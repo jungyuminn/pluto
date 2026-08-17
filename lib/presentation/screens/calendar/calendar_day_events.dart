@@ -1,0 +1,101 @@
+import 'package:job_planner/domain/entities/apply_status.dart';
+import 'package:job_planner/domain/entities/calendar_event.dart';
+import 'package:job_planner/domain/entities/job_application.dart';
+import 'package:job_planner/presentation/theme/apply_status_colors.dart';
+
+List<CalendarEvent> jobEventsOn(
+  DateTime date,
+  Iterable<JobApplication> applications,
+) {
+  final day = DateTime(date.year, date.month, date.day);
+  final items = <CalendarEvent>[];
+  for (final application in applications) {
+    if (ApplyStatus.isRejected(application.applyStatus)) continue;
+    for (var i = 0; i < application.rounds.length; i++) {
+      final round = application.rounds[i];
+      final roundDate = round.date;
+      if (roundDate == null) continue;
+      if (roundDate.year != day.year ||
+          roundDate.month != day.month ||
+          roundDate.day != day.day) {
+        continue;
+      }
+      final accent = ApplyStatusColors.of(application.applyStatus);
+      items.add(
+        CalendarEvent(
+          id: 'job:${application.id}:$i',
+          title: _label(application.companyName, i + 1, round.name),
+          date: day,
+          categoryName: application.applyStatus.isNotEmpty
+              ? application.applyStatus
+              : application.position,
+          categoryColor: accent?.toARGB32() ?? CalendarEvent.defaultCategoryColor,
+          isJob: true,
+          jobApplicationId: application.id,
+        ),
+      );
+    }
+  }
+  return items;
+}
+
+List<CalendarEvent> calendarEventsOn({
+  required DateTime date,
+  required List<CalendarEvent> events,
+  required List<JobApplication> applications,
+}) {
+  final jobs = jobEventsOn(date, applications);
+  final todos = CalendarEvent.withRangesFirst(
+    events.where((event) {
+      if (event.isJob) return false;
+      return event.date.year == date.year &&
+          event.date.month == date.month &&
+          event.date.day == date.day;
+    }),
+    all: events.where((event) => !event.isJob),
+  );
+  return [...jobs, ...todos];
+}
+
+List<CalendarEvent> leftoverTodosBefore(
+  DateTime date,
+  List<CalendarEvent> events,
+) {
+  final today = DateTime(date.year, date.month, date.day);
+  final rangeEnd = <String, DateTime>{};
+  for (final event in events) {
+    final groupId = event.groupId;
+    if (groupId == null) continue;
+    final day = event.day;
+    final current = rangeEnd[groupId];
+    if (current == null || day.isAfter(current)) {
+      rangeEnd[groupId] = day;
+    }
+  }
+
+  final leftover = <CalendarEvent>[];
+  final rangeByGroup = <String, CalendarEvent>{};
+  for (final event in events) {
+    if (event.isJob || event.completed) continue;
+    if (!event.day.isBefore(today)) continue;
+    if (event.isRange) {
+      final end = rangeEnd[event.groupId] ?? event.day;
+      if (!end.isBefore(today)) continue;
+      final current = rangeByGroup[event.groupId];
+      if (current == null || event.day.isAfter(current.day)) {
+        rangeByGroup[event.groupId!] = event;
+      }
+      continue;
+    }
+    leftover.add(event);
+  }
+  leftover.addAll(rangeByGroup.values);
+  leftover.sort((a, b) => a.day.compareTo(b.day));
+  return CalendarEvent.withRangesFirst(leftover, all: events);
+}
+
+String _label(String companyName, int number, String roundName) {
+  final name = roundName.trim();
+  if (name.isEmpty) return '$companyName-${number}차';
+  return '$companyName-${number}차($name)';
+}

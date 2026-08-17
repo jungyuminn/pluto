@@ -6,6 +6,8 @@ import 'package:job_planner/core/constants/app_strings.dart';
 import 'package:job_planner/core/utils/fade_in.dart';
 import 'package:job_planner/core/utils/korean_search.dart';
 import 'package:job_planner/core/utils/plain_text_editing_controller.dart';
+import 'package:job_planner/data/datasources/day_events_view_preference.dart';
+import 'package:job_planner/data/datasources/home_view_preference.dart';
 import 'package:job_planner/domain/entities/calendar_event.dart';
 import 'package:job_planner/domain/entities/event_category.dart';
 import 'package:job_planner/presentation/screens/calendar/calendar_day_events.dart';
@@ -32,12 +34,16 @@ class _HomeScreenState extends State<HomeScreen>
   late final CurvedAnimation _searchFade;
   var _todayEvents = <CalendarEvent>[];
   var _tomorrowEvents = <CalendarEvent>[];
+  var _weekEvents = <CalendarEvent>[];
+  var _monthEvents = <CalendarEvent>[];
   var _leftoverEvents = <CalendarEvent>[];
   var _categories = <EventCategory>[];
   var _loading = true;
   var _initialized = false;
   var _compact = false;
   var _searchOpen = false;
+  String? _weekLabel;
+  String? _monthLabel;
 
   DateTime get _today {
     final now = DateTime.now();
@@ -101,7 +107,10 @@ class _HomeScreenState extends State<HomeScreen>
     final events = await scope.getCalendarEvents();
     final applications = await scope.getJobApplications();
     final categories = await scope.getEventCategories();
+    final homePrefs = scope.homeViewPreference;
     if (!mounted) return;
+    final weekEnd = _today.add(const Duration(days: 6));
+    final monthEnd = DateTime(_today.year, _today.month + 1, 0);
     setState(() {
       _todayEvents = calendarEventsOn(
         date: _today,
@@ -113,6 +122,28 @@ class _HomeScreenState extends State<HomeScreen>
         events: events,
         applications: applications,
       );
+      _weekEvents = homePrefs.showWeek
+          ? calendarEventsInRange(
+              start: _today,
+              end: weekEnd,
+              events: events,
+              applications: applications,
+            )
+          : const <CalendarEvent>[];
+      _weekLabel = homePrefs.showWeek
+          ? calendarRangeLabel(_today, weekEnd)
+          : null;
+      _monthEvents = homePrefs.showMonth
+          ? calendarEventsInRange(
+              start: _today,
+              end: monthEnd,
+              events: events,
+              applications: applications,
+            )
+          : const <CalendarEvent>[];
+      _monthLabel = homePrefs.showMonth
+          ? calendarRangeLabel(_today, monthEnd)
+          : null;
       _leftoverEvents = leftoverTodosBefore(_today, events);
       _categories = categories;
       _loading = false;
@@ -158,9 +189,8 @@ class _HomeScreenState extends State<HomeScreen>
       ),
     );
     if (!mounted) return;
-    setState(() {
-      _compact = AppScope.of(context).homeViewPreference.isCompact;
-    });
+    _compact = AppScope.of(context).homeViewPreference.isCompact;
+    await _reload();
   }
 
   @override
@@ -168,6 +198,7 @@ class _HomeScreenState extends State<HomeScreen>
     final bottomGap = 88 + MediaQuery.paddingOf(context).bottom;
     final leftover = _filter(_leftoverEvents);
     final sortPrefs = AppScope.of(context).dayEventsViewPreference;
+    final homePrefs = AppScope.of(context).homeViewPreference;
 
     return Scaffold(
       resizeToAvoidBottomInset: false,
@@ -264,35 +295,10 @@ class _HomeScreenState extends State<HomeScreen>
                     child: ListView(
                       padding: EdgeInsets.fromLTRB(16, 8, 16, bottomGap),
                       children: [
-                        if (leftover.isNotEmpty) ...[
-                          HomeLeftoverCard(
-                            count: leftover.length,
-                            onPressed: _openLeftover,
-                          ),
-                          const SizedBox(height: 12),
-                        ],
-                        HomeDayCard(
-                          key: const ValueKey('today'),
-                          title: AppStrings.todayTitle,
-                          date: _today,
-                          events: _filter(_todayEvents),
-                          categories: _categories,
-                          compact: _compact,
-                          sortByTime: sortPrefs.sortByTime,
-                          showTime: sortPrefs.showTime,
-                          onEventsChanged: _reload,
-                        ),
-                        const SizedBox(height: 12),
-                        HomeDayCard(
-                          key: const ValueKey('tomorrow'),
-                          title: AppStrings.tomorrowTitle,
-                          date: _tomorrow,
-                          events: _filter(_tomorrowEvents),
-                          categories: _categories,
-                          compact: _compact,
-                          sortByTime: sortPrefs.sortByTime,
-                          showTime: sortPrefs.showTime,
-                          onEventsChanged: _reload,
+                        ..._homeCards(
+                          leftover: leftover,
+                          homePrefs: homePrefs,
+                          sortPrefs: sortPrefs,
                         ),
                       ],
                     ),
@@ -301,5 +307,98 @@ class _HomeScreenState extends State<HomeScreen>
               ),
             ),
     );
+  }
+
+  List<Widget> _homeCards({
+    required List<CalendarEvent> leftover,
+    required HomeViewPreference homePrefs,
+    required DayEventsViewPreference sortPrefs,
+  }) {
+    final cards = <Widget>[];
+
+    void add(Widget card) {
+      if (cards.isNotEmpty) cards.add(const SizedBox(height: 12));
+      cards.add(card);
+    }
+
+    if (homePrefs.showLeftover && leftover.isNotEmpty) {
+      add(
+        HomeLeftoverCard(
+          count: leftover.length,
+          onPressed: _openLeftover,
+        ),
+      );
+    }
+    if (homePrefs.showToday) {
+      add(
+        HomeDayCard(
+          key: const ValueKey('today'),
+          title: AppStrings.todayTitle,
+          date: _today,
+          events: _filter(_todayEvents),
+          categories: _categories,
+          compact: _compact,
+          sortByTime: sortPrefs.sortByTime,
+          showTime: sortPrefs.showTime,
+          onEventsChanged: _reload,
+        ),
+      );
+    }
+    if (homePrefs.showTomorrow) {
+      add(
+        HomeDayCard(
+          key: const ValueKey('tomorrow'),
+          title: AppStrings.tomorrowTitle,
+          date: _tomorrow,
+          events: _filter(_tomorrowEvents),
+          categories: _categories,
+          compact: _compact,
+          sortByTime: sortPrefs.sortByTime,
+          showTime: sortPrefs.showTime,
+          onEventsChanged: _reload,
+        ),
+      );
+    }
+    if (homePrefs.showWeek) {
+      add(
+        HomeDayCard(
+          key: const ValueKey('week'),
+          title: AppStrings.weekTitle,
+          events: _filter(_weekEvents),
+          categories: _categories,
+          compact: _compact,
+          sortByTime: sortPrefs.sortByTime,
+          showTime: sortPrefs.showTime,
+          showAddButton: false,
+          dateLabel: _weekLabel,
+          groupDates: calendarDaysInRange(
+            _today,
+            _today.add(const Duration(days: 6)),
+          ),
+          onEventsChanged: _reload,
+        ),
+      );
+    }
+    if (homePrefs.showMonth) {
+      add(
+        HomeDayCard(
+          key: const ValueKey('month'),
+          title: AppStrings.monthTitle,
+          events: _filter(_monthEvents),
+          categories: _categories,
+          compact: _compact,
+          sortByTime: sortPrefs.sortByTime,
+          showTime: sortPrefs.showTime,
+          showAddButton: false,
+          dateLabel: _monthLabel,
+          groupDates: calendarDaysInRange(
+            _today,
+            DateTime(_today.year, _today.month + 1, 0),
+          ),
+          onEventsChanged: _reload,
+        ),
+      );
+    }
+    return cards;
   }
 }

@@ -9,6 +9,7 @@ import 'package:job_planner/data/datasources/day_events_view_preference.dart';
 import 'package:job_planner/data/datasources/home_view_preference.dart';
 import 'package:job_planner/data/datasources/job_view_preference.dart';
 import 'package:job_planner/data/datasources/job_application_local_datasource.dart';
+import 'package:job_planner/data/datasources/notification_preference.dart';
 import 'package:job_planner/data/repositories/calendar_event_memory_repository.dart';
 import 'package:job_planner/data/repositories/calendar_event_repository_impl.dart';
 import 'package:job_planner/data/repositories/event_category_memory_repository.dart';
@@ -54,6 +55,7 @@ class JobPlannerApp extends StatelessWidget {
     this.jobViewPreference,
     this.homeViewPreference,
     this.dayEventsViewPreference,
+    this.notificationPreference,
   });
 
   final GetJobApplications? getJobApplications;
@@ -74,6 +76,7 @@ class JobPlannerApp extends StatelessWidget {
   final JobViewPreference? jobViewPreference;
   final HomeViewPreference? homeViewPreference;
   final DayEventsViewPreference? dayEventsViewPreference;
+  final NotificationPreference? notificationPreference;
 
   @override
   Widget build(BuildContext context) {
@@ -122,6 +125,8 @@ class JobPlannerApp extends StatelessWidget {
       homeViewPreference: homeViewPreference ?? HomeViewPreference(),
       dayEventsViewPreference:
           dayEventsViewPreference ?? DayEventsViewPreference(),
+      notificationPreference:
+          notificationPreference ?? NotificationPreference(),
       child: const _JobPlannerMaterialApp(),
     );
   }
@@ -153,6 +158,7 @@ class _AppBootstrapState extends State<_AppBootstrap> {
   JobViewPreference? _jobViewPreference;
   HomeViewPreference? _homeViewPreference;
   DayEventsViewPreference? _dayEventsViewPreference;
+  NotificationPreference? _notificationPreference;
 
   @override
   void initState() {
@@ -191,6 +197,7 @@ class _AppBootstrapState extends State<_AppBootstrap> {
       _jobViewPreference = JobViewPreference(prefs: prefs);
       _homeViewPreference = HomeViewPreference(prefs: prefs);
       _dayEventsViewPreference = DayEventsViewPreference(prefs: prefs);
+      _notificationPreference = NotificationPreference(prefs: prefs);
     });
   }
 
@@ -214,6 +221,7 @@ class _AppBootstrapState extends State<_AppBootstrap> {
     final jobViewPreference = _jobViewPreference;
     final homeViewPreference = _homeViewPreference;
     final dayEventsViewPreference = _dayEventsViewPreference;
+    final notificationPreference = _notificationPreference;
 
     if (getApplications == null ||
         addApplication == null ||
@@ -232,7 +240,8 @@ class _AppBootstrapState extends State<_AppBootstrap> {
         reorderCategory == null ||
         jobViewPreference == null ||
         homeViewPreference == null ||
-        dayEventsViewPreference == null) {
+        dayEventsViewPreference == null ||
+        notificationPreference == null) {
       return const MaterialApp(
         debugShowCheckedModeBanner: false,
         home: Scaffold(body: Center(child: CircularProgressIndicator())),
@@ -258,6 +267,7 @@ class _AppBootstrapState extends State<_AppBootstrap> {
       jobViewPreference: jobViewPreference,
       homeViewPreference: homeViewPreference,
       dayEventsViewPreference: dayEventsViewPreference,
+      notificationPreference: notificationPreference,
       child: const _JobPlannerMaterialApp(),
     );
   }

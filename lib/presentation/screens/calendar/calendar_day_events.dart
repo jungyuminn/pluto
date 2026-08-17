@@ -1,3 +1,4 @@
+import 'package:job_planner/core/constants/app_strings.dart';
 import 'package:job_planner/domain/entities/apply_status.dart';
 import 'package:job_planner/domain/entities/calendar_event.dart';
 import 'package:job_planner/domain/entities/job_application.dart';
@@ -55,6 +56,53 @@ List<CalendarEvent> calendarEventsOn({
     all: events.where((event) => !event.isJob),
   );
   return [...jobs, ...todos];
+}
+
+DateTime calendarDay(DateTime date) => DateTime(date.year, date.month, date.day);
+
+List<CalendarEvent> calendarEventsInRange({
+  required DateTime start,
+  required DateTime end,
+  required List<CalendarEvent> events,
+  required List<JobApplication> applications,
+}) {
+  final items = <CalendarEvent>[];
+  var day = calendarDay(start);
+  final last = calendarDay(end);
+  while (!day.isAfter(last)) {
+    items.addAll(
+      calendarEventsOn(
+        date: day,
+        events: events,
+        applications: applications,
+      ),
+    );
+    day = day.add(const Duration(days: 1));
+  }
+  return items;
+}
+
+List<DateTime> calendarDaysInRange(DateTime start, DateTime end) {
+  final days = <DateTime>[];
+  var day = calendarDay(start);
+  final last = calendarDay(end);
+  while (!day.isAfter(last)) {
+    days.add(day);
+    day = day.add(const Duration(days: 1));
+  }
+  return days;
+}
+
+String calendarRangeLabel(DateTime start, DateTime end) {
+  final first = calendarDay(start);
+  final last = calendarDay(end);
+  String labeled(DateTime day) {
+    final weekday = AppStrings.weekdays[day.weekday % 7];
+    return '${day.month}. ${day.day}. ($weekday)';
+  }
+
+  if (first == last) return labeled(first);
+  return '${labeled(first)} - ${labeled(last)}';
 }
 
 List<CalendarEvent> leftoverTodosBefore(

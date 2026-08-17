@@ -41,7 +41,7 @@ class EventTimeChip extends StatelessWidget {
             ColorFiltered(
               colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
               child: Image.asset(
-                AppIcons.time,
+                AppIcons.clock,
                 width: 20,
                 height: 20,
                 semanticLabel: AppStrings.timeAction,

@@ -28,6 +28,8 @@ class HomeDayCard extends StatefulWidget {
     required this.onEventsChanged,
     this.showAddButton = true,
     this.showEventDates = false,
+    this.dateLabel,
+    this.groupDates,
   });
 
   final String title;
@@ -40,6 +42,8 @@ class HomeDayCard extends StatefulWidget {
   final VoidCallback onEventsChanged;
   final bool showAddButton;
   final bool showEventDates;
+  final String? dateLabel;
+  final List<DateTime>? groupDates;
 
   @override
   State<HomeDayCard> createState() => _HomeDayCardState();
@@ -56,9 +60,12 @@ class _HomeDayCardState extends State<HomeDayCard> {
   static const _eventExtent = 62.0;
   static const _headerExtent = 24.0;
   static const _headerGap = 6.0;
+  static const _dateHeaderExtent = 28.0;
+  static const _dateHeaderGap = 14.0;
   static const _slotAnim = Duration(milliseconds: 240);
 
   String? get _dateLabel {
+    if (widget.dateLabel != null) return widget.dateLabel;
     final date = widget.date;
     if (date == null) return null;
     final weekday = AppStrings.weekdays[date.weekday % 7];
@@ -76,16 +83,74 @@ class _HomeDayCardState extends State<HomeDayCard> {
     return event.timeLabel ?? (event.isJob ? null : AppStrings.allDayLabel);
   }
 
+  String _dayHeaderName(DateTime date) {
+    final day = DateTime(date.year, date.month, date.day);
+    if (day == _today) return AppStrings.todayTitle;
+    if (day == _tomorrow) return AppStrings.tomorrowTitle;
+    if (day == _today.add(const Duration(days: 2))) {
+      return AppStrings.dayAfterTomorrowTitle;
+    }
+    final weekday = AppStrings.weekdays[day.weekday % 7];
+    return '${day.month}. ${day.day}. ($weekday)';
+  }
+
+  DateTime get _today {
+    final now = DateTime.now();
+    return DateTime(now.year, now.month, now.day);
+  }
+
+  DateTime get _tomorrow => _today.add(const Duration(days: 1));
+
+  bool _isSameDay(DateTime a, DateTime b) {
+    return a.year == b.year && a.month == b.month && a.day == b.day;
+  }
+
   List<_ListEntry> get _itemsForView {
+    final dates = widget.groupDates;
+    if (dates == null || dates.isEmpty) {
+      return _itemsForEvents(_events);
+    }
+
+    final items = <_ListEntry>[];
+    var firstDate = true;
+    for (final date in dates) {
+      final day = DateTime(date.year, date.month, date.day);
+      final dayEvents = [
+        for (final event in _events)
+          if (_isSameDay(event.day, day)) event,
+      ];
+      if (dayEvents.isEmpty) continue;
+      items.add(
+        _ListEntry.dateHeader(
+          key: 'd:${day.millisecondsSinceEpoch}',
+          name: _dayHeaderName(day),
+          showTopGap: !firstDate,
+        ),
+      );
+      firstDate = false;
+      items.addAll(
+        _itemsForEvents(
+          dayEvents,
+          headerKeyPrefix: '${day.millisecondsSinceEpoch}:',
+        ),
+      );
+    }
+    return items;
+  }
+
+  List<_ListEntry> _itemsForEvents(
+    List<CalendarEvent> source, {
+    String headerKeyPrefix = '',
+  }) {
     if (!widget.compact) {
       final events = widget.sortByTime
-          ? CalendarEvent.withLockedThenStartTime(_events)
-          : _events;
+          ? CalendarEvent.withLockedThenStartTime(source)
+          : source;
       return [for (final event in events) _ListEntry.event(event)];
     }
 
-    final jobs = [for (final event in _events) if (event.isJob) event];
-    final todos = [for (final event in _events) if (!event.isJob) event];
+    final jobs = [for (final event in source) if (event.isJob) event];
+    final todos = [for (final event in source) if (!event.isJob) event];
     final groups = <String, List<CalendarEvent>>{};
     for (final event in todos) {
       final key = event.categoryId ?? event.categoryName;
@@ -107,7 +172,7 @@ class _HomeDayCardState extends State<HomeDayCard> {
           : events;
       items.add(
         _ListEntry.header(
-          key: key,
+          key: '$headerKeyPrefix$key',
           name: name,
           color: color,
           showTopGap: !firstHeader,
@@ -321,12 +386,18 @@ class _HomeDayCardState extends State<HomeDayCard> {
   bool _sameGroup(CalendarEvent dragged, _ListEntry item) {
     final event = item.event;
     if (event == null || event.isLockedOrder) return false;
+    if (widget.groupDates != null && !_isSameDay(event.day, dragged.day)) {
+      return false;
+    }
     if (!widget.compact) return true;
     return (event.categoryId ?? event.categoryName) ==
         (dragged.categoryId ?? dragged.categoryName);
   }
 
   double _extent(_ListEntry item) {
+    if (item.isDateHeader) {
+      return _dateHeaderExtent + (item.showTopGap ? _dateHeaderGap : 0);
+    }
     if (item.isHeader) {
       return _headerExtent + (item.showTopGap ? _headerGap : 0);
     }
@@ -404,11 +475,7 @@ class _HomeDayCardState extends State<HomeDayCard> {
   void _moveInGroup(CalendarEvent dragged, int to) {
     final group = [
       for (final event in _events)
-        if (!event.isLockedOrder &&
-            (!widget.compact ||
-                (event.categoryId ?? event.categoryName) ==
-                    (dragged.categoryId ?? dragged.categoryName)))
-          event,
+        if (!event.isLockedOrder && _inDragGroup(dragged, event)) event,
     ];
     final from = group.indexWhere((event) => event.id == dragged.id);
     if (from < 0 || to < 0 || from == to) return;
@@ -420,7 +487,7 @@ class _HomeDayCardState extends State<HomeDayCard> {
     final jobs = [for (final event in _events) if (event.isJob) event];
     final ranges = [for (final event in _events) if (event.isRange) event];
     final todos = [for (final event in _events) if (!event.isLockedOrder) event];
-    if (widget.compact) {
+    if (widget.compact || widget.groupDates != null) {
       var gi = 0;
       final ids = {for (final event in group) event.id};
       for (var i = 0; i < todos.length; i++) {
@@ -440,6 +507,15 @@ class _HomeDayCardState extends State<HomeDayCard> {
       _items = _itemsForView;
     });
     HapticFeedback.selectionClick();
+  }
+
+  bool _inDragGroup(CalendarEvent dragged, CalendarEvent event) {
+    if (widget.groupDates != null && !_isSameDay(event.day, dragged.day)) {
+      return false;
+    }
+    if (!widget.compact) return true;
+    return (event.categoryId ?? event.categoryName) ==
+        (dragged.categoryId ?? dragged.categoryName);
   }
 
   Future<void> _persistTodoOrder() async {
@@ -546,6 +622,27 @@ class _HomeDayCardState extends State<HomeDayCard> {
   }
 
   Widget _tile(_ListEntry item) {
+    if (item.isDateHeader) {
+      return Padding(
+        padding: EdgeInsets.only(
+          top: item.showTopGap ? _dateHeaderGap : 0,
+          bottom: 8,
+        ),
+        child: SizedBox(
+          height: 20,
+          child: Text(
+            item.headerName ?? '',
+            style: const TextStyle(
+              fontFamily: AppFonts.pretendard,
+              fontSize: 14,
+              fontWeight: FontWeight.w800,
+              height: 1,
+              color: Color(0xFF0F172A),
+            ),
+          ),
+        ),
+      );
+    }
     if (item.isHeader) {
       return Padding(
         padding: EdgeInsets.only(
@@ -684,7 +781,8 @@ class _ListEntry {
       : headerKey = null,
         headerName = null,
         headerColor = null,
-        showTopGap = false;
+        showTopGap = false,
+        isDateHeader = false;
 
   const _ListEntry.header({
     required String key,
@@ -694,15 +792,27 @@ class _ListEntry {
   })  : event = null,
         headerKey = key,
         headerName = name,
-        headerColor = color;
+        headerColor = color,
+        isDateHeader = false;
+
+  const _ListEntry.dateHeader({
+    required String key,
+    required String name,
+    this.showTopGap = false,
+  })  : event = null,
+        headerKey = key,
+        headerName = name,
+        headerColor = null,
+        isDateHeader = true;
 
   final CalendarEvent? event;
   final String? headerKey;
   final String? headerName;
   final Color? headerColor;
   final bool showTopGap;
+  final bool isDateHeader;
 
-  bool get isHeader => event == null;
+  bool get isHeader => event == null && !isDateHeader;
 
   String get id => event != null ? 'e:${event!.id}' : 'h:$headerKey';
 }

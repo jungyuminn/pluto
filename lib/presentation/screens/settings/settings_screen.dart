@@ -1,8 +1,12 @@
+import 'dart:ui';
+
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:job_planner/app_scope.dart';
 import 'package:job_planner/core/constants/app_fonts.dart';
 import 'package:job_planner/core/constants/app_strings.dart';
 import 'package:job_planner/core/utils/press_bounce.dart';
+import 'package:job_planner/data/datasources/notification_preference.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -15,6 +19,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
   var _compact = false;
   var _sortByTime = false;
   var _showTime = false;
+  var _todoReminderLead = TodoReminderLead.minutes10;
+  var _showLeftover = true;
+  var _showToday = true;
+  var _showTomorrow = true;
+  var _showWeek = false;
+  var _showMonth = false;
   var _ready = false;
 
   @override
@@ -26,6 +36,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _compact = scope.homeViewPreference.isCompact;
     _sortByTime = scope.dayEventsViewPreference.sortByTime;
     _showTime = scope.dayEventsViewPreference.showTime;
+    _todoReminderLead = scope.notificationPreference.todoReminderLead;
+    _showLeftover = scope.homeViewPreference.showLeftover;
+    _showToday = scope.homeViewPreference.showToday;
+    _showTomorrow = scope.homeViewPreference.showTomorrow;
+    _showWeek = scope.homeViewPreference.showWeek;
+    _showMonth = scope.homeViewPreference.showMonth;
   }
 
   Future<void> _setCompact(bool value) async {
@@ -46,6 +62,57 @@ class _SettingsScreenState extends State<SettingsScreen> {
     await AppScope.of(context).dayEventsViewPreference.setShowTime(next);
   }
 
+  Future<void> _setShowLeftover(bool value) async {
+    setState(() => _showLeftover = value);
+    await AppScope.of(context).homeViewPreference.setShowLeftover(value);
+  }
+
+  Future<void> _setShowToday(bool value) async {
+    setState(() => _showToday = value);
+    await AppScope.of(context).homeViewPreference.setShowToday(value);
+  }
+
+  Future<void> _setShowTomorrow(bool value) async {
+    setState(() => _showTomorrow = value);
+    await AppScope.of(context).homeViewPreference.setShowTomorrow(value);
+  }
+
+  Future<void> _setShowWeek(bool value) async {
+    setState(() => _showWeek = value);
+    await AppScope.of(context).homeViewPreference.setShowWeek(value);
+  }
+
+  Future<void> _setShowMonth(bool value) async {
+    setState(() => _showMonth = value);
+    await AppScope.of(context).homeViewPreference.setShowMonth(value);
+  }
+
+  Future<void> _openTodoNotificationSettings() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (context) => const _TodoNotificationSettingsPage(),
+      ),
+    );
+    if (!mounted) return;
+    setState(() {
+      _todoReminderLead =
+          AppScope.of(context).notificationPreference.todoReminderLead;
+    });
+  }
+
+  static String _leadLabel(TodoReminderLead lead) {
+    switch (lead) {
+      case TodoReminderLead.minutes5:
+        return AppStrings.notifyMinutes5;
+      case TodoReminderLead.minutes10:
+        return AppStrings.notifyMinutes10;
+      case TodoReminderLead.minutes30:
+        return AppStrings.notifyMinutes30;
+      case TodoReminderLead.hours1:
+        return AppStrings.notifyHours1;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final top = MediaQuery.paddingOf(context).top;
@@ -53,36 +120,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF4F5F7),
       extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        forceMaterialTransparency: true,
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        surfaceTintColor: Colors.transparent,
-        shadowColor: Colors.transparent,
-        centerTitle: true,
-        leading: PressBounce(
-          onPressed: () => Navigator.pop(context),
-          pressedColor: Colors.transparent,
-          child: const SizedBox(
-            width: 40,
-            height: 40,
-            child: Icon(
-              Icons.chevron_left_rounded,
-              size: 28,
-              color: Color(0xFF0F172A),
-            ),
-          ),
-        ),
-        title: const Text(
-          AppStrings.settingsTitle,
-          style: TextStyle(
-            fontFamily: AppFonts.pretendard,
-            fontSize: 18,
-            fontWeight: FontWeight.w800,
-            color: Color(0xFF0F172A),
-          ),
-        ),
+      appBar: _FrostedAppBar(
+        title: AppStrings.settingsTitle,
+        onBack: () => Navigator.pop(context),
       ),
       body: ListView(
         padding: EdgeInsets.fromLTRB(16, top + 56, 16, 32),
@@ -103,6 +143,37 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ],
           ),
           const SizedBox(height: 24),
+          _SectionLabel(AppStrings.settingsHomeLayoutSection),
+          _SettingsCard(
+            children: [
+              _SettingsSwitchTile(
+                label: AppStrings.homeShowLeftover,
+                value: _showLeftover,
+                onChanged: _setShowLeftover,
+              ),
+              _SettingsSwitchTile(
+                label: AppStrings.homeShowToday,
+                value: _showToday,
+                onChanged: _setShowToday,
+              ),
+              _SettingsSwitchTile(
+                label: AppStrings.homeShowTomorrow,
+                value: _showTomorrow,
+                onChanged: _setShowTomorrow,
+              ),
+              _SettingsSwitchTile(
+                label: AppStrings.homeShowWeek,
+                value: _showWeek,
+                onChanged: _setShowWeek,
+              ),
+              _SettingsSwitchTile(
+                label: AppStrings.homeShowMonth,
+                value: _showMonth,
+                onChanged: _setShowMonth,
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
           _SectionLabel(AppStrings.settingsTodoSection),
           _SettingsCard(
             children: [
@@ -115,6 +186,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 label: AppStrings.timeDisplay,
                 checked: _showTime,
                 onPressed: _toggleShowTime,
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          _SectionLabel(AppStrings.settingsNotificationSection),
+          _SettingsCard(
+            children: [
+              _SettingsTile(
+                label: AppStrings.todoNotificationSetting,
+                value: _leadLabel(_todoReminderLead),
+                chevron: true,
+                onPressed: _openTodoNotificationSettings,
+              ),
+              _SettingsTile(
+                label: AppStrings.summaryNotificationSetting,
+                chevron: true,
+                onPressed: () {},
               ),
             ],
           ),
@@ -135,6 +223,119 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ],
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _TodoNotificationSettingsPage extends StatefulWidget {
+  const _TodoNotificationSettingsPage();
+
+  @override
+  State<_TodoNotificationSettingsPage> createState() =>
+      _TodoNotificationSettingsPageState();
+}
+
+class _TodoNotificationSettingsPageState
+    extends State<_TodoNotificationSettingsPage> {
+  late TodoReminderLead _lead;
+  var _ready = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_ready) return;
+    _ready = true;
+    _lead = AppScope.of(context).notificationPreference.todoReminderLead;
+  }
+
+  Future<void> _select(TodoReminderLead lead) async {
+    if (_lead == lead) return;
+    setState(() => _lead = lead);
+    await AppScope.of(context).notificationPreference.setTodoReminderLead(lead);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final top = MediaQuery.paddingOf(context).top;
+
+    return Scaffold(
+      backgroundColor: const Color(0xFFF4F5F7),
+      extendBodyBehindAppBar: true,
+      appBar: _FrostedAppBar(
+        title: AppStrings.todoNotificationSetting,
+        onBack: () => Navigator.pop(context),
+      ),
+      body: ListView(
+        padding: EdgeInsets.fromLTRB(16, top + 56, 16, 32),
+        children: [
+          _SettingsCard(
+            children: [
+              for (final lead in TodoReminderLead.values)
+                _SettingsTile(
+                  label: _SettingsScreenState._leadLabel(lead),
+                  checked: _lead == lead,
+                  onPressed: () => _select(lead),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _FrostedAppBar extends StatelessWidget implements PreferredSizeWidget {
+  const _FrostedAppBar({
+    required this.title,
+    required this.onBack,
+  });
+
+  final String title;
+  final VoidCallback onBack;
+
+  @override
+  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRect(
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
+        child: ColoredBox(
+          color: const Color(0xFFF4F5F7).withValues(alpha: 0.08),
+          child: AppBar(
+            forceMaterialTransparency: true,
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            scrolledUnderElevation: 0,
+            surfaceTintColor: Colors.transparent,
+            shadowColor: Colors.transparent,
+            centerTitle: true,
+            leading: PressBounce(
+              onPressed: onBack,
+              pressedColor: Colors.transparent,
+              child: const SizedBox(
+                width: 40,
+                height: 40,
+                child: Icon(
+                  Icons.chevron_left_rounded,
+                  size: 28,
+                  color: Color(0xFF0F172A),
+                ),
+              ),
+            ),
+            title: Text(
+              title,
+              style: const TextStyle(
+                fontFamily: AppFonts.pretendard,
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+                color: Color(0xFF0F172A),
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -197,15 +398,71 @@ class _SettingsCard extends StatelessWidget {
   }
 }
 
+class _SettingsSwitchTile extends StatelessWidget {
+  const _SettingsSwitchTile({
+    required this.label,
+    required this.value,
+    required this.onChanged,
+  });
+
+  final String label;
+  final bool value;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 10, 16, 10),
+        child: Row(
+          children: [
+            Expanded(
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => onChanged(!value),
+                child: Text(
+                  label,
+                  style: const TextStyle(
+                    fontFamily: AppFonts.pretendard,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w400,
+                    color: Color(0xFF0F172A),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            SizedBox(
+              height: 28,
+              child: FittedBox(
+                child: CupertinoSwitch(
+                  value: value,
+                  activeTrackColor: const Color(0xFF40A6FF),
+                  onChanged: onChanged,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _SettingsTile extends StatelessWidget {
   const _SettingsTile({
     required this.label,
-    required this.checked,
     required this.onPressed,
+    this.checked = false,
+    this.value,
+    this.chevron = false,
   });
 
   final String label;
   final bool checked;
+  final String? value;
+  final bool chevron;
   final VoidCallback onPressed;
 
   @override
@@ -232,11 +489,29 @@ class _SettingsTile extends StatelessWidget {
                   ),
                 ),
               ),
+              if (value != null) ...[
+                Text(
+                  value!,
+                  style: const TextStyle(
+                    fontFamily: AppFonts.pretendard,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w400,
+                    color: Color(0xFF94A3B8),
+                  ),
+                ),
+                const SizedBox(width: 2),
+              ],
               if (checked)
                 const Icon(
                   Icons.check_rounded,
                   size: 22,
                   color: Color(0xFF0F172A),
+                ),
+              if (chevron)
+                const Icon(
+                  Icons.chevron_right_rounded,
+                  size: 22,
+                  color: Color(0xFF94A3B8),
                 ),
             ],
           ),

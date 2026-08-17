@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:job_planner/app_scope.dart';
 import 'package:job_planner/core/constants/app_fonts.dart';
 import 'package:job_planner/core/constants/app_strings.dart';
+import 'package:job_planner/core/theme/app_colors.dart';
 import 'package:job_planner/core/utils/press_bounce.dart';
 import 'package:job_planner/domain/entities/event_category.dart';
 import 'package:job_planner/presentation/screens/add_company/widgets/missing_fields_dialog.dart';
@@ -60,8 +61,6 @@ class _CategoryPickerSheetState extends State<CategoryPickerSheet>
   late String? _selectedId;
   late final AnimationController _jiggle;
 
-  static const _blue = Color(0xFF3B82F6);
-  static const _red = Color(0xFFEF4444);
   static const _gridAnim = Duration(milliseconds: 220);
   static const _slotAnim = Duration(milliseconds: 240);
   static const _columns = 5;
@@ -267,6 +266,7 @@ class _CategoryPickerSheetState extends State<CategoryPickerSheet>
   @override
   Widget build(BuildContext context) {
     final bottom = MediaQuery.paddingOf(context).bottom;
+    final colors = AppColors.of(context);
 
     return PopScope(
       canPop: !_editing,
@@ -279,9 +279,9 @@ class _CategoryPickerSheetState extends State<CategoryPickerSheet>
           bottom: MediaQuery.viewInsetsOf(context).bottom,
         ),
         child: DecoratedBox(
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          decoration: BoxDecoration(
+            color: colors.card,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
           ),
           child: Padding(
             padding: EdgeInsets.fromLTRB(20, 16, 20, 16 + bottom),
@@ -296,10 +296,10 @@ class _CategoryPickerSheetState extends State<CategoryPickerSheet>
                         label: _editing
                             ? AppStrings.delete
                             : AppStrings.edit,
-                        color: _editing ? _red : _blue,
+                        color: _editing ? colors.danger : colors.accent,
                         pressedColor: _editing
-                            ? const Color(0xFFFEE2E2)
-                            : const Color(0xFFDBEAFE),
+                            ? colors.tint(colors.danger, 0.22)
+                            : colors.rangeFill,
                         onPressed: _editing ? _deleteMarked : _toggleEdit,
                       ),
                       Expanded(
@@ -307,17 +307,17 @@ class _CategoryPickerSheetState extends State<CategoryPickerSheet>
                           child: _editing
                               ? _headerButton(
                                   label: AppStrings.done,
-                                  color: const Color(0xFF0F172A),
-                                  pressedColor: const Color(0xFFF1F5F9),
+                                  color: colors.text,
+                                  pressedColor: colors.pressed,
                                   onPressed: _exitEdit,
                                 )
-                              : const Text(
+                              : Text(
                                   AppStrings.categoryAction,
                                   style: TextStyle(
                                     fontFamily: AppFonts.pretendard,
                                     fontSize: 18,
                                     fontWeight: FontWeight.w800,
-                                    color: Color(0xFF0F172A),
+                                    color: colors.text,
                                   ),
                                 ),
                         ),
@@ -326,8 +326,8 @@ class _CategoryPickerSheetState extends State<CategoryPickerSheet>
                         label: _editing
                             ? AppStrings.modify
                             : AppStrings.addCategory,
-                        color: _blue,
-                        pressedColor: const Color(0xFFDBEAFE),
+                        color: colors.accent,
+                        pressedColor: colors.rangeFill,
                         onPressed: _editing ? _editMarked : _add,
                       ),
                     ],
@@ -460,10 +460,10 @@ class _CategoryPickerSheetState extends State<CategoryPickerSheet>
             ),
           ),
         ),
-        childWhenDragging: const DecoratedBox(
+        childWhenDragging: DecoratedBox(
           decoration: BoxDecoration(
-            color: Color(0xFFF1F5F9),
-            borderRadius: BorderRadius.all(Radius.circular(8)),
+            color: AppColors.of(context).pressed,
+            borderRadius: const BorderRadius.all(Radius.circular(8)),
           ),
         ),
         child: _card(category),
@@ -532,13 +532,14 @@ class _CategoryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     return PressBounce(
       onPressed: onPressed,
       expand: true,
       color: selected
-          ? Color.lerp(Colors.white, category.tint, 0.18)!
-          : const Color(0xFFF8FAFC),
-      pressedColor: Color.lerp(Colors.white, category.tint, 0.28)!,
+          ? Color.lerp(colors.card, category.tint, 0.18)!
+          : colors.background,
+      pressedColor: Color.lerp(colors.card, category.tint, 0.28)!,
       borderRadius: BorderRadius.circular(8),
       child: SizedBox.expand(
         child: Stack(
@@ -571,7 +572,7 @@ class _CategoryCard extends StatelessWidget {
                       leadingDistribution: TextLeadingDistribution.even,
                       color: selected
                           ? category.tint
-                          : const Color(0xFF0F172A),
+                          : colors.text,
                     ),
                   ),
                 ],
@@ -600,6 +601,7 @@ class _SelectMark extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     return AnimatedContainer(
       duration: _duration,
       curve: Curves.easeOutCubic,
@@ -607,10 +609,10 @@ class _SelectMark extends StatelessWidget {
       height: _size,
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
-        color: marked ? const Color(0xFFEF4444) : Colors.white,
+        color: marked ? colors.danger : colors.card,
         shape: BoxShape.circle,
         border: Border.all(
-          color: marked ? const Color(0xFFEF4444) : const Color(0xFFCBD5E1),
+          color: marked ? colors.danger : colors.border,
           width: 1.4,
         ),
       ),

@@ -3,6 +3,7 @@ import 'package:job_planner/app_scope.dart';
 import 'package:job_planner/core/constants/app_fonts.dart';
 import 'package:job_planner/core/constants/app_icons.dart';
 import 'package:job_planner/core/constants/app_strings.dart';
+import 'package:job_planner/core/theme/app_colors.dart';
 import 'package:job_planner/core/utils/fade_in.dart';
 import 'package:job_planner/core/utils/korean_search.dart';
 import 'package:job_planner/core/utils/plain_text_editing_controller.dart';
@@ -16,6 +17,7 @@ import 'package:job_planner/presentation/screens/home/widgets/home_day_card.dart
 import 'package:job_planner/presentation/screens/home/widgets/home_leftover_card.dart';
 import 'package:job_planner/presentation/screens/settings/settings_screen.dart';
 import 'package:job_planner/presentation/widgets/app_bar_icon_group.dart';
+import 'package:job_planner/presentation/widgets/themed_asset.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key, this.visible = true});
@@ -202,13 +204,13 @@ class _HomeScreenState extends State<HomeScreen>
 
     return Scaffold(
       resizeToAvoidBottomInset: false,
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: AppColors.of(context).background,
       appBar: AppBar(
-        backgroundColor: const Color(0xFFF8FAFC),
+        backgroundColor: AppColors.of(context).background,
         surfaceTintColor: Colors.transparent,
         titleSpacing: 8,
-        title: Image.asset(
-          AppIcons.logo,
+        title: ThemedAsset(
+          asset: AppIcons.logo,
           height: 120,
           semanticLabel: AppStrings.appName,
         ),
@@ -269,13 +271,13 @@ class _HomeScreenState extends State<HomeScreen>
                             ),
                             decoration: InputDecoration(
                               hintText: AppStrings.homeSearchHint,
-                              hintStyle: const TextStyle(
+                              hintStyle: TextStyle(
                                 fontFamily: AppFonts.pretendard,
-                                color: Color(0xFF94A3B8),
+                                color: AppColors.of(context).muted,
                                 fontWeight: FontWeight.w600,
                               ),
                               filled: true,
-                              fillColor: Colors.white,
+                              fillColor: AppColors.of(context).card,
                               isDense: true,
                               contentPadding: const EdgeInsets.symmetric(
                                 horizontal: 16,

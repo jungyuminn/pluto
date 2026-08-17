@@ -6,6 +6,7 @@ import 'package:job_planner/presentation/screens/add_company/widgets/round_date_
 import 'package:job_planner/presentation/screens/add_company/widgets/round_name_field.dart';
 import 'package:job_planner/presentation/screens/add_company/widgets/round_note_field.dart';
 import 'package:job_planner/presentation/screens/add_company/widgets/save_company_button.dart';
+import 'package:job_planner/core/theme/app_colors.dart';
 import 'package:job_planner/presentation/theme/apply_status_colors.dart';
 
 Future<ApplicationRound?> showRoundEditor(
@@ -115,6 +116,7 @@ class _RoundEditorSheetState extends State<RoundEditorSheet>
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     final viewInsets = MediaQuery.viewInsetsOf(context);
     final accent = ApplyStatusColors.of(widget.applyStatus) ??
         const Color(0xFF3B82F6);
@@ -122,7 +124,10 @@ class _RoundEditorSheetState extends State<RoundEditorSheet>
     return Padding(
       padding: EdgeInsets.only(bottom: viewInsets.bottom),
       child: Material(
-        color: ApplyStatusColors.sheetOf(widget.applyStatus),
+        color: ApplyStatusColors.sheetOf(
+          widget.applyStatus,
+          base: colors.card,
+        ),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         clipBehavior: Clip.antiAlias,
         elevation: 8,

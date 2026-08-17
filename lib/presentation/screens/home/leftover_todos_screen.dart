@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:job_planner/app_scope.dart';
 import 'package:job_planner/core/constants/app_fonts.dart';
 import 'package:job_planner/core/constants/app_strings.dart';
+import 'package:job_planner/core/theme/app_colors.dart';
 import 'package:job_planner/core/utils/press_bounce.dart';
 import 'package:job_planner/domain/entities/calendar_event.dart';
 import 'package:job_planner/presentation/screens/calendar/calendar_day_events.dart';
@@ -138,10 +139,11 @@ class _LeftoverTodosScreenState extends State<LeftoverTodosScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     final top = MediaQuery.paddingOf(context).top;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: colors.background,
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -151,10 +153,10 @@ class _LeftoverTodosScreenState extends State<LeftoverTodosScreen> {
               children: [
                 _CircleButton(
                   onPressed: () => Navigator.pop(context),
-                  child: const Icon(
+                  child: Icon(
                     Icons.chevron_left_rounded,
                     size: 28,
-                    color: Color(0xFF0F172A),
+                    color: colors.text,
                   ),
                 ),
                 const Spacer(),
@@ -162,28 +164,28 @@ class _LeftoverTodosScreenState extends State<LeftoverTodosScreen> {
                   DecoratedBox(
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(999),
-                      boxShadow: const [
+                      boxShadow: [
                         BoxShadow(
-                          color: Color(0x14000000),
+                          color: colors.shadow,
                           blurRadius: 8,
-                          offset: Offset(0, 2),
+                          offset: const Offset(0, 2),
                         ),
                       ],
                     ),
                     child: PressBounce(
                       onPressed: _completeAll,
-                      color: Colors.white,
-                      pressedColor: const Color(0xFFF1F5F9),
+                      color: colors.card,
+                      pressedColor: colors.pressed,
                       borderRadius: BorderRadius.circular(999),
-                      child: const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                         child: Text(
                           AppStrings.completeAll,
                           style: TextStyle(
                             fontFamily: AppFonts.pretendard,
                             fontSize: 14,
                             fontWeight: FontWeight.w700,
-                            color: Color(0xFF3B82F6),
+                            color: colors.accent,
                           ),
                         ),
                       ),
@@ -196,18 +198,18 @@ class _LeftoverTodosScreenState extends State<LeftoverTodosScreen> {
             padding: const EdgeInsets.fromLTRB(24, 12, 24, 20),
             child: Text.rich(
               TextSpan(
-                style: const TextStyle(
+                style: TextStyle(
                   fontFamily: AppFonts.pretendard,
                   fontSize: 28,
                   fontWeight: FontWeight.w800,
                   height: 1.25,
-                  color: Color(0xFF0F172A),
+                  color: colors.text,
                 ),
                 children: [
                   const TextSpan(text: '${AppStrings.leftoverHeadline}\n'),
                   TextSpan(
                     text: AppStrings.leftoverCount(_events.length),
-                    style: const TextStyle(color: Color(0xFF3B82F6)),
+                    style: TextStyle(color: colors.accent),
                   ),
                   const TextSpan(text: ' ${AppStrings.leftoverExists}'),
                 ],
@@ -270,21 +272,22 @@ class _CircleButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     return DecoratedBox(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(999),
-        boxShadow: const [
+        boxShadow: [
           BoxShadow(
-            color: Color(0x14000000),
+            color: colors.shadow,
             blurRadius: 8,
-            offset: Offset(0, 2),
+            offset: const Offset(0, 2),
           ),
         ],
       ),
       child: PressBounce(
         onPressed: onPressed,
-        color: Colors.white,
-        pressedColor: const Color(0xFFF1F5F9),
+        color: colors.card,
+        pressedColor: colors.pressed,
         borderRadius: BorderRadius.circular(999),
         child: SizedBox(
           width: 44,

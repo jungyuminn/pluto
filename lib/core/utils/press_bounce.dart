@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:job_planner/core/theme/app_colors.dart';
 
 /// 누를 때 살짝 들어갔다가, 손을 떼면 바운스되며 돌아오는 효과.
 ///
@@ -12,7 +13,7 @@ class PressBounce extends StatefulWidget {
     this.onLongPressed,
     this.pressedScale = 0.95,
     this.color = Colors.transparent,
-    this.pressedColor = const Color(0xFFE5E7EB),
+    this.pressedColor,
     this.borderRadius = const BorderRadius.all(Radius.circular(12)),
     this.expand = false,
   });
@@ -22,7 +23,7 @@ class PressBounce extends StatefulWidget {
   final VoidCallback? onLongPressed;
   final double pressedScale;
   final Color color;
-  final Color pressedColor;
+  final Color? pressedColor;
   final BorderRadius borderRadius;
   final bool expand;
 
@@ -108,9 +109,13 @@ class _PressBounceState extends State<PressBounce>
     _setPressed(false, immediate: true);
   }
 
-  Color get _idleColor {
+  Color _pressedColorOf(BuildContext context) {
+    return widget.pressedColor ?? AppColors.of(context).border;
+  }
+
+  Color _idleColor(BuildContext context) {
     if (widget.color.a == 0) {
-      return widget.pressedColor.withValues(alpha: 0);
+      return _pressedColorOf(context).withValues(alpha: 0);
     }
     return widget.color;
   }
@@ -118,6 +123,7 @@ class _PressBounceState extends State<PressBounce>
   @override
   Widget build(BuildContext context) {
     final canPress = widget.onPressed != null || widget.onLongPressed != null;
+    final pressedColor = _pressedColorOf(context);
     return Listener(
       behavior: HitTestBehavior.opaque,
       onPointerDown: canPress ? _onPointerDown : null,
@@ -149,7 +155,7 @@ class _PressBounceState extends State<PressBounce>
             height: widget.expand ? double.infinity : null,
             alignment: widget.expand ? Alignment.center : null,
             decoration: BoxDecoration(
-              color: _pressed ? widget.pressedColor : _idleColor,
+              color: _pressed ? pressedColor : _idleColor(context),
               borderRadius: widget.borderRadius,
             ),
             child: widget.child,

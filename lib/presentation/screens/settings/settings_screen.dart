@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:job_planner/app_scope.dart';
 import 'package:job_planner/core/constants/app_fonts.dart';
 import 'package:job_planner/core/constants/app_strings.dart';
+import 'package:job_planner/core/theme/app_colors.dart';
 import 'package:job_planner/core/utils/press_bounce.dart';
 import 'package:job_planner/data/datasources/notification_preference.dart';
 
@@ -25,6 +26,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   var _showTomorrow = true;
   var _showWeek = false;
   var _showMonth = false;
+  var _dark = false;
   var _ready = false;
 
   @override
@@ -42,6 +44,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _showTomorrow = scope.homeViewPreference.showTomorrow;
     _showWeek = scope.homeViewPreference.showWeek;
     _showMonth = scope.homeViewPreference.showMonth;
+    _dark = scope.themePreference.isDark;
   }
 
   Future<void> _setCompact(bool value) async {
@@ -87,6 +90,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
     await AppScope.of(context).homeViewPreference.setShowMonth(value);
   }
 
+  Future<void> _setDark(bool value) async {
+    if (_dark == value) return;
+    setState(() => _dark = value);
+    await AppScope.of(context).themePreference.setDark(value);
+  }
+
   Future<void> _openTodoNotificationSettings() async {
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
@@ -118,7 +127,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final top = MediaQuery.paddingOf(context).top;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F5F7),
+      backgroundColor: AppColors.of(context).groupedBackground,
       extendBodyBehindAppBar: true,
       appBar: _FrostedAppBar(
         title: AppStrings.settingsTitle,
@@ -212,13 +221,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
             children: [
               _SettingsTile(
                 label: AppStrings.lightMode,
-                checked: true,
-                onPressed: () {},
+                checked: !_dark,
+                onPressed: () => _setDark(false),
               ),
               _SettingsTile(
                 label: AppStrings.darkMode,
-                checked: false,
-                onPressed: () {},
+                checked: _dark,
+                onPressed: () => _setDark(true),
               ),
             ],
           ),
@@ -260,7 +269,7 @@ class _TodoNotificationSettingsPageState
     final top = MediaQuery.paddingOf(context).top;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F5F7),
+      backgroundColor: AppColors.of(context).groupedBackground,
       extendBodyBehindAppBar: true,
       appBar: _FrostedAppBar(
         title: AppStrings.todoNotificationSetting,
@@ -299,11 +308,12 @@ class _FrostedAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     return ClipRect(
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
         child: ColoredBox(
-          color: const Color(0xFFF4F5F7).withValues(alpha: 0.08),
+          color: colors.groupedBackground.withValues(alpha: 0.08),
           child: AppBar(
             forceMaterialTransparency: true,
             backgroundColor: Colors.transparent,
@@ -315,23 +325,23 @@ class _FrostedAppBar extends StatelessWidget implements PreferredSizeWidget {
             leading: PressBounce(
               onPressed: onBack,
               pressedColor: Colors.transparent,
-              child: const SizedBox(
+              child: SizedBox(
                 width: 40,
                 height: 40,
                 child: Icon(
                   Icons.chevron_left_rounded,
                   size: 28,
-                  color: Color(0xFF0F172A),
+                  color: colors.text,
                 ),
               ),
             ),
             title: Text(
               title,
-              style: const TextStyle(
+              style: TextStyle(
                 fontFamily: AppFonts.pretendard,
                 fontSize: 18,
                 fontWeight: FontWeight.w800,
-                color: Color(0xFF0F172A),
+                color: colors.text,
               ),
             ),
           ),
@@ -352,11 +362,11 @@ class _SectionLabel extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
       child: Text(
         text,
-        style: const TextStyle(
+        style: TextStyle(
           fontFamily: AppFonts.pretendard,
           fontSize: 16,
           fontWeight: FontWeight.w700,
-          color: Color(0xFF0F172A),
+          color: AppColors.of(context).text,
         ),
       ),
     );
@@ -372,7 +382,7 @@ class _SettingsCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.of(context).card,
         borderRadius: BorderRadius.circular(24),
       ),
       child: ClipRRect(
@@ -382,12 +392,12 @@ class _SettingsCard extends StatelessWidget {
             for (var i = 0; i < children.length; i++) ...[
               children[i],
               if (i != children.length - 1)
-                const Padding(
-                  padding: EdgeInsets.only(left: 20),
+                Padding(
+                  padding: const EdgeInsets.only(left: 20),
                   child: Divider(
                     height: 1,
                     thickness: 0.5,
-                    color: Color(0xFFE5E7EB),
+                    color: AppColors.of(context).border,
                   ),
                 ),
             ],
@@ -411,6 +421,7 @@ class _SettingsSwitchTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     return SizedBox(
       width: double.infinity,
       child: Padding(
@@ -423,11 +434,11 @@ class _SettingsSwitchTile extends StatelessWidget {
                 onTap: () => onChanged(!value),
                 child: Text(
                   label,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontFamily: AppFonts.pretendard,
                     fontSize: 16,
                     fontWeight: FontWeight.w400,
-                    color: Color(0xFF0F172A),
+                    color: colors.text,
                   ),
                 ),
               ),
@@ -438,7 +449,7 @@ class _SettingsSwitchTile extends StatelessWidget {
               child: FittedBox(
                 child: CupertinoSwitch(
                   value: value,
-                  activeTrackColor: const Color(0xFF40A6FF),
+                  activeTrackColor: colors.accentBright,
                   onChanged: onChanged,
                 ),
               ),
@@ -467,11 +478,12 @@ class _SettingsTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     return PressBounce(
       onPressed: onPressed,
       pressedScale: 0.98,
-      color: Colors.white,
-      pressedColor: const Color(0xFFF8FAFC),
+      color: colors.card,
+      pressedColor: colors.pressed,
       child: SizedBox(
         width: double.infinity,
         child: Padding(
@@ -481,37 +493,37 @@ class _SettingsTile extends StatelessWidget {
               Expanded(
                 child: Text(
                   label,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontFamily: AppFonts.pretendard,
                     fontSize: 16,
                     fontWeight: FontWeight.w400,
-                    color: Color(0xFF0F172A),
+                    color: colors.text,
                   ),
                 ),
               ),
               if (value != null) ...[
                 Text(
                   value!,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontFamily: AppFonts.pretendard,
                     fontSize: 15,
                     fontWeight: FontWeight.w400,
-                    color: Color(0xFF94A3B8),
+                    color: colors.muted,
                   ),
                 ),
                 const SizedBox(width: 2),
               ],
               if (checked)
-                const Icon(
+                Icon(
                   Icons.check_rounded,
                   size: 22,
-                  color: Color(0xFF0F172A),
+                  color: colors.text,
                 ),
               if (chevron)
-                const Icon(
+                Icon(
                   Icons.chevron_right_rounded,
                   size: 22,
-                  color: Color(0xFF94A3B8),
+                  color: colors.muted,
                 ),
             ],
           ),

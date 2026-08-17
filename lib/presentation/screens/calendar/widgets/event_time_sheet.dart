@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:job_planner/core/constants/app_fonts.dart';
 import 'package:job_planner/core/constants/app_strings.dart';
+import 'package:job_planner/core/theme/app_colors.dart';
 import 'package:job_planner/core/utils/press_bounce.dart';
 import 'package:job_planner/presentation/screens/add_company/widgets/save_company_button.dart';
 
@@ -80,7 +81,7 @@ class _EventTimeSheetState extends State<EventTimeSheet> {
       padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
       child: DecoratedBox(
         decoration: BoxDecoration(
-          color: Color.lerp(const Color(0xFFFFFFFF), widget.color, 0.28)!,
+          color: AppColors.of(context).tint(widget.color),
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         ),
         child: Padding(
@@ -124,17 +125,20 @@ class _EventTimeSheetState extends State<EventTimeSheet> {
                       Navigator.of(context).pop(const EventTimePickResult());
                     },
                     color: Colors.transparent,
-                    pressedColor: const Color(0xFFFEE2E2),
+                    pressedColor: AppColors.of(context).tint(
+                      AppColors.of(context).danger,
+                      0.22,
+                    ),
                     borderRadius: BorderRadius.circular(10),
-                    child: const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                       child: Text(
                         AppStrings.timeClear,
                         style: TextStyle(
                           fontFamily: AppFonts.pretendard,
                           fontSize: 15,
                           fontWeight: FontWeight.w800,
-                          color: Color(0xFFEF4444),
+                          color: AppColors.of(context).danger,
                         ),
                       ),
                     ),
@@ -349,7 +353,7 @@ class _FlatWheelState extends State<_FlatWheel> {
                 height: 1,
                 color: selected
                     ? widget.selectedColor
-                    : const Color(0xFF9CA3AF),
+                    : AppColors.of(context).muted,
               ),
               child: Text(widget.labelAt(index)),
             ),

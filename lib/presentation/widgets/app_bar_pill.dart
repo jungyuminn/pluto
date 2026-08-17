@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:job_planner/core/theme/app_colors.dart';
 import 'package:job_planner/core/utils/press_bounce.dart';
+import 'package:job_planner/presentation/widgets/themed_asset.dart';
 
 class AppBarPill extends StatelessWidget {
   const AppBarPill({
@@ -17,27 +19,28 @@ class AppBarPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     return Center(
       child: DecoratedBox(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(999),
-          boxShadow: const [
+          boxShadow: [
             BoxShadow(
-              color: Color(0x14000000),
+              color: colors.shadow,
               blurRadius: 8,
-              offset: Offset(0, 2),
+              offset: const Offset(0, 2),
             ),
           ],
         ),
         child: PressBounce(
           onPressed: onPressed,
-          color: selected ? const Color(0xFFF1F5F9) : Colors.white,
-          pressedColor: const Color(0xFFE5E7EB),
+          color: selected ? colors.selected : colors.card,
+          pressedColor: colors.pressed,
           borderRadius: BorderRadius.circular(999),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            child: Image.asset(
-              asset,
+            child: ThemedAsset(
+              asset: asset,
               width: 18,
               height: 18,
               semanticLabel: label,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:job_planner/app_scope.dart';
+import 'package:job_planner/core/theme/app_colors.dart';
 import 'package:job_planner/domain/entities/calendar_event.dart';
 import 'package:job_planner/domain/entities/job_application.dart';
 import 'package:job_planner/presentation/screens/calendar/calendar_day_events.dart';
@@ -156,7 +157,7 @@ class _CalendarScreenState extends State<CalendarScreen>
 
     return Scaffold(
       resizeToAvoidBottomInset: false,
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.of(context).background,
       body: SafeArea(
         bottom: false,
         child: Padding(

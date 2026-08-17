@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:job_planner/core/constants/app_fonts.dart';
 import 'package:job_planner/core/constants/app_icons.dart';
+import 'package:job_planner/core/theme/app_colors.dart';
 import 'package:job_planner/core/utils/press_bounce.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/event_complete_button.dart';
 
@@ -45,7 +46,8 @@ class _DayEventLabelState extends State<DayEventLabel> {
 
   @override
   Widget build(BuildContext context) {
-    final background = Color.lerp(Colors.white, widget.color, 0.22)!;
+    final colors = AppColors.of(context);
+    final background = colors.tint(widget.color, 0.22);
 
     return PressBounce(
       onPressed: () {
@@ -98,12 +100,12 @@ class _DayEventLabelState extends State<DayEventLabel> {
                           maxLines: 1,
                           softWrap: false,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontFamily: AppFonts.pretendard,
                             fontSize: 12,
                             fontWeight: FontWeight.w700,
                             height: 1.15,
-                            color: Color(0xFF0F172A),
+                            color: colors.text,
                           ),
                         ),
                         if (widget.showCategory || widget.timeText != null) ...[
@@ -117,12 +119,12 @@ class _DayEventLabelState extends State<DayEventLabel> {
                                     maxLines: 1,
                                     softWrap: false,
                                     overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontFamily: AppFonts.pretendard,
                                       fontSize: 10,
                                       fontWeight: FontWeight.w600,
                                       height: 1.15,
-                                      color: Color(0xFF666666),
+                                      color: colors.hint,
                                     ),
                                   ),
                                 )

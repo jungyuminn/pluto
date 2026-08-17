@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:job_planner/core/constants/app_fonts.dart';
 import 'package:job_planner/core/constants/app_strings.dart';
+import 'package:job_planner/core/theme/app_colors.dart';
 
 class PositionField extends StatelessWidget {
   const PositionField({super.key, required this.controller});
@@ -9,19 +10,20 @@ class PositionField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     return TextField(
       controller: controller,
       textInputAction: TextInputAction.next,
       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
         fontFamily: AppFonts.pretendard,
         fontWeight: FontWeight.w700,
-        color: const Color(0xFF475569),
+        color: colors.secondary,
       ),
-      decoration: const InputDecoration(
+      decoration: InputDecoration(
         hintText: AppStrings.positionHint,
         hintStyle: TextStyle(
           fontFamily: AppFonts.pretendard,
-          color: Color(0xFF666666),
+          color: colors.hint,
           fontWeight: FontWeight.w700,
           fontSize: 16,
         ),

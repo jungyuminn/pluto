@@ -3,6 +3,7 @@ import 'package:job_planner/data/datasources/day_events_view_preference.dart';
 import 'package:job_planner/data/datasources/home_view_preference.dart';
 import 'package:job_planner/data/datasources/job_view_preference.dart';
 import 'package:job_planner/data/datasources/notification_preference.dart';
+import 'package:job_planner/data/datasources/theme_preference.dart';
 import 'package:job_planner/domain/usecases/add_calendar_event.dart';
 import 'package:job_planner/domain/usecases/add_event_category.dart';
 import 'package:job_planner/domain/usecases/delete_event_category.dart';
@@ -41,6 +42,7 @@ class AppScope extends InheritedWidget {
     required this.homeViewPreference,
     required this.dayEventsViewPreference,
     required this.notificationPreference,
+    required this.themePreference,
     required super.child,
   });
 
@@ -63,6 +65,7 @@ class AppScope extends InheritedWidget {
   final HomeViewPreference homeViewPreference;
   final DayEventsViewPreference dayEventsViewPreference;
   final NotificationPreference notificationPreference;
+  final ThemePreference themePreference;
 
   static AppScope of(BuildContext context) {
     final scope = context.dependOnInheritedWidgetOfExactType<AppScope>();
@@ -90,6 +93,7 @@ class AppScope extends InheritedWidget {
         jobViewPreference != oldWidget.jobViewPreference ||
         homeViewPreference != oldWidget.homeViewPreference ||
         dayEventsViewPreference != oldWidget.dayEventsViewPreference ||
-        notificationPreference != oldWidget.notificationPreference;
+        notificationPreference != oldWidget.notificationPreference ||
+        themePreference != oldWidget.themePreference;
   }
 }

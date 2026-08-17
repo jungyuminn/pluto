@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:job_planner/core/constants/app_icons.dart';
+import 'package:job_planner/core/theme/app_colors.dart';
 import 'package:job_planner/presentation/screens/shell/widgets/pill_nav_item.dart';
 import 'package:job_planner/presentation/screens/shell/widgets/sliding_nav_indicator.dart';
 
@@ -21,14 +22,15 @@ class PillBottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     final bottomInset = MediaQuery.paddingOf(context).bottom;
 
     return Padding(
       padding: EdgeInsets.only(bottom: 4 + bottomInset),
       child: Material(
-        color: Colors.white,
+        color: colors.navBar,
         elevation: 8,
-        shadowColor: Colors.black26,
+        shadowColor: colors.shadow,
         shape: const StadiumBorder(),
         child: SizedBox(
           width: 240,

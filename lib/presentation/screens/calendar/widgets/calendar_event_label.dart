@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:job_planner/core/constants/app_fonts.dart';
+import 'package:job_planner/core/theme/app_colors.dart';
 
 class CalendarEventLabel extends StatelessWidget {
   const CalendarEventLabel({
@@ -23,7 +24,8 @@ class CalendarEventLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final background = Color.lerp(Colors.white, color, isJob ? 0.12 : 0.22)!;
+    final background =
+        AppColors.of(context).tint(color, isJob ? 0.12 : 0.22);
     final radius = isJob ? 6.0 : 3.0;
 
     return SizedBox(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:job_planner/core/theme/app_colors.dart';
 import 'package:job_planner/presentation/theme/apply_status_colors.dart';
 import 'package:job_planner/presentation/screens/add_company/widgets/apply_status_dot.dart';
 
@@ -9,6 +10,7 @@ class ApplyStatusChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     final color = ApplyStatusColors.of(label);
 
     return Padding(
@@ -22,17 +24,17 @@ class ApplyStatusChip extends StatelessWidget {
           ],
           Text(
             label,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w700,
-              color: Color(0xFF334155),
+              color: colors.text,
             ),
           ),
           const SizedBox(width: 2),
-          const Icon(
+          Icon(
             Icons.keyboard_arrow_down,
             size: 14,
-            color: Color(0xFF64748B),
+            color: colors.secondary,
           ),
         ],
       ),

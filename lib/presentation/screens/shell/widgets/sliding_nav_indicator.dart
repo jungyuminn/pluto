@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:job_planner/core/theme/app_colors.dart';
 
 class SlidingNavIndicator extends StatelessWidget {
   const SlidingNavIndicator({
@@ -32,10 +33,10 @@ class SlidingNavIndicator extends StatelessWidget {
                 top: top,
                 width: width,
                 height: height,
-                child: const DecoratedBox(
+                child: DecoratedBox(
                   decoration: BoxDecoration(
-                    color: Color(0xFFE5E7EB),
-                    borderRadius: BorderRadius.all(Radius.circular(999)),
+                    color: AppColors.of(context).pressed,
+                    borderRadius: const BorderRadius.all(Radius.circular(999)),
                   ),
                 ),
               ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:job_planner/core/theme/app_colors.dart';
 import 'package:job_planner/core/utils/press_bounce.dart';
 
 class AddRoundChipButton extends StatelessWidget {
@@ -13,9 +14,10 @@ class AddRoundChipButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     return PressBounce(
-      color: const Color(0xFFF1F5F9),
-      pressedColor: const Color(0xFFE5E7EB),
+      color: colors.pressed,
+      pressedColor: colors.border,
       borderRadius: BorderRadius.circular(999),
       onPressed: onPressed,
       child: Padding(
@@ -23,7 +25,7 @@ class AddRoundChipButton extends StatelessWidget {
         child: Icon(
           icon,
           size: 14,
-          color: const Color(0xFF334155),
+          color: colors.text,
         ),
       ),
     );

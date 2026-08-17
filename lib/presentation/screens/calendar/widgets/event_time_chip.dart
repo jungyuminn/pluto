@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:job_planner/core/constants/app_fonts.dart';
 import 'package:job_planner/core/constants/app_icons.dart';
 import 'package:job_planner/core/constants/app_strings.dart';
+import 'package:job_planner/core/theme/app_colors.dart';
 import 'package:job_planner/core/utils/press_bounce.dart';
 import 'package:job_planner/domain/entities/calendar_event.dart';
 
@@ -30,8 +31,8 @@ class EventTimeChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return PressBounce(
       onPressed: onPressed,
-      color: Colors.white,
-      pressedColor: const Color(0xFFF1F5F9),
+      color: AppColors.of(context).card,
+      pressedColor: AppColors.of(context).pressed,
       borderRadius: BorderRadius.circular(999),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(8, 5, 10, 5),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:job_planner/core/theme/app_colors.dart';
 import 'package:job_planner/presentation/theme/apply_status_colors.dart';
 import 'package:job_planner/core/utils/press_bounce.dart';
 import 'package:job_planner/presentation/screens/add_company/widgets/apply_status_dot.dart';
@@ -15,6 +16,7 @@ class ApplyStatusMenuItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     final color = ApplyStatusColors.of(label);
 
     return PressBounce(
@@ -32,9 +34,9 @@ class ApplyStatusMenuItem extends StatelessWidget {
             ],
             Text(
               label,
-              style: const TextStyle(
+              style: TextStyle(
                 fontWeight: FontWeight.w700,
-                color: Color(0xFF0F172A),
+                color: colors.text,
               ),
             ),
           ],

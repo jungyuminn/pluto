@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:job_planner/core/constants/app_fonts.dart';
 import 'package:job_planner/core/constants/app_strings.dart';
+import 'package:job_planner/core/theme/app_colors.dart';
 
 class RoundNameField extends StatelessWidget {
   const RoundNameField({
@@ -14,6 +15,7 @@ class RoundNameField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     return TextField(
       controller: controller,
       focusNode: focusNode,
@@ -23,11 +25,11 @@ class RoundNameField extends StatelessWidget {
         fontFamily: AppFonts.pretendard,
         fontWeight: FontWeight.w700,
       ),
-      decoration: const InputDecoration(
+      decoration: InputDecoration(
         hintText: AppStrings.roundStageNameHint,
         hintStyle: TextStyle(
           fontFamily: AppFonts.pretendard,
-          color: Color(0xFF666666),
+          color: colors.hint,
           fontWeight: FontWeight.w600,
         ),
         border: InputBorder.none,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:job_planner/core/constants/app_strings.dart';
+import 'package:job_planner/core/theme/app_colors.dart';
 import 'package:job_planner/core/utils/press_bounce.dart';
 
 class AddCompanyButton extends StatelessWidget {
@@ -9,19 +10,20 @@ class AddCompanyButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     return PressBounce(
       onPressed: onPressed,
-      color: const Color(0xFFF2F3F7),
-      pressedColor: const Color(0xFFE5E7EB),
+      color: colors.pressed,
+      pressedColor: colors.border,
       borderRadius: BorderRadius.circular(12),
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 16),
         alignment: Alignment.center,
-        child: const Text(
+        child: Text(
           AppStrings.addCompany,
           style: TextStyle(
-            color: Color(0xFF666666),
+            color: colors.hint,
             fontWeight: FontWeight.w600,
           ),
         ),

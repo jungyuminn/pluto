@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:job_planner/core/constants/app_strings.dart';
+import 'package:job_planner/core/theme/app_colors.dart';
 import 'package:job_planner/core/utils/press_bounce.dart';
 
 Future<void> showMissingFieldsDialog(
@@ -23,20 +24,19 @@ class MissingFieldsDialog extends StatelessWidget {
   final String title;
   final String body;
 
-  static const _blue = Color(0xFF60A5FA);
-
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     return AlertDialog(
-      backgroundColor: Colors.white,
+      backgroundColor: colors.card,
       surfaceTintColor: Colors.transparent,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       title: Text(
         title,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 18,
           fontWeight: FontWeight.w800,
-          color: Color(0xFF0F172A),
+          color: colors.text,
         ),
       ),
       content: Column(
@@ -45,17 +45,17 @@ class MissingFieldsDialog extends StatelessWidget {
         children: [
           Text(
             body,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w600,
-              color: Color(0xFF64748B),
+              color: colors.secondary,
             ),
           ),
           const SizedBox(height: 20),
           PressBounce(
             onPressed: () => Navigator.of(context).pop(),
-            color: _blue,
-            pressedColor: Color.lerp(_blue, Colors.black, 0.16)!,
+            color: colors.accentBright,
+            pressedColor: Color.lerp(colors.accentBright, Colors.black, 0.16)!,
             borderRadius: BorderRadius.circular(14),
             child: const SizedBox(
               height: 48,

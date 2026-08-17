@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:job_planner/app_scope.dart';
 import 'package:job_planner/core/constants/app_fonts.dart';
 import 'package:job_planner/core/constants/app_strings.dart';
+import 'package:job_planner/core/theme/app_colors.dart';
 import 'package:job_planner/core/utils/swipe_to_delete.dart';
 import 'package:job_planner/domain/entities/calendar_event.dart';
 import 'package:job_planner/domain/entities/event_category.dart';
@@ -530,15 +531,16 @@ class _HomeDayCardState extends State<HomeDayCard> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colors.card,
         borderRadius: BorderRadius.circular(24),
-        boxShadow: const [
+        boxShadow: [
           BoxShadow(
-            color: Color(0x14000000),
+            color: colors.shadow,
             blurRadius: 8,
-            offset: Offset(0, 2),
+            offset: const Offset(0, 2),
           ),
         ],
       ),
@@ -549,24 +551,24 @@ class _HomeDayCardState extends State<HomeDayCard> {
           children: [
             Text(
               widget.title,
-              style: const TextStyle(
+              style: TextStyle(
                 fontFamily: AppFonts.pretendard,
                 fontSize: 18,
                 fontWeight: FontWeight.w800,
                 height: 1.1,
-                color: Color(0xFF0F172A),
+                color: colors.text,
               ),
             ),
             if (_dateLabel != null) ...[
               const SizedBox(height: 4),
               Text(
                 _dateLabel!,
-                style: const TextStyle(
+                style: TextStyle(
                   fontFamily: AppFonts.pretendard,
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
                   height: 1.2,
-                  color: Color(0xFF94A3B8),
+                  color: colors.muted,
                 ),
               ),
             ],
@@ -632,12 +634,12 @@ class _HomeDayCardState extends State<HomeDayCard> {
           height: 20,
           child: Text(
             item.headerName ?? '',
-            style: const TextStyle(
+            style: TextStyle(
               fontFamily: AppFonts.pretendard,
               fontSize: 14,
               fontWeight: FontWeight.w800,
               height: 1,
-              color: Color(0xFF0F172A),
+              color: AppColors.of(context).text,
             ),
           ),
         ),
@@ -664,12 +666,12 @@ class _HomeDayCardState extends State<HomeDayCard> {
               const SizedBox(width: 6),
               Text(
                 item.headerName ?? '',
-                style: const TextStyle(
+                style: TextStyle(
                   fontFamily: AppFonts.pretendard,
                   fontSize: 13,
                   fontWeight: FontWeight.w800,
                   height: 1,
-                  color: Color(0xFF0F172A),
+                  color: AppColors.of(context).text,
                 ),
               ),
             ],
@@ -759,14 +761,14 @@ class _HomeDayCardState extends State<HomeDayCard> {
               ),
             ),
           ),
-          childWhenDragging: const Padding(
-            padding: EdgeInsets.only(bottom: 10),
+          childWhenDragging: Padding(
+            padding: const EdgeInsets.only(bottom: 10),
             child: DecoratedBox(
               decoration: BoxDecoration(
-                color: Color(0xFFF1F5F9),
-                borderRadius: BorderRadius.all(Radius.circular(8)),
+                color: AppColors.of(context).pressed,
+                borderRadius: const BorderRadius.all(Radius.circular(8)),
               ),
-              child: SizedBox(height: 52, width: double.infinity),
+              child: const SizedBox(height: 52, width: double.infinity),
             ),
           ),
           child: body,

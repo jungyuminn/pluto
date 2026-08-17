@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:job_planner/core/theme/app_colors.dart';
 import 'package:job_planner/core/utils/press_bounce.dart';
 import 'package:job_planner/domain/entities/application_round.dart';
 import 'package:job_planner/presentation/screens/add_company/widgets/apply_status_chip.dart';
@@ -30,10 +31,11 @@ class RoundChipButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     final name = round.name.trim();
     return PressBounce(
-      color: round.isEmpty ? const Color(0xFFF1F5F9) : const Color(0xFFE2E8F0),
-      pressedColor: const Color(0xFFE5E7EB),
+      color: round.isEmpty ? colors.pressed : colors.border,
+      pressedColor: colors.border,
       borderRadius: BorderRadius.circular(999),
       onPressed: () => _open(context),
       child: ApplyStatusChip(label: name.isEmpty ? label : name),

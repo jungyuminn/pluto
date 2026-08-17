@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:job_planner/core/utils/press_bounce.dart';
+import 'package:job_planner/presentation/widgets/themed_asset.dart';
 
 class RoundActionIcon extends StatelessWidget {
   const RoundActionIcon({
@@ -21,7 +22,7 @@ class RoundActionIcon extends StatelessWidget {
       borderRadius: BorderRadius.circular(10),
       child: Padding(
         padding: const EdgeInsets.all(8),
-        child: Image.asset(asset, width: _size, height: _size),
+        child: ThemedAsset(asset: asset, width: _size, height: _size),
       ),
     );
   }

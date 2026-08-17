@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:job_planner/core/constants/app_strings.dart';
+import 'package:job_planner/core/theme/app_colors.dart';
 import 'package:job_planner/core/utils/press_bounce.dart';
 
 Future<bool> showDeleteCompanyDialog(
@@ -18,21 +19,19 @@ class DeleteCompanyDialog extends StatelessWidget {
 
   final String companyName;
 
-  static const _red = Color(0xFFEF4444);
-  static const _gray = Color(0xFFE2E8F0);
-
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     return AlertDialog(
-      backgroundColor: Colors.white,
+      backgroundColor: colors.card,
       surfaceTintColor: Colors.transparent,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-      title: const Text(
+      title: Text(
         AppStrings.deleteTitle,
         style: TextStyle(
           fontSize: 18,
           fontWeight: FontWeight.w800,
-          color: Color(0xFF0F172A),
+          color: colors.text,
         ),
       ),
       content: Column(
@@ -44,18 +43,18 @@ class DeleteCompanyDialog extends StatelessWidget {
               children: [
                 TextSpan(
                   text: companyName,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.w800,
-                    color: _red,
+                    color: colors.danger,
                   ),
                 ),
                 const TextSpan(text: ' ${AppStrings.deleteCompanyBody}'),
               ],
             ),
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w600,
-              color: Color(0xFF64748B),
+              color: colors.secondary,
             ),
           ),
           const SizedBox(height: 20),
@@ -64,10 +63,10 @@ class DeleteCompanyDialog extends StatelessWidget {
               Expanded(
                 child: PressBounce(
                   onPressed: () => Navigator.of(context).pop(false),
-                  color: _gray,
-                  pressedColor: Color.lerp(_gray, Colors.black, 0.12)!,
+                  color: colors.border,
+                  pressedColor: Color.lerp(colors.border, Colors.black, 0.12)!,
                   borderRadius: BorderRadius.circular(14),
-                  child: const SizedBox(
+                  child: SizedBox(
                     height: 48,
                     child: Center(
                       child: Text(
@@ -75,7 +74,7 @@ class DeleteCompanyDialog extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w800,
-                          color: Color(0xFF334155),
+                          color: colors.text,
                         ),
                       ),
                     ),
@@ -86,8 +85,8 @@ class DeleteCompanyDialog extends StatelessWidget {
               Expanded(
                 child: PressBounce(
                   onPressed: () => Navigator.of(context).pop(true),
-                  color: _red,
-                  pressedColor: Color.lerp(_red, Colors.black, 0.16)!,
+                  color: colors.danger,
+                  pressedColor: Color.lerp(colors.danger, Colors.black, 0.16)!,
                   borderRadius: BorderRadius.circular(14),
                   child: const SizedBox(
                     height: 48,

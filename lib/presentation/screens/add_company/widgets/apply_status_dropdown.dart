@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:job_planner/core/theme/app_colors.dart';
 import 'package:job_planner/presentation/screens/add_company/widgets/apply_status_menu_item.dart';
 
 class ApplyStatusDropdown extends StatelessWidget {
@@ -15,8 +16,9 @@ class ApplyStatusDropdown extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     return Material(
-      color: Colors.white,
+      color: colors.card,
       elevation: 8,
       shadowColor: const Color(0x33000000),
       borderRadius: BorderRadius.circular(16),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:job_planner/app_scope.dart';
 import 'package:job_planner/core/constants/app_strings.dart';
+import 'package:job_planner/core/theme/app_colors.dart';
 import 'package:job_planner/core/utils/press_bounce.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/calendar_filter_menu.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/category_picker_sheet.dart';
@@ -46,11 +47,11 @@ class CalendarMonthHeader extends StatelessWidget {
                 child: Text(
                   _title,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 36,
                     fontWeight: FontWeight.w800,
                     height: 1.1,
-                    color: Color(0xFF0F172A),
+                    color: AppColors.of(context).text,
                   ),
                 ),
               ),
@@ -269,29 +270,31 @@ class _CalendarMonthMenuButtonState extends State<CalendarMonthMenuButton>
       child: CompositedTransformTarget(
         link: _link,
         child: DecoratedBox(
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
-                color: Color(0x14000000),
+                color: AppColors.of(context).shadow,
                 blurRadius: 8,
-                offset: Offset(0, 2),
+                offset: const Offset(0, 2),
               ),
             ],
           ),
           child: PressBounce(
             onPressed: _toggle,
-            color: _portal.isShowing ? const Color(0xFFF1F5F9) : Colors.white,
-            pressedColor: const Color(0xFFE5E7EB),
+            color: _portal.isShowing
+                ? AppColors.of(context).pressed
+                : AppColors.of(context).card,
+            pressedColor: AppColors.of(context).border,
             borderRadius: BorderRadius.circular(999),
-            child: const SizedBox(
+            child: SizedBox(
               width: 40,
               height: 40,
               child: Center(
                 child: Icon(
                   Icons.more_horiz,
                   size: 22,
-                  color: Color(0xFF0F172A),
+                  color: AppColors.of(context).icon,
                 ),
               ),
             ),

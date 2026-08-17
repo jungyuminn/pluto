@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:job_planner/app_scope.dart';
 import 'package:job_planner/core/constants/app_icons.dart';
 import 'package:job_planner/core/constants/app_strings.dart';
+import 'package:job_planner/core/theme/app_colors.dart';
 import 'package:job_planner/core/utils/plain_text_editing_controller.dart';
 import 'package:job_planner/domain/entities/calendar_event.dart';
 import 'package:job_planner/domain/entities/event_category.dart';
@@ -393,7 +394,7 @@ class _AddEventFormState extends State<AddEventForm>
       curve: Curves.easeOutCubic,
       width: double.infinity,
       decoration: BoxDecoration(
-        color: Color.lerp(const Color(0xFFFFFFFF), _accent, 0.28)!,
+        color: AppColors.of(context).tint(_accent),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         boxShadow: const [
           BoxShadow(
@@ -445,7 +446,7 @@ class _AddEventFormState extends State<AddEventForm>
                           name: _categoryName ?? AppStrings.categoryAction,
                           color: _hasCategory
                               ? _accent
-                              : const Color(0xFF94A3B8),
+                              : AppColors.of(context).muted,
                           selected: _hasCategory,
                           onPressed: _pickCategory,
                         ),

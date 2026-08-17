@@ -10,6 +10,7 @@ import 'package:job_planner/data/datasources/home_view_preference.dart';
 import 'package:job_planner/data/datasources/job_view_preference.dart';
 import 'package:job_planner/data/datasources/job_application_local_datasource.dart';
 import 'package:job_planner/data/datasources/notification_preference.dart';
+import 'package:job_planner/data/datasources/theme_preference.dart';
 import 'package:job_planner/data/repositories/calendar_event_memory_repository.dart';
 import 'package:job_planner/data/repositories/calendar_event_repository_impl.dart';
 import 'package:job_planner/data/repositories/event_category_memory_repository.dart';
@@ -56,6 +57,7 @@ class JobPlannerApp extends StatelessWidget {
     this.homeViewPreference,
     this.dayEventsViewPreference,
     this.notificationPreference,
+    this.themePreference,
   });
 
   final GetJobApplications? getJobApplications;
@@ -77,6 +79,7 @@ class JobPlannerApp extends StatelessWidget {
   final HomeViewPreference? homeViewPreference;
   final DayEventsViewPreference? dayEventsViewPreference;
   final NotificationPreference? notificationPreference;
+  final ThemePreference? themePreference;
 
   @override
   Widget build(BuildContext context) {
@@ -127,6 +130,7 @@ class JobPlannerApp extends StatelessWidget {
           dayEventsViewPreference ?? DayEventsViewPreference(),
       notificationPreference:
           notificationPreference ?? NotificationPreference(),
+      themePreference: themePreference ?? ThemePreference(),
       child: const _JobPlannerMaterialApp(),
     );
   }
@@ -159,6 +163,7 @@ class _AppBootstrapState extends State<_AppBootstrap> {
   HomeViewPreference? _homeViewPreference;
   DayEventsViewPreference? _dayEventsViewPreference;
   NotificationPreference? _notificationPreference;
+  ThemePreference? _themePreference;
 
   @override
   void initState() {
@@ -198,6 +203,7 @@ class _AppBootstrapState extends State<_AppBootstrap> {
       _homeViewPreference = HomeViewPreference(prefs: prefs);
       _dayEventsViewPreference = DayEventsViewPreference(prefs: prefs);
       _notificationPreference = NotificationPreference(prefs: prefs);
+      _themePreference = ThemePreference(prefs: prefs);
     });
   }
 
@@ -222,6 +228,7 @@ class _AppBootstrapState extends State<_AppBootstrap> {
     final homeViewPreference = _homeViewPreference;
     final dayEventsViewPreference = _dayEventsViewPreference;
     final notificationPreference = _notificationPreference;
+    final themePreference = _themePreference;
 
     if (getApplications == null ||
         addApplication == null ||
@@ -241,7 +248,8 @@ class _AppBootstrapState extends State<_AppBootstrap> {
         jobViewPreference == null ||
         homeViewPreference == null ||
         dayEventsViewPreference == null ||
-        notificationPreference == null) {
+        notificationPreference == null ||
+        themePreference == null) {
       return const MaterialApp(
         debugShowCheckedModeBanner: false,
         home: Scaffold(body: Center(child: CircularProgressIndicator())),
@@ -268,6 +276,7 @@ class _AppBootstrapState extends State<_AppBootstrap> {
       homeViewPreference: homeViewPreference,
       dayEventsViewPreference: dayEventsViewPreference,
       notificationPreference: notificationPreference,
+      themePreference: themePreference,
       child: const _JobPlannerMaterialApp(),
     );
   }
@@ -278,18 +287,26 @@ class _JobPlannerMaterialApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: AppStrings.appName,
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.light,
-      locale: const Locale('ko', 'KR'),
-      supportedLocales: const [Locale('ko', 'KR')],
-      home: const ShellScreen(),
-      localizationsDelegates: const [
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-      ],
+    final theme = AppScope.of(context).themePreference;
+    return ListenableBuilder(
+      listenable: theme,
+      builder: (context, _) {
+        return MaterialApp(
+          title: AppStrings.appName,
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.light,
+          darkTheme: AppTheme.dark,
+          themeMode: theme.mode,
+          locale: const Locale('ko', 'KR'),
+          supportedLocales: const [Locale('ko', 'KR')],
+          home: const ShellScreen(),
+          localizationsDelegates: const [
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+        );
+      },
     );
   }
 }

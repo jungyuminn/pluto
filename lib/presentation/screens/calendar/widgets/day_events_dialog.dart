@@ -6,6 +6,7 @@ import 'package:job_planner/app_scope.dart';
 import 'package:job_planner/core/constants/app_fonts.dart';
 import 'package:job_planner/core/constants/app_icons.dart';
 import 'package:job_planner/core/constants/app_strings.dart';
+import 'package:job_planner/core/theme/app_colors.dart';
 import 'package:job_planner/core/utils/swipe_to_delete.dart';
 import 'package:job_planner/domain/entities/calendar_event.dart';
 import 'package:job_planner/domain/entities/event_category.dart';
@@ -104,6 +105,7 @@ class _DayEventsDialogState extends State<DayEventsDialog> {
   var _showTime = false;
   var _initialized = false;
   String? _draggingId;
+  final _reveals = <String, double>{};
 
   static const _eventExtent = 62.0;
   static const _headerExtent = 24.0;
@@ -159,10 +161,8 @@ class _DayEventsDialogState extends State<DayEventsDialog> {
     return 'D+${-days}';
   }
 
-  Color get _dDayColor {
-    return _daysFromToday < 0
-        ? const Color(0xFF60A5FA)
-        : const Color(0xFFEF4444);
+  Color _dDayColor(AppColors colors) {
+    return _daysFromToday < 0 ? colors.accent : colors.danger;
   }
 
   String? _timeText(CalendarEvent event) {
@@ -275,21 +275,38 @@ class _DayEventsDialogState extends State<DayEventsDialog> {
 
   void _syncItems(List<_ListEntry> next, {required bool animate}) {
     final oldIds = {for (final item in _items) item.id};
-    final inserted = next.any((item) => !oldIds.contains(item.id));
+    final appearing = <String>[];
+    for (final item in next) {
+      if (!animate || oldIds.contains(item.id)) {
+        _reveals[item.id] = 1;
+        continue;
+      }
+      _reveals[item.id] = 0;
+      appearing.add(item.id);
+    }
     final insertedRange = next.any(
-      (item) => !oldIds.contains(item.id) && (item.event?.isRange ?? false),
+      (item) => appearing.contains(item.id) && (item.event?.isRange ?? false),
     );
     setState(() => _items = next);
-    if (!inserted || !animate) return;
+    if (appearing.isEmpty || !animate) return;
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted || !_listController.hasClients) return;
-      _listController.animateTo(
-        insertedRange
-            ? _listController.position.minScrollExtent
-            : _listController.position.maxScrollExtent,
-        duration: const Duration(milliseconds: 280),
-        curve: Curves.easeOutCubic,
-      );
+      if (!mounted) return;
+      setState(() {
+        for (final id in appearing) {
+          _reveals[id] = 1;
+        }
+      });
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted || !_listController.hasClients) return;
+        _listController.animateTo(
+          insertedRange
+              ? _listController.position.minScrollExtent
+              : _listController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 280),
+          curve: Curves.easeOutCubic,
+        );
+      });
     });
   }
 
@@ -408,11 +425,15 @@ class _DayEventsDialogState extends State<DayEventsDialog> {
     return _eventExtent;
   }
 
+  double _layoutExtent(_ListEntry item) {
+    return _extent(item) * (_reveals[item.id] ?? 1);
+  }
+
   double _offsetOfEvent(String id) {
     var y = 0.0;
     for (final item in _items) {
       if (item.event?.id == id) return y;
-      y += _extent(item);
+      y += _layoutExtent(item);
     }
     return y;
   }
@@ -529,6 +550,7 @@ class _DayEventsDialogState extends State<DayEventsDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     final height =
         (MediaQuery.sizeOf(context).height * 0.56).clamp(420.0, 530.0).toDouble();
 
@@ -536,7 +558,7 @@ class _DayEventsDialogState extends State<DayEventsDialog> {
       context: context,
       removeBottom: true,
       child: Dialog(
-        backgroundColor: Colors.white,
+        backgroundColor: colors.card,
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         child: SizedBox(
@@ -556,10 +578,10 @@ class _DayEventsDialogState extends State<DayEventsDialog> {
                         children: [
                           Text(
                             _title,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w800,
-                              color: Color(0xFF0F172A),
+                              color: colors.text,
                             ),
                           ),
                           const SizedBox(height: 4),
@@ -569,7 +591,7 @@ class _DayEventsDialogState extends State<DayEventsDialog> {
                               fontSize: 11,
                               fontWeight: FontWeight.w700,
                               height: 1,
-                              color: _dDayColor,
+                              color: _dDayColor(colors),
                             ),
                           ),
                         ],
@@ -608,15 +630,17 @@ class _DayEventsDialogState extends State<DayEventsDialog> {
     final tops = <double>[];
     for (final item in _items) {
       tops.add(height);
-      height += _extent(item);
+      height += _layoutExtent(item);
     }
     return SingleChildScrollView(
       controller: _listController,
       physics: _draggingId == null
           ? const ClampingScrollPhysics()
           : const NeverScrollableScrollPhysics(),
-      child: SizedBox(
+      child: AnimatedContainer(
         key: _listBoxKey,
+        duration: _slotAnim,
+        curve: Curves.easeOutCubic,
         height: height,
         child: Stack(
           clipBehavior: Clip.none,
@@ -629,8 +653,18 @@ class _DayEventsDialogState extends State<DayEventsDialog> {
                 top: tops[i],
                 left: 0,
                 right: 0,
-                height: _extent(_items[i]),
-                child: _tile(_items[i]),
+                height: _layoutExtent(_items[i]),
+                child: ClipRect(
+                  child: AnimatedOpacity(
+                    duration: _slotAnim,
+                    curve: Curves.easeOutCubic,
+                    opacity: _reveals[_items[i].id] ?? 1,
+                    child: IgnorePointer(
+                      ignoring: (_reveals[_items[i].id] ?? 1) < 1,
+                      child: _tile(_items[i]),
+                    ),
+                  ),
+                ),
               ),
           ],
         ),
@@ -663,12 +697,12 @@ class _DayEventsDialogState extends State<DayEventsDialog> {
                   item.headerName ?? '',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontFamily: AppFonts.pretendard,
                     fontSize: 13,
                     fontWeight: FontWeight.w800,
                     height: 1,
-                    color: Color(0xFF0F172A),
+                    color: AppColors.of(context).text,
                   ),
                 ),
               ),
@@ -755,14 +789,14 @@ class _DayEventsDialogState extends State<DayEventsDialog> {
               ),
             ),
           ),
-          childWhenDragging: const Padding(
-            padding: EdgeInsets.only(bottom: 10),
+          childWhenDragging: Padding(
+            padding: const EdgeInsets.only(bottom: 10),
             child: DecoratedBox(
               decoration: BoxDecoration(
-                color: Color(0xFFF1F5F9),
-                borderRadius: BorderRadius.all(Radius.circular(8)),
+                color: AppColors.of(context).pressed,
+                borderRadius: const BorderRadius.all(Radius.circular(8)),
               ),
-              child: SizedBox(height: 52, width: double.infinity),
+              child: const SizedBox(height: 52, width: double.infinity),
             ),
           ),
           child: body,

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:job_planner/core/theme/app_colors.dart';
 import 'package:job_planner/core/utils/press_bounce.dart';
+import 'package:job_planner/presentation/widgets/themed_asset.dart';
 
 class AppBarIconAction {
   const AppBarIconAction({
@@ -22,15 +24,16 @@ class AppBarIconGroup extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colors.card,
         borderRadius: BorderRadius.circular(999),
-        boxShadow: const [
+        boxShadow: [
           BoxShadow(
-            color: Color(0x14000000),
+            color: colors.shadow,
             blurRadius: 8,
-            offset: Offset(0, 2),
+            offset: const Offset(0, 2),
           ),
         ],
       ),
@@ -54,15 +57,16 @@ class _IconButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     return PressBounce(
       onPressed: action.onPressed,
-      color: action.selected ? const Color(0xFFF1F5F9) : Colors.transparent,
-      pressedColor: const Color(0xFFE5E7EB),
+      color: action.selected ? colors.selected : Colors.transparent,
+      pressedColor: colors.pressed,
       borderRadius: BorderRadius.circular(999),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        child: Image.asset(
-          action.asset,
+        child: ThemedAsset(
+          asset: action.asset,
           width: 18,
           height: 18,
           semanticLabel: action.label,

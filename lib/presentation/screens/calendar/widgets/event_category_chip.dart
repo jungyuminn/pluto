@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:job_planner/core/constants/app_fonts.dart';
+import 'package:job_planner/core/theme/app_colors.dart';
 import 'package:job_planner/core/utils/press_bounce.dart';
 
 class EventCategoryChip extends StatelessWidget {
@@ -22,8 +23,8 @@ class EventCategoryChip extends StatelessWidget {
       constraints: const BoxConstraints(maxWidth: 140),
       child: PressBounce(
         onPressed: onPressed,
-        color: Colors.white,
-        pressedColor: const Color(0xFFF1F5F9),
+        color: AppColors.of(context).card,
+        pressedColor: AppColors.of(context).pressed,
         borderRadius: BorderRadius.circular(999),
         child: Padding(
           padding: const EdgeInsets.fromLTRB(8, 5, 10, 5),

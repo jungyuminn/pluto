@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:job_planner/core/theme/app_colors.dart';
 import 'package:job_planner/core/utils/press_bounce.dart';
 import 'package:job_planner/presentation/screens/add_company/widgets/apply_status_chip.dart';
 import 'package:job_planner/presentation/screens/add_company/widgets/apply_status_dropdown.dart';
@@ -75,6 +76,7 @@ class _ApplyStatusPickerState extends State<ApplyStatusPicker>
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     return OverlayPortal(
       controller: _portal,
       overlayChildBuilder: (context) {
@@ -115,8 +117,8 @@ class _ApplyStatusPickerState extends State<ApplyStatusPicker>
       child: CompositedTransformTarget(
         link: _link,
         child: PressBounce(
-          color: const Color(0xFFF1F5F9),
-          pressedColor: const Color(0xFFE5E7EB),
+          color: colors.pressed,
+          pressedColor: colors.border,
           borderRadius: BorderRadius.circular(999),
           onPressed: _toggle,
           child: ApplyStatusChip(label: widget.value),

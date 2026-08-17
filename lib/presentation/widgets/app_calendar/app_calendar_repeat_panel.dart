@@ -3,6 +3,7 @@ import 'package:job_planner/core/calendar/repeat_dates.dart';
 import 'package:job_planner/core/constants/app_fonts.dart';
 import 'package:job_planner/core/constants/app_icons.dart';
 import 'package:job_planner/core/constants/app_strings.dart';
+import 'package:job_planner/core/theme/app_colors.dart';
 import 'package:job_planner/core/utils/press_bounce.dart';
 
 class AppCalendarRepeatPanel extends StatelessWidget {
@@ -39,7 +40,7 @@ class AppCalendarRepeatPanel extends StatelessWidget {
 
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.of(context).card,
         borderRadius: BorderRadius.circular(20),
       ),
       child: Padding(
@@ -116,6 +117,7 @@ class _RepeatRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 16),
       child: Row(
@@ -125,22 +127,22 @@ class _RepeatRow extends StatelessWidget {
             height: 22,
             child: iconAsset != null
                 ? ColorFiltered(
-                    colorFilter: const ColorFilter.mode(
-                      Color(0xFF0F172A),
+                    colorFilter: ColorFilter.mode(
+                      colors.icon,
                       BlendMode.srcIn,
                     ),
                     child: Image.asset(iconAsset!, width: 20, height: 20),
                   )
-                : Icon(icon, size: 22, color: const Color(0xFF0F172A)),
+                : Icon(icon, size: 22, color: colors.icon),
           ),
           const SizedBox(width: 10),
           Text(
             label,
-            style: const TextStyle(
+            style: TextStyle(
               fontFamily: AppFonts.pretendard,
               fontSize: 15,
               fontWeight: FontWeight.w700,
-              color: Color(0xFF0F172A),
+              color: colors.text,
             ),
           ),
           const Spacer(),
@@ -162,6 +164,7 @@ class _WeekdayRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     return Padding(
       padding: const EdgeInsets.only(bottom: 12, top: 8),
       child: Row(
@@ -183,7 +186,7 @@ class _WeekdayRow extends StatelessWidget {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: selected.contains(i)
-                          ? const Color(0xFF3F3F3F)
+                          ? colors.icon
                           : Colors.transparent,
                     ),
                     child: Text(
@@ -194,7 +197,7 @@ class _WeekdayRow extends StatelessWidget {
                         fontWeight: FontWeight.w700,
                         color: selected.contains(i)
                             ? Colors.white
-                            : const Color(0xFF0F172A),
+                            : colors.text,
                       ),
                     ),
                   ),
@@ -214,22 +217,23 @@ class _ChevronLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(
           label,
-          style: const TextStyle(
+          style: TextStyle(
             fontFamily: AppFonts.pretendard,
             fontSize: 15,
             fontWeight: FontWeight.w700,
-            color: Color(0xFF0F172A),
+            color: colors.text,
           ),
         ),
-        const Icon(
+        Icon(
           Icons.keyboard_arrow_down_rounded,
           size: 22,
-          color: Color(0xFF94A3B8),
+          color: colors.muted,
         ),
       ],
     );
@@ -365,7 +369,7 @@ class _ChevronMenuState<T> extends State<_ChevronMenu<T>>
                         alignment: Alignment.bottomRight,
                         scale: _scale,
                         child: Material(
-                          color: Colors.white,
+                          color: AppColors.of(context).card,
                           elevation: 8,
                           shadowColor: const Color(0x33000000),
                           borderRadius: BorderRadius.circular(14),
@@ -385,9 +389,11 @@ class _ChevronMenuState<T> extends State<_ChevronMenu<T>>
                               itemCount: widget.items.length,
                               itemBuilder: (context, index) {
                                 final item = widget.items[index];
+                                final colors = AppColors.of(context);
                                 return PressBounce(
                                   onPressed: () => _select(item.$1),
                                   pressedScale: 0.98,
+                                  pressedColor: colors.pressed,
                                   borderRadius: BorderRadius.circular(10),
                                   child: Padding(
                                     padding: const EdgeInsets.symmetric(
@@ -396,11 +402,11 @@ class _ChevronMenuState<T> extends State<_ChevronMenu<T>>
                                     ),
                                     child: Text(
                                       item.$2,
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                         fontFamily: AppFonts.pretendard,
                                         fontSize: 14,
                                         fontWeight: FontWeight.w700,
-                                        color: Color(0xFF0F172A),
+                                        color: colors.text,
                                       ),
                                     ),
                                   ),
@@ -424,7 +430,7 @@ class _ChevronMenuState<T> extends State<_ChevronMenu<T>>
           onPressed: _toggle,
           pressedScale: 0.99,
           color: Colors.transparent,
-          pressedColor: const Color(0xFFF8FAFC),
+          pressedColor: AppColors.of(context).pressed,
           borderRadius: BorderRadius.circular(12),
           child: widget.child ?? _ChevronLabel(label: widget.label),
         ),

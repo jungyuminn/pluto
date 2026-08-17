@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:job_planner/core/constants/app_strings.dart';
+import 'package:job_planner/core/theme/app_colors.dart';
 import 'package:job_planner/core/utils/open_local_file.dart';
 import 'package:job_planner/core/utils/press_bounce.dart';
 import 'package:job_planner/domain/entities/application_round.dart';
@@ -79,8 +80,9 @@ class _CompanyCardState extends State<CompanyCard>
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     final accent = ApplyStatusColors.of(application.applyStatus) ??
-        const Color(0xFF3B82F6);
+        colors.accent;
     final rejected = ApplyStatus.isRejected(application.applyStatus);
     final dDay = rejected ? null : application.upcomingDDay();
     final compact = widget.compact;
@@ -90,7 +92,7 @@ class _CompanyCardState extends State<CompanyCard>
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Color(rejected ? 0x0A000000 : 0x14000000),
+            color: colors.shadow,
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -105,8 +107,8 @@ class _CompanyCardState extends State<CompanyCard>
           widget.onPressed?.call();
         },
         onLongPressed: widget.onLongPressed,
-        color: rejected ? const Color(0xFFF1F5F9) : Colors.white,
-        pressedColor: rejected ? const Color(0xFFE2E8F0) : const Color(0xFFF1F5F9),
+        color: rejected ? colors.pressed : colors.card,
+        pressedColor: colors.border,
         borderRadius: BorderRadius.circular(16),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 280),
@@ -118,7 +120,7 @@ class _CompanyCardState extends State<CompanyCard>
           ),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xFFE2E8F0)),
+            border: Border.all(color: colors.border),
           ),
           child: Opacity(
             opacity: rejected ? 0.48 : 1,
@@ -130,10 +132,10 @@ class _CompanyCardState extends State<CompanyCard>
                     padding: const EdgeInsets.only(bottom: 2),
                     child: Text(
                       dDay == 0 ? 'D-Day' : 'D-$dDay',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.w800,
-                        color: Color(0xFFEF4444),
+                        color: AppColors.of(context).danger,
                       ),
                     ),
                   ),
@@ -199,10 +201,10 @@ class _CompanyCardState extends State<CompanyCard>
             child: Text(
               ' ($position)',
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
-                color: Color(0xFF64748B),
+                color: AppColors.of(context).secondary,
               ),
             ),
           ),
@@ -254,11 +256,11 @@ class _CompanyCardState extends State<CompanyCard>
 
     return TableRow(
       children: [
-        const Padding(
-          padding: EdgeInsets.only(right: 12, bottom: 6),
+        Padding(
+          padding: const EdgeInsets.only(right: 12, bottom: 6),
           child: Text(
             AppStrings.colCoverLetter,
-            style: TextStyle(color: Color(0xFF64748B), fontSize: 13),
+            style: TextStyle(color: AppColors.of(context).secondary, fontSize: 13),
           ),
         ),
         Padding(
@@ -272,12 +274,12 @@ class _CompanyCardState extends State<CompanyCard>
               onTap: canOpen ? _openCoverLetter : null,
               child: Text(
                 fileName,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
-                  color: Color(0xFF2563EB),
+                  color: AppColors.of(context).accent,
                   decoration: TextDecoration.underline,
-                  decorationColor: Color(0xFF2563EB),
+                  decorationColor: AppColors.of(context).accent,
                 ),
               ),
             ),
@@ -311,7 +313,8 @@ class _CompanyCardState extends State<CompanyCard>
         ? AppStrings.emptyValue
         : value;
     final empty = text == AppStrings.emptyValue;
-    const muted = Color(0xFF94A3B8);
+    final muted = AppColors.of(context).muted;
+    final colors = AppColors.of(context);
     return TableRow(
       children: [
         Padding(
@@ -319,7 +322,7 @@ class _CompanyCardState extends State<CompanyCard>
           child: Text(
             label,
             style: TextStyle(
-              color: struck ? muted : const Color(0xFF64748B),
+              color: struck ? muted : colors.secondary,
               fontSize: 13,
               decoration: struck ? TextDecoration.lineThrough : TextDecoration.none,
               decorationColor: muted,
@@ -333,7 +336,7 @@ class _CompanyCardState extends State<CompanyCard>
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w600,
-              color: empty || struck ? muted : const Color(0xFF0F172A),
+              color: empty || struck ? muted : colors.text,
               decoration: struck ? TextDecoration.lineThrough : TextDecoration.none,
               decorationColor: muted,
             ),

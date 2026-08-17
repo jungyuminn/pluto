@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:job_planner/core/calendar/month_grid.dart';
+import 'package:job_planner/core/theme/app_colors.dart';
 import 'package:job_planner/core/utils/press_bounce.dart';
 
 class CalendarDayCell extends StatelessWidget {
@@ -33,18 +34,16 @@ class CalendarDayCell extends StatelessWidget {
 
   static const _sunday = Color(0xFFEF4444);
   static const _saturday = Color(0xFF60A5FA);
-  static const _weekday = Color(0xFF0F172A);
-  static const _outside = Color(0xFFD1D5DB);
   static const _outsideHoliday = Color(0xFFF0A0A0);
   static const _today = Color(0xFF0088FF);
 
-  Color get _color {
+  Color _colorOf(AppColors colors) {
     if (!day.inMonth) {
-      return day.isHoliday ? _outsideHoliday : _outside;
+      return day.isHoliday ? _outsideHoliday : colors.outside;
     }
     if (day.isHoliday || day.isSunday) return _sunday;
     if (day.isSaturday) return _saturday;
-    return _weekday;
+    return colors.text;
   }
 
   Rect _originOf(BuildContext context) {
@@ -58,17 +57,16 @@ class CalendarDayCell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = _color;
+    final colors = AppColors.of(context);
+    final color = _colorOf(colors);
     final holiday = day.holidayName;
     final today = day.isToday;
 
     return PressBounce(
       onPressed: onPressed == null ? () {} : () => onPressed!(_originOf(context)),
       pressedScale: 0.96,
-      color: inRange ? const Color(0xFFDBEAFE) : Colors.transparent,
-      pressedColor: inRange
-          ? const Color(0xFFBFDBFE)
-          : const Color(0xFFF1F5F9),
+      color: inRange ? colors.rangeFill : Colors.transparent,
+      pressedColor: inRange ? colors.rangePressed : colors.pressed,
       borderRadius: BorderRadius.circular(12),
       child: Padding(
         padding: const EdgeInsets.only(top: dateTop),

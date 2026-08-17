@@ -12,6 +12,7 @@ import 'package:job_planner/presentation/screens/add_company/widgets/missing_fie
 import 'package:job_planner/presentation/screens/add_company/widgets/position_field.dart';
 import 'package:job_planner/presentation/screens/add_company/widgets/round_chip_row.dart';
 import 'package:job_planner/presentation/screens/add_company/widgets/save_company_button.dart';
+import 'package:job_planner/core/theme/app_colors.dart';
 import 'package:job_planner/presentation/theme/apply_status_colors.dart';
 
 class AddCompanyForm extends StatefulWidget {
@@ -120,7 +121,10 @@ class _AddCompanyFormViewState extends State<AddCompanyForm> {
       curve: Curves.easeOutCubic,
       width: double.infinity,
       decoration: BoxDecoration(
-        color: ApplyStatusColors.sheetOf(_applyStatusChipValue),
+        color: ApplyStatusColors.sheetOf(
+          _applyStatusChipValue,
+          base: AppColors.of(context).card,
+        ),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         boxShadow: const [
           BoxShadow(

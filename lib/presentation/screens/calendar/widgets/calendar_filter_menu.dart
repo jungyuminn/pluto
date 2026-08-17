@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:job_planner/core/constants/app_fonts.dart';
 import 'package:job_planner/core/constants/app_icons.dart';
 import 'package:job_planner/core/constants/app_strings.dart';
+import 'package:job_planner/core/theme/app_colors.dart';
 import 'package:job_planner/core/utils/press_bounce.dart';
 
 class CalendarOverflowMenu extends StatelessWidget {
@@ -132,7 +133,7 @@ class _MenuCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.white,
+      color: AppColors.of(context).card,
       elevation: 8,
       shadowColor: const Color(0x33000000),
       borderRadius: BorderRadius.circular(18),
@@ -179,17 +180,17 @@ class _MenuItem extends StatelessWidget {
           child: Row(
             children: [
               if (leading != null) ...[
-                Icon(leading, size: 22, color: const Color(0xFF0F172A)),
+                Icon(leading, size: 22, color: AppColors.of(context).icon),
                 const SizedBox(width: 6),
               ],
               Expanded(
                 child: Text(
                   label,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontFamily: AppFonts.pretendard,
                     fontSize: 16,
                     fontWeight: FontWeight.w500,
-                    color: Color(0xFF0F172A),
+                    color: AppColors.of(context).text,
                   ),
                 ),
               ),
@@ -198,8 +199,8 @@ class _MenuItem extends StatelessWidget {
                 RotatedBox(
                   quarterTurns: trailingQuarterTurns,
                   child: ColorFiltered(
-                    colorFilter: const ColorFilter.mode(
-                      Color(0xFF0F172A),
+                    colorFilter: ColorFilter.mode(
+                      AppColors.of(context).icon,
                       BlendMode.srcIn,
                     ),
                     child: Image.asset(
@@ -243,11 +244,11 @@ class _FilterItem extends StatelessWidget {
                 onTap: () => onChanged(!checked),
                 child: Text(
                   label,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontFamily: AppFonts.pretendard,
                     fontSize: 16,
                     fontWeight: FontWeight.w500,
-                    color: Color(0xFF0F172A),
+                    color: AppColors.of(context).text,
                   ),
                 ),
               ),
@@ -258,7 +259,7 @@ class _FilterItem extends StatelessWidget {
               child: FittedBox(
                 child: CupertinoSwitch(
                   value: checked,
-                  activeTrackColor: const Color(0xFF40A6FF),
+                  activeTrackColor: AppColors.of(context).accentBright,
                   onChanged: onChanged,
                 ),
               ),

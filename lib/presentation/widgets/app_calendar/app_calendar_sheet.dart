@@ -4,6 +4,7 @@ import 'package:job_planner/core/calendar/repeat_dates.dart';
 import 'package:job_planner/core/constants/app_fonts.dart';
 import 'package:job_planner/core/constants/app_icons.dart';
 import 'package:job_planner/core/constants/app_strings.dart';
+import 'package:job_planner/core/theme/app_colors.dart';
 import 'package:job_planner/core/utils/press_bounce.dart';
 import 'package:job_planner/presentation/screens/add_company/widgets/save_company_button.dart';
 import 'package:job_planner/presentation/widgets/app_calendar/app_calendar_repeat_panel.dart';
@@ -72,12 +73,10 @@ class AppCalendarSheet extends StatefulWidget {
 
 class _AppCalendarSheetState extends State<AppCalendarSheet> {
   static const _initialPage = 12000;
-  static const _todayFill = Color(0xFFD7DDE6);
-  static const _red = Color(0xFFEF4444);
   static const _pickerBodyHeight = 352.0;
 
   Color get _accent => widget.color;
-  Color get _sheet => Color.lerp(const Color(0xFFFFFFFF), _accent, 0.28)!;
+  Color _sheetOf(BuildContext context) => AppColors.of(context).tint(_accent);
 
   late final DateTime _baseMonth;
   late final PageController _pages;
@@ -320,7 +319,7 @@ class _AppCalendarSheetState extends State<AppCalendarSheet> {
       color: Colors.transparent,
       child: DecoratedBox(
         decoration: BoxDecoration(
-          color: _sheet,
+          color: _sheetOf(context),
           borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
         ),
         child: Padding(
@@ -376,12 +375,12 @@ class _AppCalendarSheetState extends State<AppCalendarSheet> {
                               padding: const EdgeInsets.only(left: 8),
                               child: Text(
                                 '${_visibleMonth.year}${AppStrings.yearSuffix} ${_visibleMonth.month}${AppStrings.monthSuffix}',
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontFamily: AppFonts.pretendard,
                                   fontSize: 22,
                                   fontWeight: FontWeight.w800,
                                   height: 1.1,
-                                  color: Color(0xFF0F172A),
+                                  color: AppColors.of(context).text,
                                 ),
                               ),
                             ),
@@ -431,7 +430,7 @@ class _SheetHandle extends StatelessWidget {
         width: 40,
         height: 4,
         decoration: BoxDecoration(
-          color: const Color(0xFFC5CDD8),
+          color: AppColors.of(context).muted,
           borderRadius: BorderRadius.circular(999),
         ),
       ),
@@ -454,6 +453,7 @@ class _HeaderBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final danger = AppColors.of(context).danger;
     return Row(
       children: [
         _CircleButton(
@@ -465,19 +465,19 @@ class _HeaderBar extends StatelessWidget {
               clipBehavior: Clip.none,
               children: [
                 ColorFiltered(
-                  colorFilter: const ColorFilter.mode(
-                    _AppCalendarSheetState._red,
+                  colorFilter: ColorFilter.mode(
+                    danger,
                     BlendMode.srcIn,
                   ),
                   child: Image.asset(AppIcons.calendar, width: 22, height: 22),
                 ),
-                const Positioned(
+                Positioned(
                   right: -3,
                   bottom: -3,
                   child: Icon(
                     Icons.close,
                     size: 13,
-                    color: _AppCalendarSheetState._red,
+                    color: danger,
                   ),
                 ),
               ],
@@ -505,21 +505,22 @@ class _CircleButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     return DecoratedBox(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         shape: BoxShape.circle,
         boxShadow: [
           BoxShadow(
-            color: Color(0x14000000),
+            color: colors.shadow,
             blurRadius: 8,
-            offset: Offset(0, 2),
+            offset: const Offset(0, 2),
           ),
         ],
       ),
       child: PressBounce(
         onPressed: onPressed,
-        color: Colors.white,
-        pressedColor: const Color(0xFFF1F5F9),
+        color: colors.card,
+        pressedColor: colors.pressed,
         borderRadius: BorderRadius.circular(999),
         child: SizedBox(
           width: 44,
@@ -568,10 +569,10 @@ class _ModeTabs extends StatelessWidget {
                 top: (constraints.maxHeight - _pillHeight) / 2,
                 width: pillWidth,
                 height: _pillHeight,
-                child: const DecoratedBox(
+                child: DecoratedBox(
                   decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.all(Radius.circular(999)),
+                    color: AppColors.of(context).card,
+                    borderRadius: const BorderRadius.all(Radius.circular(999)),
                   ),
                 ),
               ),
@@ -592,8 +593,8 @@ class _ModeTabs extends StatelessWidget {
                               fontSize: 14,
                               fontWeight: FontWeight.w700,
                               color: i == index
-                                  ? const Color(0xFF5A6B80)
-                                  : const Color(0xFF8B95A3),
+                                  ? AppColors.of(context).secondary
+                                  : AppColors.of(context).muted,
                             ),
                             child: Text(_items[i].$2),
                           ),
@@ -622,11 +623,11 @@ class _WeekdayRow extends StatelessWidget {
             child: Text(
               label,
               textAlign: TextAlign.center,
-              style: const TextStyle(
+              style: TextStyle(
                 fontFamily: AppFonts.pretendard,
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
-                color: Color(0xFF0F172A),
+                color: AppColors.of(context).text,
               ),
             ),
           ),
@@ -721,6 +722,7 @@ class _DayCell extends StatelessWidget {
   Widget build(BuildContext context) {
     if (!day.inMonth) return const SizedBox.expand();
 
+    final colors = AppColors.of(context);
     final spanStart = rangeStart && rangeEnd;
     final showBar = (inRange || rangeStart || rangeEnd) && !spanStart;
     final circleSelected = selected;
@@ -733,11 +735,12 @@ class _DayCell extends StatelessWidget {
       circleColor = Colors.transparent;
       foreground = accent;
     } else if (day.isToday) {
-      circleColor = _AppCalendarSheetState._todayFill;
-      foreground = const Color(0xFF0F172A);
+      circleColor =
+          colors.isDark ? colors.pressed : const Color(0xFFD7DDE6);
+      foreground = colors.text;
     } else {
       circleColor = Colors.transparent;
-      foreground = const Color(0xFF0F172A);
+      foreground = colors.text;
     }
 
     final barFill = accent.withValues(alpha: 0.22);

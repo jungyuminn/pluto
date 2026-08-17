@@ -4,6 +4,7 @@ import 'package:job_planner/app_scope.dart';
 import 'package:job_planner/core/constants/app_fonts.dart';
 import 'package:job_planner/core/constants/app_icons.dart';
 import 'package:job_planner/core/constants/app_strings.dart';
+import 'package:job_planner/core/theme/app_colors.dart';
 import 'package:job_planner/core/utils/fade_in.dart';
 import 'package:job_planner/core/utils/korean_search.dart';
 import 'package:job_planner/core/utils/plain_text_editing_controller.dart';
@@ -13,6 +14,7 @@ import 'package:job_planner/presentation/screens/add_company/widgets/missing_fie
 import 'package:job_planner/presentation/screens/job/widgets/company_list.dart';
 import 'package:job_planner/presentation/screens/job/widgets/delete_company_dialog.dart';
 import 'package:job_planner/presentation/widgets/app_bar_icon_group.dart';
+import 'package:job_planner/presentation/widgets/themed_asset.dart';
 
 class JobScreen extends StatefulWidget {
   const JobScreen({super.key});
@@ -171,13 +173,13 @@ class _JobScreenState extends State<JobScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       resizeToAvoidBottomInset: false,
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: AppColors.of(context).background,
       appBar: AppBar(
-        backgroundColor: const Color(0xFFF8FAFC),
+        backgroundColor: AppColors.of(context).background,
         surfaceTintColor: Colors.transparent,
         titleSpacing: 8,
-        title: Image.asset(
-          AppIcons.jobLogo,
+        title: ThemedAsset(
+          asset: AppIcons.jobLogo,
           height: 120,
           semanticLabel: AppStrings.jobScreenTitle,
         ),
@@ -241,13 +243,13 @@ class _JobScreenState extends State<JobScreen>
                           ),
                           decoration: InputDecoration(
                             hintText: AppStrings.searchHint,
-                            hintStyle: const TextStyle(
+                            hintStyle: TextStyle(
                               fontFamily: AppFonts.pretendard,
-                              color: Color(0xFF94A3B8),
+                              color: AppColors.of(context).muted,
                               fontWeight: FontWeight.w600,
                             ),
                             filled: true,
-                            fillColor: Colors.white,
+                            fillColor: AppColors.of(context).card,
                             isDense: true,
                             contentPadding: const EdgeInsets.symmetric(
                               horizontal: 16,

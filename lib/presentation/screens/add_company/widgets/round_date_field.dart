@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:job_planner/core/constants/app_fonts.dart';
 import 'package:job_planner/core/constants/app_icons.dart';
+import 'package:job_planner/core/theme/app_colors.dart';
 import 'package:job_planner/presentation/screens/add_company/widgets/round_action_icon.dart';
 import 'package:job_planner/presentation/widgets/app_calendar/app_calendar.dart';
 
@@ -48,7 +49,7 @@ class RoundDateField extends StatelessWidget {
         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
           fontFamily: AppFonts.pretendard,
           fontWeight: FontWeight.w700,
-          color: const Color(0xFF475569),
+          color: AppColors.of(context).secondary,
           fontSize: 16,
         ),
       ),

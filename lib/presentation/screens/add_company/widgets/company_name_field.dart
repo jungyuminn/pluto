@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:job_planner/core/constants/app_fonts.dart';
 import 'package:job_planner/core/constants/app_strings.dart';
+import 'package:job_planner/core/theme/app_colors.dart';
 
 class CompanyNameField extends StatelessWidget {
   const CompanyNameField({
@@ -16,6 +17,7 @@ class CompanyNameField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     return TextField(
       controller: controller,
       focusNode: focusNode,
@@ -26,11 +28,11 @@ class CompanyNameField extends StatelessWidget {
         fontWeight: FontWeight.w700,
         fontSize: 20,
       ),
-      decoration: const InputDecoration(
+      decoration: InputDecoration(
         hintText: AppStrings.companyNameHint,
         hintStyle: TextStyle(
           fontFamily: AppFonts.pretendard,
-          color: Color(0xFF666666),
+          color: colors.hint,
           fontWeight: FontWeight.w600,
           fontSize: 20,
         ),

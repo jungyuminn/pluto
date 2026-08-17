@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:job_planner/core/constants/app_strings.dart';
+import 'package:job_planner/core/theme/app_colors.dart';
 
 class CalendarWeekdayHeader extends StatelessWidget {
   const CalendarWeekdayHeader({super.key});
@@ -17,10 +18,10 @@ class CalendarWeekdayHeader extends StatelessWidget {
               child: Text(
                 label,
                 textAlign: TextAlign.center,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w500,
-                  color: Color(0xFF94A3B8),
+                  color: AppColors.of(context).muted,
                 ),
               ),
             ),

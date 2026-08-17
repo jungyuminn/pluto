@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:job_planner/core/constants/app_fonts.dart';
 import 'package:job_planner/core/constants/app_icons.dart';
 import 'package:job_planner/core/constants/app_strings.dart';
+import 'package:job_planner/core/theme/app_colors.dart';
 import 'package:job_planner/core/utils/press_bounce.dart';
 import 'package:job_planner/core/utils/swipe_to_delete.dart';
 import 'package:job_planner/domain/entities/calendar_event.dart';
@@ -36,15 +37,16 @@ class LeftoverTodoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colors.card,
         borderRadius: BorderRadius.circular(20),
-        boxShadow: const [
+        boxShadow: [
           BoxShadow(
-            color: Color(0x14000000),
+            color: colors.shadow,
             blurRadius: 8,
-            offset: Offset(0, 2),
+            offset: const Offset(0, 2),
           ),
         ],
       ),
@@ -62,23 +64,23 @@ class LeftoverTodoCard extends StatelessWidget {
                     children: [
                       Text(
                         _dDay,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontFamily: AppFonts.pretendard,
                           fontSize: 18,
                           fontWeight: FontWeight.w800,
                           height: 1.1,
-                          color: Color(0xFFEF4444),
+                          color: colors.danger,
                         ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         _dateLabel,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontFamily: AppFonts.pretendard,
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
                           height: 1.2,
-                          color: Color(0xFF94A3B8),
+                          color: colors.muted,
                         ),
                       ),
                     ],
@@ -91,8 +93,8 @@ class LeftoverTodoCard extends StatelessWidget {
                   child: Padding(
                     padding: const EdgeInsets.all(4),
                     child: ColorFiltered(
-                      colorFilter: const ColorFilter.mode(
-                        Color(0xFF94A3B8),
+                      colorFilter: ColorFilter.mode(
+                        colors.muted,
                         BlendMode.srcIn,
                       ),
                       child: Image.asset(

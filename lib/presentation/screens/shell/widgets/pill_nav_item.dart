@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:job_planner/core/utils/press_bounce.dart';
+import 'package:job_planner/presentation/widgets/themed_asset.dart';
 
 class PillNavItem extends StatelessWidget {
   const PillNavItem({
@@ -22,9 +23,9 @@ class PillNavItem extends StatelessWidget {
     return PressBounce(
       onPressed: onTap,
       pressedColor: Colors.transparent,
-      child: Center(
-        child: Image.asset(
-          selected ? filledAsset : outlinedAsset,
+        child: Center(
+        child: ThemedAsset(
+          asset: selected ? filledAsset : outlinedAsset,
           width: _iconSize,
           height: _iconSize,
         ),

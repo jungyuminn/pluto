@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:job_planner/app_scope.dart';
 import 'package:job_planner/core/constants/app_fonts.dart';
 import 'package:job_planner/core/constants/app_strings.dart';
+import 'package:job_planner/core/theme/app_colors.dart';
 import 'package:job_planner/core/utils/plain_text_editing_controller.dart';
 import 'package:job_planner/core/utils/press_bounce.dart';
 import 'package:job_planner/domain/entities/event_category.dart';
@@ -112,6 +113,7 @@ class _AddCategorySheetState extends State<AddCategorySheet> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     final accent = Color(_color);
     final bottom = MediaQuery.paddingOf(context).bottom;
 
@@ -119,7 +121,7 @@ class _AddCategorySheetState extends State<AddCategorySheet> {
       padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
       child: DecoratedBox(
         decoration: BoxDecoration(
-          color: Color.lerp(Colors.white, accent, 0.28),
+          color: colors.tint(accent),
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         ),
         child: Padding(
@@ -137,11 +139,11 @@ class _AddCategorySheetState extends State<AddCategorySheet> {
                   fontWeight: FontWeight.w700,
                   fontSize: 20,
                 ),
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   hintText: AppStrings.categoryNameHint,
                   hintStyle: TextStyle(
                     fontFamily: AppFonts.pretendard,
-                    color: Color(0xFF666666),
+                    color: colors.hint,
                     fontWeight: FontWeight.w600,
                     fontSize: 20,
                   ),
@@ -172,7 +174,7 @@ class _AddCategorySheetState extends State<AddCategorySheet> {
                                 color: Color(value),
                                 shape: BoxShape.circle,
                                 border: _color == value
-                                    ? Border.all(color: Colors.white, width: 3)
+                                    ? Border.all(color: colors.card, width: 3)
                                     : null,
                                 boxShadow: _color == value
                                     ? const [

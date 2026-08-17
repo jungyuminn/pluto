@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:job_planner/core/constants/app_fonts.dart';
 import 'package:job_planner/core/constants/app_strings.dart';
@@ -57,8 +59,10 @@ class EventTimeSheet extends StatefulWidget {
 class _EventTimeSheetState extends State<EventTimeSheet> {
   late int _startMinutes;
   late int _endMinutes;
+  Timer? _hintTimer;
+  var _hintVisible = false;
 
-  static const _interval = 5;
+  static const _interval = 1;
 
   @override
   void initState() {
@@ -66,12 +70,40 @@ class _EventTimeSheetState extends State<EventTimeSheet> {
     final now = DateTime.now();
     final rounded = _snap(now.hour * 60 + now.minute);
     _startMinutes = _snap(widget.startMinutes ?? rounded);
-    _endMinutes = _snap(widget.endMinutes ?? (_startMinutes + 60) % (24 * 60));
+    _endMinutes = _snap(widget.endMinutes ?? _startMinutes + 60);
+  }
+
+  @override
+  void dispose() {
+    _hintTimer?.cancel();
+    super.dispose();
   }
 
   int _snap(int minutes) {
     final clamped = minutes.clamp(0, 24 * 60 - _interval);
     return (clamped / _interval).round() * _interval;
+  }
+
+  void _showInvalidHint() {
+    _hintTimer?.cancel();
+    setState(() => _hintVisible = true);
+    _hintTimer = Timer(const Duration(milliseconds: 1700), () {
+      if (!mounted) return;
+      setState(() => _hintVisible = false);
+    });
+  }
+
+  void _save() {
+    if (_endMinutes <= _startMinutes) {
+      _showInvalidHint();
+      return;
+    }
+    Navigator.of(context).pop(
+      EventTimePickResult(
+        startMinutes: _startMinutes,
+        endMinutes: _endMinutes,
+      ),
+    );
   }
 
   @override
@@ -86,7 +118,9 @@ class _EventTimeSheetState extends State<EventTimeSheet> {
         ),
         child: Padding(
           padding: EdgeInsets.fromLTRB(20, 16, 20, 12 + bottom),
-          child: Column(
+          child: Stack(
+            children: [
+              Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Row(
@@ -145,17 +179,25 @@ class _EventTimeSheetState extends State<EventTimeSheet> {
                   ),
                   const Spacer(),
                   SaveCompanyButton(
-                    onPressed: () {
-                      Navigator.of(context).pop(
-                        EventTimePickResult(
-                          startMinutes: _startMinutes,
-                          endMinutes: _endMinutes,
-                        ),
-                      );
-                    },
+                    onPressed: _save,
                     color: widget.color,
                   ),
                 ],
+              ),
+            ],
+          ),
+              Positioned(
+                left: 12,
+                right: 12,
+                bottom: 56,
+                child: IgnorePointer(
+                  child: AnimatedOpacity(
+                    duration: const Duration(milliseconds: 120),
+                    curve: _hintVisible ? Curves.easeOut : Curves.easeIn,
+                    opacity: _hintVisible ? 1 : 0,
+                    child: const _TimeHintToast(),
+                  ),
+                ),
               ),
             ],
           ),
@@ -194,7 +236,7 @@ class _TimeWheels extends StatefulWidget {
 }
 
 class _TimeWheelsState extends State<_TimeWheels> {
-  static const _interval = 5;
+  static const _interval = 1;
 
   late bool _pm;
   late int _hour12;
@@ -277,7 +319,6 @@ class _FlatWheel extends StatefulWidget {
   });
 
   static const extent = 40.0;
-  static const visible = 5;
 
   final int itemCount;
   final int initialIndex;
@@ -290,128 +331,105 @@ class _FlatWheel extends StatefulWidget {
 }
 
 class _FlatWheelState extends State<_FlatWheel> {
-  late final ScrollController _controller;
-  late int _selected;
+  late final FixedExtentScrollController _controller;
 
   static const _extent = _FlatWheel.extent;
-  static const _pad = _extent * ((_FlatWheel.visible - 1) / 2);
 
   @override
   void initState() {
     super.initState();
-    _selected = widget.initialIndex.clamp(0, widget.itemCount - 1);
-    _controller = ScrollController(initialScrollOffset: _selected * _extent);
-    _controller.addListener(_syncSelected);
+    _controller = FixedExtentScrollController(
+      initialItem: widget.initialIndex.clamp(0, widget.itemCount - 1),
+    );
   }
 
   @override
   void dispose() {
-    _controller.removeListener(_syncSelected);
     _controller.dispose();
     super.dispose();
   }
 
-  void _syncSelected() {
-    if (!_controller.hasClients) return;
-    final index = (_controller.offset / _extent)
-        .round()
-        .clamp(0, widget.itemCount - 1);
-    if (index == _selected) return;
-    setState(() => _selected = index);
-    widget.onChanged(index);
-  }
-
   @override
   Widget build(BuildContext context) {
-    return ListView.builder(
-      controller: _controller,
-      itemExtent: _extent,
-      itemCount: widget.itemCount,
-      padding: const EdgeInsets.symmetric(vertical: _pad),
-      physics: const _SnapScrollPhysics(itemExtent: _extent),
-      itemBuilder: (context, index) {
-        final selected = index == _selected;
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 180),
-            curve: Curves.easeOutCubic,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: selected
-                  ? widget.selectedColor.withValues(alpha: 0.14)
-                  : Colors.transparent,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: AnimatedDefaultTextStyle(
-              duration: const Duration(milliseconds: 180),
-              curve: Curves.easeOutCubic,
-              style: TextStyle(
-                fontFamily: AppFonts.pretendard,
-                fontSize: 16,
-                fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
-                height: 1,
-                color: selected
-                    ? widget.selectedColor
-                    : AppColors.of(context).muted,
+    return Stack(
+      children: [
+        Center(
+          child: IgnorePointer(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 6),
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: widget.selectedColor.withValues(alpha: 0.14),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const SizedBox(height: _extent, width: double.infinity),
               ),
-              child: Text(widget.labelAt(index)),
             ),
           ),
-        );
-      },
+        ),
+        ListWheelScrollView.useDelegate(
+          controller: _controller,
+          itemExtent: _extent,
+          physics: const FixedExtentScrollPhysics(),
+          diameterRatio: 8,
+          perspective: 0.0001,
+          overAndUnderCenterOpacity: 0.45,
+          onSelectedItemChanged: widget.onChanged,
+          childDelegate: ListWheelChildBuilderDelegate(
+            childCount: widget.itemCount,
+            builder: (context, index) {
+              return Center(
+                child: Text(
+                  widget.labelAt(index),
+                  style: TextStyle(
+                    fontFamily: AppFonts.pretendard,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                    height: 1,
+                    color: widget.selectedColor,
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 }
 
-class _SnapScrollPhysics extends ScrollPhysics {
-  const _SnapScrollPhysics({super.parent, required this.itemExtent});
-
-  final double itemExtent;
+class _TimeHintToast extends StatelessWidget {
+  const _TimeHintToast();
 
   @override
-  _SnapScrollPhysics applyTo(ScrollPhysics? ancestor) {
-    return _SnapScrollPhysics(
-      parent: buildParent(ancestor),
-      itemExtent: itemExtent,
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: colors.card,
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(
+            color: colors.shadow,
+            blurRadius: 16,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+        child: Text(
+          AppStrings.timeOrderInvalid,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontFamily: AppFonts.pretendard,
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            height: 1.35,
+            color: colors.text,
+          ),
+        ),
+      ),
     );
   }
-
-  double _targetPixels(
-    ScrollMetrics position,
-    Tolerance tolerance,
-    double velocity,
-  ) {
-    var item = position.pixels / itemExtent;
-    if (velocity < -tolerance.velocity) {
-      item -= 0.45;
-    } else if (velocity > tolerance.velocity) {
-      item += 0.45;
-    }
-    return item.roundToDouble() * itemExtent;
-  }
-
-  @override
-  Simulation? createBallisticSimulation(
-    ScrollMetrics position,
-    double velocity,
-  ) {
-    if ((velocity <= 0 && position.pixels <= position.minScrollExtent) ||
-        (velocity >= 0 && position.pixels >= position.maxScrollExtent)) {
-      return super.createBallisticSimulation(position, velocity);
-    }
-    final snapTolerance = toleranceFor(position);
-    final target = _targetPixels(position, snapTolerance, velocity);
-    if (target == position.pixels) return null;
-    return ScrollSpringSimulation(
-      spring,
-      position.pixels,
-      target,
-      velocity,
-      tolerance: snapTolerance,
-    );
-  }
-
-  @override
-  bool get allowImplicitScrolling => false;
 }

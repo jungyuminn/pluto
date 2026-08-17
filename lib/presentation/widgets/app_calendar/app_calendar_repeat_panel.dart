@@ -186,7 +186,7 @@ class _WeekdayRow extends StatelessWidget {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: selected.contains(i)
-                          ? colors.icon
+                          ? colors.text
                           : Colors.transparent,
                     ),
                     child: Text(
@@ -196,7 +196,7 @@ class _WeekdayRow extends StatelessWidget {
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
                         color: selected.contains(i)
-                            ? Colors.white
+                            ? colors.card
                             : colors.text,
                       ),
                     ),

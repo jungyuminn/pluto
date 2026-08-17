@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:job_planner/app_scope.dart';
 import 'package:job_planner/core/constants/app_strings.dart';
+import 'package:job_planner/core/notifications/todo_reminder_service.dart';
 import 'package:job_planner/core/theme/app_theme.dart';
 import 'package:job_planner/data/datasources/calendar_event_local_datasource.dart';
 import 'package:job_planner/data/datasources/event_category_local_datasource.dart';
@@ -173,12 +174,17 @@ class _AppBootstrapState extends State<_AppBootstrap> {
 
   Future<void> _load() async {
     final prefs = await SharedPreferences.getInstance();
-    final jobRepository = JobApplicationRepositoryImpl(
-      JobApplicationLocalDataSource(prefs),
+    final eventDataSource = CalendarEventLocalDataSource(prefs);
+    final jobDataSource = JobApplicationLocalDataSource(prefs);
+    final notificationPreference = NotificationPreference(prefs: prefs);
+    await TodoReminderService.instance.init(
+      events: eventDataSource,
+      jobs: jobDataSource,
+      preference: notificationPreference,
     );
-    final eventRepository = CalendarEventRepositoryImpl(
-      CalendarEventLocalDataSource(prefs),
-    );
+
+    final jobRepository = JobApplicationRepositoryImpl(jobDataSource);
+    final eventRepository = CalendarEventRepositoryImpl(eventDataSource);
     final categoryRepository = EventCategoryRepositoryImpl(
       EventCategoryLocalDataSource(prefs),
     );
@@ -202,9 +208,10 @@ class _AppBootstrapState extends State<_AppBootstrap> {
       _jobViewPreference = JobViewPreference(prefs: prefs);
       _homeViewPreference = HomeViewPreference(prefs: prefs);
       _dayEventsViewPreference = DayEventsViewPreference(prefs: prefs);
-      _notificationPreference = NotificationPreference(prefs: prefs);
+      _notificationPreference = notificationPreference;
       _themePreference = ThemePreference(prefs: prefs);
     });
+    await TodoReminderService.instance.sync();
   }
 
   @override

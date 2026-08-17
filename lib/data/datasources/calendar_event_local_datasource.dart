@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:job_planner/core/notifications/todo_reminder_service.dart';
 import 'package:job_planner/data/models/calendar_event_model.dart';
 import 'package:job_planner/domain/entities/calendar_event.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -21,10 +22,11 @@ class CalendarEventLocalDataSource {
         .toList();
   }
 
-  Future<void> saveAll(List<CalendarEvent> events) {
+  Future<void> saveAll(List<CalendarEvent> events) async {
     final payload = jsonEncode(
       events.map(CalendarEventModel.toJson).toList(),
     );
-    return _prefs.setString(_key, payload);
+    await _prefs.setString(_key, payload);
+    await TodoReminderService.instance.sync();
   }
 }

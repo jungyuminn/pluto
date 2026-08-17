@@ -23,10 +23,33 @@ class AppStrings {
   static const settingsNotificationSection = '알림 설정';
   static const todoNotificationSetting = '할 일 알림 설정';
   static const summaryNotificationSetting = '요약 알림 설정';
+  static const notifyOff = '사용 안함';
   static const notifyMinutes5 = '5분 전';
   static const notifyMinutes10 = '10분 전';
   static const notifyMinutes30 = '30분 전';
   static const notifyHours1 = '1시간 전';
+  static const todoReminderChannelName = '할 일 알림';
+  static const todoReminderChannelDescription = '시간이 있는 할 일을 미리 알려줘요';
+  static const summaryReminderChannelName = '요약 알림';
+  static const summaryReminderChannelDescription = '하루 일정을 모아서 알려줘요';
+  static String todoReminderHint(String leadLabel) =>
+      '시간이 설정된 할 일이 $leadLabel에 알림으로 와요';
+  static String todoReminderBody(int leadMinutes) => leadMinutes % 60 == 0
+      ? '${leadMinutes ~/ 60}시간 후 시작해요'
+      : '$leadMinutes분 후 시작해요';
+  static String summaryTimeLabel(int minutes) {
+    final hour = minutes ~/ 60;
+    final minute = minutes % 60;
+    final period = hour < 12 ? amLabel : pmLabel;
+    final hour12 = hour % 12 == 0 ? 12 : hour % 12;
+    return '$period $hour12:${minute.toString().padLeft(2, '0')}';
+  }
+
+  static String summaryReminderHint(int minutes) =>
+      '매일 ${summaryTimeLabel(minutes)}에 오늘 일정을 알려줘요';
+  static String summaryNotificationTitle(int count) =>
+      count == 0 ? '오늘의 일정' : '오늘의 일정 $count개';
+  static const summaryNotificationEmpty = '오늘 일정이 없어요';
   static const companySection = '기업';
   static const jobScreenTitle = '기업관리';
   static const searchHint = '기업명, 직무 검색';
@@ -106,6 +129,7 @@ class AppStrings {
   static const timeStartLabel = '시작';
   static const timeEndLabel = '종료';
   static const timeClear = '시간 초기화';
+  static const timeOrderInvalid = '종료 시간이 시작 시간보다 빠를 수 없어요!';
   static const allDayLabel = '하루 종일';
   static const amLabel = '오전';
   static const pmLabel = '오후';

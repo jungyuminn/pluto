@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter/cupertino.dart';
@@ -6,6 +7,7 @@ import 'package:job_planner/app_scope.dart';
 import 'package:job_planner/core/constants/app_fonts.dart';
 import 'package:job_planner/core/constants/app_strings.dart';
 import 'package:job_planner/core/theme/app_colors.dart';
+import 'package:job_planner/core/notifications/todo_reminder_service.dart';
 import 'package:job_planner/core/utils/press_bounce.dart';
 import 'package:job_planner/data/datasources/notification_preference.dart';
 
@@ -20,7 +22,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
   var _compact = false;
   var _sortByTime = false;
   var _showTime = false;
-  var _todoReminderLead = TodoReminderLead.minutes10;
+  var _todoReminderLead = TodoReminderLead.off;
+  var _summaryEnabled = true;
+  var _summaryHour = NotificationPreference.defaultSummaryMinutes;
   var _showLeftover = true;
   var _showToday = true;
   var _showTomorrow = true;
@@ -39,6 +43,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _sortByTime = scope.dayEventsViewPreference.sortByTime;
     _showTime = scope.dayEventsViewPreference.showTime;
     _todoReminderLead = scope.notificationPreference.todoReminderLead;
+    _summaryEnabled = scope.notificationPreference.summaryEnabled;
+    _summaryHour = scope.notificationPreference.summaryMinutes;
     _showLeftover = scope.homeViewPreference.showLeftover;
     _showToday = scope.homeViewPreference.showToday;
     _showTomorrow = scope.homeViewPreference.showTomorrow;
@@ -109,8 +115,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
     });
   }
 
+  Future<void> _openSummaryNotificationSettings() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (context) => const _SummaryNotificationSettingsPage(),
+      ),
+    );
+    if (!mounted) return;
+    final preference = AppScope.of(context).notificationPreference;
+    setState(() {
+      _summaryEnabled = preference.summaryEnabled;
+      _summaryHour = preference.summaryMinutes;
+    });
+  }
+
   static String _leadLabel(TodoReminderLead lead) {
     switch (lead) {
+      case TodoReminderLead.off:
+        return AppStrings.notifyOff;
       case TodoReminderLead.minutes5:
         return AppStrings.notifyMinutes5;
       case TodoReminderLead.minutes10:
@@ -210,8 +232,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               _SettingsTile(
                 label: AppStrings.summaryNotificationSetting,
+                value: _summaryEnabled
+                    ? AppStrings.summaryTimeLabel(_summaryHour)
+                    : AppStrings.notifyOff,
                 chevron: true,
-                onPressed: () {},
+                onPressed: _openSummaryNotificationSettings,
               ),
             ],
           ),
@@ -249,6 +274,9 @@ class _TodoNotificationSettingsPageState
     extends State<_TodoNotificationSettingsPage> {
   late TodoReminderLead _lead;
   var _ready = false;
+  var _hint = '';
+  var _hintVisible = false;
+  Timer? _hintTimer;
 
   @override
   void didChangeDependencies() {
@@ -258,15 +286,41 @@ class _TodoNotificationSettingsPageState
     _lead = AppScope.of(context).notificationPreference.todoReminderLead;
   }
 
+  @override
+  void dispose() {
+    _hintTimer?.cancel();
+    super.dispose();
+  }
+
+  void _showHint(TodoReminderLead lead) {
+    _hintTimer?.cancel();
+    setState(() {
+      _hint = AppStrings.todoReminderHint(_SettingsScreenState._leadLabel(lead));
+      _hintVisible = true;
+    });
+    _hintTimer = Timer(const Duration(milliseconds: 2400), () {
+      if (!mounted) return;
+      setState(() => _hintVisible = false);
+    });
+  }
+
   Future<void> _select(TodoReminderLead lead) async {
+    if (lead.isEnabled) _showHint(lead);
     if (_lead == lead) return;
+    if (lead.isEnabled) {
+      await TodoReminderService.instance.requestPermission();
+    }
+    if (!mounted) return;
     setState(() => _lead = lead);
     await AppScope.of(context).notificationPreference.setTodoReminderLead(lead);
+    await TodoReminderService.instance.sync();
   }
 
   @override
   Widget build(BuildContext context) {
     final top = MediaQuery.paddingOf(context).top;
+    final bottom = MediaQuery.paddingOf(context).bottom;
+    final visible = _hintVisible;
 
     return Scaffold(
       backgroundColor: AppColors.of(context).groupedBackground,
@@ -275,20 +329,204 @@ class _TodoNotificationSettingsPageState
         title: AppStrings.todoNotificationSetting,
         onBack: () => Navigator.pop(context),
       ),
-      body: ListView(
-        padding: EdgeInsets.fromLTRB(16, top + 56, 16, 32),
+      body: Stack(
         children: [
-          _SettingsCard(
+          ListView(
+            padding: EdgeInsets.fromLTRB(16, top + 56, 16, 32),
             children: [
-              for (final lead in TodoReminderLead.values)
-                _SettingsTile(
-                  label: _SettingsScreenState._leadLabel(lead),
-                  checked: _lead == lead,
-                  onPressed: () => _select(lead),
-                ),
+              _SettingsCard(
+                children: [
+                  for (final lead in TodoReminderLead.values)
+                    _SettingsTile(
+                      label: _SettingsScreenState._leadLabel(lead),
+                      checked: _lead == lead,
+                      onPressed: () => _select(lead),
+                    ),
+                ],
+              ),
             ],
           ),
+          Positioned(
+            left: 24,
+            right: 24,
+            bottom: 20 + bottom,
+            child: IgnorePointer(
+              child: AnimatedSlide(
+                duration: const Duration(milliseconds: 280),
+                curve: visible ? Curves.easeOutCubic : Curves.easeInCubic,
+                offset: visible ? Offset.zero : const Offset(0, 0.18),
+                child: AnimatedOpacity(
+                  duration: const Duration(milliseconds: 280),
+                  curve: visible ? Curves.easeOutCubic : Curves.easeInCubic,
+                  opacity: visible ? 1 : 0,
+                  child: _HintToast(text: _hint),
+                ),
+              ),
+            ),
+          ),
         ],
+      ),
+    );
+  }
+}
+
+class _SummaryNotificationSettingsPage extends StatefulWidget {
+  const _SummaryNotificationSettingsPage();
+
+  @override
+  State<_SummaryNotificationSettingsPage> createState() =>
+      _SummaryNotificationSettingsPageState();
+}
+
+class _SummaryNotificationSettingsPageState
+    extends State<_SummaryNotificationSettingsPage> {
+  var _enabled = true;
+  var _minutes = NotificationPreference.defaultSummaryMinutes;
+  var _ready = false;
+  var _hint = '';
+  var _hintVisible = false;
+  Timer? _hintTimer;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_ready) return;
+    _ready = true;
+    final preference = AppScope.of(context).notificationPreference;
+    _enabled = preference.summaryEnabled;
+    _minutes = preference.summaryMinutes;
+  }
+
+  @override
+  void dispose() {
+    _hintTimer?.cancel();
+    super.dispose();
+  }
+
+  void _showHint(int minutes) {
+    _hintTimer?.cancel();
+    setState(() {
+      _hint = AppStrings.summaryReminderHint(minutes);
+      _hintVisible = true;
+    });
+    _hintTimer = Timer(const Duration(milliseconds: 2400), () {
+      if (!mounted) return;
+      setState(() => _hintVisible = false);
+    });
+  }
+
+  Future<void> _selectOff() async {
+    if (!_enabled) return;
+    setState(() => _enabled = false);
+    await AppScope.of(context).notificationPreference.setSummaryEnabled(false);
+    await TodoReminderService.instance.sync();
+  }
+
+  Future<void> _selectTime(int minutes) async {
+    _showHint(minutes);
+    if (_enabled && _minutes == minutes) return;
+    await TodoReminderService.instance.requestPermission();
+    if (!mounted) return;
+    setState(() {
+      _enabled = true;
+      _minutes = minutes;
+    });
+    await AppScope.of(context).notificationPreference.setSummaryMinutes(minutes);
+    await TodoReminderService.instance.sync();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final top = MediaQuery.paddingOf(context).top;
+    final bottom = MediaQuery.paddingOf(context).bottom;
+    final visible = _hintVisible;
+
+    return Scaffold(
+      backgroundColor: AppColors.of(context).groupedBackground,
+      extendBodyBehindAppBar: true,
+      appBar: _FrostedAppBar(
+        title: AppStrings.summaryNotificationSetting,
+        onBack: () => Navigator.pop(context),
+      ),
+      body: Stack(
+        children: [
+          ListView(
+            padding: EdgeInsets.fromLTRB(16, top + 56, 16, 32),
+            children: [
+              _SettingsCard(
+                children: [
+                  _SettingsTile(
+                    label: AppStrings.notifyOff,
+                    checked: !_enabled,
+                    onPressed: _selectOff,
+                  ),
+                  for (final minutes in NotificationPreference.summaryTimeOptions)
+                    _SettingsTile(
+                      label: AppStrings.summaryTimeLabel(minutes),
+                      checked: _enabled && _minutes == minutes,
+                      onPressed: () => _selectTime(minutes),
+                    ),
+                ],
+              ),
+            ],
+          ),
+          Positioned(
+            left: 24,
+            right: 24,
+            bottom: 20 + bottom,
+            child: IgnorePointer(
+              child: AnimatedSlide(
+                duration: const Duration(milliseconds: 280),
+                curve: visible ? Curves.easeOutCubic : Curves.easeInCubic,
+                offset: visible ? Offset.zero : const Offset(0, 0.18),
+                child: AnimatedOpacity(
+                  duration: const Duration(milliseconds: 280),
+                  curve: visible ? Curves.easeOutCubic : Curves.easeInCubic,
+                  opacity: visible ? 1 : 0,
+                  child: _HintToast(text: _hint),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _HintToast extends StatelessWidget {
+  const _HintToast({required this.text});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: colors.card,
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(
+            color: colors.shadow,
+            blurRadius: 16,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+        child: Text(
+          text,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontFamily: AppFonts.pretendard,
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            height: 1.35,
+            color: colors.text,
+          ),
+        ),
       ),
     );
   }

@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:job_planner/app_scope.dart';
+import 'package:job_planner/core/constants/app_fonts.dart';
 import 'package:job_planner/core/constants/app_strings.dart';
+import 'package:job_planner/core/home_widget/home_screen_widget_service.dart';
 import 'package:job_planner/core/notifications/todo_reminder_service.dart';
 import 'package:job_planner/core/theme/app_theme.dart';
+import 'package:job_planner/data/datasources/calendar_preference.dart';
 import 'package:job_planner/data/datasources/calendar_event_local_datasource.dart';
 import 'package:job_planner/data/datasources/event_category_local_datasource.dart';
 import 'package:job_planner/data/datasources/day_events_view_preference.dart';
+import 'package:job_planner/data/datasources/font_preference.dart';
 import 'package:job_planner/data/datasources/home_view_preference.dart';
 import 'package:job_planner/data/datasources/job_view_preference.dart';
 import 'package:job_planner/data/datasources/job_application_local_datasource.dart';
@@ -57,6 +61,8 @@ class JobPlannerApp extends StatelessWidget {
     this.jobViewPreference,
     this.homeViewPreference,
     this.dayEventsViewPreference,
+    this.calendarPreference,
+    this.fontPreference,
     this.notificationPreference,
     this.themePreference,
   });
@@ -79,6 +85,8 @@ class JobPlannerApp extends StatelessWidget {
   final JobViewPreference? jobViewPreference;
   final HomeViewPreference? homeViewPreference;
   final DayEventsViewPreference? dayEventsViewPreference;
+  final CalendarPreference? calendarPreference;
+  final FontPreference? fontPreference;
   final NotificationPreference? notificationPreference;
   final ThemePreference? themePreference;
 
@@ -129,6 +137,8 @@ class JobPlannerApp extends StatelessWidget {
       homeViewPreference: homeViewPreference ?? HomeViewPreference(),
       dayEventsViewPreference:
           dayEventsViewPreference ?? DayEventsViewPreference(),
+      calendarPreference: calendarPreference ?? CalendarPreference(),
+      fontPreference: fontPreference ?? FontPreference(),
       notificationPreference:
           notificationPreference ?? NotificationPreference(),
       themePreference: themePreference ?? ThemePreference(),
@@ -163,6 +173,8 @@ class _AppBootstrapState extends State<_AppBootstrap> {
   JobViewPreference? _jobViewPreference;
   HomeViewPreference? _homeViewPreference;
   DayEventsViewPreference? _dayEventsViewPreference;
+  CalendarPreference? _calendarPreference;
+  FontPreference? _fontPreference;
   NotificationPreference? _notificationPreference;
   ThemePreference? _themePreference;
 
@@ -182,12 +194,25 @@ class _AppBootstrapState extends State<_AppBootstrap> {
       jobs: jobDataSource,
       preference: notificationPreference,
     );
+    final themePreference = ThemePreference(prefs: prefs);
+    final categoryDataSource = EventCategoryLocalDataSource(prefs);
+    final homeViewPreference = HomeViewPreference(prefs: prefs);
+    final dayEventsViewPreference = DayEventsViewPreference(prefs: prefs);
+    final calendarPreference = CalendarPreference(prefs: prefs);
+    final fontPreference = FontPreference(prefs: prefs);
+    await HomeScreenWidgetService.instance.init(
+      events: eventDataSource,
+      jobs: jobDataSource,
+      categories: categoryDataSource,
+      theme: themePreference,
+      homeView: homeViewPreference,
+      dayEventsView: dayEventsViewPreference,
+      font: fontPreference,
+    );
 
     final jobRepository = JobApplicationRepositoryImpl(jobDataSource);
     final eventRepository = CalendarEventRepositoryImpl(eventDataSource);
-    final categoryRepository = EventCategoryRepositoryImpl(
-      EventCategoryLocalDataSource(prefs),
-    );
+    final categoryRepository = EventCategoryRepositoryImpl(categoryDataSource);
     if (!mounted) return;
     setState(() {
       _getJobApplications = GetJobApplications(jobRepository);
@@ -206,12 +231,30 @@ class _AppBootstrapState extends State<_AppBootstrap> {
       _deleteEventCategory = DeleteEventCategory(categoryRepository);
       _reorderEventCategories = ReorderEventCategories(categoryRepository);
       _jobViewPreference = JobViewPreference(prefs: prefs);
-      _homeViewPreference = HomeViewPreference(prefs: prefs);
-      _dayEventsViewPreference = DayEventsViewPreference(prefs: prefs);
+      _homeViewPreference = homeViewPreference;
+      _dayEventsViewPreference = dayEventsViewPreference;
+      _calendarPreference = calendarPreference;
+      _fontPreference = fontPreference;
       _notificationPreference = notificationPreference;
-      _themePreference = ThemePreference(prefs: prefs);
+      _themePreference = themePreference;
     });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _afterFirstFrame(notificationPreference);
+    });
+  }
+
+  Future<void> _afterFirstFrame(NotificationPreference preference) async {
+    if (!mounted) return;
     await TodoReminderService.instance.sync();
+    if (!mounted) return;
+    if (preference.todoReminderLead.isEnabled || preference.summaryEnabled) {
+      await TodoReminderService.instance.requestPermission(
+        requestExactAlarms: false,
+      );
+      if (!mounted) return;
+      await TodoReminderService.instance.sync();
+    }
+    await HomeScreenWidgetService.instance.sync();
   }
 
   @override
@@ -234,6 +277,8 @@ class _AppBootstrapState extends State<_AppBootstrap> {
     final jobViewPreference = _jobViewPreference;
     final homeViewPreference = _homeViewPreference;
     final dayEventsViewPreference = _dayEventsViewPreference;
+    final calendarPreference = _calendarPreference;
+    final fontPreference = _fontPreference;
     final notificationPreference = _notificationPreference;
     final themePreference = _themePreference;
 
@@ -255,6 +300,8 @@ class _AppBootstrapState extends State<_AppBootstrap> {
         jobViewPreference == null ||
         homeViewPreference == null ||
         dayEventsViewPreference == null ||
+        calendarPreference == null ||
+        fontPreference == null ||
         notificationPreference == null ||
         themePreference == null) {
       return const MaterialApp(
@@ -282,6 +329,8 @@ class _AppBootstrapState extends State<_AppBootstrap> {
       jobViewPreference: jobViewPreference,
       homeViewPreference: homeViewPreference,
       dayEventsViewPreference: dayEventsViewPreference,
+      calendarPreference: calendarPreference,
+      fontPreference: fontPreference,
       notificationPreference: notificationPreference,
       themePreference: themePreference,
       child: const _JobPlannerMaterialApp(),
@@ -295,17 +344,28 @@ class _JobPlannerMaterialApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = AppScope.of(context).themePreference;
+    final font = AppScope.of(context).fontPreference;
     return ListenableBuilder(
-      listenable: theme,
+      listenable: Listenable.merge([theme, font]),
       builder: (context, _) {
         return MaterialApp(
           title: AppStrings.appName,
           debugShowCheckedModeBanner: false,
-          theme: AppTheme.light,
-          darkTheme: AppTheme.dark,
+          theme: AppTheme.themed(dark: false, typeface: font.typeface),
+          darkTheme: AppTheme.themed(dark: true, typeface: font.typeface),
           themeMode: theme.mode,
           locale: const Locale('ko', 'KR'),
           supportedLocales: const [Locale('ko', 'KR')],
+          builder: (context, child) {
+            return FontScope(
+              typeface: font.typeface,
+              todoScale: font.todoScale,
+              labelScale: font.labelScale,
+              calendarScale: font.calendarScale,
+              calendarLabelScale: font.calendarLabelScale,
+              child: child ?? const SizedBox.shrink(),
+            );
+          },
           home: const ShellScreen(),
           localizationsDelegates: const [
             GlobalMaterialLocalizations.delegate,

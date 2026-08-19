@@ -13,6 +13,7 @@ class AppCalendarRepeatPanel extends StatelessWidget {
     required this.weekdays,
     required this.start,
     required this.end,
+    this.startMonday = false,
     required this.onKindChanged,
     required this.onWeekdayPressed,
     required this.onStartPressed,
@@ -23,6 +24,7 @@ class AppCalendarRepeatPanel extends StatelessWidget {
   final Set<int> weekdays;
   final DateTime start;
   final DateTime? end;
+  final bool startMonday;
   final ValueChanged<RepeatKind> onKindChanged;
   final ValueChanged<int> onWeekdayPressed;
   final VoidCallback onStartPressed;
@@ -69,6 +71,7 @@ class AppCalendarRepeatPanel extends StatelessWidget {
               child: kind == RepeatKind.weekly
                   ? _WeekdayRow(
                       selected: weekdays,
+                      startMonday: startMonday,
                       onPressed: onWeekdayPressed,
                     )
                   : const SizedBox(width: double.infinity),
@@ -139,7 +142,7 @@ class _RepeatRow extends StatelessWidget {
           Text(
             label,
             style: TextStyle(
-              fontFamily: AppFonts.pretendard,
+              fontFamily: AppFonts.of(context),
               fontSize: 15,
               fontWeight: FontWeight.w700,
               color: colors.text,
@@ -157,19 +160,24 @@ class _WeekdayRow extends StatelessWidget {
   const _WeekdayRow({
     required this.selected,
     required this.onPressed,
+    this.startMonday = false,
   });
 
   final Set<int> selected;
   final ValueChanged<int> onPressed;
+  final bool startMonday;
 
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
+    final order = startMonday
+        ? const [1, 2, 3, 4, 5, 6, 0]
+        : const [0, 1, 2, 3, 4, 5, 6];
     return Padding(
       padding: const EdgeInsets.only(bottom: 12, top: 8),
       child: Row(
         children: [
-          for (var i = 0; i < AppStrings.weekdays.length; i++)
+          for (final i in order)
             Expanded(
               child: PressBounce(
                 onPressed: () => onPressed(i),
@@ -192,7 +200,7 @@ class _WeekdayRow extends StatelessWidget {
                     child: Text(
                       AppStrings.weekdays[i],
                       style: TextStyle(
-                        fontFamily: AppFonts.pretendard,
+                        fontFamily: AppFonts.of(context),
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
                         color: selected.contains(i)
@@ -224,7 +232,7 @@ class _ChevronLabel extends StatelessWidget {
         Text(
           label,
           style: TextStyle(
-            fontFamily: AppFonts.pretendard,
+            fontFamily: AppFonts.of(context),
             fontSize: 15,
             fontWeight: FontWeight.w700,
             color: colors.text,
@@ -403,7 +411,7 @@ class _ChevronMenuState<T> extends State<_ChevronMenu<T>>
                                     child: Text(
                                       item.$2,
                                       style: TextStyle(
-                                        fontFamily: AppFonts.pretendard,
+                                        fontFamily: AppFonts.of(context),
                                         fontSize: 14,
                                         fontWeight: FontWeight.w700,
                                         color: colors.text,

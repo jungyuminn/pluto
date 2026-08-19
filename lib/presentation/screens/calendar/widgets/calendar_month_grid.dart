@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:job_planner/core/calendar/month_grid.dart';
+import 'package:job_planner/core/constants/app_fonts.dart';
 import 'package:job_planner/domain/entities/calendar_event.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/calendar_day_cell.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/calendar_week_events.dart';
@@ -13,6 +14,7 @@ class CalendarMonthGrid extends StatefulWidget {
     this.onRangeSelected,
     this.onRangeDragChanged,
     this.eventsOf,
+    this.startMonday = false,
   });
 
   final DateTime month;
@@ -20,6 +22,7 @@ class CalendarMonthGrid extends StatefulWidget {
   final void Function(DateTime start, DateTime end)? onRangeSelected;
   final ValueChanged<bool>? onRangeDragChanged;
   final List<CalendarEvent> Function(DateTime date)? eventsOf;
+  final bool startMonday;
 
   @override
   State<CalendarMonthGrid> createState() => _CalendarMonthGridState();
@@ -102,7 +105,7 @@ class _CalendarMonthGridState extends State<CalendarMonthGrid> {
 
   @override
   Widget build(BuildContext context) {
-    final days = MonthGrid.daysFor(widget.month);
+    final days = MonthGrid.daysFor(widget.month, startMonday: widget.startMonday);
     final weekCount = days.length ~/ 7;
 
     return Padding(
@@ -110,6 +113,8 @@ class _CalendarMonthGridState extends State<CalendarMonthGrid> {
       child: LayoutBuilder(
         builder: (context, constraints) {
           final minWeekHeight = constraints.maxHeight / weekCount;
+          final calendarScale = AppFonts.calendarScaleOf(context);
+          final labelScale = AppFonts.calendarLabelScaleOf(context);
           return GestureDetector(
             behavior: HitTestBehavior.translucent,
             onLongPressStart: _onLongPressStart,
@@ -132,6 +137,8 @@ class _CalendarMonthGridState extends State<CalendarMonthGrid> {
                     days: weekDays,
                     eventsOf: widget.eventsOf ?? (_) => const [],
                     minHeight: minWeekHeight,
+                    calendarScale: calendarScale,
+                    labelScale: labelScale,
                   ),
                   child: Stack(
                     children: [
@@ -161,6 +168,8 @@ class _CalendarMonthGridState extends State<CalendarMonthGrid> {
                           child: CalendarWeekEvents(
                             days: weekDays,
                             eventsOf: widget.eventsOf!,
+                            calendarScale: calendarScale,
+                            labelScale: labelScale,
                           ),
                         ),
                     ],

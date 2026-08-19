@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:job_planner/core/constants/app_fonts.dart';
-import 'package:job_planner/core/constants/app_icons.dart';
 import 'package:job_planner/core/constants/app_strings.dart';
 import 'package:job_planner/core/theme/app_colors.dart';
 import 'package:job_planner/core/utils/press_bounce.dart';
@@ -14,6 +13,7 @@ class LeftoverTodoCard extends StatelessWidget {
     required this.event,
     required this.today,
     required this.onEdit,
+    required this.onPostpone,
     required this.onComplete,
     required this.onDelete,
   });
@@ -21,6 +21,7 @@ class LeftoverTodoCard extends StatelessWidget {
   final CalendarEvent event;
   final DateTime today;
   final VoidCallback onEdit;
+  final VoidCallback onPostpone;
   final VoidCallback onComplete;
   final Future<bool> Function() onDelete;
 
@@ -56,7 +57,7 @@ class LeftoverTodoCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Expanded(
                   child: Column(
@@ -65,7 +66,7 @@ class LeftoverTodoCard extends StatelessWidget {
                       Text(
                         _dDay,
                         style: TextStyle(
-                          fontFamily: AppFonts.pretendard,
+                          fontFamily: AppFonts.of(context),
                           fontSize: 18,
                           fontWeight: FontWeight.w800,
                           height: 1.1,
@@ -76,7 +77,7 @@ class LeftoverTodoCard extends StatelessWidget {
                       Text(
                         _dateLabel,
                         style: TextStyle(
-                          fontFamily: AppFonts.pretendard,
+                          fontFamily: AppFonts.of(context),
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
                           height: 1.2,
@@ -87,20 +88,21 @@ class LeftoverTodoCard extends StatelessWidget {
                   ),
                 ),
                 PressBounce(
-                  onPressed: onEdit,
-                  pressedColor: Colors.transparent,
+                  onPressed: onPostpone,
+                  pressedColor: colors.pressed,
                   borderRadius: BorderRadius.circular(10),
                   child: Padding(
-                    padding: const EdgeInsets.all(4),
-                    child: ColorFiltered(
-                      colorFilter: ColorFilter.mode(
-                        colors.muted,
-                        BlendMode.srcIn,
-                      ),
-                      child: Image.asset(
-                        AppIcons.memo,
-                        width: 22,
-                        height: 22,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
+                    child: Text(
+                      AppStrings.postpone,
+                      style: TextStyle(
+                        fontFamily: AppFonts.of(context),
+                        fontSize: 14,
+                        fontWeight: FontWeight.w800,
+                        color: colors.muted,
                       ),
                     ),
                   ),
@@ -113,7 +115,7 @@ class LeftoverTodoCard extends StatelessWidget {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                fontFamily: AppFonts.pretendard,
+                fontFamily: AppFonts.of(context),
                 fontSize: 13,
                 fontWeight: FontWeight.w700,
                 color: event.color,

@@ -175,6 +175,7 @@ class _JobScreenState extends State<JobScreen>
       resizeToAvoidBottomInset: false,
       backgroundColor: AppColors.of(context).background,
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         backgroundColor: AppColors.of(context).background,
         surfaceTintColor: Colors.transparent,
         titleSpacing: 8,
@@ -236,15 +237,15 @@ class _JobScreenState extends State<JobScreen>
                           focusNode: _searchFocus,
                           onChanged: (_) => setState(() {}),
                           textInputAction: TextInputAction.search,
-                          style: const TextStyle(
-                            fontFamily: AppFonts.pretendard,
+                          style: TextStyle(
+                            fontFamily: AppFonts.of(context),
                             fontWeight: FontWeight.w700,
                             fontSize: 15,
                           ),
                           decoration: InputDecoration(
                             hintText: AppStrings.searchHint,
                             hintStyle: TextStyle(
-                              fontFamily: AppFonts.pretendard,
+                              fontFamily: AppFonts.of(context),
                               color: AppColors.of(context).muted,
                               fontWeight: FontWeight.w600,
                             ),

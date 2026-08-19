@@ -1,5 +1,7 @@
+import 'dart:async';
 import 'dart:convert';
 
+import 'package:job_planner/core/home_widget/home_screen_widget_service.dart';
 import 'package:job_planner/core/notifications/todo_reminder_service.dart';
 import 'package:job_planner/data/models/job_application_model.dart';
 import 'package:job_planner/domain/entities/job_application.dart';
@@ -27,6 +29,11 @@ class JobApplicationLocalDataSource {
       applications.map(JobApplicationModel.toJson).toList(),
     );
     await _prefs.setString(_key, payload);
+    unawaited(_syncSideEffects());
+  }
+
+  Future<void> _syncSideEffects() async {
     await TodoReminderService.instance.sync();
+    await HomeScreenWidgetService.instance.sync();
   }
 }

@@ -26,12 +26,15 @@ class CalendarDay {
 class MonthGrid {
   MonthGrid._();
 
-  static List<CalendarDay> daysFor(DateTime month) {
+  static List<CalendarDay> daysFor(
+    DateTime month, {
+    bool startMonday = false,
+  }) {
     final first = DateTime(month.year, month.month, 1);
-    final startOffset = first.weekday % 7;
+    final startOffset = weekdayIndex(first, startMonday: startMonday);
     final start = DateTime(first.year, first.month, first.day - startOffset);
     final last = DateTime(month.year, month.month + 1, 0);
-    final endOffset = 6 - (last.weekday % 7);
+    final endOffset = 6 - weekdayIndex(last, startMonday: startMonday);
     final count = last.day + startOffset + endOffset;
 
     return List<CalendarDay>.generate(count, (index) {
@@ -42,5 +45,10 @@ class MonthGrid {
         holidayName: KoreanHolidays.nameOn(date),
       );
     });
+  }
+
+  static int weekdayIndex(DateTime date, {required bool startMonday}) {
+    if (startMonday) return (date.weekday + 6) % 7;
+    return date.weekday % 7;
   }
 }

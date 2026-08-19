@@ -52,7 +52,14 @@ class _EventCompleteButtonState extends State<EventCompleteButton>
   @override
   Widget build(BuildContext context) {
     return PressBounce(
-      onPressed: widget.onPressed,
+      onPressed: () {
+        if (widget.completed) {
+          _burst.value = 0;
+        } else {
+          _burst.forward();
+        }
+        widget.onPressed();
+      },
       pressedScale: 0.9,
       pressedColor: Colors.transparent,
       borderRadius: BorderRadius.circular(999),

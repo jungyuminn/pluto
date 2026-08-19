@@ -60,6 +60,15 @@ List<CalendarEvent> calendarEventsOn({
 
 DateTime calendarDay(DateTime date) => DateTime(date.year, date.month, date.day);
 
+DateTime calendarWeekStart(DateTime date) {
+  final day = calendarDay(date);
+  return day.subtract(Duration(days: day.weekday - 1));
+}
+
+DateTime calendarWeekEnd(DateTime date) {
+  return calendarWeekStart(date).add(const Duration(days: 6));
+}
+
 List<CalendarEvent> calendarEventsInRange({
   required DateTime start,
   required DateTime end,

@@ -52,7 +52,7 @@ class EventTimeChip extends StatelessWidget {
             Text(
               _label,
               style: TextStyle(
-                fontFamily: AppFonts.pretendard,
+                fontFamily: AppFonts.of(context),
                 fontSize: 15,
                 fontWeight: FontWeight.w700,
                 color: color,

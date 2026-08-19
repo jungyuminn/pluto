@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:job_planner/app_scope.dart';
 import 'package:job_planner/core/calendar/month_grid.dart';
 import 'package:job_planner/core/calendar/repeat_dates.dart';
 import 'package:job_planner/core/constants/app_fonts.dart';
@@ -356,6 +357,9 @@ class _AppCalendarSheetState extends State<AppCalendarSheet> {
                               weekdays: _weekdays,
                               start: _repeatStart,
                               end: _repeatEnd,
+                              startMonday: AppScope.of(context)
+                                  .calendarPreference
+                                  .startMonday,
                               onKindChanged: _setRepeatKind,
                               onWeekdayPressed: _toggleWeekday,
                               onStartPressed: _pickRepeatStart,
@@ -376,7 +380,7 @@ class _AppCalendarSheetState extends State<AppCalendarSheet> {
                               child: Text(
                                 '${_visibleMonth.year}${AppStrings.yearSuffix} ${_visibleMonth.month}${AppStrings.monthSuffix}',
                                 style: TextStyle(
-                                  fontFamily: AppFonts.pretendard,
+                                  fontFamily: AppFonts.of(context),
                                   fontSize: 22,
                                   fontWeight: FontWeight.w800,
                                   height: 1.1,
@@ -386,7 +390,11 @@ class _AppCalendarSheetState extends State<AppCalendarSheet> {
                             ),
                           ),
                           const SizedBox(height: 14),
-                          const _WeekdayRow(),
+                          _WeekdayRow(
+                            startMonday: AppScope.of(context)
+                                .calendarPreference
+                                .startMonday,
+                          ),
                           const SizedBox(height: 6),
                           SizedBox(
                             height: 288,
@@ -399,6 +407,9 @@ class _AppCalendarSheetState extends State<AppCalendarSheet> {
                                 return _MonthGridView(
                                   month: _monthAt(page),
                                   accent: _accent,
+                                  startMonday: AppScope.of(context)
+                                      .calendarPreference
+                                      .startMonday,
                                   isSelected: _isSelected,
                                   isInRange: _isInRange,
                                   isRangeStart: _isRangeStart,
@@ -589,7 +600,7 @@ class _ModeTabs extends StatelessWidget {
                             duration: _duration,
                             curve: Curves.easeOutCubic,
                             style: TextStyle(
-                              fontFamily: AppFonts.pretendard,
+                              fontFamily: AppFonts.of(context),
                               fontSize: 14,
                               fontWeight: FontWeight.w700,
                               color: i == index
@@ -612,19 +623,22 @@ class _ModeTabs extends StatelessWidget {
 }
 
 class _WeekdayRow extends StatelessWidget {
-  const _WeekdayRow();
+  const _WeekdayRow({this.startMonday = false});
+
+  final bool startMonday;
 
   @override
   Widget build(BuildContext context) {
+    final labels = AppStrings.weekdayLabels(startMonday: startMonday);
     return Row(
       children: [
-        for (final label in AppStrings.weekdays)
+        for (final label in labels)
           Expanded(
             child: Text(
               label,
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontFamily: AppFonts.pretendard,
+                fontFamily: AppFonts.of(context),
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
                 color: AppColors.of(context).text,
@@ -640,6 +654,7 @@ class _MonthGridView extends StatelessWidget {
   const _MonthGridView({
     required this.month,
     required this.accent,
+    required this.startMonday,
     required this.isSelected,
     required this.isInRange,
     required this.isRangeStart,
@@ -649,6 +664,7 @@ class _MonthGridView extends StatelessWidget {
 
   final DateTime month;
   final Color accent;
+  final bool startMonday;
   final bool Function(DateTime date) isSelected;
   final bool Function(DateTime date) isInRange;
   final bool Function(DateTime date) isRangeStart;
@@ -657,7 +673,7 @@ class _MonthGridView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final days = [...MonthGrid.daysFor(month)];
+    final days = [...MonthGrid.daysFor(month, startMonday: startMonday)];
     while (days.length < 42) {
       final last = days.last.date;
       days.add(
@@ -802,7 +818,7 @@ class _DayCell extends StatelessWidget {
                 child: Text(
                   '${day.date.day}',
                   style: TextStyle(
-                    fontFamily: AppFonts.pretendard,
+                    fontFamily: AppFonts.of(context),
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
                     height: 1,

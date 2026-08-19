@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:job_planner/core/calendar/month_grid.dart';
+import 'package:job_planner/core/constants/app_fonts.dart';
 import 'package:job_planner/core/theme/app_colors.dart';
 import 'package:job_planner/core/utils/press_bounce.dart';
 
@@ -24,11 +25,15 @@ class CalendarDayCell extends StatelessWidget {
   static const labelGap = 2.0;
   static const sideInset = 2.0;
 
-  static double get eventsTop => eventsTopFor(hasHoliday: false);
+  static double dateSizeFor(double scale) => dateSize * scale;
 
-  static double eventsTopFor({required bool hasHoliday}) {
-    var top = dateTop + dateSize + eventsTopGap;
-    if (hasHoliday) top += holidayGap + holidayHeight;
+  static double holidayHeightFor(double scale) => holidayHeight * scale;
+
+  static double labelHeightFor(double scale) => labelHeight * scale;
+
+  static double eventsTopFor({required bool hasHoliday, double scale = 1}) {
+    var top = dateTop + dateSizeFor(scale) + eventsTopGap;
+    if (hasHoliday) top += holidayGap + holidayHeightFor(scale);
     return top;
   }
 
@@ -61,6 +66,8 @@ class CalendarDayCell extends StatelessWidget {
     final color = _colorOf(colors);
     final holiday = day.holidayName;
     final today = day.isToday;
+    final scale = AppFonts.calendarScaleOf(context);
+    final dateBox = dateSizeFor(scale);
 
     return PressBounce(
       onPressed: onPressed == null ? () {} : () => onPressed!(_originOf(context)),
@@ -73,8 +80,8 @@ class CalendarDayCell extends StatelessWidget {
         child: Column(
           children: [
             Container(
-              width: dateSize,
-              height: dateSize,
+              width: dateBox,
+              height: dateBox,
               alignment: Alignment.center,
               decoration: today
                   ? const BoxDecoration(
@@ -85,7 +92,8 @@ class CalendarDayCell extends StatelessWidget {
               child: Text(
                 '${day.date.day}',
                 style: TextStyle(
-                  fontSize: 12,
+                  fontFamily: AppFonts.of(context),
+                  fontSize: 12 * scale,
                   fontWeight: today ? FontWeight.w800 : FontWeight.w600,
                   height: 1,
                   color: today ? Colors.white : color,
@@ -95,14 +103,15 @@ class CalendarDayCell extends StatelessWidget {
             if (holiday != null) ...[
               const SizedBox(height: holidayGap),
               SizedBox(
-                height: holidayHeight,
+                height: holidayHeightFor(scale),
                 child: Text(
                   holiday,
                   textAlign: TextAlign.center,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    fontSize: 10,
+                    fontFamily: AppFonts.of(context),
+                    fontSize: 10 * scale,
                     fontWeight: FontWeight.w600,
                     height: 1.15,
                     color: color,

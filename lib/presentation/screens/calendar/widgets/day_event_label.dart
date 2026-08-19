@@ -41,13 +41,24 @@ class DayEventLabel extends StatefulWidget {
 
 class _DayEventLabelState extends State<DayEventLabel> {
   var _skipLabelTap = false;
+  late var _completed = widget.completed;
 
   static const _height = 52.0;
+
+  @override
+  void didUpdateWidget(DayEventLabel oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.completed != widget.completed) {
+      _completed = widget.completed;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
     final background = colors.tint(widget.color, 0.22);
+    final scale = AppFonts.labelScaleOf(context);
+    final height = _height * scale;
 
     return PressBounce(
       onPressed: () {
@@ -77,15 +88,15 @@ class _DayEventLabelState extends State<DayEventLabel> {
         child: ClipRRect(
           borderRadius: BorderRadius.circular(8),
           child: SizedBox(
-            height: _height,
+            height: height,
             width: double.infinity,
             child: Row(
               children: [
                 AnimatedContainer(
                   duration: const Duration(milliseconds: 240),
                   curve: Curves.easeOutCubic,
-                  width: (widget.completed || widget.isJob) ? 0 : 4,
-                  height: _height,
+                  width: (_completed || widget.isJob) ? 0 : 4,
+                  height: height,
                   color: widget.color,
                 ),
                 Expanded(
@@ -101,8 +112,8 @@ class _DayEventLabelState extends State<DayEventLabel> {
                           softWrap: false,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
-                            fontFamily: AppFonts.pretendard,
-                            fontSize: 12,
+                            fontFamily: AppFonts.of(context),
+                            fontSize: 12 * scale,
                             fontWeight: FontWeight.w700,
                             height: 1.15,
                             color: colors.text,
@@ -120,8 +131,8 @@ class _DayEventLabelState extends State<DayEventLabel> {
                                     softWrap: false,
                                     overflow: TextOverflow.ellipsis,
                                     style: TextStyle(
-                                      fontFamily: AppFonts.pretendard,
-                                      fontSize: 10,
+                                      fontFamily: AppFonts.of(context),
+                                      fontSize: 10 * scale,
                                       fontWeight: FontWeight.w600,
                                       height: 1.15,
                                       color: colors.hint,
@@ -137,8 +148,8 @@ class _DayEventLabelState extends State<DayEventLabel> {
                                   widget.timeText!,
                                   maxLines: 1,
                                   style: TextStyle(
-                                    fontFamily: AppFonts.pretendard,
-                                    fontSize: 10,
+                                    fontFamily: AppFonts.of(context),
+                                    fontSize: 10 * scale,
                                     fontWeight: FontWeight.w700,
                                     height: 1.15,
                                     color: widget.color,
@@ -204,10 +215,11 @@ class _DayEventLabelState extends State<DayEventLabel> {
                     child: Listener(
                       onPointerDown: (_) => _skipLabelTap = true,
                       child: EventCompleteButton(
-                        completed: widget.completed,
+                        completed: _completed,
                         color: widget.color,
                         onPressed: () {
                           _skipLabelTap = true;
+                          setState(() => _completed = !_completed);
                           widget.onCompletePressed!();
                         },
                       ),

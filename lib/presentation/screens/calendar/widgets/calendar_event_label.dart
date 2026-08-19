@@ -27,9 +27,12 @@ class CalendarEventLabel extends StatelessWidget {
     final background =
         AppColors.of(context).tint(color, isJob ? 0.12 : 0.22);
     final radius = isJob ? 6.0 : 3.0;
+    final scale = AppFonts.calendarLabelScaleOf(context);
+    final labelHeight = height * scale;
+    final labelSize = fontSize * scale;
 
     return SizedBox(
-      height: height,
+      height: labelHeight,
       width: double.infinity,
       child: DecoratedBox(
         decoration: BoxDecoration(
@@ -45,7 +48,7 @@ class CalendarEventLabel extends StatelessWidget {
                 duration: const Duration(milliseconds: 240),
                 curve: Curves.easeOutCubic,
                 width: (showAccent && !completed && !isJob) ? 3 : 0,
-                height: height,
+                height: labelHeight,
                 color: color,
               ),
               Expanded(
@@ -59,8 +62,8 @@ class CalendarEventLabel extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                        fontFamily: AppFonts.pretendard,
-                        fontSize: fontSize,
+                        fontFamily: AppFonts.of(context),
+                        fontSize: labelSize,
                         fontWeight: FontWeight.w700,
                         height: 1,
                         color: color,

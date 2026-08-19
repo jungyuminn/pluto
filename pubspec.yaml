@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 1.0.2+3
+version: 1.0.10+11
 
 environment:
   sdk: ^3.12.2
@@ -42,6 +42,7 @@ dependencies:
   flutter_local_notifications: ^19.5.0
   timezone: ^0.10.1
   flutter_timezone: ^5.0.1
+  home_widget: ^0.9.3
 
 dev_dependencies:
   flutter_test:
@@ -103,6 +104,90 @@ flutter:
         - asset: assets/fonts/Pretendard-Bold.otf
           weight: 700
         - asset: assets/fonts/Pretendard-ExtraBold.otf
+          weight: 800
+    - family: Ownglyph
+      fonts:
+        - asset: assets/fonts/park_dahyun.ttf
+          weight: 400
+        - asset: assets/fonts/park_dahyun.ttf
+          weight: 500
+        - asset: assets/fonts/park_dahyun.ttf
+          weight: 600
+        - asset: assets/fonts/park_dahyun.ttf
+          weight: 700
+        - asset: assets/fonts/park_dahyun.ttf
+          weight: 800
+    - family: Meetme
+      fonts:
+        - asset: assets/fonts/meetme.ttf
+          weight: 400
+        - asset: assets/fonts/meetme.ttf
+          weight: 500
+        - asset: assets/fonts/meetme.ttf
+          weight: 600
+        - asset: assets/fonts/meetme.ttf
+          weight: 700
+        - asset: assets/fonts/meetme.ttf
+          weight: 800
+    - family: LeeSeoyoon
+      fonts:
+        - asset: assets/fonts/lee_seoyoon.ttf
+          weight: 400
+        - asset: assets/fonts/lee_seoyoon.ttf
+          weight: 500
+        - asset: assets/fonts/lee_seoyoon.ttf
+          weight: 600
+        - asset: assets/fonts/lee_seoyoon.ttf
+          weight: 700
+        - asset: assets/fonts/lee_seoyoon.ttf
+          weight: 800
+    - family: Bandal
+      fonts:
+        - asset: assets/fonts/bandal.otf
+          weight: 400
+        - asset: assets/fonts/bandal.otf
+          weight: 500
+        - asset: assets/fonts/bandal.otf
+          weight: 600
+        - asset: assets/fonts/bandal.otf
+          weight: 700
+        - asset: assets/fonts/bandal.otf
+          weight: 800
+    - family: MonaS
+      fonts:
+        - asset: assets/fonts/MonaS12.otf
+          weight: 400
+        - asset: assets/fonts/MonaS12.otf
+          weight: 500
+        - asset: assets/fonts/MonaS12.otf
+          weight: 600
+        - asset: assets/fonts/MonaS12-Bold.otf
+          weight: 700
+        - asset: assets/fonts/MonaS12-Bold.otf
+          weight: 800
+    - family: Omyu
+      fonts:
+        - asset: assets/fonts/omyu.ttf
+          weight: 400
+        - asset: assets/fonts/omyu.ttf
+          weight: 500
+        - asset: assets/fonts/omyu.ttf
+          weight: 600
+        - asset: assets/fonts/omyu.ttf
+          weight: 700
+        - asset: assets/fonts/omyu.ttf
+          weight: 800
+    - family: Bazzi
+      fonts:
+        - asset: assets/fonts/Bazzi.ttf
+          weight: 400
+        - asset: assets/fonts/Bazzi.ttf
+          weight: 500
+        - asset: assets/fonts/Bazzi.ttf
+          weight: 600
+        - asset: assets/fonts/Bazzi.ttf
+          weight: 700
+        - asset: assets/fonts/Bazzi.ttf
           weight: 800
 
 

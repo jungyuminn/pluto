@@ -14,10 +14,57 @@ class AppStrings {
   static const homeShowLeftover = '미완료 할 일';
   static const homeShowToday = '오늘';
   static const homeShowTomorrow = '내일';
-  static const homeShowWeek = '일주일';
+  static const homeShowWeek = '이번 주';
   static const homeShowMonth = '이번 달';
+  static const settingsMonthlyStatsSection = '통계';
+  static const homeShowMonthlyStats = '지난달 요약';
+  static const homeShowWeeklyStats = '지난주 요약';
   static const settingsTodoSection = '할 일';
   static const settingsAppearanceSection = '화면 모드';
+  static const settingsFontSection = '폰트 설정';
+  static const fontFamily = '폰트 종류';
+  static const fontTodoSize = '할 일·기업 크기';
+  static const fontCalendarSize = '캘린더 크기';
+  static const fontCalendarLabelSize = '캘린더 라벨 크기';
+  static const fontLabelScale = '할 일 폰트 크기';
+  static const fontCalendarChipScale = '캘린더 폰트 크기';
+  static const fontPretendard = '프리텐다드';
+  static const fontSystem = '기기 기본';
+  static const fontGothic = '고딕';
+  static const fontSerif = '명조';
+  static const fontOwnglyph = '박다현체';
+  static const fontMeetme = '밑미';
+  static const fontLeeSeoyoon = '이서윤체';
+  static const fontBandal = '반달체';
+  static const fontMona = '모나체';
+  static const fontOmyu = '오뮤체';
+  static const fontBazzi = '배찌체';
+  static const fontSizeSmall = '작게';
+  static const fontSizeMedium = '보통';
+  static const fontSizeLarge = '크게';
+  static const fontSizeExtraLarge = '더 크게';
+  static const settingsFontHelp =
+      '앱에 쓰는 글꼴과, 할 일·캘린더 라벨의 크기를 바꿀 수 있어요';
+  static const settingsCalendarSection = '캘린더 설정';
+  static const calendarStartMonday = '월요일부터 시작';
+  static const settingsHelpPreview = '미리보기';
+  static const settingsHomeHelp =
+      '할 일을 한 줄로 나열하거나, 카테고리별로 묶어서 볼 수 있어요';
+  static const settingsHomeLayoutHelp =
+      '홈 화면에 보여줄 카드를 고를 수 있어요';
+  static const settingsTodoHelp =
+      '할 일을 시간 순으로 정렬하거나, 라벨에 시간을 표시할 수 있어요';
+  static const settingsNotificationHelp =
+      '시간이 있는 할 일은 미리 알려주고, 매일 정해진 시간에 오늘 일정을 모아 알려줘요';
+  static const settingsAppearanceHelp =
+      '화면을 밝은 테마나 어두운 테마로 바꿀 수 있어요';
+  static const settingsCalendarHelp =
+      '달력의 첫 요일을 바꿀 수 있어요';
+  static const settingsCalendarHelpWithFontSize =
+      '달력의 첫 요일과, 할 일·기업·날짜·라벨의 글자 크기를 바꿀 수 있어요';
+  static const calendarStartSunday = '일요일부터 시작';
+  static const settingsMonthlyStatsHelp =
+      '매달 1일에는 지난달 요약을, 매주 월요일에는 지난주 요약을 보여줘요';
   static const lightMode = '라이트 모드';
   static const darkMode = '다크 모드';
   static const settingsNotificationSection = '알림 설정';
@@ -50,6 +97,9 @@ class AppStrings {
   static String summaryNotificationTitle(int count) =>
       count == 0 ? '오늘의 일정' : '오늘의 일정 $count개';
   static const summaryNotificationEmpty = '오늘 일정이 없어요';
+  static const tomorrowNotificationEmpty = '내일 일정이 없어요';
+  static const todayTomorrowNotificationEmpty = '오늘과 내일 일정이 없어요';
+  static const weekNotificationEmpty = '이번 주 일정이 없어요';
   static const companySection = '기업';
   static const jobScreenTitle = '기업관리';
   static const searchHint = '기업명, 직무 검색';
@@ -86,16 +136,58 @@ class AppStrings {
   static const yearSuffix = '년';
   static const daySuffix = '일';
   static const weekdays = ['일', '월', '화', '수', '목', '금', '토'];
+  static const weekdaysMondayFirst = ['월', '화', '수', '목', '금', '토', '일'];
+
+  static List<String> weekdayLabels({required bool startMonday}) {
+    return startMonday ? weekdaysMondayFirst : weekdays;
+  }
+
   static const todayTitle = '오늘';
   static const tomorrowTitle = '내일';
+  static const todayTomorrowTitle = '오늘 + 내일';
   static const dayAfterTomorrowTitle = '모레';
-  static const weekTitle = '일주일';
+  static const weekTitle = '이번 주';
   static const monthTitle = '이번 달';
+  static const timeMachineNow = '현재';
   static String leftoverTodos(int count) => '$count개의 남은 할 일';
+  static String monthlyStatsCardTitle(int month) => '$month월 통계가 도착했어요';
+  static const weeklyStatsCardTitle = '지난주 통계가 도착했어요';
+  static String monthlyStatsHeadlineMonth(int month) => '$month월에는';
+  static const weeklyStatsHeadline = '지난주에는';
+  static String monthlyStatsTodoCount(int count) => '할 일 $count개';
+  static String monthlyStatsRoundCount(int count) => '전형 $count개';
+  static const monthlyStatsCompleteAnd = '를 완료하고';
+  static const monthlyStatsCompletedTail = '를 완료했어요';
+  static const monthlyStatsTotalTail = '가 있었어요';
+  static const monthlyStatsRoundsTail = '를 소화했어요';
+  static const monthlyStatsAnd = '와';
+  static const monthlyStatsEmptyTail = '기록이 없어요';
+  static const monthlyStatsCompletedLabel = '완료한 할 일';
+  static const monthlyStatsIncompleteLabel = '남은 할 일';
+  static const monthlyStatsTotalLabel = '전체 할 일';
+  static const monthlyStatsRateLabel = '완료율';
+  static String monthlyStatsRateValue(int percent) => '$percent%';
+  static String monthlyStatsFraction(int done, int total) => '$done / $total';
+  static const monthlyStatsTodoSection = '할 일';
+  static const monthlyStatsJobSection = '취업';
+  static const monthlyStatsRoundsLabel = '전형 일정';
+  static const monthlyStatsCompaniesLabel = '지원 기업';
+  static const monthlyStatsCoverLettersLabel = '자기소개서';
+  static const monthlyStatsPassedLabel = '합격';
+  static const monthlyStatsFinalPassedLabel = '최종합격';
+  static const monthlyStatsRejectedLabel = '탈락';
+  static const monthlyStatsInProgressLabel = '진행중';
+  static const monthlyStatsRoundTypeSection = '전형 종류';
+  static const monthlyStatsCategorySection = '카테고리';
+  static const monthlyStatsBusyDaySection = '가장 바빴던 날';
+  static String monthlyStatsBusyDayTodos(int count) => '할 일 $count개';
+  static const monthlyStatsPreviewSummary = '지난달 요약';
+  static const weeklyStatsPreviewSummary = '지난주 요약';
   static const leftoverHeadline = '완료하지 않은 할 일이';
   static String leftoverCount(int count) => '$count개';
   static const leftoverExists = '있습니다';
   static const completeAll = '모두 완료';
+  static const postpone = '미루기';
   static const calendarShowTodos = '할일 보기';
   static const calendarShowCompanies = '기업 보기';
   static const calendarVisibleItems = '캘린더에 표시할 항목';
@@ -131,6 +223,7 @@ class AppStrings {
   static const timeClear = '시간 초기화';
   static const timeOrderInvalid = '종료 시간이 시작 시간보다 빠를 수 없어요!';
   static const allDayLabel = '하루 종일';
+  static const allDayShort = '종일';
   static const amLabel = '오전';
   static const pmLabel = '오후';
   static const calendarModeSingle = '일반';

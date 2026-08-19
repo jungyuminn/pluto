@@ -134,15 +134,15 @@ class _AddCategorySheetState extends State<AddCategorySheet> {
                 controller: _name,
                 autofocus: true,
                 textInputAction: TextInputAction.done,
-                style: const TextStyle(
-                  fontFamily: AppFonts.pretendard,
+                style: TextStyle(
+                  fontFamily: AppFonts.of(context),
                   fontWeight: FontWeight.w700,
                   fontSize: 20,
                 ),
                 decoration: InputDecoration(
                   hintText: AppStrings.categoryNameHint,
                   hintStyle: TextStyle(
-                    fontFamily: AppFonts.pretendard,
+                    fontFamily: AppFonts.of(context),
                     color: colors.hint,
                     fontWeight: FontWeight.w600,
                     fontSize: 20,

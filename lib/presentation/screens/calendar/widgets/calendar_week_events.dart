@@ -11,10 +11,14 @@ class CalendarWeekEvents extends StatefulWidget {
     super.key,
     required this.days,
     required this.eventsOf,
+    this.calendarScale = 1,
+    this.labelScale = 1,
   });
 
   final List<CalendarDay> days;
   final List<CalendarEvent> Function(DateTime date) eventsOf;
+  final double calendarScale;
+  final double labelScale;
 
   static const _moveDuration = Duration(milliseconds: 280);
   static const _fadeDuration = Duration(milliseconds: 220);
@@ -23,17 +27,24 @@ class CalendarWeekEvents extends StatefulWidget {
     required List<CalendarDay> days,
     required List<CalendarEvent> Function(DateTime date) eventsOf,
     required double minHeight,
+    double calendarScale = 1,
+    double labelScale = 1,
   }) {
-    final blocks = _blocksFor(days, eventsOf);
+    final blocks = _blocksFor(days, eventsOf, calendarScale, labelScale);
     var content = 0.0;
     for (final day in days) {
-      final top = CalendarDayCell.eventsTopFor(hasHoliday: day.isHoliday) + 6;
+      final top = CalendarDayCell.eventsTopFor(
+            hasHoliday: day.isHoliday,
+            scale: calendarScale,
+          ) +
+          6;
       if (top > content) content = top;
     }
-    const stride = CalendarDayCell.labelHeight + CalendarDayCell.labelGap;
+    final stride =
+        CalendarDayCell.labelHeightFor(labelScale) + CalendarDayCell.labelGap;
+    final labelHeight = CalendarDayCell.labelHeightFor(labelScale);
     for (final block in blocks) {
-      final bottom =
-          block.top + block.lane * stride + CalendarDayCell.labelHeight + 6;
+      final bottom = block.top + block.lane * stride + labelHeight + 6;
       if (bottom > content) content = bottom;
     }
     return math.max(minHeight, content);
@@ -52,15 +63,27 @@ class _CalendarWeekEventsState extends State<CalendarWeekEvents> {
   @override
   void initState() {
     super.initState();
-    _blocks = _blocksFor(widget.days, widget.eventsOf);
+    _blocks = _blocksFor(
+      widget.days,
+      widget.eventsOf,
+      widget.calendarScale,
+      widget.labelScale,
+    );
   }
 
   @override
   void didUpdateWidget(CalendarWeekEvents oldWidget) {
     super.didUpdateWidget(oldWidget);
-    final next = _blocksFor(widget.days, widget.eventsOf);
+    final next = _blocksFor(
+      widget.days,
+      widget.eventsOf,
+      widget.calendarScale,
+      widget.labelScale,
+    );
     final sameWeek = widget.days.first.date == oldWidget.days.first.date &&
-        widget.days.last.date == oldWidget.days.last.date;
+        widget.days.last.date == oldWidget.days.last.date &&
+        widget.calendarScale == oldWidget.calendarScale &&
+        widget.labelScale == oldWidget.labelScale;
     if (!sameWeek) {
       _exitGen++;
       setState(() {
@@ -99,7 +122,10 @@ class _CalendarWeekEventsState extends State<CalendarWeekEvents> {
   @override
   Widget build(BuildContext context) {
     if (_blocks.isEmpty && _exiting.isEmpty) return const SizedBox.expand();
-    const stride = CalendarDayCell.labelHeight + CalendarDayCell.labelGap;
+    final labelScale = widget.labelScale;
+    final stride =
+        CalendarDayCell.labelHeightFor(labelScale) + CalendarDayCell.labelGap;
+    final labelHeight = CalendarDayCell.labelHeightFor(labelScale);
 
     return IgnorePointer(
       child: LayoutBuilder(
@@ -113,7 +139,7 @@ class _CalendarWeekEventsState extends State<CalendarWeekEvents> {
                   left: cellWidth * block.start + CalendarDayCell.sideInset,
                   width: cellWidth * block.span - CalendarDayCell.sideInset * 2,
                   top: block.top + block.lane * stride,
-                  height: CalendarDayCell.labelHeight,
+                  height: labelHeight,
                   child: _FadingLabel(block: block, visible: false),
                 ),
               for (final block in _blocks)
@@ -124,7 +150,7 @@ class _CalendarWeekEventsState extends State<CalendarWeekEvents> {
                   left: cellWidth * block.start + CalendarDayCell.sideInset,
                   width: cellWidth * block.span - CalendarDayCell.sideInset * 2,
                   top: block.top + block.lane * stride,
-                  height: CalendarDayCell.labelHeight,
+                  height: labelHeight,
                   child: _FadingLabel(
                     block: block,
                     visible: true,
@@ -230,6 +256,8 @@ class _OccupiedRange {
 List<_WeekBlock> _blocksFor(
   List<CalendarDay> days,
   List<CalendarEvent> Function(DateTime date) eventsOf,
+  double calendarScale,
+  double labelScale,
 ) {
   final occupied = List.generate(7, (_) => <_OccupiedRange>[]);
   final seenGroups = <String>{};
@@ -279,7 +307,10 @@ List<_WeekBlock> _blocksFor(
 
   final origin = [
     for (final day in days)
-      CalendarDayCell.eventsTopFor(hasHoliday: day.isHoliday),
+      CalendarDayCell.eventsTopFor(
+        hasHoliday: day.isHoliday,
+        scale: calendarScale,
+      ),
   ];
   var shifted = true;
   while (shifted) {
@@ -307,7 +338,9 @@ List<_WeekBlock> _blocksFor(
     return top;
   }
 
-  const stride = CalendarDayCell.labelHeight + CalendarDayCell.labelGap;
+  final stride =
+      CalendarDayCell.labelHeightFor(labelScale) + CalendarDayCell.labelGap;
+  final labelHeight = CalendarDayCell.labelHeightFor(labelScale);
   final blocks = <_WeekBlock>[];
 
   void place(
@@ -324,7 +357,7 @@ List<_WeekBlock> _blocksFor(
     var chosen = lane ?? 0;
     while (true) {
       final labelTop = top + chosen * stride;
-      final labelBottom = labelTop + CalendarDayCell.labelHeight;
+      final labelBottom = labelTop + labelHeight;
       final taken = [
         for (var day = item.start; day <= item.end; day++)
           occupied[day].any((range) => range.overlaps(labelTop, labelBottom)),

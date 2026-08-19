@@ -314,7 +314,7 @@ class _CategoryPickerSheetState extends State<CategoryPickerSheet>
                               : Text(
                                   AppStrings.categoryAction,
                                   style: TextStyle(
-                                    fontFamily: AppFonts.pretendard,
+                                    fontFamily: AppFonts.of(context),
                                     fontSize: 18,
                                     fontWeight: FontWeight.w800,
                                     color: colors.text,
@@ -381,7 +381,7 @@ class _CategoryPickerSheetState extends State<CategoryPickerSheet>
         child: Text(
           label,
           style: TextStyle(
-            fontFamily: AppFonts.pretendard,
+            fontFamily: AppFonts.of(context),
             fontSize: 16,
             fontWeight: FontWeight.w800,
             color: color,
@@ -565,7 +565,7 @@ class _CategoryCard extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      fontFamily: AppFonts.pretendard,
+                      fontFamily: AppFonts.of(context),
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
                       height: 1,

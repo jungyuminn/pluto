@@ -42,7 +42,7 @@ class HomeLeftoverCard extends StatelessWidget {
                 child: Text(
                   AppStrings.leftoverTodos(count),
                   style: TextStyle(
-                    fontFamily: AppFonts.pretendard,
+                    fontFamily: AppFonts.of(context),
                     fontSize: 18,
                     fontWeight: FontWeight.w800,
                     height: 1.1,

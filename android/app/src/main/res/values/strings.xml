@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="today_widget_name">오늘</string>
+    <string name="today_widget_description">오늘의 일정</string>
+    <string name="tomorrow_widget_name">내일</string>
+    <string name="tomorrow_widget_description">내일의 일정</string>
+    <string name="today_tomorrow_widget_name">오늘 + 내일</string>
+    <string name="today_tomorrow_widget_description">오늘과 내일의 일정</string>
+    <string name="week_widget_name">일주일</string>
+    <string name="week_widget_description">이번주 일정 시간표</string>
+</resources>

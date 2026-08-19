@@ -15,14 +15,14 @@ class PositionField extends StatelessWidget {
       controller: controller,
       textInputAction: TextInputAction.next,
       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-        fontFamily: AppFonts.pretendard,
+        fontFamily: AppFonts.of(context),
         fontWeight: FontWeight.w700,
         color: colors.secondary,
       ),
       decoration: InputDecoration(
         hintText: AppStrings.positionHint,
         hintStyle: TextStyle(
-          fontFamily: AppFonts.pretendard,
+          fontFamily: AppFonts.of(context),
           color: colors.hint,
           fontWeight: FontWeight.w700,
           fontSize: 16,

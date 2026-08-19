@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:job_planner/core/home_widget/home_screen_widget_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class DayEventsViewPreference {
@@ -16,16 +19,18 @@ class DayEventsViewPreference {
   bool _sortByTime;
   bool _showTime;
 
-  bool get sortByTime => _sortByTime;
-  bool get showTime => _showTime;
+  bool get sortByTime => _prefs?.getBool(_sortKey) ?? _sortByTime;
+  bool get showTime => _prefs?.getBool(_showTimeKey) ?? _showTime;
 
   Future<void> setSortByTime(bool value) async {
     _sortByTime = value;
     await _prefs?.setBool(_sortKey, value);
+    unawaited(HomeScreenWidgetService.instance.sync());
   }
 
   Future<void> setShowTime(bool value) async {
     _showTime = value;
     await _prefs?.setBool(_showTimeKey, value);
+    unawaited(HomeScreenWidgetService.instance.sync());
   }
 }

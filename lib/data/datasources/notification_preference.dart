@@ -37,12 +37,8 @@ class NotificationPreference {
   static const _summaryEnabledKey = 'summary_reminder_enabled';
   static const _summaryHourKey = 'summary_reminder_hour';
 
-  static List<int> get summaryTimeOptions {
-    final times = [for (var hour = 0; hour < 24; hour++) hour * 60];
-    times.addAll([for (var minute = 30; minute <= 40; minute++) 21 * 60 + minute]);
-    times.sort();
-    return times;
-  }
+  static List<int> get summaryTimeOptions =>
+      [for (var hour = 0; hour < 24; hour++) hour * 60];
 
   final SharedPreferences? _prefs;
   TodoReminderLead _todoReminderLead;
@@ -75,6 +71,7 @@ class NotificationPreference {
   static int _readMinutes(int? stored) {
     if (stored == null) return defaultSummaryMinutes;
     if (stored <= 23) return stored * 60;
-    return stored.clamp(0, 24 * 60 - 1);
+    final minutes = stored.clamp(0, 24 * 60 - 1);
+    return (minutes ~/ 60) * 60;
   }
 }

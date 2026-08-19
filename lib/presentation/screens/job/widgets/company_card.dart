@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:job_planner/core/constants/app_fonts.dart';
 import 'package:job_planner/core/constants/app_strings.dart';
 import 'package:job_planner/core/theme/app_colors.dart';
 import 'package:job_planner/core/utils/open_local_file.dart';
@@ -184,14 +185,16 @@ class _CompanyCardState extends State<CompanyCard>
 
   Widget _title() {
     final position = application.position.trim();
+    final scale = AppFonts.todoScaleOf(context);
     return Row(
       children: [
         Flexible(
           child: Text(
             application.companyName,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              fontSize: 18,
+            style: TextStyle(
+              fontFamily: AppFonts.of(context),
+              fontSize: 18 * scale,
               fontWeight: FontWeight.w700,
             ),
           ),
@@ -202,7 +205,8 @@ class _CompanyCardState extends State<CompanyCard>
               ' ($position)',
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                fontSize: 14,
+                fontFamily: AppFonts.of(context),
+                fontSize: 14 * scale,
                 fontWeight: FontWeight.w600,
                 color: AppColors.of(context).secondary,
               ),

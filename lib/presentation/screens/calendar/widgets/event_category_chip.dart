@@ -49,7 +49,7 @@ class EventCategoryChip extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    fontFamily: AppFonts.pretendard,
+                    fontFamily: AppFonts.of(context),
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
                     color: color,

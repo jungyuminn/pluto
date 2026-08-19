@@ -3,6 +3,7 @@ import 'package:job_planner/app_scope.dart';
 import 'package:job_planner/core/constants/app_fonts.dart';
 import 'package:job_planner/core/constants/app_icons.dart';
 import 'package:job_planner/core/constants/app_strings.dart';
+import 'package:job_planner/core/notifications/todo_reminder_service.dart';
 import 'package:job_planner/core/theme/app_colors.dart';
 import 'package:job_planner/core/utils/fade_in.dart';
 import 'package:job_planner/core/utils/korean_search.dart';
@@ -13,11 +14,14 @@ import 'package:job_planner/domain/entities/calendar_event.dart';
 import 'package:job_planner/domain/entities/event_category.dart';
 import 'package:job_planner/presentation/screens/calendar/calendar_day_events.dart';
 import 'package:job_planner/presentation/screens/home/leftover_todos_screen.dart';
+import 'package:job_planner/presentation/screens/home/monthly_stats_screen.dart';
 import 'package:job_planner/presentation/screens/home/widgets/home_day_card.dart';
 import 'package:job_planner/presentation/screens/home/widgets/home_leftover_card.dart';
+import 'package:job_planner/presentation/screens/home/widgets/home_monthly_stats_card.dart';
 import 'package:job_planner/presentation/screens/settings/settings_screen.dart';
 import 'package:job_planner/presentation/widgets/app_bar_icon_group.dart';
 import 'package:job_planner/presentation/widgets/themed_asset.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key, this.visible = true});
@@ -29,7 +33,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   final _search = PlainTextEditingController();
   final _searchFocus = FocusNode();
   late final AnimationController _searchAnimation;
@@ -54,6 +58,8 @@ class _HomeScreenState extends State<HomeScreen>
 
   DateTime get _tomorrow => _today.add(const Duration(days: 1));
 
+  DateTime get _weekEnd => calendarWeekEnd(_today);
+
   List<CalendarEvent> _filter(List<CalendarEvent> events) {
     final query = _search.text;
     if (KoreanSearch.compact(query).isEmpty) return events;
@@ -68,6 +74,7 @@ class _HomeScreenState extends State<HomeScreen>
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _searchAnimation = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 260),
@@ -96,7 +103,21 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed || !widget.visible) return;
+    _reloadFromDisk();
+  }
+
+  Future<void> _reloadFromDisk() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.reload();
+    await TodoReminderService.instance.sync();
+    if (mounted) await _reload();
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _searchFade.dispose();
     _searchAnimation.dispose();
     _searchFocus.dispose();
@@ -111,7 +132,7 @@ class _HomeScreenState extends State<HomeScreen>
     final categories = await scope.getEventCategories();
     final homePrefs = scope.homeViewPreference;
     if (!mounted) return;
-    final weekEnd = _today.add(const Duration(days: 6));
+    final weekEnd = _weekEnd;
     final monthEnd = DateTime(_today.year, _today.month + 1, 0);
     setState(() {
       _todayEvents = calendarEventsOn(
@@ -156,6 +177,24 @@ class _HomeScreenState extends State<HomeScreen>
     final next = !_compact;
     setState(() => _compact = next);
     await AppScope.of(context).homeViewPreference.setCompact(next);
+  }
+
+  Future<void> _openMonthlyStats() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (context) => const MonthlyStatsScreen(),
+      ),
+    );
+    if (mounted) await _reload();
+  }
+
+  Future<void> _openWeeklyStats() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (context) => const MonthlyStatsScreen(weekly: true),
+      ),
+    );
+    if (mounted) await _reload();
   }
 
   Future<void> _openLeftover() async {
@@ -206,6 +245,7 @@ class _HomeScreenState extends State<HomeScreen>
       resizeToAvoidBottomInset: false,
       backgroundColor: AppColors.of(context).background,
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         backgroundColor: AppColors.of(context).background,
         surfaceTintColor: Colors.transparent,
         titleSpacing: 8,
@@ -264,15 +304,15 @@ class _HomeScreenState extends State<HomeScreen>
                             focusNode: _searchFocus,
                             onChanged: (_) => setState(() {}),
                             textInputAction: TextInputAction.search,
-                            style: const TextStyle(
-                              fontFamily: AppFonts.pretendard,
+                            style: TextStyle(
+                              fontFamily: AppFonts.of(context),
                               fontWeight: FontWeight.w700,
                               fontSize: 15,
                             ),
                             decoration: InputDecoration(
                               hintText: AppStrings.homeSearchHint,
                               hintStyle: TextStyle(
-                                fontFamily: AppFonts.pretendard,
+                                fontFamily: AppFonts.of(context),
                                 color: AppColors.of(context).muted,
                                 fontWeight: FontWeight.w600,
                               ),
@@ -323,6 +363,24 @@ class _HomeScreenState extends State<HomeScreen>
       cards.add(card);
     }
 
+    if (homePrefs.shouldShowWeeklyStats(_today)) {
+      add(
+        HomeMonthlyStatsCard(
+          title: AppStrings.weeklyStatsCardTitle,
+          onPressed: _openWeeklyStats,
+        ),
+      );
+    }
+    if (homePrefs.shouldShowMonthlyStats(_today)) {
+      add(
+        HomeMonthlyStatsCard(
+          title: AppStrings.monthlyStatsCardTitle(
+            DateTime(_today.year, _today.month - 1).month,
+          ),
+          onPressed: _openMonthlyStats,
+        ),
+      );
+    }
     if (homePrefs.showLeftover && leftover.isNotEmpty) {
       add(
         HomeLeftoverCard(
@@ -373,10 +431,7 @@ class _HomeScreenState extends State<HomeScreen>
           showTime: sortPrefs.showTime,
           showAddButton: false,
           dateLabel: _weekLabel,
-          groupDates: calendarDaysInRange(
-            _today,
-            _today.add(const Duration(days: 6)),
-          ),
+          groupDates: calendarDaysInRange(_today, _weekEnd),
           onEventsChanged: _reload,
         ),
       );

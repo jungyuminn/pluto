@@ -552,7 +552,7 @@ class _HomeDayCardState extends State<HomeDayCard> {
             Text(
               widget.title,
               style: TextStyle(
-                fontFamily: AppFonts.pretendard,
+                fontFamily: AppFonts.of(context),
                 fontSize: 18,
                 fontWeight: FontWeight.w800,
                 height: 1.1,
@@ -564,7 +564,7 @@ class _HomeDayCardState extends State<HomeDayCard> {
               Text(
                 _dateLabel!,
                 style: TextStyle(
-                  fontFamily: AppFonts.pretendard,
+                  fontFamily: AppFonts.of(context),
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
                   height: 1.2,
@@ -635,7 +635,7 @@ class _HomeDayCardState extends State<HomeDayCard> {
           child: Text(
             item.headerName ?? '',
             style: TextStyle(
-              fontFamily: AppFonts.pretendard,
+              fontFamily: AppFonts.of(context),
               fontSize: 14,
               fontWeight: FontWeight.w800,
               height: 1,
@@ -667,7 +667,7 @@ class _HomeDayCardState extends State<HomeDayCard> {
               Text(
                 item.headerName ?? '',
                 style: TextStyle(
-                  fontFamily: AppFonts.pretendard,
+                  fontFamily: AppFonts.of(context),
                   fontSize: 13,
                   fontWeight: FontWeight.w800,
                   height: 1,

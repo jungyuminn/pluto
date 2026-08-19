@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:job_planner/data/datasources/calendar_preference.dart';
 import 'package:job_planner/data/datasources/day_events_view_preference.dart';
+import 'package:job_planner/data/datasources/font_preference.dart';
 import 'package:job_planner/data/datasources/home_view_preference.dart';
 import 'package:job_planner/data/datasources/job_view_preference.dart';
 import 'package:job_planner/data/datasources/notification_preference.dart';
@@ -41,6 +43,8 @@ class AppScope extends InheritedWidget {
     required this.jobViewPreference,
     required this.homeViewPreference,
     required this.dayEventsViewPreference,
+    required this.calendarPreference,
+    required this.fontPreference,
     required this.notificationPreference,
     required this.themePreference,
     required super.child,
@@ -64,13 +68,19 @@ class AppScope extends InheritedWidget {
   final JobViewPreference jobViewPreference;
   final HomeViewPreference homeViewPreference;
   final DayEventsViewPreference dayEventsViewPreference;
+  final CalendarPreference calendarPreference;
+  final FontPreference fontPreference;
   final NotificationPreference notificationPreference;
   final ThemePreference themePreference;
 
   static AppScope of(BuildContext context) {
-    final scope = context.dependOnInheritedWidgetOfExactType<AppScope>();
+    final scope = maybeOf(context);
     assert(scope != null, 'AppScope가 위젯 트리에 없습니다.');
     return scope!;
+  }
+
+  static AppScope? maybeOf(BuildContext context) {
+    return context.dependOnInheritedWidgetOfExactType<AppScope>();
   }
 
   @override
@@ -93,6 +103,8 @@ class AppScope extends InheritedWidget {
         jobViewPreference != oldWidget.jobViewPreference ||
         homeViewPreference != oldWidget.homeViewPreference ||
         dayEventsViewPreference != oldWidget.dayEventsViewPreference ||
+        calendarPreference != oldWidget.calendarPreference ||
+        fontPreference != oldWidget.fontPreference ||
         notificationPreference != oldWidget.notificationPreference ||
         themePreference != oldWidget.themePreference;
   }

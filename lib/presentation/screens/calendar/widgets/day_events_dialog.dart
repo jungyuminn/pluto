@@ -698,7 +698,7 @@ class _DayEventsDialogState extends State<DayEventsDialog> {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    fontFamily: AppFonts.pretendard,
+                    fontFamily: AppFonts.of(context),
                     fontSize: 13,
                     fontWeight: FontWeight.w800,
                     height: 1,

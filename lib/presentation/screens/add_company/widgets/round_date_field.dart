@@ -47,7 +47,7 @@ class RoundDateField extends StatelessWidget {
       child: Text(
         _label,
         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-          fontFamily: AppFonts.pretendard,
+          fontFamily: AppFonts.of(context),
           fontWeight: FontWeight.w700,
           color: AppColors.of(context).secondary,
           fontSize: 16,

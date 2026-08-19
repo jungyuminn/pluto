@@ -187,7 +187,7 @@ class _MenuItem extends StatelessWidget {
                 child: Text(
                   label,
                   style: TextStyle(
-                    fontFamily: AppFonts.pretendard,
+                    fontFamily: AppFonts.of(context),
                     fontSize: 16,
                     fontWeight: FontWeight.w500,
                     color: AppColors.of(context).text,
@@ -245,7 +245,7 @@ class _FilterItem extends StatelessWidget {
                 child: Text(
                   label,
                   style: TextStyle(
-                    fontFamily: AppFonts.pretendard,
+                    fontFamily: AppFonts.of(context),
                     fontSize: 16,
                     fontWeight: FontWeight.w500,
                     color: AppColors.of(context).text,

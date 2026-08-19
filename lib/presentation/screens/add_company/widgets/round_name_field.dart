@@ -22,13 +22,13 @@ class RoundNameField extends StatelessWidget {
       autofocus: true,
       textInputAction: TextInputAction.next,
       style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-        fontFamily: AppFonts.pretendard,
+        fontFamily: AppFonts.of(context),
         fontWeight: FontWeight.w700,
       ),
       decoration: InputDecoration(
         hintText: AppStrings.roundStageNameHint,
         hintStyle: TextStyle(
-          fontFamily: AppFonts.pretendard,
+          fontFamily: AppFonts.of(context),
           color: colors.hint,
           fontWeight: FontWeight.w600,
         ),

@@ -22,6 +22,7 @@ class _LeftoverTodosScreenState extends State<LeftoverTodosScreen> {
   final _listKey = GlobalKey<AnimatedListState>();
   var _events = <CalendarEvent>[];
   var _loading = true;
+  static const _removeDuration = Duration(milliseconds: 320);
 
   DateTime get _today {
     final now = DateTime.now();
@@ -47,12 +48,14 @@ class _LeftoverTodosScreenState extends State<LeftoverTodosScreen> {
       return;
     }
     _sync(next);
-    if (popIfEmpty && next.isEmpty && mounted) Navigator.pop(context);
+    if (popIfEmpty && next.isEmpty && mounted) {
+      await Future<void>.delayed(_removeDuration);
+      if (mounted) Navigator.pop(context);
+    }
   }
 
   void _sync(List<CalendarEvent> next) {
     final list = _listKey.currentState;
-    const duration = Duration(milliseconds: 220);
 
     for (var i = _events.length - 1; i >= 0; i--) {
       if (next.any((event) => event.id == _events[i].id)) continue;
@@ -60,7 +63,7 @@ class _LeftoverTodosScreenState extends State<LeftoverTodosScreen> {
       list?.removeItem(
         i,
         (context, animation) => _tile(removed, animation),
-        duration: duration,
+        duration: _removeDuration,
       );
     }
 
@@ -72,7 +75,7 @@ class _LeftoverTodosScreenState extends State<LeftoverTodosScreen> {
       }
       if (_events.any((existing) => existing.id == event.id)) continue;
       _events.insert(i, event);
-      list?.insertItem(i, duration: duration);
+      list?.insertItem(i, duration: _removeDuration);
     }
 
     setState(() {});
@@ -85,6 +88,13 @@ class _LeftoverTodosScreenState extends State<LeftoverTodosScreen> {
       event: event,
     );
     if (saved && mounted) await _reload(popIfEmpty: true);
+  }
+
+  Future<void> _postpone(CalendarEvent event) async {
+    await AppScope.of(context).updateCalendarEvent.instance(
+      event.copyWith(date: _today),
+    );
+    if (mounted) await _reload(popIfEmpty: true);
   }
 
   Future<void> _toggleComplete(CalendarEvent event) async {
@@ -100,7 +110,8 @@ class _LeftoverTodosScreenState extends State<LeftoverTodosScreen> {
 
   Future<void> _completeAll() async {
     final updater = AppScope.of(context).updateCalendarEvent;
-    for (final event in List.of(_events)) {
+    final events = List.of(_events);
+    for (final event in events) {
       final next = event.copyWith(completed: true);
       if (event.isRepeat) {
         await updater.instance(next);
@@ -108,6 +119,18 @@ class _LeftoverTodosScreenState extends State<LeftoverTodosScreen> {
         await updater(next);
       }
     }
+    if (!mounted) return;
+    final list = _listKey.currentState;
+    for (var i = _events.length - 1; i >= 0; i--) {
+      final removed = _events.removeAt(i);
+      list?.removeItem(
+        i,
+        (context, animation) => _tile(removed, animation),
+        duration: _removeDuration,
+      );
+    }
+    setState(() {});
+    await Future<void>.delayed(_removeDuration);
     if (mounted) Navigator.pop(context);
   }
 
@@ -182,7 +205,7 @@ class _LeftoverTodosScreenState extends State<LeftoverTodosScreen> {
                         child: Text(
                           AppStrings.completeAll,
                           style: TextStyle(
-                            fontFamily: AppFonts.pretendard,
+                            fontFamily: AppFonts.of(context),
                             fontSize: 14,
                             fontWeight: FontWeight.w700,
                             color: colors.accent,
@@ -199,7 +222,7 @@ class _LeftoverTodosScreenState extends State<LeftoverTodosScreen> {
             child: Text.rich(
               TextSpan(
                 style: TextStyle(
-                  fontFamily: AppFonts.pretendard,
+                  fontFamily: AppFonts.of(context),
                   fontSize: 28,
                   fontWeight: FontWeight.w800,
                   height: 1.25,
@@ -251,6 +274,7 @@ class _LeftoverTodosScreenState extends State<LeftoverTodosScreen> {
               event: event,
               today: _today,
               onEdit: () => _edit(event),
+              onPostpone: () => _postpone(event),
               onComplete: () => _toggleComplete(event),
               onDelete: () => _delete(event),
             ),

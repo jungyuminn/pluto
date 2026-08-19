@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_row_root"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <ImageView
+        android:id="@+id/widget_row_image"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:adjustViewBounds="true"
+        android:contentDescription="@null"
+        android:scaleType="fitXY" />
+
+    <ImageView
+        android:id="@+id/widget_row_complete"
+        android:layout_width="44dp"
+        android:layout_height="52dp"
+        android:layout_gravity="end|top"
+        android:background="@android:color/transparent"
+        android:contentDescription="완료"
+        android:visibility="gone" />
+</FrameLayout>

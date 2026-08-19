@@ -68,8 +68,8 @@ class _EventTimeSheetState extends State<EventTimeSheet> {
   void initState() {
     super.initState();
     final now = DateTime.now();
-    final rounded = _snap(now.hour * 60 + now.minute);
-    _startMinutes = _snap(widget.startMinutes ?? rounded);
+    final hourStart = now.hour * 60;
+    _startMinutes = _snap(widget.startMinutes ?? hourStart);
     _endMinutes = _snap(widget.endMinutes ?? _startMinutes + 60);
   }
 
@@ -169,7 +169,7 @@ class _EventTimeSheetState extends State<EventTimeSheet> {
                       child: Text(
                         AppStrings.timeClear,
                         style: TextStyle(
-                          fontFamily: AppFonts.pretendard,
+                          fontFamily: AppFonts.of(context),
                           fontSize: 15,
                           fontWeight: FontWeight.w800,
                           color: AppColors.of(context).danger,
@@ -211,7 +211,7 @@ class _EventTimeSheetState extends State<EventTimeSheet> {
       label,
       textAlign: TextAlign.center,
       style: TextStyle(
-        fontFamily: AppFonts.pretendard,
+        fontFamily: AppFonts.of(context),
         fontSize: 16,
         fontWeight: FontWeight.w800,
         color: widget.color,
@@ -382,7 +382,7 @@ class _FlatWheelState extends State<_FlatWheel> {
                 child: Text(
                   widget.labelAt(index),
                   style: TextStyle(
-                    fontFamily: AppFonts.pretendard,
+                    fontFamily: AppFonts.of(context),
                     fontSize: 16,
                     fontWeight: FontWeight.w800,
                     height: 1,
@@ -422,7 +422,7 @@ class _TimeHintToast extends StatelessWidget {
           AppStrings.timeOrderInvalid,
           textAlign: TextAlign.center,
           style: TextStyle(
-            fontFamily: AppFonts.pretendard,
+            fontFamily: AppFonts.of(context),
             fontSize: 14,
             fontWeight: FontWeight.w600,
             height: 1.35,

@@ -32,7 +32,7 @@ class DeleteRepeatEventDialog extends StatelessWidget {
             Text(
               AppStrings.deleteRepeatTitle,
               style: TextStyle(
-                fontFamily: AppFonts.pretendard,
+                fontFamily: AppFonts.of(context),
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
                 height: 1.4,
@@ -88,7 +88,7 @@ class _OptionButton extends StatelessWidget {
           child: Text(
             label,
             style: TextStyle(
-              fontFamily: AppFonts.pretendard,
+              fontFamily: AppFonts.of(context),
               fontSize: 15,
               fontWeight: FontWeight.w600,
               color: colors.danger,

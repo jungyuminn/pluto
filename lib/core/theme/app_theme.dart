@@ -1,17 +1,32 @@
 import 'package:flutter/material.dart';
-import 'package:job_planner/core/constants/app_fonts.dart';
 import 'package:job_planner/core/theme/app_colors.dart';
+import 'package:job_planner/data/datasources/font_preference.dart';
 
 class AppTheme {
   AppTheme._();
 
   static const seedColor = Color(0xFF1D4ED8);
 
-  static ThemeData get light => _theme(AppColors.light, Brightness.light);
+  static ThemeData get light => themed(dark: false);
 
-  static ThemeData get dark => _theme(AppColors.dark, Brightness.dark);
+  static ThemeData get dark => themed(dark: true);
 
-  static ThemeData _theme(AppColors colors, Brightness brightness) {
+  static ThemeData themed({
+    required bool dark,
+    AppTypeface typeface = AppTypeface.pretendard,
+  }) {
+    return _theme(
+      dark ? AppColors.dark : AppColors.light,
+      dark ? Brightness.dark : Brightness.light,
+      typeface.fontFamily,
+    );
+  }
+
+  static ThemeData _theme(
+    AppColors colors,
+    Brightness brightness,
+    String? fontFamily,
+  ) {
     final colorScheme = ColorScheme.fromSeed(
       seedColor: seedColor,
       brightness: brightness,
@@ -25,7 +40,7 @@ class AppTheme {
       colorScheme: colorScheme,
       useMaterial3: true,
       brightness: brightness,
-      fontFamily: AppFonts.pretendard,
+      fontFamily: fontFamily,
       scaffoldBackgroundColor: colors.background,
       canvasColor: colors.background,
       dividerColor: colors.border,

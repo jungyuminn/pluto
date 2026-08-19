@@ -24,14 +24,14 @@ class CompanyNameField extends StatelessWidget {
       autofocus: autofocus,
       textInputAction: TextInputAction.next,
       style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-        fontFamily: AppFonts.pretendard,
+        fontFamily: AppFonts.of(context),
         fontWeight: FontWeight.w700,
         fontSize: 20,
       ),
       decoration: InputDecoration(
         hintText: AppStrings.companyNameHint,
         hintStyle: TextStyle(
-          fontFamily: AppFonts.pretendard,
+          fontFamily: AppFonts.of(context),
           color: colors.hint,
           fontWeight: FontWeight.w600,
           fontSize: 20,

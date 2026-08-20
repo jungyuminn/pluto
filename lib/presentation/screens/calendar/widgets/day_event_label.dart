@@ -19,7 +19,9 @@ class DayEventLabel extends StatefulWidget {
     this.onLongPressed,
     this.onCompletePressed,
     this.showCategory = true,
+    this.memo = '',
     this.timeText,
+    this.titleWeight = FontWeight.w600,
   });
 
   final String title;
@@ -33,7 +35,9 @@ class DayEventLabel extends StatefulWidget {
   final VoidCallback? onLongPressed;
   final VoidCallback? onCompletePressed;
   final bool showCategory;
+  final String memo;
   final String? timeText;
+  final FontWeight titleWeight;
 
   @override
   State<DayEventLabel> createState() => _DayEventLabelState();
@@ -59,6 +63,8 @@ class _DayEventLabelState extends State<DayEventLabel> {
     final background = colors.tint(widget.color, 0.22);
     final scale = AppFonts.labelScaleOf(context);
     final height = _height * scale;
+    final memoText = widget.memo.trim().replaceAll(RegExp(r'\s+'), ' ');
+    final hasMemo = memoText.isNotEmpty;
 
     return PressBounce(
       onPressed: () {
@@ -114,36 +120,67 @@ class _DayEventLabelState extends State<DayEventLabel> {
                           style: TextStyle(
                             fontFamily: AppFonts.of(context),
                             fontSize: 12 * scale,
-                            fontWeight: FontWeight.w700,
+                            fontWeight: widget.titleWeight,
                             height: 1.15,
                             color: colors.text,
                           ),
                         ),
-                        if (widget.showCategory || widget.timeText != null) ...[
+                        if (widget.showCategory ||
+                            hasMemo ||
+                            widget.timeText != null) ...[
                           const SizedBox(height: 5),
                           Row(
                             children: [
-                              if (widget.showCategory)
+                              if (widget.showCategory || hasMemo)
                                 Expanded(
-                                  child: Text(
-                                    widget.categoryName,
+                                  child: Text.rich(
+                                    TextSpan(
+                                      children: [
+                                        if (widget.showCategory)
+                                          TextSpan(
+                                            text: widget.categoryName,
+                                            style: TextStyle(
+                                              fontFamily: AppFonts.of(context),
+                                              fontSize: 10 * scale,
+                                              fontWeight: FontWeight.w600,
+                                              height: 1.15,
+                                              color: colors.hint,
+                                            ),
+                                          ),
+                                        if (widget.showCategory && hasMemo)
+                                          TextSpan(
+                                            text: '  ·  ',
+                                            style: TextStyle(
+                                              fontFamily: AppFonts.of(context),
+                                              fontSize: 10 * scale,
+                                              fontWeight: FontWeight.w600,
+                                              height: 1.15,
+                                              color: colors.hint,
+                                            ),
+                                          ),
+                                        if (hasMemo)
+                                          TextSpan(
+                                            text: memoText,
+                                            style: TextStyle(
+                                              fontFamily: AppFonts.of(context),
+                                              fontSize: 10 * scale,
+                                              fontWeight: FontWeight.w500,
+                                              height: 1.15,
+                                              color: colors.hint,
+                                            ),
+                                          ),
+                                      ],
+                                    ),
                                     maxLines: 1,
                                     softWrap: false,
                                     overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(
-                                      fontFamily: AppFonts.of(context),
-                                      fontSize: 10 * scale,
-                                      fontWeight: FontWeight.w600,
-                                      height: 1.15,
-                                      color: colors.hint,
-                                    ),
                                   ),
                                 )
                               else
                                 const Spacer(),
-                              if (widget.showCategory && widget.timeText != null)
-                                const SizedBox(width: 6),
-                              if (widget.timeText != null)
+                              if (widget.timeText != null) ...[
+                                if (widget.showCategory || hasMemo)
+                                  const SizedBox(width: 6),
                                 Text(
                                   widget.timeText!,
                                   maxLines: 1,
@@ -155,6 +192,7 @@ class _DayEventLabelState extends State<DayEventLabel> {
                                     color: widget.color,
                                   ),
                                 ),
+                              ],
                             ],
                           ),
                         ],

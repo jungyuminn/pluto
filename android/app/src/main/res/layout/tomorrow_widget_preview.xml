@@ -11,8 +11,8 @@
         android:layout_height="wrap_content"
         android:text="내일"
         android:textColor="#0F172A"
-        android:textSize="18sp"
-        android:textStyle="bold" />
+        android:textSize="17sp"
+        android:fontFamily="sans-serif-medium" />
 
     <TextView
         android:layout_width="match_parent"
@@ -36,9 +36,10 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
+            android:fontFamily="sans-serif-medium"
             android:text="면접"
             android:textColor="#0F172A"
-            android:textSize="12sp"
-            android:textStyle="bold" />
+            android:textFontWeight="600"
+            android:textSize="12sp" />
     </LinearLayout>
 </LinearLayout>

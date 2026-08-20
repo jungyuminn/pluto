@@ -16,11 +16,23 @@ class AppStrings {
   static const homeShowTomorrow = '내일';
   static const homeShowWeek = '이번 주';
   static const homeShowMonth = '이번 달';
-  static const settingsMonthlyStatsSection = '통계';
+  static const settingsMonthlyStatsSection = '통계 알림';
   static const homeShowMonthlyStats = '지난달 요약';
   static const homeShowWeeklyStats = '지난주 요약';
-  static const settingsTodoSection = '할 일';
+  static const settingsTodoSection = '할 일 설정';
   static const settingsAppearanceSection = '화면 모드';
+  static const settingsThemeSection = '테마 설정';
+  static const themeKind = '테마 종류';
+  static const themeClassic = '기본';
+  static const themeBlossom = '블라썸';
+  static const themeSummerBeach = '한여름 바닷가';
+  static const themeAutumnForest = '가을숲';
+  static const themeSnowyWinter = '눈 내리는 겨울';
+  static const themeSquishyBear = '말랑곰탱이';
+  static const themeStrawberryMilk = '딸기우유';
+  static const themeOnionVillage = '양파마을';
+  static const themeLovelyBear = '러블리베어';
+  static const themeRainyDay = '비와 같이 폴짝';
   static const settingsFontSection = '폰트 설정';
   static const fontFamily = '폰트 종류';
   static const fontTodoSize = '할 일·기업 크기';
@@ -29,6 +41,9 @@ class AppStrings {
   static const fontLabelScale = '할 일 폰트 크기';
   static const fontCalendarChipScale = '캘린더 폰트 크기';
   static const fontPretendard = '프리텐다드';
+  static const fontPaperlogy = '페이퍼로지';
+  static const fontSuit = '수트';
+  static const fontTheJamsil = '더잠실체';
   static const fontSystem = '기기 기본';
   static const fontGothic = '고딕';
   static const fontSerif = '명조';
@@ -39,6 +54,9 @@ class AppStrings {
   static const fontMona = '모나체';
   static const fontOmyu = '오뮤체';
   static const fontBazzi = '배찌체';
+  static const fontMabinogi = '마비노기체';
+  static const fontBabyShark = '아기상어체';
+  static const fontCookieRun = '쿠키런체';
   static const fontSizeSmall = '작게';
   static const fontSizeMedium = '보통';
   static const fontSizeLarge = '크게';
@@ -48,8 +66,6 @@ class AppStrings {
   static const settingsCalendarSection = '캘린더 설정';
   static const calendarStartMonday = '월요일부터 시작';
   static const settingsHelpPreview = '미리보기';
-  static const settingsHomeHelp =
-      '할 일을 한 줄로 나열하거나, 카테고리별로 묶어서 볼 수 있어요';
   static const settingsHomeLayoutHelp =
       '홈 화면에 보여줄 카드를 고를 수 있어요';
   static const settingsTodoHelp =
@@ -58,6 +74,8 @@ class AppStrings {
       '시간이 있는 할 일은 미리 알려주고, 매일 정해진 시간에 오늘 일정을 모아 알려줘요';
   static const settingsAppearanceHelp =
       '화면을 밝은 테마나 어두운 테마로 바꿀 수 있어요';
+  static const settingsThemeHelp =
+      '홈·캘린더 화면의 배경과 아이콘 분위기를 바꿀 수 있어요';
   static const settingsCalendarHelp =
       '달력의 첫 요일을 바꿀 수 있어요';
   static const settingsCalendarHelpWithFontSize =
@@ -113,6 +131,7 @@ class AppStrings {
   static const deleteTitle = '정말 삭제할까요?';
   static const deleteBody = '정보가 사라져요';
   static const deleteEventBody = '일정이 사라져요';
+  static const deleteCategoryBody = '카테고리가 사라져요';
   static const deleteCompanyBody = '기업이 사라져요';
   static const deleteCoverLetterTitle = '자소서를 삭제하시나요?';
   static const deleteCoverLetterBody = '파일이 사라져요';
@@ -206,6 +225,7 @@ class AppStrings {
   static const editOneCategoryTitle = '수정은 하나만 가능해요';
   static const editOneCategoryBody = '카테고리를 하나만 선택해 주세요';
   static const addCategoryTitle = '카테고리 추가';
+  static const categoryColorInUse = '사용 중인 색';
   static const categoryNameHint = '카테고리명을 입력하세요';
   static const missingCategoryBody = '카테고리명은 필수사항이에요!';
   static const dateAction = '날짜';

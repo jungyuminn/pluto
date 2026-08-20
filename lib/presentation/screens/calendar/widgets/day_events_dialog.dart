@@ -7,15 +7,16 @@ import 'package:job_planner/core/constants/app_fonts.dart';
 import 'package:job_planner/core/constants/app_icons.dart';
 import 'package:job_planner/core/constants/app_strings.dart';
 import 'package:job_planner/core/theme/app_colors.dart';
+import 'package:job_planner/core/theme/app_skin_background.dart';
 import 'package:job_planner/core/utils/swipe_to_delete.dart';
 import 'package:job_planner/domain/entities/calendar_event.dart';
 import 'package:job_planner/domain/entities/event_category.dart';
 import 'package:job_planner/domain/entities/job_application.dart';
 import 'package:job_planner/presentation/screens/add_company/widgets/add_company_sheet.dart';
-import 'package:job_planner/presentation/screens/add_company/widgets/missing_fields_dialog.dart';
 import 'package:job_planner/presentation/screens/calendar/calendar_day_events.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/add_event_button.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/add_event_sheet.dart';
+import 'package:job_planner/presentation/screens/calendar/widgets/calendar_month_grid.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/day_event_label.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/delete_event_dialog.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/delete_repeat_event_dialog.dart';
@@ -28,11 +29,12 @@ Future<void> showDayEventsDialog(
   VoidCallback? onEventsChanged,
   Rect? origin,
 }) {
+  CalendarDayDropTarget.reset();
   return showGeneralDialog<void>(
     context: context,
-    barrierDismissible: true,
+    barrierDismissible: false,
     barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
-    barrierColor: const Color(0x33000000),
+    barrierColor: const Color(0x00000000),
     transitionDuration: const Duration(milliseconds: 150),
     pageBuilder: (context, animation, secondaryAnimation) {
       return DayEventsDialog(
@@ -45,34 +47,62 @@ Future<void> showDayEventsDialog(
       final t = Curves.easeOutCubic.transform(animation.value);
       final fade = (0.25 + animation.value * 1.5).clamp(0.0, 1.0);
       final source = origin;
+      Widget dialog = child;
       if (source == null || source.isEmpty) {
-        return Opacity(
+        dialog = Opacity(
           opacity: fade,
           child: Transform.scale(
             scale: lerpDouble(0.92, 1, t)!,
             child: child,
           ),
         );
+      } else {
+        final size = MediaQuery.sizeOf(context);
+        const dialogWidth = 260.0;
+        final dialogHeight =
+            (size.height * 0.56).clamp(420.0, 530.0).toDouble();
+        final beginScale =
+            ((source.width / dialogWidth + source.height / dialogHeight) / 2)
+                .clamp(0.12, 0.38);
+        final delta = source.center - Offset(size.width / 2, size.height / 2);
+        dialog = Opacity(
+          opacity: fade,
+          child: Transform.translate(
+            offset: delta * (1 - t),
+            child: Transform.scale(
+              scale: lerpDouble(beginScale, 1, t)!,
+              child: child,
+            ),
+          ),
+        );
       }
 
-      final size = MediaQuery.sizeOf(context);
-      const dialogWidth = 260.0;
-      final dialogHeight =
-          (size.height * 0.56).clamp(420.0, 530.0).toDouble();
-      final beginScale =
-          ((source.width / dialogWidth + source.height / dialogHeight) / 2)
-              .clamp(0.12, 0.38);
-      final delta = source.center - Offset(size.width / 2, size.height / 2);
-
-      return Opacity(
-        opacity: fade,
-        child: Transform.translate(
-          offset: delta * (1 - t),
-          child: Transform.scale(
-            scale: lerpDouble(beginScale, 1, t)!,
-            child: child,
+      return Stack(
+        children: [
+          Positioned.fill(
+            child: FadeTransition(
+              opacity: animation,
+              child: ValueListenableBuilder<bool>(
+                valueListenable: CalendarDayDropTarget.hidingScrim,
+                builder: (context, hiding, _) {
+                  return IgnorePointer(
+                    ignoring: hiding,
+                    child: AnimatedOpacity(
+                      opacity: hiding ? 0 : 1,
+                      duration: const Duration(milliseconds: 140),
+                      child: GestureDetector(
+                        onTap: () => Navigator.of(context).maybePop(),
+                        behavior: HitTestBehavior.opaque,
+                        child: const ColoredBox(color: Color(0x33000000)),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
           ),
-        ),
+          dialog,
+        ],
       );
     },
   );
@@ -97,6 +127,7 @@ class DayEventsDialog extends StatefulWidget {
 class _DayEventsDialogState extends State<DayEventsDialog> {
   final _listController = ScrollController();
   final _listBoxKey = GlobalKey();
+  final _dialogKey = GlobalKey();
   late final List<CalendarEvent> _events;
   var _items = <_ListEntry>[];
   var _categories = <EventCategory>[];
@@ -105,6 +136,7 @@ class _DayEventsDialogState extends State<DayEventsDialog> {
   var _showTime = false;
   var _initialized = false;
   String? _draggingId;
+  var _draggingOutside = false;
   final _reveals = <String, double>{};
 
   static const _eventExtent = 62.0;
@@ -134,6 +166,7 @@ class _DayEventsDialogState extends State<DayEventsDialog> {
 
   @override
   void dispose() {
+    CalendarDayDropTarget.clear();
     _listController.dispose();
     super.dispose();
   }
@@ -317,15 +350,6 @@ class _DayEventsDialogState extends State<DayEventsDialog> {
     await AppScope.of(context).homeViewPreference.setCompact(next);
   }
 
-  Future<void> _explainTimeSortLock() {
-    HapticFeedback.lightImpact();
-    return showMissingFieldsDialog(
-      context,
-      title: AppStrings.timeSortLockTitle,
-      body: AppStrings.timeSortLockBody,
-    );
-  }
-
   Future<void> _add() async {
     final saved = await showAddEventSheet(context, date: widget.date);
     if (saved && mounted) await _reload();
@@ -438,22 +462,93 @@ class _DayEventsDialogState extends State<DayEventsDialog> {
     return y;
   }
 
+  bool _contains(GlobalKey key, Offset global) {
+    final box = key.currentContext?.findRenderObject() as RenderBox?;
+    if (box == null || !box.hasSize) return false;
+    return (box.localToGlobal(Offset.zero) & box.size).contains(global);
+  }
+
   void _onDragStarted(CalendarEvent event) {
-    setState(() => _draggingId = event.id);
+    setState(() {
+      _draggingId = event.id;
+      _draggingOutside = false;
+    });
   }
 
   void _onDragUpdate(Offset global) {
     final dragged = _draggedEvent;
     if (dragged == null) return;
-    final box = _listBoxKey.currentContext?.findRenderObject() as RenderBox?;
-    if (box == null || !box.hasSize) return;
-    _moveInGroup(dragged, _groupIndexAt(box.globalToLocal(global).dy, dragged));
+
+    if (!_draggingOutside) {
+      final insideDialog = _contains(_dialogKey, global);
+      final insideList = insideDialog && _contains(_listBoxKey, global);
+      if (insideList) {
+        CalendarDayDropTarget.clear();
+        if (!_sortByTime) {
+          final box =
+              _listBoxKey.currentContext?.findRenderObject() as RenderBox?;
+          if (box == null || !box.hasSize) return;
+          _moveInGroup(
+            dragged,
+            _groupIndexAt(box.globalToLocal(global).dy, dragged),
+          );
+        }
+        return;
+      }
+      if (insideDialog) {
+        CalendarDayDropTarget.clear();
+        return;
+      }
+      setState(() => _draggingOutside = true);
+      CalendarDayDropTarget.setScrimHidden(true);
+    }
+
+    final overDate = CalendarDayDropTarget.dateAt(global);
+    if (overDate != null &&
+        !CalendarDayDropTarget.isSameDay(overDate, widget.date)) {
+      final was = CalendarDayDropTarget.highlighted.value;
+      CalendarDayDropTarget.highlight(overDate);
+      if (was == null || !CalendarDayDropTarget.isSameDay(was, overDate)) {
+        HapticFeedback.selectionClick();
+      }
+      return;
+    }
+    CalendarDayDropTarget.clear();
   }
 
-  void _onDragEnded() {
-    final shouldSave = _draggingId != null;
-    setState(() => _draggingId = null);
-    if (shouldSave) _persistTodoOrder();
+  Future<void> _onDragEnded() async {
+    final event = _draggedEvent;
+    final dropDate = CalendarDayDropTarget.highlighted.value;
+    final shouldSaveOrder = _draggingId != null && !_sortByTime;
+    final moving = event != null &&
+        dropDate != null &&
+        !CalendarDayDropTarget.isSameDay(dropDate, widget.date);
+    CalendarDayDropTarget.clear();
+    if (!moving) CalendarDayDropTarget.setScrimHidden(false);
+    if (!mounted) return;
+    setState(() {
+      _draggingId = null;
+      _draggingOutside = false;
+    });
+    if (moving) {
+      await _moveToDate(event, dropDate);
+      if (mounted) Navigator.of(context).pop();
+      return;
+    }
+    if (shouldSaveOrder) await _persistTodoOrder();
+  }
+
+  Future<void> _moveToDate(CalendarEvent event, DateTime date) async {
+    final next = event.copyWith(
+      date: DateTime(date.year, date.month, date.day),
+    );
+    final updater = AppScope.of(context).updateCalendarEvent;
+    if (event.isRepeat) {
+      await updater.instance(next);
+    } else {
+      await updater(next);
+    }
+    widget.onEventsChanged?.call();
   }
 
   CalendarEvent? get _draggedEvent {
@@ -557,71 +652,88 @@ class _DayEventsDialogState extends State<DayEventsDialog> {
     return MediaQuery.removeViewInsets(
       context: context,
       removeBottom: true,
-      child: Dialog(
-        backgroundColor: colors.card,
-        surfaceTintColor: Colors.transparent,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        child: SizedBox(
-          height: height,
-          width: 260,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 20, 16, 20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+      child: AnimatedOpacity(
+        opacity: _draggingOutside ? 0 : 1,
+        duration: const Duration(milliseconds: 140),
+        child: IgnorePointer(
+          ignoring: _draggingOutside,
+          child: Dialog(
+            backgroundColor: Colors.transparent,
+            surfaceTintColor: Colors.transparent,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(24),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(24),
+              child: SizedBox(
+                key: _dialogKey,
+                height: height,
+                width: 260,
+                child: AppSkinBackground(
+                  color: colors.card,
+                  liftForNav: false,
+                  child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 20, 16, 20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            _title,
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w800,
-                              color: colors.text,
-                            ),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                _title,
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w800,
+                                  color: colors.text,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                _dDayLabel,
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
+                                  height: 1,
+                                  color: _dDayColor(colors),
+                                ),
+                              ),
+                            ],
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            _dDayLabel,
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w700,
-                              height: 1,
-                              color: _dDayColor(colors),
-                            ),
-                          ),
-                        ],
-                      ),
+                        ),
+                        AppBarPill(
+                          asset: _compact
+                              ? AppIcons.detailView
+                              : AppIcons.quickView,
+                          label: _compact
+                              ? AppStrings.defaultView
+                              : AppStrings.categoryView,
+                          onPressed: _toggleCompact,
+                        ),
+                      ],
                     ),
-                    AppBarPill(
-                      asset: _compact
-                          ? AppIcons.detailView
-                          : AppIcons.quickView,
-                      label: _compact
-                          ? AppStrings.defaultView
-                          : AppStrings.categoryView,
-                      onPressed: _toggleCompact,
+                    const SizedBox(height: 15),
+                    Expanded(
+                      child: _buildList(),
+                    ),
+                    const SizedBox(height: 16),
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: AddEventButton(onPressed: _add),
                     ),
                   ],
                 ),
-                const SizedBox(height: 15),
-                Expanded(
-                  child: _buildList(),
-                ),
-                const SizedBox(height: 16),
-                Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: AddEventButton(onPressed: _add),
-                ),
-              ],
+              ),
             ),
           ),
         ),
       ),
+    ),
+    ),
     );
   }
 
@@ -720,6 +832,7 @@ class _DayEventsDialogState extends State<DayEventsDialog> {
             categoryName: event.categoryName,
             color: event.color,
             isJob: true,
+            memo: event.memo,
             timeText: timeText,
             onPressed: () => _edit(event),
           )
@@ -730,9 +843,10 @@ class _DayEventsDialogState extends State<DayEventsDialog> {
             completed: event.completed,
             isRepeat: event.isRepeat,
             isRange: event.isRange,
+            memo: event.memo,
             timeText: timeText,
             onPressed: () => _edit(event),
-            onLongPressed: _sortByTime ? _explainTimeSortLock : null,
+            onLongPressed: null,
             onCompletePressed: () => _toggleComplete(event),
           );
 
@@ -746,7 +860,7 @@ class _DayEventsDialogState extends State<DayEventsDialog> {
             ),
     );
 
-    if (event.isLockedOrder || _sortByTime) return body;
+    if (event.isLockedOrder) return body;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -783,6 +897,7 @@ class _DayEventsDialogState extends State<DayEventsDialog> {
                     completed: event.completed,
                     isRepeat: event.isRepeat,
                     isRange: event.isRange,
+                    memo: event.memo,
                     timeText: timeText,
                   ),
                 ),

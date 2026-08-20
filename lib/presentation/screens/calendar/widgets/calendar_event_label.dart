@@ -12,6 +12,8 @@ class CalendarEventLabel extends StatelessWidget {
     this.isJob = false,
     this.height = 18,
     this.fontSize = 11,
+    this.fontWeight = FontWeight.w700,
+    this.applyCalendarScale = true,
   });
 
   final String title;
@@ -21,13 +23,16 @@ class CalendarEventLabel extends StatelessWidget {
   final bool isJob;
   final double height;
   final double fontSize;
+  final FontWeight fontWeight;
+  final bool applyCalendarScale;
 
   @override
   Widget build(BuildContext context) {
     final background =
         AppColors.of(context).tint(color, isJob ? 0.12 : 0.22);
     final radius = isJob ? 6.0 : 3.0;
-    final scale = AppFonts.calendarLabelScaleOf(context);
+    final scale =
+        applyCalendarScale ? AppFonts.calendarLabelScaleOf(context) : 1.0;
     final labelHeight = height * scale;
     final labelSize = fontSize * scale;
 
@@ -64,7 +69,7 @@ class CalendarEventLabel extends StatelessWidget {
                       style: TextStyle(
                         fontFamily: AppFonts.of(context),
                         fontSize: labelSize,
-                        fontWeight: FontWeight.w700,
+                        fontWeight: fontWeight,
                         height: 1,
                         color: color,
                       ),

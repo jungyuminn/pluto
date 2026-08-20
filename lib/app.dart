@@ -208,6 +208,7 @@ class _AppBootstrapState extends State<_AppBootstrap> {
       homeView: homeViewPreference,
       dayEventsView: dayEventsViewPreference,
       font: fontPreference,
+      calendar: calendarPreference,
     );
 
     final jobRepository = JobApplicationRepositoryImpl(jobDataSource);

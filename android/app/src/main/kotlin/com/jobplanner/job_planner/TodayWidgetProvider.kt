@@ -22,6 +22,7 @@ abstract class ScheduleWidgetProvider : HomeWidgetProvider() {
         widgetData: SharedPreferences,
     ) {
         appWidgetIds.forEach { widgetId ->
+            WidgetMidnightScheduler.schedule(context)
             val dark = widgetData.getBoolean("is_dark", false)
             val textColor = if (dark) Color.parseColor("#F1F5F9") else Color.parseColor("#0F172A")
             val mutedColor = Color.parseColor("#94A3B8")

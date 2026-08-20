@@ -39,7 +39,10 @@ class _MonthlyStatsScreenState extends State<MonthlyStatsScreen> {
     if (!mounted) return;
     setState(() {
       if (widget.weekly) {
-        final week = MonthlyStats.previousWeek(_today);
+        final week = MonthlyStats.previousWeek(
+          _today,
+          startMonday: scope.calendarPreference.startMonday,
+        );
         _stats = MonthlyStats.ofRange(
           start: week.start,
           end: week.end,

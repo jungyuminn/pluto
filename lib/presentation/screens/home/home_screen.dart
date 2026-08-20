@@ -5,9 +5,11 @@ import 'package:job_planner/core/constants/app_icons.dart';
 import 'package:job_planner/core/constants/app_strings.dart';
 import 'package:job_planner/core/notifications/todo_reminder_service.dart';
 import 'package:job_planner/core/theme/app_colors.dart';
+import 'package:job_planner/core/theme/app_skin_background.dart';
 import 'package:job_planner/core/utils/fade_in.dart';
 import 'package:job_planner/core/utils/korean_search.dart';
 import 'package:job_planner/core/utils/plain_text_editing_controller.dart';
+import 'package:job_planner/data/datasources/calendar_preference.dart';
 import 'package:job_planner/data/datasources/day_events_view_preference.dart';
 import 'package:job_planner/data/datasources/home_view_preference.dart';
 import 'package:job_planner/domain/entities/calendar_event.dart';
@@ -48,6 +50,8 @@ class _HomeScreenState extends State<HomeScreen>
   var _initialized = false;
   var _compact = false;
   var _searchOpen = false;
+  var _startMonday = false;
+  CalendarPreference? _calendarPrefs;
   String? _weekLabel;
   String? _monthLabel;
 
@@ -58,7 +62,12 @@ class _HomeScreenState extends State<HomeScreen>
 
   DateTime get _tomorrow => _today.add(const Duration(days: 1));
 
-  DateTime get _weekEnd => calendarWeekEnd(_today);
+  DateTime get _weekEnd {
+    return calendarWeekEnd(
+      _today,
+      startMonday: AppScope.of(context).calendarPreference.startMonday,
+    );
+  }
 
   List<CalendarEvent> _filter(List<CalendarEvent> events) {
     final query = _search.text;
@@ -90,9 +99,23 @@ class _HomeScreenState extends State<HomeScreen>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    final calendarPrefs = AppScope.of(context).calendarPreference;
+    if (_calendarPrefs != calendarPrefs) {
+      _calendarPrefs?.removeListener(_onCalendarPrefs);
+      _calendarPrefs = calendarPrefs;
+      _calendarPrefs!.addListener(_onCalendarPrefs);
+    }
     if (_initialized) return;
     _initialized = true;
     _compact = AppScope.of(context).homeViewPreference.isCompact;
+    _startMonday = calendarPrefs.startMonday;
+    _reload();
+  }
+
+  void _onCalendarPrefs() {
+    final startMonday = _calendarPrefs?.startMonday ?? false;
+    if (!mounted || _startMonday == startMonday) return;
+    _startMonday = startMonday;
     _reload();
   }
 
@@ -100,6 +123,7 @@ class _HomeScreenState extends State<HomeScreen>
   void didUpdateWidget(HomeScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.visible && !oldWidget.visible) _reload();
+    if (!widget.visible && oldWidget.visible) _searchFocus.unfocus();
   }
 
   @override
@@ -117,6 +141,7 @@ class _HomeScreenState extends State<HomeScreen>
 
   @override
   void dispose() {
+    _calendarPrefs?.removeListener(_onCalendarPrefs);
     WidgetsBinding.instance.removeObserver(this);
     _searchFade.dispose();
     _searchAnimation.dispose();
@@ -241,12 +266,13 @@ class _HomeScreenState extends State<HomeScreen>
     final sortPrefs = AppScope.of(context).dayEventsViewPreference;
     final homePrefs = AppScope.of(context).homeViewPreference;
 
-    return Scaffold(
+    return AppSkinBackground(
+      child: Scaffold(
       resizeToAvoidBottomInset: false,
-      backgroundColor: AppColors.of(context).background,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        backgroundColor: AppColors.of(context).background,
+        backgroundColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,
         titleSpacing: 8,
         title: ThemedAsset(
@@ -348,6 +374,7 @@ class _HomeScreenState extends State<HomeScreen>
                 ],
               ),
             ),
+    ),
     );
   }
 

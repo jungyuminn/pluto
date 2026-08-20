@@ -282,15 +282,15 @@ class _AddEventFormState extends State<AddEventForm>
     _memoToggling = true;
     if (_memoOpen) {
       _titleFocus.requestFocus();
-      await _memoAnimation.reverse();
-      if (!mounted) return;
       setState(() => _memoOpen = false);
+      await _memoAnimation.reverse();
     } else {
       setState(() => _memoOpen = true);
       await _memoAnimation.forward();
       if (!mounted) return;
       _memoFocus.requestFocus();
     }
+    if (!mounted) return;
     _memoToggling = false;
   }
 
@@ -475,11 +475,12 @@ class _AddEventFormState extends State<AddEventForm>
                         EventActionIcon(
                           label: AppStrings.memoAction,
                           color: _accent,
+                          selected: _memoOpen,
                           onPressed: _toggleMemo,
                           child: Image.asset(
-                            AppIcons.memo,
-                            width: 26,
-                            height: 26,
+                            _memoOpen ? AppIcons.memo : AppIcons.memoOutlined,
+                            width: 20,
+                            height: 20,
                           ),
                         ),
                       ],

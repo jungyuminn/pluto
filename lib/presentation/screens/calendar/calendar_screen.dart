@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:job_planner/app_scope.dart';
-import 'package:job_planner/core/theme/app_colors.dart';
+import 'package:job_planner/core/theme/app_skin_background.dart';
 import 'package:job_planner/domain/entities/calendar_event.dart';
 import 'package:job_planner/domain/entities/job_application.dart';
 import 'package:job_planner/presentation/screens/calendar/calendar_day_events.dart';
@@ -171,9 +171,10 @@ class _CalendarScreenState extends State<CalendarScreen>
   Widget build(BuildContext context) {
     final bottomGap = 72 + MediaQuery.paddingOf(context).bottom;
 
-    return Scaffold(
+    return AppSkinBackground(
+      child: Scaffold(
       resizeToAvoidBottomInset: false,
-      backgroundColor: AppColors.of(context).background,
+      backgroundColor: Colors.transparent,
       body: SafeArea(
         bottom: false,
         child: Padding(
@@ -236,6 +237,7 @@ class _CalendarScreenState extends State<CalendarScreen>
           ),
         ),
       ),
+    ),
     );
   }
 }

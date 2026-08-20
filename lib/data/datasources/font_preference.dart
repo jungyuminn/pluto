@@ -6,6 +6,7 @@ const showFontSizeSettings = false;
 
 enum AppTypeface {
   pretendard,
+  paperlogy,
   system,
   gothic,
   serif,
@@ -15,7 +16,12 @@ enum AppTypeface {
   bandal,
   mona,
   omyu,
-  bazzi;
+  bazzi,
+  mabinogi,
+  babyShark,
+  cookieRun,
+  suit,
+  theJamsil;
 
   static AppTypeface fromId(
     String? id, {
@@ -31,6 +37,8 @@ enum AppTypeface {
     switch (this) {
       case AppTypeface.pretendard:
         return 'Pretendard';
+      case AppTypeface.paperlogy:
+        return 'Paperlogy';
       case AppTypeface.system:
         return null;
       case AppTypeface.gothic:
@@ -55,21 +63,40 @@ enum AppTypeface {
         return 'Omyu';
       case AppTypeface.bazzi:
         return 'Bazzi';
+      case AppTypeface.mabinogi:
+        return 'Mabinogi';
+      case AppTypeface.babyShark:
+        return 'BabyShark';
+      case AppTypeface.cookieRun:
+        return 'CookieRun';
+      case AppTypeface.suit:
+        return 'SUIT';
+      case AppTypeface.theJamsil:
+        return 'TheJamsil';
     }
   }
 
   bool get isSelectable =>
       this == AppTypeface.pretendard ||
+      this == AppTypeface.paperlogy ||
+      this == AppTypeface.suit ||
+      this == AppTypeface.theJamsil ||
       this == AppTypeface.ownglyph ||
       this == AppTypeface.meetme ||
       this == AppTypeface.leeSeoyoon ||
       this == AppTypeface.bandal ||
       this == AppTypeface.mona ||
       this == AppTypeface.omyu ||
-      this == AppTypeface.bazzi;
+      this == AppTypeface.bazzi ||
+      this == AppTypeface.mabinogi ||
+      this == AppTypeface.babyShark ||
+      this == AppTypeface.cookieRun;
 
   static const selectable = [
     AppTypeface.pretendard,
+    AppTypeface.paperlogy,
+    AppTypeface.suit,
+    AppTypeface.theJamsil,
     AppTypeface.ownglyph,
     AppTypeface.meetme,
     AppTypeface.leeSeoyoon,
@@ -77,6 +104,9 @@ enum AppTypeface {
     AppTypeface.mona,
     AppTypeface.omyu,
     AppTypeface.bazzi,
+    AppTypeface.mabinogi,
+    AppTypeface.babyShark,
+    AppTypeface.cookieRun,
   ];
 }
 

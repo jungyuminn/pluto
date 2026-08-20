@@ -12,6 +12,7 @@ import 'package:job_planner/core/home_widget/today_widget_card.dart';
 import 'package:job_planner/core/home_widget/week_timetable_card.dart';
 import 'package:job_planner/core/theme/app_theme.dart';
 import 'package:job_planner/data/datasources/calendar_event_local_datasource.dart';
+import 'package:job_planner/data/datasources/calendar_preference.dart';
 import 'package:job_planner/data/datasources/day_events_view_preference.dart';
 import 'package:job_planner/data/datasources/event_category_local_datasource.dart';
 import 'package:job_planner/data/datasources/font_preference.dart';
@@ -28,7 +29,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 Future<void> homeWidgetInteractiveCallback(Uri? uri) async {
   WidgetsFlutterBinding.ensureInitialized();
   ui.DartPluginRegistrant.ensureInitialized();
-  await HomeScreenWidgetService.handleInteractiveUri(uri);
+  if (uri?.host == HomeScreenWidgetService.completeHost) {
+    await HomeScreenWidgetService.handleInteractiveUri(uri);
+    return;
+  }
+  await HomeScreenWidgetService.handleBackgroundRefresh();
 }
 
 class HomeScreenWidgetService {
@@ -42,6 +47,7 @@ class HomeScreenWidgetService {
     _WidgetKind.todayTomorrow,
   ];
   static const completeHost = 'complete';
+  static const refreshHost = 'refresh';
 
   CalendarEventLocalDataSource? _events;
   JobApplicationLocalDataSource? _jobs;
@@ -50,6 +56,7 @@ class HomeScreenWidgetService {
   HomeViewPreference? _homeView;
   DayEventsViewPreference? _dayEventsView;
   FontPreference? _font;
+  CalendarPreference? _calendar;
   var _syncing = false;
   var _queued = false;
 
@@ -61,6 +68,7 @@ class HomeScreenWidgetService {
     required HomeViewPreference homeView,
     required DayEventsViewPreference dayEventsView,
     FontPreference? font,
+    CalendarPreference? calendar,
   }) async {
     _events = events;
     _jobs = jobs;
@@ -69,6 +77,7 @@ class HomeScreenWidgetService {
     _homeView = homeView;
     _dayEventsView = dayEventsView;
     _font = font;
+    _calendar = calendar;
   }
 
   static Future<void> handleInteractiveUri(Uri? uri) async {
@@ -76,23 +85,35 @@ class HomeScreenWidgetService {
     final id = uri?.queryParameters['id'];
     if (id == null || id.isEmpty) return;
     try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.reload();
-      final events = CalendarEventLocalDataSource(prefs);
-      final jobs = JobApplicationLocalDataSource(prefs);
-      await HomeScreenWidgetService.instance.init(
-        events: events,
-        jobs: jobs,
-        categories: EventCategoryLocalDataSource(prefs),
-        theme: ThemePreference(prefs: prefs),
-        homeView: HomeViewPreference(prefs: prefs),
-        dayEventsView: DayEventsViewPreference(prefs: prefs),
-        font: FontPreference(prefs: prefs),
-      );
+      await _prepareFromPrefs();
       await HomeScreenWidgetService.instance._toggleCompleted(id);
     } catch (error, stack) {
       debugPrint('Widget complete failed: $error\n$stack');
     }
+  }
+
+  static Future<void> handleBackgroundRefresh() async {
+    try {
+      await _prepareFromPrefs();
+      await HomeScreenWidgetService.instance.sync();
+    } catch (error, stack) {
+      debugPrint('Widget refresh failed: $error\n$stack');
+    }
+  }
+
+  static Future<void> _prepareFromPrefs() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.reload();
+    await HomeScreenWidgetService.instance.init(
+      events: CalendarEventLocalDataSource(prefs),
+      jobs: JobApplicationLocalDataSource(prefs),
+      categories: EventCategoryLocalDataSource(prefs),
+      theme: ThemePreference(prefs: prefs),
+      homeView: HomeViewPreference(prefs: prefs),
+      dayEventsView: DayEventsViewPreference(prefs: prefs),
+      font: FontPreference(prefs: prefs),
+      calendar: CalendarPreference(prefs: prefs),
+    );
   }
 
   Future<void> _toggleCompleted(String id) async {
@@ -310,7 +331,10 @@ class HomeScreenWidgetService {
     required bool isDark,
     required double pixelRatio,
   }) async {
-    final days = WeekTimetableCard.weekDaysOn(today);
+    final days = WeekTimetableCard.weekDaysOn(
+      today,
+      startMonday: _calendar?.startMonday ?? false,
+    );
     final columns = [
       for (final day in days)
         calendarEventsOn(
@@ -339,14 +363,6 @@ class HomeScreenWidgetService {
       key: WeekTimetableCard.imageKey,
       logicalSize: size,
       pixelRatio: pixelRatio,
-    );
-    await HomeWidget.saveWidgetData<String>(
-      WeekTimetableCard.titleKey,
-      AppStrings.weekTitle,
-    );
-    await HomeWidget.saveWidgetData<String>(
-      WeekTimetableCard.dateKey,
-      WeekTimetableCard.dateLabel(days.first, days.last),
     );
     await HomeWidget.saveWidgetData<String>(
       WeekTimetableCard.emptyKey,

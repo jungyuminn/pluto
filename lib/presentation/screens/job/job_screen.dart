@@ -5,6 +5,7 @@ import 'package:job_planner/core/constants/app_fonts.dart';
 import 'package:job_planner/core/constants/app_icons.dart';
 import 'package:job_planner/core/constants/app_strings.dart';
 import 'package:job_planner/core/theme/app_colors.dart';
+import 'package:job_planner/core/theme/app_skin_background.dart';
 import 'package:job_planner/core/utils/fade_in.dart';
 import 'package:job_planner/core/utils/korean_search.dart';
 import 'package:job_planner/core/utils/plain_text_editing_controller.dart';
@@ -171,12 +172,13 @@ class _JobScreenState extends State<JobScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return AppSkinBackground(
+      child: Scaffold(
       resizeToAvoidBottomInset: false,
-      backgroundColor: AppColors.of(context).background,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        backgroundColor: AppColors.of(context).background,
+        backgroundColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,
         titleSpacing: 8,
         title: ThemedAsset(
@@ -284,6 +286,7 @@ class _JobScreenState extends State<JobScreen>
                 ],
               ),
             ),
+    ),
     );
   }
 }

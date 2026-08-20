@@ -266,8 +266,8 @@ class TodayWidgetCard extends StatelessWidget {
                 AppStrings.todayTitle,
                 style: TextStyle(
                   fontFamily: AppFonts.of(context),
-                  fontSize: 18,
-                  fontWeight: FontWeight.w800,
+                  fontSize: 17,
+                  fontWeight: FontWeight.w600,
                   height: 1.1,
                   color: colors.text,
                 ),
@@ -278,7 +278,7 @@ class TodayWidgetCard extends StatelessWidget {
                 style: TextStyle(
                   fontFamily: AppFonts.of(context),
                   fontSize: 12,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.w500,
                   height: 1.2,
                   color: colors.muted,
                 ),
@@ -360,7 +360,7 @@ class _CategoryHeader extends StatelessWidget {
               style: TextStyle(
                 fontFamily: AppFonts.of(context),
                 fontSize: 13,
-                fontWeight: FontWeight.w800,
+                fontWeight: FontWeight.w500,
                 height: 1,
                 color: AppColors.of(context).text,
               ),
@@ -422,7 +422,7 @@ class _WidgetEventLabel extends StatelessWidget {
                         style: TextStyle(
                           fontFamily: AppFonts.of(context),
                           fontSize: 12,
-                          fontWeight: FontWeight.w700,
+                          fontWeight: FontWeight.w600,
                           height: 1.15,
                           color: colors.text,
                         ),

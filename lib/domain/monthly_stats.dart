@@ -87,10 +87,14 @@ class MonthlyStats {
     return !day.isBefore(start) && !day.isAfter(end);
   }
 
-  static ({DateTime start, DateTime end}) previousWeek(DateTime today) {
+  static ({DateTime start, DateTime end}) previousWeek(
+    DateTime today, {
+    bool startMonday = false,
+  }) {
     final day = DateTime(today.year, today.month, today.day);
-    final thisMonday = day.subtract(Duration(days: day.weekday - 1));
-    final start = thisMonday.subtract(const Duration(days: 7));
+    final offset = startMonday ? day.weekday - 1 : day.weekday % 7;
+    final thisStart = day.subtract(Duration(days: offset));
+    final start = thisStart.subtract(const Duration(days: 7));
     return (start: start, end: start.add(const Duration(days: 6)));
   }
 

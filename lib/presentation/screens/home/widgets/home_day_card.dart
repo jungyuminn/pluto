@@ -553,8 +553,8 @@ class _HomeDayCardState extends State<HomeDayCard> {
               widget.title,
               style: TextStyle(
                 fontFamily: AppFonts.of(context),
-                fontSize: 18,
-                fontWeight: FontWeight.w800,
+                fontSize: 17,
+                fontWeight: FontWeight.w600,
                 height: 1.1,
                 color: colors.text,
               ),
@@ -566,7 +566,7 @@ class _HomeDayCardState extends State<HomeDayCard> {
                 style: TextStyle(
                   fontFamily: AppFonts.of(context),
                   fontSize: 12,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.w500,
                   height: 1.2,
                   color: colors.muted,
                 ),
@@ -637,7 +637,7 @@ class _HomeDayCardState extends State<HomeDayCard> {
             style: TextStyle(
               fontFamily: AppFonts.of(context),
               fontSize: 14,
-              fontWeight: FontWeight.w800,
+              fontWeight: FontWeight.w500,
               height: 1,
               color: AppColors.of(context).text,
             ),
@@ -669,7 +669,7 @@ class _HomeDayCardState extends State<HomeDayCard> {
                 style: TextStyle(
                   fontFamily: AppFonts.of(context),
                   fontSize: 13,
-                  fontWeight: FontWeight.w800,
+                  fontWeight: FontWeight.w500,
                   height: 1,
                   color: AppColors.of(context).text,
                 ),
@@ -691,6 +691,7 @@ class _HomeDayCardState extends State<HomeDayCard> {
             categoryName: event.categoryName,
             color: event.color,
             isJob: true,
+            memo: event.memo,
             timeText: timeText,
             onPressed: () => _edit(event),
           )
@@ -701,6 +702,7 @@ class _HomeDayCardState extends State<HomeDayCard> {
             completed: event.completed,
             isRepeat: event.isRepeat,
             isRange: event.isRange,
+            memo: event.memo,
             timeText: timeText,
             onPressed: () => _edit(event),
             onLongPressed:
@@ -755,6 +757,7 @@ class _HomeDayCardState extends State<HomeDayCard> {
                     completed: event.completed,
                     isRepeat: event.isRepeat,
                     isRange: event.isRange,
+                    memo: event.memo,
                     timeText: timeText,
                   ),
                 ),

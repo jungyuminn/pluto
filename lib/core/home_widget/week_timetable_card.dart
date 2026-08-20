@@ -15,20 +15,18 @@ class WeekTimetableCard extends StatelessWidget {
     this.showTime = true,
   });
 
-  static const logicalSize = Size(560, 308);
+  static const logicalSize = Size(440, 340);
   static const imageKey = 'week_timetable_image';
-  static const titleKey = 'week_timetable_title';
-  static const dateKey = 'week_timetable_date';
   static const emptyKey = 'week_timetable_empty';
   static const androidName = 'WeekTimetableWidgetProvider';
   static const qualifiedAndroidName =
       'com.jobplanner.job_planner.WeekTimetableWidgetProvider';
 
-  static const headerHeight = 44.0;
-  static const chipHeight = 18.0;
-  static const chipGap = 3.0;
-  static const timeHeight = 12.0;
-  static const moreHeight = 14.0;
+  static const headerHeight = 52.0;
+  static const chipHeight = 24.0;
+  static const chipGap = 4.0;
+  static const timeHeight = 14.0;
+  static const moreHeight = 16.0;
   static const _sunday = Color(0xFFEF4444);
   static const _saturday = Color(0xFF60A5FA);
   static const _today = Color(0xFF0088FF);
@@ -38,20 +36,13 @@ class WeekTimetableCard extends StatelessWidget {
   final List<List<CalendarEvent>> columns;
   final bool showTime;
 
-  static DateTime weekStartOn(DateTime today) => calendarWeekStart(today);
-
-  static List<DateTime> weekDaysOn(DateTime today) {
-    final start = calendarWeekStart(today);
-    return [for (var i = 0; i < 7; i++) start.add(Duration(days: i))];
+  static DateTime weekStartOn(DateTime today, {bool startMonday = false}) {
+    return calendarWeekStart(today, startMonday: startMonday);
   }
 
-  static String dateLabel(DateTime start, DateTime end) {
-    String labeled(DateTime day) {
-      final weekday = AppStrings.weekdays[day.weekday % 7];
-      return '${day.month}. ${day.day}. ($weekday)';
-    }
-
-    return '${labeled(start)} – ${labeled(end)}';
+  static List<DateTime> weekDaysOn(DateTime today, {bool startMonday = false}) {
+    final start = calendarWeekStart(today, startMonday: startMonday);
+    return [for (var i = 0; i < 7; i++) start.add(Duration(days: i))];
   }
 
   @override
@@ -149,16 +140,16 @@ class _DayHeader extends StatelessWidget {
           weekday,
           style: TextStyle(
             fontFamily: AppFonts.of(context),
-            fontSize: 11,
+            fontSize: 13,
             fontWeight: FontWeight.w600,
             height: 1,
             color: weekdayColor,
           ),
         ),
-        const SizedBox(height: 5),
+        const SizedBox(height: 6),
         Container(
-          width: 22,
-          height: 22,
+          width: 26,
+          height: 26,
           alignment: Alignment.center,
           decoration: isToday
               ? const BoxDecoration(
@@ -170,7 +161,7 @@ class _DayHeader extends StatelessWidget {
             '${date.day}',
             style: TextStyle(
               fontFamily: AppFonts.of(context),
-              fontSize: 12,
+              fontSize: 14,
               fontWeight: isToday ? FontWeight.w800 : FontWeight.w600,
               height: 1,
               color: numberColor,
@@ -237,7 +228,7 @@ class _DayColumn extends StatelessWidget {
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontFamily: AppFonts.of(context),
-                      fontSize: 10,
+                      fontSize: 12,
                       fontWeight: FontWeight.w700,
                       height: 1.2,
                       color: colors.muted,
@@ -299,7 +290,7 @@ class _EventEntry extends StatelessWidget {
               overflow: TextOverflow.clip,
               style: TextStyle(
                 fontFamily: AppFonts.of(context),
-                fontSize: 9,
+                fontSize: 11,
                 fontWeight: FontWeight.w700,
                 height: 1,
                 color: event.completed ? colors.muted : event.color,
@@ -314,7 +305,9 @@ class _EventEntry extends StatelessWidget {
             completed: event.completed,
             isJob: event.isJob,
             height: WeekTimetableCard.chipHeight,
-            fontSize: 10,
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            applyCalendarScale: false,
           ),
         ),
       ],

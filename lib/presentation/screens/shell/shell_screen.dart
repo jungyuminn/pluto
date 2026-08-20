@@ -124,11 +124,14 @@ class _TabSlot extends StatelessWidget {
       offstage: !visible,
       child: TickerMode(
         enabled: visible,
-        child: SlideTransition(
-          position: offset,
-          child: IgnorePointer(
-            ignoring: absorbing,
-            child: child,
+        child: ExcludeFocus(
+          excluding: absorbing,
+          child: SlideTransition(
+            position: offset,
+            child: IgnorePointer(
+              ignoring: absorbing,
+              child: child,
+            ),
           ),
         ),
       ),

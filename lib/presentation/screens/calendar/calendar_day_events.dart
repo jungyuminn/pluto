@@ -60,13 +60,15 @@ List<CalendarEvent> calendarEventsOn({
 
 DateTime calendarDay(DateTime date) => DateTime(date.year, date.month, date.day);
 
-DateTime calendarWeekStart(DateTime date) {
+DateTime calendarWeekStart(DateTime date, {bool startMonday = false}) {
   final day = calendarDay(date);
-  return day.subtract(Duration(days: day.weekday - 1));
+  final offset = startMonday ? day.weekday - 1 : day.weekday % 7;
+  return day.subtract(Duration(days: offset));
 }
 
-DateTime calendarWeekEnd(DateTime date) {
-  return calendarWeekStart(date).add(const Duration(days: 6));
+DateTime calendarWeekEnd(DateTime date, {bool startMonday = false}) {
+  return calendarWeekStart(date, startMonday: startMonday)
+      .add(const Duration(days: 6));
 }
 
 List<CalendarEvent> calendarEventsInRange({

@@ -92,6 +92,15 @@ flutter:
   assets:
     - assets/icons/
     - assets/images/
+    - assets/themes/blossom/
+    - assets/themes/summer_beach/
+    - assets/themes/snowy_winter/
+    - assets/themes/autumn_forest/
+    - assets/themes/squishy_bear/
+    - assets/themes/strawberry_milk/
+    - assets/themes/onion_village/
+    - assets/themes/lovely_bear/
+    - assets/themes/rainy_day/
   fonts:
     - family: Pretendard
       fonts:
@@ -104,6 +113,18 @@ flutter:
         - asset: assets/fonts/Pretendard-Bold.otf
           weight: 700
         - asset: assets/fonts/Pretendard-ExtraBold.otf
+          weight: 800
+    - family: Paperlogy
+      fonts:
+        - asset: assets/fonts/Paperlogy-4Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Paperlogy-5Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Paperlogy-6SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Paperlogy-7Bold.ttf
+          weight: 700
+        - asset: assets/fonts/Paperlogy-8ExtraBold.ttf
           weight: 800
     - family: Ownglyph
       fonts:
@@ -189,7 +210,66 @@ flutter:
           weight: 700
         - asset: assets/fonts/Bazzi.ttf
           weight: 800
-
+    - family: Mabinogi
+      fonts:
+        - asset: assets/fonts/Mabinogi_Classic_TTF.ttf
+          weight: 400
+        - asset: assets/fonts/Mabinogi_Classic_TTF.ttf
+          weight: 500
+        - asset: assets/fonts/Mabinogi_Classic_TTF.ttf
+          weight: 600
+        - asset: assets/fonts/Mabinogi_Classic_TTF.ttf
+          weight: 700
+        - asset: assets/fonts/Mabinogi_Classic_TTF.ttf
+          weight: 800
+    - family: BabyShark
+      fonts:
+        - asset: "assets/fonts/Pinkfong Baby Shark Font_ Light.ttf"
+          weight: 400
+        - asset: "assets/fonts/Pinkfong Baby Shark Font_ Regular.ttf"
+          weight: 500
+        - asset: "assets/fonts/Pinkfong Baby Shark Font_ Regular.ttf"
+          weight: 600
+        - asset: "assets/fonts/Pinkfong Baby Shark Font_ Bold.ttf"
+          weight: 700
+        - asset: "assets/fonts/Pinkfong Baby Shark Font_ Bold.ttf"
+          weight: 800
+    - family: CookieRun
+      fonts:
+        - asset: "assets/fonts/CookieRun Regular.otf"
+          weight: 400
+        - asset: "assets/fonts/CookieRun Regular.otf"
+          weight: 500
+        - asset: "assets/fonts/CookieRun Bold.otf"
+          weight: 600
+        - asset: "assets/fonts/CookieRun Bold.otf"
+          weight: 700
+        - asset: "assets/fonts/CookieRun Black.otf"
+          weight: 800
+    - family: SUIT
+      fonts:
+        - asset: assets/fonts/SUIT-Regular.otf
+          weight: 400
+        - asset: assets/fonts/SUIT-Medium.otf
+          weight: 500
+        - asset: assets/fonts/SUIT-SemiBold.otf
+          weight: 600
+        - asset: assets/fonts/SUIT-Bold.otf
+          weight: 700
+        - asset: assets/fonts/SUIT-ExtraBold.otf
+          weight: 800
+    - family: TheJamsil
+      fonts:
+        - asset: "assets/fonts/The Jamsil OTF 3 Regular.otf"
+          weight: 400
+        - asset: "assets/fonts/The Jamsil OTF 4 Medium.otf"
+          weight: 500
+        - asset: "assets/fonts/The Jamsil OTF 4 Medium.otf"
+          weight: 600
+        - asset: "assets/fonts/The Jamsil OTF 5 Bold.otf"
+          weight: 700
+        - asset: "assets/fonts/The Jamsil OTF 6 ExtraBold.otf"
+          weight: 800
 
   # To add assets to your application, add an assets section, like this:
   # assets:

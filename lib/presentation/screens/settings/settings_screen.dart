@@ -8,14 +8,17 @@ import 'package:job_planner/app_scope.dart';
 import 'package:job_planner/core/constants/app_fonts.dart';
 import 'package:job_planner/core/constants/app_strings.dart';
 import 'package:job_planner/core/theme/app_colors.dart';
+import 'package:job_planner/core/theme/app_skin_background.dart';
 import 'package:job_planner/core/home_widget/home_screen_widget_service.dart';
 import 'package:job_planner/core/notifications/todo_reminder_service.dart';
 import 'package:job_planner/core/utils/press_bounce.dart';
 import 'package:job_planner/data/datasources/font_preference.dart';
 import 'package:job_planner/data/datasources/notification_preference.dart';
+import 'package:job_planner/data/datasources/theme_preference.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/calendar_event_label.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/day_event_label.dart';
 import 'package:job_planner/presentation/screens/settings/widgets/settings_section_help.dart';
+import 'package:job_planner/presentation/widgets/themed_asset.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -25,7 +28,6 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  var _compact = false;
   var _sortByTime = false;
   var _showTime = false;
   var _todoReminderLead = TodoReminderLead.off;
@@ -40,6 +42,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   var _showWeeklyStats = false;
   var _startMonday = false;
   var _dark = false;
+  var _skin = AppSkin.classic;
   var _typeface = AppTypeface.pretendard;
   var _todoSize = FontSizeLevel.medium;
   var _calendarSize = FontSizeLevel.medium;
@@ -52,7 +55,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (_ready) return;
     _ready = true;
     final scope = AppScope.of(context);
-    _compact = scope.homeViewPreference.isCompact;
     _sortByTime = scope.dayEventsViewPreference.sortByTime;
     _showTime = scope.dayEventsViewPreference.showTime;
     _todoReminderLead = scope.notificationPreference.todoReminderLead;
@@ -67,16 +69,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _showWeeklyStats = scope.homeViewPreference.showWeeklyStats;
     _startMonday = scope.calendarPreference.startMonday;
     _dark = scope.themePreference.isDark;
+    _skin = scope.themePreference.skin;
     _typeface = scope.fontPreference.typeface;
     _todoSize = scope.fontPreference.todoSize;
     _calendarSize = scope.fontPreference.calendarSize;
     _calendarLabelSize = scope.fontPreference.calendarLabelSize;
-  }
-
-  Future<void> _setCompact(bool value) async {
-    if (_compact == value) return;
-    setState(() => _compact = value);
-    await AppScope.of(context).homeViewPreference.setCompact(value);
   }
 
   Future<void> _toggleSortByTime() async {
@@ -129,6 +126,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _setStartMonday(bool value) async {
     setState(() => _startMonday = value);
     await AppScope.of(context).calendarPreference.setStartMonday(value);
+    await HomeScreenWidgetService.instance.sync();
+  }
+
+  Future<void> _openThemeSettings() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (context) => const _ThemeSettingsPage(),
+      ),
+    );
+    if (!mounted) return;
+    setState(() {
+      _skin = AppScope.of(context).themePreference.skin;
+    });
   }
 
   Future<void> _setDark(bool value) async {
@@ -196,6 +206,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
     switch (typeface) {
       case AppTypeface.pretendard:
         return AppStrings.fontPretendard;
+      case AppTypeface.paperlogy:
+        return AppStrings.fontPaperlogy;
+      case AppTypeface.suit:
+        return AppStrings.fontSuit;
+      case AppTypeface.theJamsil:
+        return AppStrings.fontTheJamsil;
       case AppTypeface.system:
         return AppStrings.fontSystem;
       case AppTypeface.gothic:
@@ -216,6 +232,37 @@ class _SettingsScreenState extends State<SettingsScreen> {
         return AppStrings.fontOmyu;
       case AppTypeface.bazzi:
         return AppStrings.fontBazzi;
+      case AppTypeface.mabinogi:
+        return AppStrings.fontMabinogi;
+      case AppTypeface.babyShark:
+        return AppStrings.fontBabyShark;
+      case AppTypeface.cookieRun:
+        return AppStrings.fontCookieRun;
+    }
+  }
+
+  static String _skinLabel(AppSkin skin) {
+    switch (skin) {
+      case AppSkin.classic:
+        return AppStrings.themeClassic;
+      case AppSkin.blossom:
+        return AppStrings.themeBlossom;
+      case AppSkin.summerBeach:
+        return AppStrings.themeSummerBeach;
+      case AppSkin.autumnForest:
+        return AppStrings.themeAutumnForest;
+      case AppSkin.snowyWinter:
+        return AppStrings.themeSnowyWinter;
+      case AppSkin.squishyBear:
+        return AppStrings.themeSquishyBear;
+      case AppSkin.strawberryMilk:
+        return AppStrings.themeStrawberryMilk;
+      case AppSkin.onionVillage:
+        return AppStrings.themeOnionVillage;
+      case AppSkin.lovelyBear:
+        return AppStrings.themeLovelyBear;
+      case AppSkin.rainyDay:
+        return AppStrings.themeRainyDay;
     }
   }
 
@@ -262,23 +309,47 @@ class _SettingsScreenState extends State<SettingsScreen> {
         padding: EdgeInsets.fromLTRB(16, top + 56, 16, 32),
         children: [
           _SectionLabel(
-            AppStrings.settingsHomeSection,
+            AppStrings.settingsThemeSection,
             onHelp: () => showSettingsSectionHelp(
               context,
-              SettingsHelpSection.home,
+              SettingsHelpSection.theme,
             ),
           ),
           _SettingsCard(
             children: [
               _SettingsTile(
-                label: AppStrings.defaultView,
-                checked: !_compact,
-                onPressed: () => _setCompact(false),
+                label: AppStrings.themeKind,
+                value: _skinLabel(_skin),
+                chevron: true,
+                onPressed: _openThemeSettings,
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          _SectionLabel(
+            AppStrings.settingsFontSection,
+            onHelp: () => showSettingsSectionHelp(
+              context,
+              SettingsHelpSection.font,
+            ),
+          ),
+          _SettingsCard(
+            children: [
+              _SettingsTile(
+                label: AppStrings.fontFamily,
+                value: _typefaceLabel(_typeface),
+                chevron: true,
+                onPressed: _openFontSettings,
               ),
               _SettingsTile(
-                label: AppStrings.categoryView,
-                checked: _compact,
-                onPressed: () => _setCompact(true),
+                label: AppStrings.fontLabelScale,
+                chevron: true,
+                onPressed: _openFontSettings,
+              ),
+              _SettingsTile(
+                label: AppStrings.fontCalendarChipScale,
+                chevron: true,
+                onPressed: _openFontSettings,
               ),
             ],
           ),
@@ -316,28 +387,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 label: AppStrings.homeShowMonth,
                 value: _showMonth,
                 onChanged: _setShowMonth,
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-          _SectionLabel(
-            AppStrings.settingsMonthlyStatsSection,
-            onHelp: () => showSettingsSectionHelp(
-              context,
-              SettingsHelpSection.monthlyStats,
-            ),
-          ),
-          _SettingsCard(
-            children: [
-              _SettingsSwitchTile(
-                label: AppStrings.homeShowWeeklyStats,
-                value: _showWeeklyStats,
-                onChanged: _setShowWeeklyStats,
-              ),
-              _SettingsSwitchTile(
-                label: AppStrings.homeShowMonthlyStats,
-                value: _showMonthlyStats,
-                onChanged: _setShowMonthlyStats,
               ),
             ],
           ),
@@ -428,19 +477,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           const SizedBox(height: 24),
           _SectionLabel(
-            AppStrings.settingsFontSection,
+            AppStrings.settingsMonthlyStatsSection,
             onHelp: () => showSettingsSectionHelp(
               context,
-              SettingsHelpSection.font,
+              SettingsHelpSection.monthlyStats,
             ),
           ),
           _SettingsCard(
             children: [
-              _SettingsTile(
-                label: AppStrings.fontFamily,
-                value: _typefaceLabel(_typeface),
-                chevron: true,
-                onPressed: _openFontSettings,
+              _SettingsSwitchTile(
+                label: AppStrings.homeShowWeeklyStats,
+                value: _showWeeklyStats,
+                onChanged: _setShowWeeklyStats,
+              ),
+              _SettingsSwitchTile(
+                label: AppStrings.homeShowMonthlyStats,
+                value: _showMonthlyStats,
+                onChanged: _setShowMonthlyStats,
               ),
             ],
           ),
@@ -472,6 +525,629 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 }
 
+class _FontLivePreview extends StatelessWidget {
+  const _FontLivePreview();
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: colors.card,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: colors.border),
+      ),
+      child: SizedBox(
+        height: 52 * FontPreference.maxScale +
+            18 * FontPreference.maxScale +
+            74,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const DayEventLabel(
+                title: '자기소개서 제출',
+                categoryName: '서류',
+                color: Color(0xFF3B82F6),
+                timeText: '14:00',
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  for (final label in AppStrings.weekdays)
+                    Expanded(
+                      child: Text(
+                        label,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontFamily: AppFonts.of(context),
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          color: colors.muted,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              const CalendarEventLabel(
+                title: '면접 연습',
+                color: Color(0xFF22C55E),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ThemeLivePreview extends StatefulWidget {
+  const _ThemeLivePreview();
+
+  @override
+  State<_ThemeLivePreview> createState() => _ThemeLivePreviewState();
+}
+
+class _ThemeLivePreviewState extends State<_ThemeLivePreview> {
+  final _pages = PageController();
+  var _page = 0;
+  Timer? _timer;
+
+  static const _pageCount = 3;
+
+  @override
+  void initState() {
+    super.initState();
+    _startTimer();
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _pages.dispose();
+    super.dispose();
+  }
+
+  void _startTimer() {
+    _timer?.cancel();
+    _timer = Timer.periodic(const Duration(seconds: 5), (_) {
+      if (!mounted) return;
+      _goTo(_page + 1);
+    });
+  }
+
+  void _goTo(int page, {bool fromUser = false}) {
+    final next = page % _pageCount;
+    final wrapped = next < 0 ? next + _pageCount : next;
+    if (wrapped == _page && _pages.hasClients) {
+      if (fromUser) _startTimer();
+      return;
+    }
+    _pages.animateToPage(
+      wrapped,
+      duration: const Duration(milliseconds: 420),
+      curve: Curves.easeOutCubic,
+    );
+    if (fromUser) _startTimer();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: colors.border),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: SizedBox(
+          height: 280,
+          child: AppSkinBackground(
+            liftForNav: false,
+            scaleByWidth: true,
+            animate: true,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(
+                  child: PageView(
+                    controller: _pages,
+                    onPageChanged: (page) {
+                      setState(() => _page = page);
+                      _startTimer();
+                    },
+                    children: const [
+                      _ThemeHomePreviewPage(),
+                      _ThemeCalendarPreviewPage(),
+                      _ThemeJobPreviewPage(),
+                    ],
+                  ),
+                ),
+                _ThemePreviewDots(
+                  selected: _page,
+                  onSelected: (page) => _goTo(page, fromUser: true),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(14, 4, 14, 12),
+                  child: _ThemePreviewNav(
+                    selected: _page,
+                    onSelected: (page) => _goTo(page, fromUser: true),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ThemeHomePreviewPage extends StatelessWidget {
+  const _ThemeHomePreviewPage();
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(14, 18, 14, 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const Spacer(),
+          DecoratedBox(
+            decoration: BoxDecoration(
+              color: colors.card,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: colors.shadow,
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    AppStrings.todayTitle,
+                    style: TextStyle(
+                      fontFamily: AppFonts.of(context),
+                      fontSize: 15,
+                      fontWeight: FontWeight.w800,
+                      color: colors.text,
+                    ),
+                  ),
+                  Text(
+                    '8. 21. (금)',
+                    style: TextStyle(
+                      fontFamily: AppFonts.of(context),
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: colors.muted,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  const DayEventLabel(
+                    title: '자기소개서 제출',
+                    categoryName: '서류',
+                    color: Color(0xFF3B82F6),
+                    timeText: '14:00',
+                  ),
+                  const SizedBox(height: 6),
+                  const CalendarEventLabel(
+                    title: '면접 연습',
+                    color: Color(0xFF22C55E),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ThemeCalendarPreviewPage extends StatelessWidget {
+  const _ThemeCalendarPreviewPage();
+
+  static const _weeks = [
+    [2, 3, 4, 5, 6, 7, 8],
+    [9, 10, 11, 12, 13, 14, 15],
+    [16, 17, 18, 19, 20, 21, 22],
+    [23, 24, 25, 26, 27, 28, 29],
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(10, 10, 10, 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            '8${AppStrings.monthSuffix}',
+            style: TextStyle(
+              fontFamily: AppFonts.of(context),
+              fontSize: 22,
+              fontWeight: FontWeight.w800,
+              height: 1.1,
+              color: colors.text,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              for (final label in AppStrings.weekdays)
+                Expanded(
+                  child: Text(
+                    label,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontFamily: AppFonts.of(context),
+                      fontSize: 10,
+                      fontWeight: FontWeight.w500,
+                      color: colors.muted,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Expanded(
+            child: Column(
+              children: [
+                for (final week in _weeks)
+                  Expanded(
+                    child: Row(
+                      children: [
+                        for (final day in week)
+                          Expanded(
+                            child: _ThemePreviewDayCell(
+                              day: day,
+                              today: day == 21,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ThemePreviewDayCell extends StatelessWidget {
+  const _ThemePreviewDayCell({
+    required this.day,
+    required this.today,
+  });
+
+  final int day;
+  final bool today;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 1),
+      child: Center(
+        child: Text(
+          '$day',
+          style: TextStyle(
+            fontFamily: AppFonts.of(context),
+            fontSize: 11,
+            height: 1,
+            fontWeight: today ? FontWeight.w800 : FontWeight.w500,
+            color: today ? colors.text : colors.muted,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ThemeJobPreviewPage extends StatelessWidget {
+  const _ThemeJobPreviewPage();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Padding(
+      padding: EdgeInsets.fromLTRB(14, 18, 14, 12),
+      child: Column(
+        children: [
+          Spacer(),
+          _ThemePreviewCompanyCard(
+            name: '삼성전자',
+            dDay: 'D-3',
+            status: '서류제출',
+            color: Color(0xFF3B82F6),
+          ),
+          SizedBox(height: 8),
+          _ThemePreviewCompanyCard(
+            name: '카카오',
+            dDay: 'D-12',
+            status: '면접합격',
+            color: Color(0xFF4A8A10),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ThemePreviewCompanyCard extends StatelessWidget {
+  const _ThemePreviewCompanyCard({
+    required this.name,
+    required this.dDay,
+    required this.status,
+    required this.color,
+  });
+
+  final String name;
+  final String dDay;
+  final String status;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: colors.card,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: colors.border),
+        boxShadow: [
+          BoxShadow(
+            color: colors.shadow,
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(12, 8, 12, 10),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              dDay,
+              style: TextStyle(
+                fontFamily: AppFonts.of(context),
+                fontSize: 16,
+                fontWeight: FontWeight.w800,
+                color: colors.danger,
+              ),
+            ),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    name,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontFamily: AppFonts.of(context),
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: colors.text,
+                    ),
+                  ),
+                ),
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.16),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 3,
+                    ),
+                    child: Text(
+                      status,
+                      style: TextStyle(
+                        fontFamily: AppFonts.of(context),
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                        color: color,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ThemePreviewDots extends StatelessWidget {
+  const _ThemePreviewDots({
+    required this.selected,
+    required this.onSelected,
+  });
+
+  final int selected;
+  final ValueChanged<int> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        for (var i = 0; i < 3; i++)
+          PressBounce(
+            onPressed: () => onSelected(i),
+            pressedScale: 0.9,
+            pressedColor: Colors.transparent,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 220),
+                width: i == selected ? 16 : 6,
+                height: 6,
+                decoration: BoxDecoration(
+                  color: i == selected
+                      ? colors.accentBright
+                      : Colors.white,
+                  borderRadius: BorderRadius.circular(999),
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class _ThemePreviewNav extends StatelessWidget {
+  const _ThemePreviewNav({
+    required this.selected,
+    required this.onSelected,
+  });
+
+  final int selected;
+  final ValueChanged<int> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    final theme = AppScope.of(context).themePreference;
+    return ListenableBuilder(
+      listenable: theme,
+      builder: (context, _) {
+        final items = AppSkinAssets.navIcons(theme.skin);
+        return Center(
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: colors.navBar,
+              borderRadius: BorderRadius.circular(999),
+              boxShadow: [
+                BoxShadow(
+                  color: colors.shadow,
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: SizedBox(
+              width: 168,
+              height: 40,
+              child: Row(
+                children: [
+                  for (var i = 0; i < items.length; i++)
+                    Expanded(
+                      child: PressBounce(
+                        onPressed: () => onSelected(i),
+                        pressedScale: 0.88,
+                        pressedColor: Colors.transparent,
+                        child: Center(
+                          child: AnimatedSwitcher(
+                            duration: AppSkinBackground.transitionDuration,
+                            child: ThemedAsset(
+                              key: ValueKey(
+                                '${theme.skin}-$i-${i == selected}',
+                              ),
+                              asset: i == selected
+                                  ? items[i].filled
+                                  : items[i].outlined,
+                              width: 20,
+                              height: 20,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _ThemeSettingsPage extends StatefulWidget {
+  const _ThemeSettingsPage();
+
+  @override
+  State<_ThemeSettingsPage> createState() => _ThemeSettingsPageState();
+}
+
+class _ThemeSettingsPageState extends State<_ThemeSettingsPage> {
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    for (final asset in AppSkinAssets.precacheDecorations) {
+      precacheImage(AssetImage(asset), context);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = AppScope.of(context).themePreference;
+    final top = MediaQuery.paddingOf(context).top;
+    return ListenableBuilder(
+      listenable: theme,
+      builder: (context, _) {
+        final colors = AppColors.of(context);
+        return Scaffold(
+          backgroundColor: colors.groupedBackground,
+          extendBodyBehindAppBar: true,
+          appBar: _FrostedAppBar(
+            title: AppStrings.settingsThemeSection,
+            onBack: () => Navigator.pop(context),
+          ),
+          body: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              SizedBox(height: top + 56),
+              const Padding(
+                padding: EdgeInsets.fromLTRB(16, 0, 16, 8),
+                child: _ThemeLivePreview(),
+              ),
+              Expanded(
+                child: ListView(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+                  children: [
+                    _SectionLabel(AppStrings.themeKind),
+                    _SettingsCard(
+                      children: [
+                        for (final skin in AppSkin.values)
+                          _SettingsTile(
+                            label: _SettingsScreenState._skinLabel(skin),
+                            checked: theme.skin == skin,
+                            onPressed: () => theme.setSkin(skin),
+                          ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
 class _FontSettingsPage extends StatelessWidget {
   const _FontSettingsPage();
 
@@ -490,88 +1166,50 @@ class _FontSettingsPage extends StatelessWidget {
             title: AppStrings.settingsFontSection,
             onBack: () => Navigator.pop(context),
           ),
-          body: ListView(
-            padding: EdgeInsets.fromLTRB(16, top + 56, 16, 32),
+          body: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              DecoratedBox(
-                decoration: BoxDecoration(
-                  color: colors.card,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: colors.border),
-                ),
-                child: SizedBox(
-                  height: 52 * FontPreference.maxScale +
-                      18 * FontPreference.maxScale +
-                      74,
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
+              SizedBox(height: top + 56),
+              const Padding(
+                padding: EdgeInsets.fromLTRB(16, 0, 16, 8),
+                child: _FontLivePreview(),
+              ),
+              Expanded(
+                child: ListView(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+                  children: [
+                    _SectionLabel(AppStrings.fontFamily),
+                    _SettingsCard(
                       children: [
-                        const DayEventLabel(
-                          title: '자기소개서 제출',
-                          categoryName: '서류',
-                          color: Color(0xFF3B82F6),
-                          timeText: '14:00',
-                        ),
-                        const SizedBox(height: 12),
-                        Row(
-                          children: [
-                            for (final label in AppStrings.weekdays)
-                              Expanded(
-                                child: Text(
-                                  label,
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    fontFamily: AppFonts.of(context),
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w500,
-                                    color: colors.muted,
-                                  ),
-                                ),
-                              ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        const CalendarEventLabel(
-                          title: '면접 연습',
-                          color: Color(0xFF22C55E),
-                        ),
+                        for (final typeface in AppTypeface.selectable)
+                          _SettingsTile(
+                            label: _SettingsScreenState._typefaceLabel(typeface),
+                            labelFontFamily: typeface.fontFamily,
+                            previewLabelFont: true,
+                            checked: font.typeface == typeface,
+                            onPressed: () async {
+                              await font.setTypeface(typeface);
+                              await HomeScreenWidgetService.instance.sync();
+                            },
+                          ),
                       ],
                     ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 24),
-              _SectionLabel(AppStrings.fontFamily),
-              _SettingsCard(
-                children: [
-                  for (final typeface in AppTypeface.selectable)
-                    _SettingsTile(
-                      label: _SettingsScreenState._typefaceLabel(typeface),
-                      labelFontFamily: typeface.fontFamily,
-                      previewLabelFont: true,
-                      checked: font.typeface == typeface,
-                      onPressed: () async {
-                        await font.setTypeface(typeface);
-                        await HomeScreenWidgetService.instance.sync();
-                      },
+                    const SizedBox(height: 24),
+                    _SectionLabel(AppStrings.fontLabelScale),
+                    _SettingsSliderTile(
+                      value: font.labelScale,
+                      onChanged: (value) =>
+                          font.setLabelScale(value, persist: true),
                     ),
-                ],
-              ),
-              const SizedBox(height: 24),
-              _SectionLabel(AppStrings.fontLabelScale),
-              _SettingsSliderTile(
-                value: font.labelScale,
-                onChanged: (value) => font.setLabelScale(value, persist: true),
-              ),
-              const SizedBox(height: 20),
-              _SectionLabel(AppStrings.fontCalendarChipScale),
-              _SettingsSliderTile(
-                value: font.calendarChipScale,
-                onChanged: (value) =>
-                    font.setCalendarChipScale(value, persist: true),
+                    const SizedBox(height: 20),
+                    _SectionLabel(AppStrings.fontCalendarChipScale),
+                    _SettingsSliderTile(
+                      value: font.calendarChipScale,
+                      onChanged: (value) =>
+                          font.setCalendarChipScale(value, persist: true),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),

@@ -42,6 +42,7 @@ class _AddCategorySheetState extends State<AddCategorySheet> {
   late final PlainTextEditingController _name;
   late int _color;
   var _saving = false;
+  final _usedColors = <int>{};
 
   static const _colors = [
     0xFF3B82F6,
@@ -66,6 +67,21 @@ class _AddCategorySheetState extends State<AddCategorySheet> {
     final initial = widget.initial;
     _name = PlainTextEditingController(text: initial?.name ?? '');
     _color = initial?.color ?? EventCategory.fallback.color;
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadUsedColors());
+  }
+
+  Future<void> _loadUsedColors() async {
+    final categories = await AppScope.of(context).getEventCategories();
+    if (!mounted) return;
+    final editingId = widget.initial?.id;
+    setState(() {
+      _usedColors
+        ..clear()
+        ..addAll([
+          for (final category in categories)
+            if (category.id != editingId) category.color,
+        ]);
+    });
   }
 
   @override
@@ -119,7 +135,9 @@ class _AddCategorySheetState extends State<AddCategorySheet> {
 
     return Padding(
       padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
-      child: DecoratedBox(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 280),
+        curve: Curves.easeOutCubic,
         decoration: BoxDecoration(
           color: colors.tint(accent),
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
@@ -167,22 +185,41 @@ class _AddCategorySheetState extends State<AddCategorySheet> {
                             color: Colors.transparent,
                             pressedColor: Colors.transparent,
                             borderRadius: BorderRadius.circular(999),
-                            child: Container(
-                              width: 28,
-                              height: 28,
-                              decoration: BoxDecoration(
-                                color: Color(value),
-                                shape: BoxShape.circle,
-                                border: _color == value
-                                    ? Border.all(color: colors.card, width: 3)
-                                    : null,
-                                boxShadow: _color == value
-                                    ? const [
-                                        BoxShadow(
-                                          color: Color(0x33000000),
-                                          blurRadius: 6,
+                            child: Semantics(
+                              selected: _color == value,
+                              label: _usedColors.contains(value)
+                                  ? AppStrings.categoryColorInUse
+                                  : null,
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 220),
+                                curve: Curves.easeOutCubic,
+                                width: 28,
+                                height: 28,
+                                alignment: Alignment.center,
+                                decoration: BoxDecoration(
+                                  color: Color(value),
+                                  shape: BoxShape.circle,
+                                  border: _color == value
+                                      ? Border.all(color: colors.card, width: 3)
+                                      : Border.all(
+                                          color: Colors.transparent,
+                                          width: 3,
                                         ),
-                                      ]
+                                  boxShadow: _color == value
+                                      ? const [
+                                          BoxShadow(
+                                            color: Color(0x33000000),
+                                            blurRadius: 6,
+                                          ),
+                                        ]
+                                      : const [],
+                                ),
+                                child: _usedColors.contains(value)
+                                    ? const Icon(
+                                        Icons.check_rounded,
+                                        size: 16,
+                                        color: Colors.white,
+                                      )
                                     : null,
                               ),
                             ),
@@ -191,9 +228,16 @@ class _AddCategorySheetState extends State<AddCategorySheet> {
                     ),
                   ),
                   const SizedBox(width: 12),
-                  SaveCompanyButton(
-                    onPressed: _saving ? () {} : _save,
-                    color: accent,
+                  TweenAnimationBuilder<Color?>(
+                    duration: const Duration(milliseconds: 280),
+                    curve: Curves.easeOutCubic,
+                    tween: ColorTween(end: accent),
+                    builder: (context, color, child) {
+                      return SaveCompanyButton(
+                        onPressed: _saving ? () {} : _save,
+                        color: color ?? accent,
+                      );
+                    },
                   ),
                 ],
               ),

@@ -21,11 +21,9 @@ class WeekTimetableWidgetProvider : HomeWidgetProvider() {
         widgetData: SharedPreferences,
     ) {
         appWidgetIds.forEach { widgetId ->
+            WidgetMidnightScheduler.schedule(context)
             val dark = widgetData.getBoolean("is_dark", false)
-            val textColor = if (dark) Color.parseColor("#F1F5F9") else Color.parseColor("#0F172A")
             val mutedColor = Color.parseColor("#94A3B8")
-            val title = widgetData.getString("week_timetable_title", "일주일") ?: "일주일"
-            val date = widgetData.getString("week_timetable_date", "") ?: ""
             val empty = widgetData.getString("week_timetable_empty", "이번 주 일정이 없어요")
                 ?: "이번 주 일정이 없어요"
             val path = widgetData.getString("week_timetable_image", null)
@@ -37,10 +35,6 @@ class WeekTimetableWidgetProvider : HomeWidgetProvider() {
                     "setBackgroundResource",
                     if (dark) R.drawable.widget_card_dark else R.drawable.widget_card_light,
                 )
-                setTextViewText(R.id.widget_title, title)
-                setTextColor(R.id.widget_title, textColor)
-                setTextViewText(R.id.widget_date, date)
-                setTextColor(R.id.widget_date, mutedColor)
                 setTextViewText(R.id.widget_empty, empty)
                 setTextColor(R.id.widget_empty, mutedColor)
 

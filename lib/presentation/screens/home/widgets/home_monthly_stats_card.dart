@@ -42,8 +42,8 @@ class HomeMonthlyStatsCard extends StatelessWidget {
                   title,
                   style: TextStyle(
                     fontFamily: AppFonts.of(context),
-                    fontSize: 18,
-                    fontWeight: FontWeight.w800,
+                    fontSize: 17,
+                    fontWeight: FontWeight.w600,
                     height: 1.1,
                     color: colors.accentBright,
                   ),

@@ -56,8 +56,14 @@ class _CategoryPickerSheetState extends State<CategoryPickerSheet>
   var _loading = true;
   var _editing = false;
   String? _draggingId;
+  List<EventCategory>? _orderBeforeDrag;
   final _marked = <String>{};
   final _gridKey = GlobalKey();
+  final _sheetKey = GlobalKey();
+  final _discarding = ValueNotifier(false);
+  final _exiting = <String>{};
+  final _appearIds = <String>{};
+  final _seenIds = <String>{};
   late String? _selectedId;
   late final AnimationController _jiggle;
 
@@ -83,6 +89,7 @@ class _CategoryPickerSheetState extends State<CategoryPickerSheet>
 
   @override
   void dispose() {
+    _discarding.dispose();
     _jiggle.dispose();
     super.dispose();
   }
@@ -94,24 +101,51 @@ class _CategoryPickerSheetState extends State<CategoryPickerSheet>
       if (_loading) {
         setState(() {
           _categories = categories;
+          _seenIds.addAll(categories.map((item) => item.id));
           _loading = false;
         });
         return;
       }
-      _syncGrid(categories);
+      await _applyCategories(categories);
     } catch (_) {
       if (!mounted) return;
       setState(() => _loading = false);
     }
   }
 
-  void _syncGrid(List<EventCategory> next) {
+  Future<void> _applyCategories(List<EventCategory> next) async {
+    final nextIds = {for (final item in next) item.id};
+    final removed = [
+      for (final item in _categories)
+        if (!nextIds.contains(item.id)) item.id,
+    ];
+    if (removed.isNotEmpty) {
+      setState(() {
+        _exiting
+          ..clear()
+          ..addAll(removed);
+        _marked.removeWhere((id) => !nextIds.contains(id));
+      });
+      await Future<void>.delayed(_slotAnim + const Duration(milliseconds: 40));
+      if (!mounted) return;
+    }
+    final added = [
+      for (final item in next)
+        if (!_seenIds.contains(item.id)) item.id,
+    ];
     setState(() {
       _categories = List.of(next);
+      _exiting.clear();
+      _appearIds
+        ..clear()
+        ..addAll(added);
       _marked.removeWhere(
         (id) => _categories.every((category) => category.id != id),
       );
     });
+    _seenIds
+      ..removeAll(removed)
+      ..addAll(added);
   }
 
   void _enterEdit(EventCategory? category) {
@@ -204,20 +238,74 @@ class _CategoryPickerSheetState extends State<CategoryPickerSheet>
   }
 
   void _onDragStarted(EventCategory category) {
+    _discarding.value = false;
+    _orderBeforeDrag = List.of(_categories);
     setState(() => _draggingId = category.id);
   }
 
   void _onDragUpdate(Offset global) {
     if (_draggingId == null) return;
+    final outside = _isOutsideSheet(global);
+    if (outside != _discarding.value) {
+      _discarding.value = outside;
+      setState(() {
+        if (outside && _orderBeforeDrag != null) {
+          _categories = List.of(_orderBeforeDrag!);
+        }
+      });
+      HapticFeedback.mediumImpact();
+    }
+    if (outside) return;
     final box = _gridKey.currentContext?.findRenderObject() as RenderBox?;
     if (box == null || !box.hasSize) return;
     _moveToIndex(_indexAt(box.globalToLocal(global), box.size));
   }
 
-  void _onDragEnded() {
-    final shouldSave = _draggingId != null;
+  bool _isOutsideSheet(Offset global) {
+    final box = _sheetKey.currentContext?.findRenderObject() as RenderBox?;
+    if (box == null || !box.hasSize) return false;
+    final local = box.globalToLocal(global);
+    final rect = Offset.zero & box.size;
+    return !rect.contains(local);
+  }
+
+  Future<void> _onDragEnded() async {
+    final id = _draggingId;
+    final discard = _discarding.value;
+    _discarding.value = false;
     setState(() => _draggingId = null);
-    if (shouldSave) _persistOrder();
+    if (id == null) return;
+    if (discard) {
+      await _deleteDragged(id);
+      return;
+    }
+    _orderBeforeDrag = null;
+    await _persistOrder();
+  }
+
+  Future<void> _deleteDragged(String id) async {
+    EventCategory? target;
+    for (final category in _categories) {
+      if (category.id == id) {
+        target = category;
+        break;
+      }
+    }
+    if (target == null) return;
+    final confirmed = await showDeleteEventDialog(
+      context,
+      title: target.name,
+      body: AppStrings.deleteCategoryBody,
+    );
+    if (!confirmed || !mounted) {
+      if (mounted) _restoreOrderBeforeDrag();
+      return;
+    }
+    await AppScope.of(context).deleteEventCategory({id});
+    _orderBeforeDrag = null;
+    if (!mounted) return;
+    await _reload();
+    if (_categories.isEmpty && _editing) _exitEdit();
   }
 
   double _cellSize(double width) {
@@ -263,6 +351,13 @@ class _CategoryPickerSheetState extends State<CategoryPickerSheet>
     await AppScope.of(context).reorderEventCategories(List.of(_categories));
   }
 
+  void _restoreOrderBeforeDrag() {
+    final original = _orderBeforeDrag;
+    _orderBeforeDrag = null;
+    if (original == null) return;
+    setState(() => _categories = List.of(original));
+  }
+
   @override
   Widget build(BuildContext context) {
     final bottom = MediaQuery.paddingOf(context).bottom;
@@ -278,9 +373,14 @@ class _CategoryPickerSheetState extends State<CategoryPickerSheet>
         padding: EdgeInsets.only(
           bottom: MediaQuery.viewInsetsOf(context).bottom,
         ),
-        child: DecoratedBox(
+        child: AnimatedContainer(
+          key: _sheetKey,
+          duration: const Duration(milliseconds: 180),
+          curve: Curves.easeOutCubic,
           decoration: BoxDecoration(
-            color: colors.card,
+            color: _discarding.value
+                ? colors.tint(colors.danger, 0.2)
+                : colors.card,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
           ),
           child: Padding(
@@ -414,7 +514,12 @@ class _CategoryPickerSheetState extends State<CategoryPickerSheet>
                   top: (i ~/ _columns) * (cell + _gap),
                   width: cell,
                   height: cell,
-                  child: _slot(_categories[i], cell),
+                  child: _GridTile(
+                    appear: _appearIds.contains(_categories[i].id),
+                    exiting: _exiting.contains(_categories[i].id),
+                    duration: _slotAnim,
+                    child: _slot(_categories[i], cell),
+                  ),
                 ),
             ],
           ),
@@ -427,37 +532,52 @@ class _CategoryPickerSheetState extends State<CategoryPickerSheet>
     return _Jiggle(
       animation: _jiggle,
       phase: category.id.hashCode * 0.17,
-      enabled: _editing && _draggingId != category.id,
+      enabled: _editing &&
+          _draggingId != category.id &&
+          !_exiting.contains(category.id),
       child: LongPressDraggable<String>(
         data: category.id,
         delay: const Duration(milliseconds: 400),
         hapticFeedbackOnStart: true,
         rootOverlay: true,
-        maxSimultaneousDrags: 1,
+        maxSimultaneousDrags: _exiting.contains(category.id) ? 0 : 1,
         onDragStarted: () => _onDragStarted(category),
         onDragUpdate: (details) => _onDragUpdate(details.globalPosition),
         onDragEnd: (_) => _onDragEnded(),
         feedback: Material(
           color: Colors.transparent,
-          child: SizedBox(
-            width: cell,
-            height: cell,
-            child: Transform.scale(
-              scale: 1.06,
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(8),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Color(0x33000000),
-                      blurRadius: 12,
-                      offset: Offset(0, 6),
+          child: ValueListenableBuilder<bool>(
+            valueListenable: _discarding,
+            builder: (context, discarding, child) {
+              return AnimatedScale(
+                duration: const Duration(milliseconds: 160),
+                curve: Curves.easeOutCubic,
+                scale: discarding ? 0.86 : 1.06,
+                child: AnimatedOpacity(
+                  duration: const Duration(milliseconds: 160),
+                  opacity: discarding ? 0.72 : 1,
+                  child: SizedBox(
+                    width: cell,
+                    height: cell,
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(8),
+                        boxShadow: [
+                          BoxShadow(
+                            color: discarding
+                                ? const Color(0x66EF4444)
+                                : const Color(0x33000000),
+                            blurRadius: discarding ? 16 : 12,
+                            offset: const Offset(0, 6),
+                          ),
+                        ],
+                      ),
+                      child: _card(category, interactive: false),
                     ),
-                  ],
+                  ),
                 ),
-                child: _card(category, interactive: false),
-              ),
-            ),
+              );
+            },
           ),
         ),
         childWhenDragging: DecoratedBox(
@@ -483,6 +603,52 @@ class _CategoryPickerSheetState extends State<CategoryPickerSheet>
       editing: _editing || forceMarked,
       marked: _editing && marked,
       onPressed: interactive ? () => _onTap(category) : null,
+    );
+  }
+}
+
+class _GridTile extends StatefulWidget {
+  const _GridTile({
+    required this.appear,
+    required this.exiting,
+    required this.duration,
+    required this.child,
+  });
+
+  final bool appear;
+  final bool exiting;
+  final Duration duration;
+  final Widget child;
+
+  @override
+  State<_GridTile> createState() => _GridTileState();
+}
+
+class _GridTileState extends State<_GridTile> {
+  late var _shown = !widget.appear;
+
+  @override
+  void initState() {
+    super.initState();
+    if (!widget.appear) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) setState(() => _shown = true);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final visible = _shown && !widget.exiting;
+    return AnimatedOpacity(
+      duration: widget.duration,
+      curve: Curves.easeOutCubic,
+      opacity: visible ? 1 : 0,
+      child: AnimatedScale(
+        duration: widget.duration,
+        curve: visible ? Curves.easeOutCubic : Curves.easeInCubic,
+        scale: visible ? 1 : 0.84,
+        child: widget.child,
+      ),
     );
   }
 }

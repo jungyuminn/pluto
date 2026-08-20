@@ -6,6 +6,7 @@
     android:minHeight="220dp"
     android:minResizeWidth="250dp"
     android:minResizeHeight="180dp"
+    android:previewImage="@drawable/week_widget_preview"
     android:previewLayout="@layout/week_timetable_widget_preview"
     android:resizeMode="horizontal|vertical"
     android:targetCellWidth="5"

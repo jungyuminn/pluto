@@ -16,6 +16,7 @@ class PressBounce extends StatefulWidget {
     this.pressedColor,
     this.borderRadius = const BorderRadius.all(Radius.circular(12)),
     this.expand = false,
+    this.alignment,
   });
 
   final Widget child;
@@ -26,6 +27,7 @@ class PressBounce extends StatefulWidget {
   final Color? pressedColor;
   final BorderRadius borderRadius;
   final bool expand;
+  final Alignment? alignment;
 
   @override
   State<PressBounce> createState() => _PressBounceState();
@@ -153,7 +155,9 @@ class _PressBounceState extends State<PressBounce>
             duration: const Duration(milliseconds: 50),
             width: widget.expand ? double.infinity : null,
             height: widget.expand ? double.infinity : null,
-            alignment: widget.expand ? Alignment.center : null,
+            alignment: widget.expand
+                ? (widget.alignment ?? Alignment.center)
+                : null,
             decoration: BoxDecoration(
               color: _pressed ? pressedColor : _idleColor(context),
               borderRadius: widget.borderRadius,

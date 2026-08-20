@@ -10,11 +10,13 @@ class CalendarDayCell extends StatelessWidget {
     required this.day,
     this.onPressed,
     this.inRange = false,
+    this.highlighted = false,
   });
 
   final CalendarDay day;
   final ValueChanged<Rect>? onPressed;
   final bool inRange;
+  final bool highlighted;
 
   static const dateTop = 10.0;
   static const dateSize = 20.0;
@@ -40,7 +42,7 @@ class CalendarDayCell extends StatelessWidget {
   static const _sunday = Color(0xFFEF4444);
   static const _saturday = Color(0xFF60A5FA);
   static const _outsideHoliday = Color(0xFFF0A0A0);
-  static const _today = Color(0xFF0088FF);
+  static const _today = Color(0xFF4AA3FF);
 
   Color _colorOf(AppColors colors) {
     if (!day.inMonth) {
@@ -72,8 +74,8 @@ class CalendarDayCell extends StatelessWidget {
     return PressBounce(
       onPressed: onPressed == null ? () {} : () => onPressed!(_originOf(context)),
       pressedScale: 0.96,
-      color: inRange ? colors.rangeFill : Colors.transparent,
-      pressedColor: inRange ? colors.rangePressed : colors.pressed,
+      color: inRange || highlighted ? colors.rangeFill : Colors.transparent,
+      pressedColor: inRange || highlighted ? colors.rangePressed : colors.pressed,
       borderRadius: BorderRadius.circular(12),
       child: Padding(
         padding: const EdgeInsets.only(top: dateTop),

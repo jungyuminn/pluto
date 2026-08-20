@@ -6,6 +6,51 @@ import 'package:job_planner/domain/entities/calendar_event.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/calendar_day_cell.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/calendar_week_events.dart';
 
+class CalendarDayDropTarget {
+  CalendarDayDropTarget._();
+
+  static final highlighted = ValueNotifier<DateTime?>(null);
+  static final hidingScrim = ValueNotifier(false);
+  static final _grids = <_CalendarMonthGridState>{};
+
+  static DateTime? dateAt(Offset global) {
+    for (final grid in _grids) {
+      final date = grid.dateAt(global);
+      if (date != null) return date;
+    }
+    return null;
+  }
+
+  static void highlight(DateTime? date) {
+    final next = date == null
+        ? null
+        : DateTime(date.year, date.month, date.day);
+    final current = highlighted.value;
+    if (current?.year == next?.year &&
+        current?.month == next?.month &&
+        current?.day == next?.day) {
+      return;
+    }
+    highlighted.value = next;
+  }
+
+  static void clear() => highlight(null);
+
+  static void setScrimHidden(bool value) {
+    if (hidingScrim.value == value) return;
+    hidingScrim.value = value;
+  }
+
+  static void reset() {
+    highlight(null);
+    setScrimHidden(false);
+  }
+
+  static bool isSameDay(DateTime a, DateTime b) {
+    return a.year == b.year && a.month == b.month && a.day == b.day;
+  }
+}
+
 class CalendarMonthGrid extends StatefulWidget {
   const CalendarMonthGrid({
     super.key,
@@ -30,9 +75,22 @@ class CalendarMonthGrid extends StatefulWidget {
 
 class _CalendarMonthGridState extends State<CalendarMonthGrid> {
   final _keys = <DateTime, GlobalKey>{};
+  final _weekKeys = <int, GlobalKey>{};
   DateTime? _rangeStart;
   DateTime? _rangeEnd;
   var _dragging = false;
+
+  @override
+  void initState() {
+    super.initState();
+    CalendarDayDropTarget._grids.add(this);
+  }
+
+  @override
+  void dispose() {
+    CalendarDayDropTarget._grids.remove(this);
+    super.dispose();
+  }
 
   DateTime _dateOnly(DateTime date) =>
       DateTime(date.year, date.month, date.day);
@@ -41,7 +99,27 @@ class _CalendarMonthGridState extends State<CalendarMonthGrid> {
     return _keys.putIfAbsent(_dateOnly(date), GlobalKey.new);
   }
 
-  DateTime? _dateAt(Offset global) {
+  GlobalKey _weekKey(int week) {
+    return _weekKeys.putIfAbsent(week, GlobalKey.new);
+  }
+
+  DateTime? dateAt(Offset global) {
+    final days = MonthGrid.daysFor(
+      widget.month,
+      startMonday: widget.startMonday,
+    );
+    final weekCount = days.length ~/ 7;
+    for (var week = 0; week < weekCount; week++) {
+      final box =
+          _weekKey(week).currentContext?.findRenderObject() as RenderBox?;
+      if (box == null || !box.hasSize) continue;
+      final origin = box.localToGlobal(Offset.zero);
+      final rect = origin & box.size;
+      if (!rect.contains(global)) continue;
+      final col = (global.dx - origin.dx) / box.size.width * 7;
+      final weekday = col.floor().clamp(0, 6);
+      return days[week * 7 + weekday].date;
+    }
     for (final entry in _keys.entries) {
       final box = entry.value.currentContext?.findRenderObject() as RenderBox?;
       if (box == null || !box.hasSize) continue;
@@ -66,7 +144,7 @@ class _CalendarMonthGridState extends State<CalendarMonthGrid> {
   }
 
   void _onLongPressStart(LongPressStartDetails details) {
-    final date = _dateAt(details.globalPosition);
+    final date = dateAt(details.globalPosition);
     if (date == null) return;
     HapticFeedback.mediumImpact();
     _setDragging(true);
@@ -78,7 +156,7 @@ class _CalendarMonthGridState extends State<CalendarMonthGrid> {
 
   void _onLongPressMove(LongPressMoveUpdateDetails details) {
     if (!_dragging || _rangeStart == null) return;
-    final date = _dateAt(details.globalPosition);
+    final date = dateAt(details.globalPosition);
     if (date == null || date == _rangeEnd) return;
     setState(() => _rangeEnd = date);
   }
@@ -103,83 +181,101 @@ class _CalendarMonthGridState extends State<CalendarMonthGrid> {
     return !day.isBefore(first) && !day.isAfter(last);
   }
 
+  bool _isDropTarget(DateTime date, DateTime? highlighted) {
+    if (highlighted == null) return false;
+    return CalendarDayDropTarget.isSameDay(date, highlighted);
+  }
+
   @override
   Widget build(BuildContext context) {
+    CalendarDayDropTarget._grids.add(this);
     final days = MonthGrid.daysFor(widget.month, startMonday: widget.startMonday);
     final weekCount = days.length ~/ 7;
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final minWeekHeight = constraints.maxHeight / weekCount;
-          final calendarScale = AppFonts.calendarScaleOf(context);
-          final labelScale = AppFonts.calendarLabelScaleOf(context);
-          return GestureDetector(
-            behavior: HitTestBehavior.translucent,
-            onLongPressStart: _onLongPressStart,
-            onLongPressMoveUpdate: _onLongPressMove,
-            onLongPressEnd: _onLongPressEnd,
-            onLongPressCancel: _clearRange,
-            child: ListView.builder(
-              padding: EdgeInsets.zero,
-              primary: false,
-              physics: _dragging
-                  ? const NeverScrollableScrollPhysics()
-                  : const ClampingScrollPhysics(),
-              itemCount: weekCount,
-              itemBuilder: (context, week) {
-                final weekDays = days.sublist(week * 7, week * 7 + 7);
-                return AnimatedContainer(
-                  duration: const Duration(milliseconds: 280),
-                  curve: Curves.easeOutCubic,
-                  height: CalendarWeekEvents.heightFor(
-                    days: weekDays,
-                    eventsOf: widget.eventsOf ?? (_) => const [],
-                    minHeight: minWeekHeight,
-                    calendarScale: calendarScale,
-                    labelScale: labelScale,
-                  ),
-                  child: Stack(
-                    children: [
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
+    return ValueListenableBuilder<DateTime?>(
+      valueListenable: CalendarDayDropTarget.highlighted,
+      builder: (context, highlighted, _) {
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final minWeekHeight = constraints.maxHeight / weekCount;
+              final calendarScale = AppFonts.calendarScaleOf(context);
+              final labelScale = AppFonts.calendarLabelScaleOf(context);
+              return GestureDetector(
+                behavior: HitTestBehavior.translucent,
+                onLongPressStart: _onLongPressStart,
+                onLongPressMoveUpdate: _onLongPressMove,
+                onLongPressEnd: _onLongPressEnd,
+                onLongPressCancel: _clearRange,
+                child: ListView.builder(
+                  padding: EdgeInsets.zero,
+                  primary: false,
+                  physics: _dragging
+                      ? const NeverScrollableScrollPhysics()
+                      : const ClampingScrollPhysics(),
+                  itemCount: weekCount,
+                  itemBuilder: (context, week) {
+                    final weekDays = days.sublist(week * 7, week * 7 + 7);
+                    return AnimatedContainer(
+                      key: _weekKey(week),
+                      duration: const Duration(milliseconds: 280),
+                      curve: Curves.easeOutCubic,
+                      height: CalendarWeekEvents.heightFor(
+                        days: weekDays,
+                        eventsOf: widget.eventsOf ?? (_) => const [],
+                        minHeight: minWeekHeight,
+                        calendarScale: calendarScale,
+                        labelScale: labelScale,
+                      ),
+                      child: Stack(
                         children: [
-                          for (var weekday = 0; weekday < 7; weekday++)
-                            Expanded(
-                              child: KeyedSubtree(
-                                key: _keyFor(weekDays[weekday].date),
-                                child: CalendarDayCell(
-                                  day: weekDays[weekday],
-                                  inRange: _inRange(weekDays[weekday].date),
-                                  onPressed: widget.onDayPressed == null
-                                      ? null
-                                      : (origin) => widget.onDayPressed!(
-                                            weekDays[weekday].date,
-                                            origin,
-                                          ),
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              for (var weekday = 0; weekday < 7; weekday++)
+                                Expanded(
+                                  child: KeyedSubtree(
+                                    key: _keyFor(weekDays[weekday].date),
+                                    child: SizedBox.expand(
+                                      child: CalendarDayCell(
+                                        day: weekDays[weekday],
+                                        inRange: _inRange(weekDays[weekday].date),
+                                        highlighted: _isDropTarget(
+                                          weekDays[weekday].date,
+                                          highlighted,
+                                        ),
+                                        onPressed: widget.onDayPressed == null
+                                            ? null
+                                            : (origin) => widget.onDayPressed!(
+                                                  weekDays[weekday].date,
+                                                  origin,
+                                                ),
+                                      ),
+                                    ),
+                                  ),
                                 ),
+                            ],
+                          ),
+                          if (widget.eventsOf != null)
+                            Positioned.fill(
+                              child: CalendarWeekEvents(
+                                days: weekDays,
+                                eventsOf: widget.eventsOf!,
+                                calendarScale: calendarScale,
+                                labelScale: labelScale,
                               ),
                             ),
                         ],
                       ),
-                      if (widget.eventsOf != null)
-                        Positioned.fill(
-                          child: CalendarWeekEvents(
-                            days: weekDays,
-                            eventsOf: widget.eventsOf!,
-                            calendarScale: calendarScale,
-                            labelScale: labelScale,
-                          ),
-                        ),
-                    ],
-                  ),
-                );
-              },
-            ),
-          );
-        },
-      ),
+                    );
+                  },
+                ),
+              );
+            },
+          ),
+        );
+      },
     );
   }
 }

@@ -5,14 +5,15 @@ import 'package:flutter/material.dart';
 import 'package:job_planner/core/constants/app_fonts.dart';
 import 'package:job_planner/core/constants/app_strings.dart';
 import 'package:job_planner/core/theme/app_colors.dart';
+import 'package:job_planner/core/theme/app_skin_background.dart';
 import 'package:job_planner/core/theme/app_theme.dart';
 import 'package:job_planner/core/utils/press_bounce.dart';
 import 'package:job_planner/data/datasources/font_preference.dart';
+import 'package:job_planner/data/datasources/theme_preference.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/calendar_event_label.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/day_event_label.dart';
 
 enum SettingsHelpSection {
-  home,
   homeLayout,
   monthlyStats,
   calendar,
@@ -20,6 +21,7 @@ enum SettingsHelpSection {
   notification,
   font,
   appearance,
+  theme,
 }
 
 Future<void> showSettingsSectionHelp(
@@ -137,8 +139,6 @@ class SettingsSectionHelpSheet extends StatelessWidget {
 extension on SettingsHelpSection {
   String get title {
     switch (this) {
-      case SettingsHelpSection.home:
-        return AppStrings.settingsHomeSection;
       case SettingsHelpSection.homeLayout:
         return AppStrings.settingsHomeLayoutSection;
       case SettingsHelpSection.monthlyStats:
@@ -153,13 +153,13 @@ extension on SettingsHelpSection {
         return AppStrings.settingsFontSection;
       case SettingsHelpSection.appearance:
         return AppStrings.settingsAppearanceSection;
+      case SettingsHelpSection.theme:
+        return AppStrings.settingsThemeSection;
     }
   }
 
   String get body {
     switch (this) {
-      case SettingsHelpSection.home:
-        return AppStrings.settingsHomeHelp;
       case SettingsHelpSection.homeLayout:
         return AppStrings.settingsHomeLayoutHelp;
       case SettingsHelpSection.monthlyStats:
@@ -176,13 +176,13 @@ extension on SettingsHelpSection {
         return AppStrings.settingsFontHelp;
       case SettingsHelpSection.appearance:
         return AppStrings.settingsAppearanceHelp;
+      case SettingsHelpSection.theme:
+        return AppStrings.settingsThemeHelp;
     }
   }
 
   Widget get preview {
     switch (this) {
-      case SettingsHelpSection.home:
-        return const _HomeViewPreview();
       case SettingsHelpSection.homeLayout:
         return const _HomeLayoutPreview();
       case SettingsHelpSection.monthlyStats:
@@ -197,71 +197,9 @@ extension on SettingsHelpSection {
         return const _FontPreview();
       case SettingsHelpSection.appearance:
         return const _AppearancePreview();
+      case SettingsHelpSection.theme:
+        return const _ThemePreview();
     }
-  }
-}
-
-class _HomeViewPreview extends StatelessWidget {
-  const _HomeViewPreview();
-
-  @override
-  Widget build(BuildContext context) {
-    return _CyclingPreview(
-      frames: [
-        _PreviewFrame(
-          caption: AppStrings.defaultView,
-          child: _FakeHomeCard(
-            title: AppStrings.todayTitle,
-            children: const [
-              _FakeTodo(
-                title: '자기소개서 제출',
-                category: '서류',
-                color: Color(0xFF3B82F6),
-              ),
-              _FakeTodo(
-                title: '코딩테스트 준비',
-                category: '코딩테스트',
-                color: Color(0xFFF59E0B),
-              ),
-              _FakeTodo(
-                title: '면접 연습',
-                category: '면접',
-                color: Color(0xFF22C55E),
-              ),
-            ],
-          ),
-        ),
-        _PreviewFrame(
-          caption: AppStrings.categoryView,
-          child: _FakeHomeCard(
-            title: AppStrings.todayTitle,
-            children: const [
-              _FakeCategoryHeader('서류'),
-              _FakeTodo(
-                title: '자기소개서 제출',
-                category: '서류',
-                color: Color(0xFF3B82F6),
-                showCategory: false,
-              ),
-              _FakeCategoryHeader('코딩테스트'),
-              _FakeTodo(
-                title: '코딩테스트 준비',
-                category: '코딩테스트',
-                color: Color(0xFFF59E0B),
-                showCategory: false,
-              ),
-              _FakeCategoryHeader('면접'),
-              _FakeTodo(
-                title: '면접 연습',
-                category: '면접',
-                color: Color(0xFF22C55E),
-                showCategory: false,
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
   }
 }
 
@@ -624,36 +562,22 @@ class _FontPreview extends StatelessWidget {
     return const _CyclingPreview(
       frames: [
         _PreviewFrame(
-          caption: AppStrings.fontPretendard,
-          child: _TypefacePreviewCard(typeface: AppTypeface.pretendard),
-        ),
-        _PreviewFrame(
-          caption: AppStrings.fontOwnglyph,
-          child: _TypefacePreviewCard(typeface: AppTypeface.ownglyph),
-        ),
-        _PreviewFrame(
-          caption: AppStrings.fontMeetme,
-          child: _TypefacePreviewCard(typeface: AppTypeface.meetme),
-        ),
-        _PreviewFrame(
-          caption: AppStrings.fontLeeSeoyoon,
-          child: _TypefacePreviewCard(typeface: AppTypeface.leeSeoyoon),
-        ),
-        _PreviewFrame(
-          caption: AppStrings.fontBandal,
-          child: _TypefacePreviewCard(typeface: AppTypeface.bandal),
-        ),
-        _PreviewFrame(
-          caption: AppStrings.fontMona,
-          child: _TypefacePreviewCard(typeface: AppTypeface.mona),
-        ),
-        _PreviewFrame(
-          caption: AppStrings.fontOmyu,
-          child: _TypefacePreviewCard(typeface: AppTypeface.omyu),
-        ),
-        _PreviewFrame(
-          caption: AppStrings.fontBazzi,
+          caption: AppStrings.fontFamily,
           child: _TypefacePreviewCard(typeface: AppTypeface.bazzi),
+        ),
+        _PreviewFrame(
+          caption: AppStrings.fontLabelScale,
+          child: _TypefacePreviewCard(
+            typeface: AppTypeface.pretendard,
+            labelScale: FontPreference.maxScale,
+          ),
+        ),
+        _PreviewFrame(
+          caption: AppStrings.fontCalendarChipScale,
+          child: _TypefacePreviewCard(
+            typeface: AppTypeface.pretendard,
+            calendarLabelScale: FontPreference.maxScale,
+          ),
         ),
       ],
     );
@@ -661,9 +585,15 @@ class _FontPreview extends StatelessWidget {
 }
 
 class _TypefacePreviewCard extends StatelessWidget {
-  const _TypefacePreviewCard({required this.typeface});
+  const _TypefacePreviewCard({
+    required this.typeface,
+    this.labelScale,
+    this.calendarLabelScale,
+  });
 
   final AppTypeface typeface;
+  final double? labelScale;
+  final double? calendarLabelScale;
 
   @override
   Widget build(BuildContext context) {
@@ -672,9 +602,10 @@ class _TypefacePreviewCard extends StatelessWidget {
     return FontScope(
       typeface: typeface,
       todoScale: current?.todoScale ?? 1,
-      labelScale: current?.labelScale ?? 1,
+      labelScale: labelScale ?? current?.labelScale ?? 1,
       calendarScale: current?.calendarScale ?? 1,
-      calendarLabelScale: current?.calendarLabelScale ?? 1,
+      calendarLabelScale:
+          calendarLabelScale ?? current?.calendarLabelScale ?? 1,
       child: Builder(
         builder: (context) {
           return DecoratedBox(
@@ -769,7 +700,7 @@ class _FontPreviewCard extends StatelessWidget {
               style: TextStyle(
                 fontFamily: fontFamily,
                 fontSize: 12 * todoScale,
-                fontWeight: FontWeight.w700,
+                fontWeight: FontWeight.w600,
                 color: colors.text,
               ),
             ),
@@ -824,6 +755,102 @@ class _FontPreviewCard extends StatelessWidget {
   }
 }
 
+class _ThemePreview extends StatelessWidget {
+  const _ThemePreview();
+
+  @override
+  Widget build(BuildContext context) {
+    for (final asset in AppSkinAssets.precacheDecorations) {
+      precacheImage(AssetImage(asset), context);
+    }
+    return _CyclingPreview(
+      frames: [
+        for (final skin in AppSkin.values)
+          _PreviewFrame(
+            caption: _themeCaption(skin),
+            child: _ThemeHelpScene(skin: skin),
+          ),
+      ],
+    );
+  }
+
+  static String _themeCaption(AppSkin skin) {
+    switch (skin) {
+      case AppSkin.classic:
+        return AppStrings.themeClassic;
+      case AppSkin.blossom:
+        return AppStrings.themeBlossom;
+      case AppSkin.summerBeach:
+        return AppStrings.themeSummerBeach;
+      case AppSkin.autumnForest:
+        return AppStrings.themeAutumnForest;
+      case AppSkin.snowyWinter:
+        return AppStrings.themeSnowyWinter;
+      case AppSkin.squishyBear:
+        return AppStrings.themeSquishyBear;
+      case AppSkin.strawberryMilk:
+        return AppStrings.themeStrawberryMilk;
+      case AppSkin.onionVillage:
+        return AppStrings.themeOnionVillage;
+      case AppSkin.lovelyBear:
+        return AppStrings.themeLovelyBear;
+      case AppSkin.rainyDay:
+        return AppStrings.themeRainyDay;
+    }
+  }
+}
+
+class _ThemeHelpScene extends StatelessWidget {
+  const _ThemeHelpScene({required this.skin});
+
+  final AppSkin skin;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: colors.border),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(17),
+        child: SizedBox(
+          height: 188,
+          child: AppSkinBackground(
+            skin: skin,
+            liftForNav: false,
+            scaleByWidth: true,
+            child: const Padding(
+              padding: EdgeInsets.fromLTRB(12, 16, 12, 12),
+              child: Column(
+                children: [
+                  Spacer(),
+                  _FakeHomeCard(
+                    title: AppStrings.todayTitle,
+                    children: [
+                      _FakeTodo(
+                        title: '자기소개서 제출',
+                        category: '서류',
+                        color: Color(0xFF3B82F6),
+                      ),
+                      _FakeTodo(
+                        title: '면접 연습',
+                        category: '면접',
+                        color: Color(0xFF22C55E),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _AppearancePreview extends StatelessWidget {
   const _AppearancePreview();
 
@@ -853,11 +880,15 @@ class _AppearancePreview extends StatelessWidget {
 class _ThemedPreviewPhone extends StatelessWidget {
   const _ThemedPreviewPhone({
     required this.theme,
-    required this.caption,
+    this.caption,
+    this.background,
+    this.child,
   });
 
   final ThemeData theme;
-  final String caption;
+  final String? caption;
+  final Color? background;
+  final Widget? child;
 
   @override
   Widget build(BuildContext context) {
@@ -870,42 +901,45 @@ class _ThemedPreviewPhone extends StatelessWidget {
               final colors = AppColors.of(context);
               return DecoratedBox(
                 decoration: BoxDecoration(
-                  color: colors.groupedBackground,
+                  color: background ?? colors.groupedBackground,
                   borderRadius: BorderRadius.circular(18),
                   border: Border.all(color: colors.border),
                 ),
                 child: Padding(
                   padding: const EdgeInsets.all(8),
-                  child: _FakeHomeCard(
-                    title: AppStrings.todayTitle,
-                    children: const [
-                      _FakeTodo(
-                        title: '자기소개서 제출',
-                        category: '서류',
-                        color: Color(0xFF3B82F6),
+                  child: child ??
+                      const _FakeHomeCard(
+                        title: AppStrings.todayTitle,
+                        children: [
+                          _FakeTodo(
+                            title: '자기소개서 제출',
+                            category: '서류',
+                            color: Color(0xFF3B82F6),
+                          ),
+                          _FakeTodo(
+                            title: '면접 연습',
+                            category: '면접',
+                            color: Color(0xFF22C55E),
+                          ),
+                        ],
                       ),
-                      _FakeTodo(
-                        title: '면접 연습',
-                        category: '면접',
-                        color: Color(0xFF22C55E),
-                      ),
-                    ],
-                  ),
                 ),
               );
             },
           ),
         ),
-        const SizedBox(height: 8),
-        Text(
-          caption,
-          style: TextStyle(
-            fontFamily: AppFonts.of(context),
-            fontSize: 13,
-            fontWeight: FontWeight.w700,
-            color: AppColors.of(context).text,
+        if (caption != null) ...[
+          const SizedBox(height: 8),
+          Text(
+            caption!,
+            style: TextStyle(
+              fontFamily: AppFonts.of(context),
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: AppColors.of(context).text,
+            ),
           ),
-        ),
+        ],
       ],
     );
   }
@@ -1141,6 +1175,7 @@ class _FakeHomeCard extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
@@ -1149,6 +1184,7 @@ class _FakeHomeCard extends StatelessWidget {
                 fontFamily: AppFonts.of(context),
                 fontSize: 16,
                 fontWeight: FontWeight.w800,
+                height: 1.2,
                 color: colors.text,
               ),
             ),
@@ -1733,28 +1769,6 @@ class _FakeCategoryBar extends StatelessWidget {
   }
 }
 
-class _FakeCategoryHeader extends StatelessWidget {
-  const _FakeCategoryHeader(this.label);
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 4, bottom: 2),
-      child: Text(
-        label,
-        style: TextStyle(
-          fontFamily: AppFonts.of(context),
-          fontSize: 12,
-          fontWeight: FontWeight.w800,
-          color: AppColors.of(context).text,
-        ),
-      ),
-    );
-  }
-}
-
 class _FakeTodo extends StatelessWidget {
   const _FakeTodo({
     required this.title,
@@ -1800,7 +1814,7 @@ class _FakeTodo extends StatelessWidget {
                         style: TextStyle(
                           fontFamily: AppFonts.of(context),
                           fontSize: 12,
-                          fontWeight: FontWeight.w700,
+                          fontWeight: FontWeight.w600,
                           height: 1.15,
                           color: colors.text,
                         ),

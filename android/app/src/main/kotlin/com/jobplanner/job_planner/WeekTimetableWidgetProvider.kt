@@ -5,13 +5,11 @@ import android.appwidget.AppWidgetManager
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
-import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.view.View
 import android.widget.RemoteViews
 import es.antonborri.home_widget.HomeWidgetPlugin
 import es.antonborri.home_widget.HomeWidgetProvider
-import java.io.File
 
 class WeekTimetableWidgetProvider : HomeWidgetProvider() {
     override fun onUpdate(
@@ -27,13 +25,17 @@ class WeekTimetableWidgetProvider : HomeWidgetProvider() {
             val empty = widgetData.getString("week_timetable_empty", "이번 주 일정이 없어요")
                 ?: "이번 주 일정이 없어요"
             val path = widgetData.getString("week_timetable_image", null)
-            val bitmap = path?.takeIf { File(it).exists() }?.let { decodeBitmap(context, it) }
+            val bitmap = WidgetSkin.decode(context, path)
 
             val views = RemoteViews(context.packageName, R.layout.week_timetable_widget).apply {
-                setInt(
+                WidgetSkin.apply(
+                    context,
+                    this,
+                    widgetData,
+                    dark,
                     R.id.widget_root,
-                    "setBackgroundResource",
-                    if (dark) R.drawable.widget_card_dark else R.drawable.widget_card_light,
+                    R.id.widget_skin_bg,
+                    showImage = bitmap == null,
                 )
                 setTextViewText(R.id.widget_empty, empty)
                 setTextColor(R.id.widget_empty, mutedColor)
@@ -80,16 +82,5 @@ class WeekTimetableWidgetProvider : HomeWidgetProvider() {
             intArrayOf(appWidgetId),
             HomeWidgetPlugin.getData(context),
         )
-    }
-
-    private fun decodeBitmap(context: Context, path: String): android.graphics.Bitmap? {
-        val density = context.resources.displayMetrics.densityDpi
-        val options = BitmapFactory.Options().apply {
-            inScaled = true
-            inDensity = density
-            inTargetDensity = density
-            inPreferredConfig = android.graphics.Bitmap.Config.ARGB_8888
-        }
-        return BitmapFactory.decodeFile(path, options)
     }
 }

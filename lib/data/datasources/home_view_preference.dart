@@ -12,6 +12,7 @@ class HomeViewPreference {
     bool showTomorrow = true,
     bool showWeek = false,
     bool showMonth = false,
+    bool showLongGoal = false,
     bool showMonthlyStats = true,
     bool showWeeklyStats = false,
   })  : _prefs = prefs,
@@ -21,6 +22,7 @@ class HomeViewPreference {
         _showTomorrow = prefs?.getBool(_tomorrowKey) ?? showTomorrow,
         _showWeek = prefs?.getBool(_weekKey) ?? showWeek,
         _showMonth = prefs?.getBool(_monthKey) ?? showMonth,
+        _showLongGoal = prefs?.getBool(_longGoalKey) ?? showLongGoal,
         _showMonthlyStats =
             prefs?.getBool(_monthlyStatsKey) ?? showMonthlyStats,
         _monthlyStatsSeen = prefs?.getString(_monthlyStatsSeenKey),
@@ -33,6 +35,7 @@ class HomeViewPreference {
   static const _tomorrowKey = 'home_show_tomorrow';
   static const _weekKey = 'home_show_week';
   static const _monthKey = 'home_show_month';
+  static const _longGoalKey = 'home_show_long_goal';
   static const _monthlyStatsKey = 'home_show_monthly_stats';
   static const _monthlyStatsSeenKey = 'home_monthly_stats_seen';
   static const _weeklyStatsKey = 'home_show_weekly_stats';
@@ -45,6 +48,7 @@ class HomeViewPreference {
   bool _showTomorrow;
   bool _showWeek;
   bool _showMonth;
+  bool _showLongGoal;
   bool _showMonthlyStats;
   String? _monthlyStatsSeen;
   bool _showWeeklyStats;
@@ -56,6 +60,7 @@ class HomeViewPreference {
   bool get showTomorrow => _showTomorrow;
   bool get showWeek => _showWeek;
   bool get showMonth => _showMonth;
+  bool get showLongGoal => _showLongGoal;
   bool get showMonthlyStats => _showMonthlyStats;
   bool get showWeeklyStats => _showWeeklyStats;
 
@@ -102,6 +107,11 @@ class HomeViewPreference {
   Future<void> setShowMonth(bool value) async {
     _showMonth = value;
     await _prefs?.setBool(_monthKey, value);
+  }
+
+  Future<void> setShowLongGoal(bool value) async {
+    _showLongGoal = value;
+    await _prefs?.setBool(_longGoalKey, value);
   }
 
   Future<void> setShowMonthlyStats(bool value) async {

@@ -14,11 +14,13 @@ import 'package:job_planner/data/datasources/day_events_view_preference.dart';
 import 'package:job_planner/data/datasources/home_view_preference.dart';
 import 'package:job_planner/domain/entities/calendar_event.dart';
 import 'package:job_planner/domain/entities/event_category.dart';
+import 'package:job_planner/domain/entities/long_goal.dart';
 import 'package:job_planner/presentation/screens/calendar/calendar_day_events.dart';
 import 'package:job_planner/presentation/screens/home/leftover_todos_screen.dart';
 import 'package:job_planner/presentation/screens/home/monthly_stats_screen.dart';
 import 'package:job_planner/presentation/screens/home/widgets/home_day_card.dart';
 import 'package:job_planner/presentation/screens/home/widgets/home_leftover_card.dart';
+import 'package:job_planner/presentation/screens/home/widgets/home_long_goal_card.dart';
 import 'package:job_planner/presentation/screens/home/widgets/home_monthly_stats_card.dart';
 import 'package:job_planner/presentation/screens/settings/settings_screen.dart';
 import 'package:job_planner/presentation/widgets/app_bar_icon_group.dart';
@@ -46,6 +48,7 @@ class _HomeScreenState extends State<HomeScreen>
   var _monthEvents = <CalendarEvent>[];
   var _leftoverEvents = <CalendarEvent>[];
   var _categories = <EventCategory>[];
+  var _longGoals = <LongGoal>[];
   var _loading = true;
   var _initialized = false;
   var _compact = false;
@@ -194,6 +197,7 @@ class _HomeScreenState extends State<HomeScreen>
           : null;
       _leftoverEvents = leftoverTodosBefore(_today, events);
       _categories = categories;
+      _longGoals = List.of(scope.longGoalStore.goals);
       _loading = false;
     });
   }
@@ -413,6 +417,17 @@ class _HomeScreenState extends State<HomeScreen>
         HomeLeftoverCard(
           count: leftover.length,
           onPressed: _openLeftover,
+        ),
+      );
+    }
+    if (homePrefs.showLongGoal) {
+      add(
+        HomeLongGoalCard(
+          goals: _longGoals,
+          categories: _categories,
+          today: _today,
+          compact: _compact,
+          onChanged: _reload,
         ),
       );
     }

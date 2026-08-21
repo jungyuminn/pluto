@@ -4,9 +4,10 @@ import 'package:job_planner/core/theme/app_colors.dart';
 import 'package:job_planner/core/utils/press_bounce.dart';
 
 class AddEventButton extends StatelessWidget {
-  const AddEventButton({super.key, this.onPressed});
+  const AddEventButton({super.key, this.onPressed, this.label});
 
   final VoidCallback? onPressed;
+  final String? label;
 
   @override
   Widget build(BuildContext context) {
@@ -21,7 +22,7 @@ class AddEventButton extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 16),
         alignment: Alignment.center,
         child: Text(
-          AppStrings.addEvent,
+          label ?? AppStrings.addEvent,
           style: TextStyle(
             color: colors.hint,
             fontWeight: FontWeight.w600,

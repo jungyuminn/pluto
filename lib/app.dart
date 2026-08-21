@@ -13,6 +13,7 @@ import 'package:job_planner/data/datasources/day_events_view_preference.dart';
 import 'package:job_planner/data/datasources/font_preference.dart';
 import 'package:job_planner/data/datasources/home_view_preference.dart';
 import 'package:job_planner/data/datasources/job_view_preference.dart';
+import 'package:job_planner/data/datasources/long_goal_local_datasource.dart';
 import 'package:job_planner/data/datasources/job_application_local_datasource.dart';
 import 'package:job_planner/data/datasources/notification_preference.dart';
 import 'package:job_planner/data/datasources/theme_preference.dart';
@@ -60,6 +61,7 @@ class JobPlannerApp extends StatelessWidget {
     this.reorderEventCategories,
     this.jobViewPreference,
     this.homeViewPreference,
+    this.longGoalStore,
     this.dayEventsViewPreference,
     this.calendarPreference,
     this.fontPreference,
@@ -84,6 +86,7 @@ class JobPlannerApp extends StatelessWidget {
   final ReorderEventCategories? reorderEventCategories;
   final JobViewPreference? jobViewPreference;
   final HomeViewPreference? homeViewPreference;
+  final LongGoalLocalDataSource? longGoalStore;
   final DayEventsViewPreference? dayEventsViewPreference;
   final CalendarPreference? calendarPreference;
   final FontPreference? fontPreference;
@@ -135,6 +138,7 @@ class JobPlannerApp extends StatelessWidget {
           reorderEventCategories ?? ReorderEventCategories(categoryRepository),
       jobViewPreference: jobViewPreference ?? JobViewPreference(),
       homeViewPreference: homeViewPreference ?? HomeViewPreference(),
+      longGoalStore: longGoalStore ?? LongGoalLocalDataSource(),
       dayEventsViewPreference:
           dayEventsViewPreference ?? DayEventsViewPreference(),
       calendarPreference: calendarPreference ?? CalendarPreference(),
@@ -172,6 +176,7 @@ class _AppBootstrapState extends State<_AppBootstrap> {
   ReorderEventCategories? _reorderEventCategories;
   JobViewPreference? _jobViewPreference;
   HomeViewPreference? _homeViewPreference;
+  LongGoalLocalDataSource? _longGoalStore;
   DayEventsViewPreference? _dayEventsViewPreference;
   CalendarPreference? _calendarPreference;
   FontPreference? _fontPreference;
@@ -197,6 +202,7 @@ class _AppBootstrapState extends State<_AppBootstrap> {
     final themePreference = ThemePreference(prefs: prefs);
     final categoryDataSource = EventCategoryLocalDataSource(prefs);
     final homeViewPreference = HomeViewPreference(prefs: prefs);
+    final longGoalStore = LongGoalLocalDataSource(prefs: prefs);
     final dayEventsViewPreference = DayEventsViewPreference(prefs: prefs);
     final calendarPreference = CalendarPreference(prefs: prefs);
     final fontPreference = FontPreference(prefs: prefs);
@@ -233,6 +239,7 @@ class _AppBootstrapState extends State<_AppBootstrap> {
       _reorderEventCategories = ReorderEventCategories(categoryRepository);
       _jobViewPreference = JobViewPreference(prefs: prefs);
       _homeViewPreference = homeViewPreference;
+      _longGoalStore = longGoalStore;
       _dayEventsViewPreference = dayEventsViewPreference;
       _calendarPreference = calendarPreference;
       _fontPreference = fontPreference;
@@ -277,6 +284,7 @@ class _AppBootstrapState extends State<_AppBootstrap> {
     final reorderCategory = _reorderEventCategories;
     final jobViewPreference = _jobViewPreference;
     final homeViewPreference = _homeViewPreference;
+    final longGoalStore = _longGoalStore;
     final dayEventsViewPreference = _dayEventsViewPreference;
     final calendarPreference = _calendarPreference;
     final fontPreference = _fontPreference;
@@ -300,6 +308,7 @@ class _AppBootstrapState extends State<_AppBootstrap> {
         reorderCategory == null ||
         jobViewPreference == null ||
         homeViewPreference == null ||
+        longGoalStore == null ||
         dayEventsViewPreference == null ||
         calendarPreference == null ||
         fontPreference == null ||
@@ -329,6 +338,7 @@ class _AppBootstrapState extends State<_AppBootstrap> {
       reorderEventCategories: reorderCategory,
       jobViewPreference: jobViewPreference,
       homeViewPreference: homeViewPreference,
+      longGoalStore: longGoalStore,
       dayEventsViewPreference: dayEventsViewPreference,
       calendarPreference: calendarPreference,
       fontPreference: fontPreference,
@@ -352,8 +362,16 @@ class _JobPlannerMaterialApp extends StatelessWidget {
         return MaterialApp(
           title: AppStrings.appName,
           debugShowCheckedModeBanner: false,
-          theme: AppTheme.themed(dark: false, typeface: font.typeface),
-          darkTheme: AppTheme.themed(dark: true, typeface: font.typeface),
+          theme: AppTheme.themed(
+            dark: false,
+            typeface: font.typeface,
+            skin: theme.skin,
+          ),
+          darkTheme: AppTheme.themed(
+            dark: true,
+            typeface: font.typeface,
+            skin: theme.skin,
+          ),
           themeMode: theme.mode,
           locale: const Locale('ko', 'KR'),
           supportedLocales: const [Locale('ko', 'KR')],

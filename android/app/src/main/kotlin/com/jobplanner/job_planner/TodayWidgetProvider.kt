@@ -27,10 +27,13 @@ abstract class ScheduleWidgetProvider : HomeWidgetProvider() {
             val textColor = if (dark) Color.parseColor("#F1F5F9") else Color.parseColor("#0F172A")
             val mutedColor = Color.parseColor("#94A3B8")
             val views = RemoteViews(context.packageName, R.layout.today_widget).apply {
-                setInt(
+                WidgetSkin.apply(
+                    context,
+                    this,
+                    widgetData,
+                    dark,
                     R.id.widget_root,
-                    "setBackgroundResource",
-                    if (dark) R.drawable.widget_card_dark else R.drawable.widget_card_light,
+                    R.id.widget_skin_bg,
                 )
                 setTextViewText(
                     R.id.widget_title,

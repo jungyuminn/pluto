@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:job_planner/app_scope.dart';
 import 'package:job_planner/core/theme/app_colors.dart';
+import 'package:job_planner/data/datasources/theme_preference.dart';
 
 class ThemedAsset extends StatelessWidget {
   const ThemedAsset({
@@ -26,7 +28,9 @@ class ThemedAsset extends StatelessWidget {
       semanticLabel: semanticLabel,
     );
     final dark = Theme.of(context).brightness == Brightness.dark;
-    if (!dark && !forceTint) return image;
+    final skin =
+        AppScope.maybeOf(context)?.themePreference.skin ?? AppSkin.classic;
+    if (!dark && !forceTint && skin == AppSkin.classic) return image;
     return ColorFiltered(
       colorFilter: ColorFilter.mode(
         AppColors.of(context).icon,

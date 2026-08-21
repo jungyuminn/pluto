@@ -21,7 +21,9 @@ class DayEventLabel extends StatefulWidget {
     this.showCategory = true,
     this.memo = '',
     this.timeText,
+    this.trailingText,
     this.titleWeight = FontWeight.w600,
+    this.disabled = false,
   });
 
   final String title;
@@ -37,7 +39,9 @@ class DayEventLabel extends StatefulWidget {
   final bool showCategory;
   final String memo;
   final String? timeText;
+  final String? trailingText;
   final FontWeight titleWeight;
+  final bool disabled;
 
   @override
   State<DayEventLabel> createState() => _DayEventLabelState();
@@ -60,13 +64,18 @@ class _DayEventLabelState extends State<DayEventLabel> {
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
-    final background = colors.tint(widget.color, 0.22);
+    final accent = widget.disabled ? colors.muted : widget.color;
+    final background = colors.tint(accent, widget.disabled ? 0.14 : 0.22);
     final scale = AppFonts.labelScaleOf(context);
     final height = _height * scale;
     final memoText = widget.memo.trim().replaceAll(RegExp(r'\s+'), ' ');
     final hasMemo = memoText.isNotEmpty;
 
-    return PressBounce(
+    return AnimatedOpacity(
+      duration: const Duration(milliseconds: 420),
+      curve: Curves.easeOutCubic,
+      opacity: widget.disabled ? 0.42 : 1,
+      child: PressBounce(
       onPressed: () {
         if (_skipLabelTap) {
           _skipLabelTap = false;
@@ -88,7 +97,7 @@ class _DayEventLabelState extends State<DayEventLabel> {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(8),
           border: widget.isJob
-              ? Border.all(color: widget.color, width: 1.5)
+              ? Border.all(color: accent, width: 1.5)
               : null,
         ),
         child: ClipRRect(
@@ -103,7 +112,7 @@ class _DayEventLabelState extends State<DayEventLabel> {
                   curve: Curves.easeOutCubic,
                   width: (_completed || widget.isJob) ? 0 : 4,
                   height: height,
-                  color: widget.color,
+                  color: accent,
                 ),
                 Expanded(
                   child: Padding(
@@ -189,7 +198,7 @@ class _DayEventLabelState extends State<DayEventLabel> {
                                     fontSize: 10 * scale,
                                     fontWeight: FontWeight.w700,
                                     height: 1.15,
-                                    color: widget.color,
+                                    color: accent,
                                   ),
                                 ),
                               ],
@@ -200,12 +209,27 @@ class _DayEventLabelState extends State<DayEventLabel> {
                     ),
                   ),
                 ),
+                if (widget.trailingText != null)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 10),
+                    child: Text(
+                      widget.trailingText!,
+                      maxLines: 1,
+                      style: TextStyle(
+                        fontFamily: AppFonts.of(context),
+                        fontSize: 14 * scale,
+                        fontWeight: FontWeight.w800,
+                        height: 1,
+                        color: accent,
+                      ),
+                    ),
+                  ),
                 if (widget.isJob)
                   Padding(
                     padding: const EdgeInsets.only(right: 8),
                     child: ColorFiltered(
                       colorFilter: ColorFilter.mode(
-                        widget.color,
+                        accent,
                         BlendMode.srcIn,
                       ),
                       child: Image.asset(
@@ -254,7 +278,7 @@ class _DayEventLabelState extends State<DayEventLabel> {
                       onPointerDown: (_) => _skipLabelTap = true,
                       child: EventCompleteButton(
                         completed: _completed,
-                        color: widget.color,
+                        color: accent,
                         onPressed: () {
                           _skipLabelTap = true;
                           setState(() => _completed = !_completed);
@@ -267,6 +291,7 @@ class _DayEventLabelState extends State<DayEventLabel> {
             ),
           ),
         ),
+      ),
       ),
     );
   }

@@ -122,6 +122,11 @@ class _AddCategorySheetState extends State<AddCategorySheet> {
           ),
         );
       }
+      final store = scope.longGoalStore;
+      for (final goal in store.goals) {
+        if (goal.categoryId != category.id) continue;
+        await store.upsertGoal(goal.copyWith(color: category.color));
+      }
     }
     if (!mounted) return;
     Navigator.of(context).pop(true);

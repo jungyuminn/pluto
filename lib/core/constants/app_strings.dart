@@ -16,6 +16,38 @@ class AppStrings {
   static const homeShowTomorrow = '내일';
   static const homeShowWeek = '이번 주';
   static const homeShowMonth = '이번 달';
+  static const homeShowLongGoal = '언젠가';
+  static const longGoalTitle = '언젠가';
+  static const longGoalAdd = '+ 목표를 추가하세요';
+  static const longGoalNameHint = '목표 이름을 입력하세요';
+  static const longGoalUnitHint = '단위';
+  static const longGoalTargetHint = '목표치';
+  static const longGoalMissingName = '목표 이름은 필수사항이에요!';
+  static const longGoalMissingTarget = '목표치는 필수사항이에요!';
+  static const longGoalMissingCategory = '카테고리는 필수사항이에요!';
+  static const longGoalKindMeasure = '수치';
+  static const longGoalKindSum = '쌓기';
+  static const longGoalKindDaily = '매일';
+  static const longGoalKindStreak = '연속';
+  static const longGoalKindMeasureHint = '다이어트, 점수처럼 오늘의 값을 적어요';
+  static const longGoalKindSumHint = '총 시간, 총 권수처럼 한 양을 더해요';
+  static const longGoalKindDailyHint = '매일 독서, 매일 운동처럼 했는지 남겨요';
+  static const longGoalKindStreakHint = '하루라도 빠지면 처음부터예요';
+  static const longGoalKindAction = '분류';
+  static const longGoalNotLogged = '오늘 미기록';
+  static const longGoalTodayLog = '오늘의 기록';
+  static const longGoalTodayValueHint = '오늘 값';
+  static const longGoalTodayAmountHint = '오늘 한 양';
+  static const longGoalValueHint = '값';
+  static const longGoalAmountHint = '한 양';
+  static const longGoalToday = '오늘';
+  static const longGoalCheckInDone = '완료';
+  static const longGoalRestart = '다시 시작하기';
+  static const longGoalProgress = '진척도';
+  static const longGoalRecent = '최근 기록';
+  static const longGoalEmptyHistory = '아직 기록이 없어요';
+  static const longGoalDeleteBody = '목표와 기록이 사라져요';
+  static String longGoalPercent(int value) => '$value%';
   static const settingsMonthlyStatsSection = '통계 알림';
   static const homeShowMonthlyStats = '지난달 요약';
   static const homeShowWeeklyStats = '지난주 요약';
@@ -33,6 +65,10 @@ class AppStrings {
   static const themeOnionVillage = '양파마을';
   static const themeLovelyBear = '러블리베어';
   static const themeRainyDay = '비와 같이 폴짝';
+  static const themeConcertDay = '공연하는 날';
+  static const themeBoyhood = 'Boyhood';
+  static const themeInterlude = 'Interlude';
+  static const themeFluffyCloud = '몽실구름';
   static const settingsFontSection = '폰트 설정';
   static const fontFamily = '폰트 종류';
   static const fontTodoSize = '할 일·기업 크기';
@@ -75,7 +111,7 @@ class AppStrings {
   static const settingsAppearanceHelp =
       '화면을 밝은 테마나 어두운 테마로 바꿀 수 있어요';
   static const settingsThemeHelp =
-      '홈·캘린더 화면의 배경과 아이콘 분위기를 바꿀 수 있어요';
+      '홈·캘린더 배경 분위기와 아이콘·버튼 색을 바꿀 수 있어요';
   static const settingsCalendarHelp =
       '달력의 첫 요일을 바꿀 수 있어요';
   static const settingsCalendarHelpWithFontSize =

@@ -3,6 +3,7 @@ import 'package:job_planner/data/datasources/calendar_preference.dart';
 import 'package:job_planner/data/datasources/day_events_view_preference.dart';
 import 'package:job_planner/data/datasources/font_preference.dart';
 import 'package:job_planner/data/datasources/home_view_preference.dart';
+import 'package:job_planner/data/datasources/long_goal_local_datasource.dart';
 import 'package:job_planner/data/datasources/job_view_preference.dart';
 import 'package:job_planner/data/datasources/notification_preference.dart';
 import 'package:job_planner/data/datasources/theme_preference.dart';
@@ -42,6 +43,7 @@ class AppScope extends InheritedWidget {
     required this.reorderEventCategories,
     required this.jobViewPreference,
     required this.homeViewPreference,
+    required this.longGoalStore,
     required this.dayEventsViewPreference,
     required this.calendarPreference,
     required this.fontPreference,
@@ -67,6 +69,7 @@ class AppScope extends InheritedWidget {
   final ReorderEventCategories reorderEventCategories;
   final JobViewPreference jobViewPreference;
   final HomeViewPreference homeViewPreference;
+  final LongGoalLocalDataSource longGoalStore;
   final DayEventsViewPreference dayEventsViewPreference;
   final CalendarPreference calendarPreference;
   final FontPreference fontPreference;
@@ -102,6 +105,7 @@ class AppScope extends InheritedWidget {
         reorderEventCategories != oldWidget.reorderEventCategories ||
         jobViewPreference != oldWidget.jobViewPreference ||
         homeViewPreference != oldWidget.homeViewPreference ||
+        longGoalStore != oldWidget.longGoalStore ||
         dayEventsViewPreference != oldWidget.dayEventsViewPreference ||
         calendarPreference != oldWidget.calendarPreference ||
         fontPreference != oldWidget.fontPreference ||

@@ -101,6 +101,10 @@ flutter:
     - assets/themes/onion_village/
     - assets/themes/lovely_bear/
     - assets/themes/rainy_day/
+    - assets/themes/band/
+    - assets/themes/boyhood/
+    - assets/themes/interlude/
+    - assets/themes/cloud/
   fonts:
     - family: Pretendard
       fonts:

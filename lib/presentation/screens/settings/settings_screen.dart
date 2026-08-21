@@ -38,6 +38,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   var _showTomorrow = true;
   var _showWeek = false;
   var _showMonth = false;
+  var _showLongGoal = false;
   var _showMonthlyStats = true;
   var _showWeeklyStats = false;
   var _startMonday = false;
@@ -65,6 +66,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _showTomorrow = scope.homeViewPreference.showTomorrow;
     _showWeek = scope.homeViewPreference.showWeek;
     _showMonth = scope.homeViewPreference.showMonth;
+    _showLongGoal = scope.homeViewPreference.showLongGoal;
     _showMonthlyStats = scope.homeViewPreference.showMonthlyStats;
     _showWeeklyStats = scope.homeViewPreference.showWeeklyStats;
     _startMonday = scope.calendarPreference.startMonday;
@@ -111,6 +113,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _setShowMonth(bool value) async {
     setState(() => _showMonth = value);
     await AppScope.of(context).homeViewPreference.setShowMonth(value);
+  }
+
+  Future<void> _setShowLongGoal(bool value) async {
+    setState(() => _showLongGoal = value);
+    await AppScope.of(context).homeViewPreference.setShowLongGoal(value);
   }
 
   Future<void> _setShowMonthlyStats(bool value) async {
@@ -263,6 +270,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
         return AppStrings.themeLovelyBear;
       case AppSkin.rainyDay:
         return AppStrings.themeRainyDay;
+      case AppSkin.concertDay:
+        return AppStrings.themeConcertDay;
+      case AppSkin.boyhood:
+        return AppStrings.themeBoyhood;
+      case AppSkin.interlude:
+        return AppStrings.themeInterlude;
+      case AppSkin.fluffyCloud:
+        return AppStrings.themeFluffyCloud;
     }
   }
 
@@ -387,6 +402,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 label: AppStrings.homeShowMonth,
                 value: _showMonth,
                 onChanged: _setShowMonth,
+              ),
+              _SettingsSwitchTile(
+                label: AppStrings.homeShowLongGoal,
+                value: _showLongGoal,
+                onChanged: _setShowLongGoal,
               ),
             ],
           ),
@@ -1133,7 +1153,10 @@ class _ThemeSettingsPageState extends State<_ThemeSettingsPage> {
                           _SettingsTile(
                             label: _SettingsScreenState._skinLabel(skin),
                             checked: theme.skin == skin,
-                            onPressed: () => theme.setSkin(skin),
+                            onPressed: () async {
+                              await theme.setSkin(skin);
+                              await HomeScreenWidgetService.instance.sync();
+                            },
                           ),
                       ],
                     ),

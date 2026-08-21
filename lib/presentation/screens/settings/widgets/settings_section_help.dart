@@ -307,6 +307,35 @@ class _HomeLayoutPreview extends StatelessWidget {
             ],
           ),
         ),
+        const _PreviewFrame(
+          caption: AppStrings.homeShowLongGoal,
+          child: _FakeHomeCard(
+            title: AppStrings.longGoalTitle,
+            children: [
+              _FakeTodo(
+                title: '다이어트',
+                category: '75kg / 70kg',
+                color: Color(0xFF22C55E),
+                trailingText: '50%',
+                showComplete: false,
+              ),
+              _FakeTodo(
+                title: '매일 독서',
+                category: '12 / 30일',
+                color: Color(0xFF8B5CF6),
+                trailingText: '40%',
+                showComplete: false,
+              ),
+              _FakeTodo(
+                title: '무지출챌린지',
+                category: '8 / 21일',
+                color: Color(0xFFF97316),
+                trailingText: '38%',
+                showComplete: false,
+              ),
+            ],
+          ),
+        ),
       ],
     );
   }
@@ -796,6 +825,14 @@ class _ThemePreview extends StatelessWidget {
         return AppStrings.themeLovelyBear;
       case AppSkin.rainyDay:
         return AppStrings.themeRainyDay;
+      case AppSkin.concertDay:
+        return AppStrings.themeConcertDay;
+      case AppSkin.boyhood:
+        return AppStrings.themeBoyhood;
+      case AppSkin.interlude:
+        return AppStrings.themeInterlude;
+      case AppSkin.fluffyCloud:
+        return AppStrings.themeFluffyCloud;
     }
   }
 }
@@ -1775,14 +1812,20 @@ class _FakeTodo extends StatelessWidget {
     required this.category,
     required this.color,
     this.timeText,
+    this.trailingText,
     this.showCategory = true,
+    this.showComplete = true,
+    this.completed = false,
   });
 
   final String title;
   final String category;
   final Color color;
   final String? timeText;
+  final String? trailingText;
   final bool showCategory;
+  final bool showComplete;
+  final bool completed;
 
   @override
   Widget build(BuildContext context) {
@@ -1796,10 +1839,11 @@ class _FakeTodo extends StatelessWidget {
           height: 46,
           child: Row(
             children: [
-              ColoredBox(
-                color: color,
-                child: const SizedBox(width: 4, height: 46),
-              ),
+              if (!completed)
+                ColoredBox(
+                  color: color,
+                  child: const SizedBox(width: 4, height: 46),
+                ),
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(10, 7, 4, 7),
@@ -1856,16 +1900,31 @@ class _FakeTodo extends StatelessWidget {
                   ),
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.only(right: 8),
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(color: color, width: 2),
+              if (trailingText != null)
+                Padding(
+                  padding: const EdgeInsets.only(right: 10),
+                  child: Text(
+                    trailingText!,
+                    style: TextStyle(
+                      fontFamily: AppFonts.of(context),
+                      fontSize: 14,
+                      fontWeight: FontWeight.w800,
+                      height: 1,
+                      color: color,
+                    ),
                   ),
-                  child: const SizedBox(width: 16, height: 16),
                 ),
-              ),
+              if (showComplete)
+                Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(color: color, width: 2),
+                    ),
+                    child: const SizedBox(width: 16, height: 16),
+                  ),
+                ),
             ],
           ),
         ),

@@ -10,6 +10,8 @@ import 'package:job_planner/core/constants/app_icons.dart';
 import 'package:job_planner/core/constants/app_strings.dart';
 import 'package:job_planner/core/home_widget/today_widget_card.dart';
 import 'package:job_planner/core/home_widget/week_timetable_card.dart';
+import 'package:job_planner/core/theme/app_colors.dart';
+import 'package:job_planner/core/theme/app_skin_background.dart';
 import 'package:job_planner/core/theme/app_theme.dart';
 import 'package:job_planner/data/datasources/calendar_event_local_datasource.dart';
 import 'package:job_planner/data/datasources/calendar_preference.dart';
@@ -48,6 +50,8 @@ class HomeScreenWidgetService {
   ];
   static const completeHost = 'complete';
   static const refreshHost = 'refresh';
+  static const skinBackgroundKey = 'widget_skin_bg';
+  static const skinBackgroundSize = Size(412, 300);
 
   CalendarEventLocalDataSource? _events;
   JobApplicationLocalDataSource? _jobs;
@@ -186,6 +190,11 @@ class HomeScreenWidgetService {
       final pixelRatio = (liveRatio < 2 ? 3.0 : liveRatio).clamp(3.0, 4.0);
       officeIcon = await _loadOfficeIcon();
       await HomeWidget.saveWidgetData<bool>('is_dark', theme.isDark);
+      await _renderSkinBackground(
+        skin: theme.skin,
+        isDark: theme.isDark,
+        pixelRatio: pixelRatio,
+      );
 
       for (final kind in _kinds) {
         await _syncKind(
@@ -209,6 +218,7 @@ class HomeScreenWidgetService {
         applications: applications,
         showTime: dayEventsView.showTime,
         isDark: theme.isDark,
+        skin: theme.skin,
         pixelRatio: pixelRatio,
       );
     } catch (error, stack) {
@@ -329,6 +339,7 @@ class HomeScreenWidgetService {
     required List<JobApplication> applications,
     required bool showTime,
     required bool isDark,
+    required AppSkin skin,
     required double pixelRatio,
   }) async {
     final days = WeekTimetableCard.weekDaysOn(
@@ -352,11 +363,14 @@ class HomeScreenWidgetService {
         child: SizedBox(
           width: size.width,
           height: size.height,
-          child: WeekTimetableCard(
-            days: days,
-            today: today,
-            columns: columns,
-            showTime: showTime,
+          child: _skinCard(
+            skin: skin,
+            child: WeekTimetableCard(
+              days: days,
+              today: today,
+              columns: columns,
+              showTime: showTime,
+            ),
           ),
         ),
       ),
@@ -426,6 +440,53 @@ class HomeScreenWidgetService {
     return TodayWidgetSnapshot(items: items, moreCount: 0);
   }
 
+  Future<void> _renderSkinBackground({
+    required AppSkin skin,
+    required bool isDark,
+    required double pixelRatio,
+  }) async {
+    const size = skinBackgroundSize;
+    await HomeWidget.renderFlutterWidget(
+      _wrapTheme(
+        isDark: isDark,
+        size: size,
+        pixelRatio: pixelRatio,
+        child: SizedBox(
+          width: size.width,
+          height: size.height,
+          child: _skinCard(skin: skin),
+        ),
+      ),
+      key: skinBackgroundKey,
+      logicalSize: size,
+      pixelRatio: pixelRatio,
+    );
+  }
+
+  Widget _skinCard({
+    required AppSkin skin,
+    Widget child = const SizedBox.expand(),
+  }) {
+    return ColoredBox(
+      color: const Color(0x00000000),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: Builder(
+          builder: (context) {
+            return AppSkinBackground(
+              skin: skin,
+              color: AppColors.of(context).card,
+              liftForNav: false,
+              scaleByWidth: true,
+              simple: true,
+              child: child,
+            );
+          },
+        ),
+      ),
+    );
+  }
+
   Widget _wrapTheme({
     required bool isDark,
     required Size size,
@@ -440,17 +501,24 @@ class HomeScreenWidgetService {
         devicePixelRatio: pixelRatio,
         textScaler: TextScaler.noScaling,
       ),
-      child: Theme(
-        data: AppTheme.themed(dark: isDark, typeface: typeface),
-        child: FontScope(
-          typeface: typeface,
-          todoScale: font?.todoScale ?? 1,
-          labelScale: font?.labelScale ?? 1,
-          calendarScale: font?.calendarScale ?? 1,
-          calendarLabelScale: font?.calendarLabelScale ?? 1,
-          child: TickerMode(
-            enabled: false,
-            child: child,
+      child: Directionality(
+        textDirection: TextDirection.ltr,
+        child: Theme(
+          data: AppTheme.themed(
+            dark: isDark,
+            typeface: typeface,
+            skin: _theme?.skin ?? AppSkin.classic,
+          ),
+          child: FontScope(
+            typeface: typeface,
+            todoScale: font?.todoScale ?? 1,
+            labelScale: font?.labelScale ?? 1,
+            calendarScale: font?.calendarScale ?? 1,
+            calendarLabelScale: font?.calendarLabelScale ?? 1,
+            child: TickerMode(
+              enabled: false,
+              child: child,
+            ),
           ),
         ),
       ),

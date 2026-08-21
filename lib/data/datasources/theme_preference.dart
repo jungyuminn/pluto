@@ -11,7 +11,11 @@ enum AppSkin {
   strawberryMilk,
   onionVillage,
   lovelyBear,
-  rainyDay;
+  rainyDay,
+  concertDay,
+  boyhood,
+  interlude,
+  fluffyCloud;
 
   static AppSkin fromId(
     String? id, {

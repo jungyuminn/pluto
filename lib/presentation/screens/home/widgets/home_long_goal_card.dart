@@ -4,6 +4,7 @@ import 'package:job_planner/app_scope.dart';
 import 'package:job_planner/core/constants/app_fonts.dart';
 import 'package:job_planner/core/constants/app_strings.dart';
 import 'package:job_planner/core/theme/app_colors.dart';
+import 'package:job_planner/core/utils/press_bounce.dart';
 import 'package:job_planner/core/utils/swipe_to_delete.dart';
 import 'package:job_planner/domain/entities/event_category.dart';
 import 'package:job_planner/domain/entities/long_goal.dart';
@@ -149,7 +150,6 @@ class _HomeLongGoalCardState extends State<HomeLongGoalCard> {
     final colors = AppColors.of(context);
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: colors.card,
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
@@ -159,30 +159,36 @@ class _HomeLongGoalCardState extends State<HomeLongGoalCard> {
           ),
         ],
       ),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              AppStrings.longGoalTitle,
-              style: TextStyle(
-                fontFamily: AppFonts.of(context),
-                fontSize: 17,
-                fontWeight: FontWeight.w600,
-                height: 1.1,
-                color: colors.text,
+      child: PressBounce(
+        passthrough: true,
+        color: colors.card,
+        pressedColor: Color.lerp(colors.card, Colors.black, 0.08)!,
+        borderRadius: BorderRadius.circular(24),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                AppStrings.longGoalTitle,
+                style: TextStyle(
+                  fontFamily: AppFonts.of(context),
+                  fontSize: 17,
+                  fontWeight: FontWeight.w600,
+                  height: 1.1,
+                  color: colors.text,
+                ),
               ),
-            ),
-            if (_goals.isNotEmpty) ...[
-              const SizedBox(height: 16),
-              _buildList(),
+              if (_goals.isNotEmpty) ...[
+                const SizedBox(height: 16),
+                _buildList(),
+              ],
+              AddEventButton(
+                onPressed: _add,
+                label: AppStrings.longGoalAdd,
+              ),
             ],
-            AddEventButton(
-              onPressed: _add,
-              label: AppStrings.longGoalAdd,
-            ),
-          ],
+          ),
         ),
       ),
     );

@@ -17,6 +17,7 @@ class PressBounce extends StatefulWidget {
     this.borderRadius = const BorderRadius.all(Radius.circular(12)),
     this.expand = false,
     this.alignment,
+    this.passthrough = false,
   });
 
   final Widget child;
@@ -29,16 +30,22 @@ class PressBounce extends StatefulWidget {
   final bool expand;
   final Alignment? alignment;
 
+  /// 자식이 탭을 처리하도록 두고, 눌림 연출만 보여 준다.
+  final bool passthrough;
+
   @override
   State<PressBounce> createState() => _PressBounceState();
 }
 
 class _PressBounceState extends State<PressBounce>
     with SingleTickerProviderStateMixin {
+  static final _pending = <int, List<_PressBounceState>>{};
+
   late final AnimationController _controller;
   late final Animation<double> _scale;
   var _pressed = false;
   var _pressSeq = 0;
+  int? _pointer;
   Offset? _downPos;
 
   @override
@@ -60,8 +67,22 @@ class _PressBounceState extends State<PressBounce>
 
   @override
   void dispose() {
+    final pointer = _pointer;
+    if (pointer != null) {
+      _pending[pointer]?.remove(this);
+      if (_pending[pointer]?.isEmpty ?? false) _pending.remove(pointer);
+    }
     _controller.dispose();
     super.dispose();
+  }
+
+  int get _depth {
+    var depth = 0;
+    context.visitAncestorElements((element) {
+      depth++;
+      return true;
+    });
+    return depth;
   }
 
   Future<void> _setPressed(bool value, {bool immediate = false}) async {
@@ -87,27 +108,65 @@ class _PressBounceState extends State<PressBounce>
 
   void _onPointerDown(PointerDownEvent event) {
     _pressSeq++;
+    _pointer = event.pointer;
     _downPos = event.position;
-    _setPressed(true);
+    _pending.putIfAbsent(event.pointer, () => []).add(this);
+    Future.microtask(() => _resolveDown(event.pointer));
+  }
+
+  void _resolveDown(int pointer) {
+    final list = _pending.remove(pointer);
+    if (list == null) return;
+    final active = [
+      for (final state in list)
+        if (state.mounted && state._pointer == pointer) state,
+    ];
+    if (active.isEmpty) return;
+    _PressBounceState? leaf;
+    var leafDepth = -1;
+    for (final state in active) {
+      final depth = state._depth;
+      if (depth > leafDepth) {
+        leaf = state;
+        leafDepth = depth;
+      }
+    }
+    for (final state in active) {
+      if (state == leaf) {
+        state._setPressed(true);
+      } else {
+        state._setPressed(false, immediate: true);
+      }
+    }
+  }
+
+  void _clearPointer(int? pointer) {
+    if (pointer == null) return;
+    _pending[pointer]?.remove(this);
+    if (_pending[pointer]?.isEmpty ?? false) _pending.remove(pointer);
+    if (_pointer == pointer) _pointer = null;
   }
 
   void _onPointerMove(PointerMoveEvent event) {
     final down = _downPos;
-    if (down == null || !_pressed) return;
+    if (down == null) return;
     if ((event.position - down).distance <= 18) return;
     _pressSeq++;
     _downPos = null;
+    _clearPointer(event.pointer);
     _setPressed(false, immediate: true);
   }
 
   void _onPointerUp(PointerUpEvent event) {
     _downPos = null;
+    _clearPointer(event.pointer);
     _setPressed(false);
   }
 
   void _onPointerCancel(PointerCancelEvent event) {
     _pressSeq++;
     _downPos = null;
+    _clearPointer(event.pointer);
     _setPressed(false, immediate: true);
   }
 
@@ -124,48 +183,55 @@ class _PressBounceState extends State<PressBounce>
 
   @override
   Widget build(BuildContext context) {
-    final canPress = widget.onPressed != null || widget.onLongPressed != null;
+    final canPress = widget.onPressed != null ||
+        widget.onLongPressed != null ||
+        widget.passthrough;
     final pressedColor = _pressedColorOf(context);
+    final scaled = AnimatedBuilder(
+      animation: _scale,
+      builder: (context, child) {
+        return Transform.scale(
+          scale: _scale.value,
+          transformHitTests: false,
+          child: child,
+        );
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 50),
+        width: widget.expand ? double.infinity : null,
+        height: widget.expand ? double.infinity : null,
+        alignment: widget.expand
+            ? (widget.alignment ?? Alignment.center)
+            : null,
+        decoration: BoxDecoration(
+          color: _pressed ? pressedColor : _idleColor(context),
+          borderRadius: widget.borderRadius,
+        ),
+        child: widget.child,
+      ),
+    );
     return Listener(
-      behavior: HitTestBehavior.opaque,
+      behavior: widget.passthrough
+          ? HitTestBehavior.translucent
+          : HitTestBehavior.opaque,
       onPointerDown: canPress ? _onPointerDown : null,
       onPointerMove: canPress ? _onPointerMove : null,
       onPointerUp: canPress ? _onPointerUp : null,
       onPointerCancel: canPress ? _onPointerCancel : null,
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: widget.onPressed,
-        onLongPress: widget.onLongPressed == null
-            ? null
-            : () {
-                _pressSeq++;
-                _setPressed(false, immediate: true);
-                widget.onLongPressed!();
-              },
-        child: AnimatedBuilder(
-          animation: _scale,
-          builder: (context, child) {
-            return Transform.scale(
-              scale: _scale.value,
-              transformHitTests: false,
-              child: child,
-            );
-          },
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 50),
-            width: widget.expand ? double.infinity : null,
-            height: widget.expand ? double.infinity : null,
-            alignment: widget.expand
-                ? (widget.alignment ?? Alignment.center)
-                : null,
-            decoration: BoxDecoration(
-              color: _pressed ? pressedColor : _idleColor(context),
-              borderRadius: widget.borderRadius,
+      child: widget.passthrough
+          ? scaled
+          : GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: widget.onPressed,
+              onLongPress: widget.onLongPressed == null
+                  ? null
+                  : () {
+                      _pressSeq++;
+                      _setPressed(false, immediate: true);
+                      widget.onLongPressed!();
+                    },
+              child: scaled,
             ),
-            child: widget.child,
-          ),
-        ),
-      ),
     );
   }
 }

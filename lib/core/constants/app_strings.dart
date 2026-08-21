@@ -103,7 +103,7 @@ class AppStrings {
   static const calendarStartMonday = '월요일부터 시작';
   static const settingsHelpPreview = '미리보기';
   static const settingsHomeLayoutHelp =
-      '홈 화면에 보여줄 카드를 고를 수 있어요';
+      '홈 화면에 보여줄 카드를 고르고, 홈에서 카드를 길게 눌러 순서를 바꿀 수 있어요';
   static const settingsTodoHelp =
       '할 일을 시간 순으로 정렬하거나, 라벨에 시간을 표시할 수 있어요';
   static const settingsNotificationHelp =

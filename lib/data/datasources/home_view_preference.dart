@@ -27,7 +27,8 @@ class HomeViewPreference {
             prefs?.getBool(_monthlyStatsKey) ?? showMonthlyStats,
         _monthlyStatsSeen = prefs?.getString(_monthlyStatsSeenKey),
         _showWeeklyStats = prefs?.getBool(_weeklyStatsKey) ?? showWeeklyStats,
-        _weeklyStatsSeen = prefs?.getString(_weeklyStatsSeenKey);
+        _weeklyStatsSeen = prefs?.getString(_weeklyStatsSeenKey),
+        _cardOrder = parseCardOrder(prefs?.getString(_cardOrderKey));
 
   static const _compactKey = 'home_events_compact_view';
   static const _leftoverKey = 'home_show_leftover';
@@ -40,6 +41,7 @@ class HomeViewPreference {
   static const _monthlyStatsSeenKey = 'home_monthly_stats_seen';
   static const _weeklyStatsKey = 'home_show_weekly_stats';
   static const _weeklyStatsSeenKey = 'home_weekly_stats_seen';
+  static const _cardOrderKey = 'home_card_order';
 
   final SharedPreferences? _prefs;
   bool _compact;
@@ -53,6 +55,7 @@ class HomeViewPreference {
   String? _monthlyStatsSeen;
   bool _showWeeklyStats;
   String? _weeklyStatsSeen;
+  List<HomeCardKind> _cardOrder;
 
   bool get isCompact => _prefs?.getBool(_compactKey) ?? _compact;
   bool get showLeftover => _showLeftover;
@@ -63,6 +66,7 @@ class HomeViewPreference {
   bool get showLongGoal => _showLongGoal;
   bool get showMonthlyStats => _showMonthlyStats;
   bool get showWeeklyStats => _showWeeklyStats;
+  List<HomeCardKind> get cardOrder => List.unmodifiable(_cardOrder);
 
   bool shouldShowMonthlyStats([DateTime? now]) {
     if (!_showMonthlyStats) return false;
@@ -124,6 +128,28 @@ class HomeViewPreference {
     await _prefs?.setBool(_weeklyStatsKey, value);
   }
 
+  Future<void> setCardOrder(List<HomeCardKind> order) async {
+    _cardOrder = parseCardOrder(order.map((kind) => kind.name).join(','));
+    await _prefs?.setString(
+      _cardOrderKey,
+      _cardOrder.map((kind) => kind.name).join(','),
+    );
+  }
+
+  static List<HomeCardKind> parseCardOrder(String? raw) {
+    final found = <HomeCardKind>[];
+    if (raw != null && raw.isNotEmpty) {
+      for (final part in raw.split(',')) {
+        final kind = HomeCardKind.fromName(part);
+        if (kind != null && !found.contains(kind)) found.add(kind);
+      }
+    }
+    for (final kind in HomeCardKind.defaults) {
+      if (!found.contains(kind)) found.add(kind);
+    }
+    return found;
+  }
+
   Future<void> dismissMonthlyStats([DateTime? now]) async {
     final today = now ?? DateTime.now();
     _monthlyStatsSeen = _monthStamp(today);
@@ -147,5 +173,30 @@ class HomeViewPreference {
     final month = monday.month.toString().padLeft(2, '0');
     final dayNum = monday.day.toString().padLeft(2, '0');
     return '${monday.year}-$month-$dayNum';
+  }
+}
+
+enum HomeCardKind {
+  leftover,
+  today,
+  tomorrow,
+  week,
+  month,
+  longGoal;
+
+  static const defaults = [
+    leftover,
+    today,
+    tomorrow,
+    week,
+    month,
+    longGoal,
+  ];
+
+  static HomeCardKind? fromName(String raw) {
+    for (final value in values) {
+      if (value.name == raw) return value;
+    }
+    return null;
   }
 }

@@ -30,9 +30,8 @@ class HomeLeftoverCard extends StatelessWidget {
       ),
       child: PressBounce(
         onPressed: onPressed,
-        pressedScale: 0.98,
         color: colors.card,
-        pressedColor: colors.pressed,
+        pressedColor: Color.lerp(colors.card, Colors.black, 0.08)!,
         borderRadius: BorderRadius.circular(24),
         child: Padding(
           padding: const EdgeInsets.fromLTRB(20, 14, 16, 14),

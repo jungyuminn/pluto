@@ -4,6 +4,7 @@ import 'package:job_planner/app_scope.dart';
 import 'package:job_planner/core/constants/app_fonts.dart';
 import 'package:job_planner/core/constants/app_strings.dart';
 import 'package:job_planner/core/theme/app_colors.dart';
+import 'package:job_planner/core/utils/press_bounce.dart';
 import 'package:job_planner/core/utils/swipe_to_delete.dart';
 import 'package:job_planner/domain/entities/calendar_event.dart';
 import 'package:job_planner/domain/entities/event_category.dart';
@@ -534,7 +535,6 @@ class _HomeDayCardState extends State<HomeDayCard> {
     final colors = AppColors.of(context);
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: colors.card,
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
@@ -544,38 +544,44 @@ class _HomeDayCardState extends State<HomeDayCard> {
           ),
         ],
       ),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              widget.title,
-              style: TextStyle(
-                fontFamily: AppFonts.of(context),
-                fontSize: 17,
-                fontWeight: FontWeight.w600,
-                height: 1.1,
-                color: colors.text,
-              ),
-            ),
-            if (_dateLabel != null) ...[
-              const SizedBox(height: 4),
+      child: PressBounce(
+        passthrough: true,
+        color: colors.card,
+        pressedColor: Color.lerp(colors.card, Colors.black, 0.08)!,
+        borderRadius: BorderRadius.circular(24),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
               Text(
-                _dateLabel!,
+                widget.title,
                 style: TextStyle(
                   fontFamily: AppFonts.of(context),
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                  height: 1.2,
-                  color: colors.muted,
+                  fontSize: 17,
+                  fontWeight: FontWeight.w600,
+                  height: 1.1,
+                  color: colors.text,
                 ),
               ),
+              if (_dateLabel != null) ...[
+                const SizedBox(height: 4),
+                Text(
+                  _dateLabel!,
+                  style: TextStyle(
+                    fontFamily: AppFonts.of(context),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    height: 1.2,
+                    color: colors.muted,
+                  ),
+                ),
+              ],
+              const SizedBox(height: 16),
+              _buildList(),
+              if (widget.showAddButton) AddEventButton(onPressed: _add),
             ],
-            const SizedBox(height: 16),
-            _buildList(),
-            if (widget.showAddButton) AddEventButton(onPressed: _add),
-          ],
+          ),
         ),
       ),
     );

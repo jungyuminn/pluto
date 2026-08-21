@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:job_planner/app_scope.dart';
 import 'package:job_planner/core/constants/app_fonts.dart';
 import 'package:job_planner/core/constants/app_icons.dart';
@@ -364,15 +365,11 @@ class _HomeScreenState extends State<HomeScreen>
                     ),
                   ),
                   Expanded(
-                    child: ListView(
-                      padding: EdgeInsets.fromLTRB(16, 8, 16, bottomGap),
-                      children: [
-                        ..._homeCards(
-                          leftover: leftover,
-                          homePrefs: homePrefs,
-                          sortPrefs: sortPrefs,
-                        ),
-                      ],
+                    child: _homeList(
+                      leftover: leftover,
+                      homePrefs: homePrefs,
+                      sortPrefs: sortPrefs,
+                      bottomGap: bottomGap,
                     ),
                   ),
                 ],
@@ -382,20 +379,15 @@ class _HomeScreenState extends State<HomeScreen>
     );
   }
 
-  List<Widget> _homeCards({
+  Widget _homeList({
     required List<CalendarEvent> leftover,
     required HomeViewPreference homePrefs,
     required DayEventsViewPreference sortPrefs,
+    required double bottomGap,
   }) {
-    final cards = <Widget>[];
-
-    void add(Widget card) {
-      if (cards.isNotEmpty) cards.add(const SizedBox(height: 12));
-      cards.add(card);
-    }
-
+    final stats = <Widget>[];
     if (homePrefs.shouldShowWeeklyStats(_today)) {
-      add(
+      stats.add(
         HomeMonthlyStatsCard(
           title: AppStrings.weeklyStatsCardTitle,
           onPressed: _openWeeklyStats,
@@ -403,7 +395,7 @@ class _HomeScreenState extends State<HomeScreen>
       );
     }
     if (homePrefs.shouldShowMonthlyStats(_today)) {
-      add(
+      stats.add(
         HomeMonthlyStatsCard(
           title: AppStrings.monthlyStatsCardTitle(
             DateTime(_today.year, _today.month - 1).month,
@@ -413,28 +405,109 @@ class _HomeScreenState extends State<HomeScreen>
       );
     }
     if (homePrefs.showLeftover && leftover.isNotEmpty) {
-      add(
+      stats.add(
         HomeLeftoverCard(
           count: leftover.length,
           onPressed: _openLeftover,
         ),
       );
     }
-    if (homePrefs.showLongGoal) {
-      add(
-        HomeLongGoalCard(
-          goals: _longGoals,
-          categories: _categories,
-          today: _today,
-          compact: _compact,
-          onChanged: _reload,
+
+    final kinds = [
+      for (final kind in homePrefs.cardOrder)
+        if (kind != HomeCardKind.leftover &&
+            _showsCard(kind, leftover: leftover, homePrefs: homePrefs))
+          kind,
+    ];
+
+    Widget? header;
+    if (stats.isNotEmpty) {
+      header = Padding(
+        padding: const EdgeInsets.only(bottom: 12),
+        child: Column(
+          children: [
+            for (var i = 0; i < stats.length; i++) ...[
+              if (i > 0) const SizedBox(height: 12),
+              stats[i],
+            ],
+          ],
         ),
       );
     }
-    if (homePrefs.showToday) {
-      add(
-        HomeDayCard(
-          key: const ValueKey('today'),
+
+    return ReorderableListView(
+      padding: EdgeInsets.fromLTRB(16, 8, 16, bottomGap),
+      buildDefaultDragHandles: false,
+      header: header,
+      proxyDecorator: (child, index, animation) {
+        return AnimatedBuilder(
+          animation: animation,
+          builder: (context, child) {
+            final t = Curves.easeOutBack.transform(animation.value);
+            return Transform.translate(
+              offset: Offset(0, -8 * t),
+              child: Transform.scale(
+                scale: 1 + 0.04 * t,
+                child: child,
+              ),
+            );
+          },
+          child: child,
+        );
+      },
+      onReorderStart: (_) => HapticFeedback.mediumImpact(),
+      onReorder: (oldIndex, newIndex) => _reorderCards(
+        kinds,
+        oldIndex: oldIndex,
+        newIndex: newIndex,
+        homePrefs: homePrefs,
+      ),
+      children: [
+        for (var i = 0; i < kinds.length; i++)
+          ReorderableDelayedDragStartListener(
+            key: ValueKey(kinds[i].name),
+            index: i,
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: _layoutCard(
+                kinds[i],
+                leftover: leftover,
+                homePrefs: homePrefs,
+                sortPrefs: sortPrefs,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  bool _showsCard(
+    HomeCardKind kind, {
+    required List<CalendarEvent> leftover,
+    required HomeViewPreference homePrefs,
+  }) {
+    return switch (kind) {
+      HomeCardKind.leftover => homePrefs.showLeftover && leftover.isNotEmpty,
+      HomeCardKind.today => homePrefs.showToday,
+      HomeCardKind.tomorrow => homePrefs.showTomorrow,
+      HomeCardKind.week => homePrefs.showWeek,
+      HomeCardKind.month => homePrefs.showMonth,
+      HomeCardKind.longGoal => homePrefs.showLongGoal,
+    };
+  }
+
+  Widget _layoutCard(
+    HomeCardKind kind, {
+    required List<CalendarEvent> leftover,
+    required HomeViewPreference homePrefs,
+    required DayEventsViewPreference sortPrefs,
+  }) {
+    return switch (kind) {
+      HomeCardKind.leftover => HomeLeftoverCard(
+          count: leftover.length,
+          onPressed: _openLeftover,
+        ),
+      HomeCardKind.today => HomeDayCard(
           title: AppStrings.todayTitle,
           date: _today,
           events: _filter(_todayEvents),
@@ -444,12 +517,7 @@ class _HomeScreenState extends State<HomeScreen>
           showTime: sortPrefs.showTime,
           onEventsChanged: _reload,
         ),
-      );
-    }
-    if (homePrefs.showTomorrow) {
-      add(
-        HomeDayCard(
-          key: const ValueKey('tomorrow'),
+      HomeCardKind.tomorrow => HomeDayCard(
           title: AppStrings.tomorrowTitle,
           date: _tomorrow,
           events: _filter(_tomorrowEvents),
@@ -459,12 +527,7 @@ class _HomeScreenState extends State<HomeScreen>
           showTime: sortPrefs.showTime,
           onEventsChanged: _reload,
         ),
-      );
-    }
-    if (homePrefs.showWeek) {
-      add(
-        HomeDayCard(
-          key: const ValueKey('week'),
+      HomeCardKind.week => HomeDayCard(
           title: AppStrings.weekTitle,
           events: _filter(_weekEvents),
           categories: _categories,
@@ -476,12 +539,7 @@ class _HomeScreenState extends State<HomeScreen>
           groupDates: calendarDaysInRange(_today, _weekEnd),
           onEventsChanged: _reload,
         ),
-      );
-    }
-    if (homePrefs.showMonth) {
-      add(
-        HomeDayCard(
-          key: const ValueKey('month'),
+      HomeCardKind.month => HomeDayCard(
           title: AppStrings.monthTitle,
           events: _filter(_monthEvents),
           categories: _categories,
@@ -496,8 +554,36 @@ class _HomeScreenState extends State<HomeScreen>
           ),
           onEventsChanged: _reload,
         ),
-      );
-    }
-    return cards;
+      HomeCardKind.longGoal => HomeLongGoalCard(
+          goals: _longGoals,
+          categories: _categories,
+          today: _today,
+          compact: _compact,
+          onChanged: _reload,
+        ),
+    };
+  }
+
+  void _reorderCards(
+    List<HomeCardKind> visible, {
+    required int oldIndex,
+    required int newIndex,
+    required HomeViewPreference homePrefs,
+  }) {
+    var to = newIndex;
+    if (to > oldIndex) to -= 1;
+    if (to == oldIndex) return;
+    if (visible[oldIndex] == HomeCardKind.leftover) return;
+    final nextVisible = List<HomeCardKind>.of(visible);
+    final moved = nextVisible.removeAt(oldIndex);
+    nextVisible.insert(to, moved);
+    final queue = List<HomeCardKind>.of(nextVisible);
+    final rest = <HomeCardKind>[
+      for (final kind in homePrefs.cardOrder)
+        if (kind != HomeCardKind.leftover)
+          if (visible.contains(kind)) queue.removeAt(0) else kind,
+    ];
+    homePrefs.setCardOrder([HomeCardKind.leftover, ...rest]);
+    setState(() {});
   }
 }

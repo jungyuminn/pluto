@@ -19,4 +19,11 @@ class CalendarPreference extends ChangeNotifier {
     notifyListeners();
     await _prefs?.setBool(_key, value);
   }
+
+  void hydrate() {
+    final prefs = _prefs;
+    if (prefs == null) return;
+    _startMonday = prefs.getBool(_key) ?? _startMonday;
+    notifyListeners();
+  }
 }

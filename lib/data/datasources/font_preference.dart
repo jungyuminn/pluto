@@ -94,17 +94,17 @@ enum AppTypeface {
 
   static const selectable = [
     AppTypeface.pretendard,
-    AppTypeface.paperlogy,
-    AppTypeface.suit,
     AppTypeface.theJamsil,
-    AppTypeface.ownglyph,
-    AppTypeface.meetme,
-    AppTypeface.leeSeoyoon,
-    AppTypeface.bandal,
+    AppTypeface.suit,
+    AppTypeface.paperlogy,
     AppTypeface.mona,
+    AppTypeface.meetme,
+    AppTypeface.ownglyph,
+    AppTypeface.bandal,
     AppTypeface.omyu,
-    AppTypeface.bazzi,
+    AppTypeface.leeSeoyoon,
     AppTypeface.mabinogi,
+    AppTypeface.bazzi,
     AppTypeface.babyShark,
     AppTypeface.cookieRun,
   ];
@@ -273,5 +273,36 @@ class FontPreference extends ChangeNotifier {
     _calendarChipScale = next;
     notifyListeners();
     if (persist) await _prefs?.setDouble(_calendarChipKey, next);
+  }
+
+  void hydrate() {
+    final prefs = _prefs;
+    if (prefs == null) return;
+    _typeface = AppTypeface.fromId(
+      prefs.getString(_familyKey),
+      fallback: _typeface,
+    );
+    if (!_typeface.isSelectable) {
+      _typeface = AppTypeface.pretendard;
+    }
+    _todoSize = FontSizeLevel.fromId(
+      prefs.getString(_todoKey),
+      fallback: _todoSize,
+    );
+    _calendarSize = FontSizeLevel.fromId(
+      prefs.getString(_calendarKey),
+      fallback: _calendarSize,
+    );
+    _calendarLabelSize = FontSizeLevel.fromId(
+      prefs.getString(_calendarLabelKey),
+      fallback: _calendarLabelSize,
+    );
+    _labelScale = clampScale(
+      prefs.getDouble(_labelScaleKey) ?? _todoSize.scale,
+    );
+    _calendarChipScale = clampScale(
+      prefs.getDouble(_calendarChipKey) ?? _calendarLabelSize.scale,
+    );
+    notifyListeners();
   }
 }

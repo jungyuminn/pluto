@@ -1,0 +1,313 @@
+import 'dart:convert';
+import 'dart:io';
+
+import 'package:archive/archive.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart';
+import 'package:job_planner/app_scope.dart';
+import 'package:job_planner/core/home_widget/home_screen_widget_service.dart';
+import 'package:job_planner/core/notifications/todo_reminder_service.dart';
+import 'package:job_planner/data/datasources/backup_preference.dart';
+import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+class AppBackupService {
+  AppBackupService._();
+
+  static const format = 1;
+  static const appId = 'job_planner';
+  static final revision = ValueNotifier(0);
+
+  static const _jobsKey = 'job_applications';
+  static const _diariesKey = 'diary_entries';
+  static const _coverFolder = 'cover_letters';
+  static const _diaryFolder = 'diaries';
+  static const _autoFolder = 'auto_backups';
+  static const _keepAutoCount = 3;
+
+  static String fileName([DateTime? now]) {
+    final stamp = now ?? DateTime.now();
+    final month = stamp.month.toString().padLeft(2, '0');
+    final day = stamp.day.toString().padLeft(2, '0');
+    return '잡플래너_백업_${stamp.year}$month$day.zip';
+  }
+
+  static Future<bool> backup() async {
+    final bytes = await encode();
+    final saved = await FilePicker.saveFile(
+      fileName: fileName(),
+      bytes: bytes,
+      mimeType: 'application/zip',
+      type: FileType.custom,
+      allowedExtensions: const ['zip'],
+    );
+    return saved != null;
+  }
+
+  static Future<void> runAutoIfDue(BackupPreference preference) async {
+    if (!preference.isDue) return;
+    try {
+      await saveLocal();
+      await preference.markBackedUp();
+    } catch (error, stack) {
+      debugPrint('Auto backup failed: $error\n$stack');
+    }
+  }
+
+  static Future<void> saveLocal() async {
+    final bytes = await encode();
+    final folder = await _autoBackupDirectory();
+    await folder.create(recursive: true);
+    final file = File(p.join(folder.path, autoFileName()));
+    await file.writeAsBytes(bytes, flush: true);
+    await _pruneAutoBackups(folder);
+  }
+
+  static String autoFileName([DateTime? now]) {
+    final stamp = now ?? DateTime.now();
+    final month = stamp.month.toString().padLeft(2, '0');
+    final day = stamp.day.toString().padLeft(2, '0');
+    return '잡플래너_자동백업_${stamp.year}$month$day.zip';
+  }
+
+  static Future<Directory> _autoBackupDirectory() async {
+    final documents = await getApplicationDocumentsDirectory();
+    return Directory(p.join(documents.path, _autoFolder));
+  }
+
+  static Future<void> _pruneAutoBackups(Directory folder) async {
+    if (!folder.existsSync()) return;
+    final files = folder.listSync().whereType<File>().toList()
+      ..sort((a, b) => b.lastModifiedSync().compareTo(a.lastModifiedSync()));
+    for (final file in files.skip(_keepAutoCount)) {
+      try {
+        await file.delete();
+      } catch (_) {}
+    }
+  }
+
+  static Future<bool> restoreFromPicker() async {
+    final file = await FilePicker.pickFile(
+      type: FileType.custom,
+      allowedExtensions: const ['zip'],
+    );
+    if (file == null) return false;
+    final bytes = await file.readAsBytes();
+    await decode(bytes);
+    return true;
+  }
+
+  static Future<void> applyToApp(AppScope scope) async {
+    await SharedPreferences.getInstance().then((prefs) => prefs.reload());
+    scope.themePreference.hydrate();
+    scope.fontPreference.hydrate();
+    scope.calendarPreference.hydrate();
+    scope.notificationPreference.hydrate();
+    scope.homeViewPreference.hydrate();
+    scope.jobViewPreference.hydrate();
+    scope.dayEventsViewPreference.hydrate();
+    scope.backupPreference.hydrate();
+    scope.longGoalStore.reload();
+    await TodoReminderService.instance.sync();
+    await HomeScreenWidgetService.instance.sync();
+    revision.value++;
+  }
+
+  static Future<Uint8List> encode() async {
+    final prefs = await SharedPreferences.getInstance();
+    final documents = await getApplicationDocumentsDirectory();
+    final archive = Archive();
+    final manifest = jsonEncode({
+      'app': appId,
+      'format': format,
+      'createdAt': DateTime.now().toIso8601String(),
+      'prefs': _dumpPrefs(prefs),
+    });
+    final manifestBytes = utf8.encode(manifest);
+    archive.addFile(
+      ArchiveFile('manifest.json', manifestBytes.length, manifestBytes),
+    );
+    await _addFolder(archive, Directory(p.join(documents.path, _coverFolder)), _coverFolder);
+    await _addFolder(archive, Directory(p.join(documents.path, _diaryFolder)), _diaryFolder);
+    await _addReferencedFiles(archive, prefs, documents.path);
+    final encoded = ZipEncoder().encode(archive);
+    return Uint8List.fromList(encoded);
+  }
+
+  static Future<void> decode(Uint8List bytes) async {
+    final archive = ZipDecoder().decodeBytes(bytes);
+    final manifestFile = archive.findFile('manifest.json');
+    if (manifestFile == null) {
+      throw const FormatException('missing manifest');
+    }
+    final manifest = jsonDecode(utf8.decode(manifestFile.content as List<int>))
+        as Map<String, dynamic>;
+    if (manifest['app'] != appId) {
+      throw const FormatException('unknown app');
+    }
+    final prefsMap = manifest['prefs'];
+    if (prefsMap is! Map<String, dynamic>) {
+      throw const FormatException('missing prefs');
+    }
+
+    final documents = await getApplicationDocumentsDirectory();
+    final coverDir = Directory(p.join(documents.path, _coverFolder));
+    final diaryDir = Directory(p.join(documents.path, _diaryFolder));
+    await coverDir.create(recursive: true);
+    await diaryDir.create(recursive: true);
+
+    for (final file in archive.files) {
+      if (!file.isFile) continue;
+      if (file.name == 'manifest.json') continue;
+      final name = file.name.replaceAll('\\', '/');
+      Directory? folder;
+      if (name.startsWith('$_coverFolder/')) {
+        folder = coverDir;
+      } else if (name.startsWith('$_diaryFolder/')) {
+        folder = diaryDir;
+      }
+      if (folder == null) continue;
+      final dest = File(p.join(folder.path, p.basename(name)));
+      await dest.writeAsBytes(file.content as List<int>, flush: true);
+    }
+
+    final prefs = await SharedPreferences.getInstance();
+    await _applyPrefs(prefs, prefsMap);
+    await _relocatePaths(prefs, coverDir.path, diaryDir.path);
+  }
+
+  static Map<String, dynamic> _dumpPrefs(SharedPreferences prefs) {
+    final out = <String, dynamic>{};
+    for (final key in prefs.getKeys()) {
+      final value = prefs.get(key);
+      if (value is String) {
+        out[key] = {'t': 's', 'v': value};
+      } else if (value is bool) {
+        out[key] = {'t': 'b', 'v': value};
+      } else if (value is int) {
+        out[key] = {'t': 'i', 'v': value};
+      } else if (value is double) {
+        out[key] = {'t': 'd', 'v': value};
+      } else if (value is List) {
+        out[key] = {'t': 'l', 'v': List<String>.from(value)};
+      }
+    }
+    return out;
+  }
+
+  static Future<void> _applyPrefs(
+    SharedPreferences prefs,
+    Map<String, dynamic> raw,
+  ) async {
+    for (final entry in raw.entries) {
+      final payload = entry.value;
+      if (payload is! Map) continue;
+      final type = payload['t'] as String?;
+      final value = payload['v'];
+      switch (type) {
+        case 's':
+          await prefs.setString(entry.key, value as String);
+        case 'b':
+          await prefs.setBool(entry.key, value as bool);
+        case 'i':
+          await prefs.setInt(entry.key, (value as num).toInt());
+        case 'd':
+          await prefs.setDouble(entry.key, (value as num).toDouble());
+        case 'l':
+          await prefs.setStringList(entry.key, List<String>.from(value as List));
+      }
+    }
+  }
+
+  static Future<void> _relocatePaths(
+    SharedPreferences prefs,
+    String coverDir,
+    String diaryDir,
+  ) async {
+    final jobsRaw = prefs.getString(_jobsKey);
+    if (jobsRaw != null && jobsRaw.isNotEmpty) {
+      final jobs = jsonDecode(jobsRaw) as List<dynamic>;
+      final next = [
+        for (final item in jobs)
+          _rewritePath(item as Map<String, dynamic>, 'coverLetterPath', coverDir),
+      ];
+      await prefs.setString(_jobsKey, jsonEncode(next));
+    }
+    final diariesRaw = prefs.getString(_diariesKey);
+    if (diariesRaw != null && diariesRaw.isNotEmpty) {
+      final diaries = jsonDecode(diariesRaw) as List<dynamic>;
+      final next = [
+        for (final item in diaries)
+          _rewritePath(item as Map<String, dynamic>, 'photoPath', diaryDir),
+      ];
+      await prefs.setString(_diariesKey, jsonEncode(next));
+    }
+  }
+
+  static Map<String, dynamic> _rewritePath(
+    Map<String, dynamic> json,
+    String key,
+    String folder,
+  ) {
+    final path = json[key] as String?;
+    if (path == null || path.isEmpty) return json;
+    json[key] = p.join(folder, p.basename(path));
+    return json;
+  }
+
+  static Future<void> _addFolder(
+    Archive archive,
+    Directory dir,
+    String zipPrefix,
+  ) async {
+    if (!dir.existsSync()) return;
+    for (final entity in dir.listSync()) {
+      if (entity is! File) continue;
+      await _addFile(archive, entity, '$zipPrefix/${p.basename(entity.path)}');
+    }
+  }
+
+  static Future<void> _addReferencedFiles(
+    Archive archive,
+    SharedPreferences prefs,
+    String documentsPath,
+  ) async {
+    final coverDir = p.join(documentsPath, _coverFolder);
+    final diaryDir = p.join(documentsPath, _diaryFolder);
+    final jobsRaw = prefs.getString(_jobsKey);
+    if (jobsRaw != null && jobsRaw.isNotEmpty) {
+      final jobs = jsonDecode(jobsRaw) as List<dynamic>;
+      for (final item in jobs) {
+        final path = (item as Map<String, dynamic>)['coverLetterPath'] as String?;
+        if (path == null || path.isEmpty) continue;
+        final file = File(path);
+        if (!file.existsSync()) continue;
+        if (p.equals(p.dirname(path), coverDir)) continue;
+        await _addFile(archive, file, '$_coverFolder/${p.basename(path)}');
+      }
+    }
+    final diariesRaw = prefs.getString(_diariesKey);
+    if (diariesRaw != null && diariesRaw.isNotEmpty) {
+      final diaries = jsonDecode(diariesRaw) as List<dynamic>;
+      for (final item in diaries) {
+        final path = (item as Map<String, dynamic>)['photoPath'] as String?;
+        if (path == null || path.isEmpty) continue;
+        final file = File(path);
+        if (!file.existsSync()) continue;
+        if (p.equals(p.dirname(path), diaryDir)) continue;
+        await _addFile(archive, file, '$_diaryFolder/${p.basename(path)}');
+      }
+    }
+  }
+
+  static Future<void> _addFile(
+    Archive archive,
+    File file,
+    String zipName,
+  ) async {
+    if (archive.findFile(zipName) != null) return;
+    final bytes = await file.readAsBytes();
+    archive.addFile(ArchiveFile(zipName, bytes.length, bytes));
+  }
+}

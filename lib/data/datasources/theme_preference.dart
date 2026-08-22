@@ -68,4 +68,12 @@ class ThemePreference extends ChangeNotifier {
     notifyListeners();
     await _prefs?.setString(_skinKey, value.name);
   }
+
+  void hydrate() {
+    final prefs = _prefs;
+    if (prefs == null) return;
+    _dark = prefs.getBool(_darkKey) ?? _dark;
+    _skin = AppSkin.fromId(prefs.getString(_skinKey), fallback: _skin);
+    notifyListeners();
+  }
 }

@@ -9,12 +9,14 @@ class CalendarDayCell extends StatelessWidget {
     super.key,
     required this.day,
     this.onPressed,
+    this.onLongPressed,
     this.inRange = false,
     this.highlighted = false,
   });
 
   final CalendarDay day;
   final ValueChanged<Rect>? onPressed;
+  final VoidCallback? onLongPressed;
   final bool inRange;
   final bool highlighted;
 
@@ -73,6 +75,7 @@ class CalendarDayCell extends StatelessWidget {
 
     return PressBounce(
       onPressed: onPressed == null ? () {} : () => onPressed!(_originOf(context)),
+      onLongPressed: onLongPressed,
       pressedScale: 0.96,
       color: inRange || highlighted ? colors.rangeFill : Colors.transparent,
       pressedColor: inRange || highlighted ? colors.rangePressed : colors.pressed,

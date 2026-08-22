@@ -637,6 +637,48 @@ class AppSkinBackground extends StatelessWidget {
   }
 }
 
+abstract final class _SkinGround {
+  static double heightOf(
+    double width,
+    double height, {
+    double assetRatio = 887 / 1774,
+    double maxFraction = 0.34,
+  }) {
+    final squat = width > height * 0.72;
+    final cap = height * (squat ? 0.22 : maxFraction);
+    return (width * assetRatio).clamp(0.0, cap);
+  }
+
+  static Widget cover(
+    String asset, {
+    required double width,
+    required double bandHeight,
+    double assetRatio = 887 / 1774,
+  }) {
+    final natural = width * assetRatio;
+    final cropped =
+        natural <= 0 ? 0.0 : (1 - bandHeight / natural).clamp(0.0, 1.0);
+    final fadeEnd = (0.12 + cropped * 0.78).clamp(0.12, 0.55);
+    return ShaderMask(
+      shaderCallback: (rect) {
+        return LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: const [Color(0x00FFFFFF), Color(0xFFFFFFFF)],
+          stops: [0, fadeEnd],
+        ).createShader(rect);
+      },
+      blendMode: BlendMode.dstIn,
+      child: Image.asset(
+        asset,
+        fit: BoxFit.cover,
+        alignment: Alignment.bottomCenter,
+        filterQuality: FilterQuality.medium,
+      ),
+    );
+  }
+}
+
 class _LogoSafe {
   _LogoSafe({
     required double screenWidth,
@@ -716,8 +758,12 @@ class _BlossomDecorations extends StatelessWidget {
         final hills = dark
             ? AppSkinAssets.hillsDark
             : AppSkinAssets.hillsLight;
-        final hillsHeight =
-            (width * 600 / 2000).clamp(0.0, height * 0.32);
+        final hillsHeight = _SkinGround.heightOf(
+          width,
+          height,
+          assetRatio: 600 / 2000,
+          maxFraction: 0.32,
+        );
 
         Widget petal(String asset) {
           return Image.asset(
@@ -735,11 +781,11 @@ class _BlossomDecorations extends StatelessWidget {
                 right: 0,
                 bottom: 0,
                 height: hillsHeight,
-                child: Image.asset(
+                child: _SkinGround.cover(
                   hills,
-                  fit: BoxFit.cover,
-                  alignment: Alignment.bottomCenter,
-                  filterQuality: FilterQuality.medium,
+                  width: width,
+                  bandHeight: hillsHeight,
+                  assetRatio: 600 / 2000,
                 ),
               ),
               Positioned(
@@ -833,7 +879,11 @@ class _SummerBeachDecorations extends StatelessWidget {
         final shell =
             dark ? AppSkinAssets.shellDark : AppSkinAssets.shellLight;
         final wave = dark ? AppSkinAssets.waveDark : AppSkinAssets.waveLight;
-        final waveHeight = (width * 700 / 2000).clamp(0.0, height * 0.34);
+        final waveHeight = _SkinGround.heightOf(
+          width,
+          height,
+          assetRatio: 700 / 2000,
+        );
 
         Widget sticker(String asset) {
           return Image.asset(
@@ -851,11 +901,11 @@ class _SummerBeachDecorations extends StatelessWidget {
                 right: 0,
                 bottom: 0,
                 height: waveHeight,
-                child: Image.asset(
+                child: _SkinGround.cover(
                   wave,
-                  fit: BoxFit.cover,
-                  alignment: Alignment.bottomCenter,
-                  filterQuality: FilterQuality.medium,
+                  width: width,
+                  bandHeight: waveHeight,
+                  assetRatio: 700 / 2000,
                 ),
               ),
               if (!simple)
@@ -923,7 +973,11 @@ class _SnowyWinterDecorations extends StatelessWidget {
         final ground = dark
             ? AppSkinAssets.snowGroundDark
             : AppSkinAssets.snowGroundLight;
-        final groundHeight = (width * 887 / 1774).clamp(0.0, height * 0.32);
+        final groundHeight = _SkinGround.heightOf(
+          width,
+          height,
+          maxFraction: 0.32,
+        );
 
         Widget sticker(String asset) {
           return Image.asset(
@@ -941,11 +995,10 @@ class _SnowyWinterDecorations extends StatelessWidget {
                 right: 0,
                 bottom: 0,
                 height: groundHeight,
-                child: Image.asset(
+                child: _SkinGround.cover(
                   ground,
-                  fit: BoxFit.cover,
-                  alignment: Alignment.bottomCenter,
-                  filterQuality: FilterQuality.medium,
+                  width: width,
+                  bandHeight: groundHeight,
                 ),
               ),
               if (!simple) ...[
@@ -1037,7 +1090,11 @@ class _AutumnForestDecorations extends StatelessWidget {
         final ground = dark
             ? AppSkinAssets.leafGroundDark
             : AppSkinAssets.leafGroundLight;
-        final groundHeight = (width * 887 / 1774).clamp(0.0, height * 0.32);
+        final groundHeight = _SkinGround.heightOf(
+          width,
+          height,
+          maxFraction: 0.32,
+        );
 
         Widget sticker(String asset) {
           return Image.asset(
@@ -1055,11 +1112,10 @@ class _AutumnForestDecorations extends StatelessWidget {
                 right: 0,
                 bottom: 0,
                 height: groundHeight,
-                child: Image.asset(
+                child: _SkinGround.cover(
                   ground,
-                  fit: BoxFit.cover,
-                  alignment: Alignment.bottomCenter,
-                  filterQuality: FilterQuality.medium,
+                  width: width,
+                  bandHeight: groundHeight,
                 ),
               ),
               if (!simple) ...[
@@ -1152,7 +1208,11 @@ class _SquishyBearDecorations extends StatelessWidget {
         final hills = dark
             ? AppSkinAssets.softHillsDark
             : AppSkinAssets.softHillsLight;
-        final hillsHeight = (width * 887 / 1774).clamp(0.0, height * 0.32);
+        final hillsHeight = _SkinGround.heightOf(
+          width,
+          height,
+          maxFraction: 0.32,
+        );
 
         Widget sticker(String asset) {
           return Image.asset(
@@ -1170,11 +1230,10 @@ class _SquishyBearDecorations extends StatelessWidget {
                 right: 0,
                 bottom: 0,
                 height: hillsHeight,
-                child: Image.asset(
+                child: _SkinGround.cover(
                   hills,
-                  fit: BoxFit.cover,
-                  alignment: Alignment.bottomCenter,
-                  filterQuality: FilterQuality.medium,
+                  width: width,
+                  bandHeight: hillsHeight,
                 ),
               ),
               if (!simple) ...[
@@ -1262,7 +1321,11 @@ class _StrawberryMilkDecorations extends StatelessWidget {
         final foam = dark
             ? AppSkinAssets.milkFoamDark
             : AppSkinAssets.milkFoamLight;
-        final foamHeight = (width * 887 / 1774).clamp(0.0, height * 0.32);
+        final foamHeight = _SkinGround.heightOf(
+          width,
+          height,
+          maxFraction: 0.32,
+        );
 
         Widget sticker(String asset) {
           return Image.asset(
@@ -1280,11 +1343,10 @@ class _StrawberryMilkDecorations extends StatelessWidget {
                 right: 0,
                 bottom: 0,
                 height: foamHeight,
-                child: Image.asset(
+                child: _SkinGround.cover(
                   foam,
-                  fit: BoxFit.cover,
-                  alignment: Alignment.bottomCenter,
-                  filterQuality: FilterQuality.medium,
+                  width: width,
+                  bandHeight: foamHeight,
                 ),
               ),
               if (!simple) ...[
@@ -1369,7 +1431,7 @@ class _OnionVillageDecorations extends StatelessWidget {
         final ground = dark
             ? AppSkinAssets.villageGroundDark
             : AppSkinAssets.villageGroundLight;
-        final groundHeight = (width * 887 / 1774).clamp(0.0, height * 0.34);
+        final groundHeight = _SkinGround.heightOf(width, height);
 
         Widget sticker(String asset) {
           return Image.asset(
@@ -1387,11 +1449,10 @@ class _OnionVillageDecorations extends StatelessWidget {
                 right: 0,
                 bottom: 0,
                 height: groundHeight,
-                child: Image.asset(
+                child: _SkinGround.cover(
                   ground,
-                  fit: BoxFit.cover,
-                  alignment: Alignment.bottomCenter,
-                  filterQuality: FilterQuality.medium,
+                  width: width,
+                  bandHeight: groundHeight,
                 ),
               ),
               if (!simple) ...[
@@ -1474,7 +1535,7 @@ class _LovelyBearDecorations extends StatelessWidget {
         final ground = dark
             ? AppSkinAssets.loveVillageGroundDark
             : AppSkinAssets.loveVillageGroundLight;
-        final groundHeight = (width * 887 / 1774).clamp(0.0, height * 0.34);
+        final groundHeight = _SkinGround.heightOf(width, height);
 
         Widget sticker(String asset) {
           return Image.asset(
@@ -1492,11 +1553,10 @@ class _LovelyBearDecorations extends StatelessWidget {
                 right: 0,
                 bottom: 0,
                 height: groundHeight,
-                child: Image.asset(
+                child: _SkinGround.cover(
                   ground,
-                  fit: BoxFit.cover,
-                  alignment: Alignment.bottomCenter,
-                  filterQuality: FilterQuality.medium,
+                  width: width,
+                  bandHeight: groundHeight,
                 ),
               ),
               if (!simple) ...[
@@ -1564,7 +1624,7 @@ class _RainyDayDecorations extends StatelessWidget {
         final ground = dark
             ? AppSkinAssets.rainyGroundDark
             : AppSkinAssets.rainyGroundLight;
-        final groundHeight = (width * 887 / 1774).clamp(0.0, height * 0.34);
+        final groundHeight = _SkinGround.heightOf(width, height);
 
         Widget sticker(String asset) {
           return Image.asset(
@@ -1582,11 +1642,10 @@ class _RainyDayDecorations extends StatelessWidget {
                 right: 0,
                 bottom: 0,
                 height: groundHeight,
-                child: Image.asset(
+                child: _SkinGround.cover(
                   ground,
-                  fit: BoxFit.cover,
-                  alignment: Alignment.bottomCenter,
-                  filterQuality: FilterQuality.medium,
+                  width: width,
+                  bandHeight: groundHeight,
                 ),
               ),
               if (!simple)
@@ -1640,7 +1699,7 @@ class _ConcertDayDecorations extends StatelessWidget {
         final ground = dark
             ? AppSkinAssets.bandStageGroundDark
             : AppSkinAssets.bandStageGroundLight;
-        final groundHeight = (width * 887 / 1774).clamp(0.0, height * 0.34);
+        final groundHeight = _SkinGround.heightOf(width, height);
 
         return IgnorePointer(
           child: Stack(
@@ -1650,11 +1709,10 @@ class _ConcertDayDecorations extends StatelessWidget {
                 right: 0,
                 bottom: 0,
                 height: groundHeight,
-                child: Image.asset(
+                child: _SkinGround.cover(
                   ground,
-                  fit: BoxFit.cover,
-                  alignment: Alignment.bottomCenter,
-                  filterQuality: FilterQuality.medium,
+                  width: width,
+                  bandHeight: groundHeight,
                 ),
               ),
               Positioned(
@@ -1715,7 +1773,7 @@ class _BoyhoodDecorations extends StatelessWidget {
         final ground = dark
             ? AppSkinAssets.nightRoadGroundDark
             : AppSkinAssets.nightRoadGroundLight;
-        final groundHeight = (width * 887 / 1774).clamp(0.0, height * 0.34);
+        final groundHeight = _SkinGround.heightOf(width, height);
 
         Widget sticker(String asset) {
           return Image.asset(
@@ -1733,11 +1791,10 @@ class _BoyhoodDecorations extends StatelessWidget {
                 right: 0,
                 bottom: 0,
                 height: groundHeight,
-                child: Image.asset(
+                child: _SkinGround.cover(
                   ground,
-                  fit: BoxFit.cover,
-                  alignment: Alignment.bottomCenter,
-                  filterQuality: FilterQuality.medium,
+                  width: width,
+                  bandHeight: groundHeight,
                 ),
               ),
               if (!simple) ...[
@@ -1810,7 +1867,7 @@ class _InterludeDecorations extends StatelessWidget {
         final ground = dark
             ? AppSkinAssets.pianoCityGroundDark
             : AppSkinAssets.pianoCityGroundLight;
-        final groundHeight = (width * 887 / 1774).clamp(0.0, height * 0.34);
+        final groundHeight = _SkinGround.heightOf(width, height);
 
         return IgnorePointer(
           child: Stack(
@@ -1820,11 +1877,10 @@ class _InterludeDecorations extends StatelessWidget {
                 right: 0,
                 bottom: 0,
                 height: groundHeight,
-                child: Image.asset(
+                child: _SkinGround.cover(
                   ground,
-                  fit: BoxFit.cover,
-                  alignment: Alignment.bottomCenter,
-                  filterQuality: FilterQuality.medium,
+                  width: width,
+                  bandHeight: groundHeight,
                 ),
               ),
               Positioned(
@@ -1880,7 +1936,7 @@ class _FluffyCloudDecorations extends StatelessWidget {
         final ground = dark
             ? AppSkinAssets.cloudVillageGroundDark
             : AppSkinAssets.cloudVillageGroundLight;
-        final groundHeight = (width * 887 / 1774).clamp(0.0, height * 0.34);
+        final groundHeight = _SkinGround.heightOf(width, height);
 
         Widget sticker(String asset) {
           return Image.asset(
@@ -1898,11 +1954,10 @@ class _FluffyCloudDecorations extends StatelessWidget {
                 right: 0,
                 bottom: 0,
                 height: groundHeight,
-                child: Image.asset(
+                child: _SkinGround.cover(
                   ground,
-                  fit: BoxFit.cover,
-                  alignment: Alignment.bottomCenter,
-                  filterQuality: FilterQuality.medium,
+                  width: width,
+                  bandHeight: groundHeight,
                 ),
               ),
               if (!simple)
@@ -1969,7 +2024,7 @@ class _CatVillageDecorations extends StatelessWidget {
         final ground = dark
             ? AppSkinAssets.catTownGroundDark
             : AppSkinAssets.catTownGroundLight;
-        final groundHeight = (width * 887 / 1774).clamp(0.0, height * 0.34);
+        final groundHeight = _SkinGround.heightOf(width, height);
 
         Widget sticker(String asset) {
           return Image.asset(
@@ -1987,11 +2042,10 @@ class _CatVillageDecorations extends StatelessWidget {
                 right: 0,
                 bottom: 0,
                 height: groundHeight,
-                child: Image.asset(
+                child: _SkinGround.cover(
                   ground,
-                  fit: BoxFit.cover,
-                  alignment: Alignment.bottomCenter,
-                  filterQuality: FilterQuality.medium,
+                  width: width,
+                  bandHeight: groundHeight,
                 ),
               ),
               if (!simple)
@@ -2061,7 +2115,7 @@ class _HamsterBakeryDecorations extends StatelessWidget {
         final ground = dark
             ? AppSkinAssets.hamsterBakeryGroundDark
             : AppSkinAssets.hamsterBakeryGroundLight;
-        final groundHeight = (width * 887 / 1774).clamp(0.0, height * 0.34);
+        final groundHeight = _SkinGround.heightOf(width, height);
 
         Widget sticker(String asset) {
           return Image.asset(
@@ -2079,11 +2133,10 @@ class _HamsterBakeryDecorations extends StatelessWidget {
                 right: 0,
                 bottom: 0,
                 height: groundHeight,
-                child: Image.asset(
+                child: _SkinGround.cover(
                   ground,
-                  fit: BoxFit.cover,
-                  alignment: Alignment.bottomCenter,
-                  filterQuality: FilterQuality.medium,
+                  width: width,
+                  bandHeight: groundHeight,
                 ),
               ),
               if (!simple)

@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:job_planner/app_scope.dart';
@@ -6,6 +9,8 @@ import 'package:job_planner/core/constants/app_strings.dart';
 import 'package:job_planner/core/home_widget/home_screen_widget_service.dart';
 import 'package:job_planner/core/notifications/todo_reminder_service.dart';
 import 'package:job_planner/core/theme/app_theme.dart';
+import 'package:job_planner/data/datasources/app_backup_service.dart';
+import 'package:job_planner/data/datasources/backup_preference.dart';
 import 'package:job_planner/data/datasources/calendar_preference.dart';
 import 'package:job_planner/data/datasources/calendar_event_local_datasource.dart';
 import 'package:job_planner/data/datasources/diary_local_datasource.dart';
@@ -82,6 +87,7 @@ class JobPlannerApp extends StatelessWidget {
     this.fontPreference,
     this.notificationPreference,
     this.themePreference,
+    this.backupPreference,
   });
 
   final GetJobApplications? getJobApplications;
@@ -115,6 +121,7 @@ class JobPlannerApp extends StatelessWidget {
   final FontPreference? fontPreference;
   final NotificationPreference? notificationPreference;
   final ThemePreference? themePreference;
+  final BackupPreference? backupPreference;
 
   @override
   Widget build(BuildContext context) {
@@ -185,6 +192,7 @@ class JobPlannerApp extends StatelessWidget {
       notificationPreference:
           notificationPreference ?? NotificationPreference(),
       themePreference: themePreference ?? ThemePreference(),
+      backupPreference: backupPreference ?? BackupPreference(),
       child: const _JobPlannerMaterialApp(),
     );
   }
@@ -229,6 +237,7 @@ class _AppBootstrapState extends State<_AppBootstrap> {
   FontPreference? _fontPreference;
   NotificationPreference? _notificationPreference;
   ThemePreference? _themePreference;
+  BackupPreference? _backupPreference;
 
   @override
   void initState() {
@@ -248,6 +257,7 @@ class _AppBootstrapState extends State<_AppBootstrap> {
       preference: notificationPreference,
     );
     final themePreference = ThemePreference(prefs: prefs);
+    final backupPreference = BackupPreference(prefs: prefs);
     final categoryDataSource = EventCategoryLocalDataSource(prefs);
     final companyCategoryDataSource = EventCategoryLocalDataSource(
       prefs,
@@ -311,13 +321,17 @@ class _AppBootstrapState extends State<_AppBootstrap> {
       _fontPreference = fontPreference;
       _notificationPreference = notificationPreference;
       _themePreference = themePreference;
+      _backupPreference = backupPreference;
     });
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _afterFirstFrame(notificationPreference);
+      _afterFirstFrame(notificationPreference, backupPreference);
     });
   }
 
-  Future<void> _afterFirstFrame(NotificationPreference preference) async {
+  Future<void> _afterFirstFrame(
+    NotificationPreference preference,
+    BackupPreference backupPreference,
+  ) async {
     if (!mounted) return;
     await TodoReminderService.instance.sync();
     if (!mounted) return;
@@ -329,6 +343,7 @@ class _AppBootstrapState extends State<_AppBootstrap> {
       await TodoReminderService.instance.sync();
     }
     await HomeScreenWidgetService.instance.sync();
+    unawaited(AppBackupService.runAutoIfDue(backupPreference));
   }
 
   @override
@@ -364,6 +379,7 @@ class _AppBootstrapState extends State<_AppBootstrap> {
     final fontPreference = _fontPreference;
     final notificationPreference = _notificationPreference;
     final themePreference = _themePreference;
+    final backupPreference = _backupPreference;
 
     if (getApplications == null ||
         addApplication == null ||
@@ -395,10 +411,18 @@ class _AppBootstrapState extends State<_AppBootstrap> {
         calendarPreference == null ||
         fontPreference == null ||
         notificationPreference == null ||
-        themePreference == null) {
+        themePreference == null ||
+        backupPreference == null) {
       return const MaterialApp(
         debugShowCheckedModeBanner: false,
-        home: Scaffold(body: Center(child: CircularProgressIndicator())),
+        home: Scaffold(
+          body: Center(
+            child: CupertinoActivityIndicator(
+              radius: 14,
+              color: Color(0xFF8EC5FF),
+            ),
+          ),
+        ),
       );
     }
 
@@ -434,13 +458,40 @@ class _AppBootstrapState extends State<_AppBootstrap> {
       fontPreference: fontPreference,
       notificationPreference: notificationPreference,
       themePreference: themePreference,
+      backupPreference: backupPreference,
       child: const _JobPlannerMaterialApp(),
     );
   }
 }
 
-class _JobPlannerMaterialApp extends StatelessWidget {
+class _JobPlannerMaterialApp extends StatefulWidget {
   const _JobPlannerMaterialApp();
+
+  @override
+  State<_JobPlannerMaterialApp> createState() => _JobPlannerMaterialAppState();
+}
+
+class _JobPlannerMaterialAppState extends State<_JobPlannerMaterialApp>
+    with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed) return;
+    unawaited(
+      AppBackupService.runAutoIfDue(AppScope.of(context).backupPreference),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {

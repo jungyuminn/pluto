@@ -174,6 +174,23 @@ class HomeViewPreference {
     final dayNum = monday.day.toString().padLeft(2, '0');
     return '${monday.year}-$month-$dayNum';
   }
+
+  void hydrate() {
+    final prefs = _prefs;
+    if (prefs == null) return;
+    _compact = prefs.getBool(_compactKey) ?? _compact;
+    _showLeftover = prefs.getBool(_leftoverKey) ?? _showLeftover;
+    _showToday = prefs.getBool(_todayKey) ?? _showToday;
+    _showTomorrow = prefs.getBool(_tomorrowKey) ?? _showTomorrow;
+    _showWeek = prefs.getBool(_weekKey) ?? _showWeek;
+    _showMonth = prefs.getBool(_monthKey) ?? _showMonth;
+    _showLongGoal = prefs.getBool(_longGoalKey) ?? _showLongGoal;
+    _showMonthlyStats = prefs.getBool(_monthlyStatsKey) ?? _showMonthlyStats;
+    _monthlyStatsSeen = prefs.getString(_monthlyStatsSeenKey);
+    _showWeeklyStats = prefs.getBool(_weeklyStatsKey) ?? _showWeeklyStats;
+    _weeklyStatsSeen = prefs.getString(_weeklyStatsSeenKey);
+    _cardOrder = parseCardOrder(prefs.getString(_cardOrderKey));
+  }
 }
 
 enum HomeCardKind {

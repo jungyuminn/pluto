@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:job_planner/data/datasources/backup_preference.dart';
 import 'package:job_planner/data/datasources/calendar_preference.dart';
 import 'package:job_planner/data/datasources/day_events_view_preference.dart';
 import 'package:job_planner/data/datasources/font_preference.dart';
@@ -61,6 +62,7 @@ class AppScope extends InheritedWidget {
     required this.fontPreference,
     required this.notificationPreference,
     required this.themePreference,
+    required this.backupPreference,
     required super.child,
   });
 
@@ -95,6 +97,7 @@ class AppScope extends InheritedWidget {
   final FontPreference fontPreference;
   final NotificationPreference notificationPreference;
   final ThemePreference themePreference;
+  final BackupPreference backupPreference;
 
   static AppScope of(BuildContext context) {
     final scope = maybeOf(context);
@@ -138,7 +141,8 @@ class AppScope extends InheritedWidget {
         calendarPreference != oldWidget.calendarPreference ||
         fontPreference != oldWidget.fontPreference ||
         notificationPreference != oldWidget.notificationPreference ||
-        themePreference != oldWidget.themePreference;
+        themePreference != oldWidget.themePreference ||
+        backupPreference != oldWidget.backupPreference;
   }
 
   Future<List<EventCategory>> fetchCategories(CategoryKind kind) {

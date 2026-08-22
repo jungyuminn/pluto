@@ -28,4 +28,11 @@ class JobViewPreference {
     _sortByDate = value;
     await _prefs?.setBool(_sortKey, value);
   }
+
+  void hydrate() {
+    final prefs = _prefs;
+    if (prefs == null) return;
+    _compact = prefs.getBool(_compactKey) ?? _compact;
+    _sortByDate = prefs.getBool(_sortKey) ?? _sortByDate;
+  }
 }

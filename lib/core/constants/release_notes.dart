@@ -17,6 +17,27 @@ class ReleaseNote {
 abstract final class ReleaseNotes {
   static const all = [
     ReleaseNote(
+      version: '1.0.12',
+      items: [
+        '일기 전환에서 날짜를 길게 눌러 일기를 지울 수 있어요',
+      ],
+      fixes: [
+        '일기가 칸에 뚝 나타나거나 사라지던 문제를 고쳤어요',
+        '사진 일기를 넣으면 주 높이가 갑자기 바뀌던 문제를 고쳤어요',
+      ],
+    ),
+    ReleaseNote(
+      version: '1.0.11',
+      items: [
+        '캘린더에서 일기를 쓰고 사진을 넣을 수 있어요',
+        '기업에도 카테고리를 붙일 수 있어요',
+        '고양이 마을·햄스터 빵집 테마가 생겼어요',
+        '데이터를 백업하고 복구할 수 있어요',
+        '자동저장 주기를 정할 수 있어요',
+        '기업을 카테고리 이름으로도 검색할 수 있어요',
+      ],
+    ),
+    ReleaseNote(
       version: '1.0.10',
       items: [
         '홈에서 카드를 길게 눌러 순서를 바꿀 수 있어요',

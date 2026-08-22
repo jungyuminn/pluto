@@ -4,6 +4,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:job_planner/core/constants/app_fonts.dart';
 import 'package:job_planner/core/constants/app_strings.dart';
+import 'package:job_planner/core/constants/release_notes.dart';
 import 'package:job_planner/core/theme/app_colors.dart';
 import 'package:job_planner/core/theme/app_skin_background.dart';
 import 'package:job_planner/core/theme/app_theme.dart';
@@ -22,6 +23,8 @@ enum SettingsHelpSection {
   font,
   appearance,
   theme,
+  backup,
+  app,
 }
 
 Future<void> showSettingsSectionHelp(
@@ -155,6 +158,10 @@ extension on SettingsHelpSection {
         return AppStrings.settingsAppearanceSection;
       case SettingsHelpSection.theme:
         return AppStrings.settingsThemeSection;
+      case SettingsHelpSection.backup:
+        return AppStrings.settingsBackupSection;
+      case SettingsHelpSection.app:
+        return AppStrings.settingsAppSection;
     }
   }
 
@@ -178,6 +185,10 @@ extension on SettingsHelpSection {
         return AppStrings.settingsAppearanceHelp;
       case SettingsHelpSection.theme:
         return AppStrings.settingsThemeHelp;
+      case SettingsHelpSection.backup:
+        return AppStrings.settingsBackupHelp;
+      case SettingsHelpSection.app:
+        return AppStrings.settingsAppHelp;
     }
   }
 
@@ -199,6 +210,10 @@ extension on SettingsHelpSection {
         return const _AppearancePreview();
       case SettingsHelpSection.theme:
         return const _ThemePreview();
+      case SettingsHelpSection.backup:
+        return const _BackupPreview();
+      case SettingsHelpSection.app:
+        return const _AppPreview();
     }
   }
 }
@@ -577,6 +592,222 @@ class _NotificationPreview extends StatelessWidget {
           title: '오늘의 일정 3개',
           body: '자기소개서 제출, 코딩테스트 준비, 면접 연습',
           time: '오전 8:00',
+        ),
+      ],
+    );
+  }
+}
+
+class _BackupPreview extends StatelessWidget {
+  const _BackupPreview();
+
+  @override
+  Widget build(BuildContext context) {
+    return const _CyclingPreview(
+      frames: [
+        _PreviewFrame(
+          caption: AppStrings.backupData,
+          child: _FakeBackupScene(
+            icon: Icons.ios_share_rounded,
+            title: AppStrings.backupSavedTitle,
+            body: '잡플래너_백업.zip',
+          ),
+        ),
+        _PreviewFrame(
+          caption: AppStrings.restoreData,
+          child: _FakeBackupScene(
+            icon: Icons.download_rounded,
+            title: AppStrings.restoreDoneTitle,
+            body: AppStrings.restoreDoneBody,
+          ),
+        ),
+        _PreviewFrame(
+          caption: AppStrings.autoBackupSetting,
+          child: _FakeBackupScene(
+            icon: Icons.sync_rounded,
+            title: AppStrings.autoBackupDaily,
+            body: '앱을 켜면 매일 자동으로 저장해요',
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _FakeBackupScene extends StatelessWidget {
+  const _FakeBackupScene({
+    required this.icon,
+    required this.title,
+    required this.body,
+  });
+
+  final IconData icon;
+  final String title;
+  final String body;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: colors.card,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: colors.shadow,
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+        border: Border.all(color: colors.border.withValues(alpha: 0.7)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+        child: Column(
+          children: [
+            DecoratedBox(
+              decoration: BoxDecoration(
+                color: colors.tint(colors.accentBright, 0.18),
+                shape: BoxShape.circle,
+              ),
+              child: SizedBox(
+                width: 52,
+                height: 52,
+                child: Icon(
+                  icon,
+                  size: 24,
+                  color: colors.accentBright,
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontFamily: AppFonts.of(context),
+                fontSize: 16,
+                fontWeight: FontWeight.w800,
+                color: colors.text,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              body,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontFamily: AppFonts.of(context),
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                height: 1.4,
+                color: colors.muted,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _AppPreview extends StatelessWidget {
+  const _AppPreview();
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    final note = ReleaseNotes.all.first;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: colors.card,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: colors.shadow,
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+        border: Border.all(color: colors.border.withValues(alpha: 0.7)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              note.version,
+              style: TextStyle(
+                fontFamily: AppFonts.of(context),
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+                color: colors.text,
+              ),
+            ),
+            if (note.items.isNotEmpty) ...[
+              const SizedBox(height: 10),
+              Text(
+                AppStrings.releaseNotesFeatures,
+                style: TextStyle(
+                  fontFamily: AppFonts.of(context),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: colors.muted,
+                ),
+              ),
+              const SizedBox(height: 6),
+              _FakeReleaseBullet(note.items.first),
+            ],
+            if (note.fixes.isNotEmpty) ...[
+              const SizedBox(height: 10),
+              Text(
+                AppStrings.releaseNotesFixes,
+                style: TextStyle(
+                  fontFamily: AppFonts.of(context),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: colors.muted,
+                ),
+              ),
+              const SizedBox(height: 6),
+              _FakeReleaseBullet(note.fixes.first),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _FakeReleaseBullet extends StatelessWidget {
+  const _FakeReleaseBullet(this.text);
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    final style = TextStyle(
+      fontFamily: AppFonts.of(context),
+      fontSize: 14,
+      fontWeight: FontWeight.w500,
+      height: 1.4,
+      color: colors.text,
+    );
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: 14,
+          child: Text('·', style: style),
+        ),
+        Expanded(
+          child: Text(
+            text,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: style,
+          ),
         ),
       ],
     );

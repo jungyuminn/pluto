@@ -10,6 +10,27 @@ class AppStrings {
   static const categoryView = '카테고리별 보기';
   static const settingsTitle = '설정';
   static const settingsAppSection = '앱';
+  static const settingsBackupSection = '데이터 설정';
+  static const backupData = '데이터 백업하기';
+  static const restoreData = '데이터 복구하기';
+  static const backupSavedTitle = '백업했어요';
+  static const backupSavedBody = '파일을 안전한 곳에 보관해 주세요';
+  static const backupFailedTitle = '백업하지 못했어요';
+  static const backupFailedBody = '잠시 후 다시 시도해 주세요';
+  static const restoreConfirmTitle = '데이터를 복구할까요?';
+  static const restoreConfirmBody = '지금 있는 데이터가 백업 파일로 바뀌어요';
+  static const restoreAction = '복구하기';
+  static const restoreDoneTitle = '복구했어요';
+  static const restoreDoneBody = '홈·캘린더·잡 화면에 바로 반영돼요';
+  static const restoreFailedTitle = '복구하지 못했어요';
+  static const restoreFailedBody = '잡플래너 백업 파일이 맞는지 확인해 주세요';
+  static const autoBackupSetting = '자동저장 주기';
+  static const autoBackupDaily = '매일';
+  static const autoBackupEvery3Days = '3일마다';
+  static const autoBackupWeekly = '일주일마다';
+  static const autoBackupMonthly = '한 달마다';
+  static String autoBackupHint(String label) => '앱을 켜면 $label 자동으로 저장해요';
+  static const appTutorial = '앱 둘러보기';
   static const releaseNotesTitle = '릴리즈 노트';
   static const releaseNotesFeatures = '새로운 기능';
   static const releaseNotesFixes = '버그 수정';
@@ -118,6 +139,10 @@ class AppStrings {
       '화면을 밝은 테마나 어두운 테마로 바꿀 수 있어요';
   static const settingsThemeHelp =
       '홈·캘린더 배경 분위기와 아이콘·버튼 색을 바꿀 수 있어요';
+  static const settingsBackupHelp =
+      '할 일·기업·일기 데이터를 파일로 보관하고, 필요할 때 다시 가져올 수 있어요. 앱을 켜면 정한 주기마다 자동으로도 저장해요';
+  static const settingsAppHelp =
+      '앱 사용법을 처음부터 다시 보거나, 이 버전에 새로 생긴 기능과 고친 내용을 볼 수 있어요';
   static const settingsCalendarHelp =
       '달력의 첫 요일을 바꿀 수 있어요';
   static const settingsCalendarHelpWithFontSize =
@@ -259,6 +284,7 @@ class AppStrings {
   static const diaryPhotoHint = '이미지를 추가하세요';
   static const diaryFallback = '일기';
   static const missingDiaryBody = '제목이나 사진, 카테고리는 필수사항이에요!';
+  static const deleteDiaryBody = '일기가 사라져요';
   static const deleteDiaryPhotoTitle = '사진을 삭제하시나요?';
   static const deleteDiaryPhotoBody = '사진이 사라져요';
   static const addEvent = '+ 할 일을 추가하세요';

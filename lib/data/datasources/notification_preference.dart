@@ -74,4 +74,14 @@ class NotificationPreference {
     final minutes = stored.clamp(0, 24 * 60 - 1);
     return (minutes ~/ 60) * 60;
   }
+
+  void hydrate() {
+    final prefs = _prefs;
+    if (prefs == null) return;
+    _todoReminderLead = TodoReminderLead.fromMinutes(
+      prefs.getInt(_todoLeadKey) ?? _todoReminderLead.minutes,
+    );
+    _summaryEnabled = prefs.getBool(_summaryEnabledKey) ?? _summaryEnabled;
+    _summaryMinutes = _readMinutes(prefs.getInt(_summaryHourKey));
+  }
 }

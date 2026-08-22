@@ -58,6 +58,7 @@ class CalendarMonthGrid extends StatefulWidget {
     super.key,
     required this.month,
     this.onDayPressed,
+    this.onDayLongPressed,
     this.onRangeSelected,
     this.onRangeDragChanged,
     this.eventsOf,
@@ -68,6 +69,7 @@ class CalendarMonthGrid extends StatefulWidget {
 
   final DateTime month;
   final void Function(DateTime date, Rect origin)? onDayPressed;
+  final ValueChanged<DateTime>? onDayLongPressed;
   final void Function(DateTime start, DateTime end)? onRangeSelected;
   final ValueChanged<bool>? onRangeDragChanged;
   final List<CalendarEvent> Function(DateTime date)? eventsOf;
@@ -279,9 +281,14 @@ class _CalendarMonthGridState extends State<CalendarMonthGrid>
                       animation: _ease,
                       builder: (context, child) {
                         final t = _ease.value;
-                        return SizedBox(
+                        return AnimatedContainer(
                           key: _weekKey(week),
-                          height: eventHeight + (diaryHeight - eventHeight) * t,
+                          duration: _mode.isAnimating
+                              ? Duration.zero
+                              : CalendarWeekDiaries.fadeDuration,
+                          curve: Curves.easeOutCubic,
+                          height:
+                              eventHeight + (diaryHeight - eventHeight) * t,
                           child: child,
                         );
                       },
@@ -308,6 +315,12 @@ class _CalendarMonthGridState extends State<CalendarMonthGrid>
                                                   weekDays[weekday].date,
                                                   origin,
                                                 ),
+                                        onLongPressed:
+                                            widget.onDayLongPressed == null
+                                                ? null
+                                                : () => widget.onDayLongPressed!(
+                                                      weekDays[weekday].date,
+                                                    ),
                                       ),
                                     ),
                                   ),

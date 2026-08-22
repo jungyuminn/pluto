@@ -1,17 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:job_planner/app_scope.dart';
+import 'package:job_planner/core/constants/app_strings.dart';
 import 'package:job_planner/core/theme/app_skin_background.dart';
+import 'package:job_planner/data/datasources/app_backup_service.dart';
+import 'package:job_planner/data/datasources/diary_photo_storage.dart';
 import 'package:job_planner/domain/entities/calendar_event.dart';
 import 'package:job_planner/domain/entities/diary_entry.dart';
 import 'package:job_planner/domain/entities/event_category.dart';
 import 'package:job_planner/domain/entities/job_application.dart';
 import 'package:job_planner/presentation/screens/calendar/calendar_day_events.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/calendar_month_grid.dart';
+import 'package:job_planner/presentation/screens/calendar/widgets/calendar_week_diaries.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/calendar_month_header.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/calendar_time_machine_sheet.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/calendar_weekday_header.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/day_events_dialog.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/add_event_sheet.dart';
+import 'package:job_planner/presentation/screens/calendar/widgets/delete_event_dialog.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/diary_sheet.dart';
 
 class CalendarScreen extends StatefulWidget {
@@ -46,6 +52,11 @@ class _CalendarScreenState extends State<CalendarScreen>
     WidgetsBinding.instance.addObserver(this);
     _showCurrentMonth();
     _pages = PageController(initialPage: _initialPage, keepPage: false);
+    AppBackupService.revision.addListener(_onBackupRestored);
+  }
+
+  void _onBackupRestored() {
+    if (mounted) _reload();
   }
 
   @override
@@ -64,6 +75,7 @@ class _CalendarScreenState extends State<CalendarScreen>
 
   @override
   void dispose() {
+    AppBackupService.revision.removeListener(_onBackupRestored);
     WidgetsBinding.instance.removeObserver(this);
     _pages.dispose();
     super.dispose();
@@ -187,6 +199,27 @@ class _CalendarScreenState extends State<CalendarScreen>
     if (mounted) await _reload();
   }
 
+  Future<void> _deleteDiaryOn(DateTime date) async {
+    if (!_showDiary) return;
+    final diary = _diaryOn(date);
+    if (diary == null) return;
+    HapticFeedback.mediumImpact();
+    final title = diary.title.trim().isEmpty
+        ? AppStrings.diaryFallback
+        : diary.title.trim();
+    final confirmed = await showDeleteEventDialog(
+      context,
+      title: title,
+      body: AppStrings.deleteDiaryBody,
+    );
+    if (!confirmed || !mounted) return;
+    final photoPath = diary.photoPath;
+    await AppScope.of(context).deleteDiary(diary.id);
+    if (mounted) await _reload();
+    await Future<void>.delayed(CalendarWeekDiaries.fadeDuration);
+    await const DiaryPhotoStorage().delete(photoPath);
+  }
+
   Future<void> _openRange(DateTime start, DateTime end) async {
     await showAddEventSheet(
       context,
@@ -255,6 +288,8 @@ class _CalendarScreenState extends State<CalendarScreen>
                               diaryOf: _diaryOn,
                               showDiary: _showDiary,
                               onDayPressed: _openDay,
+                              onDayLongPressed:
+                                  _showDiary ? _deleteDiaryOn : null,
                               onRangeDragChanged: _showDiary
                                   ? null
                                   : (dragging) {

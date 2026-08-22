@@ -9,6 +9,7 @@ import 'package:job_planner/core/theme/app_skin_background.dart';
 import 'package:job_planner/core/utils/fade_in.dart';
 import 'package:job_planner/core/utils/korean_search.dart';
 import 'package:job_planner/core/utils/plain_text_editing_controller.dart';
+import 'package:job_planner/data/datasources/app_backup_service.dart';
 import 'package:job_planner/domain/entities/event_category.dart';
 import 'package:job_planner/domain/entities/job_application.dart';
 import 'package:job_planner/presentation/screens/add_company/widgets/add_company_sheet.dart';
@@ -52,6 +53,14 @@ class _JobScreenState extends State<JobScreen>
       curve: Curves.easeOutCubic,
       reverseCurve: Curves.easeInCubic,
     );
+    AppBackupService.revision.addListener(_onBackupRestored);
+  }
+
+  void _onBackupRestored() {
+    if (!mounted) return;
+    _compact = AppScope.of(context).jobViewPreference.isCompact;
+    _sortByDate = AppScope.of(context).jobViewPreference.sortByDate;
+    _reload();
   }
 
   @override
@@ -66,6 +75,7 @@ class _JobScreenState extends State<JobScreen>
 
   @override
   void dispose() {
+    AppBackupService.revision.removeListener(_onBackupRestored);
     _searchFade.dispose();
     _searchAnimation.dispose();
     _searchFocus.dispose();

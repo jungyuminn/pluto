@@ -10,6 +10,7 @@ import 'package:job_planner/core/theme/app_skin_background.dart';
 import 'package:job_planner/core/utils/fade_in.dart';
 import 'package:job_planner/core/utils/korean_search.dart';
 import 'package:job_planner/core/utils/plain_text_editing_controller.dart';
+import 'package:job_planner/data/datasources/app_backup_service.dart';
 import 'package:job_planner/data/datasources/calendar_preference.dart';
 import 'package:job_planner/data/datasources/day_events_view_preference.dart';
 import 'package:job_planner/data/datasources/home_view_preference.dart';
@@ -98,6 +99,7 @@ class _HomeScreenState extends State<HomeScreen>
       curve: Curves.easeOutCubic,
       reverseCurve: Curves.easeInCubic,
     );
+    AppBackupService.revision.addListener(_onBackupRestored);
   }
 
   @override
@@ -143,8 +145,16 @@ class _HomeScreenState extends State<HomeScreen>
     if (mounted) await _reload();
   }
 
+  void _onBackupRestored() {
+    if (!mounted) return;
+    _compact = AppScope.of(context).homeViewPreference.isCompact;
+    _startMonday = AppScope.of(context).calendarPreference.startMonday;
+    _reload();
+  }
+
   @override
   void dispose() {
+    AppBackupService.revision.removeListener(_onBackupRestored);
     _calendarPrefs?.removeListener(_onCalendarPrefs);
     WidgetsBinding.instance.removeObserver(this);
     _searchFade.dispose();

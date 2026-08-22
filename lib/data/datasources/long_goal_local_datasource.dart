@@ -100,6 +100,12 @@ class LongGoalLocalDataSource {
 
   static String dateStamp(DateTime day) => LongGoal.dateStamp(day);
 
+  void reload() {
+    _goals = [];
+    _logs = [];
+    _load();
+  }
+
   void _load() {
     final prefs = _prefs;
     if (prefs == null) return;

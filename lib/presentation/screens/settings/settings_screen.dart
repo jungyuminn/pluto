@@ -13,11 +13,14 @@ import 'package:job_planner/core/theme/app_skin_background.dart';
 import 'package:job_planner/core/home_widget/home_screen_widget_service.dart';
 import 'package:job_planner/core/notifications/todo_reminder_service.dart';
 import 'package:job_planner/core/utils/press_bounce.dart';
+import 'package:job_planner/data/datasources/app_backup_service.dart';
+import 'package:job_planner/data/datasources/backup_preference.dart';
 import 'package:job_planner/data/datasources/font_preference.dart';
 import 'package:job_planner/data/datasources/notification_preference.dart';
 import 'package:job_planner/data/datasources/theme_preference.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/calendar_event_label.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/day_event_label.dart';
+import 'package:job_planner/presentation/screens/settings/widgets/backup_dialogs.dart';
 import 'package:job_planner/presentation/screens/settings/widgets/settings_section_help.dart';
 import 'package:job_planner/presentation/widgets/themed_asset.dart';
 
@@ -49,6 +52,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   var _todoSize = FontSizeLevel.medium;
   var _calendarSize = FontSizeLevel.medium;
   var _calendarLabelSize = FontSizeLevel.medium;
+  var _autoBackupInterval = AutoBackupInterval.daily;
   var _ready = false;
 
   @override
@@ -77,6 +81,77 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _todoSize = scope.fontPreference.todoSize;
     _calendarSize = scope.fontPreference.calendarSize;
     _calendarLabelSize = scope.fontPreference.calendarLabelSize;
+    _autoBackupInterval = scope.backupPreference.interval;
+  }
+
+  void _syncFromScope() {
+    final scope = AppScope.of(context);
+    setState(() {
+      _sortByTime = scope.dayEventsViewPreference.sortByTime;
+      _showTime = scope.dayEventsViewPreference.showTime;
+      _todoReminderLead = scope.notificationPreference.todoReminderLead;
+      _summaryEnabled = scope.notificationPreference.summaryEnabled;
+      _summaryHour = scope.notificationPreference.summaryMinutes;
+      _showLeftover = scope.homeViewPreference.showLeftover;
+      _showToday = scope.homeViewPreference.showToday;
+      _showTomorrow = scope.homeViewPreference.showTomorrow;
+      _showWeek = scope.homeViewPreference.showWeek;
+      _showMonth = scope.homeViewPreference.showMonth;
+      _showLongGoal = scope.homeViewPreference.showLongGoal;
+      _showMonthlyStats = scope.homeViewPreference.showMonthlyStats;
+      _showWeeklyStats = scope.homeViewPreference.showWeeklyStats;
+      _startMonday = scope.calendarPreference.startMonday;
+      _dark = scope.themePreference.isDark;
+      _skin = scope.themePreference.skin;
+      _typeface = scope.fontPreference.typeface;
+      _todoSize = scope.fontPreference.todoSize;
+      _calendarSize = scope.fontPreference.calendarSize;
+      _calendarLabelSize = scope.fontPreference.calendarLabelSize;
+      _autoBackupInterval = scope.backupPreference.interval;
+    });
+  }
+
+  Future<void> _backup() async {
+    try {
+      final saved = await AppBackupService.backup();
+      if (!mounted || !saved) return;
+      await showBackupMessageDialog(
+        context,
+        title: AppStrings.backupSavedTitle,
+        body: AppStrings.backupSavedBody,
+      );
+    } catch (_) {
+      if (!mounted) return;
+      await showBackupMessageDialog(
+        context,
+        title: AppStrings.backupFailedTitle,
+        body: AppStrings.backupFailedBody,
+      );
+    }
+  }
+
+  Future<void> _restore() async {
+    final confirmed = await showRestoreConfirmDialog(context);
+    if (!confirmed || !mounted) return;
+    try {
+      final picked = await AppBackupService.restoreFromPicker();
+      if (!picked || !mounted) return;
+      await AppBackupService.applyToApp(AppScope.of(context));
+      if (!mounted) return;
+      _syncFromScope();
+      await showBackupMessageDialog(
+        context,
+        title: AppStrings.restoreDoneTitle,
+        body: AppStrings.restoreDoneBody,
+      );
+    } catch (_) {
+      if (!mounted) return;
+      await showBackupMessageDialog(
+        context,
+        title: AppStrings.restoreFailedTitle,
+        body: AppStrings.restoreFailedBody,
+      );
+    }
   }
 
   Future<void> _toggleSortByTime() async {
@@ -149,6 +224,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     });
   }
 
+  Future<void> _openAppTutorial() async {}
+
   Future<void> _openReleaseNotes() {
     return Navigator.of(context).push(
       MaterialPageRoute<void>(
@@ -164,10 +241,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
     await HomeScreenWidgetService.instance.sync();
   }
 
-  Future<void> _openFontSettings() async {
+  Future<void> _openFontSettings([
+    _FontSettingsFocus focus = _FontSettingsFocus.family,
+  ]) async {
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (context) => const _FontSettingsPage(),
+        builder: (context) => _FontSettingsPage(focus: focus),
       ),
     );
     if (!mounted) return;
@@ -215,6 +294,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
     setState(() {
       _summaryEnabled = preference.summaryEnabled;
       _summaryHour = preference.summaryMinutes;
+    });
+  }
+
+  Future<void> _openAutoBackupSettings() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (context) => const _AutoBackupSettingsPage(),
+      ),
+    );
+    if (!mounted) return;
+    setState(() {
+      _autoBackupInterval = AppScope.of(context).backupPreference.interval;
     });
   }
 
@@ -322,6 +413,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
+  static String _autoBackupLabel(AutoBackupInterval interval) {
+    switch (interval) {
+      case AutoBackupInterval.off:
+        return AppStrings.notifyOff;
+      case AutoBackupInterval.daily:
+        return AppStrings.autoBackupDaily;
+      case AutoBackupInterval.every3Days:
+        return AppStrings.autoBackupEvery3Days;
+      case AutoBackupInterval.weekly:
+        return AppStrings.autoBackupWeekly;
+      case AutoBackupInterval.monthly:
+        return AppStrings.autoBackupMonthly;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final top = MediaQuery.paddingOf(context).top;
@@ -367,17 +473,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 label: AppStrings.fontFamily,
                 value: _typefaceLabel(_typeface),
                 chevron: true,
-                onPressed: _openFontSettings,
+                onPressed: () => _openFontSettings(),
               ),
               _SettingsTile(
                 label: AppStrings.fontLabelScale,
                 chevron: true,
-                onPressed: _openFontSettings,
+                onPressed: () => _openFontSettings(
+                  _FontSettingsFocus.labelScale,
+                ),
               ),
               _SettingsTile(
                 label: AppStrings.fontCalendarChipScale,
                 chevron: true,
-                onPressed: _openFontSettings,
+                onPressed: () => _openFontSettings(
+                  _FontSettingsFocus.calendarChip,
+                ),
               ),
             ],
           ),
@@ -553,9 +663,48 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ],
           ),
           const SizedBox(height: 24),
-          const _SectionLabel(AppStrings.settingsAppSection),
+          _SectionLabel(
+            AppStrings.settingsBackupSection,
+            onHelp: () => showSettingsSectionHelp(
+              context,
+              SettingsHelpSection.backup,
+            ),
+          ),
           _SettingsCard(
             children: [
+              _SettingsTile(
+                label: AppStrings.backupData,
+                chevron: true,
+                onPressed: _backup,
+              ),
+              _SettingsTile(
+                label: AppStrings.restoreData,
+                chevron: true,
+                onPressed: _restore,
+              ),
+              _SettingsTile(
+                label: AppStrings.autoBackupSetting,
+                value: _autoBackupLabel(_autoBackupInterval),
+                chevron: true,
+                onPressed: _openAutoBackupSettings,
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          _SectionLabel(
+            AppStrings.settingsAppSection,
+            onHelp: () => showSettingsSectionHelp(
+              context,
+              SettingsHelpSection.app,
+            ),
+          ),
+          _SettingsCard(
+            children: [
+              _SettingsTile(
+                label: AppStrings.appTutorial,
+                chevron: true,
+                onPressed: _openAppTutorial,
+              ),
               _SettingsTile(
                 label: AppStrings.releaseNotesTitle,
                 onPressed: _openReleaseNotes,
@@ -1194,8 +1343,61 @@ class _ThemeSettingsPageState extends State<_ThemeSettingsPage> {
   }
 }
 
-class _FontSettingsPage extends StatelessWidget {
-  const _FontSettingsPage();
+enum _FontSettingsFocus { family, labelScale, calendarChip }
+
+class _FontSettingsPage extends StatefulWidget {
+  const _FontSettingsPage({this.focus = _FontSettingsFocus.family});
+
+  final _FontSettingsFocus focus;
+
+  @override
+  State<_FontSettingsPage> createState() => _FontSettingsPageState();
+}
+
+class _FontSettingsPageState extends State<_FontSettingsPage> {
+  final _scroll = ScrollController();
+  final _labelKey = GlobalKey();
+  final _calendarKey = GlobalKey();
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.focus == _FontSettingsFocus.family) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await Future<void>.delayed(const Duration(milliseconds: 240));
+      if (!mounted) return;
+      await _scrollToFocus();
+    });
+  }
+
+  @override
+  void dispose() {
+    _scroll.dispose();
+    super.dispose();
+  }
+
+  Future<void> _scrollToFocus({int attempt = 0}) async {
+    if (!mounted) return;
+    final key = switch (widget.focus) {
+      _FontSettingsFocus.family => null,
+      _FontSettingsFocus.labelScale => _labelKey,
+      _FontSettingsFocus.calendarChip => _calendarKey,
+    };
+    final target = key?.currentContext?.findRenderObject();
+    if (target == null || !_scroll.hasClients) {
+      if (attempt >= 12) return;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _scrollToFocus(attempt: attempt + 1);
+      });
+      return;
+    }
+    await _scroll.position.ensureVisible(
+      target,
+      alignment: 0.12,
+      duration: const Duration(milliseconds: 480),
+      curve: Curves.easeOutCubic,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -1221,40 +1423,67 @@ class _FontSettingsPage extends StatelessWidget {
                 child: _FontLivePreview(),
               ),
               Expanded(
-                child: ListView(
+                child: SingleChildScrollView(
+                  controller: _scroll,
                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
-                  children: [
-                    _SectionLabel(AppStrings.fontFamily),
-                    _SettingsCard(
-                      children: [
-                        for (final typeface in AppTypeface.selectable)
-                          _SettingsTile(
-                            label: _SettingsScreenState._typefaceLabel(typeface),
-                            labelFontFamily: typeface.fontFamily,
-                            previewLabelFont: true,
-                            checked: font.typeface == typeface,
-                            onPressed: () async {
-                              await font.setTypeface(typeface);
-                              await HomeScreenWidgetService.instance.sync();
-                            },
-                          ),
-                      ],
-                    ),
-                    const SizedBox(height: 24),
-                    _SectionLabel(AppStrings.fontLabelScale),
-                    _SettingsSliderTile(
-                      value: font.labelScale,
-                      onChanged: (value) =>
-                          font.setLabelScale(value, persist: true),
-                    ),
-                    const SizedBox(height: 20),
-                    _SectionLabel(AppStrings.fontCalendarChipScale),
-                    _SettingsSliderTile(
-                      value: font.calendarChipScale,
-                      onChanged: (value) =>
-                          font.setCalendarChipScale(value, persist: true),
-                    ),
-                  ],
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const _SectionLabel(AppStrings.fontFamily),
+                      _SettingsCard(
+                        children: [
+                          for (final typeface in AppTypeface.selectable)
+                            _SettingsTile(
+                              label:
+                                  _SettingsScreenState._typefaceLabel(typeface),
+                              labelFontFamily: typeface.fontFamily,
+                              previewLabelFont: true,
+                              checked: font.typeface == typeface,
+                              onPressed: () async {
+                                await font.setTypeface(typeface);
+                                await HomeScreenWidgetService.instance.sync();
+                              },
+                            ),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
+                      KeyedSubtree(
+                        key: _labelKey,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            const _SectionLabel(AppStrings.fontLabelScale),
+                            _SettingsSliderTile(
+                              value: font.labelScale,
+                              onChanged: (value) =>
+                                  font.setLabelScale(value, persist: true),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      KeyedSubtree(
+                        key: _calendarKey,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            const _SectionLabel(
+                              AppStrings.fontCalendarChipScale,
+                            ),
+                            _SettingsSliderTile(
+                              value: font.calendarChipScale,
+                              onChanged: (value) => font.setCalendarChipScale(
+                                value,
+                                persist: true,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],
@@ -1616,6 +1845,117 @@ class _SummaryNotificationSettingsPageState
   }
 }
 
+class _AutoBackupSettingsPage extends StatefulWidget {
+  const _AutoBackupSettingsPage();
+
+  @override
+  State<_AutoBackupSettingsPage> createState() =>
+      _AutoBackupSettingsPageState();
+}
+
+class _AutoBackupSettingsPageState extends State<_AutoBackupSettingsPage> {
+  late AutoBackupInterval _interval;
+  var _ready = false;
+  var _hint = '';
+  var _hintVisible = false;
+  Timer? _hintTimer;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_ready) return;
+    _ready = true;
+    _interval = AppScope.of(context).backupPreference.interval;
+  }
+
+  @override
+  void dispose() {
+    _hintTimer?.cancel();
+    super.dispose();
+  }
+
+  void _showHint(AutoBackupInterval interval) {
+    if (!interval.isEnabled) return;
+    _hintTimer?.cancel();
+    setState(() {
+      _hint = AppStrings.autoBackupHint(
+        _SettingsScreenState._autoBackupLabel(interval),
+      );
+      _hintVisible = true;
+    });
+    _hintTimer = Timer(const Duration(milliseconds: 2400), () {
+      if (!mounted) return;
+      setState(() => _hintVisible = false);
+    });
+  }
+
+  Future<void> _select(AutoBackupInterval interval) async {
+    if (_interval == interval) return;
+    setState(() => _interval = interval);
+    _showHint(interval);
+    final preference = AppScope.of(context).backupPreference;
+    await preference.setInterval(interval);
+    if (!interval.isEnabled) return;
+    try {
+      await AppBackupService.saveLocal();
+      await preference.markBackedUp();
+    } catch (_) {}
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final top = MediaQuery.paddingOf(context).top;
+    final bottom = MediaQuery.paddingOf(context).bottom;
+    final visible = _hintVisible;
+
+    return Scaffold(
+      backgroundColor: AppColors.of(context).groupedBackground,
+      extendBodyBehindAppBar: true,
+      appBar: _FrostedAppBar(
+        title: AppStrings.autoBackupSetting,
+        onBack: () => Navigator.pop(context),
+      ),
+      body: Stack(
+        children: [
+          ListView(
+            padding: EdgeInsets.fromLTRB(16, top + 56, 16, 32),
+            children: [
+              _SettingsCard(
+                children: [
+                  for (final interval in AutoBackupInterval.values)
+                    _SettingsTile(
+                      label: _SettingsScreenState._autoBackupLabel(interval),
+                      checked: _interval == interval,
+                      onPressed: () => _select(interval),
+                    ),
+                ],
+              ),
+            ],
+          ),
+          Positioned(
+            left: 24,
+            right: 24,
+            bottom: 20 + bottom,
+            child: IgnorePointer(
+              child: AnimatedSlide(
+                duration: const Duration(milliseconds: 280),
+                curve: visible ? Curves.easeOutCubic : Curves.easeInCubic,
+                offset: visible ? Offset.zero : const Offset(0, 0.18),
+                child: AnimatedOpacity(
+                  duration: const Duration(milliseconds: 280),
+                  curve: visible ? Curves.easeOutCubic : Curves.easeInCubic,
+                  opacity: visible ? 1 : 0,
+                  child: _HintToast(text: _hint),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _HintToast extends StatelessWidget {
   const _HintToast({required this.text});
 
@@ -1681,10 +2021,9 @@ class _ReleaseNotesPage extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       if (note.items.isNotEmpty) ...[
-                        if (note.fixes.isNotEmpty)
-                          const _ReleaseNoteHeading(
-                            AppStrings.releaseNotesFeatures,
-                          ),
+                        const _ReleaseNoteHeading(
+                          AppStrings.releaseNotesFeatures,
+                        ),
                         for (final item in note.items)
                           _ReleaseNoteBullet(item),
                       ],
@@ -1825,7 +2164,7 @@ class _FrostedAppBar extends StatelessWidget implements PreferredSizeWidget {
 }
 
 class _SectionLabel extends StatelessWidget {
-  const _SectionLabel(this.text, {this.onHelp});
+  const _SectionLabel(this.text, {super.key, this.onHelp});
 
   final String text;
   final VoidCallback? onHelp;

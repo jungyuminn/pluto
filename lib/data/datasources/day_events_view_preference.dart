@@ -33,4 +33,11 @@ class DayEventsViewPreference {
     await _prefs?.setBool(_showTimeKey, value);
     unawaited(HomeScreenWidgetService.instance.sync());
   }
+
+  void hydrate() {
+    final prefs = _prefs;
+    if (prefs == null) return;
+    _sortByTime = prefs.getBool(_sortKey) ?? _sortByTime;
+    _showTime = prefs.getBool(_showTimeKey) ?? _showTime;
+  }
 }

@@ -12,6 +12,7 @@ class EventActionIcon extends StatelessWidget {
     this.label,
     this.text,
     this.selected = false,
+    this.size = 20,
   });
 
   final VoidCallback onPressed;
@@ -20,8 +21,7 @@ class EventActionIcon extends StatelessWidget {
   final String? label;
   final String? text;
   final bool selected;
-
-  static const _size = 20.0;
+  final double size;
 
   @override
   Widget build(BuildContext context) {
@@ -44,8 +44,8 @@ class EventActionIcon extends StatelessWidget {
               ColorFiltered(
                 colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
                 child: SizedBox(
-                  width: _size,
-                  height: _size,
+                  width: size,
+                  height: size,
                   child: Center(child: child),
                 ),
               ),

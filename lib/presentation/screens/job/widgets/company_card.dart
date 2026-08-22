@@ -8,7 +8,6 @@ import 'package:job_planner/domain/entities/application_round.dart';
 import 'package:job_planner/domain/entities/apply_status.dart';
 import 'package:job_planner/domain/entities/job_application.dart';
 import 'package:job_planner/presentation/screens/add_company/widgets/apply_status_dot.dart';
-import 'package:job_planner/presentation/theme/apply_status_colors.dart';
 
 class CompanyCard extends StatefulWidget {
   const CompanyCard({
@@ -82,8 +81,9 @@ class _CompanyCardState extends State<CompanyCard>
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
-    final accent = ApplyStatusColors.of(application.applyStatus) ??
-        colors.accent;
+    final accent = application.categoryColor != null
+        ? Color(application.categoryColor!)
+        : colors.accent;
     final rejected = ApplyStatus.isRejected(application.applyStatus);
     final dDay = rejected ? null : application.upcomingDDay();
     final compact = widget.compact;
@@ -141,6 +141,7 @@ class _CompanyCardState extends State<CompanyCard>
                     ),
                   ),
                 Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Expanded(child: _title()),
                     const SizedBox(width: 8),
@@ -186,30 +187,69 @@ class _CompanyCardState extends State<CompanyCard>
   Widget _title() {
     final position = application.position.trim();
     final scale = AppFonts.todoScaleOf(context);
-    return Row(
+    final category = application.categoryName.trim();
+    final accent = application.categoryColor != null
+        ? Color(application.categoryColor!)
+        : AppColors.of(context).accent;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Flexible(
-          child: Text(
-            application.companyName,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontFamily: AppFonts.of(context),
-              fontSize: 18 * scale,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ),
-        if (position.isNotEmpty)
-          Flexible(
-            child: Text(
-              ' ($position)',
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontFamily: AppFonts.of(context),
-                fontSize: 14 * scale,
-                fontWeight: FontWeight.w600,
-                color: AppColors.of(context).secondary,
+        Row(
+          children: [
+            Flexible(
+              child: Text(
+                application.companyName,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontFamily: AppFonts.of(context),
+                  fontSize: 18 * scale,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
+            ),
+            if (position.isNotEmpty)
+              Flexible(
+                child: Text(
+                  ' ($position)',
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontFamily: AppFonts.of(context),
+                    fontSize: 14 * scale,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.of(context).secondary,
+                  ),
+                ),
+              ),
+          ],
+        ),
+        if (application.hasCategory && category.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(top: 5),
+            child: Row(
+              children: [
+                Container(
+                  width: 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    color: accent,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Flexible(
+                  child: Text(
+                    category,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontFamily: AppFonts.of(context),
+                      fontSize: 13 * scale,
+                      fontWeight: FontWeight.w700,
+                      color: accent,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
       ],
@@ -243,13 +283,15 @@ class _CompanyCardState extends State<CompanyCard>
   }
 
   TableRow _round(String label, ApplicationRound round) {
+    final date = round.date;
+    final title = date == null
+        ? label
+        : '$label(${date.month}.${date.day})';
     final name = round.name.trim();
-    final title = name.isEmpty ? label : '$label($name)';
     final note = round.note.trim();
-    final dateText = round.dateText;
-    final value = dateText == null
-        ? (note.isEmpty ? null : '($note)')
-        : (note.isEmpty ? dateText : '$dateText ($note)');
+    final value = name.isEmpty
+        ? (note.isEmpty ? null : note)
+        : (note.isEmpty ? name : '$name ($note)');
     return _row(title, value, struck: round.isPast());
   }
 

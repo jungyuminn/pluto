@@ -23,6 +23,13 @@ JobPlannerApp _app() {
   );
 }
 
+Future<void> _pickCompanyCategory(WidgetTester tester) async {
+  await tester.tap(find.text(AppStrings.categoryAction));
+  await tester.pumpAndSettle();
+  await tester.tap(find.text('공기업'));
+  await tester.pumpAndSettle();
+}
+
 void main() {
   testWidgets('앱 시작 시 캘린더 탭과 하단 네비가 보인다', (WidgetTester tester) async {
     await tester.pumpWidget(_app());
@@ -55,6 +62,7 @@ void main() {
 
     await tester.enterText(find.byType(TextField).first, '삼성전자');
     await tester.enterText(find.byType(TextField).at(1), '소프트웨어 개발');
+    await _pickCompanyCategory(tester);
     await tester.tap(find.byType(SaveCompanyButton));
     await tester.pumpAndSettle();
 
@@ -73,7 +81,7 @@ void main() {
     await tester.pumpAndSettle();
 
     await tester.enterText(find.byType(TextField).first, '삼성전자');
-    await tester.enterText(find.byType(TextField).at(1), '소프트웨어 개발');
+    await _pickCompanyCategory(tester);
     await tester.tap(find.byType(SaveCompanyButton));
     await tester.pumpAndSettle();
 
@@ -98,7 +106,7 @@ void main() {
     await tester.pumpAndSettle();
 
     await tester.enterText(find.byType(TextField).first, '삼성전자');
-    await tester.enterText(find.byType(TextField).at(1), '소프트웨어 개발');
+    await _pickCompanyCategory(tester);
     await tester.tap(find.byType(SaveCompanyButton));
     await tester.pumpAndSettle();
 

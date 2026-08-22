@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:job_planner/core/theme/app_colors.dart';
-import 'package:job_planner/core/utils/press_bounce.dart';
-import 'package:job_planner/presentation/screens/add_company/widgets/apply_status_chip.dart';
+import 'package:job_planner/core/constants/app_icons.dart';
+import 'package:job_planner/core/constants/app_strings.dart';
 import 'package:job_planner/presentation/screens/add_company/widgets/apply_status_dropdown.dart';
+import 'package:job_planner/presentation/screens/calendar/widgets/event_action_icon.dart';
 
 class ApplyStatusPicker extends StatefulWidget {
   const ApplyStatusPicker({
@@ -10,11 +10,13 @@ class ApplyStatusPicker extends StatefulWidget {
     required this.value,
     required this.options,
     required this.onChanged,
+    required this.color,
   });
 
   final String value;
   final List<String> options;
   final ValueChanged<String> onChanged;
+  final Color color;
 
   @override
   State<ApplyStatusPicker> createState() => _ApplyStatusPickerState();
@@ -27,6 +29,7 @@ class _ApplyStatusPickerState extends State<ApplyStatusPicker>
   late final AnimationController _animation;
   late final CurvedAnimation _fade;
   late final Animation<double> _scale;
+  var _open = false;
   var _closing = false;
 
   @override
@@ -53,19 +56,23 @@ class _ApplyStatusPickerState extends State<ApplyStatusPicker>
   }
 
   Future<void> _toggle() async {
-    if (_portal.isShowing) {
+    if (_open) {
       await _close();
     } else {
+      setState(() => _open = true);
       _portal.show();
       _animation.forward(from: 0);
     }
   }
 
   Future<void> _close() async {
-    if (!_portal.isShowing || _closing) return;
+    if (!_open || _closing) return;
     _closing = true;
     await _animation.reverse();
-    if (mounted) _portal.hide();
+    if (mounted) {
+      _portal.hide();
+      setState(() => _open = false);
+    }
     _closing = false;
   }
 
@@ -76,7 +83,6 @@ class _ApplyStatusPickerState extends State<ApplyStatusPicker>
 
   @override
   Widget build(BuildContext context) {
-    final colors = AppColors.of(context);
     return OverlayPortal(
       controller: _portal,
       overlayChildBuilder: (context) {
@@ -92,15 +98,15 @@ class _ApplyStatusPickerState extends State<ApplyStatusPicker>
               CompositedTransformFollower(
                 link: _link,
                 showWhenUnlinked: false,
-                targetAnchor: Alignment.bottomRight,
-                followerAnchor: Alignment.topRight,
-                offset: const Offset(0, 6),
+                targetAnchor: Alignment.topRight,
+                followerAnchor: Alignment.bottomRight,
+                offset: const Offset(0, -6),
                 child: UnconstrainedBox(
-                  alignment: Alignment.topRight,
+                  alignment: Alignment.bottomRight,
                   child: FadeTransition(
                     opacity: _fade,
                     child: ScaleTransition(
-                      alignment: Alignment.topRight,
+                      alignment: Alignment.bottomRight,
                       scale: _scale,
                       child: ApplyStatusDropdown(
                         options: widget.options,
@@ -116,12 +122,17 @@ class _ApplyStatusPickerState extends State<ApplyStatusPicker>
       },
       child: CompositedTransformTarget(
         link: _link,
-        child: PressBounce(
-          color: colors.pressed,
-          pressedColor: colors.border,
-          borderRadius: BorderRadius.circular(999),
+        child: EventActionIcon(
+          label: AppStrings.colApplyStatus,
+          text: widget.value,
+          color: widget.color,
+          selected: _open,
           onPressed: _toggle,
-          child: ApplyStatusChip(label: widget.value),
+          child: Image.asset(
+            AppIcons.status,
+            width: 20,
+            height: 20,
+          ),
         ),
       ),
     );

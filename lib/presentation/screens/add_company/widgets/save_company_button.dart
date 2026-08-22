@@ -12,7 +12,7 @@ class SaveCompanyButton extends StatelessWidget {
   final VoidCallback onPressed;
   final Color color;
 
-  static const _size = 44.0;
+  static const size = 44.0;
   static const _iconSize = 18.0;
 
   @override
@@ -22,9 +22,9 @@ class SaveCompanyButton extends StatelessWidget {
       color: color,
       pressedColor: Color.lerp(color, Colors.black, 0.16)!,
       borderRadius: BorderRadius.circular(999),
-      child: SizedBox(
-        width: _size,
-        height: _size,
+        child: SizedBox(
+        width: size,
+        height: size,
         child: Center(
           child: ColorFiltered(
             colorFilter: const ColorFilter.mode(

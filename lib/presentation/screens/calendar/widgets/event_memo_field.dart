@@ -8,10 +8,16 @@ class EventMemoField extends StatelessWidget {
     super.key,
     required this.controller,
     this.focusNode,
+    this.hintText,
+    this.minLines = 1,
+    this.maxLines = 4,
   });
 
   final TextEditingController controller;
   final FocusNode? focusNode;
+  final String? hintText;
+  final int minLines;
+  final int? maxLines;
 
   @override
   Widget build(BuildContext context) {
@@ -19,16 +25,17 @@ class EventMemoField extends StatelessWidget {
     return TextField(
       controller: controller,
       focusNode: focusNode,
-      minLines: 1,
-      maxLines: 4,
+      minLines: minLines,
+      maxLines: maxLines,
       textInputAction: TextInputAction.newline,
-      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+      style: TextStyle(
         fontFamily: AppFonts.of(context),
         fontWeight: FontWeight.w700,
+        fontSize: 16,
         color: colors.secondary,
       ),
       decoration: InputDecoration(
-        hintText: AppStrings.eventMemoHint,
+        hintText: hintText ?? AppStrings.eventMemoHint,
         hintStyle: TextStyle(
           fontFamily: AppFonts.of(context),
           color: colors.hint,

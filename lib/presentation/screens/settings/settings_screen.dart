@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:job_planner/app_scope.dart';
 import 'package:job_planner/core/constants/app_fonts.dart';
 import 'package:job_planner/core/constants/app_strings.dart';
+import 'package:job_planner/core/constants/release_notes.dart';
 import 'package:job_planner/core/theme/app_colors.dart';
 import 'package:job_planner/core/theme/app_skin_background.dart';
 import 'package:job_planner/core/home_widget/home_screen_widget_service.dart';
@@ -148,6 +149,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
     });
   }
 
+  Future<void> _openReleaseNotes() {
+    return Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (context) => const _ReleaseNotesPage(),
+      ),
+    );
+  }
+
   Future<void> _setDark(bool value) async {
     if (_dark == value) return;
     setState(() => _dark = value);
@@ -278,6 +287,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
         return AppStrings.themeInterlude;
       case AppSkin.fluffyCloud:
         return AppStrings.themeFluffyCloud;
+      case AppSkin.catVillage:
+        return AppStrings.themeCatVillage;
+      case AppSkin.hamsterBakery:
+        return AppStrings.themeHamsterBakery;
     }
   }
 
@@ -536,6 +549,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 label: AppStrings.darkMode,
                 checked: _dark,
                 onPressed: () => _setDark(true),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          const _SectionLabel(AppStrings.settingsAppSection),
+          _SettingsCard(
+            children: [
+              _SettingsTile(
+                label: AppStrings.releaseNotesTitle,
+                onPressed: _openReleaseNotes,
               ),
             ],
           ),
@@ -1631,6 +1654,116 @@ class _HintToast extends StatelessWidget {
   }
 }
 
+class _ReleaseNotesPage extends StatelessWidget {
+  const _ReleaseNotesPage();
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    final top = MediaQuery.paddingOf(context).top;
+    return Scaffold(
+      backgroundColor: colors.groupedBackground,
+      extendBodyBehindAppBar: true,
+      appBar: _FrostedAppBar(
+        title: AppStrings.releaseNotesTitle,
+        onBack: () => Navigator.pop(context),
+      ),
+      body: ListView(
+        padding: EdgeInsets.fromLTRB(16, top + 48, 16, 32),
+        children: [
+          for (final note in ReleaseNotes.all) ...[
+            _SectionLabel(note.version),
+            _SettingsCard(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      if (note.items.isNotEmpty) ...[
+                        if (note.fixes.isNotEmpty)
+                          const _ReleaseNoteHeading(
+                            AppStrings.releaseNotesFeatures,
+                          ),
+                        for (final item in note.items)
+                          _ReleaseNoteBullet(item),
+                      ],
+                      if (note.fixes.isNotEmpty) ...[
+                        _ReleaseNoteHeading(
+                          AppStrings.releaseNotesFixes,
+                          padTop: note.items.isNotEmpty,
+                        ),
+                        for (final item in note.fixes) _ReleaseNoteBullet(item),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _ReleaseNoteHeading extends StatelessWidget {
+  const _ReleaseNoteHeading(this.text, {this.padTop = false});
+
+  final String text;
+  final bool padTop;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(bottom: 8, top: padTop ? 8 : 0),
+      child: Text(
+        text,
+        style: TextStyle(
+          fontFamily: AppFonts.of(context),
+          fontSize: 13,
+          fontWeight: FontWeight.w700,
+          color: AppColors.of(context).muted,
+        ),
+      ),
+    );
+  }
+}
+
+class _ReleaseNoteBullet extends StatelessWidget {
+  const _ReleaseNoteBullet(this.text);
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    final style = TextStyle(
+      fontFamily: AppFonts.of(context),
+      fontSize: 15,
+      fontWeight: FontWeight.w400,
+      height: 1.45,
+      color: colors.text,
+    );
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 16,
+            child: Text('·', style: style),
+          ),
+          Expanded(
+            child: Text(text, style: style),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _FrostedAppBar extends StatelessWidget implements PreferredSizeWidget {
   const _FrostedAppBar({
     required this.title,
@@ -1640,8 +1773,10 @@ class _FrostedAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
   final VoidCallback onBack;
 
+  static const _toolbarHeight = 48.0;
+
   @override
-  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
+  Size get preferredSize => const Size.fromHeight(_toolbarHeight);
 
   @override
   Widget build(BuildContext context) {
@@ -1658,6 +1793,7 @@ class _FrostedAppBar extends StatelessWidget implements PreferredSizeWidget {
             scrolledUnderElevation: 0,
             surfaceTintColor: Colors.transparent,
             shadowColor: Colors.transparent,
+            toolbarHeight: _toolbarHeight,
             centerTitle: true,
             leading: PressBounce(
               onPressed: onBack,

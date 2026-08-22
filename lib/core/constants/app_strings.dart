@@ -9,6 +9,10 @@ class AppStrings {
   static const defaultView = '기본보기';
   static const categoryView = '카테고리별 보기';
   static const settingsTitle = '설정';
+  static const settingsAppSection = '앱';
+  static const releaseNotesTitle = '릴리즈 노트';
+  static const releaseNotesFeatures = '새로운 기능';
+  static const releaseNotesFixes = '버그 수정';
   static const settingsHomeSection = '홈 화면';
   static const settingsHomeLayoutSection = '홈 화면 설정';
   static const homeShowLeftover = '미완료 할 일';
@@ -69,6 +73,8 @@ class AppStrings {
   static const themeBoyhood = 'Boyhood';
   static const themeInterlude = 'Interlude';
   static const themeFluffyCloud = '몽실구름';
+  static const themeCatVillage = '고양이 마을';
+  static const themeHamsterBakery = '햄스터 빵집';
   static const settingsFontSection = '폰트 설정';
   static const fontFamily = '폰트 종류';
   static const fontTodoSize = '할 일·기업 크기';
@@ -156,13 +162,13 @@ class AppStrings {
   static const weekNotificationEmpty = '이번 주 일정이 없어요';
   static const companySection = '기업';
   static const jobScreenTitle = '기업관리';
-  static const searchHint = '기업명, 직무 검색';
+  static const searchHint = '기업명, 직무, 카테고리 검색';
   static const homeSearchHint = '할 일, 기업, 카테고리 검색';
   static const addCompany = '+ 기업을 추가하세요';
   static const addCompanyTitle = '기업 추가';
   static const save = '저장';
   static const missingFieldsTitle = '무언가 빠뜨렸어요 😭';
-  static const missingFieldsBody = '기업명과 직무는 필수사항이에요!';
+  static const missingFieldsBody = '기업명과 카테고리는 필수사항이에요!';
   static const confirm = '확인했어요';
   static const deleteTitle = '정말 삭제할까요?';
   static const deleteBody = '정보가 사라져요';
@@ -184,7 +190,7 @@ class AppStrings {
   static const roundNoteHint = '추가정보를 입력하세요';
   static const emptyValue = '—';
   static const colCoverLetter = '자기소개서';
-  static const attachFile = '파일 첨부';
+  static const attachFile = '자기소개서';
   static const coverLetterNotFound = '자기소개서 파일을 찾을 수 없어요';
   static const coverLetterOpenFailed = '파일을 열 수 없어요';
   static const monthSuffix = '월';
@@ -247,6 +253,14 @@ class AppStrings {
   static const calendarShowCompanies = '기업 보기';
   static const calendarVisibleItems = '캘린더에 표시할 항목';
   static const calendarSortMode = '정렬 방식';
+  static const calendarDiaryMode = '일기 전환';
+  static const diaryTitleHint = '제목을 입력하세요';
+  static const diaryBodyHint = '내용을 입력하세요';
+  static const diaryPhotoHint = '이미지를 추가하세요';
+  static const diaryFallback = '일기';
+  static const missingDiaryBody = '제목이나 사진, 카테고리는 필수사항이에요!';
+  static const deleteDiaryPhotoTitle = '사진을 삭제하시나요?';
+  static const deleteDiaryPhotoBody = '사진이 사라져요';
   static const addEvent = '+ 할 일을 추가하세요';
   static const eventTitleHint = '할 일을 입력하세요';
   static const eventMemoHint = '메모를 입력하세요';
@@ -266,6 +280,7 @@ class AppStrings {
   static const missingCategoryBody = '카테고리명은 필수사항이에요!';
   static const dateAction = '날짜';
   static const memoAction = '메모';
+  static const roundAction = '전형';
   static const timeAction = '시간';
   static const timeSortView = '시간 순으로 보기';
   static const timeDisplay = '시간 표시';

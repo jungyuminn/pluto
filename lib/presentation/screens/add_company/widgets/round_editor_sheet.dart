@@ -1,19 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:job_planner/core/constants/app_icons.dart';
+import 'package:job_planner/core/constants/app_strings.dart';
+import 'package:job_planner/core/utils/plain_text_editing_controller.dart';
 import 'package:job_planner/domain/entities/application_round.dart';
-import 'package:job_planner/presentation/screens/add_company/widgets/round_action_icon.dart';
 import 'package:job_planner/presentation/screens/add_company/widgets/round_date_field.dart';
 import 'package:job_planner/presentation/screens/add_company/widgets/round_name_field.dart';
 import 'package:job_planner/presentation/screens/add_company/widgets/round_note_field.dart';
 import 'package:job_planner/presentation/screens/add_company/widgets/save_company_button.dart';
+import 'package:job_planner/presentation/screens/calendar/widgets/event_action_icon.dart';
 import 'package:job_planner/core/theme/app_colors.dart';
-import 'package:job_planner/presentation/theme/apply_status_colors.dart';
 
 Future<ApplicationRound?> showRoundEditor(
   BuildContext context, {
   required String title,
   required ApplicationRound initial,
-  required String applyStatus,
+  required Color accent,
 }) {
   return showModalBottomSheet<ApplicationRound>(
     context: context,
@@ -24,7 +25,7 @@ Future<ApplicationRound?> showRoundEditor(
     builder: (context) => RoundEditorSheet(
       title: title,
       initial: initial,
-      applyStatus: applyStatus,
+      accent: accent,
     ),
   );
 }
@@ -34,12 +35,12 @@ class RoundEditorSheet extends StatefulWidget {
     super.key,
     required this.title,
     required this.initial,
-    required this.applyStatus,
+    required this.accent,
   });
 
   final String title;
   final ApplicationRound initial;
-  final String applyStatus;
+  final Color accent;
 
   @override
   State<RoundEditorSheet> createState() => _RoundEditorSheetState();
@@ -47,8 +48,8 @@ class RoundEditorSheet extends StatefulWidget {
 
 class _RoundEditorSheetState extends State<RoundEditorSheet>
     with SingleTickerProviderStateMixin {
-  late final TextEditingController _name;
-  late final TextEditingController _note;
+  late final PlainTextEditingController _name;
+  late final PlainTextEditingController _note;
   final _nameFocus = FocusNode();
   final _noteFocus = FocusNode();
   late final AnimationController _noteAnimation;
@@ -60,9 +61,10 @@ class _RoundEditorSheetState extends State<RoundEditorSheet>
   @override
   void initState() {
     super.initState();
-    _name = TextEditingController(text: widget.initial.name);
-    _note = TextEditingController(text: widget.initial.note);
-    _date = widget.initial.date;
+    _name = PlainTextEditingController(text: widget.initial.name);
+    _note = PlainTextEditingController(text: widget.initial.note);
+    final now = DateTime.now();
+    _date = widget.initial.date ?? DateTime(now.year, now.month, now.day);
     _noteAnimation = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 260),
@@ -118,16 +120,12 @@ class _RoundEditorSheetState extends State<RoundEditorSheet>
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
     final viewInsets = MediaQuery.viewInsetsOf(context);
-    final accent = ApplyStatusColors.of(widget.applyStatus) ??
-        const Color(0xFF3B82F6);
+    final accent = widget.accent;
 
     return Padding(
       padding: EdgeInsets.only(bottom: viewInsets.bottom),
       child: Material(
-        color: ApplyStatusColors.sheetOf(
-          widget.applyStatus,
-          base: colors.card,
-        ),
+        color: colors.tint(accent),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         clipBehavior: Clip.antiAlias,
         elevation: 8,
@@ -163,7 +161,7 @@ class _RoundEditorSheetState extends State<RoundEditorSheet>
                     ),
                   ),
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: 5),
                 Row(
                   children: [
                     if (_date != null)
@@ -180,9 +178,17 @@ class _RoundEditorSheetState extends State<RoundEditorSheet>
                         color: accent,
                         onPicked: (value) => setState(() => _date = value),
                       ),
-                    RoundActionIcon(
-                      asset: AppIcons.memo,
+                    const SizedBox(width: 4),
+                    EventActionIcon(
+                      label: AppStrings.memoAction,
+                      color: accent,
+                      selected: _noteOpen,
                       onPressed: _toggleNote,
+                      child: Image.asset(
+                        _noteOpen ? AppIcons.memo : AppIcons.memoOutlined,
+                        width: 20,
+                        height: 20,
+                      ),
                     ),
                     const Spacer(),
                     SaveCompanyButton(onPressed: _save, color: accent),

@@ -12,12 +12,14 @@ class EventDateChip extends StatelessWidget {
     required this.color,
     required this.onPressed,
     this.label,
+    this.iconSize = 20,
   });
 
   final DateTime date;
   final Color color;
   final VoidCallback onPressed;
   final String? label;
+  final double iconSize;
 
   String get _label {
     if (label != null) return label!;
@@ -41,8 +43,8 @@ class EventDateChip extends StatelessWidget {
               colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
               child: Image.asset(
                 AppIcons.calendar,
-                width: 20,
-                height: 20,
+                width: iconSize,
+                height: iconSize,
               ),
             ),
             const SizedBox(width: 4),

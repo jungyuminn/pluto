@@ -833,6 +833,10 @@ class _ThemePreview extends StatelessWidget {
         return AppStrings.themeInterlude;
       case AppSkin.fluffyCloud:
         return AppStrings.themeFluffyCloud;
+      case AppSkin.catVillage:
+        return AppStrings.themeCatVillage;
+      case AppSkin.hamsterBakery:
+        return AppStrings.themeHamsterBakery;
     }
   }
 }

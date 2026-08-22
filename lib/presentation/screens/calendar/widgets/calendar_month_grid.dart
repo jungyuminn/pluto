@@ -3,7 +3,9 @@ import 'package:flutter/services.dart';
 import 'package:job_planner/core/calendar/month_grid.dart';
 import 'package:job_planner/core/constants/app_fonts.dart';
 import 'package:job_planner/domain/entities/calendar_event.dart';
+import 'package:job_planner/domain/entities/diary_entry.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/calendar_day_cell.dart';
+import 'package:job_planner/presentation/screens/calendar/widgets/calendar_week_diaries.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/calendar_week_events.dart';
 
 class CalendarDayDropTarget {
@@ -59,6 +61,8 @@ class CalendarMonthGrid extends StatefulWidget {
     this.onRangeSelected,
     this.onRangeDragChanged,
     this.eventsOf,
+    this.diaryOf,
+    this.showDiary = false,
     this.startMonday = false,
   });
 
@@ -67,28 +71,67 @@ class CalendarMonthGrid extends StatefulWidget {
   final void Function(DateTime start, DateTime end)? onRangeSelected;
   final ValueChanged<bool>? onRangeDragChanged;
   final List<CalendarEvent> Function(DateTime date)? eventsOf;
+  final DiaryEntry? Function(DateTime date)? diaryOf;
+  final bool showDiary;
   final bool startMonday;
 
   @override
   State<CalendarMonthGrid> createState() => _CalendarMonthGridState();
 }
 
-class _CalendarMonthGridState extends State<CalendarMonthGrid> {
+class _CalendarMonthGridState extends State<CalendarMonthGrid>
+    with SingleTickerProviderStateMixin {
+  static const _modeDuration = Duration(milliseconds: 460);
+
   final _keys = <DateTime, GlobalKey>{};
   final _weekKeys = <int, GlobalKey>{};
   DateTime? _rangeStart;
   DateTime? _rangeEnd;
   var _dragging = false;
+  late final AnimationController _mode;
+  late final CurvedAnimation _ease;
+  late final Animation<double> _eventsOpacity;
+  late final Animation<double> _diaryOpacity;
+  late final Animation<double> _eventsScale;
+  late final Animation<double> _diaryScale;
 
   @override
   void initState() {
     super.initState();
     CalendarDayDropTarget._grids.add(this);
+    _mode = AnimationController(
+      vsync: this,
+      duration: _modeDuration,
+      reverseDuration: _modeDuration,
+      value: widget.showDiary ? 1 : 0,
+    );
+    _ease = CurvedAnimation(
+      parent: _mode,
+      curve: Curves.easeInOutCubic,
+      reverseCurve: Curves.easeInOutCubic,
+    );
+    _eventsOpacity = Tween<double>(begin: 1, end: 0).animate(_ease);
+    _diaryOpacity = Tween<double>(begin: 0, end: 1).animate(_ease);
+    _eventsScale = Tween<double>(begin: 1, end: 0.97).animate(_ease);
+    _diaryScale = Tween<double>(begin: 0.97, end: 1).animate(_ease);
+  }
+
+  @override
+  void didUpdateWidget(CalendarMonthGrid oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.showDiary == widget.showDiary) return;
+    if (widget.showDiary) {
+      _mode.forward();
+    } else {
+      _mode.reverse();
+    }
   }
 
   @override
   void dispose() {
     CalendarDayDropTarget._grids.remove(this);
+    _ease.dispose();
+    _mode.dispose();
     super.dispose();
   }
 
@@ -202,12 +245,13 @@ class _CalendarMonthGridState extends State<CalendarMonthGrid> {
               final minWeekHeight = constraints.maxHeight / weekCount;
               final calendarScale = AppFonts.calendarScaleOf(context);
               final labelScale = AppFonts.calendarLabelScaleOf(context);
+              final allowRange = widget.onRangeSelected != null;
               return GestureDetector(
                 behavior: HitTestBehavior.translucent,
-                onLongPressStart: _onLongPressStart,
-                onLongPressMoveUpdate: _onLongPressMove,
-                onLongPressEnd: _onLongPressEnd,
-                onLongPressCancel: _clearRange,
+                onLongPressStart: allowRange ? _onLongPressStart : null,
+                onLongPressMoveUpdate: allowRange ? _onLongPressMove : null,
+                onLongPressEnd: allowRange ? _onLongPressEnd : null,
+                onLongPressCancel: allowRange ? _clearRange : null,
                 child: ListView.builder(
                   padding: EdgeInsets.zero,
                   primary: false,
@@ -217,17 +261,30 @@ class _CalendarMonthGridState extends State<CalendarMonthGrid> {
                   itemCount: weekCount,
                   itemBuilder: (context, week) {
                     final weekDays = days.sublist(week * 7, week * 7 + 7);
-                    return AnimatedContainer(
-                      key: _weekKey(week),
-                      duration: const Duration(milliseconds: 280),
-                      curve: Curves.easeOutCubic,
-                      height: CalendarWeekEvents.heightFor(
-                        days: weekDays,
-                        eventsOf: widget.eventsOf ?? (_) => const [],
-                        minHeight: minWeekHeight,
-                        calendarScale: calendarScale,
-                        labelScale: labelScale,
-                      ),
+                    final eventHeight = CalendarWeekEvents.heightFor(
+                      days: weekDays,
+                      eventsOf: widget.eventsOf ?? (_) => const [],
+                      minHeight: minWeekHeight,
+                      calendarScale: calendarScale,
+                      labelScale: labelScale,
+                    );
+                    final diaryHeight = CalendarWeekDiaries.heightFor(
+                      days: weekDays,
+                      diaryOf: widget.diaryOf ?? (_) => null,
+                      minHeight: minWeekHeight,
+                      calendarScale: calendarScale,
+                      labelScale: labelScale,
+                    );
+                    return AnimatedBuilder(
+                      animation: _ease,
+                      builder: (context, child) {
+                        final t = _ease.value;
+                        return SizedBox(
+                          key: _weekKey(week),
+                          height: eventHeight + (diaryHeight - eventHeight) * t,
+                          child: child,
+                        );
+                      },
                       child: Stack(
                         children: [
                           Row(
@@ -259,11 +316,34 @@ class _CalendarMonthGridState extends State<CalendarMonthGrid> {
                           ),
                           if (widget.eventsOf != null)
                             Positioned.fill(
-                              child: CalendarWeekEvents(
-                                days: weekDays,
-                                eventsOf: widget.eventsOf!,
-                                calendarScale: calendarScale,
-                                labelScale: labelScale,
+                              child: FadeTransition(
+                                opacity: _eventsOpacity,
+                                child: ScaleTransition(
+                                  alignment: Alignment.topCenter,
+                                  scale: _eventsScale,
+                                  child: CalendarWeekEvents(
+                                    days: weekDays,
+                                    eventsOf: widget.eventsOf!,
+                                    calendarScale: calendarScale,
+                                    labelScale: labelScale,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          if (widget.diaryOf != null)
+                            Positioned.fill(
+                              child: FadeTransition(
+                                opacity: _diaryOpacity,
+                                child: ScaleTransition(
+                                  alignment: Alignment.topCenter,
+                                  scale: _diaryScale,
+                                  child: CalendarWeekDiaries(
+                                    days: weekDays,
+                                    diaryOf: widget.diaryOf!,
+                                    calendarScale: calendarScale,
+                                    labelScale: labelScale,
+                                  ),
+                                ),
                               ),
                             ),
                         ],

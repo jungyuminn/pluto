@@ -1,13 +1,27 @@
 import 'package:job_planner/core/constants/app_strings.dart';
 import 'package:job_planner/domain/entities/apply_status.dart';
 import 'package:job_planner/domain/entities/calendar_event.dart';
+import 'package:job_planner/domain/entities/event_category.dart';
 import 'package:job_planner/domain/entities/job_application.dart';
-import 'package:job_planner/presentation/theme/apply_status_colors.dart';
+
+int jobCategoryColor(
+  JobApplication application, [
+  List<EventCategory> companyCategories = const [],
+]) {
+  final id = application.categoryId;
+  if (id != null && id.isNotEmpty) {
+    for (final category in companyCategories) {
+      if (category.id == id) return category.color;
+    }
+  }
+  return application.categoryColor ?? CalendarEvent.defaultCategoryColor;
+}
 
 List<CalendarEvent> jobEventsOn(
   DateTime date,
-  Iterable<JobApplication> applications,
-) {
+  Iterable<JobApplication> applications, {
+  List<EventCategory> companyCategories = const [],
+}) {
   final day = DateTime(date.year, date.month, date.day);
   final items = <CalendarEvent>[];
   for (final application in applications) {
@@ -21,16 +35,19 @@ List<CalendarEvent> jobEventsOn(
           roundDate.day != day.day) {
         continue;
       }
-      final accent = ApplyStatusColors.of(application.applyStatus);
       items.add(
         CalendarEvent(
           id: 'job:${application.id}:$i',
           title: _label(application.companyName, i + 1, round.name),
           date: day,
-          categoryName: application.applyStatus.isNotEmpty
-              ? application.applyStatus
-              : application.position,
-          categoryColor: accent?.toARGB32() ?? CalendarEvent.defaultCategoryColor,
+          memo: application.position.trim(),
+          categoryId: application.categoryId,
+          categoryName: application.hasCategory
+              ? application.categoryName
+              : (application.applyStatus.isNotEmpty
+                  ? application.applyStatus
+                  : application.position),
+          categoryColor: jobCategoryColor(application, companyCategories),
           isJob: true,
           jobApplicationId: application.id,
         ),
@@ -44,8 +61,13 @@ List<CalendarEvent> calendarEventsOn({
   required DateTime date,
   required List<CalendarEvent> events,
   required List<JobApplication> applications,
+  List<EventCategory> companyCategories = const [],
 }) {
-  final jobs = jobEventsOn(date, applications);
+  final jobs = jobEventsOn(
+    date,
+    applications,
+    companyCategories: companyCategories,
+  );
   final todos = CalendarEvent.withRangesFirst(
     events.where((event) {
       if (event.isJob) return false;
@@ -76,6 +98,7 @@ List<CalendarEvent> calendarEventsInRange({
   required DateTime end,
   required List<CalendarEvent> events,
   required List<JobApplication> applications,
+  List<EventCategory> companyCategories = const [],
 }) {
   final items = <CalendarEvent>[];
   var day = calendarDay(start);
@@ -86,6 +109,7 @@ List<CalendarEvent> calendarEventsInRange({
         date: day,
         events: events,
         applications: applications,
+        companyCategories: companyCategories,
       ),
     );
     day = day.add(const Duration(days: 1));

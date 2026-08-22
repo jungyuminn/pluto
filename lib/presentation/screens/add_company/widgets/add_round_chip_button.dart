@@ -7,25 +7,36 @@ class AddRoundChipButton extends StatelessWidget {
     super.key,
     required this.onPressed,
     this.icon = Icons.add,
+    this.enabled = true,
   });
 
   final VoidCallback onPressed;
   final IconData icon;
+  final bool enabled;
+
+  static const size = 36.0;
 
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
-    return PressBounce(
-      color: colors.pressed,
-      pressedColor: colors.border,
-      borderRadius: BorderRadius.circular(999),
-      onPressed: onPressed,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-        child: Icon(
-          icon,
-          size: 14,
-          color: colors.text,
+    return AnimatedOpacity(
+      duration: const Duration(milliseconds: 220),
+      curve: Curves.easeOutCubic,
+      opacity: enabled ? 1 : 0.32,
+      child: SizedBox(
+        width: size,
+        height: size,
+        child: PressBounce(
+          expand: true,
+          color: colors.card,
+          pressedColor: colors.pressed,
+          borderRadius: BorderRadius.circular(999),
+          onPressed: enabled ? onPressed : null,
+          child: Icon(
+            icon,
+            size: 18,
+            color: colors.secondary,
+          ),
         ),
       ),
     );

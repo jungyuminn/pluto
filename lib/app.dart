@@ -8,6 +8,7 @@ import 'package:job_planner/core/notifications/todo_reminder_service.dart';
 import 'package:job_planner/core/theme/app_theme.dart';
 import 'package:job_planner/data/datasources/calendar_preference.dart';
 import 'package:job_planner/data/datasources/calendar_event_local_datasource.dart';
+import 'package:job_planner/data/datasources/diary_local_datasource.dart';
 import 'package:job_planner/data/datasources/event_category_local_datasource.dart';
 import 'package:job_planner/data/datasources/day_events_view_preference.dart';
 import 'package:job_planner/data/datasources/font_preference.dart';
@@ -19,22 +20,28 @@ import 'package:job_planner/data/datasources/notification_preference.dart';
 import 'package:job_planner/data/datasources/theme_preference.dart';
 import 'package:job_planner/data/repositories/calendar_event_memory_repository.dart';
 import 'package:job_planner/data/repositories/calendar_event_repository_impl.dart';
+import 'package:job_planner/data/repositories/diary_memory_repository.dart';
+import 'package:job_planner/data/repositories/diary_repository_impl.dart';
 import 'package:job_planner/data/repositories/event_category_memory_repository.dart';
 import 'package:job_planner/data/repositories/event_category_repository_impl.dart';
 import 'package:job_planner/data/repositories/job_application_memory_repository.dart';
 import 'package:job_planner/data/repositories/job_application_repository_impl.dart';
+import 'package:job_planner/domain/entities/event_category.dart';
 import 'package:job_planner/domain/usecases/add_calendar_event.dart';
 import 'package:job_planner/domain/usecases/add_event_category.dart';
 import 'package:job_planner/domain/usecases/delete_event_category.dart';
 import 'package:job_planner/domain/usecases/add_job_application.dart';
 import 'package:job_planner/domain/usecases/delete_calendar_event.dart';
+import 'package:job_planner/domain/usecases/delete_diary.dart';
 import 'package:job_planner/domain/usecases/delete_job_application.dart';
 import 'package:job_planner/domain/usecases/get_calendar_events.dart';
+import 'package:job_planner/domain/usecases/get_diaries.dart';
 import 'package:job_planner/domain/usecases/get_event_categories.dart';
 import 'package:job_planner/domain/usecases/get_job_applications.dart';
 import 'package:job_planner/domain/usecases/reorder_calendar_events.dart';
 import 'package:job_planner/domain/usecases/reorder_job_applications.dart';
 import 'package:job_planner/domain/usecases/reorder_event_categories.dart';
+import 'package:job_planner/domain/usecases/save_diary.dart';
 import 'package:job_planner/domain/usecases/update_calendar_event.dart';
 import 'package:job_planner/domain/usecases/update_event_category.dart';
 import 'package:job_planner/domain/usecases/update_job_application.dart';
@@ -54,11 +61,19 @@ class JobPlannerApp extends StatelessWidget {
     this.updateCalendarEvent,
     this.deleteCalendarEvent,
     this.reorderCalendarEvents,
+    this.getDiaries,
+    this.saveDiary,
+    this.deleteDiary,
     this.getEventCategories,
     this.addEventCategory,
     this.updateEventCategory,
     this.deleteEventCategory,
     this.reorderEventCategories,
+    this.getCompanyCategories,
+    this.addCompanyCategory,
+    this.updateCompanyCategory,
+    this.deleteCompanyCategory,
+    this.reorderCompanyCategories,
     this.jobViewPreference,
     this.homeViewPreference,
     this.longGoalStore,
@@ -79,11 +94,19 @@ class JobPlannerApp extends StatelessWidget {
   final UpdateCalendarEvent? updateCalendarEvent;
   final DeleteCalendarEvent? deleteCalendarEvent;
   final ReorderCalendarEvents? reorderCalendarEvents;
+  final GetDiaries? getDiaries;
+  final SaveDiary? saveDiary;
+  final DeleteDiary? deleteDiary;
   final GetEventCategories? getEventCategories;
   final AddEventCategory? addEventCategory;
   final UpdateEventCategory? updateEventCategory;
   final DeleteEventCategory? deleteEventCategory;
   final ReorderEventCategories? reorderEventCategories;
+  final GetEventCategories? getCompanyCategories;
+  final AddEventCategory? addCompanyCategory;
+  final UpdateEventCategory? updateCompanyCategory;
+  final DeleteEventCategory? deleteCompanyCategory;
+  final ReorderEventCategories? reorderCompanyCategories;
   final JobViewPreference? jobViewPreference;
   final HomeViewPreference? homeViewPreference;
   final LongGoalLocalDataSource? longGoalStore;
@@ -108,7 +131,10 @@ class JobPlannerApp extends StatelessWidget {
     }
 
     final calendarRepository = CalendarEventMemoryRepository();
+    final diaryRepository = DiaryMemoryRepository();
     final categoryRepository = EventCategoryMemoryRepository();
+    final companyCategoryRepository =
+        EventCategoryMemoryRepository(EventCategory.companyPresets);
     return AppScope(
       getJobApplications: getApplications,
       addJobApplication: addApplication,
@@ -126,6 +152,9 @@ class JobPlannerApp extends StatelessWidget {
           deleteCalendarEvent ?? DeleteCalendarEvent(calendarRepository),
       reorderCalendarEvents:
           reorderCalendarEvents ?? ReorderCalendarEvents(calendarRepository),
+      getDiaries: getDiaries ?? GetDiaries(diaryRepository),
+      saveDiary: saveDiary ?? SaveDiary(diaryRepository),
+      deleteDiary: deleteDiary ?? DeleteDiary(diaryRepository),
       getEventCategories:
           getEventCategories ?? GetEventCategories(categoryRepository),
       addEventCategory:
@@ -136,6 +165,16 @@ class JobPlannerApp extends StatelessWidget {
           deleteEventCategory ?? DeleteEventCategory(categoryRepository),
       reorderEventCategories:
           reorderEventCategories ?? ReorderEventCategories(categoryRepository),
+      getCompanyCategories: getCompanyCategories ??
+          GetEventCategories(companyCategoryRepository),
+      addCompanyCategory:
+          addCompanyCategory ?? AddEventCategory(companyCategoryRepository),
+      updateCompanyCategory: updateCompanyCategory ??
+          UpdateEventCategory(companyCategoryRepository),
+      deleteCompanyCategory: deleteCompanyCategory ??
+          DeleteEventCategory(companyCategoryRepository),
+      reorderCompanyCategories: reorderCompanyCategories ??
+          ReorderEventCategories(companyCategoryRepository),
       jobViewPreference: jobViewPreference ?? JobViewPreference(),
       homeViewPreference: homeViewPreference ?? HomeViewPreference(),
       longGoalStore: longGoalStore ?? LongGoalLocalDataSource(),
@@ -169,11 +208,19 @@ class _AppBootstrapState extends State<_AppBootstrap> {
   UpdateCalendarEvent? _updateCalendarEvent;
   DeleteCalendarEvent? _deleteCalendarEvent;
   ReorderCalendarEvents? _reorderCalendarEvents;
+  GetDiaries? _getDiaries;
+  SaveDiary? _saveDiary;
+  DeleteDiary? _deleteDiary;
   GetEventCategories? _getEventCategories;
   AddEventCategory? _addEventCategory;
   UpdateEventCategory? _updateEventCategory;
   DeleteEventCategory? _deleteEventCategory;
   ReorderEventCategories? _reorderEventCategories;
+  GetEventCategories? _getCompanyCategories;
+  AddEventCategory? _addCompanyCategory;
+  UpdateEventCategory? _updateCompanyCategory;
+  DeleteEventCategory? _deleteCompanyCategory;
+  ReorderEventCategories? _reorderCompanyCategories;
   JobViewPreference? _jobViewPreference;
   HomeViewPreference? _homeViewPreference;
   LongGoalLocalDataSource? _longGoalStore;
@@ -192,6 +239,7 @@ class _AppBootstrapState extends State<_AppBootstrap> {
   Future<void> _load() async {
     final prefs = await SharedPreferences.getInstance();
     final eventDataSource = CalendarEventLocalDataSource(prefs);
+    final diaryDataSource = DiaryLocalDataSource(prefs);
     final jobDataSource = JobApplicationLocalDataSource(prefs);
     final notificationPreference = NotificationPreference(prefs: prefs);
     await TodoReminderService.instance.init(
@@ -201,6 +249,12 @@ class _AppBootstrapState extends State<_AppBootstrap> {
     );
     final themePreference = ThemePreference(prefs: prefs);
     final categoryDataSource = EventCategoryLocalDataSource(prefs);
+    final companyCategoryDataSource = EventCategoryLocalDataSource(
+      prefs,
+      key: EventCategoryLocalDataSource.companyKey,
+      presets: EventCategory.companyPresets,
+      syncHomeWidget: false,
+    );
     final homeViewPreference = HomeViewPreference(prefs: prefs);
     final longGoalStore = LongGoalLocalDataSource(prefs: prefs);
     final dayEventsViewPreference = DayEventsViewPreference(prefs: prefs);
@@ -219,7 +273,10 @@ class _AppBootstrapState extends State<_AppBootstrap> {
 
     final jobRepository = JobApplicationRepositoryImpl(jobDataSource);
     final eventRepository = CalendarEventRepositoryImpl(eventDataSource);
+    final diaryRepository = DiaryRepositoryImpl(diaryDataSource);
     final categoryRepository = EventCategoryRepositoryImpl(categoryDataSource);
+    final companyCategoryRepository =
+        EventCategoryRepositoryImpl(companyCategoryDataSource);
     if (!mounted) return;
     setState(() {
       _getJobApplications = GetJobApplications(jobRepository);
@@ -232,11 +289,20 @@ class _AppBootstrapState extends State<_AppBootstrap> {
       _updateCalendarEvent = UpdateCalendarEvent(eventRepository);
       _deleteCalendarEvent = DeleteCalendarEvent(eventRepository);
       _reorderCalendarEvents = ReorderCalendarEvents(eventRepository);
+      _getDiaries = GetDiaries(diaryRepository);
+      _saveDiary = SaveDiary(diaryRepository);
+      _deleteDiary = DeleteDiary(diaryRepository);
       _getEventCategories = GetEventCategories(categoryRepository);
       _addEventCategory = AddEventCategory(categoryRepository);
       _updateEventCategory = UpdateEventCategory(categoryRepository);
       _deleteEventCategory = DeleteEventCategory(categoryRepository);
       _reorderEventCategories = ReorderEventCategories(categoryRepository);
+      _getCompanyCategories = GetEventCategories(companyCategoryRepository);
+      _addCompanyCategory = AddEventCategory(companyCategoryRepository);
+      _updateCompanyCategory = UpdateEventCategory(companyCategoryRepository);
+      _deleteCompanyCategory = DeleteEventCategory(companyCategoryRepository);
+      _reorderCompanyCategories =
+          ReorderEventCategories(companyCategoryRepository);
       _jobViewPreference = JobViewPreference(prefs: prefs);
       _homeViewPreference = homeViewPreference;
       _longGoalStore = longGoalStore;
@@ -277,11 +343,19 @@ class _AppBootstrapState extends State<_AppBootstrap> {
     final updateEvent = _updateCalendarEvent;
     final deleteEvent = _deleteCalendarEvent;
     final reorderEvents = _reorderCalendarEvents;
+    final getDiaries = _getDiaries;
+    final saveDiary = _saveDiary;
+    final deleteDiary = _deleteDiary;
     final getCategories = _getEventCategories;
     final addCategory = _addEventCategory;
     final updateCategory = _updateEventCategory;
     final deleteCategory = _deleteEventCategory;
     final reorderCategory = _reorderEventCategories;
+    final getCompanyCategories = _getCompanyCategories;
+    final addCompanyCategory = _addCompanyCategory;
+    final updateCompanyCategory = _updateCompanyCategory;
+    final deleteCompanyCategory = _deleteCompanyCategory;
+    final reorderCompanyCategories = _reorderCompanyCategories;
     final jobViewPreference = _jobViewPreference;
     final homeViewPreference = _homeViewPreference;
     final longGoalStore = _longGoalStore;
@@ -301,11 +375,19 @@ class _AppBootstrapState extends State<_AppBootstrap> {
         updateEvent == null ||
         deleteEvent == null ||
         reorderEvents == null ||
+        getDiaries == null ||
+        saveDiary == null ||
+        deleteDiary == null ||
         getCategories == null ||
         addCategory == null ||
         updateCategory == null ||
         deleteCategory == null ||
         reorderCategory == null ||
+        getCompanyCategories == null ||
+        addCompanyCategory == null ||
+        updateCompanyCategory == null ||
+        deleteCompanyCategory == null ||
+        reorderCompanyCategories == null ||
         jobViewPreference == null ||
         homeViewPreference == null ||
         longGoalStore == null ||
@@ -331,11 +413,19 @@ class _AppBootstrapState extends State<_AppBootstrap> {
       updateCalendarEvent: updateEvent,
       deleteCalendarEvent: deleteEvent,
       reorderCalendarEvents: reorderEvents,
+      getDiaries: getDiaries,
+      saveDiary: saveDiary,
+      deleteDiary: deleteDiary,
       getEventCategories: getCategories,
       addEventCategory: addCategory,
       updateEventCategory: updateCategory,
       deleteEventCategory: deleteCategory,
       reorderEventCategories: reorderCategory,
+      getCompanyCategories: getCompanyCategories,
+      addCompanyCategory: addCompanyCategory,
+      updateCompanyCategory: updateCompanyCategory,
+      deleteCompanyCategory: deleteCompanyCategory,
+      reorderCompanyCategories: reorderCompanyCategories,
       jobViewPreference: jobViewPreference,
       homeViewPreference: homeViewPreference,
       longGoalStore: longGoalStore,

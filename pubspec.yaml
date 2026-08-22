@@ -105,6 +105,8 @@ flutter:
     - assets/themes/boyhood/
     - assets/themes/interlude/
     - assets/themes/cloud/
+    - assets/themes/cat_village/
+    - assets/themes/hamster_bakery/
   fonts:
     - family: Pretendard
       fonts:

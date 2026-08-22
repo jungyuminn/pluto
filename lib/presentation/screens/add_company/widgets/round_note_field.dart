@@ -22,9 +22,10 @@ class RoundNoteField extends StatelessWidget {
       minLines: 1,
       maxLines: 4,
       textInputAction: TextInputAction.newline,
-      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+      style: TextStyle(
         fontFamily: AppFonts.of(context),
         fontWeight: FontWeight.w700,
+        fontSize: 16,
         color: colors.secondary,
       ),
       decoration: InputDecoration(

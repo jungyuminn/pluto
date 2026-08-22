@@ -25,4 +25,8 @@ class AppIcons {
   static const clock = 'assets/icons/clock.png';
   static const clockOutlined = 'assets/icons/clock_outlined.png';
   static const setting = 'assets/icons/setting.png';
+  static const resume = 'assets/icons/resume.png';
+  static const resumeOutlined = 'assets/icons/resume_outlined.png';
+  static const status = 'assets/icons/status.png';
+  static const statusOutlined = 'assets/icons/status_outlined.png';
 }

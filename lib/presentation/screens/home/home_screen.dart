@@ -159,6 +159,8 @@ class _HomeScreenState extends State<HomeScreen>
     final events = await scope.getCalendarEvents();
     final applications = await scope.getJobApplications();
     final categories = await scope.getEventCategories();
+    final companyCategories =
+        await scope.fetchCategories(CategoryKind.company);
     final homePrefs = scope.homeViewPreference;
     if (!mounted) return;
     final weekEnd = _weekEnd;
@@ -168,11 +170,13 @@ class _HomeScreenState extends State<HomeScreen>
         date: _today,
         events: events,
         applications: applications,
+        companyCategories: companyCategories,
       );
       _tomorrowEvents = calendarEventsOn(
         date: _tomorrow,
         events: events,
         applications: applications,
+        companyCategories: companyCategories,
       );
       _weekEvents = homePrefs.showWeek
           ? calendarEventsInRange(
@@ -180,6 +184,7 @@ class _HomeScreenState extends State<HomeScreen>
               end: weekEnd,
               events: events,
               applications: applications,
+              companyCategories: companyCategories,
             )
           : const <CalendarEvent>[];
       _weekLabel = homePrefs.showWeek
@@ -191,6 +196,7 @@ class _HomeScreenState extends State<HomeScreen>
               end: monthEnd,
               events: events,
               applications: applications,
+              companyCategories: companyCategories,
             )
           : const <CalendarEvent>[];
       _monthLabel = homePrefs.showMonth

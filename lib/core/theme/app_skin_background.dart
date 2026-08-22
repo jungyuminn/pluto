@@ -205,6 +205,34 @@ class AppSkinAssets {
   static const cloudVillageGroundDark =
       'assets/themes/cloud/cloud_village_ground_dark.png';
 
+  static const catPileLight = 'assets/themes/cat_village/cat_pile_light.png';
+  static const catPileDark = 'assets/themes/cat_village/cat_pile_dark.png';
+  static const catBoxLight = 'assets/themes/cat_village/cat_box_light.png';
+  static const catBoxDark = 'assets/themes/cat_village/cat_box_dark.png';
+  static const catToysLight = 'assets/themes/cat_village/cat_toys_light.png';
+  static const catToysDark = 'assets/themes/cat_village/cat_toys_dark.png';
+  static const catTownGroundLight =
+      'assets/themes/cat_village/cat_town_ground_light.png';
+  static const catTownGroundDark =
+      'assets/themes/cat_village/cat_town_ground_dark.png';
+
+  static const bakerHamstersLight =
+      'assets/themes/hamster_bakery/baker_hamsters_light.png';
+  static const bakerHamstersDark =
+      'assets/themes/hamster_bakery/baker_hamsters_dark.png';
+  static const cuteBreadsLight =
+      'assets/themes/hamster_bakery/cute_breads_light.png';
+  static const cuteBreadsDark =
+      'assets/themes/hamster_bakery/cute_breads_dark.png';
+  static const hamsterBreadBasketLight =
+      'assets/themes/hamster_bakery/hamster_bread_basket_light.png';
+  static const hamsterBreadBasketDark =
+      'assets/themes/hamster_bakery/hamster_bread_basket_dark.png';
+  static const hamsterBakeryGroundLight =
+      'assets/themes/hamster_bakery/hamster_bakery_ground_light.png';
+  static const hamsterBakeryGroundDark =
+      'assets/themes/hamster_bakery/hamster_bakery_ground_dark.png';
+
   static const precacheDecorations = [
     petal90Light,
     petal180Light,
@@ -308,6 +336,22 @@ class AppSkinAssets {
     sleepyMoonDark,
     cloudVillageGroundLight,
     cloudVillageGroundDark,
+    catPileLight,
+    catPileDark,
+    catBoxLight,
+    catBoxDark,
+    catToysLight,
+    catToysDark,
+    catTownGroundLight,
+    catTownGroundDark,
+    bakerHamstersLight,
+    bakerHamstersDark,
+    cuteBreadsLight,
+    cuteBreadsDark,
+    hamsterBreadBasketLight,
+    hamsterBreadBasketDark,
+    hamsterBakeryGroundLight,
+    hamsterBakeryGroundDark,
   ];
 
   static const blossomLightFill = Color(0xFFF8E8ED);
@@ -336,6 +380,10 @@ class AppSkinAssets {
   static const interludeDarkFill = Color(0xFF141018);
   static const fluffyCloudLightFill = Color(0xFFEEF4FC);
   static const fluffyCloudDarkFill = Color(0xFF10141C);
+  static const catVillageLightFill = Color(0xFFF7F0E8);
+  static const catVillageDarkFill = Color(0xFF15110E);
+  static const hamsterBakeryLightFill = Color(0xFFF8F0E4);
+  static const hamsterBakeryDarkFill = Color(0xFF16120C);
 
   static Color accentColor(AppSkin skin, bool dark, Color fallback) {
     switch (skin) {
@@ -367,6 +415,10 @@ class AppSkinAssets {
         return dark ? const Color(0xFFC4A0E8) : const Color(0xFFB08AD4);
       case AppSkin.fluffyCloud:
         return dark ? const Color(0xFF8BB4E8) : const Color(0xFF6A9FD4);
+      case AppSkin.catVillage:
+        return dark ? const Color(0xFFE0A888) : const Color(0xFFD4896A);
+      case AppSkin.hamsterBakery:
+        return dark ? const Color(0xFFE0B888) : const Color(0xFFD4A06A);
     }
   }
 
@@ -400,6 +452,10 @@ class AppSkinAssets {
         return dark ? interludeDarkFill : interludeLightFill;
       case AppSkin.fluffyCloud:
         return dark ? fluffyCloudDarkFill : fluffyCloudLightFill;
+      case AppSkin.catVillage:
+        return dark ? catVillageDarkFill : catVillageLightFill;
+      case AppSkin.hamsterBakery:
+        return dark ? hamsterBakeryDarkFill : hamsterBakeryLightFill;
     }
   }
 
@@ -419,6 +475,8 @@ class AppSkinAssets {
       case AppSkin.boyhood:
       case AppSkin.interlude:
       case AppSkin.fluffyCloud:
+      case AppSkin.catVillage:
+      case AppSkin.hamsterBakery:
         return const [
           (filled: AppIcons.home, outlined: AppIcons.homeOutlined),
           (filled: AppIcons.calendar, outlined: AppIcons.calendarOutlined),
@@ -535,6 +593,16 @@ class AppSkinBackground extends StatelessWidget {
           simple: simple,
         ),
       AppSkin.fluffyCloud => _FluffyCloudDecorations(
+          liftForNav: liftForNav,
+          scaleByWidth: scaleByWidth,
+          simple: simple,
+        ),
+      AppSkin.catVillage => _CatVillageDecorations(
+          liftForNav: liftForNav,
+          scaleByWidth: scaleByWidth,
+          simple: simple,
+        ),
+      AppSkin.hamsterBakery => _HamsterBakeryDecorations(
           liftForNav: liftForNav,
           scaleByWidth: scaleByWidth,
           simple: simple,
@@ -1855,6 +1923,187 @@ class _FluffyCloudDecorations extends StatelessWidget {
                 bottom: groundBottom,
                 width: span * 0.32,
                 child: sticker(house),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _CatVillageDecorations extends StatelessWidget {
+  const _CatVillageDecorations({
+    required this.liftForNav,
+    this.scaleByWidth = false,
+    this.simple = false,
+  });
+
+  final bool liftForNav;
+  final bool scaleByWidth;
+  final bool simple;
+
+  @override
+  Widget build(BuildContext context) {
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        final height = constraints.maxHeight;
+        final span = scaleByWidth
+            ? width
+            : constraints.biggest.shortestSide;
+        final paddingBottom = MediaQuery.paddingOf(context).bottom;
+        final groundBottom = liftForNav ? 58 + paddingBottom : height * 0.02;
+        final safe = _LogoSafe(
+          screenWidth: width,
+          paddingTop: MediaQuery.paddingOf(context).top,
+          enabled: !simple,
+        );
+        final pile =
+            dark ? AppSkinAssets.catPileDark : AppSkinAssets.catPileLight;
+        final box =
+            dark ? AppSkinAssets.catBoxDark : AppSkinAssets.catBoxLight;
+        final toys =
+            dark ? AppSkinAssets.catToysDark : AppSkinAssets.catToysLight;
+        final ground = dark
+            ? AppSkinAssets.catTownGroundDark
+            : AppSkinAssets.catTownGroundLight;
+        final groundHeight = (width * 887 / 1774).clamp(0.0, height * 0.34);
+
+        Widget sticker(String asset) {
+          return Image.asset(
+            asset,
+            fit: BoxFit.contain,
+            filterQuality: FilterQuality.medium,
+          );
+        }
+
+        return IgnorePointer(
+          child: Stack(
+            children: [
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                height: groundHeight,
+                child: Image.asset(
+                  ground,
+                  fit: BoxFit.cover,
+                  alignment: Alignment.bottomCenter,
+                  filterQuality: FilterQuality.medium,
+                ),
+              ),
+              if (!simple)
+                safe.topLeft(
+                  left: span * 0.04,
+                  top: span * 0.02,
+                  width: span * 0.28,
+                  child: sticker(toys),
+                ),
+              Positioned(
+                left: span * 0.02,
+                bottom: groundBottom + span * 0.02,
+                width: span * 0.28,
+                child: sticker(box),
+              ),
+              Positioned(
+                right: span * 0.02,
+                bottom: groundBottom,
+                width: span * 0.34,
+                child: sticker(pile),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _HamsterBakeryDecorations extends StatelessWidget {
+  const _HamsterBakeryDecorations({
+    required this.liftForNav,
+    this.scaleByWidth = false,
+    this.simple = false,
+  });
+
+  final bool liftForNav;
+  final bool scaleByWidth;
+  final bool simple;
+
+  @override
+  Widget build(BuildContext context) {
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        final height = constraints.maxHeight;
+        final span = scaleByWidth
+            ? width
+            : constraints.biggest.shortestSide;
+        final paddingBottom = MediaQuery.paddingOf(context).bottom;
+        final groundBottom = liftForNav ? 58 + paddingBottom : height * 0.02;
+        final safe = _LogoSafe(
+          screenWidth: width,
+          paddingTop: MediaQuery.paddingOf(context).top,
+          enabled: !simple,
+        );
+        final bakers = dark
+            ? AppSkinAssets.bakerHamstersDark
+            : AppSkinAssets.bakerHamstersLight;
+        final basket = dark
+            ? AppSkinAssets.hamsterBreadBasketDark
+            : AppSkinAssets.hamsterBreadBasketLight;
+        final breads = dark
+            ? AppSkinAssets.cuteBreadsDark
+            : AppSkinAssets.cuteBreadsLight;
+        final ground = dark
+            ? AppSkinAssets.hamsterBakeryGroundDark
+            : AppSkinAssets.hamsterBakeryGroundLight;
+        final groundHeight = (width * 887 / 1774).clamp(0.0, height * 0.34);
+
+        Widget sticker(String asset) {
+          return Image.asset(
+            asset,
+            fit: BoxFit.contain,
+            filterQuality: FilterQuality.medium,
+          );
+        }
+
+        return IgnorePointer(
+          child: Stack(
+            children: [
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                height: groundHeight,
+                child: Image.asset(
+                  ground,
+                  fit: BoxFit.cover,
+                  alignment: Alignment.bottomCenter,
+                  filterQuality: FilterQuality.medium,
+                ),
+              ),
+              if (!simple)
+                safe.topLeft(
+                  left: span * 0.04,
+                  top: span * 0.02,
+                  width: span * 0.28,
+                  child: sticker(breads),
+                ),
+              Positioned(
+                left: span * 0.02,
+                bottom: groundBottom + span * 0.02,
+                width: span * 0.28,
+                child: sticker(basket),
+              ),
+              Positioned(
+                right: span * 0.02,
+                bottom: groundBottom,
+                width: span * 0.34,
+                child: sticker(bakers),
               ),
             ],
           ),

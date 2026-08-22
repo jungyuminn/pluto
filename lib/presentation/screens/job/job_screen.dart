@@ -9,6 +9,7 @@ import 'package:job_planner/core/theme/app_skin_background.dart';
 import 'package:job_planner/core/utils/fade_in.dart';
 import 'package:job_planner/core/utils/korean_search.dart';
 import 'package:job_planner/core/utils/plain_text_editing_controller.dart';
+import 'package:job_planner/domain/entities/event_category.dart';
 import 'package:job_planner/domain/entities/job_application.dart';
 import 'package:job_planner/presentation/screens/add_company/widgets/add_company_sheet.dart';
 import 'package:job_planner/presentation/screens/add_company/widgets/missing_fields_dialog.dart';
@@ -31,6 +32,7 @@ class _JobScreenState extends State<JobScreen>
   late final AnimationController _searchAnimation;
   late final CurvedAnimation _searchFade;
   var _items = <JobApplication>[];
+  var _companyCategories = <EventCategory>[];
   var _loading = true;
   var _initialized = false;
   var _compact = false;
@@ -76,23 +78,36 @@ class _JobScreenState extends State<JobScreen>
     return List.of(_items)..sort(JobApplication.compareHomeOrder);
   }
 
+  String _categoryNameOf(JobApplication item) {
+    final id = item.categoryId;
+    if (id != null && id.isNotEmpty) {
+      for (final category in _companyCategories) {
+        if (category.id == id) return category.name;
+      }
+    }
+    return item.categoryName;
+  }
+
   List<JobApplication> get _visibleItems {
     final query = _search.text;
     final items = _orderedItems;
     if (KoreanSearch.compact(query).isEmpty) return items;
     return items.where((item) {
       return KoreanSearch.matchesAny(
-        [item.companyName, item.position],
+        [item.companyName, item.position, _categoryNameOf(item)],
         query,
       );
     }).toList();
   }
 
   Future<void> _reload() async {
-    final items = await AppScope.of(context).getJobApplications();
+    final scope = AppScope.of(context);
+    final items = await scope.getJobApplications();
+    final companyCategories = await scope.fetchCategories(CategoryKind.company);
     if (!mounted) return;
     setState(() {
       _items = items;
+      _companyCategories = companyCategories;
       _loading = false;
     });
   }

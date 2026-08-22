@@ -17,6 +17,9 @@ class JobApplicationModel {
       coverLetterPath: json['coverLetterPath'] as String?,
       coverLetterFileName: json['coverLetterFileName'] as String?,
       sortOrder: (json['sortOrder'] as num?)?.toInt() ?? 0,
+      categoryId: json['categoryId'] as String?,
+      categoryName: json['categoryName'] as String? ?? '',
+      categoryColor: (json['categoryColor'] as num?)?.toInt(),
     );
   }
 
@@ -38,6 +41,9 @@ class JobApplicationModel {
       'coverLetterPath': application.coverLetterPath,
       'coverLetterFileName': application.coverLetterFileName,
       'sortOrder': application.sortOrder,
+      'categoryId': application.categoryId,
+      'categoryName': application.categoryName,
+      'categoryColor': application.categoryColor,
     };
   }
 

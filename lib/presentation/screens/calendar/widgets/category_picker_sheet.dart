@@ -16,6 +16,7 @@ Future<EventCategory?> showCategoryPickerSheet(
   BuildContext context, {
   String? selectedId,
   bool startModifying = false,
+  CategoryKind kind = CategoryKind.event,
 }) {
   return showModalBottomSheet<EventCategory>(
     context: context,
@@ -32,6 +33,7 @@ Future<EventCategory?> showCategoryPickerSheet(
     builder: (context) => CategoryPickerSheet(
       selectedId: selectedId,
       startModifying: startModifying,
+      kind: kind,
     ),
   );
 }
@@ -41,10 +43,12 @@ class CategoryPickerSheet extends StatefulWidget {
     super.key,
     this.selectedId,
     this.startModifying = false,
+    this.kind = CategoryKind.event,
   });
 
   final String? selectedId;
   final bool startModifying;
+  final CategoryKind kind;
 
   @override
   State<CategoryPickerSheet> createState() => _CategoryPickerSheetState();
@@ -96,7 +100,7 @@ class _CategoryPickerSheetState extends State<CategoryPickerSheet>
 
   Future<void> _reload() async {
     try {
-      final categories = await AppScope.of(context).getEventCategories();
+      final categories = await AppScope.of(context).fetchCategories(widget.kind);
       if (!mounted) return;
       if (_loading) {
         setState(() {
@@ -193,7 +197,11 @@ class _CategoryPickerSheetState extends State<CategoryPickerSheet>
   }
 
   Future<void> _editCategory(EventCategory category) async {
-    final saved = await showAddCategorySheet(context, initial: category);
+    final saved = await showAddCategorySheet(
+      context,
+      initial: category,
+      kind: widget.kind,
+    );
     if (saved && mounted) await _reload();
   }
 
@@ -217,7 +225,7 @@ class _CategoryPickerSheetState extends State<CategoryPickerSheet>
   }
 
   Future<void> _add() async {
-    final created = await showAddCategorySheet(context);
+    final created = await showAddCategorySheet(context, kind: widget.kind);
     if (created && mounted) await _reload();
   }
 
@@ -229,7 +237,7 @@ class _CategoryPickerSheetState extends State<CategoryPickerSheet>
       message: AppStrings.deleteSelectedCategoriesBody,
     );
     if (!confirmed || !mounted) return;
-    await AppScope.of(context).deleteEventCategory(_marked);
+    await AppScope.of(context).removeCategories(widget.kind, _marked);
     if (!mounted) return;
     await _reload();
     if (_categories.isEmpty) {
@@ -301,7 +309,7 @@ class _CategoryPickerSheetState extends State<CategoryPickerSheet>
       if (mounted) _restoreOrderBeforeDrag();
       return;
     }
-    await AppScope.of(context).deleteEventCategory({id});
+    await AppScope.of(context).removeCategories(widget.kind, {id});
     _orderBeforeDrag = null;
     if (!mounted) return;
     await _reload();
@@ -348,7 +356,10 @@ class _CategoryPickerSheetState extends State<CategoryPickerSheet>
 
   Future<void> _persistOrder() async {
     if (!mounted) return;
-    await AppScope.of(context).reorderEventCategories(List.of(_categories));
+    await AppScope.of(context).replaceCategories(
+      widget.kind,
+      List.of(_categories),
+    );
   }
 
   void _restoreOrderBeforeDrag() {
@@ -364,7 +375,7 @@ class _CategoryPickerSheetState extends State<CategoryPickerSheet>
     final colors = AppColors.of(context);
 
     return PopScope(
-      canPop: !_editing,
+      canPop: !_editing || widget.startModifying,
       onPopInvokedWithResult: (didPop, result) {
         if (didPop) return;
         if (_editing) _exitEdit();
@@ -392,42 +403,37 @@ class _CategoryPickerSheetState extends State<CategoryPickerSheet>
                   height: 40,
                   child: Row(
                     children: [
-                      _headerButton(
-                        label: _editing
-                            ? AppStrings.delete
-                            : AppStrings.edit,
-                        color: _editing ? colors.danger : colors.accent,
-                        pressedColor: _editing
-                            ? colors.tint(colors.danger, 0.22)
-                            : colors.rangeFill,
+                      _headerAction(
+                        editing: _editing,
+                        idleLabel: AppStrings.edit,
+                        editLabel: AppStrings.delete,
+                        idleColor: colors.accent,
+                        editColor: colors.danger,
+                        idlePressed: colors.rangeFill,
+                        editPressed: colors.tint(colors.danger, 0.22),
                         onPressed: _editing ? _deleteMarked : _toggleEdit,
                       ),
                       Expanded(
                         child: Center(
-                          child: _editing
-                              ? _headerButton(
-                                  label: AppStrings.done,
-                                  color: colors.text,
-                                  pressedColor: colors.pressed,
-                                  onPressed: _exitEdit,
-                                )
-                              : Text(
-                                  AppStrings.categoryAction,
-                                  style: TextStyle(
-                                    fontFamily: AppFonts.of(context),
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w800,
-                                    color: colors.text,
-                                  ),
-                                ),
+                          child: Text(
+                            AppStrings.categoryAction,
+                            style: TextStyle(
+                              fontFamily: AppFonts.of(context),
+                              fontSize: 18,
+                              fontWeight: FontWeight.w800,
+                              color: colors.text,
+                            ),
+                          ),
                         ),
                       ),
-                      _headerButton(
-                        label: _editing
-                            ? AppStrings.modify
-                            : AppStrings.addCategory,
-                        color: colors.accent,
-                        pressedColor: colors.rangeFill,
+                      _headerAction(
+                        editing: _editing,
+                        idleLabel: AppStrings.addCategory,
+                        editLabel: AppStrings.modify,
+                        idleColor: colors.accent,
+                        editColor: colors.accent,
+                        idlePressed: colors.rangeFill,
+                        editPressed: colors.rangeFill,
                         onPressed: _editing ? _editMarked : _add,
                       ),
                     ],
@@ -464,27 +470,57 @@ class _CategoryPickerSheetState extends State<CategoryPickerSheet>
     );
   }
 
-  Widget _headerButton({
-    required String label,
-    required Color color,
-    required Color pressedColor,
+  Widget _headerAction({
+    required bool editing,
+    required String idleLabel,
+    required String editLabel,
+    required Color idleColor,
+    required Color editColor,
+    required Color idlePressed,
+    required Color editPressed,
     required VoidCallback onPressed,
   }) {
+    final label = editing ? editLabel : idleLabel;
+    final color = editing ? editColor : idleColor;
     return PressBounce(
       onPressed: onPressed,
       pressedScale: 0.96,
       color: Colors.transparent,
-      pressedColor: pressedColor,
+      pressedColor: editing ? editPressed : idlePressed,
       borderRadius: BorderRadius.circular(10),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-        child: Text(
-          label,
+        child: AnimatedDefaultTextStyle(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeOutCubic,
           style: TextStyle(
             fontFamily: AppFonts.of(context),
             fontSize: 16,
             fontWeight: FontWeight.w800,
             color: color,
+          ),
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 240),
+            layoutBuilder: (current, previous) {
+              return Stack(
+                alignment: Alignment.center,
+                children: [
+                  ...previous,
+                  if (current != null) current,
+                ],
+              );
+            },
+            transitionBuilder: (child, animation) {
+              return FadeTransition(
+                opacity: CurvedAnimation(
+                  parent: animation,
+                  curve: const Interval(0.45, 1, curve: Curves.easeOut),
+                  reverseCurve: const Interval(0, 0.4, curve: Curves.easeIn),
+                ),
+                child: child,
+              );
+            },
+            child: Text(label, key: ValueKey(label)),
           ),
         ),
       ),

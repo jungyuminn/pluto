@@ -14,11 +14,14 @@ class JobApplication {
     this.coverLetterPath,
     this.coverLetterFileName,
     this.sortOrder = 0,
+    this.categoryId,
+    this.categoryName = '',
+    this.categoryColor,
   }) : rounds = normalizeRounds(rounds);
 
   static const minRoundCount = 1;
   static const defaultRoundCount = 4;
-  static const maxRoundCount = 10;
+  static const maxRoundCount = 12;
   static const firstRowRoundCount = 5;
 
   final String id;
@@ -32,6 +35,12 @@ class JobApplication {
   final String? coverLetterPath;
   final String? coverLetterFileName;
   final int sortOrder;
+  final String? categoryId;
+  final String categoryName;
+  final int? categoryColor;
+
+  bool get hasCategory =>
+      (categoryId?.isNotEmpty ?? false) && categoryName.trim().isNotEmpty;
 
   bool get isRejected => ApplyStatus.isRejected(applyStatus);
 
@@ -129,6 +138,10 @@ class JobApplication {
     String? coverLetterPath,
     String? coverLetterFileName,
     int? sortOrder,
+    String? categoryId,
+    String? categoryName,
+    int? categoryColor,
+    bool clearCategory = false,
   }) {
     return JobApplication(
       id: id,
@@ -142,6 +155,9 @@ class JobApplication {
       coverLetterPath: coverLetterPath ?? this.coverLetterPath,
       coverLetterFileName: coverLetterFileName ?? this.coverLetterFileName,
       sortOrder: sortOrder ?? this.sortOrder,
+      categoryId: clearCategory ? null : (categoryId ?? this.categoryId),
+      categoryName: clearCategory ? '' : (categoryName ?? this.categoryName),
+      categoryColor: clearCategory ? null : (categoryColor ?? this.categoryColor),
     );
   }
 }

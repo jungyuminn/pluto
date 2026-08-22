@@ -15,7 +15,9 @@ enum AppSkin {
   concertDay,
   boyhood,
   interlude,
-  fluffyCloud;
+  fluffyCloud,
+  catVillage,
+  hamsterBakery;
 
   static AppSkin fromId(
     String? id, {

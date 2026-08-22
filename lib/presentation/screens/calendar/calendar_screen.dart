@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:job_planner/app_scope.dart';
 import 'package:job_planner/core/theme/app_skin_background.dart';
 import 'package:job_planner/domain/entities/calendar_event.dart';
+import 'package:job_planner/domain/entities/diary_entry.dart';
+import 'package:job_planner/domain/entities/event_category.dart';
 import 'package:job_planner/domain/entities/job_application.dart';
 import 'package:job_planner/presentation/screens/calendar/calendar_day_events.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/calendar_month_grid.dart';
@@ -10,6 +12,7 @@ import 'package:job_planner/presentation/screens/calendar/widgets/calendar_time_
 import 'package:job_planner/presentation/screens/calendar/widgets/calendar_weekday_header.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/day_events_dialog.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/add_event_sheet.dart';
+import 'package:job_planner/presentation/screens/calendar/widgets/diary_sheet.dart';
 
 class CalendarScreen extends StatefulWidget {
   const CalendarScreen({super.key, this.visible = true});
@@ -28,11 +31,14 @@ class _CalendarScreenState extends State<CalendarScreen>
   late final PageController _pages;
   late DateTime _visibleMonth;
   var _events = <CalendarEvent>[];
+  var _diaries = <DiaryEntry>[];
   var _applications = <JobApplication>[];
+  var _companyCategories = <EventCategory>[];
   var _initialized = false;
   var _rangeDragging = false;
   var _showTodos = true;
   var _showCompanies = true;
+  var _showDiary = false;
 
   @override
   void initState() {
@@ -125,11 +131,16 @@ class _CalendarScreenState extends State<CalendarScreen>
   Future<void> _reload() async {
     final scope = AppScope.of(context);
     final events = await scope.getCalendarEvents();
+    final diaries = await scope.getDiaries();
     final applications = await scope.getJobApplications();
+    final companyCategories =
+        await scope.fetchCategories(CategoryKind.company);
     if (!mounted) return;
     setState(() {
       _events = events;
+      _diaries = diaries;
       _applications = applications;
+      _companyCategories = companyCategories;
     });
   }
 
@@ -138,6 +149,7 @@ class _CalendarScreenState extends State<CalendarScreen>
       date: date,
       events: _showTodos ? _events : const [],
       applications: _showCompanies ? _applications : const [],
+      companyCategories: _companyCategories,
     );
     if (!AppScope.of(context).dayEventsViewPreference.sortByTime) {
       return events;
@@ -145,7 +157,24 @@ class _CalendarScreenState extends State<CalendarScreen>
     return CalendarEvent.withLockedThenStartTime(events);
   }
 
+  DiaryEntry? _diaryOn(DateTime date) {
+    final day = DateTime(date.year, date.month, date.day);
+    for (final diary in _diaries) {
+      if (diary.day == day) return diary;
+    }
+    return null;
+  }
+
   Future<void> _openDay(DateTime date, Rect origin) async {
+    if (_showDiary) {
+      await showDiarySheet(
+        context,
+        date: date,
+        initial: _diaryOn(date),
+      );
+      if (mounted) await _reload();
+      return;
+    }
     await showDayEventsDialog(
       context,
       date: date,
@@ -196,11 +225,15 @@ class _CalendarScreenState extends State<CalendarScreen>
                         onTitlePressed: _openTimeMachine,
                         showTodos: _showTodos,
                         showCompanies: _showCompanies,
+                        showDiary: _showDiary,
                         onShowTodosChanged: (value) {
                           setState(() => _showTodos = value);
                         },
                         onShowCompaniesChanged: (value) {
                           setState(() => _showCompanies = value);
+                        },
+                        onShowDiaryChanged: (value) {
+                          setState(() => _showDiary = value);
                         },
                         onSortPrefsChanged: () => setState(() {}),
                       ),
@@ -219,11 +252,15 @@ class _CalendarScreenState extends State<CalendarScreen>
                               month: _monthAt(page),
                               startMonday: startMonday,
                               eventsOf: _eventsOn,
+                              diaryOf: _diaryOn,
+                              showDiary: _showDiary,
                               onDayPressed: _openDay,
-                              onRangeDragChanged: (dragging) {
-                                setState(() => _rangeDragging = dragging);
-                              },
-                              onRangeSelected: _openRange,
+                              onRangeDragChanged: _showDiary
+                                  ? null
+                                  : (dragging) {
+                                      setState(() => _rangeDragging = dragging);
+                                    },
+                              onRangeSelected: _showDiary ? null : _openRange,
                             );
                           },
                         ),

@@ -12,6 +12,7 @@ import 'package:job_planner/presentation/screens/add_company/widgets/save_compan
 Future<bool> showAddCategorySheet(
   BuildContext context, {
   EventCategory? initial,
+  CategoryKind kind = CategoryKind.event,
 }) async {
   final saved = await showModalBottomSheet<bool>(
     context: context,
@@ -24,15 +25,20 @@ Future<bool> showAddCategorySheet(
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
     ),
-    builder: (context) => AddCategorySheet(initial: initial),
+    builder: (context) => AddCategorySheet(initial: initial, kind: kind),
   );
   return saved == true;
 }
 
 class AddCategorySheet extends StatefulWidget {
-  const AddCategorySheet({super.key, this.initial});
+  const AddCategorySheet({
+    super.key,
+    this.initial,
+    this.kind = CategoryKind.event,
+  });
 
   final EventCategory? initial;
+  final CategoryKind kind;
 
   @override
   State<AddCategorySheet> createState() => _AddCategorySheetState();
@@ -71,7 +77,7 @@ class _AddCategorySheetState extends State<AddCategorySheet> {
   }
 
   Future<void> _loadUsedColors() async {
-    final categories = await AppScope.of(context).getEventCategories();
+    final categories = await AppScope.of(context).fetchCategories(widget.kind);
     if (!mounted) return;
     final editingId = widget.initial?.id;
     setState(() {
@@ -109,23 +115,36 @@ class _AddCategorySheetState extends State<AddCategorySheet> {
     );
     final scope = AppScope.of(context);
     if (initial == null) {
-      await scope.addEventCategory(category);
+      await scope.addCategory(widget.kind, category);
     } else {
-      await scope.updateEventCategory(category);
-      final events = await scope.getCalendarEvents();
-      for (final event in events) {
-        if (event.categoryId != category.id) continue;
-        await scope.updateCalendarEvent.instance(
-          event.copyWith(
-            categoryName: category.name,
-            categoryColor: category.color,
-          ),
-        );
-      }
-      final store = scope.longGoalStore;
-      for (final goal in store.goals) {
-        if (goal.categoryId != category.id) continue;
-        await store.upsertGoal(goal.copyWith(color: category.color));
+      await scope.saveCategory(widget.kind, category);
+      if (widget.kind == CategoryKind.event) {
+        final events = await scope.getCalendarEvents();
+        for (final event in events) {
+          if (event.categoryId != category.id) continue;
+          await scope.updateCalendarEvent.instance(
+            event.copyWith(
+              categoryName: category.name,
+              categoryColor: category.color,
+            ),
+          );
+        }
+        final store = scope.longGoalStore;
+        for (final goal in store.goals) {
+          if (goal.categoryId != category.id) continue;
+          await store.upsertGoal(goal.copyWith(color: category.color));
+        }
+      } else {
+        final jobs = await scope.getJobApplications();
+        for (final job in jobs) {
+          if (job.categoryId != category.id) continue;
+          await scope.updateJobApplication(
+            job.copyWith(
+              categoryName: category.name,
+              categoryColor: category.color,
+            ),
+          );
+        }
       }
     }
     if (!mounted) return;

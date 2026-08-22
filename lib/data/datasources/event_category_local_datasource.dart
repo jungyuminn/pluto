@@ -7,22 +7,32 @@ import 'package:job_planner/domain/entities/event_category.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class EventCategoryLocalDataSource {
-  EventCategoryLocalDataSource(this._prefs);
+  EventCategoryLocalDataSource(
+    this._prefs, {
+    String key = eventKey,
+    List<EventCategory>? presets,
+    this.syncHomeWidget = true,
+  })  : _key = key,
+        _presets = List.unmodifiable(presets ?? EventCategory.presets);
 
-  static const _key = 'event_categories';
+  static const eventKey = 'event_categories';
+  static const companyKey = 'company_categories';
 
   final SharedPreferences _prefs;
+  final String _key;
+  final List<EventCategory> _presets;
+  final bool syncHomeWidget;
 
   List<EventCategory> fetchAll() {
     final raw = _prefs.getString(_key);
-    if (raw == null || raw.isEmpty) return List.of(EventCategory.presets);
+    if (raw == null || raw.isEmpty) return List.of(_presets);
 
     final decoded = jsonDecode(raw) as List<dynamic>;
     final items = decoded
         .map((item) => EventCategoryModel.fromJson(item as Map<String, dynamic>))
         .toList();
     if (items.length == 1 && items.first.id == EventCategory.defaultId) {
-      return List.of(EventCategory.presets);
+      return List.of(_presets);
     }
     return items;
   }
@@ -32,6 +42,6 @@ class EventCategoryLocalDataSource {
       categories.map(EventCategoryModel.toJson).toList(),
     );
     await _prefs.setString(_key, payload);
-    unawaited(HomeScreenWidgetService.instance.sync());
+    if (syncHomeWidget) unawaited(HomeScreenWidgetService.instance.sync());
   }
 }

@@ -13,8 +13,10 @@ class CalendarMonthHeader extends StatelessWidget {
     this.onTitlePressed,
     this.showTodos = true,
     this.showCompanies = true,
+    this.showDiary = false,
     this.onShowTodosChanged,
     this.onShowCompaniesChanged,
+    this.onShowDiaryChanged,
     this.onSortPrefsChanged,
   });
 
@@ -22,8 +24,10 @@ class CalendarMonthHeader extends StatelessWidget {
   final VoidCallback? onTitlePressed;
   final bool showTodos;
   final bool showCompanies;
+  final bool showDiary;
   final ValueChanged<bool>? onShowTodosChanged;
   final ValueChanged<bool>? onShowCompaniesChanged;
+  final ValueChanged<bool>? onShowDiaryChanged;
   final VoidCallback? onSortPrefsChanged;
 
   String get _title {
@@ -60,8 +64,10 @@ class CalendarMonthHeader extends StatelessWidget {
           CalendarMonthMenuButton(
             showTodos: showTodos,
             showCompanies: showCompanies,
+            showDiary: showDiary,
             onShowTodosChanged: onShowTodosChanged,
             onShowCompaniesChanged: onShowCompaniesChanged,
+            onShowDiaryChanged: onShowDiaryChanged,
             onSortPrefsChanged: onSortPrefsChanged,
           ),
         ],
@@ -77,15 +83,19 @@ class CalendarMonthMenuButton extends StatefulWidget {
     super.key,
     required this.showTodos,
     required this.showCompanies,
+    required this.showDiary,
     this.onShowTodosChanged,
     this.onShowCompaniesChanged,
+    this.onShowDiaryChanged,
     this.onSortPrefsChanged,
   });
 
   final bool showTodos;
   final bool showCompanies;
+  final bool showDiary;
   final ValueChanged<bool>? onShowTodosChanged;
   final ValueChanged<bool>? onShowCompaniesChanged;
+  final ValueChanged<bool>? onShowDiaryChanged;
   final VoidCallback? onSortPrefsChanged;
 
   @override
@@ -191,6 +201,10 @@ class _CalendarMonthMenuButtonState extends State<CalendarMonthMenuButton>
           onVisibleItems: () => setState(() => _page = _MenuPage.filter),
           onSortMode: () => setState(() => _page = _MenuPage.sort),
           onEditCategories: _openCategories,
+          showDiary: widget.showDiary,
+          onShowDiaryChanged: (value) {
+            widget.onShowDiaryChanged?.call(value);
+          },
         ),
     };
   }

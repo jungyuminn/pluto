@@ -24,6 +24,7 @@ class RoundNameField extends StatelessWidget {
       style: Theme.of(context).textTheme.headlineSmall?.copyWith(
         fontFamily: AppFonts.of(context),
         fontWeight: FontWeight.w700,
+        fontSize: 20,
       ),
       decoration: InputDecoration(
         hintText: AppStrings.roundStageNameHint,
@@ -31,6 +32,7 @@ class RoundNameField extends StatelessWidget {
           fontFamily: AppFonts.of(context),
           color: colors.hint,
           fontWeight: FontWeight.w600,
+          fontSize: 20,
         ),
         border: InputBorder.none,
         enabledBorder: InputBorder.none,

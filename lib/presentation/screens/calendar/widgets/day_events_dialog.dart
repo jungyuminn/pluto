@@ -293,6 +293,8 @@ class _DayEventsDialogState extends State<DayEventsDialog> {
     final scope = AppScope.of(context);
     final events = await scope.getCalendarEvents();
     final applications = await scope.getJobApplications();
+    final companyCategories =
+        await scope.fetchCategories(CategoryKind.company);
     if (!mounted) return;
     _events
       ..clear()
@@ -301,6 +303,7 @@ class _DayEventsDialogState extends State<DayEventsDialog> {
           date: widget.date,
           events: events,
           applications: applications,
+          companyCategories: companyCategories,
         ),
       );
     _syncItems(_itemsForView, animate: animate);

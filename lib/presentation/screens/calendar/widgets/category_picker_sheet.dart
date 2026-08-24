@@ -410,12 +410,12 @@ class _CategoryPickerSheetState extends State<CategoryPickerSheet>
                       _headerAction(
                         editing: _editing,
                         idleLabel: AppStrings.edit,
-                        editLabel: AppStrings.delete,
+                        editLabel: AppStrings.modify,
                         idleColor: colors.accent,
-                        editColor: colors.danger,
+                        editColor: colors.accent,
                         idlePressed: colors.rangeFill,
-                        editPressed: colors.tint(colors.danger, 0.22),
-                        onPressed: _editing ? _deleteMarked : _toggleEdit,
+                        editPressed: colors.rangeFill,
+                        onPressed: _editing ? _editMarked : _toggleEdit,
                       ),
                       Expanded(
                         child: Center(
@@ -433,12 +433,12 @@ class _CategoryPickerSheetState extends State<CategoryPickerSheet>
                       _headerAction(
                         editing: _editing,
                         idleLabel: AppStrings.addCategory,
-                        editLabel: AppStrings.modify,
+                        editLabel: AppStrings.delete,
                         idleColor: colors.accent,
-                        editColor: colors.accent,
+                        editColor: colors.danger,
                         idlePressed: colors.rangeFill,
-                        editPressed: colors.rangeFill,
-                        onPressed: _editing ? _editMarked : _add,
+                        editPressed: colors.tint(colors.danger, 0.22),
+                        onPressed: _editing ? _deleteMarked : _add,
                       ),
                     ],
                   ),

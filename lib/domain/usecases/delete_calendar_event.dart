@@ -25,4 +25,8 @@ class DeleteCalendarEvent {
   Future<void> allRepeats(String repeatId) {
     return _repository.deleteRepeat(repeatId);
   }
+
+  Future<void> many(Iterable<String> ids) {
+    return _repository.deleteMany(ids);
+  }
 }

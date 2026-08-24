@@ -37,6 +37,8 @@ class HomeLongGoalCard extends StatefulWidget {
 class _HomeLongGoalCardState extends State<HomeLongGoalCard> {
   final _listBoxKey = GlobalKey();
   late var _goals = List.of(widget.goals);
+  final _reveals = <String, double>{};
+  final _liveIds = <String>{};
   String? _draggingId;
 
   static const _slotAnim = Duration(milliseconds: 240);
@@ -47,7 +49,73 @@ class _HomeLongGoalCardState extends State<HomeLongGoalCard> {
   void didUpdateWidget(HomeLongGoalCard oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (_draggingId != null) return;
-    _goals = List.of(widget.goals);
+    _syncGoals(List.of(widget.goals));
+  }
+
+  void _syncGoals(List<LongGoal> next) {
+    final prev = _goals;
+    final prevById = {for (final goal in prev) goal.id: goal};
+    final nextIds = {for (final goal in next) goal.id};
+    _liveIds
+      ..clear()
+      ..addAll(nextIds);
+
+    final outgoingIndex = {
+      for (var i = 0; i < prev.length; i++)
+        if (!nextIds.contains(prev[i].id)) prev[i].id: i,
+    };
+
+    final merged = [...next];
+    final inserted = outgoingIndex.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+    for (final entry in inserted) {
+      final goal = prevById[entry.key];
+      if (goal == null) continue;
+      merged.insert(entry.value.clamp(0, merged.length), goal);
+      _reveals[goal.id] = 0;
+    }
+
+    final appearing = <String>[];
+    for (final goal in next) {
+      if (prevById.containsKey(goal.id)) {
+        _reveals[goal.id] = 1;
+        continue;
+      }
+      _reveals[goal.id] = 0;
+      appearing.add(goal.id);
+    }
+
+    _goals = merged;
+    setState(() {});
+
+    if (appearing.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        var changed = false;
+        for (final id in appearing) {
+          if (!_liveIds.contains(id)) continue;
+          if (_reveals[id] == 1) continue;
+          _reveals[id] = 1;
+          changed = true;
+        }
+        if (changed) setState(() {});
+      });
+    }
+
+    if (outgoingIndex.isEmpty) return;
+    Future<void>.delayed(_slotAnim, () {
+      if (!mounted) return;
+      final before = _goals.length;
+      _goals.removeWhere((goal) {
+        return !_liveIds.contains(goal.id) && (_reveals[goal.id] ?? 1) == 0;
+      });
+      if (_goals.length == before) return;
+      setState(() {});
+    });
+  }
+
+  double _layoutExtent(LongGoal goal) {
+    return _extent * (_reveals[goal.id] ?? 1);
   }
 
   Future<void> _add() async {
@@ -67,9 +135,7 @@ class _HomeLongGoalCardState extends State<HomeLongGoalCard> {
 
   void _syncFromStore() {
     if (!mounted) return;
-    setState(() {
-      _goals = List.of(AppScope.of(context).longGoalStore.goals);
-    });
+    _syncGoals(List.of(AppScope.of(context).longGoalStore.goals));
   }
 
   Future<bool> _delete(LongGoal goal) async {
@@ -179,10 +245,8 @@ class _HomeLongGoalCardState extends State<HomeLongGoalCard> {
                   color: colors.text,
                 ),
               ),
-              if (_goals.isNotEmpty) ...[
-                const SizedBox(height: 16),
-                _buildList(),
-              ],
+              const SizedBox(height: 16),
+              _buildList(),
               AddEventButton(
                 onPressed: _add,
                 label: AppStrings.longGoalAdd,
@@ -195,7 +259,12 @@ class _HomeLongGoalCardState extends State<HomeLongGoalCard> {
   }
 
   Widget _buildList() {
-    final height = _goals.length * _extent;
+    var height = 0.0;
+    final tops = <double>[];
+    for (final goal in _goals) {
+      tops.add(height);
+      height += _layoutExtent(goal);
+    }
     return AnimatedContainer(
       key: _listBoxKey,
       duration: _slotAnim,
@@ -209,11 +278,21 @@ class _HomeLongGoalCardState extends State<HomeLongGoalCard> {
               key: ValueKey(_goals[i].id),
               duration: _slotAnim,
               curve: Curves.easeOutCubic,
-              top: i * _extent,
+              top: tops[i],
               left: 0,
               right: 0,
-              height: _extent,
-              child: _tile(_goals[i]),
+              height: _layoutExtent(_goals[i]),
+              child: ClipRect(
+                child: AnimatedOpacity(
+                  duration: _slotAnim,
+                  curve: Curves.easeOutCubic,
+                  opacity: _reveals[_goals[i].id] ?? 1,
+                  child: IgnorePointer(
+                    ignoring: (_reveals[_goals[i].id] ?? 1) < 1,
+                    child: _tile(_goals[i]),
+                  ),
+                ),
+              ),
             ),
         ],
       ),

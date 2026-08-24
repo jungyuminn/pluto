@@ -9,14 +9,12 @@ import 'package:job_planner/core/theme/app_colors.dart';
 import 'package:job_planner/core/utils/press_bounce.dart';
 import 'package:job_planner/presentation/screens/add_company/widgets/save_company_button.dart';
 import 'package:job_planner/presentation/widgets/app_calendar/app_calendar_repeat_panel.dart';
+import 'package:job_planner/presentation/widgets/app_calendar/calendar_zoom_picker.dart';
 
 enum AppCalendarMode { single, range, repeat, multiple }
 
 class AppCalendarResult {
-  const AppCalendarResult({
-    required this.mode,
-    required this.dates,
-  });
+  const AppCalendarResult({required this.mode, required this.dates});
 
   final AppCalendarMode mode;
   final List<DateTime> dates;
@@ -90,6 +88,7 @@ class _AppCalendarSheetState extends State<AppCalendarSheet> {
   late DateTime _repeatStart;
   DateTime? _repeatEnd;
   late Set<int> _weekdays;
+  var _zoom = CalendarZoomLevel.days;
 
   @override
   void initState() {
@@ -104,7 +103,7 @@ class _AppCalendarSheetState extends State<AppCalendarSheet> {
     _baseMonth = DateTime(seed.year, seed.month);
     _visibleMonth = _baseMonth;
     _pages = PageController(initialPage: _initialPage);
-    _mode = widget.showModes ? widget.initialMode : AppCalendarMode.single;
+    _mode = widget.initialMode;
     final given = (widget.initialDates ?? const <DateTime>[])
         .map(_dateOnly)
         .toList();
@@ -185,7 +184,47 @@ class _AppCalendarSheetState extends State<AppCalendarSheet> {
         _rangeEnd = null;
         _selected = [keep];
       }
+      _zoom = CalendarZoomLevel.days;
     });
+  }
+
+  void _onTitlePressed() {
+    if (_zoom == CalendarZoomLevel.years) return;
+    setState(() => _zoom = CalendarZoom.next(_zoom));
+  }
+
+  void _showMonth(DateTime month) {
+    setState(() => _zoom = CalendarZoomLevel.days);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_pages.hasClients) return;
+      final target = DateTime(month.year, month.month);
+      final delta =
+          (target.year - _baseMonth.year) * 12 +
+          (target.month - _baseMonth.month);
+      _pages.jumpToPage(_initialPage + delta);
+      setState(() => _visibleMonth = target);
+    });
+  }
+
+  void _showYearMonths(int year) {
+    setState(() {
+      _visibleMonth = DateTime(year, _visibleMonth.month);
+      _zoom = CalendarZoomLevel.months;
+    });
+  }
+
+  Widget _zoomTitle(BuildContext context) {
+    final canZoom = _zoom != CalendarZoomLevel.years;
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Padding(
+        padding: const EdgeInsets.only(left: 8),
+        child: CalendarZoomTitle(
+          text: CalendarZoom.title(_zoom, _visibleMonth),
+          onPressed: canZoom ? _onTitlePressed : null,
+        ),
+      ),
+    );
   }
 
   Future<void> _pickRepeatStart() async {
@@ -304,12 +343,11 @@ class _AppCalendarSheetState extends State<AppCalendarSheet> {
     final dates = switch (_mode) {
       AppCalendarMode.range => [_rangeStart!, _rangeEnd!],
       AppCalendarMode.repeat => _repeatDates,
-      AppCalendarMode.single || AppCalendarMode.multiple =>
-        List<DateTime>.from(_selected)..sort((a, b) => a.compareTo(b)),
+      AppCalendarMode.single || AppCalendarMode.multiple => List<DateTime>.from(
+        _selected,
+      )..sort((a, b) => a.compareTo(b)),
     };
-    Navigator.of(context).pop(
-      AppCalendarResult(mode: _mode, dates: dates),
-    );
+    Navigator.of(context).pop(AppCalendarResult(mode: _mode, dates: dates));
   }
 
   @override
@@ -357,9 +395,9 @@ class _AppCalendarSheetState extends State<AppCalendarSheet> {
                               weekdays: _weekdays,
                               start: _repeatStart,
                               end: _repeatEnd,
-                              startMonday: AppScope.of(context)
-                                  .calendarPreference
-                                  .startMonday,
+                              startMonday: AppScope.of(
+                                context,
+                              ).calendarPreference.startMonday,
                               onKindChanged: _setRepeatKind,
                               onWeekdayPressed: _toggleWeekday,
                               onStartPressed: _pickRepeatStart,
@@ -373,54 +411,72 @@ class _AppCalendarSheetState extends State<AppCalendarSheet> {
                       : Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                          Align(
-                            alignment: Alignment.centerLeft,
-                            child: Padding(
-                              padding: const EdgeInsets.only(left: 8),
-                              child: Text(
-                                '${_visibleMonth.year}${AppStrings.yearSuffix} ${_visibleMonth.month}${AppStrings.monthSuffix}',
-                                style: TextStyle(
-                                  fontFamily: AppFonts.of(context),
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.w800,
-                                  height: 1.1,
-                                  color: AppColors.of(context).text,
-                                ),
+                            _zoomTitle(context),
+                            const SizedBox(height: 14),
+                            SizedBox(
+                              height: 314,
+                              child: CalendarZoomTransition(
+                                level: _zoom,
+                                child: switch (_zoom) {
+                                  CalendarZoomLevel.days => Column(
+                                    children: [
+                                      _WeekdayRow(
+                                        startMonday: AppScope.of(
+                                          context,
+                                        ).calendarPreference.startMonday,
+                                      ),
+                                      const SizedBox(height: 6),
+                                      Expanded(
+                                        child: PageView.builder(
+                                          controller: _pages,
+                                          onPageChanged: (page) {
+                                            setState(
+                                              () => _visibleMonth = _monthAt(
+                                                page,
+                                              ),
+                                            );
+                                          },
+                                          itemBuilder: (context, page) {
+                                            return _MonthGridView(
+                                              month: _monthAt(page),
+                                              accent: _accent,
+                                              startMonday: AppScope.of(
+                                                context,
+                                              ).calendarPreference.startMonday,
+                                              isSelected: _isSelected,
+                                              isInRange: _isInRange,
+                                              isRangeStart: _isRangeStart,
+                                              isRangeEnd: _isRangeEnd,
+                                              onDayPressed: _onDayPressed,
+                                            );
+                                          },
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  CalendarZoomLevel.months =>
+                                    CalendarMonthZoomView(
+                                      focused: _visibleMonth,
+                                      accent: _accent,
+                                      onFocusedChanged: (month) {
+                                        setState(() => _visibleMonth = month);
+                                      },
+                                      onMonthPressed: _showMonth,
+                                    ),
+                                  CalendarZoomLevel.years =>
+                                    CalendarYearZoomView(
+                                      focused: _visibleMonth,
+                                      accent: _accent,
+                                      onFocusedChanged: (month) {
+                                        setState(() => _visibleMonth = month);
+                                      },
+                                      onYearPressed: _showYearMonths,
+                                    ),
+                                },
                               ),
                             ),
-                          ),
-                          const SizedBox(height: 14),
-                          _WeekdayRow(
-                            startMonday: AppScope.of(context)
-                                .calendarPreference
-                                .startMonday,
-                          ),
-                          const SizedBox(height: 6),
-                          SizedBox(
-                            height: 288,
-                            child: PageView.builder(
-                              controller: _pages,
-                              onPageChanged: (page) {
-                                setState(() => _visibleMonth = _monthAt(page));
-                              },
-                              itemBuilder: (context, page) {
-                                return _MonthGridView(
-                                  month: _monthAt(page),
-                                  accent: _accent,
-                                  startMonday: AppScope.of(context)
-                                      .calendarPreference
-                                      .startMonday,
-                                  isSelected: _isSelected,
-                                  isInRange: _isInRange,
-                                  isRangeStart: _isRangeStart,
-                                  isRangeEnd: _isRangeEnd,
-                                  onDayPressed: _onDayPressed,
-                                );
-                              },
-                            ),
-                          ),
-                        ],
-                      ),
+                          ],
+                        ),
                 ),
               ),
             ],
@@ -476,20 +532,13 @@ class _HeaderBar extends StatelessWidget {
               clipBehavior: Clip.none,
               children: [
                 ColorFiltered(
-                  colorFilter: ColorFilter.mode(
-                    danger,
-                    BlendMode.srcIn,
-                  ),
+                  colorFilter: ColorFilter.mode(danger, BlendMode.srcIn),
                   child: Image.asset(AppIcons.calendar, width: 22, height: 22),
                 ),
                 Positioned(
                   right: -3,
                   bottom: -3,
-                  child: Icon(
-                    Icons.close,
-                    size: 13,
-                    color: danger,
-                  ),
+                  child: Icon(Icons.close, size: 13, color: danger),
                 ),
               ],
             ),
@@ -533,11 +582,7 @@ class _CircleButton extends StatelessWidget {
         color: colors.card,
         pressedColor: colors.pressed,
         borderRadius: BorderRadius.circular(999),
-        child: SizedBox(
-          width: 44,
-          height: 44,
-          child: Center(child: child),
-        ),
+        child: SizedBox(width: 44, height: 44, child: Center(child: child)),
       ),
     );
   }
@@ -751,8 +796,7 @@ class _DayCell extends StatelessWidget {
       circleColor = Colors.transparent;
       foreground = accent;
     } else if (day.isToday) {
-      circleColor =
-          colors.isDark ? colors.pressed : const Color(0xFFD7DDE6);
+      circleColor = colors.isDark ? colors.pressed : const Color(0xFFD7DDE6);
       foreground = colors.text;
     } else {
       circleColor = Colors.transparent;
@@ -776,59 +820,59 @@ class _DayCell extends StatelessWidget {
     final leftCap = inRange && weekday == 0;
     final rightCap = inRange && weekday == 6;
 
-    return PressBounce(
-      onPressed: () => onPressed(day.date),
-      color: Colors.transparent,
-      pressedColor: Colors.transparent,
-      pressedScale: showBar ? 1 : 0.94,
-      child: SizedBox.expand(
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            if (showBar)
-              Align(
-                alignment: barAlignment,
-                child: FractionallySizedBox(
-                  widthFactor: barWidthFactor,
-                  child: Container(
-                    height: _size,
-                    decoration: BoxDecoration(
-                      color: barFill,
-                      borderRadius: BorderRadius.horizontal(
-                        left: leftCap
-                            ? const Radius.circular(_size / 2)
-                            : Radius.zero,
-                        right: rightCap
-                            ? const Radius.circular(_size / 2)
-                            : Radius.zero,
-                      ),
+    return SizedBox.expand(
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          if (showBar)
+            Align(
+              alignment: barAlignment,
+              child: FractionallySizedBox(
+                widthFactor: barWidthFactor,
+                child: Container(
+                  height: _size,
+                  decoration: BoxDecoration(
+                    color: barFill,
+                    borderRadius: BorderRadius.horizontal(
+                      left: leftCap
+                          ? const Radius.circular(_size / 2)
+                          : Radius.zero,
+                      right: rightCap
+                          ? const Radius.circular(_size / 2)
+                          : Radius.zero,
                     ),
                   ),
                 ),
               ),
-            Center(
-              child: Container(
-                width: _size,
-                height: _size,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: circleColor,
-                ),
-                child: Text(
-                  '${day.date.day}',
-                  style: TextStyle(
-                    fontFamily: AppFonts.of(context),
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    height: 1,
-                    color: foreground,
-                  ),
+            ),
+          PressBounce(
+            onPressed: () => onPressed(day.date),
+            color: Colors.transparent,
+            pressedColor: Colors.transparent,
+            pressedScale: 0.94,
+            expand: true,
+            alignment: Alignment.center,
+            child: Container(
+              width: _size,
+              height: _size,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: circleColor,
+              ),
+              child: Text(
+                '${day.date.day}',
+                style: TextStyle(
+                  fontFamily: AppFonts.of(context),
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  height: 1,
+                  color: foreground,
                 ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

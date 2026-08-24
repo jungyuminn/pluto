@@ -17,6 +17,7 @@ import 'package:job_planner/presentation/screens/add_company/widgets/missing_fie
 import 'package:job_planner/presentation/screens/job/widgets/company_list.dart';
 import 'package:job_planner/presentation/screens/job/widgets/delete_company_dialog.dart';
 import 'package:job_planner/presentation/widgets/app_bar_icon_group.dart';
+import 'package:job_planner/presentation/tutorial/tutorial_anchor.dart';
 import 'package:job_planner/presentation/widgets/themed_asset.dart';
 
 class JobScreen extends StatefulWidget {
@@ -215,7 +216,9 @@ class _JobScreenState extends State<JobScreen>
           Padding(
             padding: const EdgeInsets.only(right: 12),
             child: Center(
-              child: AppBarIconGroup(
+              child: TutorialAnchor(
+                id: TutorialAnchorId.jobTools,
+                child: AppBarIconGroup(
                 actions: [
                   AppBarIconAction(
                     asset: AppIcons.search,
@@ -241,6 +244,7 @@ class _JobScreenState extends State<JobScreen>
                     onPressed: _toggleDateSort,
                   ),
                 ],
+                ),
               ),
             ),
           ),

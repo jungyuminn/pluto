@@ -7,4 +7,6 @@ class AddCalendarEvent {
   final CalendarEventRepository _repository;
 
   Future<void> call(CalendarEvent event) => _repository.add(event);
+
+  Future<void> many(List<CalendarEvent> events) => _repository.addAll(events);
 }

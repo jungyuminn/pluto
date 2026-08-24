@@ -13,7 +13,7 @@ class SlidingNavIndicator extends StatelessWidget {
 
   static const width = 60.0;
   static const height = 40.0;
-  static const duration = Duration(milliseconds: 30);
+  static const duration = Duration(milliseconds: 280);
 
   @override
   Widget build(BuildContext context) {

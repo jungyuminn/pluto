@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:job_planner/app_scope.dart';
@@ -15,13 +16,18 @@ import 'package:job_planner/core/notifications/todo_reminder_service.dart';
 import 'package:job_planner/core/utils/press_bounce.dart';
 import 'package:job_planner/data/datasources/app_backup_service.dart';
 import 'package:job_planner/data/datasources/backup_preference.dart';
+import 'package:job_planner/data/datasources/device_calendar_import.dart';
+import 'package:job_planner/data/datasources/device_calendar_mapper.dart';
 import 'package:job_planner/data/datasources/font_preference.dart';
 import 'package:job_planner/data/datasources/notification_preference.dart';
 import 'package:job_planner/data/datasources/theme_preference.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/calendar_event_label.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/day_event_label.dart';
 import 'package:job_planner/presentation/screens/settings/widgets/backup_dialogs.dart';
+import 'package:job_planner/presentation/screens/settings/widgets/calendar_import_dialogs.dart';
+import 'package:job_planner/presentation/screens/settings/widgets/calendar_import_wizard.dart';
 import 'package:job_planner/presentation/screens/settings/widgets/settings_section_help.dart';
+import 'package:job_planner/presentation/tutorial/tutorial_controller.dart';
 import 'package:job_planner/presentation/widgets/themed_asset.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -37,6 +43,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   var _todoReminderLead = TodoReminderLead.off;
   var _summaryEnabled = true;
   var _summaryHour = NotificationPreference.defaultSummaryMinutes;
+  var _leftoverEnabled = true;
+  var _leftoverMinutes = NotificationPreference.defaultLeftoverMinutes;
   var _showLeftover = true;
   var _showToday = true;
   var _showTomorrow = true;
@@ -66,6 +74,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _todoReminderLead = scope.notificationPreference.todoReminderLead;
     _summaryEnabled = scope.notificationPreference.summaryEnabled;
     _summaryHour = scope.notificationPreference.summaryMinutes;
+    _leftoverEnabled = scope.notificationPreference.leftoverEnabled;
+    _leftoverMinutes = scope.notificationPreference.leftoverMinutes;
     _showLeftover = scope.homeViewPreference.showLeftover;
     _showToday = scope.homeViewPreference.showToday;
     _showTomorrow = scope.homeViewPreference.showTomorrow;
@@ -115,6 +125,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     try {
       final saved = await AppBackupService.backup();
       if (!mounted || !saved) return;
+      await AppScope.of(context).backupPreference.markBackedUp();
+      if (!mounted) return;
       await showBackupMessageDialog(
         context,
         title: AppStrings.backupSavedTitle,
@@ -131,11 +143,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _restore() async {
-    final confirmed = await showRestoreConfirmDialog(context);
-    if (!confirmed || !mounted) return;
+    final files = await AppBackupService.listLocalBackups();
+    if (!mounted) return;
     try {
-      final picked = await AppBackupService.restoreFromPicker();
-      if (!picked || !mounted) return;
+      if (files.isEmpty) {
+        final confirmed = await showRestoreConfirmDialog(context);
+        if (!confirmed || !mounted) return;
+        final picked = await AppBackupService.restoreFromPicker();
+        if (!picked || !mounted) return;
+      } else {
+        final choice = await showRestoreSourceDialog(context, files);
+        if (choice == null || !mounted) return;
+        if (choice.pickOther) {
+          final picked = await AppBackupService.restoreFromPicker();
+          if (!picked || !mounted) return;
+        } else {
+          await AppBackupService.restoreFromFile(choice.file!);
+        }
+      }
+      if (!mounted) return;
       await AppBackupService.applyToApp(AppScope.of(context));
       if (!mounted) return;
       _syncFromScope();
@@ -150,6 +176,118 @@ class _SettingsScreenState extends State<SettingsScreen> {
         context,
         title: AppStrings.restoreFailedTitle,
         body: AppStrings.restoreFailedBody,
+      );
+    }
+  }
+
+  Future<void> _showIosCalendarComingSoon() {
+    return showBackupMessageDialog(
+      context,
+      title: AppStrings.importComingLaterTitle,
+      body: AppStrings.importComingLaterBody,
+    );
+  }
+
+  Future<void> _importSamsungCalendar() async {
+    if (defaultTargetPlatform != TargetPlatform.android) {
+      await showBackupMessageDialog(
+        context,
+        title: AppStrings.importAndroidOnlyTitle,
+        body: AppStrings.importAndroidOnlyBody,
+      );
+      return;
+    }
+
+    try {
+      final permission = await DeviceCalendarImport.requestPermission();
+      if (!mounted) return;
+      if (permission == DeviceCalendarPermission.unavailable) {
+        await showBackupMessageDialog(
+          context,
+          title: AppStrings.importAndroidOnlyTitle,
+          body: AppStrings.importAndroidOnlyBody,
+        );
+        return;
+      }
+      if (permission == DeviceCalendarPermission.denied) {
+        await showBackupMessageDialog(
+          context,
+          title: AppStrings.importPermissionTitle,
+          body: AppStrings.importPermissionBody,
+        );
+        return;
+      }
+      if (permission == DeviceCalendarPermission.permanentlyDenied) {
+        final open = await showCalendarPermissionDialog(
+          context,
+          openSettings: true,
+        );
+        if (open) await DeviceCalendarImport.openSettings();
+        return;
+      }
+
+      final calendars = await showCalendarImportLoading(
+        context,
+        DeviceCalendarImport.calendars,
+      );
+      if (!mounted) return;
+      if (calendars.isEmpty) {
+        await showBackupMessageDialog(
+          context,
+          title: AppStrings.importNoCalendarsTitle,
+          body: AppStrings.importNoCalendarsBody,
+        );
+        return;
+      }
+
+      final existing = await AppScope.of(context).getCalendarEvents();
+      if (!mounted) return;
+      final junk = DeviceCalendarMapper.importedObservanceIds(existing);
+      if (junk.isNotEmpty) {
+        await AppScope.of(context).deleteCalendarEvent.many(junk);
+        AppBackupService.revision.value++;
+      }
+      if (!mounted) return;
+      final kept = [
+        for (final event in existing)
+          if (!junk.contains(event.id)) event,
+      ];
+
+      final result = await showCalendarImportWizard(
+        context,
+        calendars: calendars,
+        existing: kept,
+      );
+      if (result == null || !mounted) return;
+      if (result.events.isEmpty) {
+        await showBackupMessageDialog(
+          context,
+          title: junk.isNotEmpty
+              ? AppStrings.importDoneTitle
+              : AppStrings.importNoEventsTitle,
+          body: junk.isNotEmpty
+              ? AppStrings.importObservanceSkippedBody
+              : AppStrings.importNoEventsBody,
+        );
+        return;
+      }
+
+      await AppScope.of(context).addCalendarEvent.many(result.events);
+      AppBackupService.revision.value++;
+      if (!mounted) return;
+      await showBackupMessageDialog(
+        context,
+        title: AppStrings.importDoneTitle,
+        body: result.truncated
+            ? AppStrings.importDonePartialBody(result.events.length)
+            : AppStrings.importDoneBody(result.events.length),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      await showBackupMessageDialog(
+        context,
+        title: AppStrings.importFailedTitle,
+        body: AppStrings.importFailedBody,
       );
     }
   }
@@ -214,9 +352,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> _openThemeSettings() async {
     await Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (context) => const _ThemeSettingsPage(),
-      ),
+      MaterialPageRoute<void>(builder: (context) => const _ThemeSettingsPage()),
     );
     if (!mounted) return;
     setState(() {
@@ -224,13 +360,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
     });
   }
 
-  Future<void> _openAppTutorial() async {}
+  void _openAppTutorial() {
+    final tutorial = TutorialController.of(context);
+    Navigator.of(context).pop();
+    tutorial.start();
+  }
 
   Future<void> _openReleaseNotes() {
     return Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (context) => const _ReleaseNotesPage(),
-      ),
+      MaterialPageRoute<void>(builder: (context) => const _ReleaseNotesPage()),
     );
   }
 
@@ -278,8 +416,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
     if (!mounted) return;
     setState(() {
-      _todoReminderLead =
-          AppScope.of(context).notificationPreference.todoReminderLead;
+      _todoReminderLead = AppScope.of(
+        context,
+      ).notificationPreference.todoReminderLead;
     });
   }
 
@@ -294,6 +433,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
     setState(() {
       _summaryEnabled = preference.summaryEnabled;
       _summaryHour = preference.summaryMinutes;
+    });
+  }
+
+  Future<void> _openLeftoverNotificationSettings() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (context) => const _LeftoverNotificationSettingsPage(),
+      ),
+    );
+    if (!mounted) return;
+    final preference = AppScope.of(context).notificationPreference;
+    setState(() {
+      _leftoverEnabled = preference.leftoverEnabled;
+      _leftoverMinutes = preference.leftoverMinutes;
     });
   }
 
@@ -444,10 +597,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
         children: [
           _SectionLabel(
             AppStrings.settingsThemeSection,
-            onHelp: () => showSettingsSectionHelp(
-              context,
-              SettingsHelpSection.theme,
-            ),
+            onHelp: () =>
+                showSettingsSectionHelp(context, SettingsHelpSection.theme),
           ),
           _SettingsCard(
             children: [
@@ -462,10 +613,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const SizedBox(height: 24),
           _SectionLabel(
             AppStrings.settingsFontSection,
-            onHelp: () => showSettingsSectionHelp(
-              context,
-              SettingsHelpSection.font,
-            ),
+            onHelp: () =>
+                showSettingsSectionHelp(context, SettingsHelpSection.font),
           ),
           _SettingsCard(
             children: [
@@ -478,16 +627,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
               _SettingsTile(
                 label: AppStrings.fontLabelScale,
                 chevron: true,
-                onPressed: () => _openFontSettings(
-                  _FontSettingsFocus.labelScale,
-                ),
+                onPressed: () =>
+                    _openFontSettings(_FontSettingsFocus.labelScale),
               ),
               _SettingsTile(
                 label: AppStrings.fontCalendarChipScale,
                 chevron: true,
-                onPressed: () => _openFontSettings(
-                  _FontSettingsFocus.calendarChip,
-                ),
+                onPressed: () =>
+                    _openFontSettings(_FontSettingsFocus.calendarChip),
               ),
             ],
           ),
@@ -536,10 +683,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const SizedBox(height: 24),
           _SectionLabel(
             AppStrings.settingsCalendarSection,
-            onHelp: () => showSettingsSectionHelp(
-              context,
-              SettingsHelpSection.calendar,
-            ),
+            onHelp: () =>
+                showSettingsSectionHelp(context, SettingsHelpSection.calendar),
           ),
           _SettingsCard(
             children: [
@@ -573,10 +718,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const SizedBox(height: 24),
           _SectionLabel(
             AppStrings.settingsTodoSection,
-            onHelp: () => showSettingsSectionHelp(
-              context,
-              SettingsHelpSection.todo,
-            ),
+            onHelp: () =>
+                showSettingsSectionHelp(context, SettingsHelpSection.todo),
           ),
           _SettingsCard(
             children: [
@@ -615,6 +758,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     : AppStrings.notifyOff,
                 chevron: true,
                 onPressed: _openSummaryNotificationSettings,
+              ),
+              _SettingsTile(
+                label: AppStrings.leftoverNotificationSetting,
+                value: _leftoverEnabled
+                    ? AppStrings.summaryTimeLabel(_leftoverMinutes)
+                    : AppStrings.notifyOff,
+                chevron: true,
+                onPressed: _openLeftoverNotificationSettings,
               ),
             ],
           ),
@@ -665,10 +816,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const SizedBox(height: 24),
           _SectionLabel(
             AppStrings.settingsBackupSection,
-            onHelp: () => showSettingsSectionHelp(
-              context,
-              SettingsHelpSection.backup,
-            ),
+            onHelp: () =>
+                showSettingsSectionHelp(context, SettingsHelpSection.backup),
           ),
           _SettingsCard(
             children: [
@@ -692,11 +841,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           const SizedBox(height: 24),
           _SectionLabel(
-            AppStrings.settingsAppSection,
+            AppStrings.settingsCalendarSyncSection,
             onHelp: () => showSettingsSectionHelp(
               context,
-              SettingsHelpSection.app,
+              SettingsHelpSection.calendarSync,
             ),
+          ),
+          _SettingsCard(
+            children: [
+              _SettingsTile(
+                label: AppStrings.importSamsungCalendar,
+                chevron: true,
+                onPressed: _importSamsungCalendar,
+              ),
+              _SettingsTile(
+                label: AppStrings.importIosCalendar,
+                onPressed: _showIosCalendarComingSoon,
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          _SectionLabel(
+            AppStrings.settingsAppSection,
+            onHelp: () =>
+                showSettingsSectionHelp(context, SettingsHelpSection.app),
           ),
           _SettingsCard(
             children: [
@@ -730,9 +898,8 @@ class _FontLivePreview extends StatelessWidget {
         border: Border.all(color: colors.border),
       ),
       child: SizedBox(
-        height: 52 * FontPreference.maxScale +
-            18 * FontPreference.maxScale +
-            74,
+        height:
+            52 * FontPreference.maxScale + 18 * FontPreference.maxScale + 74,
         child: Padding(
           padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
           child: Column(
@@ -1022,10 +1189,7 @@ class _ThemeCalendarPreviewPage extends StatelessWidget {
 }
 
 class _ThemePreviewDayCell extends StatelessWidget {
-  const _ThemePreviewDayCell({
-    required this.day,
-    required this.today,
-  });
+  const _ThemePreviewDayCell({required this.day, required this.today});
 
   final int day;
   final bool today;
@@ -1168,10 +1332,7 @@ class _ThemePreviewCompanyCard extends StatelessWidget {
 }
 
 class _ThemePreviewDots extends StatelessWidget {
-  const _ThemePreviewDots({
-    required this.selected,
-    required this.onSelected,
-  });
+  const _ThemePreviewDots({required this.selected, required this.onSelected});
 
   final int selected;
   final ValueChanged<int> onSelected;
@@ -1194,9 +1355,7 @@ class _ThemePreviewDots extends StatelessWidget {
                 width: i == selected ? 16 : 6,
                 height: 6,
                 decoration: BoxDecoration(
-                  color: i == selected
-                      ? colors.accentBright
-                      : Colors.white,
+                  color: i == selected ? colors.accentBright : Colors.white,
                   borderRadius: BorderRadius.circular(999),
                 ),
               ),
@@ -1208,10 +1367,7 @@ class _ThemePreviewDots extends StatelessWidget {
 }
 
 class _ThemePreviewNav extends StatelessWidget {
-  const _ThemePreviewNav({
-    required this.selected,
-    required this.onSelected,
-  });
+  const _ThemePreviewNav({required this.selected, required this.onSelected});
 
   final int selected;
   final ValueChanged<int> onSelected;
@@ -1321,7 +1477,7 @@ class _ThemeSettingsPageState extends State<_ThemeSettingsPage> {
                     _SectionLabel(AppStrings.themeKind),
                     _SettingsCard(
                       children: [
-                        for (final skin in AppSkin.values)
+                        for (final skin in AppSkin.selectable)
                           _SettingsTile(
                             label: _SettingsScreenState._skinLabel(skin),
                             checked: theme.skin == skin,
@@ -1434,8 +1590,9 @@ class _FontSettingsPageState extends State<_FontSettingsPage> {
                         children: [
                           for (final typeface in AppTypeface.selectable)
                             _SettingsTile(
-                              label:
-                                  _SettingsScreenState._typefaceLabel(typeface),
+                              label: _SettingsScreenState._typefaceLabel(
+                                typeface,
+                              ),
                               labelFontFamily: typeface.fontFamily,
                               previewLabelFont: true,
                               checked: font.typeface == typeface,
@@ -1646,7 +1803,9 @@ class _TodoNotificationSettingsPageState
   void _showHint(TodoReminderLead lead) {
     _hintTimer?.cancel();
     setState(() {
-      _hint = AppStrings.todoReminderHint(_SettingsScreenState._leadLabel(lead));
+      _hint = AppStrings.todoReminderHint(
+        _SettingsScreenState._leadLabel(lead),
+      );
       _hintVisible = true;
     });
     _hintTimer = Timer(const Duration(milliseconds: 2400), () {
@@ -1782,7 +1941,9 @@ class _SummaryNotificationSettingsPageState
       _enabled = true;
       _minutes = minutes;
     });
-    await AppScope.of(context).notificationPreference.setSummaryMinutes(minutes);
+    await AppScope.of(
+      context,
+    ).notificationPreference.setSummaryMinutes(minutes);
     await TodoReminderService.instance.sync();
   }
 
@@ -1811,7 +1972,135 @@ class _SummaryNotificationSettingsPageState
                     checked: !_enabled,
                     onPressed: _selectOff,
                   ),
-                  for (final minutes in NotificationPreference.summaryTimeOptions)
+                  for (final minutes
+                      in NotificationPreference.summaryTimeOptions)
+                    _SettingsTile(
+                      label: AppStrings.summaryTimeLabel(minutes),
+                      checked: _enabled && _minutes == minutes,
+                      onPressed: () => _selectTime(minutes),
+                    ),
+                ],
+              ),
+            ],
+          ),
+          Positioned(
+            left: 24,
+            right: 24,
+            bottom: 20 + bottom,
+            child: IgnorePointer(
+              child: AnimatedSlide(
+                duration: const Duration(milliseconds: 280),
+                curve: visible ? Curves.easeOutCubic : Curves.easeInCubic,
+                offset: visible ? Offset.zero : const Offset(0, 0.18),
+                child: AnimatedOpacity(
+                  duration: const Duration(milliseconds: 280),
+                  curve: visible ? Curves.easeOutCubic : Curves.easeInCubic,
+                  opacity: visible ? 1 : 0,
+                  child: _HintToast(text: _hint),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _LeftoverNotificationSettingsPage extends StatefulWidget {
+  const _LeftoverNotificationSettingsPage();
+
+  @override
+  State<_LeftoverNotificationSettingsPage> createState() =>
+      _LeftoverNotificationSettingsPageState();
+}
+
+class _LeftoverNotificationSettingsPageState
+    extends State<_LeftoverNotificationSettingsPage> {
+  var _enabled = true;
+  var _minutes = NotificationPreference.defaultLeftoverMinutes;
+  var _ready = false;
+  var _hint = '';
+  var _hintVisible = false;
+  Timer? _hintTimer;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_ready) return;
+    _ready = true;
+    final preference = AppScope.of(context).notificationPreference;
+    _enabled = preference.leftoverEnabled;
+    _minutes = preference.leftoverMinutes;
+  }
+
+  @override
+  void dispose() {
+    _hintTimer?.cancel();
+    super.dispose();
+  }
+
+  void _showHint(int minutes) {
+    _hintTimer?.cancel();
+    setState(() {
+      _hint = AppStrings.leftoverReminderHint(minutes);
+      _hintVisible = true;
+    });
+    _hintTimer = Timer(const Duration(milliseconds: 2400), () {
+      if (!mounted) return;
+      setState(() => _hintVisible = false);
+    });
+  }
+
+  Future<void> _selectOff() async {
+    if (!_enabled) return;
+    setState(() => _enabled = false);
+    await AppScope.of(context).notificationPreference.setLeftoverEnabled(false);
+    await TodoReminderService.instance.sync();
+  }
+
+  Future<void> _selectTime(int minutes) async {
+    _showHint(minutes);
+    if (_enabled && _minutes == minutes) return;
+    await TodoReminderService.instance.requestPermission();
+    if (!mounted) return;
+    setState(() {
+      _enabled = true;
+      _minutes = minutes;
+    });
+    await AppScope.of(
+      context,
+    ).notificationPreference.setLeftoverMinutes(minutes);
+    await TodoReminderService.instance.sync();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final top = MediaQuery.paddingOf(context).top;
+    final bottom = MediaQuery.paddingOf(context).bottom;
+    final visible = _hintVisible;
+
+    return Scaffold(
+      backgroundColor: AppColors.of(context).groupedBackground,
+      extendBodyBehindAppBar: true,
+      appBar: _FrostedAppBar(
+        title: AppStrings.leftoverNotificationSetting,
+        onBack: () => Navigator.pop(context),
+      ),
+      body: Stack(
+        children: [
+          ListView(
+            padding: EdgeInsets.fromLTRB(16, top + 56, 16, 32),
+            children: [
+              _SettingsCard(
+                children: [
+                  _SettingsTile(
+                    label: AppStrings.notifyOff,
+                    checked: !_enabled,
+                    onPressed: _selectOff,
+                  ),
+                  for (final minutes
+                      in NotificationPreference.leftoverTimeOptions)
                     _SettingsTile(
                       label: AppStrings.summaryTimeLabel(minutes),
                       checked: _enabled && _minutes == minutes,
@@ -2024,8 +2313,7 @@ class _ReleaseNotesPage extends StatelessWidget {
                         const _ReleaseNoteHeading(
                           AppStrings.releaseNotesFeatures,
                         ),
-                        for (final item in note.items)
-                          _ReleaseNoteBullet(item),
+                        for (final item in note.items) _ReleaseNoteBullet(item),
                       ],
                       if (note.fixes.isNotEmpty) ...[
                         _ReleaseNoteHeading(
@@ -2090,13 +2378,8 @@ class _ReleaseNoteBullet extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(
-            width: 16,
-            child: Text('·', style: style),
-          ),
-          Expanded(
-            child: Text(text, style: style),
-          ),
+          SizedBox(width: 16, child: Text('·', style: style)),
+          Expanded(child: Text(text, style: style)),
         ],
       ),
     );
@@ -2104,10 +2387,7 @@ class _ReleaseNoteBullet extends StatelessWidget {
 }
 
 class _FrostedAppBar extends StatelessWidget implements PreferredSizeWidget {
-  const _FrostedAppBar({
-    required this.title,
-    required this.onBack,
-  });
+  const _FrostedAppBar({required this.title, required this.onBack});
 
   final String title;
   final VoidCallback onBack;
@@ -2248,10 +2528,7 @@ class _SettingsCard extends StatelessWidget {
 }
 
 class _SettingsSliderTile extends StatefulWidget {
-  const _SettingsSliderTile({
-    required this.value,
-    required this.onChanged,
-  });
+  const _SettingsSliderTile({required this.value, required this.onChanged});
 
   final double value;
   final ValueChanged<double> onChanged;
@@ -2285,13 +2562,14 @@ class _SettingsSliderTileState extends State<_SettingsSliderTile>
     super.initState();
     _t = _targetT;
     _snap = const AlwaysStoppedAnimation(0);
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 220),
-    )..addListener(() {
-        if (_dragging) return;
-        setState(() => _t = _snap.value);
-      });
+    _controller =
+        AnimationController(
+          vsync: this,
+          duration: const Duration(milliseconds: 220),
+        )..addListener(() {
+          if (_dragging) return;
+          setState(() => _t = _snap.value);
+        });
     _press = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 140),
@@ -2350,9 +2628,10 @@ class _SettingsSliderTileState extends State<_SettingsSliderTile>
     _press.reverse();
     final begin = _t;
     final end = _targetT;
-    _snap = Tween<double>(begin: begin, end: end).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
-    );
+    _snap = Tween<double>(
+      begin: begin,
+      end: end,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
     _controller.forward(from: 0);
   }
 
@@ -2475,8 +2754,7 @@ class _SteppedSliderPainter extends CustomPainter {
         Paint()..color = active.withValues(alpha: 0.28 * press),
       );
     }
-    final radius =
-        thumbRadius + (pressedThumbRadius - thumbRadius) * press;
+    final radius = thumbRadius + (pressedThumbRadius - thumbRadius) * press;
     canvas.drawCircle(center, radius, Paint()..color = active);
   }
 
@@ -2602,11 +2880,7 @@ class _SettingsTile extends StatelessWidget {
                 const SizedBox(width: 2),
               ],
               if (checked)
-                Icon(
-                  Icons.check_rounded,
-                  size: 22,
-                  color: colors.text,
-                ),
+                Icon(Icons.check_rounded, size: 22, color: colors.text),
               if (chevron)
                 Icon(
                   Icons.chevron_right_rounded,

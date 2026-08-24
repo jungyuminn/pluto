@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:job_planner/core/calendar/calendar_years.dart';
 import 'package:job_planner/core/constants/app_fonts.dart';
 import 'package:job_planner/core/constants/app_strings.dart';
 import 'package:job_planner/core/theme/app_colors.dart';
@@ -37,13 +38,12 @@ class CalendarTimeMachineSheet extends StatefulWidget {
 }
 
 class _CalendarTimeMachineSheetState extends State<CalendarTimeMachineSheet> {
-  static const _minYear = 2010;
-  static const _maxExtraYears = 5;
-
   late int _year;
   late int _month;
 
-  int get _maxYear => DateTime.now().year + _maxExtraYears;
+  int get _minYear => CalendarYears.min;
+
+  int get _maxYear => CalendarYears.max();
 
   int get _yearCount => _maxYear - _minYear + 1;
 

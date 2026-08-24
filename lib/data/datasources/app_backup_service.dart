@@ -5,6 +5,7 @@ import 'package:archive/archive.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:job_planner/app_scope.dart';
+import 'package:job_planner/core/constants/app_strings.dart';
 import 'package:job_planner/core/home_widget/home_screen_widget_service.dart';
 import 'package:job_planner/core/notifications/todo_reminder_service.dart';
 import 'package:job_planner/data/datasources/backup_preference.dart';
@@ -34,15 +35,8 @@ class AppBackupService {
   }
 
   static Future<bool> backup() async {
-    final bytes = await encode();
-    final saved = await FilePicker.saveFile(
-      fileName: fileName(),
-      bytes: bytes,
-      mimeType: 'application/zip',
-      type: FileType.custom,
-      allowedExtensions: const ['zip'],
-    );
-    return saved != null;
+    await saveLocal();
+    return true;
   }
 
   static Future<void> runAutoIfDue(BackupPreference preference) async {
@@ -59,16 +53,47 @@ class AppBackupService {
     final bytes = await encode();
     final folder = await _autoBackupDirectory();
     await folder.create(recursive: true);
-    final file = File(p.join(folder.path, autoFileName()));
+    final file = File(p.join(folder.path, fileName()));
     await file.writeAsBytes(bytes, flush: true);
     await _pruneAutoBackups(folder);
   }
 
-  static String autoFileName([DateTime? now]) {
-    final stamp = now ?? DateTime.now();
-    final month = stamp.month.toString().padLeft(2, '0');
-    final day = stamp.day.toString().padLeft(2, '0');
-    return '잡플래너_자동백업_${stamp.year}$month$day.zip';
+  static Future<List<File>> listLocalBackups() async {
+    final folder = await _autoBackupDirectory();
+    if (!folder.existsSync()) return [];
+    await _pruneAutoBackups(folder);
+    final files = folder
+        .listSync()
+        .whereType<File>()
+        .where((file) => p.extension(file.path).toLowerCase() == '.zip')
+        .toList()
+      ..sort((a, b) => b.lastModifiedSync().compareTo(a.lastModifiedSync()));
+    return files;
+  }
+
+  static String backupLabel(File file) {
+    final date = _backupDate(file);
+    final weekday = AppStrings.weekdays[date.weekday % 7];
+    return '${date.year}. ${date.month}. ${date.day}. ($weekday)';
+  }
+
+  static DateTime _backupDate(File file) {
+    final name = p.basenameWithoutExtension(file.path);
+    final match = RegExp(r'(\d{8})$').firstMatch(name);
+    if (match != null) {
+      final stamp = match.group(1)!;
+      return DateTime(
+        int.parse(stamp.substring(0, 4)),
+        int.parse(stamp.substring(4, 6)),
+        int.parse(stamp.substring(6, 8)),
+      );
+    }
+    return file.lastModifiedSync();
+  }
+
+  static Future<void> restoreFromFile(File file) async {
+    final bytes = await file.readAsBytes();
+    await decode(bytes);
   }
 
   static Future<Directory> _autoBackupDirectory() async {

@@ -43,7 +43,8 @@ class EventCategoryChip extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 6),
-              Flexible(
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 110),
                 child: Text(
                   name,
                   maxLines: 1,

@@ -30,10 +30,13 @@ Future<EventCategory?> showCategoryPickerSheet(
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
     ),
-    builder: (context) => CategoryPickerSheet(
-      selectedId: selectedId,
-      startModifying: startModifying,
-      kind: kind,
+    builder: (context) => SizedBox(
+      width: MediaQuery.sizeOf(context).width,
+      child: CategoryPickerSheet(
+        selectedId: selectedId,
+        startModifying: startModifying,
+        kind: kind,
+      ),
     ),
   );
 }
@@ -317,7 +320,8 @@ class _CategoryPickerSheetState extends State<CategoryPickerSheet>
   }
 
   double _cellSize(double width) {
-    return (width - _gap * (_columns - 1)) / _columns;
+    if (!width.isFinite || width <= 0) return 48;
+    return ((width - _gap * (_columns - 1)) / _columns).clamp(24.0, 200.0);
   }
 
   int _indexAt(Offset local, Size size) {
@@ -530,7 +534,10 @@ class _CategoryPickerSheetState extends State<CategoryPickerSheet>
   Widget _buildGrid() {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final width = constraints.maxWidth;
+        final raw = constraints.maxWidth;
+        final width = raw.isFinite && raw > 0
+            ? raw
+            : MediaQuery.sizeOf(context).width - 40;
         final cell = _cellSize(width);
         final rows = math.max(1, (_categories.length / _columns).ceil());
         final height = rows * cell + (rows - 1) * _gap;

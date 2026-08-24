@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 /// 화면 공통으로 쓰는 페이드 인 등장 효과.
@@ -23,6 +25,7 @@ class _FadeInState extends State<FadeIn> with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
   late final Animation<double> _opacity;
   late final Animation<Offset> _slide;
+  Timer? _startTimer;
 
   @override
   void initState() {
@@ -33,13 +36,20 @@ class _FadeInState extends State<FadeIn> with SingleTickerProviderStateMixin {
       CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
     );
 
-    Future<void>.delayed(widget.delay, () {
+    void start() {
       if (mounted) _controller.forward();
-    });
+    }
+
+    if (widget.delay == Duration.zero) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => start());
+    } else {
+      _startTimer = Timer(widget.delay, start);
+    }
   }
 
   @override
   void dispose() {
+    _startTimer?.cancel();
     _controller.dispose();
     super.dispose();
   }

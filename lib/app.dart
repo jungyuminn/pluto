@@ -23,6 +23,7 @@ import 'package:job_planner/data/datasources/long_goal_local_datasource.dart';
 import 'package:job_planner/data/datasources/job_application_local_datasource.dart';
 import 'package:job_planner/data/datasources/notification_preference.dart';
 import 'package:job_planner/data/datasources/theme_preference.dart';
+import 'package:job_planner/data/datasources/tutorial_preference.dart';
 import 'package:job_planner/data/repositories/calendar_event_memory_repository.dart';
 import 'package:job_planner/data/repositories/calendar_event_repository_impl.dart';
 import 'package:job_planner/data/repositories/diary_memory_repository.dart';
@@ -51,6 +52,7 @@ import 'package:job_planner/domain/usecases/update_calendar_event.dart';
 import 'package:job_planner/domain/usecases/update_event_category.dart';
 import 'package:job_planner/domain/usecases/update_job_application.dart';
 import 'package:job_planner/presentation/screens/shell/shell_screen.dart';
+import 'package:job_planner/presentation/tutorial/tutorial_controller.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class JobPlannerApp extends StatelessWidget {
@@ -193,7 +195,9 @@ class JobPlannerApp extends StatelessWidget {
           notificationPreference ?? NotificationPreference(),
       themePreference: themePreference ?? ThemePreference(),
       backupPreference: backupPreference ?? BackupPreference(),
-      child: const _JobPlannerMaterialApp(),
+      child: const _TutorialHost(
+        child: _JobPlannerMaterialApp(),
+      ),
     );
   }
 }
@@ -238,6 +242,7 @@ class _AppBootstrapState extends State<_AppBootstrap> {
   NotificationPreference? _notificationPreference;
   ThemePreference? _themePreference;
   BackupPreference? _backupPreference;
+  SharedPreferences? _prefs;
 
   @override
   void initState() {
@@ -322,6 +327,7 @@ class _AppBootstrapState extends State<_AppBootstrap> {
       _notificationPreference = notificationPreference;
       _themePreference = themePreference;
       _backupPreference = backupPreference;
+      _prefs = prefs;
     });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _afterFirstFrame(notificationPreference, backupPreference);
@@ -335,7 +341,9 @@ class _AppBootstrapState extends State<_AppBootstrap> {
     if (!mounted) return;
     await TodoReminderService.instance.sync();
     if (!mounted) return;
-    if (preference.todoReminderLead.isEnabled || preference.summaryEnabled) {
+    if (preference.todoReminderLead.isEnabled ||
+        preference.summaryEnabled ||
+        preference.leftoverEnabled) {
       await TodoReminderService.instance.requestPermission(
         requestExactAlarms: false,
       );
@@ -459,7 +467,40 @@ class _AppBootstrapState extends State<_AppBootstrap> {
       notificationPreference: notificationPreference,
       themePreference: themePreference,
       backupPreference: backupPreference,
-      child: const _JobPlannerMaterialApp(),
+      child: _TutorialHost(
+        prefs: _prefs,
+        child: const _JobPlannerMaterialApp(),
+      ),
+    );
+  }
+}
+
+class _TutorialHost extends StatefulWidget {
+  const _TutorialHost({required this.child, this.prefs});
+
+  final Widget child;
+  final SharedPreferences? prefs;
+
+  @override
+  State<_TutorialHost> createState() => _TutorialHostState();
+}
+
+class _TutorialHostState extends State<_TutorialHost> {
+  late final TutorialController _controller = TutorialController(
+    TutorialPreference(prefs: widget.prefs),
+  );
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return TutorialScope(
+      controller: _controller,
+      child: widget.child,
     );
   }
 }

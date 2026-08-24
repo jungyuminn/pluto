@@ -326,11 +326,9 @@ class _LongGoalLogSheetState extends State<LongGoalLogSheet> {
                       ),
                     ),
                     const Spacer(),
-                    TweenAnimationBuilder<double>(
-                      tween: Tween(begin: 0, end: progress.percent.toDouble()),
-                      duration: const Duration(milliseconds: 520),
-                      curve: Curves.easeOutCubic,
-                      builder: (context, value, _) {
+                    _AnimatedProgress(
+                      value: progress.percent.toDouble(),
+                      builder: (context, value) {
                         return Text(
                           AppStrings.longGoalPercent(value.round()),
                           style: TextStyle(
@@ -344,39 +342,60 @@ class _LongGoalLogSheetState extends State<LongGoalLogSheet> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
-                _SegmentedProgressBar(
+                const SizedBox(height: 10),
+                _GoalProgressBar(
                   value: progress.barValue,
-                  segments: progress.barSegments,
+                  ticks: _goal.kind.isCheckIn ? progress.barSegments : 0,
                   color: accent,
-                  background: colors.card.withValues(alpha: 0.55),
+                  background: colors.border,
                 ),
-                if (progress.summary.isNotEmpty) ...[
-                  const SizedBox(height: 6),
-                  Row(
-                    children: [
-                      Text(
-                        _goal.format(progress.start),
-                        style: TextStyle(
-                          fontFamily: font,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: colors.muted,
-                        ),
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 360),
+                  switchInCurve: Curves.easeOutCubic,
+                  switchOutCurve: Curves.easeOutCubic,
+                  transitionBuilder: (child, animation) {
+                    return FadeTransition(
+                      opacity: animation,
+                      child: SizeTransition(
+                        sizeFactor: animation,
+                        axisAlignment: -1,
+                        child: child,
                       ),
-                      const Spacer(),
-                      Text(
-                        _goal.format(progress.target),
-                        style: TextStyle(
-                          fontFamily: font,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: colors.muted,
+                    );
+                  },
+                  child: progress.summary.isEmpty
+                      ? const SizedBox(
+                          key: ValueKey('range-gone'),
+                          width: double.infinity,
+                        )
+                      : Padding(
+                          key: const ValueKey('range'),
+                          padding: const EdgeInsets.only(top: 6),
+                          child: Row(
+                            children: [
+                              Text(
+                                _goal.format(progress.start),
+                                style: TextStyle(
+                                  fontFamily: font,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: colors.muted,
+                                ),
+                              ),
+                              const Spacer(),
+                              Text(
+                                _goal.format(progress.target),
+                                style: TextStyle(
+                                  fontFamily: font,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: colors.muted,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-                ],
+                ),
                 const SizedBox(height: 16),
                 _CheckInWeek(
                   days: _trackDays,
@@ -506,53 +525,133 @@ class _LongGoalLogSheetState extends State<LongGoalLogSheet> {
   }
 }
 
-class _SegmentedProgressBar extends StatelessWidget {
-  const _SegmentedProgressBar({
+class _AnimatedProgress extends StatefulWidget {
+  const _AnimatedProgress({
     required this.value,
-    required this.segments,
+    required this.builder,
+  });
+
+  static const duration = Duration(milliseconds: 800);
+  static const curve = Curves.easeOutCubic;
+
+  final double value;
+  final Widget Function(BuildContext context, double value) builder;
+
+  @override
+  State<_AnimatedProgress> createState() => _AnimatedProgressState();
+}
+
+class _AnimatedProgressState extends State<_AnimatedProgress>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late Animation<double> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: _AnimatedProgress.duration,
+    )..addListener(() => setState(() {}));
+    _animation = const AlwaysStoppedAnimation(0);
+    _move(from: 0, to: widget.value);
+  }
+
+  @override
+  void didUpdateWidget(covariant _AnimatedProgress oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.value != widget.value) {
+      _move(from: _animation.value, to: widget.value);
+    }
+  }
+
+  void _move({required double from, required double to}) {
+    _animation = Tween<double>(begin: from, end: to).animate(
+      CurvedAnimation(parent: _controller, curve: _AnimatedProgress.curve),
+    );
+    _controller.forward(from: 0);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return widget.builder(context, _animation.value);
+  }
+}
+
+class _GoalProgressBar extends StatelessWidget {
+  const _GoalProgressBar({
+    required this.value,
+    required this.ticks,
     required this.color,
     required this.background,
   });
 
+  static const _height = 12.0;
+
   final double value;
-  final int segments;
+  final int ticks;
   final Color color;
   final Color background;
 
   @override
   Widget build(BuildContext context) {
-    final count = segments.clamp(1, 24);
-    return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 0, end: value.clamp(0.0, 1.0)),
-      duration: const Duration(milliseconds: 520),
-      curve: Curves.easeOutCubic,
-      builder: (context, animated, _) {
+    final markCount = ticks.clamp(0, 12);
+    return _AnimatedProgress(
+      value: value.clamp(0.0, 1.0),
+      builder: (context, filled) {
         return SizedBox(
-          height: 8,
-          child: Row(
-            children: [
-              for (var i = 0; i < count; i++) ...[
-                if (i > 0) const SizedBox(width: 3),
-                Expanded(
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(999),
-                    child: ColoredBox(
-                      color: background,
-                      child: Align(
+          height: _height,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(999),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final width = constraints.maxWidth * filled.clamp(0.0, 1.0);
+                return Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    ColoredBox(color: background),
+                    if (width > 0)
+                      Align(
                         alignment: Alignment.centerLeft,
-                        child: FractionallySizedBox(
-                          widthFactor: ((animated * count) - i).clamp(0.0, 1.0),
-                          child: ColoredBox(
-                            color: color,
+                        child: SizedBox(
+                          width: width,
+                          height: _height,
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  color,
+                                  Color.lerp(color, Colors.white, 0.28)!,
+                                ],
+                              ),
+                            ),
                             child: const SizedBox.expand(),
                           ),
                         ),
                       ),
-                    ),
-                  ),
-                ),
-              ],
-            ],
+                    if (markCount >= 2)
+                      Row(
+                        children: [
+                          for (var i = 1; i < markCount; i++) ...[
+                            const Expanded(child: SizedBox.expand()),
+                            ColoredBox(
+                              color: background,
+                              child: SizedBox(width: 1, height: _height),
+                            ),
+                          ],
+                          const Expanded(child: SizedBox.expand()),
+                        ],
+                      ),
+                  ],
+                );
+              },
+            ),
           ),
         );
       },
@@ -945,56 +1044,85 @@ class _CheckInWeekState extends State<_CheckInWeek>
     required bool isToday,
     required bool isFuture,
   }) {
-    if (label == null || label.isEmpty) {
-      return Center(
-        child: Text(
-          isFuture ? '' : '—',
-          style: TextStyle(
-            fontFamily: font,
-            fontSize: 12,
-            fontWeight: FontWeight.w800,
-            height: 1,
-            color: isToday ? widget.color : colors.muted,
-          ),
-        ),
-      );
-    }
     final unit = widget.unit.trim();
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        FittedBox(
-          fit: BoxFit.scaleDown,
-          child: Text(
-            label,
-            maxLines: 1,
-            style: TextStyle(
-              fontFamily: font,
-              fontSize: 12,
-              fontWeight: FontWeight.w800,
-              height: 1,
-              color: widget.color,
-            ),
-          ),
-        ),
-        if (unit.isNotEmpty) ...[
-          const SizedBox(height: 2),
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            child: Text(
-              unit,
-              maxLines: 1,
-              style: TextStyle(
-                fontFamily: font,
-                fontSize: 9,
-                fontWeight: FontWeight.w700,
-                height: 1,
-                color: widget.color.withValues(alpha: 0.8),
+    final empty = label == null || label.isEmpty;
+    return ClipRect(
+      child: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 380),
+        switchInCurve: Curves.easeOutCubic,
+        switchOutCurve: Curves.easeInCubic,
+        layoutBuilder: (current, previous) {
+          return Stack(
+            alignment: Alignment.center,
+            children: [
+              ...previous,
+              if (current != null) current,
+            ],
+          );
+        },
+        transitionBuilder: (child, animation) {
+          final leaving = animation.status == AnimationStatus.reverse ||
+              animation.status == AnimationStatus.dismissed;
+          final slide = Tween<Offset>(
+            begin: Offset(0, leaving ? -0.55 : 0.55),
+            end: Offset.zero,
+          ).animate(animation);
+          return FadeTransition(
+            opacity: animation,
+            child: SlideTransition(position: slide, child: child),
+          );
+        },
+        child: empty
+            ? Text(
+                key: ValueKey(isFuture ? 'future' : 'empty'),
+                isFuture ? '' : '—',
+                style: TextStyle(
+                  fontFamily: font,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                  height: 1,
+                  color: isToday ? widget.color : colors.muted,
+                ),
+              )
+            : Column(
+                key: ValueKey('v:$label:$unit'),
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      label,
+                      maxLines: 1,
+                      style: TextStyle(
+                        fontFamily: font,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                        height: 1,
+                        color: widget.color,
+                      ),
+                    ),
+                  ),
+                  if (unit.isNotEmpty) ...[
+                    const SizedBox(height: 2),
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        unit,
+                        maxLines: 1,
+                        style: TextStyle(
+                          fontFamily: font,
+                          fontSize: 9,
+                          fontWeight: FontWeight.w700,
+                          height: 1,
+                          color: widget.color.withValues(alpha: 0.8),
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
               ),
-            ),
-          ),
-        ],
-      ],
+      ),
     );
   }
 }

@@ -26,6 +26,7 @@ import 'package:job_planner/presentation/screens/home/widgets/home_long_goal_car
 import 'package:job_planner/presentation/screens/home/widgets/home_monthly_stats_card.dart';
 import 'package:job_planner/presentation/screens/settings/settings_screen.dart';
 import 'package:job_planner/presentation/widgets/app_bar_icon_group.dart';
+import 'package:job_planner/presentation/tutorial/tutorial_anchor.dart';
 import 'package:job_planner/presentation/widgets/themed_asset.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -305,7 +306,9 @@ class _HomeScreenState extends State<HomeScreen>
           Padding(
             padding: const EdgeInsets.only(right: 12),
             child: Center(
-              child: AppBarIconGroup(
+              child: TutorialAnchor(
+                id: TutorialAnchorId.homeTools,
+                child: AppBarIconGroup(
                 actions: [
                   AppBarIconAction(
                     asset: AppIcons.search,
@@ -328,6 +331,7 @@ class _HomeScreenState extends State<HomeScreen>
                     onPressed: _openSettings,
                   ),
                 ],
+                ),
               ),
             ),
           ),
@@ -381,11 +385,14 @@ class _HomeScreenState extends State<HomeScreen>
                     ),
                   ),
                   Expanded(
-                    child: _homeList(
+                    child: TutorialAnchor(
+                      id: TutorialAnchorId.homeList,
+                      child: _homeList(
                       leftover: leftover,
                       homePrefs: homePrefs,
                       sortPrefs: sortPrefs,
                       bottomGap: bottomGap,
+                    ),
                     ),
                   ),
                 ],

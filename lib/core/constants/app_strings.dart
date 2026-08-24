@@ -11,14 +11,60 @@ class AppStrings {
   static const settingsTitle = '설정';
   static const settingsAppSection = '앱';
   static const settingsBackupSection = '데이터 설정';
+  static const settingsCalendarSyncSection = '캘린더 연동';
+  static const importSamsungCalendar = '삼성 캘린더';
+  static const importIosCalendar = 'iOS 캘린더';
+  static const importComingLaterTitle = '아직 준비 중이에요';
+  static const importComingLaterBody = 'iOS 캘린더 연동은 곧 추가될 예정이에요';
+  static const importAndroidOnlyTitle = '안드로이드에서 가져올 수 있어요';
+  static const importAndroidOnlyBody = '삼성 캘린더 가져오기는 안드로이드 폰에서 사용할 수 있어요';
+  static const importPermissionTitle = '캘린더 권한이 필요해요';
+  static const importPermissionBody = '폰 캘린더에 있는 일정을 할 일로 가져오려면 권한이 필요해요';
+  static const importPermissionSettings = '설정으로 이동';
+  static const importCalendarsTitle = '가져올 캘린더';
+  static const importCalendarsBody = '선택한 캘린더의 일정을 할 일로 가져와요';
+  static String importCalendarEventCount(int count) => '할 일 $count개';
+  static const importRangeLabel = '가져올 기간';
+  static const importRangeAll = '전체 기간';
+  static String importRangeValue(DateTime from, DateTime to) =>
+      '${from.year}. ${from.month}. ${from.day}. ~ ${to.year}. ${to.month}. ${to.day}.';
+  static const importNoCalendarsTitle = '가져올 캘린더가 없어요';
+  static const importNoCalendarsBody = '삼성 캘린더에서 가져올 캘린더가 없어요';
+  static const importNoEventsTitle = '가져올 일정이 없어요';
+  static const importNoEventsBody = '해당 기간에 새로 가져올 일정이 없어요';
+  static const importObservanceSkippedBody = '공휴일과 생일은 할 일로 넣지 않았어요';
+  static const importConfirmTitle = '가져올 할 일';
+  static String importConfirmBody(int count) => '일정 $count개를 할 일로 가져와요';
+  static const importConfirmSkipHint = '가져올 일정만 체크하면 돼요';
+  static const importCategoryModeTitle = '카테고리를 어떻게 넣을까요?';
+  static const importCategoryAll = '하나에 몰아넣기';
+  static const importCategoryAllBody = '모든 일정을 같은 카테고리로 넣어요';
+  static const importCategoryEach = '개별로 고르기';
+  static const importCategoryEachBody = '할 일마다 카테고리를 고르면 돼요';
+  static const importCategoryEachTitle = '할 일별 카테고리';
+  static const importCategoryPick = '카테고리 고르기';
+  static const importDoneTitle = '가져오기 성공!';
+  static String importDoneBody(int count) => '할 일 $count개를 캘린더에 넣었어요';
+  static String importDonePartialBody(int count) =>
+      '일정이 많아서 할 일 $count개만 가져왔어요';
+  static const importFailedTitle = '가져오지 못했어요';
+  static const importFailedBody = '잠시 후 다시 시도해 주세요';
+  static const importAction = '가져오기';
+  static const importBack = '이전';
+  static const importNext = '다음';
+  static String importStepLabel(int step, int total) => '$step/$total';
+  static const importRangeTitle = '가져올 기간';
+  static const importRangeBody = '시작 날과 마지막 날을 고르면 그 사이 일정만 가져와요';
   static const backupData = '데이터 백업하기';
   static const restoreData = '데이터 복구하기';
   static const backupSavedTitle = '백업했어요';
-  static const backupSavedBody = '파일을 안전한 곳에 보관해 주세요';
+  static const backupSavedBody = '최근 백업 3개까지 앱에 저장해 둬요';
   static const backupFailedTitle = '백업하지 못했어요';
   static const backupFailedBody = '잠시 후 다시 시도해 주세요';
   static const restoreConfirmTitle = '데이터를 복구할까요?';
   static const restoreConfirmBody = '지금 있는 데이터가 백업 파일로 바뀌어요';
+  static const restorePickOther = '다른 파일 고르기';
+  static const restoreLatest = '가장 최근';
   static const restoreAction = '복구하기';
   static const restoreDoneTitle = '복구했어요';
   static const restoreDoneBody = '홈·캘린더·잡 화면에 바로 반영돼요';
@@ -31,6 +77,52 @@ class AppStrings {
   static const autoBackupMonthly = '한 달마다';
   static String autoBackupHint(String label) => '앱을 켜면 $label 자동으로 저장해요';
   static const appTutorial = '앱 둘러보기';
+  static const tutorialSkip = '건너뛰기';
+  static const tutorialStart = '시작하기';
+  static const tutorialNext = '다음';
+  static const tutorialDone = '확인';
+  static const tutorialBadgeStart = '시작';
+  static const tutorialBadgeNav = '탭';
+  static const tutorialBadgeCalendar = '캘린더';
+  static const tutorialBadgeHome = '홈';
+  static const tutorialBadgeJob = '취업';
+  static const tutorialWelcomeTitle = '잡플래너에 오신 걸 환영해요';
+  static const tutorialWelcomeBody =
+      '할 일, 달력, 취업 지원을 한곳에서 관리해요. 화면을 따라가며 어디를 누르면 되는지 알려줄게요';
+  static const tutorialNavBarTitle = '아래 탭으로 이동';
+  static const tutorialNavBarBody =
+      '왼쪽이 홈, 가운데가 캘린더, 오른쪽이 취업이에요. 알약을 눌러 화면을 바꿔요';
+  static const tutorialNavCalendarTitle = '캘린더 화면';
+  static const tutorialNavCalendarBody =
+      '지금 있는 화면이 캘린더예요. 할 일과 기업 일정이 날짜에 점으로 보여요';
+  static const tutorialCalendarTitleTitle = '달·연도 고르기';
+  static const tutorialCalendarTitleBody =
+      '월 이름을 누르면 달을 고르고, 한 번 더 누르면 연도를 고를 수 있어요';
+  static const tutorialCalendarGridTitle = '날짜를 눌러 추가';
+  static const tutorialCalendarGridBody =
+      '날짜를 눌러 할 일을 넣고, 여러 날을 밀면 기간 할 일도 만들 수 있어요';
+  static const tutorialCalendarMenuTitle = '표시 바꾸기';
+  static const tutorialCalendarMenuBody =
+      '오른쪽 버튼으로 할 일·기업만 보거나, 일기로 전환할 수 있어요';
+  static const tutorialNavHomeTitle = '홈 화면';
+  static const tutorialNavHomeBody =
+      '오늘·내일 할 일과 목표가 모여 있어요';
+  static const tutorialHomeToolsTitle = '위쪽 버튼';
+  static const tutorialHomeToolsBody =
+      '검색, 간략히 보기, 설정이에요';
+  static const tutorialHomeListTitle = '할 일 카드';
+  static const tutorialHomeListBody =
+      '오늘·내일·언젠가 카드예요. 눌러 열거나, 길게 눌러 순서를 바꿀 수 있어요';
+  static const tutorialNavJobTitle = '취업 화면';
+  static const tutorialNavJobBody = '지원 기업이 모여 있어요';
+  static const tutorialJobToolsTitle = '위쪽 버튼';
+  static const tutorialJobToolsBody =
+      '검색, 보기, 날짜순 정렬이에요';
+  static const tutorialJobAddTitle = '기업 추가';
+  static const tutorialJobAddBody =
+      '아래 + 로 기업을 넣고, 카드를 밀어 순서를 바꾸고, 왼쪽으로 밀면 지울 수 있어요';
+  static const tutorialDoneTitle = '이제 시작할 수 있어요';
+  static const tutorialDoneBody = '설정 > 앱 둘러보기에서 언제든 다시 볼 수 있어요';
   static const releaseNotesTitle = '릴리즈 노트';
   static const releaseNotesFeatures = '새로운 기능';
   static const releaseNotesFixes = '버그 수정';
@@ -124,27 +216,24 @@ class AppStrings {
   static const fontSizeMedium = '보통';
   static const fontSizeLarge = '크게';
   static const fontSizeExtraLarge = '더 크게';
-  static const settingsFontHelp =
-      '앱에 쓰는 글꼴과, 할 일·캘린더 라벨의 크기를 바꿀 수 있어요';
+  static const settingsFontHelp = '앱에 쓰는 글꼴과, 할 일·캘린더 라벨의 크기를 바꿀 수 있어요';
   static const settingsCalendarSection = '캘린더 설정';
   static const calendarStartMonday = '월요일부터 시작';
   static const settingsHelpPreview = '미리보기';
   static const settingsHomeLayoutHelp =
       '홈 화면에 보여줄 카드를 고르고, 홈에서 카드를 길게 눌러 순서를 바꿀 수 있어요';
-  static const settingsTodoHelp =
-      '할 일을 시간 순으로 정렬하거나, 라벨에 시간을 표시할 수 있어요';
+  static const settingsTodoHelp = '할 일을 시간 순으로 정렬하거나, 라벨에 시간을 표시할 수 있어요';
   static const settingsNotificationHelp =
-      '시간이 있는 할 일은 미리 알려주고, 매일 정해진 시간에 오늘 일정을 모아 알려줘요';
-  static const settingsAppearanceHelp =
-      '화면을 밝은 테마나 어두운 테마로 바꿀 수 있어요';
-  static const settingsThemeHelp =
-      '홈·캘린더 배경 분위기와 아이콘·버튼 색을 바꿀 수 있어요';
+      '시간이 있는 할 일은 미리 알려주고, 매일 정해진 시간에 오늘 일정과 끝내지 않은 할 일을 알려줘요';
+  static const settingsAppearanceHelp = '화면을 밝은 테마나 어두운 테마로 바꿀 수 있어요';
+  static const settingsThemeHelp = '홈·캘린더 배경 분위기와 아이콘·버튼 색을 바꿀 수 있어요';
   static const settingsBackupHelp =
-      '할 일·기업·일기 데이터를 파일로 보관하고, 필요할 때 다시 가져올 수 있어요. 앱을 켜면 정한 주기마다 자동으로도 저장해요';
+      '할 일·기업·일기 데이터를 최근 3개까지 앱에 저장하고, 필요할 때 다시 가져올 수 있어요. 앱을 켜면 정한 주기마다 자동으로도 저장해요';
+  static const settingsCalendarSyncHelp =
+      '삼성 캘린더에 있는 일정을 할 일로 가져와요. 가져올 기간을 고르고, 카테고리는 하나에 몰아넣거나 할 일마다 고를 수 있어요. 기업 카드는 그대로 둬요. iOS 캘린더는 나중에 추가될 예정이에요';
   static const settingsAppHelp =
       '앱 사용법을 처음부터 다시 보거나, 이 버전에 새로 생긴 기능과 고친 내용을 볼 수 있어요';
-  static const settingsCalendarHelp =
-      '달력의 첫 요일을 바꿀 수 있어요';
+  static const settingsCalendarHelp = '달력의 첫 요일을 바꿀 수 있어요';
   static const settingsCalendarHelpWithFontSize =
       '달력의 첫 요일과, 할 일·기업·날짜·라벨의 글자 크기를 바꿀 수 있어요';
   static const calendarStartSunday = '일요일부터 시작';
@@ -155,6 +244,7 @@ class AppStrings {
   static const settingsNotificationSection = '알림 설정';
   static const todoNotificationSetting = '할 일 알림 설정';
   static const summaryNotificationSetting = '요약 알림 설정';
+  static const leftoverNotificationSetting = '미완료 할 일';
   static const notifyOff = '사용 안함';
   static const notifyMinutes5 = '5분 전';
   static const notifyMinutes10 = '10분 전';
@@ -164,6 +254,8 @@ class AppStrings {
   static const todoReminderChannelDescription = '시간이 있는 할 일을 미리 알려줘요';
   static const summaryReminderChannelName = '요약 알림';
   static const summaryReminderChannelDescription = '하루 일정을 모아서 알려줘요';
+  static const leftoverReminderChannelName = '미완료 할 일';
+  static const leftoverReminderChannelDescription = '그날 끝내지 않은 할 일을 알려줘요';
   static String todoReminderHint(String leadLabel) =>
       '시간이 설정된 할 일이 $leadLabel에 알림으로 와요';
   static String todoReminderBody(int leadMinutes) => leadMinutes % 60 == 0
@@ -182,6 +274,9 @@ class AppStrings {
   static String summaryNotificationTitle(int count) =>
       count == 0 ? '오늘의 일정' : '오늘의 일정 $count개';
   static const summaryNotificationEmpty = '오늘 일정이 없어요';
+  static String leftoverReminderHint(int minutes) =>
+      '매일 ${summaryTimeLabel(minutes)}에 끝내지 않은 할 일을 알려줘요';
+  static String leftoverNotificationTitle(int count) => '미완료 할 일 $count개';
   static const tomorrowNotificationEmpty = '내일 일정이 없어요';
   static const todayTomorrowNotificationEmpty = '오늘과 내일 일정이 없어요';
   static const weekNotificationEmpty = '이번 주 일정이 없어요';
@@ -236,6 +331,12 @@ class AppStrings {
   static const monthTitle = '이번 달';
   static const timeMachineNow = '현재';
   static String leftoverTodos(int count) => '$count개의 남은 할 일';
+  static const allEventsCard = '전체 일정 보기';
+  static const allEventsTitle = '전체 일정';
+  static const allEventsSearchHint = '할 일, 카테고리 검색';
+  static const allEventsEmpty = '할 일이 없어요';
+  static const allEventsDeleteAll = '전체 삭제';
+  static String allEventsDeleteBody(int count) => '할 일 $count개가 사라져요';
   static String monthlyStatsCardTitle(int month) => '$month월 통계가 도착했어요';
   static const weeklyStatsCardTitle = '지난주 통계가 도착했어요';
   static String monthlyStatsHeadlineMonth(int month) => '$month월에는';

@@ -4,6 +4,7 @@ import 'package:job_planner/core/theme/app_colors.dart';
 import 'package:job_planner/core/theme/app_skin_background.dart';
 import 'package:job_planner/presentation/screens/shell/widgets/pill_nav_item.dart';
 import 'package:job_planner/presentation/screens/shell/widgets/sliding_nav_indicator.dart';
+import 'package:job_planner/presentation/tutorial/tutorial_anchor.dart';
 
 class PillBottomNav extends StatelessWidget {
   const PillBottomNav({
@@ -25,7 +26,9 @@ class PillBottomNav extends StatelessWidget {
       listenable: theme,
       builder: (context, _) {
         final items = AppSkinAssets.navIcons(theme.skin);
-        return Padding(
+        return TutorialAnchor(
+          id: TutorialAnchorId.navBar,
+          child: Padding(
           padding: EdgeInsets.only(bottom: 4 + bottomInset),
           child: Material(
             color: colors.navBar,
@@ -49,11 +52,18 @@ class PillBottomNav extends StatelessWidget {
                       children: [
                         for (var i = 0; i < items.length; i++)
                           Expanded(
-                            child: PillNavItem(
-                              selected: i == currentIndex,
-                              onTap: () => onChanged(i),
-                              filledAsset: items[i].filled,
-                              outlinedAsset: items[i].outlined,
+                            child: TutorialAnchor(
+                              id: switch (i) {
+                                0 => TutorialAnchorId.navHome,
+                                1 => TutorialAnchorId.navCalendar,
+                                _ => TutorialAnchorId.navJob,
+                              },
+                              child: PillNavItem(
+                                selected: i == currentIndex,
+                                onTap: () => onChanged(i),
+                                filledAsset: items[i].filled,
+                                outlinedAsset: items[i].outlined,
+                              ),
                             ),
                           ),
                       ],
@@ -63,6 +73,7 @@ class PillBottomNav extends StatelessWidget {
               ),
             ),
           ),
+        ),
         );
       },
     );

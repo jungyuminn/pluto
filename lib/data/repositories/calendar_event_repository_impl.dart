@@ -19,6 +19,13 @@ class CalendarEventRepositoryImpl implements CalendarEventRepository {
   }
 
   @override
+  Future<void> addAll(List<CalendarEvent> events) async {
+    if (events.isEmpty) return;
+    final current = _localDataSource.fetchAll();
+    await _localDataSource.saveAll([...current, ...events]);
+  }
+
+  @override
   Future<void> update(CalendarEvent event) async {
     final current = _localDataSource.fetchAll();
     await _localDataSource.saveAll([
@@ -33,6 +40,17 @@ class CalendarEventRepositoryImpl implements CalendarEventRepository {
     await _localDataSource.saveAll([
       for (final item in current)
         if (item.id != id) item,
+    ]);
+  }
+
+  @override
+  Future<void> deleteMany(Iterable<String> ids) async {
+    final remove = ids.toSet();
+    if (remove.isEmpty) return;
+    final current = _localDataSource.fetchAll();
+    await _localDataSource.saveAll([
+      for (final item in current)
+        if (!remove.contains(item.id)) item,
     ]);
   }
 

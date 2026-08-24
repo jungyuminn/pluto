@@ -5,11 +5,14 @@ import 'package:job_planner/core/theme/app_colors.dart';
 import 'package:job_planner/core/utils/press_bounce.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/calendar_filter_menu.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/category_picker_sheet.dart';
+import 'package:job_planner/presentation/tutorial/tutorial_anchor.dart';
+import 'package:job_planner/presentation/widgets/app_calendar/calendar_zoom_picker.dart';
 
 class CalendarMonthHeader extends StatelessWidget {
   const CalendarMonthHeader({
     super.key,
     required this.month,
+    this.title,
     this.onTitlePressed,
     this.showTodos = true,
     this.showCompanies = true,
@@ -21,6 +24,7 @@ class CalendarMonthHeader extends StatelessWidget {
   });
 
   final DateTime month;
+  final String? title;
   final VoidCallback? onTitlePressed;
   final bool showTodos;
   final bool showCompanies;
@@ -31,6 +35,7 @@ class CalendarMonthHeader extends StatelessWidget {
   final VoidCallback? onSortPrefsChanged;
 
   String get _title {
+    if (title != null) return title!;
     final monthLabel = '${month.month}${AppStrings.monthSuffix}';
     if (month.year == DateTime.now().year) return monthLabel;
     return '${month.year}${AppStrings.yearSuffix} $monthLabel';
@@ -45,30 +50,29 @@ class CalendarMonthHeader extends StatelessWidget {
           Expanded(
             child: Align(
               alignment: Alignment.centerLeft,
-              child: PressBounce(
-                onPressed: onTitlePressed ?? () {},
-                pressedScale: 0.97,
-                child: Text(
-                  _title,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
+              child: IntrinsicWidth(
+                child: TutorialAnchor(
+                  id: TutorialAnchorId.calendarTitle,
+                  child: CalendarZoomTitle(
+                    text: _title,
+                    onPressed: onTitlePressed,
                     fontSize: 36,
-                    fontWeight: FontWeight.w800,
-                    height: 1.1,
-                    color: AppColors.of(context).text,
                   ),
                 ),
               ),
             ),
           ),
-          CalendarMonthMenuButton(
-            showTodos: showTodos,
-            showCompanies: showCompanies,
-            showDiary: showDiary,
-            onShowTodosChanged: onShowTodosChanged,
-            onShowCompaniesChanged: onShowCompaniesChanged,
-            onShowDiaryChanged: onShowDiaryChanged,
-            onSortPrefsChanged: onSortPrefsChanged,
+          TutorialAnchor(
+            id: TutorialAnchorId.calendarMenu,
+            child: CalendarMonthMenuButton(
+              showTodos: showTodos,
+              showCompanies: showCompanies,
+              showDiary: showDiary,
+              onShowTodosChanged: onShowTodosChanged,
+              onShowCompaniesChanged: onShowCompaniesChanged,
+              onShowDiaryChanged: onShowDiaryChanged,
+              onSortPrefsChanged: onSortPrefsChanged,
+            ),
           ),
         ],
       ),
@@ -169,43 +173,43 @@ class _CalendarMonthMenuButtonState extends State<CalendarMonthMenuButton>
     final prefs = AppScope.of(context).dayEventsViewPreference;
     return switch (_page) {
       _MenuPage.filter => CalendarFilterMenu(
-          key: const ValueKey('filter'),
-          showTodos: widget.showTodos,
-          showCompanies: widget.showCompanies,
-          onShowTodosChanged: (value) {
-            widget.onShowTodosChanged?.call(value);
-          },
-          onShowCompaniesChanged: (value) {
-            widget.onShowCompaniesChanged?.call(value);
-          },
-          onBack: () => setState(() => _page = _MenuPage.root),
-        ),
+        key: const ValueKey('filter'),
+        showTodos: widget.showTodos,
+        showCompanies: widget.showCompanies,
+        onShowTodosChanged: (value) {
+          widget.onShowTodosChanged?.call(value);
+        },
+        onShowCompaniesChanged: (value) {
+          widget.onShowCompaniesChanged?.call(value);
+        },
+        onBack: () => setState(() => _page = _MenuPage.root),
+      ),
       _MenuPage.sort => CalendarSortMenu(
-          key: const ValueKey('sort'),
-          sortByTime: prefs.sortByTime,
-          showTime: prefs.showTime,
-          onSortByTimeChanged: (value) async {
-            await prefs.setSortByTime(value);
-            if (mounted) setState(() {});
-            widget.onSortPrefsChanged?.call();
-          },
-          onShowTimeChanged: (value) async {
-            await prefs.setShowTime(value);
-            if (mounted) setState(() {});
-            widget.onSortPrefsChanged?.call();
-          },
-          onBack: () => setState(() => _page = _MenuPage.root),
-        ),
+        key: const ValueKey('sort'),
+        sortByTime: prefs.sortByTime,
+        showTime: prefs.showTime,
+        onSortByTimeChanged: (value) async {
+          await prefs.setSortByTime(value);
+          if (mounted) setState(() {});
+          widget.onSortPrefsChanged?.call();
+        },
+        onShowTimeChanged: (value) async {
+          await prefs.setShowTime(value);
+          if (mounted) setState(() {});
+          widget.onSortPrefsChanged?.call();
+        },
+        onBack: () => setState(() => _page = _MenuPage.root),
+      ),
       _MenuPage.root => CalendarOverflowMenu(
-          key: const ValueKey('root'),
-          onVisibleItems: () => setState(() => _page = _MenuPage.filter),
-          onSortMode: () => setState(() => _page = _MenuPage.sort),
-          onEditCategories: _openCategories,
-          showDiary: widget.showDiary,
-          onShowDiaryChanged: (value) {
-            widget.onShowDiaryChanged?.call(value);
-          },
-        ),
+        key: const ValueKey('root'),
+        onVisibleItems: () => setState(() => _page = _MenuPage.filter),
+        onSortMode: () => setState(() => _page = _MenuPage.sort),
+        onEditCategories: _openCategories,
+        showDiary: widget.showDiary,
+        onShowDiaryChanged: (value) {
+          widget.onShowDiaryChanged?.call(value);
+        },
+      ),
     };
   }
 
@@ -257,8 +261,7 @@ class _CalendarMonthMenuButtonState extends State<CalendarMonthMenuButton>
                             );
                           },
                           transitionBuilder: (child, animation) {
-                            final submenu =
-                                child.key != const ValueKey('root');
+                            final submenu = child.key != const ValueKey('root');
                             return FadeTransition(
                               opacity: animation,
                               child: SlideTransition(

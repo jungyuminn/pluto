@@ -8,6 +8,7 @@ import 'package:job_planner/domain/entities/job_application.dart';
 import 'package:job_planner/presentation/screens/add_company/widgets/missing_fields_dialog.dart';
 import 'package:job_planner/presentation/screens/job/widgets/add_company_button.dart';
 import 'package:job_planner/presentation/screens/job/widgets/company_card.dart';
+import 'package:job_planner/presentation/tutorial/tutorial_anchor.dart';
 
 class CompanyList extends StatefulWidget {
   const CompanyList({
@@ -244,7 +245,10 @@ class _CompanyListState extends State<CompanyList> {
         SliverPadding(
           padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
           sliver: SliverToBoxAdapter(
-            child: AddCompanyButton(onPressed: widget.onAdd),
+            child: TutorialAnchor(
+              id: TutorialAnchorId.jobAdd,
+              child: AddCompanyButton(onPressed: widget.onAdd),
+            ),
           ),
         ),
       ],

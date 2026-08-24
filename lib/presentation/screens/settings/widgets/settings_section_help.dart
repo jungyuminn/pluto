@@ -24,6 +24,7 @@ enum SettingsHelpSection {
   appearance,
   theme,
   backup,
+  calendarSync,
   app,
 }
 
@@ -160,6 +161,8 @@ extension on SettingsHelpSection {
         return AppStrings.settingsThemeSection;
       case SettingsHelpSection.backup:
         return AppStrings.settingsBackupSection;
+      case SettingsHelpSection.calendarSync:
+        return AppStrings.settingsCalendarSyncSection;
       case SettingsHelpSection.app:
         return AppStrings.settingsAppSection;
     }
@@ -187,6 +190,8 @@ extension on SettingsHelpSection {
         return AppStrings.settingsThemeHelp;
       case SettingsHelpSection.backup:
         return AppStrings.settingsBackupHelp;
+      case SettingsHelpSection.calendarSync:
+        return AppStrings.settingsCalendarSyncHelp;
       case SettingsHelpSection.app:
         return AppStrings.settingsAppHelp;
     }
@@ -212,6 +217,8 @@ extension on SettingsHelpSection {
         return const _ThemePreview();
       case SettingsHelpSection.backup:
         return const _BackupPreview();
+      case SettingsHelpSection.calendarSync:
+        return const _CalendarSyncPreview();
       case SettingsHelpSection.app:
         return const _AppPreview();
     }
@@ -593,6 +600,12 @@ class _NotificationPreview extends StatelessWidget {
           body: '자기소개서 제출, 코딩테스트 준비, 면접 연습',
           time: '오전 8:00',
         ),
+        SizedBox(height: 10),
+        _FakeNotificationCard(
+          title: '미완료 할 일 2개',
+          body: '자기소개서 제출, 면접 연습',
+          time: '오후 9:00',
+        ),
       ],
     );
   }
@@ -627,6 +640,34 @@ class _BackupPreview extends StatelessWidget {
             icon: Icons.sync_rounded,
             title: AppStrings.autoBackupDaily,
             body: '앱을 켜면 매일 자동으로 저장해요',
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _CalendarSyncPreview extends StatelessWidget {
+  const _CalendarSyncPreview();
+
+  @override
+  Widget build(BuildContext context) {
+    return const _CyclingPreview(
+      frames: [
+        _PreviewFrame(
+          caption: AppStrings.importSamsungCalendar,
+          child: _FakeBackupScene(
+            icon: Icons.event_available_rounded,
+            title: AppStrings.importDoneTitle,
+            body: '할 일 3개를 캘린더에 넣었어요',
+          ),
+        ),
+        _PreviewFrame(
+          caption: AppStrings.importIosCalendar,
+          child: _FakeBackupScene(
+            icon: Icons.schedule_rounded,
+            title: AppStrings.importComingLaterTitle,
+            body: AppStrings.importComingLaterBody,
           ),
         ),
       ],
@@ -1025,7 +1066,7 @@ class _ThemePreview extends StatelessWidget {
     }
     return _CyclingPreview(
       frames: [
-        for (final skin in AppSkin.values)
+        for (final skin in AppSkin.selectable)
           _PreviewFrame(
             caption: _themeCaption(skin),
             child: _ThemeHelpScene(skin: skin),

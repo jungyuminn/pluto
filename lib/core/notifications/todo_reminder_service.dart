@@ -18,9 +18,11 @@ class TodoReminderService {
 
   static const _channelId = 'todo_reminders';
   static const _summaryChannelId = 'daily_summary';
+  static const _leftoverChannelId = 'leftover_todos';
   static const _androidIcon = 'ic_stat_notification';
   static const _maxScheduled = 64;
   static const _summaryIdBase = 91001000;
+  static const _leftoverIdBase = 91002000;
   static const _summaryDays = 7;
 
   final _plugin = FlutterLocalNotificationsPlugin();
@@ -74,6 +76,14 @@ class TodoReminderService {
           _summaryChannelId,
           AppStrings.summaryReminderChannelName,
           description: AppStrings.summaryReminderChannelDescription,
+          importance: Importance.high,
+        ),
+      );
+      await androidPlugin?.createNotificationChannel(
+        const AndroidNotificationChannel(
+          _leftoverChannelId,
+          AppStrings.leftoverReminderChannelName,
+          description: AppStrings.leftoverReminderChannelDescription,
           importance: Importance.high,
         ),
       );
@@ -142,6 +152,9 @@ class TodoReminderService {
       final scheduled = <int>{};
       scheduled.addAll(await _scheduleTodos(events, preference, mode));
       scheduled.addAll(await _scheduleSummaries(events, jobs, preference, mode));
+      scheduled.addAll(
+        await _scheduleLeftovers(events, jobs, preference, mode),
+      );
       for (final item in previous) {
         if (!scheduled.contains(item.id)) {
           await _plugin.cancel(item.id);
@@ -235,6 +248,61 @@ class TodoReminderService {
         channelId: _summaryChannelId,
         channelName: AppStrings.summaryReminderChannelName,
         channelDescription: AppStrings.summaryReminderChannelDescription,
+        mode: mode,
+        bigText: true,
+      );
+      if (ok) scheduled.add(id);
+    }
+    return scheduled;
+  }
+
+  Future<Set<int>> _scheduleLeftovers(
+    CalendarEventLocalDataSource events,
+    JobApplicationLocalDataSource jobs,
+    NotificationPreference preference,
+    AndroidScheduleMode mode,
+  ) async {
+    if (!preference.leftoverEnabled) return {};
+
+    final now = _now;
+    var next = _wallTime(
+      now,
+      hour: preference.leftoverHour,
+      minute: preference.leftoverMinute,
+    );
+    if (!next.isAfter(now)) {
+      next = next.add(const Duration(days: 1));
+    }
+
+    final allEvents = events.fetchAll();
+    final applications = jobs.fetchAll();
+    final scheduled = <int>{};
+    for (var i = 0; i < _summaryDays; i++) {
+      final at = next.add(Duration(days: i));
+      final day = DateTime(at.year, at.month, at.day);
+      final items = CalendarEvent.withLockedThenStartTime(
+        calendarEventsOn(
+          date: day,
+          events: allEvents,
+          applications: applications,
+        ).where((event) => !event.isJob && !event.completed),
+      );
+      if (items.isEmpty) continue;
+      final lines = [
+        for (final event in items.take(12)) event.title,
+      ];
+      if (items.length > 12) {
+        lines.add('외 ${items.length - 12}개');
+      }
+      final id = _leftoverIdBase + i;
+      final ok = await _schedule(
+        id: id,
+        title: AppStrings.leftoverNotificationTitle(items.length),
+        body: lines.join('\n'),
+        at: at,
+        channelId: _leftoverChannelId,
+        channelName: AppStrings.leftoverReminderChannelName,
+        channelDescription: AppStrings.leftoverReminderChannelDescription,
         mode: mode,
         bigText: true,
       );

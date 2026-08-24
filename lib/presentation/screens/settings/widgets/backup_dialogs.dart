@@ -1,7 +1,10 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:job_planner/core/constants/app_strings.dart';
 import 'package:job_planner/core/theme/app_colors.dart';
 import 'package:job_planner/core/utils/press_bounce.dart';
+import 'package:job_planner/data/datasources/app_backup_service.dart';
 
 Future<void> showBackupMessageDialog(
   BuildContext context, {
@@ -165,6 +168,208 @@ class RestoreConfirmDialog extends StatelessWidget {
             ],
           ),
         ],
+      ),
+    );
+  }
+}
+
+class RestoreChoice {
+  const RestoreChoice.file(this.file) : pickOther = false;
+  const RestoreChoice.other() : file = null, pickOther = true;
+
+  final File? file;
+  final bool pickOther;
+}
+
+Future<RestoreChoice?> showRestoreSourceDialog(
+  BuildContext context,
+  List<File> files,
+) {
+  return showDialog<RestoreChoice>(
+    context: context,
+    builder: (context) => RestoreSourceDialog(files: files),
+  );
+}
+
+class RestoreSourceDialog extends StatefulWidget {
+  const RestoreSourceDialog({super.key, required this.files});
+
+  final List<File> files;
+
+  @override
+  State<RestoreSourceDialog> createState() => _RestoreSourceDialogState();
+}
+
+class _RestoreSourceDialogState extends State<RestoreSourceDialog> {
+  var _selected = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    return AlertDialog(
+      backgroundColor: colors.card,
+      surfaceTintColor: Colors.transparent,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      title: Text(
+        AppStrings.restoreConfirmTitle,
+        style: TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.w800,
+          color: colors.text,
+        ),
+      ),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            AppStrings.restoreConfirmBody,
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              color: colors.secondary,
+            ),
+          ),
+          const SizedBox(height: 16),
+          for (var i = 0; i < widget.files.length; i++) ...[
+            if (i > 0) const SizedBox(height: 6),
+            _BackupChoiceTile(
+              label: AppBackupService.backupLabel(widget.files[i]),
+              latest: i == 0,
+              selected: _selected == i,
+              onPressed: () => setState(() => _selected = i),
+            ),
+          ],
+          const SizedBox(height: 8),
+          PressBounce(
+            onPressed: () {
+              Navigator.of(context).pop(const RestoreChoice.other());
+            },
+            pressedColor: Colors.transparent,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Text(
+                AppStrings.restorePickOther,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: colors.accentBright,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: PressBounce(
+                  onPressed: () => Navigator.of(context).pop(),
+                  color: colors.border,
+                  pressedColor: Color.lerp(colors.border, Colors.black, 0.12)!,
+                  borderRadius: BorderRadius.circular(14),
+                  child: SizedBox(
+                    height: 48,
+                    child: Center(
+                      child: Text(
+                        AppStrings.cancel,
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w800,
+                          color: colors.text,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: PressBounce(
+                  onPressed: () => Navigator.of(context).pop(
+                    RestoreChoice.file(widget.files[_selected]),
+                  ),
+                  color: colors.accentBright,
+                  pressedColor:
+                      Color.lerp(colors.accentBright, Colors.black, 0.16)!,
+                  borderRadius: BorderRadius.circular(14),
+                  child: const SizedBox(
+                    height: 48,
+                    child: Center(
+                      child: Text(
+                        AppStrings.restoreAction,
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _BackupChoiceTile extends StatelessWidget {
+  const _BackupChoiceTile({
+    required this.label,
+    required this.latest,
+    required this.selected,
+    required this.onPressed,
+  });
+
+  final String label;
+  final bool latest;
+  final bool selected;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    return PressBounce(
+      onPressed: onPressed,
+      color: selected ? colors.selected : colors.groupedBackground,
+      pressedColor: colors.pressed,
+      borderRadius: BorderRadius.circular(14),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+        child: Row(
+          children: [
+            Icon(
+              selected
+                  ? Icons.radio_button_checked_rounded
+                  : Icons.radio_button_off_rounded,
+              size: 22,
+              color: selected ? colors.accentBright : colors.muted,
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: colors.text,
+                ),
+              ),
+            ),
+            if (latest)
+              Text(
+                AppStrings.restoreLatest,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: colors.muted,
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }

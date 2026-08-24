@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:job_planner/app_scope.dart';
 import 'package:job_planner/core/constants/app_strings.dart';
+import 'package:job_planner/core/theme/app_colors.dart';
 import 'package:job_planner/core/theme/app_skin_background.dart';
 import 'package:job_planner/data/datasources/app_backup_service.dart';
 import 'package:job_planner/data/datasources/diary_photo_storage.dart';
@@ -13,12 +14,13 @@ import 'package:job_planner/presentation/screens/calendar/calendar_day_events.da
 import 'package:job_planner/presentation/screens/calendar/widgets/calendar_month_grid.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/calendar_week_diaries.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/calendar_month_header.dart';
-import 'package:job_planner/presentation/screens/calendar/widgets/calendar_time_machine_sheet.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/calendar_weekday_header.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/day_events_dialog.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/add_event_sheet.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/delete_event_dialog.dart';
+import 'package:job_planner/presentation/tutorial/tutorial_anchor.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/diary_sheet.dart';
+import 'package:job_planner/presentation/widgets/app_calendar/calendar_zoom_picker.dart';
 
 class CalendarScreen extends StatefulWidget {
   const CalendarScreen({super.key, this.visible = true});
@@ -45,6 +47,7 @@ class _CalendarScreenState extends State<CalendarScreen>
   var _showTodos = true;
   var _showCompanies = true;
   var _showDiary = false;
+  var _zoom = CalendarZoomLevel.days;
 
   @override
   void initState() {
@@ -87,13 +90,23 @@ class _CalendarScreenState extends State<CalendarScreen>
     _showCurrentMonth(jump: true);
   }
 
-  Future<void> _openTimeMachine() async {
-    final picked = await showCalendarTimeMachineSheet(
-      context,
-      month: _visibleMonth,
-    );
-    if (picked == null || !mounted) return;
-    await _goToMonth(picked);
+  Future<void> _onTitlePressed() async {
+    if (_zoom == CalendarZoomLevel.years) return;
+    setState(() => _zoom = CalendarZoom.next(_zoom));
+  }
+
+  Future<void> _pickMonth(DateTime month) async {
+    setState(() => _zoom = CalendarZoomLevel.days);
+    await WidgetsBinding.instance.endOfFrame;
+    if (!mounted) return;
+    await _goToMonth(month);
+  }
+
+  void _pickYear(int year) {
+    setState(() {
+      _visibleMonth = DateTime(year, _visibleMonth.month);
+      _zoom = CalendarZoomLevel.months;
+    });
   }
 
   void _showCurrentMonth({bool jump = false}) {
@@ -101,6 +114,7 @@ class _CalendarScreenState extends State<CalendarScreen>
     final current = DateTime(now.year, now.month);
     _baseMonth = current;
     _visibleMonth = current;
+    _zoom = CalendarZoomLevel.days;
     if (!jump) return;
     if (_pages.hasClients) _pages.jumpToPage(_initialPage);
     if (mounted) setState(() {});
@@ -145,8 +159,7 @@ class _CalendarScreenState extends State<CalendarScreen>
     final events = await scope.getCalendarEvents();
     final diaries = await scope.getDiaries();
     final applications = await scope.getJobApplications();
-    final companyCategories =
-        await scope.fetchCategories(CategoryKind.company);
+    final companyCategories = await scope.fetchCategories(CategoryKind.company);
     if (!mounted) return;
     setState(() {
       _events = events;
@@ -179,11 +192,7 @@ class _CalendarScreenState extends State<CalendarScreen>
 
   Future<void> _openDay(DateTime date, Rect origin) async {
     if (_showDiary) {
-      await showDiarySheet(
-        context,
-        date: date,
-        initial: _diaryOn(date),
-      );
+      await showDiarySheet(context, date: date, initial: _diaryOn(date));
       if (mounted) await _reload();
       return;
     }
@@ -221,11 +230,7 @@ class _CalendarScreenState extends State<CalendarScreen>
   }
 
   Future<void> _openRange(DateTime start, DateTime end) async {
-    await showAddEventSheet(
-      context,
-      date: start,
-      rangeEnd: end,
-    );
+    await showAddEventSheet(context, date: start, rangeEnd: end);
     if (mounted) await _reload();
   }
 
@@ -235,81 +240,137 @@ class _CalendarScreenState extends State<CalendarScreen>
 
     return AppSkinBackground(
       child: Scaffold(
-      resizeToAvoidBottomInset: false,
-      backgroundColor: Colors.transparent,
-      body: SafeArea(
-        bottom: false,
-        child: Padding(
-          padding: EdgeInsets.only(bottom: bottomGap),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Expanded(
-                child: ListenableBuilder(
-                  listenable: AppScope.of(context).calendarPreference,
-                  builder: (context, _) {
-                    final startMonday =
-                        AppScope.of(context).calendarPreference.startMonday;
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                      CalendarMonthHeader(
-                        month: _visibleMonth,
-                        onTitlePressed: _openTimeMachine,
-                        showTodos: _showTodos,
-                        showCompanies: _showCompanies,
-                        showDiary: _showDiary,
-                        onShowTodosChanged: (value) {
-                          setState(() => _showTodos = value);
-                        },
-                        onShowCompaniesChanged: (value) {
-                          setState(() => _showCompanies = value);
-                        },
-                        onShowDiaryChanged: (value) {
-                          setState(() => _showDiary = value);
-                        },
-                        onSortPrefsChanged: () => setState(() {}),
-                      ),
-                      CalendarWeekdayHeader(startMonday: startMonday),
-                      Expanded(
-                        child: PageView.builder(
-                          controller: _pages,
-                          physics: _rangeDragging
-                              ? const NeverScrollableScrollPhysics()
-                              : null,
-                          onPageChanged: (page) {
-                            setState(() => _visibleMonth = _monthAt(page));
-                          },
-                          itemBuilder: (context, page) {
-                            return CalendarMonthGrid(
-                              month: _monthAt(page),
-                              startMonday: startMonday,
-                              eventsOf: _eventsOn,
-                              diaryOf: _diaryOn,
-                              showDiary: _showDiary,
-                              onDayPressed: _openDay,
-                              onDayLongPressed:
-                                  _showDiary ? _deleteDiaryOn : null,
-                              onRangeDragChanged: _showDiary
-                                  ? null
-                                  : (dragging) {
-                                      setState(() => _rangeDragging = dragging);
-                                    },
-                              onRangeSelected: _showDiary ? null : _openRange,
-                            );
-                          },
-                        ),
-                      ),
-                    ],
-                  );
-                },
+        resizeToAvoidBottomInset: false,
+        backgroundColor: Colors.transparent,
+        body: SafeArea(
+          bottom: false,
+          child: Padding(
+            padding: EdgeInsets.only(bottom: bottomGap),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(
+                  child: ListenableBuilder(
+                    listenable: AppScope.of(context).calendarPreference,
+                    builder: (context, _) {
+                      final startMonday = AppScope.of(
+                        context,
+                      ).calendarPreference.startMonday;
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          CalendarMonthHeader(
+                            month: _visibleMonth,
+                            title: CalendarZoom.title(
+                              _zoom,
+                              _visibleMonth,
+                              hideCurrentYear: true,
+                            ),
+                            onTitlePressed: _zoom == CalendarZoomLevel.years
+                                ? null
+                                : _onTitlePressed,
+                            showTodos: _showTodos,
+                            showCompanies: _showCompanies,
+                            showDiary: _showDiary,
+                            onShowTodosChanged: (value) {
+                              setState(() => _showTodos = value);
+                            },
+                            onShowCompaniesChanged: (value) {
+                              setState(() => _showCompanies = value);
+                            },
+                            onShowDiaryChanged: (value) {
+                              setState(() => _showDiary = value);
+                            },
+                            onSortPrefsChanged: () => setState(() {}),
+                          ),
+                          Expanded(
+                            child: TutorialAnchor(
+                              id: TutorialAnchorId.calendarGrid,
+                              child: CalendarZoomTransition(
+                                level: _zoom,
+                                child: switch (_zoom) {
+                                  CalendarZoomLevel.days => Column(
+                                    children: [
+                                      CalendarWeekdayHeader(
+                                        startMonday: startMonday,
+                                      ),
+                                      Expanded(
+                                        child: PageView.builder(
+                                          controller: _pages,
+                                          physics: _rangeDragging
+                                              ? const NeverScrollableScrollPhysics()
+                                              : null,
+                                          onPageChanged: (page) {
+                                            setState(
+                                              () => _visibleMonth = _monthAt(
+                                                page,
+                                              ),
+                                            );
+                                          },
+                                          itemBuilder: (context, page) {
+                                            return CalendarMonthGrid(
+                                              month: _monthAt(page),
+                                              startMonday: startMonday,
+                                              eventsOf: _eventsOn,
+                                              diaryOf: _diaryOn,
+                                              showDiary: _showDiary,
+                                              onDayPressed: _openDay,
+                                              onDayLongPressed: _showDiary
+                                                  ? _deleteDiaryOn
+                                                  : null,
+                                              onRangeDragChanged: _showDiary
+                                                  ? null
+                                                  : (dragging) {
+                                                      setState(
+                                                        () => _rangeDragging =
+                                                            dragging,
+                                                      );
+                                                    },
+                                              onRangeSelected: _showDiary
+                                                  ? null
+                                                  : _openRange,
+                                            );
+                                          },
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  CalendarZoomLevel.months =>
+                                    CalendarMonthZoomView(
+                                      focused: _visibleMonth,
+                                      accent: AppColors.of(
+                                        context,
+                                      ).accentBright,
+                                      onFocusedChanged: (month) {
+                                        setState(() => _visibleMonth = month);
+                                      },
+                                      onMonthPressed: _pickMonth,
+                                    ),
+                                  CalendarZoomLevel.years =>
+                                    CalendarYearZoomView(
+                                      focused: _visibleMonth,
+                                      accent: AppColors.of(
+                                        context,
+                                      ).accentBright,
+                                      onFocusedChanged: (month) {
+                                        setState(() => _visibleMonth = month);
+                                      },
+                                      onYearPressed: _pickYear,
+                                    ),
+                                },
+                              ),
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
-    ),
     );
   }
 }

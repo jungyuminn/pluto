@@ -16,6 +16,11 @@ class CalendarEventMemoryRepository implements CalendarEventRepository {
   }
 
   @override
+  Future<void> addAll(List<CalendarEvent> events) async {
+    _items.addAll(events);
+  }
+
+  @override
   Future<void> update(CalendarEvent event) async {
     final index = _items.indexWhere((item) => item.id == event.id);
     if (index < 0) return;
@@ -25,6 +30,12 @@ class CalendarEventMemoryRepository implements CalendarEventRepository {
   @override
   Future<void> delete(String id) async {
     _items.removeWhere((item) => item.id == id);
+  }
+
+  @override
+  Future<void> deleteMany(Iterable<String> ids) async {
+    final remove = ids.toSet();
+    _items.removeWhere((item) => remove.contains(item.id));
   }
 
   @override

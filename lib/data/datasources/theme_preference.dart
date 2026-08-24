@@ -19,12 +19,31 @@ enum AppSkin {
   catVillage,
   hamsterBakery;
 
+  static const selectable = [
+    classic,
+    blossom,
+    summerBeach,
+    autumnForest,
+    snowyWinter,
+    squishyBear,
+    strawberryMilk,
+    onionVillage,
+    lovelyBear,
+    rainyDay,
+    concertDay,
+    fluffyCloud,
+    catVillage,
+    hamsterBakery,
+  ];
+
   static AppSkin fromId(
     String? id, {
     AppSkin fallback = AppSkin.classic,
   }) {
     for (final value in AppSkin.values) {
-      if (value.name == id) return value;
+      if (value.name != id) continue;
+      if (value == boyhood || value == interlude) return fallback;
+      return value;
     }
     return fallback;
   }

@@ -95,13 +95,3 @@ flutter run
 ```
 
 `build/`, `.dart_tool/`, `android/.gradle/`는 올리지 않습니다. 클론한 뒤 각 컴퓨터에서 다시 빌드하면 됩니다.
-
-## 커밋
-
-`feat:`, `fix:`, `docs:` 뒤에 한국어 명사구로 적습니다. 문장으로 끝내지 않습니다.
-
-```
-feat: 미완료 할 일 알림
-fix: 릴리즈에서 알림이 울리지 않던 문제
-docs: README 보강
-```

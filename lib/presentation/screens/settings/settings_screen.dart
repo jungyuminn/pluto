@@ -180,14 +180,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
-  Future<void> _showIosCalendarComingSoon() {
-    return showBackupMessageDialog(
-      context,
-      title: AppStrings.importComingLaterTitle,
-      body: AppStrings.importComingLaterBody,
-    );
-  }
-
   Future<void> _importSamsungCalendar() async {
     if (defaultTargetPlatform != TargetPlatform.android) {
       await showBackupMessageDialog(
@@ -197,15 +189,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
       );
       return;
     }
+    await _importDeviceCalendar();
+  }
 
+  Future<void> _importIosCalendar() async {
+    if (defaultTargetPlatform != TargetPlatform.iOS) {
+      await showBackupMessageDialog(
+        context,
+        title: AppStrings.importIosOnlyTitle,
+        body: AppStrings.importIosOnlyBody,
+      );
+      return;
+    }
+    await _importDeviceCalendar();
+  }
+
+  Future<void> _importDeviceCalendar() async {
     try {
       final permission = await DeviceCalendarImport.requestPermission();
       if (!mounted) return;
       if (permission == DeviceCalendarPermission.unavailable) {
         await showBackupMessageDialog(
           context,
-          title: AppStrings.importAndroidOnlyTitle,
-          body: AppStrings.importAndroidOnlyBody,
+          title: AppStrings.importFailedTitle,
+          body: AppStrings.importFailedBody,
         );
         return;
       }
@@ -856,7 +863,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               _SettingsTile(
                 label: AppStrings.importIosCalendar,
-                onPressed: _showIosCalendarComingSoon,
+                chevron: true,
+                onPressed: _importIosCalendar,
               ),
             ],
           ),

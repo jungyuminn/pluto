@@ -665,9 +665,9 @@ class _CalendarSyncPreview extends StatelessWidget {
         _PreviewFrame(
           caption: AppStrings.importIosCalendar,
           child: _FakeBackupScene(
-            icon: Icons.schedule_rounded,
-            title: AppStrings.importComingLaterTitle,
-            body: AppStrings.importComingLaterBody,
+            icon: Icons.event_available_rounded,
+            title: AppStrings.importDoneTitle,
+            body: '할 일 3개를 캘린더에 넣었어요',
           ),
         ),
       ],

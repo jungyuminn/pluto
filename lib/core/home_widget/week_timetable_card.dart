@@ -21,6 +21,7 @@ class WeekTimetableCard extends StatelessWidget {
   static const androidName = 'WeekTimetableWidgetProvider';
   static const qualifiedAndroidName =
       'com.jobplanner.job_planner.WeekTimetableWidgetProvider';
+  static const iOSName = 'WeekTimetableWidget';
 
   static const headerHeight = 52.0;
   static const chipHeight = 24.0;

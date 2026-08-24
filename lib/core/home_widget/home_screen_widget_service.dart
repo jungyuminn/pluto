@@ -50,8 +50,12 @@ class HomeScreenWidgetService {
   ];
   static const completeHost = 'complete';
   static const refreshHost = 'refresh';
+  static const appGroupId = 'group.com.jobplanner.jobPlanner';
   static const skinBackgroundKey = 'widget_skin_bg';
   static const skinBackgroundSize = Size(412, 300);
+  static const _iosSmallSize = Size(170, 170);
+  static const _iosMediumSize = Size(364, 170);
+  static const _iosLargeSize = Size(364, 382);
 
   CalendarEventLocalDataSource? _events;
   JobApplicationLocalDataSource? _jobs;
@@ -82,6 +86,7 @@ class HomeScreenWidgetService {
     _dayEventsView = dayEventsView;
     _font = font;
     _calendar = calendar;
+    await _ensureAppGroup();
   }
 
   static Future<void> handleInteractiveUri(Uri? uri) async {
@@ -143,8 +148,18 @@ class HomeScreenWidgetService {
     ]);
   }
 
+  Future<void> _ensureAppGroup() async {
+    if (kIsWeb || !Platform.isIOS) return;
+    await HomeWidget.setAppGroupId(appGroupId);
+  }
+
+  bool get _supported {
+    if (kIsWeb) return false;
+    return Platform.isAndroid || Platform.isIOS;
+  }
+
   Future<void> sync() async {
-    if (!Platform.isAndroid) return;
+    if (!_supported) return;
     if (_syncing) {
       _queued = true;
       return;
@@ -161,7 +176,8 @@ class HomeScreenWidgetService {
   }
 
   Future<void> _syncOnce() async {
-    if (!Platform.isAndroid) return;
+    if (!_supported) return;
+    await _ensureAppGroup();
     final events = _events;
     final jobs = _jobs;
     final categories = _categories;
@@ -190,11 +206,13 @@ class HomeScreenWidgetService {
       final pixelRatio = (liveRatio < 2 ? 3.0 : liveRatio).clamp(3.0, 4.0);
       officeIcon = await _loadOfficeIcon();
       await HomeWidget.saveWidgetData<bool>('is_dark', theme.isDark);
-      await _renderSkinBackground(
-        skin: theme.skin,
-        isDark: theme.isDark,
-        pixelRatio: pixelRatio,
-      );
+      if (Platform.isAndroid) {
+        await _renderSkinBackground(
+          skin: theme.skin,
+          isDark: theme.isDark,
+          pixelRatio: pixelRatio,
+        );
+      }
 
       for (final kind in _kinds) {
         await _syncKind(
@@ -208,6 +226,7 @@ class HomeScreenWidgetService {
           sortByTime: dayEventsView.sortByTime,
           showTime: dayEventsView.showTime,
           isDark: theme.isDark,
+          skin: theme.skin,
           pixelRatio: pixelRatio,
           officeIcon: officeIcon,
         );
@@ -221,6 +240,17 @@ class HomeScreenWidgetService {
         skin: theme.skin,
         pixelRatio: pixelRatio,
       );
+      if (Platform.isIOS) {
+        await _syncLockGlance(
+          events: calendarEventsOn(
+            date: today,
+            events: allEvents,
+            applications: applications,
+          ),
+          sortByTime: dayEventsView.sortByTime,
+        );
+        await HomeWidget.updateWidget(iOSName: 'TodayWidget');
+      }
     } catch (error, stack) {
       debugPrint('HomeScreenWidgetService.sync failed: $error\n$stack');
     } finally {
@@ -239,6 +269,7 @@ class HomeScreenWidgetService {
     required bool sortByTime,
     required bool showTime,
     required bool isDark,
+    required AppSkin skin,
     required double pixelRatio,
     required ui.Image? officeIcon,
   }) async {
@@ -279,41 +310,54 @@ class HomeScreenWidgetService {
           sortByTime: sortByTime,
         ),
     };
-    final previousCount =
-        (await HomeWidget.getWidgetData<int>(kind.rowCountKey)) ?? 0;
-
-    for (var i = 0; i < snapshot.items.length; i++) {
-      final item = snapshot.items[i];
-      final event = item.event;
-      final completable = event != null && !event.isJob;
-      await HomeWidget.saveWidgetData<String>(
-        kind.rowIdKey(i),
-        completable ? event.id : '',
+    if (Platform.isIOS) {
+      await _syncKindIos(
+        kind: kind,
+        snapshot: snapshot,
+        dateLabel: kind.dateLabel(today, tomorrow),
+        showTime: showTime,
+        isDark: isDark,
+        skin: skin,
+        pixelRatio: pixelRatio,
+        officeIcon: officeIcon,
       );
-      final size = Size(TodayWidgetCard.cardWidth, item.extent);
-      await HomeWidget.renderFlutterWidget(
-        _wrapTheme(
-          isDark: isDark,
-          size: size,
-          pixelRatio: pixelRatio,
-          child: SizedBox(
-            width: size.width,
-            height: size.height,
-            child: TodayWidgetCard.row(
-              item: item,
-              showTime: showTime,
-              officeIcon: officeIcon,
+    } else {
+      final previousCount =
+          (await HomeWidget.getWidgetData<int>(kind.rowCountKey)) ?? 0;
+
+      for (var i = 0; i < snapshot.items.length; i++) {
+        final item = snapshot.items[i];
+        final event = item.event;
+        final completable = event != null && !event.isJob;
+        await HomeWidget.saveWidgetData<String>(
+          kind.rowIdKey(i),
+          completable ? event.id : '',
+        );
+        final size = Size(TodayWidgetCard.cardWidth, item.extent);
+        await HomeWidget.renderFlutterWidget(
+          _wrapTheme(
+            isDark: isDark,
+            size: size,
+            pixelRatio: pixelRatio,
+            child: SizedBox(
+              width: size.width,
+              height: size.height,
+              child: TodayWidgetCard.row(
+                item: item,
+                showTime: showTime,
+                officeIcon: officeIcon,
+              ),
             ),
           ),
-        ),
-        key: kind.rowKey(i),
-        logicalSize: size,
-        pixelRatio: pixelRatio,
-      );
-    }
-    for (var i = snapshot.items.length; i < previousCount; i++) {
-      await HomeWidget.saveWidgetData(kind.rowKey(i), null);
-      await HomeWidget.saveWidgetData(kind.rowIdKey(i), null);
+          key: kind.rowKey(i),
+          logicalSize: size,
+          pixelRatio: pixelRatio,
+        );
+      }
+      for (var i = snapshot.items.length; i < previousCount; i++) {
+        await HomeWidget.saveWidgetData(kind.rowKey(i), null);
+        await HomeWidget.saveWidgetData(kind.rowIdKey(i), null);
+      }
     }
 
     await HomeWidget.saveWidgetData<String>(kind.titleKey, kind.title);
@@ -329,8 +373,91 @@ class HomeScreenWidgetService {
     await HomeWidget.updateWidget(
       name: kind.androidName,
       androidName: kind.androidName,
+      iOSName: kind.iOSName,
       qualifiedAndroidName: kind.qualifiedAndroidName,
     );
+  }
+
+  Future<void> _syncKindIos({
+    required _WidgetKind kind,
+    required TodayWidgetSnapshot snapshot,
+    required String dateLabel,
+    required bool showTime,
+    required bool isDark,
+    required AppSkin skin,
+    required double pixelRatio,
+    required ui.Image? officeIcon,
+  }) async {
+    const sizes = <String, Size>{
+      'small': _iosSmallSize,
+      'medium': _iosMediumSize,
+      'large': _iosLargeSize,
+    };
+    for (final entry in sizes.entries) {
+      final size = entry.value;
+      await HomeWidget.renderFlutterWidget(
+        _wrapTheme(
+          isDark: isDark,
+          size: size,
+          pixelRatio: pixelRatio,
+          child: SizedBox(
+            width: size.width,
+            height: size.height,
+            child: _iosFillCard(
+              skin: skin,
+              title: kind.title,
+              dateLabel: dateLabel,
+              emptyText: kind.emptyText,
+              snapshot: snapshot,
+              showTime: showTime,
+              officeIcon: officeIcon,
+            ),
+          ),
+        ),
+        key: kind.imageKey(entry.key),
+        logicalSize: size,
+        pixelRatio: pixelRatio,
+      );
+    }
+  }
+
+  Future<void> _syncLockGlance({
+    required List<CalendarEvent> events,
+    required bool sortByTime,
+  }) async {
+    final ordered = sortByTime
+        ? CalendarEvent.withLockedThenStartTime(events)
+        : events;
+    final open = [for (final event in ordered) if (!event.completed) event];
+    final total = events.length;
+    final remaining = open.length;
+    CalendarEvent? at(int index) =>
+        index < open.length ? open[index] : null;
+    String timeOf(CalendarEvent event) => event.timeLabel ?? '';
+    final first = at(0);
+    final inline = remaining == 0
+        ? (total == 0 ? AppStrings.summaryNotificationEmpty : '오늘 일정 끝')
+        : (first != null && timeOf(first).isNotEmpty
+            ? '${timeOf(first)} ${first.title}'
+            : '오늘 할 일 $remaining개');
+    await HomeWidget.saveWidgetData<int>('lock_total', total);
+    await HomeWidget.saveWidgetData<int>('lock_remaining', remaining);
+    for (var i = 0; i < 3; i++) {
+      final event = at(i);
+      await HomeWidget.saveWidgetData<String>(
+        'lock_item_${i}_title',
+        event?.title ?? '',
+      );
+      await HomeWidget.saveWidgetData<String>(
+        'lock_item_${i}_time',
+        event == null ? '' : timeOf(event),
+      );
+      await HomeWidget.saveWidgetData<int>(
+        'lock_item_${i}_color',
+        event?.categoryColor ?? 0,
+      );
+    }
+    await HomeWidget.saveWidgetData<String>('lock_inline', inline);
   }
 
   Future<void> _syncWeekTimetable({
@@ -354,30 +481,38 @@ class HomeScreenWidgetService {
           applications: applications,
         ),
     ];
-    const size = WeekTimetableCard.logicalSize;
-    await HomeWidget.renderFlutterWidget(
-      _wrapTheme(
-        isDark: isDark,
-        size: size,
-        pixelRatio: pixelRatio,
-        child: SizedBox(
-          width: size.width,
-          height: size.height,
-          child: _skinCard(
-            skin: skin,
-            child: WeekTimetableCard(
-              days: days,
-              today: today,
-              columns: columns,
-              showTime: showTime,
+    Future<void> render(Size size, String key) {
+      return HomeWidget.renderFlutterWidget(
+        _wrapTheme(
+          isDark: isDark,
+          size: size,
+          pixelRatio: pixelRatio,
+          child: SizedBox(
+            width: size.width,
+            height: size.height,
+            child: _skinCard(
+              skin: skin,
+              clip: !Platform.isIOS,
+              child: WeekTimetableCard(
+                days: days,
+                today: today,
+                columns: columns,
+                showTime: showTime,
+              ),
             ),
           ),
         ),
-      ),
-      key: WeekTimetableCard.imageKey,
-      logicalSize: size,
-      pixelRatio: pixelRatio,
-    );
+        key: key,
+        logicalSize: size,
+        pixelRatio: pixelRatio,
+      );
+    }
+
+    if (Platform.isIOS) {
+      await render(_iosMediumSize, 'week_timetable_image_medium');
+      await render(_iosLargeSize, 'week_timetable_image_large');
+    }
+    await render(WeekTimetableCard.logicalSize, WeekTimetableCard.imageKey);
     await HomeWidget.saveWidgetData<String>(
       WeekTimetableCard.emptyKey,
       AppStrings.weekNotificationEmpty,
@@ -385,6 +520,7 @@ class HomeScreenWidgetService {
     await HomeWidget.updateWidget(
       name: WeekTimetableCard.androidName,
       androidName: WeekTimetableCard.androidName,
+      iOSName: WeekTimetableCard.iOSName,
       qualifiedAndroidName: WeekTimetableCard.qualifiedAndroidName,
     );
   }
@@ -466,20 +602,112 @@ class HomeScreenWidgetService {
   Widget _skinCard({
     required AppSkin skin,
     Widget child = const SizedBox.expand(),
+    bool clip = true,
   }) {
+    Widget painted = Builder(
+      builder: (context) {
+        return AppSkinBackground(
+          skin: skin,
+          color: AppColors.of(context).card,
+          liftForNav: false,
+          scaleByWidth: true,
+          simple: true,
+          child: child,
+        );
+      },
+    );
+    if (clip) {
+      painted = ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: painted,
+      );
+    }
     return ColoredBox(
       color: const Color(0x00000000),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
+      child: painted,
+    );
+  }
+
+  Widget _iosFillCard({
+    required AppSkin skin,
+    required String title,
+    required String dateLabel,
+    required String emptyText,
+    required TodayWidgetSnapshot snapshot,
+    required bool showTime,
+    required ui.Image? officeIcon,
+  }) {
+    return _skinCard(
+      skin: skin,
+      clip: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
         child: Builder(
           builder: (context) {
-            return AppSkinBackground(
-              skin: skin,
-              color: AppColors.of(context).card,
-              liftForNav: false,
-              scaleByWidth: true,
-              simple: true,
-              child: child,
+            final colors = AppColors.of(context);
+            final font = AppFonts.of(context);
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontFamily: font,
+                    fontSize: 17,
+                    fontWeight: FontWeight.w600,
+                    height: 1.1,
+                    color: colors.text,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  dateLabel,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontFamily: font,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    height: 1.2,
+                    color: colors.muted,
+                  ),
+                ),
+                const SizedBox(height: TodayWidgetCard.listGap),
+                Expanded(
+                  child: ClipRect(
+                    child: OverflowBox(
+                      alignment: Alignment.topCenter,
+                      maxHeight: double.infinity,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (snapshot.items.isEmpty)
+                            Text(
+                              emptyText,
+                              style: TextStyle(
+                                fontFamily: font,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                                height: 1.3,
+                                color: colors.muted,
+                              ),
+                            )
+                          else
+                            for (final item in snapshot.items)
+                              TodayWidgetCard.row(
+                                item: item,
+                                showTime: showTime,
+                                officeIcon: officeIcon,
+                              ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             );
           },
         ),
@@ -560,6 +788,12 @@ extension on _WidgetKind {
   String get qualifiedAndroidName =>
       'com.jobplanner.job_planner.$androidName';
 
+  String get iOSName => switch (this) {
+        _WidgetKind.today => 'TodayWidget',
+        _WidgetKind.tomorrow => 'TomorrowWidget',
+        _WidgetKind.todayTomorrow => 'TodayTomorrowWidget',
+      };
+
   String get title => switch (this) {
         _WidgetKind.today => AppStrings.todayTitle,
         _WidgetKind.tomorrow => AppStrings.tomorrowTitle,
@@ -578,6 +812,7 @@ extension on _WidgetKind {
   String get rowCountKey => '${id}_row_count';
   String rowKey(int index) => '${id}_row_$index';
   String rowIdKey(int index) => '${id}_row_${index}_id';
+  String imageKey(String family) => '${id}_image_$family';
 
   String dateLabel(DateTime todayDate, DateTime tomorrowDate) {
     String labeled(DateTime day) {

@@ -339,17 +339,16 @@ class _AppBootstrapState extends State<_AppBootstrap> {
     BackupPreference backupPreference,
   ) async {
     if (!mounted) return;
-    await TodoReminderService.instance.sync();
-    if (!mounted) return;
-    if (preference.todoReminderLead.isEnabled ||
+    final wantsNotifications = preference.todoReminderLead.isEnabled ||
         preference.summaryEnabled ||
-        preference.leftoverEnabled) {
+        preference.leftoverEnabled;
+    if (wantsNotifications) {
       await TodoReminderService.instance.requestPermission(
         requestExactAlarms: false,
       );
       if (!mounted) return;
-      await TodoReminderService.instance.sync();
     }
+    await TodoReminderService.instance.sync();
     await HomeScreenWidgetService.instance.sync();
     unawaited(AppBackupService.runAutoIfDue(backupPreference));
   }

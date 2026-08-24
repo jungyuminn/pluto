@@ -17,7 +17,7 @@ class CoverLetterStorage {
       await folder.create(recursive: true);
     }
 
-    final destination = p.join(folder.path, '${id}_$fileName');
+    final destination = p.join(folder.path, '${id}_${p.basename(fileName)}');
     await File(sourcePath).copy(destination);
     return destination;
   }

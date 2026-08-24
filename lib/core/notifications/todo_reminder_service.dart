@@ -1,3 +1,4 @@
+import 'dart:io' show Platform;
 import 'dart:ui' show Color;
 
 import 'package:flutter/foundation.dart';
@@ -21,6 +22,7 @@ class TodoReminderService {
   static const _leftoverChannelId = 'leftover_todos';
   static const _androidIcon = 'ic_stat_notification';
   static const _maxScheduled = 64;
+  static const _iosPendingLimit = 64;
   static const _summaryIdBase = 91001000;
   static const _leftoverIdBase = 91002000;
   static const _summaryDays = 7;
@@ -96,6 +98,17 @@ class TodoReminderService {
 
   Future<bool> requestPermission({bool requestExactAlarms = true}) async {
     if (!_ready) return false;
+    if (!kIsWeb && Platform.isIOS) {
+      final ios = _plugin.resolvePlatformSpecificImplementation<
+          IOSFlutterLocalNotificationsPlugin>();
+      if (ios == null) return false;
+      return await ios.requestPermissions(
+            alert: true,
+            badge: true,
+            sound: true,
+          ) ??
+          false;
+    }
     final android = _plugin.resolvePlatformSpecificImplementation<
         AndroidFlutterLocalNotificationsPlugin>();
     final notifications =
@@ -103,15 +116,7 @@ class TodoReminderService {
     if (requestExactAlarms) {
       await android?.requestExactAlarmsPermission();
     }
-    final ios = _plugin.resolvePlatformSpecificImplementation<
-        IOSFlutterLocalNotificationsPlugin>();
-    final iosOk = await ios?.requestPermissions(
-          alert: true,
-          badge: true,
-          sound: true,
-        ) ??
-        true;
-    return notifications && iosOk;
+    return notifications;
   }
 
   Future<void> sync() async {
@@ -142,6 +147,11 @@ class TodoReminderService {
     final preference = _preference;
     if (events == null || jobs == null || preference == null) return;
     try {
+      if (!kIsWeb && Platform.isIOS && !await _iosNotificationsAllowed()) {
+        debugPrint('TodoReminderService: iOS notification permission not granted');
+        await _plugin.cancelAll();
+        return;
+      }
       final previous = await _plugin.pendingNotificationRequests();
       final android = _plugin.resolvePlatformSpecificImplementation<
           AndroidFlutterLocalNotificationsPlugin>();
@@ -149,11 +159,17 @@ class TodoReminderService {
       final mode = exact
           ? AndroidScheduleMode.exactAllowWhileIdle
           : AndroidScheduleMode.inexactAllowWhileIdle;
+      var slots = (!kIsWeb && Platform.isIOS) ? _iosPendingLimit : 1 << 20;
       final scheduled = <int>{};
-      scheduled.addAll(await _scheduleTodos(events, preference, mode));
-      scheduled.addAll(await _scheduleSummaries(events, jobs, preference, mode));
+      final todos = await _scheduleTodos(events, preference, mode, slots);
+      scheduled.addAll(todos);
+      slots -= todos.length;
+      final summaries =
+          await _scheduleSummaries(events, jobs, preference, mode, slots);
+      scheduled.addAll(summaries);
+      slots -= summaries.length;
       scheduled.addAll(
-        await _scheduleLeftovers(events, jobs, preference, mode),
+        await _scheduleLeftovers(events, jobs, preference, mode, slots),
       );
       for (final item in previous) {
         if (!scheduled.contains(item.id)) {
@@ -165,13 +181,23 @@ class TodoReminderService {
     }
   }
 
+  Future<bool> _iosNotificationsAllowed() async {
+    final ios = _plugin.resolvePlatformSpecificImplementation<
+        IOSFlutterLocalNotificationsPlugin>();
+    if (ios == null) return false;
+    final status = await ios.checkPermissions();
+    if (status == null) return true;
+    return status.isEnabled;
+  }
+
   Future<Set<int>> _scheduleTodos(
     CalendarEventLocalDataSource events,
     NotificationPreference preference,
     AndroidScheduleMode mode,
+    int max,
   ) async {
     final lead = preference.todoReminderLead;
-    if (!lead.isEnabled) return {};
+    if (!lead.isEnabled || max <= 0) return {};
 
     final now = _now;
     final upcoming = <({int id, CalendarEvent event, tz.TZDateTime at})>[];
@@ -183,7 +209,7 @@ class TodoReminderService {
     upcoming.sort((a, b) => a.at.compareTo(b.at));
 
     final scheduled = <int>{};
-    for (final item in upcoming.take(_maxScheduled)) {
+    for (final item in upcoming.take(max.clamp(0, _maxScheduled))) {
       final ok = await _schedule(
         id: item.id,
         title: item.event.title,
@@ -204,8 +230,9 @@ class TodoReminderService {
     JobApplicationLocalDataSource jobs,
     NotificationPreference preference,
     AndroidScheduleMode mode,
+    int max,
   ) async {
-    if (!preference.summaryEnabled) return {};
+    if (!preference.summaryEnabled || max <= 0) return {};
 
     final now = _now;
     var next = _wallTime(
@@ -220,7 +247,7 @@ class TodoReminderService {
     final allEvents = events.fetchAll();
     final applications = jobs.fetchAll();
     final scheduled = <int>{};
-    for (var i = 0; i < _summaryDays; i++) {
+    for (var i = 0; i < _summaryDays && scheduled.length < max; i++) {
       final at = next.add(Duration(days: i));
       final day = DateTime(at.year, at.month, at.day);
       final items = CalendarEvent.withLockedThenStartTime(
@@ -261,8 +288,9 @@ class TodoReminderService {
     JobApplicationLocalDataSource jobs,
     NotificationPreference preference,
     AndroidScheduleMode mode,
+    int max,
   ) async {
-    if (!preference.leftoverEnabled) return {};
+    if (!preference.leftoverEnabled || max <= 0) return {};
 
     final now = _now;
     var next = _wallTime(
@@ -277,7 +305,7 @@ class TodoReminderService {
     final allEvents = events.fetchAll();
     final applications = jobs.fetchAll();
     final scheduled = <int>{};
-    for (var i = 0; i < _summaryDays; i++) {
+    for (var i = 0; i < _summaryDays && scheduled.length < max; i++) {
       final at = next.add(Duration(days: i));
       final day = DateTime(at.year, at.month, at.day);
       final items = CalendarEvent.withLockedThenStartTime(
@@ -336,7 +364,10 @@ class TodoReminderService {
       iOS: const DarwinNotificationDetails(
         presentAlert: true,
         presentBadge: true,
+        presentBanner: true,
+        presentList: true,
         presentSound: true,
+        interruptionLevel: InterruptionLevel.active,
       ),
     );
     Future<void> run(AndroidScheduleMode scheduleMode) {

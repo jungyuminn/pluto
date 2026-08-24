@@ -18,6 +18,8 @@ class AppStrings {
   static const importComingLaterBody = 'iOS 캘린더 연동은 곧 추가될 예정이에요';
   static const importAndroidOnlyTitle = '안드로이드에서 가져올 수 있어요';
   static const importAndroidOnlyBody = '삼성 캘린더 가져오기는 안드로이드 폰에서 사용할 수 있어요';
+  static const importIosOnlyTitle = '아이폰에서 가져올 수 있어요';
+  static const importIosOnlyBody = 'iOS 캘린더 가져오기는 아이폰에서 사용할 수 있어요';
   static const importPermissionTitle = '캘린더 권한이 필요해요';
   static const importPermissionBody = '폰 캘린더에 있는 일정을 할 일로 가져오려면 권한이 필요해요';
   static const importPermissionSettings = '설정으로 이동';
@@ -29,7 +31,7 @@ class AppStrings {
   static String importRangeValue(DateTime from, DateTime to) =>
       '${from.year}. ${from.month}. ${from.day}. ~ ${to.year}. ${to.month}. ${to.day}.';
   static const importNoCalendarsTitle = '가져올 캘린더가 없어요';
-  static const importNoCalendarsBody = '삼성 캘린더에서 가져올 캘린더가 없어요';
+  static const importNoCalendarsBody = '가져올 수 있는 캘린더가 없어요';
   static const importNoEventsTitle = '가져올 일정이 없어요';
   static const importNoEventsBody = '해당 기간에 새로 가져올 일정이 없어요';
   static const importObservanceSkippedBody = '공휴일과 생일은 할 일로 넣지 않았어요';
@@ -230,7 +232,7 @@ class AppStrings {
   static const settingsBackupHelp =
       '할 일·기업·일기 데이터를 최근 3개까지 앱에 저장하고, 필요할 때 다시 가져올 수 있어요. 앱을 켜면 정한 주기마다 자동으로도 저장해요';
   static const settingsCalendarSyncHelp =
-      '삼성 캘린더에 있는 일정을 할 일로 가져와요. 가져올 기간을 고르고, 카테고리는 하나에 몰아넣거나 할 일마다 고를 수 있어요. 기업 카드는 그대로 둬요. iOS 캘린더는 나중에 추가될 예정이에요';
+      '폰 캘린더에 있는 일정을 할 일로 가져와요. 안드로이드는 삼성 캘린더, 아이폰은 iOS 캘린더를 쓰면 돼요. 가져올 기간을 고르고, 카테고리는 하나에 몰아넣거나 할 일마다 고를 수 있어요. 기업 카드는 그대로 둬요';
   static const settingsAppHelp =
       '앱 사용법을 처음부터 다시 보거나, 이 버전에 새로 생긴 기능과 고친 내용을 볼 수 있어요';
   static const settingsCalendarHelp = '달력의 첫 요일을 바꿀 수 있어요';
@@ -325,7 +327,7 @@ class AppStrings {
 
   static const todayTitle = '오늘';
   static const tomorrowTitle = '내일';
-  static const todayTomorrowTitle = '오늘 + 내일';
+  static const todayTomorrowTitle = '오늘과 내일';
   static const dayAfterTomorrowTitle = '모레';
   static const weekTitle = '이번 주';
   static const monthTitle = '이번 달';

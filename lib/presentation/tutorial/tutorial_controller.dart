@@ -10,6 +10,7 @@ class TutorialStep {
     required this.body,
     this.badge = '',
     this.anchor,
+    this.demo = TutorialDemo.none,
   });
 
   final int tab;
@@ -17,6 +18,19 @@ class TutorialStep {
   final String badge;
   final String title;
   final String body;
+  final TutorialDemo demo;
+}
+
+enum TutorialDemo {
+  none,
+  navTabs,
+  calendarTitle,
+  calendarTap,
+  calendarRange,
+  todoComplete,
+  calendarMenu,
+  homeReorder,
+  jobSwipe,
 }
 
 class TutorialController extends ChangeNotifier {
@@ -35,6 +49,7 @@ class TutorialController extends ChangeNotifier {
       anchor: TutorialAnchorId.navBar,
       title: AppStrings.tutorialNavBarTitle,
       body: AppStrings.tutorialNavBarBody,
+      demo: TutorialDemo.navTabs,
     ),
     TutorialStep(
       tab: 1,
@@ -49,6 +64,7 @@ class TutorialController extends ChangeNotifier {
       anchor: TutorialAnchorId.calendarTitle,
       title: AppStrings.tutorialCalendarTitleTitle,
       body: AppStrings.tutorialCalendarTitleBody,
+      demo: TutorialDemo.calendarTitle,
     ),
     TutorialStep(
       tab: 1,
@@ -56,6 +72,23 @@ class TutorialController extends ChangeNotifier {
       anchor: TutorialAnchorId.calendarGrid,
       title: AppStrings.tutorialCalendarGridTitle,
       body: AppStrings.tutorialCalendarGridBody,
+      demo: TutorialDemo.calendarTap,
+    ),
+    TutorialStep(
+      tab: 1,
+      badge: AppStrings.tutorialBadgeCalendar,
+      anchor: TutorialAnchorId.calendarGrid,
+      title: AppStrings.tutorialCalendarRangeTitle,
+      body: AppStrings.tutorialCalendarRangeBody,
+      demo: TutorialDemo.calendarRange,
+    ),
+    TutorialStep(
+      tab: 1,
+      badge: AppStrings.tutorialBadgeCalendar,
+      anchor: TutorialAnchorId.calendarGrid,
+      title: AppStrings.tutorialCalendarCompleteTitle,
+      body: AppStrings.tutorialCalendarCompleteBody,
+      demo: TutorialDemo.todoComplete,
     ),
     TutorialStep(
       tab: 1,
@@ -63,6 +96,7 @@ class TutorialController extends ChangeNotifier {
       anchor: TutorialAnchorId.calendarMenu,
       title: AppStrings.tutorialCalendarMenuTitle,
       body: AppStrings.tutorialCalendarMenuBody,
+      demo: TutorialDemo.calendarMenu,
     ),
     TutorialStep(
       tab: 0,
@@ -84,6 +118,7 @@ class TutorialController extends ChangeNotifier {
       anchor: TutorialAnchorId.homeList,
       title: AppStrings.tutorialHomeListTitle,
       body: AppStrings.tutorialHomeListBody,
+      demo: TutorialDemo.homeReorder,
     ),
     TutorialStep(
       tab: 2,
@@ -105,6 +140,7 @@ class TutorialController extends ChangeNotifier {
       anchor: TutorialAnchorId.jobAdd,
       title: AppStrings.tutorialJobAddTitle,
       body: AppStrings.tutorialJobAddBody,
+      demo: TutorialDemo.jobSwipe,
     ),
     TutorialStep(
       tab: 2,
@@ -121,6 +157,7 @@ class TutorialController extends ChangeNotifier {
 
   bool get active => _active;
   int get index => _index;
+  bool get isFirst => _index <= 0;
   bool get isLast => _index >= steps.length - 1;
   TutorialStep get step => steps[_index];
   bool get shouldAutoStart => _preference.shouldAutoStart;
@@ -160,6 +197,12 @@ class TutorialController extends ChangeNotifier {
       return;
     }
     _index += 1;
+    notifyListeners();
+  }
+
+  void previous() {
+    if (!_active || isFirst) return;
+    _index -= 1;
     notifyListeners();
   }
 

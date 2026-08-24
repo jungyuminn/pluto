@@ -11,7 +11,7 @@
 
 <p align="center">
   <img alt="Flutter" src="https://img.shields.io/badge/Flutter-3-02569B?logo=flutter&logoColor=white">
-  <img alt="version" src="https://img.shields.io/badge/version-1.0.17-5B8DEF">
+  <img alt="version" src="https://img.shields.io/badge/version-1.0.18-5B8DEF">
   <img alt="platform" src="https://img.shields.io/badge/Android%20%7C%20iOS-local%20first-34C759">
 </p>
 
@@ -54,7 +54,7 @@
 
 ### 홈 화면 위젯
 
-안드로이드 홈에 오늘, 오늘+내일, 일주일 시간표를 둘 수 있습니다. iOS 위젯은 아직 없습니다.
+안드로이드와 아이폰 홈에 **오늘**, **내일**, **오늘과 내일**, **일주일** 위젯을 둘 수 있습니다. 아이폰은 잠금 화면에도 오늘 일정을 둘 수 있습니다.
 
 ## 이 저장소
 

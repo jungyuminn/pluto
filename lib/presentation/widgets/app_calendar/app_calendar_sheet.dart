@@ -29,6 +29,7 @@ Future<AppCalendarResult?> showAppCalendarSheet(
   AppCalendarMode mode = AppCalendarMode.single,
   Color color = const Color(0xFF3B82F6),
   bool showModes = true,
+  List<AppCalendarMode>? modes,
 }) {
   FocusManager.instance.primaryFocus?.unfocus();
   return showModalBottomSheet<AppCalendarResult>(
@@ -46,6 +47,7 @@ Future<AppCalendarResult?> showAppCalendarSheet(
       initialMode: mode,
       color: color,
       showModes: showModes,
+      modes: modes,
     ),
   );
 }
@@ -58,6 +60,7 @@ class AppCalendarSheet extends StatefulWidget {
     this.initialMode = AppCalendarMode.single,
     this.color = const Color(0xFF3B82F6),
     this.showModes = true,
+    this.modes,
   });
 
   final DateTime? initialDate;
@@ -65,6 +68,7 @@ class AppCalendarSheet extends StatefulWidget {
   final AppCalendarMode initialMode;
   final Color color;
   final bool showModes;
+  final List<AppCalendarMode>? modes;
 
   @override
   State<AppCalendarSheet> createState() => _AppCalendarSheetState();
@@ -165,6 +169,8 @@ class _AppCalendarSheetState extends State<AppCalendarSheet> {
 
   void _setMode(AppCalendarMode mode) {
     if (!widget.showModes) return;
+    final allowed = widget.modes;
+    if (allowed != null && !allowed.contains(mode)) return;
     if (mode == _mode) return;
     setState(() {
       final keep = _mode == AppCalendarMode.repeat ? _repeatStart : _primary;
@@ -376,7 +382,11 @@ class _AppCalendarSheetState extends State<AppCalendarSheet> {
               ),
               const SizedBox(height: 14),
               if (widget.showModes) ...[
-                _ModeTabs(mode: _mode, onChanged: _setMode),
+                _ModeTabs(
+                  mode: _mode,
+                  onChanged: _setMode,
+                  modes: widget.modes,
+                ),
                 const SizedBox(height: 18),
               ],
               AnimatedSize(
@@ -589,12 +599,17 @@ class _CircleButton extends StatelessWidget {
 }
 
 class _ModeTabs extends StatelessWidget {
-  const _ModeTabs({required this.mode, required this.onChanged});
+  const _ModeTabs({
+    required this.mode,
+    required this.onChanged,
+    this.modes,
+  });
 
   final AppCalendarMode mode;
   final ValueChanged<AppCalendarMode> onChanged;
+  final List<AppCalendarMode>? modes;
 
-  static const _items = [
+  static const _all = [
     (AppCalendarMode.single, AppStrings.calendarModeSingle),
     (AppCalendarMode.range, AppStrings.calendarModeRange),
     (AppCalendarMode.repeat, AppStrings.calendarModeRepeat),
@@ -604,15 +619,25 @@ class _ModeTabs extends StatelessWidget {
   static const _pillHeight = 34.0;
   static const _duration = Duration(milliseconds: 240);
 
+  List<(AppCalendarMode, String)> get _items {
+    final allowed = modes;
+    if (allowed == null || allowed.isEmpty) return _all;
+    return [
+      for (final item in _all)
+        if (allowed.contains(item.$1)) item,
+    ];
+  }
+
   @override
   Widget build(BuildContext context) {
-    final index = _items.indexWhere((item) => item.$1 == mode).clamp(0, 3);
+    final items = _items;
+    final index = items.indexWhere((item) => item.$1 == mode).clamp(0, items.length - 1);
 
     return SizedBox(
       height: 38,
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final cellWidth = constraints.maxWidth / _items.length;
+          final cellWidth = constraints.maxWidth / items.length;
           final pillWidth = cellWidth - 6;
           final left = cellWidth * index + (cellWidth - pillWidth) / 2;
 
@@ -634,10 +659,10 @@ class _ModeTabs extends StatelessWidget {
               ),
               Row(
                 children: [
-                  for (var i = 0; i < _items.length; i++)
+                  for (var i = 0; i < items.length; i++)
                     Expanded(
                       child: PressBounce(
-                        onPressed: () => onChanged(_items[i].$1),
+                        onPressed: () => onChanged(items[i].$1),
                         pressedScale: 0.96,
                         pressedColor: Colors.transparent,
                         child: Center(
@@ -652,7 +677,7 @@ class _ModeTabs extends StatelessWidget {
                                   ? AppColors.of(context).secondary
                                   : AppColors.of(context).muted,
                             ),
-                            child: Text(_items[i].$2),
+                            child: Text(items[i].$2),
                           ),
                         ),
                       ),

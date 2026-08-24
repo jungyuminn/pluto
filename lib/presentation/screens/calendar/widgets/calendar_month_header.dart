@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:job_planner/app_scope.dart';
+import 'package:job_planner/core/constants/app_icons.dart';
 import 'package:job_planner/core/constants/app_strings.dart';
 import 'package:job_planner/core/theme/app_colors.dart';
-import 'package:job_planner/core/utils/press_bounce.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/calendar_filter_menu.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/category_picker_sheet.dart';
 import 'package:job_planner/presentation/tutorial/tutorial_anchor.dart';
+import 'package:job_planner/presentation/widgets/app_bar_icon_group.dart';
 import 'package:job_planner/presentation/widgets/app_calendar/calendar_zoom_picker.dart';
 
 class CalendarMonthHeader extends StatelessWidget {
@@ -21,6 +22,8 @@ class CalendarMonthHeader extends StatelessWidget {
     this.onShowCompaniesChanged,
     this.onShowDiaryChanged,
     this.onSortPrefsChanged,
+    this.searchOpen = false,
+    this.onSearchPressed,
   });
 
   final DateTime month;
@@ -33,6 +36,8 @@ class CalendarMonthHeader extends StatelessWidget {
   final ValueChanged<bool>? onShowCompaniesChanged;
   final ValueChanged<bool>? onShowDiaryChanged;
   final VoidCallback? onSortPrefsChanged;
+  final bool searchOpen;
+  final VoidCallback? onSearchPressed;
 
   String get _title {
     if (title != null) return title!;
@@ -64,14 +69,27 @@ class CalendarMonthHeader extends StatelessWidget {
           ),
           TutorialAnchor(
             id: TutorialAnchorId.calendarMenu,
-            child: CalendarMonthMenuButton(
-              showTodos: showTodos,
-              showCompanies: showCompanies,
-              showDiary: showDiary,
-              onShowTodosChanged: onShowTodosChanged,
-              onShowCompaniesChanged: onShowCompaniesChanged,
-              onShowDiaryChanged: onShowDiaryChanged,
-              onSortPrefsChanged: onSortPrefsChanged,
+            child: AppBarIconGroup(
+              actions: [
+                if (onSearchPressed != null)
+                  AppBarIconAction(
+                    asset: AppIcons.search,
+                    label: AppStrings.calendarSearchLabel,
+                    selected: searchOpen,
+                    onPressed: onSearchPressed!,
+                  ),
+              ],
+              trailing: [
+                CalendarMonthMenuButton(
+                  showTodos: showTodos,
+                  showCompanies: showCompanies,
+                  showDiary: showDiary,
+                  onShowTodosChanged: onShowTodosChanged,
+                  onShowCompaniesChanged: onShowCompaniesChanged,
+                  onShowDiaryChanged: onShowDiaryChanged,
+                  onSortPrefsChanged: onSortPrefsChanged,
+                ),
+              ],
             ),
           ),
         ],
@@ -286,35 +304,13 @@ class _CalendarMonthMenuButtonState extends State<CalendarMonthMenuButton>
       },
       child: CompositedTransformTarget(
         link: _link,
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.of(context).shadow,
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: PressBounce(
-            onPressed: _toggle,
-            color: _portal.isShowing
-                ? AppColors.of(context).pressed
-                : AppColors.of(context).card,
-            pressedColor: AppColors.of(context).border,
-            borderRadius: BorderRadius.circular(999),
-            child: SizedBox(
-              width: 40,
-              height: 40,
-              child: Center(
-                child: Icon(
-                  Icons.more_horiz,
-                  size: 22,
-                  color: AppColors.of(context).icon,
-                ),
-              ),
-            ),
+        child: AppBarIconSlot(
+          selected: _portal.isShowing,
+          onPressed: _toggle,
+          child: Icon(
+            Icons.more_horiz,
+            size: 22,
+            color: AppColors.of(context).icon,
           ),
         ),
       ),

@@ -18,9 +18,14 @@ class AppBarIconAction {
 }
 
 class AppBarIconGroup extends StatelessWidget {
-  const AppBarIconGroup({super.key, required this.actions});
+  const AppBarIconGroup({
+    super.key,
+    this.actions = const [],
+    this.trailing = const [],
+  });
 
   final List<AppBarIconAction> actions;
+  final List<Widget> trailing;
 
   @override
   Widget build(BuildContext context) {
@@ -42,7 +47,17 @@ class AppBarIconGroup extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            for (final action in actions) _IconButton(action: action),
+            for (final action in actions) AppBarIconSlot(
+              selected: action.selected,
+              onPressed: action.onPressed,
+              child: ThemedAsset(
+                asset: action.asset,
+                width: 18,
+                height: 18,
+                semanticLabel: action.label,
+              ),
+            ),
+            ...trailing,
           ],
         ),
       ),
@@ -50,27 +65,29 @@ class AppBarIconGroup extends StatelessWidget {
   }
 }
 
-class _IconButton extends StatelessWidget {
-  const _IconButton({required this.action});
+class AppBarIconSlot extends StatelessWidget {
+  const AppBarIconSlot({
+    super.key,
+    required this.onPressed,
+    required this.child,
+    this.selected = false,
+  });
 
-  final AppBarIconAction action;
+  final VoidCallback onPressed;
+  final Widget child;
+  final bool selected;
 
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
     return PressBounce(
-      onPressed: action.onPressed,
-      color: action.selected ? colors.selected : Colors.transparent,
+      onPressed: onPressed,
+      color: selected ? colors.selected : Colors.transparent,
       pressedColor: colors.pressed,
       borderRadius: BorderRadius.circular(999),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        child: ThemedAsset(
-          asset: action.asset,
-          width: 18,
-          height: 18,
-          semanticLabel: action.label,
-        ),
+        child: child,
       ),
     );
   }

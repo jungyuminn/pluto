@@ -16,12 +16,20 @@ class DiaryRepositoryImpl implements DiaryRepository {
     return _localDataSource.fetchAll();
   }
 
+  bool _replacesSameDay(DiaryEntry existing, DiaryEntry incoming) {
+    if (!_sameDay(existing.day, incoming.day)) return false;
+    if (incoming.groupId != null) {
+      return existing.groupId == incoming.groupId;
+    }
+    return existing.groupId == null;
+  }
+
   @override
   Future<void> save(DiaryEntry entry) async {
     final current = _localDataSource.fetchAll();
     await _localDataSource.saveAll([
       for (final item in current)
-        if (item.id != entry.id && !_sameDay(item.day, entry.day)) item,
+        if (item.id != entry.id && !_replacesSameDay(item, entry)) item,
       entry,
     ]);
   }

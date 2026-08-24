@@ -105,9 +105,7 @@ class NotificationPreference {
 
   static int _readLeftoverMinutes(int? stored) {
     if (stored == null) return defaultLeftoverMinutes;
-    final minutes = stored.clamp(0, 24 * 60 - 1);
-    if (minutes % 60 != 0) return defaultLeftoverMinutes;
-    return minutes;
+    return (stored.clamp(0, 24 * 60 - 1) ~/ 60) * 60;
   }
 
   void hydrate() {

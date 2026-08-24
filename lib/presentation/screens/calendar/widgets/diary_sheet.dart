@@ -5,6 +5,7 @@ import 'package:job_planner/presentation/screens/calendar/widgets/diary_form.dar
 Future<bool> showDiarySheet(
   BuildContext context, {
   required DateTime date,
+  DateTime? rangeEnd,
   DiaryEntry? initial,
 }) async {
   final saved = await showModalBottomSheet<bool>(
@@ -21,6 +22,7 @@ Future<bool> showDiarySheet(
     ),
     builder: (context) => DiarySheet(
       date: date,
+      rangeEnd: rangeEnd,
       initial: initial,
     ),
   );
@@ -31,10 +33,12 @@ class DiarySheet extends StatelessWidget {
   const DiarySheet({
     super.key,
     required this.date,
+    this.rangeEnd,
     this.initial,
   });
 
   final DateTime date;
+  final DateTime? rangeEnd;
   final DiaryEntry? initial;
 
   @override
@@ -48,6 +52,7 @@ class DiarySheet extends StatelessWidget {
         child: SingleChildScrollView(
           child: DiaryForm(
             date: date,
+            rangeEnd: rangeEnd,
             initial: initial,
           ),
         ),

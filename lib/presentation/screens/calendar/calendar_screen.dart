@@ -1,23 +1,23 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:job_planner/app_scope.dart';
 import 'package:job_planner/core/constants/app_strings.dart';
 import 'package:job_planner/core/theme/app_colors.dart';
 import 'package:job_planner/core/theme/app_skin_background.dart';
+import 'package:job_planner/core/utils/korean_search.dart';
+import 'package:job_planner/core/utils/plain_text_editing_controller.dart';
 import 'package:job_planner/data/datasources/app_backup_service.dart';
-import 'package:job_planner/data/datasources/diary_photo_storage.dart';
+import 'package:job_planner/domain/entities/apply_status.dart';
 import 'package:job_planner/domain/entities/calendar_event.dart';
 import 'package:job_planner/domain/entities/diary_entry.dart';
 import 'package:job_planner/domain/entities/event_category.dart';
 import 'package:job_planner/domain/entities/job_application.dart';
 import 'package:job_planner/presentation/screens/calendar/calendar_day_events.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/calendar_month_grid.dart';
-import 'package:job_planner/presentation/screens/calendar/widgets/calendar_week_diaries.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/calendar_month_header.dart';
+import 'package:job_planner/presentation/screens/calendar/widgets/calendar_search_bar.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/calendar_weekday_header.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/day_events_dialog.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/add_event_sheet.dart';
-import 'package:job_planner/presentation/screens/calendar/widgets/delete_event_dialog.dart';
 import 'package:job_planner/presentation/tutorial/tutorial_anchor.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/diary_sheet.dart';
 import 'package:job_planner/presentation/widgets/app_calendar/calendar_zoom_picker.dart';
@@ -32,12 +32,17 @@ class CalendarScreen extends StatefulWidget {
 }
 
 class _CalendarScreenState extends State<CalendarScreen>
-    with WidgetsBindingObserver {
+    with WidgetsBindingObserver, SingleTickerProviderStateMixin {
   static const _initialPage = 12000;
 
   late DateTime _baseMonth;
   late final PageController _pages;
   late DateTime _visibleMonth;
+  late final PlainTextEditingController _search;
+  late final FocusNode _searchFocus;
+  late final AnimationController _searchAnimation;
+  late final CurvedAnimation _searchFade;
+  late final ValueNotifier<bool> _searchOpen;
   var _events = <CalendarEvent>[];
   var _diaries = <DiaryEntry>[];
   var _applications = <JobApplication>[];
@@ -48,6 +53,10 @@ class _CalendarScreenState extends State<CalendarScreen>
   var _showCompanies = true;
   var _showDiary = false;
   var _zoom = CalendarZoomLevel.days;
+  var _hits = <_SearchHit>[];
+  var _hitIndex = 0;
+  DateTime? _searchDay;
+  String? _searchHitKey;
 
   @override
   void initState() {
@@ -55,6 +64,19 @@ class _CalendarScreenState extends State<CalendarScreen>
     WidgetsBinding.instance.addObserver(this);
     _showCurrentMonth();
     _pages = PageController(initialPage: _initialPage, keepPage: false);
+    _search = PlainTextEditingController();
+    _searchFocus = FocusNode();
+    _searchAnimation = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 260),
+      reverseDuration: const Duration(milliseconds: 200),
+    );
+    _searchFade = CurvedAnimation(
+      parent: _searchAnimation,
+      curve: Curves.easeOutCubic,
+      reverseCurve: Curves.easeInCubic,
+    );
+    _searchOpen = ValueNotifier(false);
     AppBackupService.revision.addListener(_onBackupRestored);
   }
 
@@ -80,6 +102,11 @@ class _CalendarScreenState extends State<CalendarScreen>
   void dispose() {
     AppBackupService.revision.removeListener(_onBackupRestored);
     WidgetsBinding.instance.removeObserver(this);
+    _searchFade.dispose();
+    _searchAnimation.dispose();
+    _searchOpen.dispose();
+    _searchFocus.dispose();
+    _search.dispose();
     _pages.dispose();
     super.dispose();
   }
@@ -167,6 +194,127 @@ class _CalendarScreenState extends State<CalendarScreen>
       _applications = applications;
       _companyCategories = companyCategories;
     });
+    if (_searchOpen.value) _refreshHits(jump: false);
+  }
+
+  Future<void> _toggleSearch() async {
+    if (_searchOpen.value) {
+      _searchFocus.unfocus();
+      _searchOpen.value = false;
+      await _searchAnimation.reverse();
+      if (!mounted) return;
+      _search.clear();
+      if (_hits.isEmpty && _searchDay == null && _searchHitKey == null) {
+        return;
+      }
+      setState(() {
+        _hits = [];
+        _hitIndex = 0;
+        _searchDay = null;
+        _searchHitKey = null;
+      });
+      return;
+    }
+
+    _searchOpen.value = true;
+    await _searchAnimation.forward();
+    if (mounted) _searchFocus.requestFocus();
+  }
+
+  void _onSearchChanged(String _) {
+    _refreshHits(resetIndex: true);
+  }
+
+  void _refreshHits({bool jump = true, bool resetIndex = false}) {
+    final hits = _searchHits(_search.text);
+    final index = hits.isEmpty
+        ? 0
+        : (resetIndex ? 0 : _hitIndex.clamp(0, hits.length - 1));
+    setState(() {
+      _hits = hits;
+      _hitIndex = index;
+      _searchDay = hits.isEmpty ? null : hits[index].day;
+      _searchHitKey = hits.isEmpty ? null : hits[index].key;
+    });
+    if (jump && hits.isNotEmpty) _revealHit(hits[index].day);
+  }
+
+  List<_SearchHit> _searchHits(String query) {
+    if (KoreanSearch.compact(query).isEmpty) return const [];
+    final latest = <String, DateTime>{};
+
+    void consider(String key, DateTime date, Iterable<String> texts) {
+      if (!KoreanSearch.matchesAny(texts, query)) return;
+      final day = DateTime(date.year, date.month, date.day);
+      final current = latest[key];
+      if (current == null || day.isAfter(current)) latest[key] = day;
+    }
+
+    if (_showDiary) {
+      for (final diary in _diaries) {
+        consider(
+          diary.groupId ?? diary.id,
+          diary.day,
+          [diary.title, diary.body, diary.categoryName],
+        );
+      }
+    } else {
+      if (_showTodos) {
+        for (final event in _events) {
+          if (event.isJob) continue;
+          consider(
+            event.groupId ?? event.id,
+            event.day,
+            [event.title, event.categoryName],
+          );
+        }
+      }
+      if (_showCompanies) {
+        for (final application in _applications) {
+          if (ApplyStatus.isRejected(application.applyStatus)) continue;
+          for (var i = 0; i < application.rounds.length; i++) {
+            final round = application.rounds[i];
+            final date = round.date;
+            if (date == null) continue;
+            consider(
+              'job:${application.id}:$i',
+              date,
+              [application.companyName, application.categoryName],
+            );
+          }
+        }
+      }
+    }
+
+    return [
+      for (final entry in latest.entries)
+        _SearchHit(key: entry.key, day: entry.value),
+    ]..sort((a, b) {
+        final byDay = b.day.compareTo(a.day);
+        if (byDay != 0) return byDay;
+        return a.key.compareTo(b.key);
+      });
+  }
+
+  Future<void> _revealHit(DateTime day) async {
+    if (_zoom != CalendarZoomLevel.days) {
+      setState(() => _zoom = CalendarZoomLevel.days);
+      await WidgetsBinding.instance.endOfFrame;
+      if (!mounted) return;
+    }
+    await _goToMonth(day);
+  }
+
+  void _searchStep(int delta) {
+    if (_hits.isEmpty) return;
+    final next = (_hitIndex + delta) % _hits.length;
+    final index = next < 0 ? next + _hits.length : next;
+    setState(() {
+      _hitIndex = index;
+      _searchDay = _hits[index].day;
+      _searchHitKey = _hits[index].key;
+    });
+    _revealHit(_hits[index].day);
   }
 
   List<CalendarEvent> _eventsOn(DateTime date) {
@@ -182,17 +330,62 @@ class _CalendarScreenState extends State<CalendarScreen>
     return CalendarEvent.withLockedThenStartTime(events);
   }
 
-  DiaryEntry? _diaryOn(DateTime date) {
+  List<DiaryEntry> _diariesOn(DateTime date) {
     final day = DateTime(date.year, date.month, date.day);
-    for (final diary in _diaries) {
-      if (diary.day == day) return diary;
+    return [
+      for (final diary in _diaries)
+        if (diary.day == day) diary,
+    ];
+  }
+
+  ({DateTime start, DateTime end})? _diarySpan(DiaryEntry diary) {
+    final groupId = diary.groupId;
+    if (groupId == null) return null;
+    DateTime? start;
+    DateTime? end;
+    for (final item in _diaries) {
+      if (item.groupId != groupId) continue;
+      if (start == null || item.day.isBefore(start)) start = item.day;
+      if (end == null || item.day.isAfter(end)) end = item.day;
     }
-    return null;
+    if (start == null || end == null || start == end) return null;
+    return (start: start, end: end);
+  }
+
+  DiaryEntry? _diaryToOpen(DateTime date) {
+    final onDay = _diariesOn(date);
+    if (onDay.isEmpty) return null;
+    final day = DateTime(date.year, date.month, date.day);
+    DiaryEntry? startsToday;
+    DiaryEntry? single;
+    DiaryEntry? earliest;
+    DateTime? earliestStart;
+    for (final diary in onDay) {
+      final span = _diarySpan(diary);
+      if (span != null && span.start == day) {
+        startsToday ??= diary;
+      } else if (span == null) {
+        single ??= diary;
+      }
+      final start = span?.start ?? diary.day;
+      if (earliestStart == null || start.isBefore(earliestStart)) {
+        earliestStart = start;
+        earliest = diary;
+      }
+    }
+    return startsToday ?? single ?? earliest;
   }
 
   Future<void> _openDay(DateTime date, Rect origin) async {
     if (_showDiary) {
-      await showDiarySheet(context, date: date, initial: _diaryOn(date));
+      final diary = _diaryToOpen(date);
+      final span = diary == null ? null : _diarySpan(diary);
+      await showDiarySheet(
+        context,
+        date: span?.start ?? date,
+        rangeEnd: span?.end,
+        initial: diary,
+      );
       if (mounted) await _reload();
       return;
     }
@@ -208,29 +401,12 @@ class _CalendarScreenState extends State<CalendarScreen>
     if (mounted) await _reload();
   }
 
-  Future<void> _deleteDiaryOn(DateTime date) async {
-    if (!_showDiary) return;
-    final diary = _diaryOn(date);
-    if (diary == null) return;
-    HapticFeedback.mediumImpact();
-    final title = diary.title.trim().isEmpty
-        ? AppStrings.diaryFallback
-        : diary.title.trim();
-    final confirmed = await showDeleteEventDialog(
-      context,
-      title: title,
-      body: AppStrings.deleteDiaryBody,
-    );
-    if (!confirmed || !mounted) return;
-    final photoPath = diary.photoPath;
-    await AppScope.of(context).deleteDiary(diary.id);
-    if (mounted) await _reload();
-    await Future<void>.delayed(CalendarWeekDiaries.fadeDuration);
-    await const DiaryPhotoStorage().delete(photoPath);
-  }
-
   Future<void> _openRange(DateTime start, DateTime end) async {
-    await showAddEventSheet(context, date: start, rangeEnd: end);
+    if (_showDiary) {
+      await showDiarySheet(context, date: start, rangeEnd: end);
+    } else {
+      await showAddEventSheet(context, date: start, rangeEnd: end);
+    }
     if (mounted) await _reload();
   }
 
@@ -259,105 +435,141 @@ class _CalendarScreenState extends State<CalendarScreen>
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          CalendarMonthHeader(
-                            month: _visibleMonth,
-                            title: CalendarZoom.title(
-                              _zoom,
-                              _visibleMonth,
-                              hideCurrentYear: true,
+                          ValueListenableBuilder<bool>(
+                            valueListenable: _searchOpen,
+                            builder: (context, searchOpen, _) {
+                              return CalendarMonthHeader(
+                                month: _visibleMonth,
+                                title: CalendarZoom.title(
+                                  _zoom,
+                                  _visibleMonth,
+                                  hideCurrentYear: true,
+                                ),
+                                onTitlePressed: _zoom == CalendarZoomLevel.years
+                                    ? null
+                                    : _onTitlePressed,
+                                showTodos: _showTodos,
+                                showCompanies: _showCompanies,
+                                showDiary: _showDiary,
+                                searchOpen: searchOpen,
+                                onSearchPressed: _toggleSearch,
+                                onShowTodosChanged: (value) {
+                                  setState(() => _showTodos = value);
+                                  if (_searchOpen.value) _refreshHits();
+                                },
+                                onShowCompaniesChanged: (value) {
+                                  setState(() => _showCompanies = value);
+                                  if (_searchOpen.value) _refreshHits();
+                                },
+                                onShowDiaryChanged: (value) {
+                                  setState(() => _showDiary = value);
+                                  if (_searchOpen.value) _refreshHits();
+                                },
+                                onSortPrefsChanged: () => setState(() {}),
+                              );
+                            },
+                          ),
+                          ClipRect(
+                            child: SizeTransition(
+                              sizeFactor: _searchFade,
+                              axisAlignment: -1,
+                              child: FadeTransition(
+                                opacity: _searchFade,
+                                child: CalendarSearchBar(
+                                  controller: _search,
+                                  focusNode: _searchFocus,
+                                  hintText: _showDiary
+                                      ? AppStrings.calendarDiarySearchHint
+                                      : AppStrings.calendarSearchHint,
+                                  onChanged: _onSearchChanged,
+                                  onSubmitted: () => _searchStep(1),
+                                  onPrevious: () => _searchStep(-1),
+                                  onNext: () => _searchStep(1),
+                                  index: _hitIndex,
+                                  total: _hits.length,
+                                ),
+                              ),
                             ),
-                            onTitlePressed: _zoom == CalendarZoomLevel.years
-                                ? null
-                                : _onTitlePressed,
-                            showTodos: _showTodos,
-                            showCompanies: _showCompanies,
-                            showDiary: _showDiary,
-                            onShowTodosChanged: (value) {
-                              setState(() => _showTodos = value);
-                            },
-                            onShowCompaniesChanged: (value) {
-                              setState(() => _showCompanies = value);
-                            },
-                            onShowDiaryChanged: (value) {
-                              setState(() => _showDiary = value);
-                            },
-                            onSortPrefsChanged: () => setState(() {}),
                           ),
                           Expanded(
-                            child: TutorialAnchor(
-                              id: TutorialAnchorId.calendarGrid,
-                              child: CalendarZoomTransition(
-                                level: _zoom,
-                                child: switch (_zoom) {
-                                  CalendarZoomLevel.days => Column(
-                                    children: [
-                                      CalendarWeekdayHeader(
-                                        startMonday: startMonday,
-                                      ),
-                                      Expanded(
-                                        child: PageView.builder(
-                                          controller: _pages,
-                                          physics: _rangeDragging
-                                              ? const NeverScrollableScrollPhysics()
-                                              : null,
-                                          onPageChanged: (page) {
-                                            setState(
-                                              () => _visibleMonth = _monthAt(
-                                                page,
-                                              ),
-                                            );
-                                          },
-                                          itemBuilder: (context, page) {
-                                            return CalendarMonthGrid(
-                                              month: _monthAt(page),
-                                              startMonday: startMonday,
-                                              eventsOf: _eventsOn,
-                                              diaryOf: _diaryOn,
-                                              showDiary: _showDiary,
-                                              onDayPressed: _openDay,
-                                              onDayLongPressed: _showDiary
-                                                  ? _deleteDiaryOn
+                            child: _SearchStableViewport(
+                              animation: _searchAnimation,
+                              child: TutorialAnchor(
+                                id: TutorialAnchorId.calendarGrid,
+                                child: RepaintBoundary(
+                                  child: CalendarZoomTransition(
+                                    level: _zoom,
+                                    child: switch (_zoom) {
+                                      CalendarZoomLevel.days => Column(
+                                        children: [
+                                          CalendarWeekdayHeader(
+                                            startMonday: startMonday,
+                                          ),
+                                          Expanded(
+                                            child: PageView.builder(
+                                              controller: _pages,
+                                              physics: _rangeDragging
+                                                  ? const NeverScrollableScrollPhysics()
                                                   : null,
-                                              onRangeDragChanged: _showDiary
-                                                  ? null
-                                                  : (dragging) {
-                                                      setState(
-                                                        () => _rangeDragging =
-                                                            dragging,
-                                                      );
-                                                    },
-                                              onRangeSelected: _showDiary
-                                                  ? null
-                                                  : _openRange,
+                                              onPageChanged: (page) {
+                                                setState(
+                                                  () => _visibleMonth =
+                                                      _monthAt(page),
+                                                );
+                                              },
+                                              itemBuilder: (context, page) {
+                                                return CalendarMonthGrid(
+                                                  month: _monthAt(page),
+                                                  startMonday: startMonday,
+                                                  eventsOf: _eventsOn,
+                                                  diariesOf: _diariesOn,
+                                                  showDiary: _showDiary,
+                                                  searchDay: _searchDay,
+                                                  searchHitKey: _searchHitKey,
+                                                  onDayPressed: _openDay,
+                                                  onRangeDragChanged:
+                                                      (dragging) {
+                                                    setState(
+                                                      () => _rangeDragging =
+                                                          dragging,
+                                                    );
+                                                  },
+                                                  onRangeSelected: _openRange,
+                                                );
+                                              },
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      CalendarZoomLevel.months =>
+                                        CalendarMonthZoomView(
+                                          focused: _visibleMonth,
+                                          accent: AppColors.of(
+                                            context,
+                                          ).accentBright,
+                                          onFocusedChanged: (month) {
+                                            setState(
+                                              () => _visibleMonth = month,
                                             );
                                           },
+                                          onMonthPressed: _pickMonth,
                                         ),
-                                      ),
-                                    ],
+                                      CalendarZoomLevel.years =>
+                                        CalendarYearZoomView(
+                                          focused: _visibleMonth,
+                                          accent: AppColors.of(
+                                            context,
+                                          ).accentBright,
+                                          onFocusedChanged: (month) {
+                                            setState(
+                                              () => _visibleMonth = month,
+                                            );
+                                          },
+                                          onYearPressed: _pickYear,
+                                        ),
+                                    },
                                   ),
-                                  CalendarZoomLevel.months =>
-                                    CalendarMonthZoomView(
-                                      focused: _visibleMonth,
-                                      accent: AppColors.of(
-                                        context,
-                                      ).accentBright,
-                                      onFocusedChanged: (month) {
-                                        setState(() => _visibleMonth = month);
-                                      },
-                                      onMonthPressed: _pickMonth,
-                                    ),
-                                  CalendarZoomLevel.years =>
-                                    CalendarYearZoomView(
-                                      focused: _visibleMonth,
-                                      accent: AppColors.of(
-                                        context,
-                                      ).accentBright,
-                                      onFocusedChanged: (month) {
-                                        setState(() => _visibleMonth = month);
-                                      },
-                                      onYearPressed: _pickYear,
-                                    ),
-                                },
+                                ),
                               ),
                             ),
                           ),
@@ -371,6 +583,87 @@ class _CalendarScreenState extends State<CalendarScreen>
           ),
         ),
       ),
+    );
+  }
+}
+
+class _SearchHit {
+  const _SearchHit({required this.key, required this.day});
+
+  final String key;
+  final DateTime day;
+}
+
+class _SearchStableViewport extends StatefulWidget {
+  const _SearchStableViewport({
+    required this.animation,
+    required this.child,
+  });
+
+  final Animation<double> animation;
+  final Widget child;
+
+  @override
+  State<_SearchStableViewport> createState() => _SearchStableViewportState();
+}
+
+class _SearchStableViewportState extends State<_SearchStableViewport> {
+  double? _restHeight;
+  double? _frozenHeight;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.animation.addStatusListener(_onStatus);
+  }
+
+  @override
+  void didUpdateWidget(_SearchStableViewport oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.animation == widget.animation) return;
+    oldWidget.animation.removeStatusListener(_onStatus);
+    widget.animation.addStatusListener(_onStatus);
+  }
+
+  @override
+  void dispose() {
+    widget.animation.removeStatusListener(_onStatus);
+    super.dispose();
+  }
+
+  void _onStatus(AnimationStatus status) {
+    if (!mounted) return;
+    setState(() {
+      if (status == AnimationStatus.completed ||
+          status == AnimationStatus.dismissed) {
+        _frozenHeight = null;
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final available = constraints.maxHeight;
+        final status = widget.animation.status;
+        if (status == AnimationStatus.dismissed) {
+          _restHeight = available;
+          return widget.child;
+        }
+        if (status == AnimationStatus.completed) {
+          return widget.child;
+        }
+        _frozenHeight ??= _restHeight ?? available;
+        return ClipRect(
+          child: OverflowBox(
+            alignment: Alignment.topCenter,
+            minHeight: _frozenHeight,
+            maxHeight: _frozenHeight,
+            child: widget.child,
+          ),
+        );
+      },
     );
   }
 }

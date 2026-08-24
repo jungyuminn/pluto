@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:job_planner/core/calendar/month_grid.dart';
 import 'package:job_planner/core/constants/app_fonts.dart';
+import 'package:job_planner/core/theme/app_colors.dart';
 import 'package:job_planner/domain/entities/calendar_event.dart';
 import 'package:job_planner/domain/entities/diary_entry.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/calendar_day_cell.dart';
@@ -62,9 +63,11 @@ class CalendarMonthGrid extends StatefulWidget {
     this.onRangeSelected,
     this.onRangeDragChanged,
     this.eventsOf,
-    this.diaryOf,
+    this.diariesOf,
     this.showDiary = false,
     this.startMonday = false,
+    this.searchDay,
+    this.searchHitKey,
   });
 
   final DateTime month;
@@ -73,9 +76,11 @@ class CalendarMonthGrid extends StatefulWidget {
   final void Function(DateTime start, DateTime end)? onRangeSelected;
   final ValueChanged<bool>? onRangeDragChanged;
   final List<CalendarEvent> Function(DateTime date)? eventsOf;
-  final DiaryEntry? Function(DateTime date)? diaryOf;
+  final List<DiaryEntry> Function(DateTime date)? diariesOf;
   final bool showDiary;
   final bool startMonday;
+  final DateTime? searchDay;
+  final String? searchHitKey;
 
   @override
   State<CalendarMonthGrid> createState() => _CalendarMonthGridState();
@@ -87,8 +92,11 @@ class _CalendarMonthGridState extends State<CalendarMonthGrid>
 
   final _keys = <DateTime, GlobalKey>{};
   final _weekKeys = <int, GlobalKey>{};
+  final _stackKey = GlobalKey();
   DateTime? _rangeStart;
   DateTime? _rangeEnd;
+  Rect? _searchRect;
+  var _searchAnimate = false;
   var _dragging = false;
   late final AnimationController _mode;
   late final CurvedAnimation _ease;
@@ -116,16 +124,26 @@ class _CalendarMonthGridState extends State<CalendarMonthGrid>
     _diaryOpacity = Tween<double>(begin: 0, end: 1).animate(_ease);
     _eventsScale = Tween<double>(begin: 1, end: 0.97).animate(_ease);
     _diaryScale = Tween<double>(begin: 0.97, end: 1).animate(_ease);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _syncSearchHighlight(animate: false);
+    });
   }
 
   @override
   void didUpdateWidget(CalendarMonthGrid oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.showDiary == widget.showDiary) return;
-    if (widget.showDiary) {
-      _mode.forward();
-    } else {
-      _mode.reverse();
+    if (oldWidget.showDiary != widget.showDiary) {
+      if (widget.showDiary) {
+        _mode.forward();
+      } else {
+        _mode.reverse();
+      }
+    }
+    if (oldWidget.searchDay != widget.searchDay ||
+        oldWidget.month != widget.month) {
+      _syncSearchHighlight(
+        animate: oldWidget.searchDay != null && widget.searchDay != null,
+      );
     }
   }
 
@@ -231,6 +249,35 @@ class _CalendarMonthGridState extends State<CalendarMonthGrid>
     return CalendarDayDropTarget.isSameDay(date, highlighted);
   }
 
+  bool _isInSearchMonth(DateTime day) {
+    return day.year == widget.month.year && day.month == widget.month.month;
+  }
+
+  Rect? _searchRectFor(DateTime day) {
+    if (!_isInSearchMonth(day)) return null;
+    final cell =
+        _keys[_dateOnly(day)]?.currentContext?.findRenderObject() as RenderBox?;
+    final stack = _stackKey.currentContext?.findRenderObject() as RenderBox?;
+    if (cell == null || stack == null || !cell.hasSize || !stack.hasSize) {
+      return null;
+    }
+    final offset = cell.localToGlobal(Offset.zero, ancestor: stack);
+    return offset & cell.size;
+  }
+
+  void _syncSearchHighlight({required bool animate}) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final day = widget.searchDay;
+      final rect = day == null ? null : _searchRectFor(day);
+      if (rect == _searchRect) return;
+      setState(() {
+        _searchAnimate = animate && _searchRect != null && rect != null;
+        _searchRect = rect;
+      });
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     CalendarDayDropTarget._grids.add(this);
@@ -254,7 +301,29 @@ class _CalendarMonthGridState extends State<CalendarMonthGrid>
                 onLongPressMoveUpdate: allowRange ? _onLongPressMove : null,
                 onLongPressEnd: allowRange ? _onLongPressEnd : null,
                 onLongPressCancel: allowRange ? _clearRange : null,
-                child: ListView.builder(
+                child: Stack(
+                  key: _stackKey,
+                  children: [
+                    if (_searchRect != null)
+                      AnimatedPositioned(
+                        duration: _searchAnimate
+                            ? const Duration(milliseconds: 340)
+                            : Duration.zero,
+                        curve: Curves.easeInOutCubic,
+                        left: _searchRect!.left,
+                        top: _searchRect!.top,
+                        width: _searchRect!.width,
+                        height: _searchRect!.height,
+                        child: IgnorePointer(
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              color: AppColors.of(context).rangeFill,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ListView.builder(
                   padding: EdgeInsets.zero,
                   primary: false,
                   physics: _dragging
@@ -272,7 +341,7 @@ class _CalendarMonthGridState extends State<CalendarMonthGrid>
                     );
                     final diaryHeight = CalendarWeekDiaries.heightFor(
                       days: weekDays,
-                      diaryOf: widget.diaryOf ?? (_) => null,
+                      diariesOf: widget.diariesOf ?? (_) => const [],
                       minHeight: minWeekHeight,
                       calendarScale: calendarScale,
                       labelScale: labelScale,
@@ -339,11 +408,12 @@ class _CalendarMonthGridState extends State<CalendarMonthGrid>
                                     eventsOf: widget.eventsOf!,
                                     calendarScale: calendarScale,
                                     labelScale: labelScale,
+                                    searchHitKey: widget.searchHitKey,
                                   ),
                                 ),
                               ),
                             ),
-                          if (widget.diaryOf != null)
+                          if (widget.diariesOf != null)
                             Positioned.fill(
                               child: FadeTransition(
                                 opacity: _diaryOpacity,
@@ -352,9 +422,10 @@ class _CalendarMonthGridState extends State<CalendarMonthGrid>
                                   scale: _diaryScale,
                                   child: CalendarWeekDiaries(
                                     days: weekDays,
-                                    diaryOf: widget.diaryOf!,
+                                    diariesOf: widget.diariesOf!,
                                     calendarScale: calendarScale,
                                     labelScale: labelScale,
+                                    searchHitKey: widget.searchHitKey,
                                   ),
                                 ),
                               ),
@@ -363,6 +434,8 @@ class _CalendarMonthGridState extends State<CalendarMonthGrid>
                       ),
                     );
                   },
+                ),
+                  ],
                 ),
               );
             },

@@ -45,6 +45,8 @@ class AppStrings {
   static const importCategoryEachBody = '할 일마다 카테고리를 고르면 돼요';
   static const importCategoryEachTitle = '할 일별 카테고리';
   static const importCategoryPick = '카테고리 고르기';
+  static const importCategoryAllHint = '카테고리를 고르면 모든 할 일에 들어가요';
+  static const importCategoryEachHint = '카테고리를 누르면 할 일에 들어가요';
   static const importDoneTitle = '가져오기 성공!';
   static String importDoneBody(int count) => '할 일 $count개를 캘린더에 넣었어요';
   static String importDonePartialBody(int count) =>
@@ -80,6 +82,7 @@ class AppStrings {
   static String autoBackupHint(String label) => '앱을 켜면 $label 자동으로 저장해요';
   static const appTutorial = '앱 둘러보기';
   static const tutorialSkip = '건너뛰기';
+  static const tutorialPrev = '이전';
   static const tutorialStart = '시작하기';
   static const tutorialNext = '다음';
   static const tutorialDone = '확인';
@@ -102,10 +105,16 @@ class AppStrings {
       '월 이름을 누르면 달을 고르고, 한 번 더 누르면 연도를 고를 수 있어요';
   static const tutorialCalendarGridTitle = '날짜를 눌러 추가';
   static const tutorialCalendarGridBody =
-      '날짜를 눌러 할 일을 넣고, 여러 날을 밀면 기간 할 일도 만들 수 있어요';
+      '날짜를 누르면 그날 할 일을 넣거나, 이미 있는 일정을 볼 수 있어요';
+  static const tutorialCalendarRangeTitle = '여러 날을 밀어 기간 추가';
+  static const tutorialCalendarRangeBody =
+      '날짜를 길게 누른 뒤 옆으로 밀면 기간 할 일을 만들 수 있어요';
+  static const tutorialCalendarCompleteTitle = '할 일 완료하기';
+  static const tutorialCalendarCompleteBody =
+      '날짜를 눌러 열린 창에서 동그라미를 누르면 완료예요';
   static const tutorialCalendarMenuTitle = '표시 바꾸기';
   static const tutorialCalendarMenuBody =
-      '오른쪽 버튼으로 할 일·기업만 보거나, 일기로 전환할 수 있어요';
+      '오른쪽 ··· 을 누르면 메뉴가 열려요. 할 일·기업만 보거나 일기로 바꿀 수 있어요';
   static const tutorialNavHomeTitle = '홈 화면';
   static const tutorialNavHomeBody =
       '오늘·내일 할 일과 목표가 모여 있어요';
@@ -114,7 +123,7 @@ class AppStrings {
       '검색, 간략히 보기, 설정이에요';
   static const tutorialHomeListTitle = '할 일 카드';
   static const tutorialHomeListBody =
-      '오늘·내일·언젠가 카드예요. 눌러 열거나, 길게 눌러 순서를 바꿀 수 있어요';
+      '오늘·내일·목표 카드예요. 눌러 열거나, 길게 눌러 순서를 바꿀 수 있어요';
   static const tutorialNavJobTitle = '취업 화면';
   static const tutorialNavJobBody = '지원 기업이 모여 있어요';
   static const tutorialJobToolsTitle = '위쪽 버튼';
@@ -135,8 +144,8 @@ class AppStrings {
   static const homeShowTomorrow = '내일';
   static const homeShowWeek = '이번 주';
   static const homeShowMonth = '이번 달';
-  static const homeShowLongGoal = '언젠가';
-  static const longGoalTitle = '언젠가';
+  static const homeShowLongGoal = '목표';
+  static const longGoalTitle = '목표';
   static const longGoalAdd = '+ 목표를 추가하세요';
   static const longGoalNameHint = '목표 이름을 입력하세요';
   static const longGoalUnitHint = '단위';
@@ -382,6 +391,9 @@ class AppStrings {
   static const calendarVisibleItems = '캘린더에 표시할 항목';
   static const calendarSortMode = '정렬 방식';
   static const calendarDiaryMode = '일기 전환';
+  static const calendarSearchHint = '할 일, 기업, 카테고리 검색';
+  static const calendarDiarySearchHint = '제목, 내용 검색';
+  static const calendarSearchLabel = '검색';
   static const diaryTitleHint = '제목을 입력하세요';
   static const diaryBodyHint = '내용을 입력하세요';
   static const diaryPhotoHint = '이미지를 추가하세요';
@@ -431,6 +443,7 @@ class AppStrings {
   static const calendarModeRepeat = '반복';
   static const calendarModeMultiple = '다중';
   static const rangeEventLabel = '기간 일정';
+  static const rangeDiaryLabel = '기간 일기';
   static const multipleEventLabel = '다중 일정';
   static const repeatEventLabel = '반복 일정';
   static const repeatTypeLabel = '반복 유형';

@@ -17,6 +17,7 @@ class DiaryEntryModel {
           CalendarEvent.defaultCategoryName,
       categoryColor:
           json['categoryColor'] as int? ?? CalendarEvent.defaultCategoryColor,
+      groupId: json['groupId'] as String?,
     );
   }
 
@@ -31,6 +32,7 @@ class DiaryEntryModel {
       'categoryId': entry.categoryId,
       'categoryName': entry.categoryName,
       'categoryColor': entry.categoryColor,
+      'groupId': entry.groupId,
     };
   }
 

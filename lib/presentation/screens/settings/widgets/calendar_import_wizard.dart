@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:job_planner/app_scope.dart';
 import 'package:job_planner/core/calendar/calendar_years.dart';
 import 'package:job_planner/core/constants/app_icons.dart';
 import 'package:job_planner/core/constants/app_strings.dart';
@@ -9,7 +12,7 @@ import 'package:job_planner/data/datasources/device_calendar_import.dart';
 import 'package:job_planner/data/datasources/device_calendar_mapper.dart';
 import 'package:job_planner/domain/entities/calendar_event.dart';
 import 'package:job_planner/domain/entities/event_category.dart';
-import 'package:job_planner/presentation/screens/calendar/widgets/category_picker_sheet.dart';
+import 'package:job_planner/presentation/screens/calendar/widgets/add_category_sheet.dart';
 import 'package:job_planner/presentation/screens/settings/widgets/backup_dialogs.dart';
 import 'package:job_planner/presentation/widgets/app_calendar/app_calendar.dart';
 import 'package:job_planner/presentation/widgets/themed_asset.dart';
@@ -88,11 +91,33 @@ class _CalendarImportWizardState extends State<CalendarImportWizard> {
   var _mode = _CategoryMode.allInOne;
   EventCategory? _allCategory;
   final _eachCategory = <String, EventCategory>{};
+  var _categories = <EventCategory>[];
+  String? _focusEventId;
+  var _assignGen = 0;
+  final _eventList = ScrollController();
+  final _eventKeys = <String, GlobalKey>{};
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) unawaited(_loadCategories());
+    });
+  }
 
   @override
   void dispose() {
     _pages.dispose();
+    _eventList.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadCategories() async {
+    final categories = await AppScope.of(
+      context,
+    ).fetchCategories(CategoryKind.event);
+    if (!mounted) return;
+    setState(() => _categories = categories);
   }
 
   double get _pageNumber {
@@ -150,6 +175,15 @@ class _CalendarImportWizardState extends State<CalendarImportWizard> {
 
   Future<void> _goTo(_ImportStep step) async {
     if (_busy || _step == step) return;
+    if (step == _ImportStep.category) {
+      unawaited(_loadCategories());
+      if (_mode == _CategoryMode.perEvent) {
+        final ids = {for (final event in _importEvents) event.id};
+        if (_focusEventId == null || !ids.contains(_focusEventId)) {
+          _focusEventId = _nextFocusId();
+        }
+      }
+    }
     setState(() {
       _busy = true;
       _step = step;
@@ -165,6 +199,9 @@ class _CalendarImportWizardState extends State<CalendarImportWizard> {
     } finally {
       if (mounted) {
         setState(() => _busy = false);
+        if (step == _ImportStep.category && _mode == _CategoryMode.perEvent) {
+          _scrollTo(_focusEventId);
+        }
       } else {
         _busy = false;
       }
@@ -319,22 +356,115 @@ class _CalendarImportWizardState extends State<CalendarImportWizard> {
     });
   }
 
-  Future<void> _pickAllCategory() async {
-    final category = await showCategoryPickerSheet(
-      context,
-      selectedId: _allCategory?.id,
-    );
-    if (category == null || !mounted) return;
-    setState(() => _allCategory = category);
+  String? _nextFocusId({String? except}) {
+    for (final event in _importEvents) {
+      if (event.id == except) continue;
+      if (!_eachCategory.containsKey(event.id)) return event.id;
+    }
+    return except ?? (_importEvents.isEmpty ? null : _importEvents.first.id);
   }
 
-  Future<void> _pickEachCategory(CalendarEvent event) async {
-    final category = await showCategoryPickerSheet(
-      context,
-      selectedId: _eachCategory[event.id]?.id,
+  GlobalKey _eventKey(String id) {
+    return _eventKeys.putIfAbsent(id, GlobalKey.new);
+  }
+
+  void _scrollTo(String? id) {
+    if (id == null) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final context = _eventKey(id).currentContext;
+      if (context == null) return;
+      Scrollable.ensureVisible(
+        context,
+        alignment: 0.18,
+        duration: const Duration(milliseconds: 320),
+        curve: Curves.easeOutCubic,
+      );
+    });
+  }
+
+  void _selectCategory(EventCategory category) {
+    if (_mode == _CategoryMode.allInOne) {
+      setState(() => _allCategory = category);
+      return;
+    }
+    final events = _importEvents;
+    if (events.isEmpty) return;
+    final targetId = _focusEventId ?? _nextFocusId() ?? events.first.id;
+    final gen = ++_assignGen;
+    setState(() => _eachCategory[targetId] = category);
+    final next = _nextFocusId(except: targetId);
+    Future<void>.delayed(const Duration(milliseconds: 240), () {
+      if (!mounted || gen != _assignGen) return;
+      if (next == null || next == targetId) return;
+      setState(() => _focusEventId = next);
+      _scrollTo(next);
+    });
+  }
+
+  void _focusEvent(String id) {
+    _assignGen++;
+    setState(() => _focusEventId = id);
+    _scrollTo(id);
+  }
+
+  Future<void> _addCategory() async {
+    final saved = await showAddCategorySheet(context);
+    if (!saved || !mounted) return;
+    await _loadCategories();
+  }
+
+  Widget _categoryBody() {
+    final colors = AppColors.of(context);
+    final perEvent = _mode == _CategoryMode.perEvent;
+    final chips = _CategoryChipWrap(
+      categories: _categories,
+      selectedId: perEvent
+          ? _eachCategory[_focusEventId]?.id
+          : _allCategory?.id,
+      onPick: _selectCategory,
+      onAdd: _addCategory,
     );
-    if (category == null || !mounted) return;
-    setState(() => _eachCategory[event.id] = category);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          perEvent
+              ? AppStrings.importCategoryEachHint
+              : AppStrings.importCategoryAllHint,
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w600,
+            color: colors.secondary,
+          ),
+        ),
+        const SizedBox(height: 12),
+        if (perEvent) ...[
+          chips,
+          const SizedBox(height: 12),
+          Expanded(
+            child: ListView.separated(
+              controller: _eventList,
+              itemCount: _importEvents.length,
+              separatorBuilder: (context, index) => const SizedBox(height: 8),
+              itemBuilder: (context, index) {
+                final event = _importEvents[index];
+                return KeyedSubtree(
+                  key: _eventKey(event.id),
+                  child: _EventCategoryTile(
+                    event: event,
+                    category: _eachCategory[event.id],
+                    focused: event.id == _focusEventId,
+                    onPressed: () => _focusEvent(event.id),
+                  ),
+                );
+              },
+            ),
+          ),
+        ] else
+          Expanded(child: SingleChildScrollView(child: chips)),
+      ],
+    );
   }
 
   @override
@@ -626,26 +756,7 @@ class _CalendarImportWizardState extends State<CalendarImportWizard> {
           ),
         ],
       ),
-      _ImportStep.category => _mode == _CategoryMode.allInOne
-          ? Align(
-              alignment: Alignment.topCenter,
-              child: _CategoryPickTile(
-                category: _allCategory,
-                onPressed: _pickAllCategory,
-              ),
-            )
-          : ListView.separated(
-              itemCount: _importEvents.length,
-              separatorBuilder: (context, index) => const SizedBox(height: 8),
-              itemBuilder: (context, index) {
-                final event = _importEvents[index];
-                return _EventCategoryTile(
-                  event: event,
-                  category: _eachCategory[event.id],
-                  onPressed: () => _pickEachCategory(event),
-                );
-              },
-            ),
+      _ImportStep.category => _categoryBody(),
     };
   }
 }
@@ -886,10 +997,46 @@ class _ModeTile extends StatelessWidget {
   }
 }
 
-class _CategoryPickTile extends StatelessWidget {
-  const _CategoryPickTile({required this.category, required this.onPressed});
+class _CategoryChipWrap extends StatelessWidget {
+  const _CategoryChipWrap({
+    required this.categories,
+    required this.selectedId,
+    required this.onPick,
+    required this.onAdd,
+  });
 
-  final EventCategory? category;
+  final List<EventCategory> categories;
+  final String? selectedId;
+  final ValueChanged<EventCategory> onPick;
+  final VoidCallback onAdd;
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: [
+        for (final category in categories)
+          _PickChip(
+            category: category,
+            selected: category.id == selectedId,
+            onPressed: () => onPick(category),
+          ),
+        _AddChip(onPressed: onAdd),
+      ],
+    );
+  }
+}
+
+class _PickChip extends StatelessWidget {
+  const _PickChip({
+    required this.category,
+    required this.selected,
+    required this.onPressed,
+  });
+
+  final EventCategory category;
+  final bool selected;
   final VoidCallback onPressed;
 
   @override
@@ -897,26 +1044,68 @@ class _CategoryPickTile extends StatelessWidget {
     final colors = AppColors.of(context);
     return PressBounce(
       onPressed: onPressed,
-      color: _wizardTileIdle(colors),
-      pressedColor: _wizardTilePressed(colors),
-      borderRadius: BorderRadius.circular(14),
+      color: selected
+          ? Color.lerp(colors.groupedBackground, category.tint, 0.22)!
+          : colors.groupedBackground,
+      pressedColor: Color.lerp(colors.groupedBackground, category.tint, 0.32)!,
+      borderRadius: BorderRadius.circular(999),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(14, 16, 14, 16),
+        padding: const EdgeInsets.fromLTRB(10, 8, 12, 8),
         child: Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Expanded(
-              child: Text(
-                category == null
-                    ? AppStrings.importCategoryPick
-                    : category!.name,
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
-                  color: category == null ? colors.muted : colors.text,
-                ),
+            Container(
+              width: 12,
+              height: 12,
+              decoration: BoxDecoration(
+                color: category.tint,
+                shape: BoxShape.circle,
               ),
             ),
-            if (category != null) _CategoryDot(color: category!.tint),
+            const SizedBox(width: 6),
+            Text(
+              category.name,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: selected ? category.tint : colors.text,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _AddChip extends StatelessWidget {
+  const _AddChip({required this.onPressed});
+
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    return PressBounce(
+      onPressed: onPressed,
+      color: colors.groupedBackground,
+      pressedColor: colors.pressed,
+      borderRadius: BorderRadius.circular(999),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(10, 8, 12, 8),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.add_rounded, size: 16, color: colors.muted),
+            const SizedBox(width: 4),
+            Text(
+              AppStrings.addCategory,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: colors.muted,
+              ),
+            ),
           ],
         ),
       ),
@@ -1021,11 +1210,13 @@ class _EventCategoryTile extends StatelessWidget {
   const _EventCategoryTile({
     required this.event,
     required this.category,
+    required this.focused,
     required this.onPressed,
   });
 
   final CalendarEvent event;
   final EventCategory? category;
+  final bool focused;
   final VoidCallback onPressed;
 
   String get _dateLabel {
@@ -1039,8 +1230,8 @@ class _EventCategoryTile extends StatelessWidget {
     final colors = AppColors.of(context);
     return PressBounce(
       onPressed: onPressed,
-      color: _wizardTileIdle(colors),
-      pressedColor: _wizardTilePressed(colors),
+      color: _wizardTileIdle(colors, selected: focused),
+      pressedColor: _wizardTilePressed(colors, selected: focused),
       borderRadius: BorderRadius.circular(14),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
@@ -1073,17 +1264,61 @@ class _EventCategoryTile extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 8),
-            if (category == null)
-              Text(
-                AppStrings.importCategoryPick,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                  color: colors.muted,
+            SizedBox(
+              width: 112,
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 280),
+                  switchInCurve: Curves.easeOutCubic,
+                  switchOutCurve: Curves.easeInCubic,
+                  layoutBuilder: (current, previous) {
+                    return Stack(
+                      alignment: Alignment.centerRight,
+                      children: [
+                        ...previous,
+                        if (current != null) current,
+                      ],
+                    );
+                  },
+                  transitionBuilder: (child, animation) {
+                    final incoming = child.key != const ValueKey('empty');
+                    return FadeTransition(
+                      opacity: animation,
+                      child: incoming
+                          ? SlideTransition(
+                              position: Tween<Offset>(
+                                begin: const Offset(0.18, 0),
+                                end: Offset.zero,
+                              ).animate(animation),
+                              child: child,
+                            )
+                          : child,
+                    );
+                  },
+                  child: category == null
+                      ? Padding(
+                          key: const ValueKey('empty'),
+                          padding: const EdgeInsets.symmetric(vertical: 5),
+                          child: Text(
+                            AppStrings.importCategoryPick,
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                              color: focused
+                                  ? colors.accentBright
+                                  : colors.muted,
+                            ),
+                          ),
+                        )
+                      : _CategoryDot(
+                          key: ValueKey(category!.id),
+                          color: category!.tint,
+                          label: category!.name,
+                        ),
                 ),
-              )
-            else
-              _CategoryDot(color: category!.tint, label: category!.name),
+              ),
+            ),
           ],
         ),
       ),
@@ -1092,7 +1327,7 @@ class _EventCategoryTile extends StatelessWidget {
 }
 
 class _CategoryDot extends StatelessWidget {
-  const _CategoryDot({required this.color, this.label});
+  const _CategoryDot({super.key, required this.color, this.label});
 
   final Color color;
   final String? label;

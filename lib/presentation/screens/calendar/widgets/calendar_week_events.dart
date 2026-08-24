@@ -13,12 +13,14 @@ class CalendarWeekEvents extends StatefulWidget {
     required this.eventsOf,
     this.calendarScale = 1,
     this.labelScale = 1,
+    this.searchHitKey,
   });
 
   final List<CalendarDay> days;
   final List<CalendarEvent> Function(DateTime date) eventsOf;
   final double calendarScale;
   final double labelScale;
+  final String? searchHitKey;
 
   static const _moveDuration = Duration(milliseconds: 280);
   static const _fadeDuration = Duration(milliseconds: 220);
@@ -119,6 +121,12 @@ class _CalendarWeekEventsState extends State<CalendarWeekEvents> {
     });
   }
 
+  bool _isSearchMatch(CalendarEvent event) {
+    final key = widget.searchHitKey;
+    if (key == null) return false;
+    return (event.groupId ?? event.id) == key;
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_blocks.isEmpty && _exiting.isEmpty) return const SizedBox.expand();
@@ -140,7 +148,12 @@ class _CalendarWeekEventsState extends State<CalendarWeekEvents> {
                   width: cellWidth * block.span - CalendarDayCell.sideInset * 2,
                   top: block.top + block.lane * stride,
                   height: labelHeight,
-                  child: _FadingLabel(block: block, visible: false),
+                  child: _FadingLabel(
+                    block: block,
+                    visible: false,
+                    searching: widget.searchHitKey != null,
+                    matched: _isSearchMatch(block.event),
+                  ),
                 ),
               for (final block in _blocks)
                 AnimatedPositioned(
@@ -155,6 +168,8 @@ class _CalendarWeekEventsState extends State<CalendarWeekEvents> {
                     block: block,
                     visible: true,
                     appear: _appearing.contains(block.event.id),
+                    searching: widget.searchHitKey != null,
+                    matched: _isSearchMatch(block.event),
                   ),
                 ),
             ],
@@ -170,11 +185,15 @@ class _FadingLabel extends StatefulWidget {
     required this.block,
     required this.visible,
     this.appear = false,
+    this.searching = false,
+    this.matched = false,
   });
 
   final _WeekBlock block;
   final bool visible;
   final bool appear;
+  final bool searching;
+  final bool matched;
 
   @override
   State<_FadingLabel> createState() => _FadingLabelState();
@@ -205,10 +224,11 @@ class _FadingLabelState extends State<_FadingLabel> {
   @override
   Widget build(BuildContext context) {
     final block = widget.block;
+    final dim = widget.searching && !widget.matched;
     return AnimatedOpacity(
       duration: CalendarWeekEvents._fadeDuration,
       curve: widget.visible ? Curves.easeOutCubic : Curves.easeInCubic,
-      opacity: _opacity * (block.inMonth ? 1 : 0.45),
+      opacity: _opacity * (block.inMonth ? 1 : 0.45) * (dim ? 0.28 : 1),
       child: CalendarEventLabel(
         title: block.event.title,
         color: block.event.color,

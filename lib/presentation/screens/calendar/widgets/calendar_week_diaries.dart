@@ -12,17 +12,20 @@ class CalendarWeekDiaries extends StatefulWidget {
   const CalendarWeekDiaries({
     super.key,
     required this.days,
-    required this.diaryOf,
+    required this.diariesOf,
     this.calendarScale = 1,
     this.labelScale = 1,
+    this.searchHitKey,
   });
 
   final List<CalendarDay> days;
-  final DiaryEntry? Function(DateTime date) diaryOf;
+  final List<DiaryEntry> Function(DateTime date) diariesOf;
   final double calendarScale;
   final double labelScale;
+  final String? searchHitKey;
 
   static const photoHeight = 42.0;
+  static const maxPhotoSpan = 4;
   static const fadeDuration = Duration(milliseconds: 240);
 
   static double photoHeightFor(double scale) => photoHeight * scale;
@@ -35,26 +38,27 @@ class CalendarWeekDiaries extends StatefulWidget {
 
   static double heightFor({
     required List<CalendarDay> days,
-    required DiaryEntry? Function(DateTime date) diaryOf,
+    required List<DiaryEntry> Function(DateTime date) diariesOf,
     required double minHeight,
     double calendarScale = 1,
     double labelScale = 1,
   }) {
+    final tiles = _tilesFor(
+      days: days,
+      diariesOf: diariesOf,
+      calendarScale: calendarScale,
+      labelScale: labelScale,
+    );
     var content = 0.0;
-    final photoH = photoHeightFor(calendarScale);
-    final labelH = CalendarDayCell.labelHeightFor(labelScale);
     for (final day in days) {
       final top = CalendarDayCell.eventsTopFor(
         hasHoliday: day.isHoliday,
         scale: calendarScale,
       );
-      final diary = diaryOf(day.date);
-      if (diary == null) {
-        if (top > content) content = top;
-        continue;
-      }
-      final extra = showsPhoto(diary) ? photoH : labelH;
-      final bottom = top + extra + 6;
+      if (top > content) content = top;
+    }
+    for (final tile in tiles) {
+      final bottom = tile.top + tile.height + 6;
       if (bottom > content) content = bottom;
     }
     return math.max(minHeight, content);
@@ -73,13 +77,23 @@ class _CalendarWeekDiariesState extends State<CalendarWeekDiaries> {
   @override
   void initState() {
     super.initState();
-    _tiles = _tilesFor(widget);
+    _tiles = _tilesFor(
+      days: widget.days,
+      diariesOf: widget.diariesOf,
+      calendarScale: widget.calendarScale,
+      labelScale: widget.labelScale,
+    );
   }
 
   @override
   void didUpdateWidget(CalendarWeekDiaries oldWidget) {
     super.didUpdateWidget(oldWidget);
-    final next = _tilesFor(widget);
+    final next = _tilesFor(
+      days: widget.days,
+      diariesOf: widget.diariesOf,
+      calendarScale: widget.calendarScale,
+      labelScale: widget.labelScale,
+    );
     final sameWeek = widget.days.first.date == oldWidget.days.first.date &&
         widget.days.last.date == oldWidget.days.last.date &&
         widget.calendarScale == oldWidget.calendarScale &&
@@ -119,18 +133,6 @@ class _CalendarWeekDiariesState extends State<CalendarWeekDiaries> {
     });
   }
 
-  static List<_DiaryTile> _tilesFor(CalendarWeekDiaries widget) {
-    return [
-      for (var weekday = 0; weekday < widget.days.length; weekday++)
-        if (widget.diaryOf(widget.days[weekday].date) != null)
-          _DiaryTile(
-            day: widget.days[weekday],
-            weekday: weekday,
-            diary: widget.diaryOf(widget.days[weekday].date)!,
-          ),
-    ];
-  }
-
   @override
   Widget build(BuildContext context) {
     if (_tiles.isEmpty && _exiting.isEmpty) return const SizedBox.expand();
@@ -147,25 +149,35 @@ class _CalendarWeekDiariesState extends State<CalendarWeekDiaries> {
                 _positioned(
                   tile: tile,
                   cellWidth: cellWidth,
-                  photoH: photoH,
-                  labelH: labelH,
                   child: _FadingDiary(
                     key: ValueKey('out-${tile.id}'),
                     tile: tile,
+                    cellWidth: cellWidth,
+                    photoH: photoH,
+                    labelH: labelH,
                     visible: false,
+                    searching: widget.searchHitKey != null,
+                    matched: widget.searchHitKey != null &&
+                        (tile.diary.groupId ?? tile.diary.id) ==
+                            widget.searchHitKey,
                   ),
                 ),
               for (final tile in _tiles)
                 _positioned(
                   tile: tile,
                   cellWidth: cellWidth,
-                  photoH: photoH,
-                  labelH: labelH,
                   child: _FadingDiary(
                     key: ValueKey(tile.id),
                     tile: tile,
+                    cellWidth: cellWidth,
+                    photoH: photoH,
+                    labelH: labelH,
                     visible: true,
                     appear: _appearing.contains(tile.id),
+                    searching: widget.searchHitKey != null,
+                    matched: widget.searchHitKey != null &&
+                        (tile.diary.groupId ?? tile.diary.id) ==
+                            widget.searchHitKey,
                   ),
                 ),
             ],
@@ -178,50 +190,287 @@ class _CalendarWeekDiariesState extends State<CalendarWeekDiaries> {
   Widget _positioned({
     required _DiaryTile tile,
     required double cellWidth,
-    required double photoH,
-    required double labelH,
     required Widget child,
   }) {
-    final photo = CalendarWeekDiaries.showsPhoto(tile.diary);
-    final top = CalendarDayCell.eventsTopFor(
-      hasHoliday: tile.day.isHoliday,
-      scale: widget.calendarScale,
-    );
     return Positioned(
-      left: cellWidth * tile.weekday + CalendarDayCell.sideInset,
-      width: cellWidth - CalendarDayCell.sideInset * 2,
-      top: top,
-      height: photo ? photoH : labelH,
+      left: cellWidth * tile.start + CalendarDayCell.sideInset,
+      width: cellWidth * tile.span - CalendarDayCell.sideInset * 2,
+      top: tile.top,
+      height: tile.height,
       child: child,
     );
   }
 }
 
-class _DiaryTile {
-  const _DiaryTile({
-    required this.day,
-    required this.weekday,
-    required this.diary,
+List<_DiaryTile> _tilesFor({
+  required List<CalendarDay> days,
+  required List<DiaryEntry> Function(DateTime date) diariesOf,
+  required double calendarScale,
+  required double labelScale,
+}) {
+  bool sameGroup(DiaryEntry diary, DiaryEntry other) {
+    if (diary.groupId != null) return diary.groupId == other.groupId;
+    return diary.id == other.id;
+  }
+
+  bool hasGroupOn(DateTime date, DiaryEntry diary) {
+    return diariesOf(date).any((item) => sameGroup(diary, item));
+  }
+
+  DateTime groupStartOf(DiaryEntry diary) {
+    var day = diary.day;
+    if (diary.groupId == null) return day;
+    for (var i = 0; i < 400; i++) {
+      final prev = day.subtract(const Duration(days: 1));
+      if (!hasGroupOn(prev, diary)) break;
+      day = prev;
+    }
+    return day;
+  }
+
+  DateTime groupEndOf(DiaryEntry diary) {
+    var day = diary.day;
+    if (diary.groupId == null) return day;
+    for (var i = 0; i < 400; i++) {
+      final next = day.add(const Duration(days: 1));
+      if (!hasGroupOn(next, diary)) break;
+      day = next;
+    }
+    return day;
+  }
+
+  ({int start, int end})? photoWeekdays({
+    required DateTime groupStart,
+    required DateTime groupEnd,
+    required DiaryEntry diary,
+  }) {
+    if (!CalendarWeekDiaries.showsPhoto(diary)) return null;
+    final groupLength = groupEnd.difference(groupStart).inDays + 1;
+    final photoSpan = math.min(groupLength, CalendarWeekDiaries.maxPhotoSpan);
+    final offset = ((groupLength - photoSpan) / 2).floor();
+    final photoStart = groupStart.add(Duration(days: offset));
+    final photoEnd = photoStart.add(Duration(days: photoSpan - 1));
+    int? start;
+    int? end;
+    for (var weekday = 0; weekday < days.length; weekday++) {
+      final day = days[weekday].date;
+      if (day.isBefore(photoStart) || day.isAfter(photoEnd)) continue;
+      start ??= weekday;
+      end = weekday;
+    }
+    if (start == null || end == null) return null;
+    return (start: start, end: end);
+  }
+
+  final claimed = <String>{};
+  final raw = <_RawDiary>[];
+  for (var weekday = 0; weekday < days.length; weekday++) {
+    for (final diary in diariesOf(days[weekday].date)) {
+      final key = diary.groupId ?? diary.id;
+      if (claimed.contains('$weekday|$key')) continue;
+      var end = weekday;
+      if (diary.groupId != null) {
+        for (var next = weekday + 1; next < days.length; next++) {
+          if (!hasGroupOn(days[next].date, diary)) break;
+          end = next;
+        }
+      }
+      for (var i = weekday; i <= end; i++) {
+        claimed.add('$i|$key');
+      }
+      final previous = days[weekday].date.subtract(const Duration(days: 1));
+      final groupStart = groupStartOf(diary);
+      final groupEnd = groupEndOf(diary);
+      raw.add(
+        _RawDiary(
+          start: weekday,
+          end: end,
+          diary: diary,
+          showAccent: !hasGroupOn(previous, diary),
+          inMonth: days.sublist(weekday, end + 1).any((day) => day.inMonth),
+          groupStart: groupStart,
+          photo: photoWeekdays(
+            groupStart: groupStart,
+            groupEnd: groupEnd,
+            diary: diary,
+          ),
+        ),
+      );
+    }
+  }
+
+  raw.sort((a, b) {
+    final byStart = a.groupStart.compareTo(b.groupStart);
+    if (byStart != 0) return byStart;
+    return a.start.compareTo(b.start);
   });
 
-  final CalendarDay day;
-  final int weekday;
-  final DiaryEntry diary;
+  final origin = [
+    for (final day in days)
+      CalendarDayCell.eventsTopFor(
+        hasHoliday: day.isHoliday,
+        scale: calendarScale,
+      ),
+  ];
+  var shifted = true;
+  while (shifted) {
+    shifted = false;
+    for (final item in raw) {
+      if (item.diary.groupId == null) continue;
+      var top = origin[item.start];
+      for (var day = item.start; day <= item.end; day++) {
+        if (origin[day] > top) top = origin[day];
+      }
+      for (var day = item.start; day <= item.end; day++) {
+        if (origin[day] < top) {
+          origin[day] = top;
+          shifted = true;
+        }
+      }
+    }
+  }
 
-  String get id => diary.id;
+  double originOf(_RawDiary item) {
+    var top = origin[item.start];
+    for (var day = item.start; day <= item.end; day++) {
+      if (origin[day] > top) top = origin[day];
+    }
+    return top;
+  }
+
+  final labelH = CalendarDayCell.labelHeightFor(labelScale);
+  final photoH = CalendarWeekDiaries.photoHeightFor(calendarScale);
+  final occupied = List.generate(7, (_) => <_OccupiedRange>[]);
+  final tiles = <_DiaryTile>[];
+
+  for (final item in raw) {
+    final hasPhoto = item.photo != null;
+    final height =
+        labelH + (hasPhoto ? CalendarDayCell.labelGap + photoH : 0);
+    var top = originOf(item);
+    while (true) {
+      final bottom = top + height;
+      final taken = [
+        for (var day = item.start; day <= item.end; day++)
+          occupied[day].any((range) => range.overlaps(top, bottom)),
+      ].any((value) => value);
+      if (!taken) {
+        for (var day = item.start; day <= item.end; day++) {
+          occupied[day].add(_OccupiedRange(top, bottom));
+        }
+        tiles.add(
+          _DiaryTile(
+            start: item.start,
+            end: item.end,
+            diary: item.diary,
+            showAccent: item.showAccent,
+            inMonth: item.inMonth,
+            top: top,
+            height: height,
+            photoStart: item.photo?.start,
+            photoEnd: item.photo?.end,
+          ),
+        );
+        break;
+      }
+      var next = top + CalendarDayCell.labelGap;
+      for (var day = item.start; day <= item.end; day++) {
+        for (final range in occupied[day]) {
+          if (!range.overlaps(top, bottom)) continue;
+          if (range.bottom + CalendarDayCell.labelGap > next) {
+            next = range.bottom + CalendarDayCell.labelGap;
+          }
+        }
+      }
+      if (next <= top) next = top + CalendarDayCell.labelGap;
+      top = next;
+    }
+  }
+  return tiles;
+}
+
+class _RawDiary {
+  const _RawDiary({
+    required this.start,
+    required this.end,
+    required this.diary,
+    required this.showAccent,
+    required this.inMonth,
+    required this.groupStart,
+    required this.photo,
+  });
+
+  final int start;
+  final int end;
+  final DiaryEntry diary;
+  final bool showAccent;
+  final bool inMonth;
+  final DateTime groupStart;
+  final ({int start, int end})? photo;
+}
+
+class _OccupiedRange {
+  const _OccupiedRange(this.top, this.bottom);
+
+  final double top;
+  final double bottom;
+
+  bool overlaps(double otherTop, double otherBottom) {
+    return otherTop < bottom && top < otherBottom;
+  }
+}
+
+class _DiaryTile {
+  const _DiaryTile({
+    required this.start,
+    required this.end,
+    required this.diary,
+    required this.showAccent,
+    required this.inMonth,
+    required this.top,
+    required this.height,
+    required this.photoStart,
+    required this.photoEnd,
+  });
+
+  final int start;
+  final int end;
+  final DiaryEntry diary;
+  final bool showAccent;
+  final bool inMonth;
+  final double top;
+  final double height;
+  final int? photoStart;
+  final int? photoEnd;
+
+  String get id => '${diary.groupId ?? diary.id}:$start';
+
+  int get span => end - start + 1;
+
+  bool get showPhoto => photoStart != null && photoEnd != null;
 }
 
 class _FadingDiary extends StatefulWidget {
   const _FadingDiary({
     super.key,
     required this.tile,
+    required this.cellWidth,
+    required this.photoH,
+    required this.labelH,
     required this.visible,
     this.appear = false,
+    this.searching = false,
+    this.matched = false,
   });
 
   final _DiaryTile tile;
+  final double cellWidth;
+  final double photoH;
+  final double labelH;
   final bool visible;
   final bool appear;
+  final bool searching;
+  final bool matched;
 
   @override
   State<_FadingDiary> createState() => _FadingDiaryState();
@@ -261,11 +510,19 @@ class _FadingDiaryState extends State<_FadingDiary> {
   Widget build(BuildContext context) {
     final tile = widget.tile;
     final diary = tile.diary;
-    final photo = CalendarWeekDiaries.showsPhoto(diary);
     final title = diary.title.trim().isEmpty
         ? AppStrings.diaryFallback
         : diary.title;
-    final faded = _opacity * (tile.day.inMonth ? 1 : 0.45);
+    final faded = _opacity *
+        (tile.inMonth ? 1 : 0.45) *
+        (widget.searching && !widget.matched ? 0.28 : 1);
+    final label = CalendarEventLabel(
+      title: title,
+      color: diary.color,
+      showAccent: tile.showAccent,
+    );
+    final photoStart = tile.photoStart;
+    final photoEnd = tile.photoEnd;
 
     return AnimatedScale(
       duration: CalendarWeekDiaries.fadeDuration,
@@ -276,23 +533,40 @@ class _FadingDiaryState extends State<_FadingDiary> {
         duration: CalendarWeekDiaries.fadeDuration,
         curve: widget.visible ? Curves.easeOutCubic : Curves.easeInCubic,
         opacity: faded,
-        child: photo
-            ? ClipRRect(
-                borderRadius: BorderRadius.circular(6),
-                child: Image.file(
-                  File(diary.photoPath!),
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    return CalendarEventLabel(
-                      title: title,
-                      color: diary.color,
-                    );
-                  },
-                ),
-              )
-            : CalendarEventLabel(
-                title: title,
-                color: diary.color,
+        child: photoStart == null || photoEnd == null
+            ? label
+            : Stack(
+                children: [
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    top: 0,
+                    height: widget.labelH,
+                    child: label,
+                  ),
+                  Positioned(
+                    left: (photoStart - tile.start) * widget.cellWidth,
+                    width: math.max(
+                      0,
+                      (photoEnd - photoStart + 1) * widget.cellWidth -
+                          CalendarDayCell.sideInset * 2,
+                    ),
+                    top: widget.labelH + CalendarDayCell.labelGap,
+                    height: widget.photoH,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(6),
+                      child: Image.file(
+                        File(diary.photoPath!),
+                        fit: BoxFit.cover,
+                        width: double.infinity,
+                        height: double.infinity,
+                        errorBuilder: (context, error, stackTrace) {
+                          return const SizedBox.expand();
+                        },
+                      ),
+                    ),
+                  ),
+                ],
               ),
       ),
     );

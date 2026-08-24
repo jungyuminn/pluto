@@ -29,4 +29,5 @@ class AppIcons {
   static const resumeOutlined = 'assets/icons/resume_outlined.png';
   static const status = 'assets/icons/status.png';
   static const statusOutlined = 'assets/icons/status_outlined.png';
+  static const trashCan = 'assets/icons/trash_can.png';
 }

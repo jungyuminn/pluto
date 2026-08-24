@@ -13,10 +13,18 @@ class DiaryMemoryRepository implements DiaryRepository {
   @override
   Future<List<DiaryEntry>> getAll() async => List.unmodifiable(_items);
 
+  bool _replacesSameDay(DiaryEntry existing, DiaryEntry incoming) {
+    if (!_sameDay(existing.day, incoming.day)) return false;
+    if (incoming.groupId != null) {
+      return existing.groupId == incoming.groupId;
+    }
+    return existing.groupId == null;
+  }
+
   @override
   Future<void> save(DiaryEntry entry) async {
     _items.removeWhere(
-      (item) => item.id == entry.id || _sameDay(item.day, entry.day),
+      (item) => item.id == entry.id || _replacesSameDay(item, entry),
     );
     _items.add(entry);
   }

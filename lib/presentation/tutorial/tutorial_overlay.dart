@@ -8,6 +8,7 @@ import 'package:job_planner/core/theme/app_colors.dart';
 import 'package:job_planner/core/utils/press_bounce.dart';
 import 'package:job_planner/presentation/tutorial/tutorial_anchor.dart';
 import 'package:job_planner/presentation/tutorial/tutorial_controller.dart';
+import 'package:job_planner/presentation/tutorial/tutorial_demos.dart';
 
 class TutorialOverlay extends StatefulWidget {
   const TutorialOverlay({super.key});
@@ -25,6 +26,7 @@ class _TutorialOverlayState extends State<TutorialOverlay>
   TutorialStep? _displayedStep;
   var _displayedIndex = 0;
   var _displayedLast = false;
+  var _displayedFirst = true;
   int? _shownTab;
   Rect? _hole;
   Rect? _holeFrom;
@@ -132,6 +134,7 @@ class _TutorialOverlayState extends State<TutorialOverlay>
         _displayedStep = tutorial.step;
         _displayedIndex = tutorial.index;
         _displayedLast = tutorial.isLast;
+        _displayedFirst = tutorial.isFirst;
       });
     }
     if (_appear.status != AnimationStatus.forward &&
@@ -187,6 +190,7 @@ class _TutorialOverlayState extends State<TutorialOverlay>
       _displayedStep = tutorial.step;
       _displayedIndex = tutorial.index;
       _displayedLast = tutorial.isLast;
+      _displayedFirst = tutorial.isFirst;
       _spotlightHidden = false;
     });
     _syncPulse(nextHole != null);
@@ -261,10 +265,12 @@ class _TutorialOverlayState extends State<TutorialOverlay>
     final canAct = tutorial != null && tutorial.active;
     final card = _TutorialCard(
       step: step,
+      isFirst: _displayedFirst,
       isLast: _displayedLast,
       index: _displayedIndex,
       total: TutorialController.steps.length,
       onNext: canAct ? tutorial.next : () {},
+      onPrev: canAct ? tutorial.previous : () {},
       onSkip: canAct ? tutorial.skip : () {},
     );
 
@@ -549,18 +555,22 @@ class _CardDelegate extends SingleChildLayoutDelegate {
 class _TutorialCard extends StatelessWidget {
   const _TutorialCard({
     required this.step,
+    required this.isFirst,
     required this.isLast,
     required this.index,
     required this.total,
     required this.onNext,
+    required this.onPrev,
     required this.onSkip,
   });
 
   final TutorialStep step;
+  final bool isFirst;
   final bool isLast;
   final int index;
   final int total;
   final VoidCallback onNext;
+  final VoidCallback onPrev;
   final VoidCallback onSkip;
 
   @override
@@ -686,6 +696,10 @@ class _TutorialCard extends StatelessWidget {
                         color: colors.secondary,
                       ),
                     ),
+                    if (step.demo != TutorialDemo.none) ...[
+                      const SizedBox(height: 12),
+                      TutorialDemoView(demo: step.demo),
+                    ],
                   ],
                 ),
               ),
@@ -713,6 +727,30 @@ class _TutorialCard extends StatelessWidget {
                       ),
                     ),
                   const Spacer(),
+                  if (!isFirst) ...[
+                    PressBounce(
+                      onPressed: onPrev,
+                      color: colors.accent.withValues(alpha: 0.14),
+                      pressedColor: colors.accent.withValues(alpha: 0.24),
+                      borderRadius: BorderRadius.circular(999),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 11,
+                        ),
+                        child: Text(
+                          AppStrings.tutorialPrev,
+                          style: TextStyle(
+                            fontFamily: font,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w800,
+                            color: colors.accent,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                  ],
                   PressBounce(
                     onPressed: onNext,
                     color: colors.accent,

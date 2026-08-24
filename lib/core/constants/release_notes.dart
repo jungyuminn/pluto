@@ -17,6 +17,19 @@ class ReleaseNote {
 abstract final class ReleaseNotes {
   static const all = [
     ReleaseNote(
+      version: '1.0.18',
+      items: [
+        '캘린더에서 할 일·기업·일기를 검색할 수 있어요',
+        '날짜를 밀어 기간 일기를 남길 수 있어요',
+        '일기는 휴지통 버튼으로 지울 수 있어요',
+        '앱 둘러보기에 동작 예시가 보여요',
+      ],
+      fixes: [
+        '기간 일기를 저장할 때 다른 사진이 같이 지워지던 문제를 고쳤어요',
+        '시간순 정렬에서는 할 일 순서를 바꿀 수 없다고 알려줘요',
+      ],
+    ),
+    ReleaseNote(
       version: '1.0.17',
       items: [
         '하단 탭을 누르면 화면이 더 부드럽게 넘어가요',

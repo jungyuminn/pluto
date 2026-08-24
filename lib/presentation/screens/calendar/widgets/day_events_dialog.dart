@@ -13,6 +13,7 @@ import 'package:job_planner/domain/entities/calendar_event.dart';
 import 'package:job_planner/domain/entities/event_category.dart';
 import 'package:job_planner/domain/entities/job_application.dart';
 import 'package:job_planner/presentation/screens/add_company/widgets/add_company_sheet.dart';
+import 'package:job_planner/presentation/screens/add_company/widgets/missing_fields_dialog.dart';
 import 'package:job_planner/presentation/screens/calendar/calendar_day_events.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/add_event_button.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/add_event_sheet.dart';
@@ -437,6 +438,15 @@ class _DayEventsDialogState extends State<DayEventsDialog> {
     widget.onEventsChanged?.call();
   }
 
+  Future<void> _explainTimeSortLock() {
+    HapticFeedback.lightImpact();
+    return showMissingFieldsDialog(
+      context,
+      title: AppStrings.timeSortLockTitle,
+      body: AppStrings.timeSortLockBody,
+    );
+  }
+
   bool _sameGroup(CalendarEvent dragged, _ListEntry item) {
     final event = item.event;
     if (event == null || event.isLockedOrder) return false;
@@ -849,7 +859,7 @@ class _DayEventsDialogState extends State<DayEventsDialog> {
             memo: event.memo,
             timeText: timeText,
             onPressed: () => _edit(event),
-            onLongPressed: null,
+            onLongPressed: _sortByTime ? _explainTimeSortLock : null,
             onCompletePressed: () => _toggleComplete(event),
           );
 
@@ -863,7 +873,7 @@ class _DayEventsDialogState extends State<DayEventsDialog> {
             ),
     );
 
-    if (event.isLockedOrder) return body;
+    if (event.isLockedOrder || _sortByTime) return body;
 
     return LayoutBuilder(
       builder: (context, constraints) {

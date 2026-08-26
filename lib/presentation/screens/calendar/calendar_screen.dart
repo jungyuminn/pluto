@@ -9,6 +9,7 @@ import 'package:job_planner/data/datasources/app_backup_service.dart';
 import 'package:job_planner/domain/entities/apply_status.dart';
 import 'package:job_planner/domain/entities/calendar_event.dart';
 import 'package:job_planner/domain/entities/diary_entry.dart';
+import 'package:job_planner/domain/entities/ledger_entry.dart';
 import 'package:job_planner/domain/entities/event_category.dart';
 import 'package:job_planner/domain/entities/job_application.dart';
 import 'package:job_planner/presentation/screens/calendar/calendar_day_events.dart';
@@ -20,6 +21,7 @@ import 'package:job_planner/presentation/screens/calendar/widgets/day_events_dia
 import 'package:job_planner/presentation/screens/calendar/widgets/add_event_sheet.dart';
 import 'package:job_planner/presentation/tutorial/tutorial_anchor.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/diary_sheet.dart';
+import 'package:job_planner/presentation/screens/calendar/widgets/ledger_day_sheet.dart';
 import 'package:job_planner/presentation/widgets/app_calendar/calendar_zoom_picker.dart';
 
 class CalendarScreen extends StatefulWidget {
@@ -45,6 +47,7 @@ class _CalendarScreenState extends State<CalendarScreen>
   late final ValueNotifier<bool> _searchOpen;
   var _events = <CalendarEvent>[];
   var _diaries = <DiaryEntry>[];
+  var _ledgers = <LedgerEntry>[];
   var _applications = <JobApplication>[];
   var _companyCategories = <EventCategory>[];
   var _initialized = false;
@@ -52,6 +55,7 @@ class _CalendarScreenState extends State<CalendarScreen>
   var _showTodos = true;
   var _showCompanies = true;
   var _showDiary = false;
+  var _showLedger = false;
   var _zoom = CalendarZoomLevel.days;
   var _hits = <_SearchHit>[];
   var _hitIndex = 0;
@@ -185,12 +189,14 @@ class _CalendarScreenState extends State<CalendarScreen>
     final scope = AppScope.of(context);
     final events = await scope.getCalendarEvents();
     final diaries = await scope.getDiaries();
+    final ledgers = await scope.getLedgers();
     final applications = await scope.getJobApplications();
     final companyCategories = await scope.fetchCategories(CategoryKind.company);
     if (!mounted) return;
     setState(() {
       _events = events;
       _diaries = diaries;
+      _ledgers = ledgers;
       _applications = applications;
       _companyCategories = companyCategories;
     });
@@ -256,6 +262,20 @@ class _CalendarScreenState extends State<CalendarScreen>
           diary.groupId ?? diary.id,
           diary.day,
           [diary.title, diary.body, diary.categoryName],
+        );
+      }
+    } else if (_showLedger) {
+      for (final entry in _ledgers) {
+        consider(
+          entry.id,
+          entry.day,
+          [
+            entry.title,
+            entry.memo,
+            entry.signedLabel,
+            '${entry.amount}',
+            entry.kindLabel,
+          ],
         );
       }
     } else {
@@ -330,6 +350,14 @@ class _CalendarScreenState extends State<CalendarScreen>
     return CalendarEvent.withLockedThenStartTime(events);
   }
 
+  List<LedgerEntry> _ledgersOn(DateTime date) {
+    final day = DateTime(date.year, date.month, date.day);
+    return [
+      for (final entry in _ledgers)
+        if (entry.day == day) entry,
+    ]..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+  }
+
   List<DiaryEntry> _diariesOn(DateTime date) {
     final day = DateTime(date.year, date.month, date.day);
     return [
@@ -377,6 +405,15 @@ class _CalendarScreenState extends State<CalendarScreen>
   }
 
   Future<void> _openDay(DateTime date, Rect origin) async {
+    if (_showLedger) {
+      await showLedgerDaySheet(
+        context,
+        date: date,
+        entries: _ledgersOn(date),
+      );
+      if (mounted) await _reload();
+      return;
+    }
     if (_showDiary) {
       final diary = _diaryToOpen(date);
       final span = diary == null ? null : _diarySpan(diary);
@@ -451,6 +488,7 @@ class _CalendarScreenState extends State<CalendarScreen>
                                 showTodos: _showTodos,
                                 showCompanies: _showCompanies,
                                 showDiary: _showDiary,
+                                showLedger: _showLedger,
                                 searchOpen: searchOpen,
                                 onSearchPressed: _toggleSearch,
                                 onShowTodosChanged: (value) {
@@ -462,7 +500,17 @@ class _CalendarScreenState extends State<CalendarScreen>
                                   if (_searchOpen.value) _refreshHits();
                                 },
                                 onShowDiaryChanged: (value) {
-                                  setState(() => _showDiary = value);
+                                  setState(() {
+                                    _showDiary = value;
+                                    if (value) _showLedger = false;
+                                  });
+                                  if (_searchOpen.value) _refreshHits();
+                                },
+                                onShowLedgerChanged: (value) {
+                                  setState(() {
+                                    _showLedger = value;
+                                    if (value) _showDiary = false;
+                                  });
                                   if (_searchOpen.value) _refreshHits();
                                 },
                                 onSortPrefsChanged: () => setState(() {}),
@@ -478,9 +526,11 @@ class _CalendarScreenState extends State<CalendarScreen>
                                 child: CalendarSearchBar(
                                   controller: _search,
                                   focusNode: _searchFocus,
-                                  hintText: _showDiary
-                                      ? AppStrings.calendarDiarySearchHint
-                                      : AppStrings.calendarSearchHint,
+                                  hintText: _showLedger
+                                      ? AppStrings.calendarLedgerSearchHint
+                                      : _showDiary
+                                          ? AppStrings.calendarDiarySearchHint
+                                          : AppStrings.calendarSearchHint,
                                   onChanged: _onSearchChanged,
                                   onSubmitted: () => _searchStep(1),
                                   onPrevious: () => _searchStep(-1),
@@ -523,7 +573,9 @@ class _CalendarScreenState extends State<CalendarScreen>
                                                   startMonday: startMonday,
                                                   eventsOf: _eventsOn,
                                                   diariesOf: _diariesOn,
+                                                  ledgersOf: _ledgersOn,
                                                   showDiary: _showDiary,
+                                                  showLedger: _showLedger,
                                                   searchDay: _searchDay,
                                                   searchHitKey: _searchHitKey,
                                                   onDayPressed: _openDay,
@@ -534,7 +586,9 @@ class _CalendarScreenState extends State<CalendarScreen>
                                                           dragging,
                                                     );
                                                   },
-                                                  onRangeSelected: _openRange,
+                                                  onRangeSelected: _showLedger
+                                                      ? null
+                                                      : _openRange,
                                                 );
                                               },
                                             ),

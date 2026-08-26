@@ -17,6 +17,19 @@ class ReleaseNote {
 abstract final class ReleaseNotes {
   static const all = [
     ReleaseNote(
+      version: '1.0.19',
+      items: [
+        '캘린더에서 가계부로 수입과 지출을 적을 수 있어요',
+        '일기에 그림을 그리고 사진 위에 덧그릴 수 있어요',
+        '일기 작성 화면이 노트처럼 보여요',
+        '카테고리 색을 더 다양하게 고를 수 있어요',
+      ],
+      fixes: [
+        '사진에 그림을 그릴 때 원본이 잘리던 문제를 고쳤어요',
+        '카테고리를 여러 개 고르면 수정 버튼이 숨겨져요',
+      ],
+    ),
+    ReleaseNote(
       version: '1.0.18',
       items: [
         '캘린더에서 할 일·기업·일기를 검색할 수 있어요',

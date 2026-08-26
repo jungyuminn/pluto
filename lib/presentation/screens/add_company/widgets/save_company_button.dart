@@ -13,7 +13,7 @@ class SaveCompanyButton extends StatelessWidget {
   final Color color;
 
   static const size = 44.0;
-  static const _iconSize = 18.0;
+  static const _iconSize = 22.0;
 
   @override
   Widget build(BuildContext context) {

@@ -14,6 +14,8 @@ class CalendarOverflowMenu extends StatelessWidget {
     required this.onEditCategories,
     required this.showDiary,
     required this.onShowDiaryChanged,
+    required this.showLedger,
+    required this.onShowLedgerChanged,
   });
 
   final VoidCallback onVisibleItems;
@@ -21,6 +23,8 @@ class CalendarOverflowMenu extends StatelessWidget {
   final VoidCallback onEditCategories;
   final bool showDiary;
   final ValueChanged<bool> onShowDiaryChanged;
+  final bool showLedger;
+  final ValueChanged<bool> onShowLedgerChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -46,6 +50,11 @@ class CalendarOverflowMenu extends StatelessWidget {
           label: AppStrings.calendarDiaryMode,
           checked: showDiary,
           onChanged: onShowDiaryChanged,
+        ),
+        _FilterItem(
+          label: AppStrings.calendarLedgerMode,
+          checked: showLedger,
+          onChanged: onShowLedgerChanged,
         ),
       ],
     );

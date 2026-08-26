@@ -34,63 +34,63 @@ class CalendarSearchBar extends StatelessWidget {
     final hasQuery = controller.text.trim().isNotEmpty;
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-      child: TextField(
-        controller: controller,
-        focusNode: focusNode,
-        onChanged: onChanged,
-        onSubmitted: (_) => onSubmitted(),
-        textInputAction: TextInputAction.search,
-        style: TextStyle(
-          fontFamily: AppFonts.of(context),
-          fontWeight: FontWeight.w700,
-          fontSize: 15,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: colors.card,
+          borderRadius: BorderRadius.circular(999),
         ),
-        decoration: InputDecoration(
-          hintText: hintText,
-          hintStyle: TextStyle(
-            fontFamily: AppFonts.of(context),
-            color: colors.muted,
-            fontWeight: FontWeight.w600,
-          ),
-          filled: true,
-          fillColor: colors.card,
-          isDense: true,
-          contentPadding: const EdgeInsets.fromLTRB(16, 12, 8, 12),
-          suffixIcon: hasQuery
-              ? Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      total == 0 ? '0/0' : '${index + 1}/$total',
-                      style: TextStyle(
-                        fontFamily: AppFonts.of(context),
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        color: colors.secondary,
-                      ),
-                    ),
-                    const SizedBox(width: 2),
-                    _StepButton(
-                      icon: Icons.keyboard_arrow_up_rounded,
-                      onPressed: total == 0 ? null : onPrevious,
-                    ),
-                    _StepButton(
-                      icon: Icons.keyboard_arrow_down_rounded,
-                      onPressed: total == 0 ? null : onNext,
-                    ),
-                    const SizedBox(width: 4),
-                  ],
-                )
-              : null,
-          suffixIconConstraints: const BoxConstraints(
-            minWidth: 0,
-            minHeight: 40,
-            maxHeight: 40,
-          ),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(999),
-            borderSide: BorderSide.none,
-          ),
+        child: Row(
+          children: [
+            Expanded(
+              child: TextField(
+                controller: controller,
+                focusNode: focusNode,
+                onChanged: onChanged,
+                onSubmitted: (_) => onSubmitted(),
+                textInputAction: TextInputAction.search,
+                style: TextStyle(
+                  fontFamily: AppFonts.of(context),
+                  fontWeight: FontWeight.w700,
+                  fontSize: 15,
+                ),
+                decoration: InputDecoration(
+                  hintText: hintText,
+                  hintStyle: TextStyle(
+                    fontFamily: AppFonts.of(context),
+                    color: colors.muted,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  isDense: true,
+                  contentPadding: const EdgeInsets.fromLTRB(16, 12, 8, 12),
+                  border: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  focusedBorder: InputBorder.none,
+                ),
+              ),
+            ),
+            if (hasQuery) ...[
+              const SizedBox(width: 4),
+              Text(
+                total == 0 ? '0/0' : '${index + 1}/$total',
+                style: TextStyle(
+                  fontFamily: AppFonts.of(context),
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: colors.secondary,
+                ),
+              ),
+              const SizedBox(width: 4),
+              _StepButton(
+                icon: Icons.keyboard_arrow_up_rounded,
+                onPressed: total == 0 ? null : onPrevious,
+              ),
+              _StepButton(
+                icon: Icons.keyboard_arrow_down_rounded,
+                onPressed: total == 0 ? null : onNext,
+              ),
+              const SizedBox(width: 8),
+            ],
+          ],
         ),
       ),
     );
@@ -112,11 +112,11 @@ class _StepButton extends StatelessWidget {
       pressedColor: AppColors.of(context).pressed,
       borderRadius: BorderRadius.circular(999),
       child: SizedBox(
-        width: 32,
-        height: 32,
+        width: 40,
+        height: 40,
         child: Icon(
           icon,
-          size: 22,
+          size: 24,
           color: onPressed == null
               ? AppColors.of(context).muted
               : AppColors.of(context).icon,

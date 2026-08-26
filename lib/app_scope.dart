@@ -14,15 +14,18 @@ import 'package:job_planner/domain/usecases/delete_event_category.dart';
 import 'package:job_planner/domain/usecases/add_job_application.dart';
 import 'package:job_planner/domain/usecases/delete_calendar_event.dart';
 import 'package:job_planner/domain/usecases/delete_diary.dart';
+import 'package:job_planner/domain/usecases/delete_ledger.dart';
 import 'package:job_planner/domain/usecases/delete_job_application.dart';
 import 'package:job_planner/domain/usecases/get_calendar_events.dart';
 import 'package:job_planner/domain/usecases/get_diaries.dart';
+import 'package:job_planner/domain/usecases/get_ledgers.dart';
 import 'package:job_planner/domain/usecases/get_event_categories.dart';
 import 'package:job_planner/domain/usecases/get_job_applications.dart';
 import 'package:job_planner/domain/usecases/reorder_calendar_events.dart';
 import 'package:job_planner/domain/usecases/reorder_job_applications.dart';
 import 'package:job_planner/domain/usecases/reorder_event_categories.dart';
 import 'package:job_planner/domain/usecases/save_diary.dart';
+import 'package:job_planner/domain/usecases/save_ledger.dart';
 import 'package:job_planner/domain/usecases/update_calendar_event.dart';
 import 'package:job_planner/domain/usecases/update_event_category.dart';
 import 'package:job_planner/domain/entities/event_category.dart';
@@ -44,6 +47,9 @@ class AppScope extends InheritedWidget {
     required this.getDiaries,
     required this.saveDiary,
     required this.deleteDiary,
+    required this.getLedgers,
+    required this.saveLedger,
+    required this.deleteLedger,
     required this.getEventCategories,
     required this.addEventCategory,
     required this.updateEventCategory,
@@ -79,6 +85,9 @@ class AppScope extends InheritedWidget {
   final GetDiaries getDiaries;
   final SaveDiary saveDiary;
   final DeleteDiary deleteDiary;
+  final GetLedgers getLedgers;
+  final SaveLedger saveLedger;
+  final DeleteLedger deleteLedger;
   final GetEventCategories getEventCategories;
   final AddEventCategory addEventCategory;
   final UpdateEventCategory updateEventCategory;
@@ -124,6 +133,9 @@ class AppScope extends InheritedWidget {
         getDiaries != oldWidget.getDiaries ||
         saveDiary != oldWidget.saveDiary ||
         deleteDiary != oldWidget.deleteDiary ||
+        getLedgers != oldWidget.getLedgers ||
+        saveLedger != oldWidget.saveLedger ||
+        deleteLedger != oldWidget.deleteLedger ||
         getEventCategories != oldWidget.getEventCategories ||
         addEventCategory != oldWidget.addEventCategory ||
         updateEventCategory != oldWidget.updateEventCategory ||

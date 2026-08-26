@@ -67,7 +67,9 @@ class SettingsSectionHelpSheet extends StatelessWidget {
           child: DecoratedBox(
             decoration: BoxDecoration(
               color: colors.card,
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(24),
+              ),
             ),
             child: SingleChildScrollView(
               padding: EdgeInsets.fromLTRB(20, 10, 20, 20 + bottom),
@@ -230,133 +232,15 @@ class _HomeLayoutPreview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _CyclingPreview(
+    return const _CyclingPreview(
       frames: [
         _PreviewFrame(
-          caption: AppStrings.homeShowLeftover,
-          child: Column(
-            children: [
-              _FakeBannerCard(AppStrings.leftoverTodos(3)),
-              const SizedBox(height: 10),
-              const _FakeLeftoverPeek(),
-            ],
-          ),
+          caption: AppStrings.homePickCards,
+          child: _HomeCardToggleDemo(),
         ),
-        const _PreviewFrame(
-          caption: AppStrings.homeShowToday,
-          child: _FakeHomeCard(
-            title: AppStrings.todayTitle,
-            dateLabel: '8. 19. (수)',
-            children: [
-              _FakeTodo(
-                title: '자기소개서 제출',
-                category: '서류',
-                color: Color(0xFF3B82F6),
-              ),
-              _FakeTodo(
-                title: '코딩테스트 준비',
-                category: '코딩테스트',
-                color: Color(0xFFF59E0B),
-              ),
-            ],
-          ),
-        ),
-        const _PreviewFrame(
-          caption: AppStrings.homeShowTomorrow,
-          child: _FakeHomeCard(
-            title: AppStrings.tomorrowTitle,
-            dateLabel: '8. 20. (목)',
-            children: [
-              _FakeTodo(
-                title: '면접 연습',
-                category: '면접',
-                color: Color(0xFF22C55E),
-              ),
-            ],
-          ),
-        ),
-        const _PreviewFrame(
-          caption: AppStrings.homeShowWeek,
-          child: _FakeHomeCard(
-            title: AppStrings.weekTitle,
-            dateLabel: '8. 19. (수) - 8. 23. (일)',
-            children: [
-              _FakeDayHeader(AppStrings.todayTitle),
-              _FakeTodo(
-                title: '자기소개서 제출',
-                category: '서류',
-                color: Color(0xFF3B82F6),
-              ),
-              _FakeDayHeader(AppStrings.tomorrowTitle, showTopGap: true),
-              _FakeTodo(
-                title: '면접 연습',
-                category: '면접',
-                color: Color(0xFF22C55E),
-              ),
-              _FakeDayHeader('8. 22. (토)', showTopGap: true),
-              _FakeTodo(
-                title: '코딩테스트 준비',
-                category: '코딩테스트',
-                color: Color(0xFFF59E0B),
-              ),
-            ],
-          ),
-        ),
-        const _PreviewFrame(
-          caption: AppStrings.homeShowMonth,
-          child: _FakeHomeCard(
-            title: AppStrings.monthTitle,
-            dateLabel: '8. 19. (수) - 8. 31. (월)',
-            children: [
-              _FakeDayHeader(AppStrings.todayTitle),
-              _FakeTodo(
-                title: '자기소개서 제출',
-                category: '서류',
-                color: Color(0xFF3B82F6),
-              ),
-              _FakeDayHeader('8. 25. (화)', showTopGap: true),
-              _FakeTodo(
-                title: '면접 연습',
-                category: '면접',
-                color: Color(0xFF22C55E),
-              ),
-              _FakeDayHeader('8. 28. (금)', showTopGap: true),
-              _FakeTodo(
-                title: '코딩테스트 준비',
-                category: '코딩테스트',
-                color: Color(0xFFF59E0B),
-              ),
-            ],
-          ),
-        ),
-        const _PreviewFrame(
-          caption: AppStrings.homeShowLongGoal,
-          child: _FakeHomeCard(
-            title: AppStrings.longGoalTitle,
-            children: [
-              _FakeTodo(
-                title: '다이어트',
-                category: '75kg / 70kg',
-                color: Color(0xFF22C55E),
-                trailingText: '50%',
-                showComplete: false,
-              ),
-              _FakeTodo(
-                title: '매일 독서',
-                category: '12 / 30일',
-                color: Color(0xFF8B5CF6),
-                trailingText: '40%',
-                showComplete: false,
-              ),
-              _FakeTodo(
-                title: '무지출챌린지',
-                category: '8 / 21일',
-                color: Color(0xFFF97316),
-                trailingText: '38%',
-                showComplete: false,
-              ),
-            ],
-          ),
+        _PreviewFrame(
+          caption: AppStrings.homeReorderCards,
+          child: _HomeReorderDemo(),
         ),
       ],
     );
@@ -368,30 +252,7 @@ class _MonthlyStatsPreview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _CyclingPreview(
-      frames: [
-        _PreviewFrame(
-          caption: AppStrings.homeShowWeeklyStats,
-          child: _FakeBannerCard(AppStrings.weeklyStatsCardTitle),
-        ),
-        _PreviewFrame(
-          caption: AppStrings.settingsHomeSection,
-          child: _FakeBannerCard(AppStrings.monthlyStatsCardTitle(7)),
-        ),
-        _PreviewFrame(
-          caption: AppStrings.monthlyStatsPreviewSummary,
-          child: const _FakeMonthlySummary(),
-        ),
-        _PreviewFrame(
-          caption: AppStrings.monthlyStatsTodoSection,
-          child: const _FakeMonthlyTodos(),
-        ),
-        _PreviewFrame(
-          caption: AppStrings.monthlyStatsJobSection,
-          child: const _FakeMonthlyJobs(),
-        ),
-      ],
-    );
+    return const _StatsToggleDemo();
   }
 }
 
@@ -400,46 +261,42 @@ class _CalendarPreview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _CyclingPreview(
+    const weekStart = _CalendarSwitchDemo();
+    if (!showFontSizeSettings) return weekStart;
+    return const _CyclingPreview(
       frames: [
-        const _PreviewFrame(
-          caption: AppStrings.calendarStartSunday,
-          child: _FakeWeekStartCalendar(startMonday: false),
-        ),
-        const _PreviewFrame(
+        _PreviewFrame(
           caption: AppStrings.calendarStartMonday,
-          child: _FakeWeekStartCalendar(startMonday: true),
+          child: weekStart,
         ),
-        if (showFontSizeSettings) ...[
-          const _PreviewFrame(
-            caption: '${AppStrings.fontTodoSize} ${AppStrings.fontSizeLarge}',
-            child: _FontPreviewCard(
-              fontFamily: AppFonts.pretendard,
-              todoScale: 1.14,
-              calendarScale: 1,
-              calendarLabelScale: 1,
-            ),
+        _PreviewFrame(
+          caption: '${AppStrings.fontTodoSize} ${AppStrings.fontSizeLarge}',
+          child: _FontPreviewCard(
+            fontFamily: AppFonts.pretendard,
+            todoScale: 1.14,
+            calendarScale: 1,
+            calendarLabelScale: 1,
           ),
-          const _PreviewFrame(
-            caption: '${AppStrings.fontCalendarSize} ${AppStrings.fontSizeLarge}',
-            child: _FontPreviewCard(
-              fontFamily: AppFonts.pretendard,
-              todoScale: 1,
-              calendarScale: 1.14,
-              calendarLabelScale: 1,
-            ),
+        ),
+        _PreviewFrame(
+          caption: '${AppStrings.fontCalendarSize} ${AppStrings.fontSizeLarge}',
+          child: _FontPreviewCard(
+            fontFamily: AppFonts.pretendard,
+            todoScale: 1,
+            calendarScale: 1.14,
+            calendarLabelScale: 1,
           ),
-          const _PreviewFrame(
-            caption:
-                '${AppStrings.fontCalendarLabelSize} ${AppStrings.fontSizeLarge}',
-            child: _FontPreviewCard(
-              fontFamily: AppFonts.pretendard,
-              todoScale: 1,
-              calendarScale: 1,
-              calendarLabelScale: 1.14,
-            ),
+        ),
+        _PreviewFrame(
+          caption:
+              '${AppStrings.fontCalendarLabelSize} ${AppStrings.fontSizeLarge}',
+          child: _FontPreviewCard(
+            fontFamily: AppFonts.pretendard,
+            todoScale: 1,
+            calendarScale: 1,
+            calendarLabelScale: 1.14,
           ),
-        ],
+        ),
       ],
     );
   }
@@ -523,90 +380,47 @@ class _TodoPreview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _CyclingPreview(
-      frames: [
-        _PreviewFrame(
-          caption: AppStrings.timeDisplay,
-          child: const _FakeHomeCard(
-            title: AppStrings.todayTitle,
-            children: [
-              _FakeTodo(
-                title: '면접 연습',
-                category: '면접',
-                color: Color(0xFF22C55E),
-                timeText: '오후 4:00',
-              ),
-              _FakeTodo(
-                title: '자기소개서 제출',
-                category: '서류',
-                color: Color(0xFF3B82F6),
-                timeText: '오전 9:00',
-              ),
-              _FakeTodo(
-                title: '코딩테스트 준비',
-                category: '코딩테스트',
-                color: Color(0xFFF59E0B),
-                timeText: '오후 2:00',
-              ),
-            ],
-          ),
-        ),
-        _PreviewFrame(
-          caption: AppStrings.timeSortView,
-          child: const _FakeHomeCard(
-            title: AppStrings.todayTitle,
-            children: [
-              _FakeTodo(
-                title: '자기소개서 제출',
-                category: '서류',
-                color: Color(0xFF3B82F6),
-                timeText: '오전 9:00',
-              ),
-              _FakeTodo(
-                title: '코딩테스트 준비',
-                category: '코딩테스트',
-                color: Color(0xFFF59E0B),
-                timeText: '오후 2:00',
-              ),
-              _FakeTodo(
-                title: '면접 연습',
-                category: '면접',
-                color: Color(0xFF22C55E),
-                timeText: '오후 4:00',
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
+    return const _TodoSettingsDemo();
   }
 }
 
 class _NotificationPreview extends StatelessWidget {
   const _NotificationPreview();
 
+  static const _cards = [
+    _FakeNotificationCard(title: '코딩테스트 준비', body: '10분 후 시작해요', time: '지금'),
+    _FakeNotificationCard(
+      title: '오늘의 일정 3개',
+      body: '자기소개서 제출, 코딩테스트 준비, 면접 연습',
+      time: '오전 8:00',
+    ),
+    _FakeNotificationCard(
+      title: '미완료 할 일 2개',
+      body: '자기소개서 제출, 면접 연습',
+      time: '오후 9:00',
+    ),
+  ];
+
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: const [
-        _FakeNotificationCard(
-          title: '코딩테스트 준비',
-          body: '10분 후 시작해요',
-          time: '지금',
-        ),
-        SizedBox(height: 10),
-        _FakeNotificationCard(
-          title: '오늘의 일정 3개',
-          body: '자기소개서 제출, 코딩테스트 준비, 면접 연습',
-          time: '오전 8:00',
-        ),
-        SizedBox(height: 10),
-        _FakeNotificationCard(
-          title: '미완료 할 일 2개',
-          body: '자기소개서 제출, 면접 연습',
-          time: '오후 9:00',
-        ),
+    return _HelpSelectDemo(
+      labels: const [
+        AppStrings.todoNotificationSetting,
+        AppStrings.summaryNotificationSetting,
+        AppStrings.leftoverNotificationSetting,
       ],
+      values: [
+        AppStrings.notifyMinutes10,
+        AppStrings.summaryTimeLabel(8 * 60),
+        AppStrings.summaryTimeLabel(21 * 60),
+      ],
+      chevron: true,
+      sceneHeight: 110,
+      scene: (context, selected) {
+        return _HelpSceneFill(
+          child: _helpKeyedSwitch(switchKey: selected, child: _cards[selected]),
+        );
+      },
     );
   }
 }
@@ -614,35 +428,42 @@ class _NotificationPreview extends StatelessWidget {
 class _BackupPreview extends StatelessWidget {
   const _BackupPreview();
 
+  static const _scenes = [
+    _FakeBackupScene(
+      icon: Icons.ios_share_rounded,
+      title: AppStrings.backupSavedTitle,
+      body: '잡플래너_백업.zip',
+    ),
+    _FakeBackupScene(
+      icon: Icons.download_rounded,
+      title: AppStrings.restoreDoneTitle,
+      body: AppStrings.restoreDoneBody,
+    ),
+    _FakeBackupScene(
+      icon: Icons.sync_rounded,
+      title: AppStrings.autoBackupDaily,
+      body: '앱을 켜면 매일 자동으로 저장해요',
+    ),
+  ];
+
   @override
   Widget build(BuildContext context) {
-    return const _CyclingPreview(
-      frames: [
-        _PreviewFrame(
-          caption: AppStrings.backupData,
-          child: _FakeBackupScene(
-            icon: Icons.ios_share_rounded,
-            title: AppStrings.backupSavedTitle,
-            body: '잡플래너_백업.zip',
-          ),
-        ),
-        _PreviewFrame(
-          caption: AppStrings.restoreData,
-          child: _FakeBackupScene(
-            icon: Icons.download_rounded,
-            title: AppStrings.restoreDoneTitle,
-            body: AppStrings.restoreDoneBody,
-          ),
-        ),
-        _PreviewFrame(
-          caption: AppStrings.autoBackupSetting,
-          child: _FakeBackupScene(
-            icon: Icons.sync_rounded,
-            title: AppStrings.autoBackupDaily,
-            body: '앱을 켜면 매일 자동으로 저장해요',
-          ),
-        ),
+    return _HelpSelectDemo(
+      labels: const [
+        AppStrings.backupData,
+        AppStrings.restoreData,
+        AppStrings.autoBackupSetting,
       ],
+      chevron: true,
+      sceneHeight: 176,
+      scene: (context, selected) {
+        return _HelpSceneFill(
+          child: _helpKeyedSwitch(
+            switchKey: selected,
+            child: _scenes[selected],
+          ),
+        );
+      },
     );
   }
 }
@@ -652,25 +473,25 @@ class _CalendarSyncPreview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const _CyclingPreview(
-      frames: [
-        _PreviewFrame(
-          caption: AppStrings.importSamsungCalendar,
-          child: _FakeBackupScene(
-            icon: Icons.event_available_rounded,
-            title: AppStrings.importDoneTitle,
-            body: '할 일 3개를 캘린더에 넣었어요',
-          ),
-        ),
-        _PreviewFrame(
-          caption: AppStrings.importIosCalendar,
-          child: _FakeBackupScene(
-            icon: Icons.event_available_rounded,
-            title: AppStrings.importDoneTitle,
-            body: '할 일 3개를 캘린더에 넣었어요',
-          ),
-        ),
+    return _HelpSelectDemo(
+      labels: const [
+        AppStrings.importSamsungCalendar,
+        AppStrings.importIosCalendar,
       ],
+      chevron: true,
+      sceneHeight: 176,
+      scene: (context, selected) {
+        return _HelpSceneFill(
+          child: _helpKeyedSwitch(
+            switchKey: selected,
+            child: _FakeBackupScene(
+              icon: Icons.event_available_rounded,
+              title: AppStrings.importDoneTitle,
+              body: '할 일 3개를 캘린더에 넣었어요',
+            ),
+          ),
+        );
+      },
     );
   }
 }
@@ -714,11 +535,7 @@ class _FakeBackupScene extends StatelessWidget {
               child: SizedBox(
                 width: 52,
                 height: 52,
-                child: Icon(
-                  icon,
-                  size: 24,
-                  color: colors.accentBright,
-                ),
+                child: Icon(icon, size: 24, color: colors.accentBright),
               ),
             ),
             const SizedBox(height: 12),
@@ -756,6 +573,133 @@ class _AppPreview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return _HelpSelectDemo(
+      labels: const [AppStrings.appTutorial, AppStrings.releaseNotesTitle],
+      values: ['', ReleaseNotes.latestVersion],
+      chevron: true,
+      sceneHeight: 228,
+      scene: (context, selected) {
+        return _HelpSceneFill(
+          child: _helpKeyedSwitch(
+            switchKey: selected,
+            child: selected == 0
+                ? const _FakeTutorialPeek()
+                : const _FakeReleaseNotesCard(),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _FakeTutorialPeek extends StatelessWidget {
+  const _FakeTutorialPeek();
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    final font = AppFonts.of(context);
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: colors.card,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: colors.shadow,
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+        border: Border.all(color: colors.border.withValues(alpha: 0.7)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(999),
+              child: LinearProgressIndicator(
+                value: 0.12,
+                minHeight: 4,
+                backgroundColor: colors.border,
+                color: colors.accent,
+              ),
+            ),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: colors.accent.withValues(alpha: 0.14),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    child: Text(
+                      AppStrings.tutorialBadgeStart,
+                      style: TextStyle(
+                        fontFamily: font,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                        color: colors.accent,
+                      ),
+                    ),
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  '1 / 12',
+                  style: TextStyle(
+                    fontFamily: font,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: colors.muted,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              AppStrings.tutorialWelcomeTitle,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontFamily: font,
+                fontSize: 15,
+                fontWeight: FontWeight.w800,
+                color: colors.text,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              AppStrings.tutorialWelcomeBody,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontFamily: font,
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                height: 1.35,
+                color: colors.muted,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _FakeReleaseNotesCard extends StatelessWidget {
+  const _FakeReleaseNotesCard();
+
+  @override
+  Widget build(BuildContext context) {
     final colors = AppColors.of(context);
     final note = ReleaseNotes.all.first;
     return DecoratedBox(
@@ -772,21 +716,23 @@ class _AppPreview extends StatelessWidget {
         border: Border.all(color: colors.border.withValues(alpha: 0.7)),
       ),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+        padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               note.version,
               style: TextStyle(
                 fontFamily: AppFonts.of(context),
-                fontSize: 18,
+                fontSize: 16,
                 fontWeight: FontWeight.w800,
+                height: 1.2,
                 color: colors.text,
               ),
             ),
             if (note.items.isNotEmpty) ...[
-              const SizedBox(height: 10),
+              const SizedBox(height: 8),
               Text(
                 AppStrings.releaseNotesFeatures,
                 style: TextStyle(
@@ -796,11 +742,11 @@ class _AppPreview extends StatelessWidget {
                   color: colors.muted,
                 ),
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: 4),
               _FakeReleaseBullet(note.items.first),
             ],
             if (note.fixes.isNotEmpty) ...[
-              const SizedBox(height: 10),
+              const SizedBox(height: 8),
               Text(
                 AppStrings.releaseNotesFixes,
                 style: TextStyle(
@@ -810,7 +756,7 @@ class _AppPreview extends StatelessWidget {
                   color: colors.muted,
                 ),
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: 4),
               _FakeReleaseBullet(note.fixes.first),
             ],
           ],
@@ -838,10 +784,7 @@ class _FakeReleaseBullet extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SizedBox(
-          width: 14,
-          child: Text('·', style: style),
-        ),
+        SizedBox(width: 14, child: Text('·', style: style)),
         Expanded(
           child: Text(
             text,
@@ -858,41 +801,57 @@ class _FakeReleaseBullet extends StatelessWidget {
 class _FontPreview extends StatelessWidget {
   const _FontPreview();
 
+  static const _faces = [
+    AppTypeface.pretendard,
+    AppTypeface.theJamsil,
+    AppTypeface.bazzi,
+  ];
+
   @override
   Widget build(BuildContext context) {
-    return const _CyclingPreview(
+    return _CyclingPreview(
       frames: [
         _PreviewFrame(
           caption: AppStrings.fontFamily,
-          child: _TypefacePreviewCard(typeface: AppTypeface.bazzi),
+          child: _HelpSelectDemo(
+            showCaption: false,
+            labels: [for (final face in _faces) _typefaceCaption(face)],
+            sceneHeight: 168,
+            scene: (context, selected) {
+              return _FontDemoScene(typeface: _faces[selected]);
+            },
+          ),
         ),
-        _PreviewFrame(
+        const _PreviewFrame(
           caption: AppStrings.fontLabelScale,
-          child: _TypefacePreviewCard(
-            typeface: AppTypeface.pretendard,
-            labelScale: FontPreference.maxScale,
-          ),
+          child: _FontScaleDemo(kind: _FontScaleKind.label),
         ),
-        _PreviewFrame(
+        const _PreviewFrame(
           caption: AppStrings.fontCalendarChipScale,
-          child: _TypefacePreviewCard(
-            typeface: AppTypeface.pretendard,
-            calendarLabelScale: FontPreference.maxScale,
-          ),
+          child: _FontScaleDemo(kind: _FontScaleKind.calendar),
         ),
       ],
     );
   }
 }
 
-class _TypefacePreviewCard extends StatelessWidget {
-  const _TypefacePreviewCard({
-    required this.typeface,
+String _typefaceCaption(AppTypeface typeface) {
+  return switch (typeface) {
+    AppTypeface.pretendard => AppStrings.fontPretendard,
+    AppTypeface.theJamsil => AppStrings.fontTheJamsil,
+    AppTypeface.bazzi => AppStrings.fontBazzi,
+    _ => AppStrings.fontFamily,
+  };
+}
+
+class _FontDemoScene extends StatelessWidget {
+  const _FontDemoScene({
+    this.typeface,
     this.labelScale,
     this.calendarLabelScale,
   });
 
-  final AppTypeface typeface;
+  final AppTypeface? typeface;
   final double? labelScale;
   final double? calendarLabelScale;
 
@@ -900,62 +859,273 @@ class _TypefacePreviewCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final current = FontScope.maybeOf(context);
     final colors = AppColors.of(context);
-    return FontScope(
-      typeface: typeface,
-      todoScale: current?.todoScale ?? 1,
-      labelScale: labelScale ?? current?.labelScale ?? 1,
-      calendarScale: current?.calendarScale ?? 1,
-      calendarLabelScale:
-          calendarLabelScale ?? current?.calendarLabelScale ?? 1,
-      child: Builder(
-        builder: (context) {
-          return DecoratedBox(
-            decoration: BoxDecoration(
-              color: colors.card,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: colors.border),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const DayEventLabel(
-                    title: '자기소개서 제출',
-                    categoryName: '서류',
-                    color: Color(0xFF3B82F6),
-                    timeText: '14:00',
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      for (final label in AppStrings.weekdays)
-                        Expanded(
-                          child: Text(
-                            label,
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontFamily: AppFonts.of(context),
-                              fontSize: 13,
-                              fontWeight: FontWeight.w500,
-                              color: colors.muted,
+    return ColoredBox(
+      color: colors.groupedBackground,
+      child: FontScope(
+        typeface: typeface ?? current?.typeface ?? AppTypeface.pretendard,
+        todoScale: current?.todoScale ?? 1,
+        labelScale: labelScale ?? current?.labelScale ?? 1,
+        calendarScale: current?.calendarScale ?? 1,
+        calendarLabelScale:
+            calendarLabelScale ?? current?.calendarLabelScale ?? 1,
+        child: Builder(
+          builder: (context) {
+            return Padding(
+              padding: const EdgeInsets.fromLTRB(12, 16, 12, 12),
+              child: Align(
+                alignment: Alignment.bottomCenter,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const DayEventLabel(
+                      title: '자기소개서 제출',
+                      categoryName: '서류',
+                      color: Color(0xFF3B82F6),
+                      timeText: '14:00',
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        for (final label in AppStrings.weekdays)
+                          Expanded(
+                            child: Text(
+                              label,
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontFamily: AppFonts.of(context),
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                                color: colors.muted,
+                              ),
                             ),
                           ),
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  const CalendarEventLabel(
-                    title: '면접 연습',
-                    color: Color(0xFF22C55E),
-                  ),
-                ],
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    const CalendarEventLabel(
+                      title: '면접 연습',
+                      color: Color(0xFF22C55E),
+                    ),
+                  ],
+                ),
               ),
-            ),
-          );
-        },
+            );
+          },
+        ),
       ),
     );
+  }
+}
+
+class _FontScaleKind {
+  static const label = 0;
+  static const calendar = 1;
+}
+
+class _FontScaleDemo extends StatefulWidget {
+  const _FontScaleDemo({required this.kind});
+
+  final int kind;
+
+  @override
+  State<_FontScaleDemo> createState() => _FontScaleDemoState();
+}
+
+class _FontScaleDemoState extends State<_FontScaleDemo>
+    with SingleTickerProviderStateMixin {
+  static const _sceneHeight = 168.0;
+  static const _sliderHeight = 52.0;
+  static const _thumb = 14.0;
+
+  late final AnimationController _loop;
+
+  @override
+  void initState() {
+    super.initState();
+    _loop = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 4800),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _loop.dispose();
+    super.dispose();
+  }
+
+  double _progress(double t) {
+    if (t < 0.18) return 0;
+    if (t < 0.48) {
+      return Curves.easeInOutCubic.transform(_helpGate(t, 0.18, 0.48));
+    }
+    if (t < 0.58) return 1;
+    if (t < 0.88) {
+      return 1 - Curves.easeInOutCubic.transform(_helpGate(t, 0.58, 0.88));
+    }
+    return 0;
+  }
+
+  double _fingerOpacity(double t) {
+    if (t < 0.08) return 0;
+    if (t < 0.16) return _helpGate(t, 0.08, 0.16);
+    if (t < 0.90) return 1;
+    if (t < 0.96) return 1 - _helpGate(t, 0.90, 0.96);
+    return 0;
+  }
+
+  double _fingerPress(double t) {
+    final dragging = (t >= 0.18 && t <= 0.48) || (t >= 0.58 && t <= 0.88);
+    return dragging ? 1 : (t >= 0.16 && t <= 0.90 ? 0.35 : 0);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    final steps = FontPreference.scaleSteps;
+    return AnimatedBuilder(
+      animation: _loop,
+      builder: (context, child) {
+        final t = _loop.value;
+        final progress = _progress(t);
+        final scale =
+            FontPreference.minScale +
+            (FontPreference.maxScale - FontPreference.minScale) * progress;
+        final finger = _fingerOpacity(t);
+        final press = _fingerPress(t);
+        final labelScale = widget.kind == _FontScaleKind.label ? scale : 1.0;
+        final calendarScale = widget.kind == _FontScaleKind.calendar
+            ? scale
+            : 1.0;
+        return IgnorePointer(
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: colors.border),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(17),
+              child: SizedBox(
+                height: _sceneHeight + _sliderHeight,
+                width: double.infinity,
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    const pad = 22.0;
+                    final track = (constraints.maxWidth - pad * 2 - _thumb)
+                        .clamp(1.0, constraints.maxWidth);
+                    final thumbX = pad + _thumb / 2 + track * progress;
+                    return Stack(
+                      children: [
+                        Column(
+                          children: [
+                            SizedBox(
+                              height: _sceneHeight,
+                              width: double.infinity,
+                              child: ClipRect(
+                                child: _FontDemoScene(
+                                  labelScale: labelScale,
+                                  calendarLabelScale: calendarScale,
+                                ),
+                              ),
+                            ),
+                            ColoredBox(
+                              color: colors.card,
+                              child: SizedBox(
+                                height: _sliderHeight,
+                                width: double.infinity,
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: pad,
+                                  ),
+                                  child: CustomPaint(
+                                    painter: _FontScaleTrackPainter(
+                                      progress: progress,
+                                      count: steps.length,
+                                      color: colors.accentBright,
+                                      inactive: colors.border,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        if (finger > 0)
+                          Positioned(
+                            left: thumbX - 14,
+                            top: _sceneHeight + (_sliderHeight - 28) / 2,
+                            child: _HelpFinger(pressed: press, opacity: finger),
+                          ),
+                      ],
+                    );
+                  },
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _FontScaleTrackPainter extends CustomPainter {
+  const _FontScaleTrackPainter({
+    required this.progress,
+    required this.count,
+    required this.color,
+    required this.inactive,
+  });
+
+  final double progress;
+  final int count;
+  final Color color;
+  final Color inactive;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    const thumb = 7.0;
+    const trackH = 4.0;
+    final cy = size.height / 2;
+    final start = thumb;
+    final end = size.width - thumb;
+    final trackW = end - start;
+    final track = RRect.fromLTRBR(
+      start - trackH / 2,
+      cy - trackH / 2,
+      end + trackH / 2,
+      cy + trackH / 2,
+      const Radius.circular(2),
+    );
+    canvas.drawRRect(track, Paint()..color = inactive);
+    final thumbX = start + trackW * progress.clamp(0.0, 1.0);
+    canvas.drawRRect(
+      RRect.fromLTRBR(
+        start - trackH / 2,
+        cy - trackH / 2,
+        thumbX + trackH / 2,
+        cy + trackH / 2,
+        const Radius.circular(2),
+      ),
+      Paint()..color = color,
+    );
+    for (var i = 0; i < count; i++) {
+      final x = start + trackW * (count <= 1 ? 0 : i / (count - 1));
+      final passed = i / (count - 1) <= progress + 0.001;
+      canvas.drawCircle(
+        Offset(x, cy),
+        2.2,
+        Paint()..color = passed ? Colors.white : color,
+      );
+    }
+    canvas.drawCircle(Offset(thumbX, cy), thumb, Paint()..color = color);
+  }
+
+  @override
+  bool shouldRepaint(_FontScaleTrackPainter oldDelegate) {
+    return oldDelegate.progress != progress ||
+        oldDelegate.color != color ||
+        oldDelegate.inactive != inactive;
   }
 }
 
@@ -1059,109 +1229,435 @@ class _FontPreviewCard extends StatelessWidget {
 class _ThemePreview extends StatelessWidget {
   const _ThemePreview();
 
+  static const _skins = [AppSkin.classic, AppSkin.blossom, AppSkin.catVillage];
+
   @override
   Widget build(BuildContext context) {
     for (final asset in AppSkinAssets.precacheDecorations) {
       precacheImage(AssetImage(asset), context);
     }
-    return _CyclingPreview(
-      frames: [
-        for (final skin in AppSkin.selectable)
-          _PreviewFrame(
-            caption: _themeCaption(skin),
-            child: _ThemeHelpScene(skin: skin),
-          ),
-      ],
-    );
-  }
-
-  static String _themeCaption(AppSkin skin) {
-    switch (skin) {
-      case AppSkin.classic:
-        return AppStrings.themeClassic;
-      case AppSkin.blossom:
-        return AppStrings.themeBlossom;
-      case AppSkin.summerBeach:
-        return AppStrings.themeSummerBeach;
-      case AppSkin.autumnForest:
-        return AppStrings.themeAutumnForest;
-      case AppSkin.snowyWinter:
-        return AppStrings.themeSnowyWinter;
-      case AppSkin.squishyBear:
-        return AppStrings.themeSquishyBear;
-      case AppSkin.strawberryMilk:
-        return AppStrings.themeStrawberryMilk;
-      case AppSkin.onionVillage:
-        return AppStrings.themeOnionVillage;
-      case AppSkin.lovelyBear:
-        return AppStrings.themeLovelyBear;
-      case AppSkin.rainyDay:
-        return AppStrings.themeRainyDay;
-      case AppSkin.concertDay:
-        return AppStrings.themeConcertDay;
-      case AppSkin.boyhood:
-        return AppStrings.themeBoyhood;
-      case AppSkin.interlude:
-        return AppStrings.themeInterlude;
-      case AppSkin.fluffyCloud:
-        return AppStrings.themeFluffyCloud;
-      case AppSkin.catVillage:
-        return AppStrings.themeCatVillage;
-      case AppSkin.hamsterBakery:
-        return AppStrings.themeHamsterBakery;
-    }
-  }
-}
-
-class _ThemeHelpScene extends StatelessWidget {
-  const _ThemeHelpScene({required this.skin});
-
-  final AppSkin skin;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = AppColors.of(context);
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: colors.border),
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(17),
-        child: SizedBox(
-          height: 188,
-          child: AppSkinBackground(
-            skin: skin,
-            liftForNav: false,
-            scaleByWidth: true,
-            child: const Padding(
-              padding: EdgeInsets.fromLTRB(12, 16, 12, 12),
-              child: Column(
+    return _HelpSelectDemo(
+      labels: [for (final skin in _skins) _themeCaption(skin)],
+      scene: (context, selected) {
+        return AppSkinBackground(
+          skin: _skins[selected],
+          animate: true,
+          liftForNav: false,
+          scaleByWidth: true,
+          child: const Padding(
+            padding: EdgeInsets.fromLTRB(12, 16, 12, 12),
+            child: Align(
+              alignment: Alignment.bottomCenter,
+              child: _FakeHomeCard(
+                title: AppStrings.todayTitle,
                 children: [
-                  Spacer(),
-                  _FakeHomeCard(
-                    title: AppStrings.todayTitle,
-                    children: [
-                      _FakeTodo(
-                        title: '자기소개서 제출',
-                        category: '서류',
-                        color: Color(0xFF3B82F6),
-                      ),
-                      _FakeTodo(
-                        title: '면접 연습',
-                        category: '면접',
-                        color: Color(0xFF22C55E),
-                      ),
-                    ],
+                  _FakeTodo(
+                    title: '자기소개서 제출',
+                    category: '서류',
+                    color: Color(0xFF3B82F6),
+                  ),
+                  _FakeTodo(
+                    title: '면접 연습',
+                    category: '면접',
+                    color: Color(0xFF22C55E),
                   ),
                 ],
               ),
             ),
           ),
+        );
+      },
+    );
+  }
+}
+
+String _themeCaption(AppSkin skin) {
+  switch (skin) {
+    case AppSkin.classic:
+      return AppStrings.themeClassic;
+    case AppSkin.blossom:
+      return AppStrings.themeBlossom;
+    case AppSkin.summerBeach:
+      return AppStrings.themeSummerBeach;
+    case AppSkin.autumnForest:
+      return AppStrings.themeAutumnForest;
+    case AppSkin.snowyWinter:
+      return AppStrings.themeSnowyWinter;
+    case AppSkin.squishyBear:
+      return AppStrings.themeSquishyBear;
+    case AppSkin.strawberryMilk:
+      return AppStrings.themeStrawberryMilk;
+    case AppSkin.onionVillage:
+      return AppStrings.themeOnionVillage;
+    case AppSkin.lovelyBear:
+      return AppStrings.themeLovelyBear;
+    case AppSkin.rainyDay:
+      return AppStrings.themeRainyDay;
+    case AppSkin.concertDay:
+      return AppStrings.themeConcertDay;
+    case AppSkin.boyhood:
+      return AppStrings.themeBoyhood;
+    case AppSkin.interlude:
+      return AppStrings.themeInterlude;
+    case AppSkin.fluffyCloud:
+      return AppStrings.themeFluffyCloud;
+    case AppSkin.catVillage:
+      return AppStrings.themeCatVillage;
+    case AppSkin.hamsterBakery:
+      return AppStrings.themeHamsterBakery;
+  }
+}
+
+class _HelpSelectDemo extends StatefulWidget {
+  const _HelpSelectDemo({
+    required this.labels,
+    required this.scene,
+    this.sceneHeight = 188,
+    this.showCaption = true,
+    this.chevron = false,
+    this.values,
+  });
+
+  final List<String> labels;
+  final Widget Function(BuildContext context, int selected) scene;
+  final double sceneHeight;
+  final bool showCaption;
+  final bool chevron;
+  final List<String>? values;
+
+  @override
+  State<_HelpSelectDemo> createState() => _HelpSelectDemoState();
+}
+
+class _HelpSelectDemoState extends State<_HelpSelectDemo>
+    with SingleTickerProviderStateMixin {
+  static const _rowHeight = 40.0;
+
+  late final AnimationController _loop;
+
+  @override
+  void initState() {
+    super.initState();
+    _loop = AnimationController(
+      vsync: this,
+      duration: Duration(milliseconds: widget.labels.length >= 3 ? 5600 : 4800),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _loop.dispose();
+    super.dispose();
+  }
+
+  int _selected(double t) {
+    final n = widget.labels.length;
+    if (n <= 1) return 0;
+    if (n == 2) return t < 0.42 ? 0 : 1;
+    if (t < 0.42) return 0;
+    if (t < 0.74) return 1;
+    return 2;
+  }
+
+  double _fingerRow(double t) {
+    final n = widget.labels.length;
+    if (n <= 1) return 0;
+    if (n == 2) return 1;
+    if (t < 0.30) return 0;
+    if (t < 0.42) {
+      return Curves.easeInOutCubic.transform(_helpGate(t, 0.30, 0.42));
+    }
+    if (t < 0.62) return 1;
+    if (t < 0.74) {
+      return 1 + Curves.easeInOutCubic.transform(_helpGate(t, 0.62, 0.74));
+    }
+    return 2;
+  }
+
+  double _fingerOpacity(double t) {
+    if (widget.labels.length == 2) {
+      if (t < 0.12) return 0;
+      if (t < 0.20) return _helpGate(t, 0.12, 0.20);
+      if (t < 0.78) return 1;
+      if (t < 0.88) return 1 - _helpGate(t, 0.78, 0.88);
+      return 0;
+    }
+    if (t < 0.04) return 0;
+    if (t < 0.12) return _helpGate(t, 0.04, 0.12);
+    if (t < 0.90) return 1;
+    if (t < 0.98) return 1 - _helpGate(t, 0.90, 0.98);
+    return 0;
+  }
+
+  double _fingerPress(double t) {
+    if (widget.labels.length == 2) {
+      return _helpPulse(t, 0.22, 0.32, 0.46);
+    }
+    final a = _helpPulse(t, 0.10, 0.18, 0.28);
+    final b = _helpPulse(t, 0.42, 0.50, 0.60);
+    final c = _helpPulse(t, 0.74, 0.82, 0.90);
+    return [a, b, c].reduce((x, y) => x > y ? x : y);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    final labels = widget.labels;
+    return AnimatedBuilder(
+      animation: _loop,
+      builder: (context, child) {
+        final t = _loop.value;
+        final selected = _selected(t).clamp(0, labels.length - 1).toInt();
+        final finger = _fingerOpacity(t);
+        final press = _fingerPress(t);
+        final fingerRow = _fingerRow(t);
+        return Column(
+          children: [
+            if (widget.showCaption) ...[
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 280),
+                child: DecoratedBox(
+                  key: ValueKey(labels[selected]),
+                  decoration: BoxDecoration(
+                    color: colors.tint(colors.accentBright, 0.18),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
+                    child: Text(
+                      labels[selected],
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontFamily: AppFonts.of(context),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: colors.accentBright,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+            ],
+            IgnorePointer(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(color: colors.border),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(17),
+                  child: SizedBox(
+                    height: widget.sceneHeight + _rowHeight * labels.length,
+                    width: double.infinity,
+                    child: Stack(
+                      children: [
+                        Column(
+                          children: [
+                            SizedBox(
+                              height: widget.sceneHeight,
+                              width: double.infinity,
+                              child: ClipRect(
+                                child: widget.scene(context, selected),
+                              ),
+                            ),
+                            ColoredBox(
+                              color: colors.card,
+                              child: Column(
+                                children: [
+                                  for (var i = 0; i < labels.length; i++)
+                                    _HelpSelectRow(
+                                      label: labels[i],
+                                      selected: selected == i,
+                                      height: _rowHeight,
+                                      chevron: widget.chevron,
+                                      value: widget.values == null
+                                          ? null
+                                          : widget.values![i],
+                                    ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        if (finger > 0)
+                          Positioned(
+                            right: 28,
+                            top:
+                                widget.sceneHeight +
+                                fingerRow * _rowHeight +
+                                (_rowHeight - 28) / 2,
+                            child: _HelpFinger(pressed: press, opacity: finger),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _HelpSelectRow extends StatelessWidget {
+  const _HelpSelectRow({
+    required this.label,
+    required this.selected,
+    required this.height,
+    this.chevron = false,
+    this.value,
+  });
+
+  final String label;
+  final bool selected;
+  final double height;
+  final bool chevron;
+  final String? value;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    return SizedBox(
+      height: height,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontFamily: AppFonts.of(context),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w400,
+                  color: colors.text,
+                ),
+              ),
+            ),
+            if (value != null && value!.isNotEmpty) ...[
+              Text(
+                value!,
+                style: TextStyle(
+                  fontFamily: AppFonts.of(context),
+                  fontSize: 13,
+                  fontWeight: FontWeight.w400,
+                  color: colors.muted,
+                ),
+              ),
+              const SizedBox(width: 2),
+            ],
+            if (chevron)
+              Icon(Icons.chevron_right_rounded, size: 22, color: colors.muted)
+            else
+              AnimatedOpacity(
+                duration: const Duration(milliseconds: 220),
+                opacity: selected ? 1 : 0,
+                child: Icon(Icons.check_rounded, size: 20, color: colors.text),
+              ),
+          ],
         ),
       ),
     );
   }
+}
+
+class _HelpFinger extends StatelessWidget {
+  const _HelpFinger({required this.pressed, required this.opacity});
+
+  final double pressed;
+  final double opacity;
+
+  @override
+  Widget build(BuildContext context) {
+    final scale = 1 - pressed * 0.12;
+    return Opacity(
+      opacity: opacity.clamp(0.0, 1.0),
+      child: Transform.scale(
+        scale: scale,
+        child: Container(
+          width: 28,
+          height: 28,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: Colors.white.withValues(alpha: 0.92),
+            border: Border.all(
+              color: const Color(0xFF3B82F6).withValues(alpha: 0.45),
+              width: 2,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.18),
+                blurRadius: 8,
+                offset: const Offset(0, 3),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+double _helpGate(double t, double a, double b) {
+  if (t <= a) return 0;
+  if (t >= b) return 1;
+  return ((t - a) / (b - a)).clamp(0.0, 1.0);
+}
+
+double _helpPulse(double t, double a, double b, double c) {
+  if (t < a) return 0;
+  if (t < b) return _helpGate(t, a, b);
+  if (t < c) return 1;
+  return (1 - _helpGate(t, c, (c + 0.12).clamp(0.0, 1.0))).clamp(0.0, 1.0);
+}
+
+class _HelpSceneFill extends StatelessWidget {
+  const _HelpSceneFill({
+    required this.child,
+    this.alignment = Alignment.center,
+  });
+
+  final Widget child;
+  final Alignment alignment;
+
+  @override
+  Widget build(BuildContext context) {
+    return ColoredBox(
+      color: AppColors.of(context).groupedBackground,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return SingleChildScrollView(
+              physics: const NeverScrollableScrollPhysics(),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minHeight: constraints.maxHeight,
+                  maxWidth: constraints.maxWidth,
+                ),
+                child: Align(alignment: alignment, child: child),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+Widget _helpKeyedSwitch({required Object switchKey, required Widget child}) {
+  return AnimatedSwitcher(
+    duration: const Duration(milliseconds: 420),
+    switchInCurve: Curves.easeOutCubic,
+    switchOutCurve: Curves.easeInCubic,
+    child: KeyedSubtree(key: ValueKey(switchKey), child: child),
+  );
 }
 
 class _AppearancePreview extends StatelessWidget {
@@ -1169,59 +1665,24 @@ class _AppearancePreview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(
-          child: _ThemedPreviewPhone(
-            theme: AppTheme.light,
-            caption: AppStrings.lightMode,
-          ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: _ThemedPreviewPhone(
-            theme: AppTheme.dark,
-            caption: AppStrings.darkMode,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _ThemedPreviewPhone extends StatelessWidget {
-  const _ThemedPreviewPhone({
-    required this.theme,
-    this.caption,
-    this.background,
-    this.child,
-  });
-
-  final ThemeData theme;
-  final String? caption;
-  final Color? background;
-  final Widget? child;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Theme(
-          data: theme,
-          child: Builder(
-            builder: (context) {
-              final colors = AppColors.of(context);
-              return DecoratedBox(
-                decoration: BoxDecoration(
-                  color: background ?? colors.groupedBackground,
-                  borderRadius: BorderRadius.circular(18),
-                  border: Border.all(color: colors.border),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(8),
-                  child: child ??
-                      const _FakeHomeCard(
+    return _HelpSelectDemo(
+      labels: const [AppStrings.lightMode, AppStrings.darkMode],
+      sceneHeight: 188,
+      scene: (context, selected) {
+        final theme = selected == 0 ? AppTheme.light : AppTheme.dark;
+        return _helpKeyedSwitch(
+          switchKey: selected,
+          child: Theme(
+            data: theme,
+            child: Builder(
+              builder: (context) {
+                return ColoredBox(
+                  color: AppColors.of(context).groupedBackground,
+                  child: const Padding(
+                    padding: EdgeInsets.fromLTRB(12, 16, 12, 12),
+                    child: Align(
+                      alignment: Alignment.bottomCenter,
+                      child: _FakeHomeCard(
                         title: AppStrings.todayTitle,
                         children: [
                           _FakeTodo(
@@ -1236,24 +1697,14 @@ class _ThemedPreviewPhone extends StatelessWidget {
                           ),
                         ],
                       ),
-                ),
-              );
-            },
-          ),
-        ),
-        if (caption != null) ...[
-          const SizedBox(height: 8),
-          Text(
-            caption!,
-            style: TextStyle(
-              fontFamily: AppFonts.of(context),
-              fontSize: 13,
-              fontWeight: FontWeight.w700,
-              color: AppColors.of(context).text,
+                    ),
+                  ),
+                );
+              },
             ),
           ),
-        ],
-      ],
+        );
+      },
     );
   }
 }
@@ -1322,10 +1773,7 @@ class _CyclingPreviewState extends State<_CyclingPreview> {
           : (details) {
               final velocity = details.primaryVelocity ?? 0;
               if (velocity.abs() < 180) return;
-              _goTo(
-                velocity < 0 ? _index + 1 : _index - 1,
-                fromUser: true,
-              );
+              _goTo(velocity < 0 ? _index + 1 : _index - 1, fromUser: true);
             },
       child: Column(
         children: [
@@ -1430,10 +1878,7 @@ class _CyclingPreviewState extends State<_CyclingPreview> {
 }
 
 class _PreviewNavButton extends StatelessWidget {
-  const _PreviewNavButton({
-    required this.icon,
-    required this.onPressed,
-  });
+  const _PreviewNavButton({required this.icon, required this.onPressed});
 
   final IconData icon;
   final VoidCallback onPressed;
@@ -1448,11 +1893,7 @@ class _PreviewNavButton extends StatelessWidget {
       child: SizedBox(
         width: 32,
         height: 32,
-        child: Icon(
-          icon,
-          size: 26,
-          color: colors.muted,
-        ),
+        child: Icon(icon, size: 26, color: colors.muted),
       ),
     );
   }
@@ -1525,10 +1966,221 @@ class _FakeHomeCard extends StatelessWidget {
   }
 }
 
-class _FakeBannerCard extends StatelessWidget {
-  const _FakeBannerCard(this.title);
+class _HomeCardToggleDemo extends StatefulWidget {
+  const _HomeCardToggleDemo();
+
+  @override
+  State<_HomeCardToggleDemo> createState() => _HomeCardToggleDemoState();
+}
+
+class _HomeCardToggleDemoState extends State<_HomeCardToggleDemo>
+    with SingleTickerProviderStateMixin {
+  static const _sceneHeight = 220.0;
+  static const _rowHeight = 44.0;
+  static const _labels = [
+    AppStrings.homeShowToday,
+    AppStrings.homeShowTomorrow,
+    AppStrings.homeShowWeek,
+  ];
+
+  late final AnimationController _loop;
+
+  @override
+  void initState() {
+    super.initState();
+    _loop = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 5600),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _loop.dispose();
+    super.dispose();
+  }
+
+  double _fingerRow(double t) {
+    if (t < 0.38) return 1;
+    if (t < 0.48) {
+      return 1 + Curves.easeInOutCubic.transform(_helpGate(t, 0.38, 0.48));
+    }
+    if (t < 0.66) return 2;
+    if (t < 0.76) {
+      return 2 - 2 * Curves.easeInOutCubic.transform(_helpGate(t, 0.66, 0.76));
+    }
+    return 0;
+  }
+
+  double _fingerOpacity(double t) {
+    if (t < 0.08) return 0;
+    if (t < 0.16) return _helpGate(t, 0.08, 0.16);
+    if (t < 0.88) return 1;
+    if (t < 0.96) return 1 - _helpGate(t, 0.88, 0.96);
+    return 0;
+  }
+
+  double _fingerPress(double t) {
+    final a = _helpPulse(t, 0.18, 0.26, 0.36);
+    final b = _helpPulse(t, 0.48, 0.56, 0.66);
+    final c = _helpPulse(t, 0.76, 0.84, 0.90);
+    return [a, b, c].reduce((x, y) => x > y ? x : y);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    return AnimatedBuilder(
+      animation: _loop,
+      builder: (context, child) {
+        final t = _loop.value;
+        final today = t < 0.76
+            ? 1.0
+            : 1 - Curves.easeOutCubic.transform(_helpGate(t, 0.76, 0.86));
+        final tomorrow = t < 0.22
+            ? 0.0
+            : Curves.easeOutCubic.transform(_helpGate(t, 0.22, 0.32));
+        final week = t < 0.50
+            ? 0.0
+            : Curves.easeOutCubic.transform(_helpGate(t, 0.50, 0.60));
+        final ons = [today, tomorrow, week];
+        final finger = _fingerOpacity(t);
+        final press = _fingerPress(t);
+        final fingerRow = _fingerRow(t);
+        return IgnorePointer(
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: colors.border),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(17),
+              child: SizedBox(
+                height: _sceneHeight + _rowHeight * _labels.length,
+                width: double.infinity,
+                child: Stack(
+                  children: [
+                    Column(
+                      children: [
+                        SizedBox(
+                          height: _sceneHeight,
+                          width: double.infinity,
+                          child: ColoredBox(
+                            color: colors.groupedBackground,
+                            child: Padding(
+                              padding: const EdgeInsets.fromLTRB(
+                                12,
+                                14,
+                                12,
+                                10,
+                              ),
+                              child: Align(
+                                alignment: Alignment.topCenter,
+                                child: SingleChildScrollView(
+                                  physics: const NeverScrollableScrollPhysics(),
+                                  child: Column(
+                                    children: [
+                                      _HomeCollapsingCard(
+                                        open: today,
+                                        child: const _HomePeekCard(
+                                          title: AppStrings.todayTitle,
+                                          date: '8. 19. (수)',
+                                          color: Color(0xFF3B82F6),
+                                        ),
+                                      ),
+                                      _HomeCollapsingCard(
+                                        open: tomorrow,
+                                        child: const _HomePeekCard(
+                                          title: AppStrings.tomorrowTitle,
+                                          date: '8. 20. (목)',
+                                          color: Color(0xFF22C55E),
+                                        ),
+                                      ),
+                                      _HomeCollapsingCard(
+                                        open: week,
+                                        child: const _HomePeekCard(
+                                          title: AppStrings.weekTitle,
+                                          date: '8. 19. (수) - 8. 23. (일)',
+                                          color: Color(0xFFF59E0B),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        ColoredBox(
+                          color: colors.card,
+                          child: Column(
+                            children: [
+                              for (var i = 0; i < _labels.length; i++)
+                                _HelpSwitchRow(
+                                  label: _labels[i],
+                                  on: ons[i],
+                                  height: _rowHeight,
+                                ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (finger > 0)
+                      Positioned(
+                        right: 26,
+                        top:
+                            _sceneHeight +
+                            fingerRow * _rowHeight +
+                            (_rowHeight - 28) / 2,
+                        child: _HelpFinger(pressed: press, opacity: finger),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _HomeCollapsingCard extends StatelessWidget {
+  const _HomeCollapsingCard({required this.open, required this.child});
+
+  final double open;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final visible = open.clamp(0.0, 1.0);
+    return ClipRect(
+      child: Align(
+        alignment: Alignment.topCenter,
+        heightFactor: visible,
+        child: Opacity(
+          opacity: visible,
+          child: Padding(
+            padding: EdgeInsets.only(bottom: 8 * visible),
+            child: child,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _HomePeekCard extends StatelessWidget {
+  const _HomePeekCard({
+    required this.title,
+    required this.date,
+    required this.color,
+  });
 
   final String title;
+  final String date;
+  final Color color;
 
   @override
   Widget build(BuildContext context) {
@@ -1536,7 +2188,856 @@ class _FakeBannerCard extends StatelessWidget {
     return DecoratedBox(
       decoration: BoxDecoration(
         color: colors.card,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: colors.border.withValues(alpha: 0.7)),
+        boxShadow: [
+          BoxShadow(
+            color: colors.shadow,
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+        child: Row(
+          children: [
+            ColoredBox(
+              color: color,
+              child: const SizedBox(width: 4, height: 36),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontFamily: AppFonts.of(context),
+                      fontSize: 15,
+                      fontWeight: FontWeight.w800,
+                      height: 1.15,
+                      color: colors.text,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    date,
+                    style: TextStyle(
+                      fontFamily: AppFonts.of(context),
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: colors.muted,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _HelpSwitchRow extends StatelessWidget {
+  const _HelpSwitchRow({
+    required this.label,
+    required this.on,
+    required this.height,
+  });
+
+  final String label;
+  final double on;
+  final double height;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    return SizedBox(
+      height: height,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontFamily: AppFonts.of(context),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w400,
+                  color: colors.text,
+                ),
+              ),
+            ),
+            _HelpMiniSwitch(on: on),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _CalendarSwitchDemo extends StatefulWidget {
+  const _CalendarSwitchDemo();
+
+  @override
+  State<_CalendarSwitchDemo> createState() => _CalendarSwitchDemoState();
+}
+
+class _CalendarSwitchDemoState extends State<_CalendarSwitchDemo>
+    with SingleTickerProviderStateMixin {
+  static const _sceneHeight = 148.0;
+  static const _rowHeight = 48.0;
+
+  late final AnimationController _loop;
+
+  @override
+  void initState() {
+    super.initState();
+    _loop = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 5200),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _loop.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    return AnimatedBuilder(
+      animation: _loop,
+      builder: (context, child) {
+        final t = _loop.value;
+        final monday = t < 0.22
+            ? 0.0
+            : t < 0.34
+            ? Curves.easeOutCubic.transform(_helpGate(t, 0.22, 0.34))
+            : t < 0.68
+            ? 1.0
+            : t < 0.80
+            ? 1 - Curves.easeOutCubic.transform(_helpGate(t, 0.68, 0.80))
+            : 0.0;
+        final finger = () {
+          if (t < 0.10) return 0.0;
+          if (t < 0.18) return _helpGate(t, 0.10, 0.18);
+          if (t < 0.40) return 1.0;
+          if (t < 0.48) return 1 - _helpGate(t, 0.40, 0.48);
+          if (t < 0.56) return 0.0;
+          if (t < 0.64) return _helpGate(t, 0.56, 0.64);
+          if (t < 0.86) return 1.0;
+          if (t < 0.94) return 1 - _helpGate(t, 0.86, 0.94);
+          return 0.0;
+        }();
+        final a = _helpPulse(t, 0.18, 0.26, 0.36);
+        final b = _helpPulse(t, 0.64, 0.72, 0.82);
+        final press = a > b ? a : b;
+        final startMonday = monday > 0.5;
+        return IgnorePointer(
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: colors.border),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(17),
+              child: SizedBox(
+                height: _sceneHeight + _rowHeight,
+                width: double.infinity,
+                child: Stack(
+                  children: [
+                    Column(
+                      children: [
+                        SizedBox(
+                          height: _sceneHeight,
+                          width: double.infinity,
+                          child: ColoredBox(
+                            color: colors.groupedBackground,
+                            child: Padding(
+                              padding: const EdgeInsets.fromLTRB(
+                                12,
+                                16,
+                                12,
+                                12,
+                              ),
+                              child: Align(
+                                alignment: Alignment.bottomCenter,
+                                child: AnimatedSwitcher(
+                                  duration: const Duration(milliseconds: 420),
+                                  switchInCurve: Curves.easeOutCubic,
+                                  switchOutCurve: Curves.easeInCubic,
+                                  child: KeyedSubtree(
+                                    key: ValueKey(startMonday),
+                                    child: _FakeWeekStartCalendar(
+                                      startMonday: startMonday,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        ColoredBox(
+                          color: colors.card,
+                          child: _HelpSwitchRow(
+                            label: AppStrings.calendarStartMonday,
+                            on: monday,
+                            height: _rowHeight,
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (finger > 0)
+                      Positioned(
+                        right: 26,
+                        top: _sceneHeight + (_rowHeight - 28) / 2,
+                        child: _HelpFinger(pressed: press, opacity: finger),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _StatsToggleDemo extends StatefulWidget {
+  const _StatsToggleDemo();
+
+  @override
+  State<_StatsToggleDemo> createState() => _StatsToggleDemoState();
+}
+
+class _StatsToggleDemoState extends State<_StatsToggleDemo>
+    with SingleTickerProviderStateMixin {
+  static const _sceneHeight = 228.0;
+  static const _rowHeight = 44.0;
+  static const _labels = [
+    AppStrings.homeShowWeeklyStats,
+    AppStrings.homeShowMonthlyStats,
+  ];
+
+  late final AnimationController _loop;
+
+  @override
+  void initState() {
+    super.initState();
+    _loop = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 5600),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _loop.dispose();
+    super.dispose();
+  }
+
+  double _fingerRow(double t) {
+    if (t < 0.38) return 0;
+    if (t < 0.48) {
+      return Curves.easeInOutCubic.transform(_helpGate(t, 0.38, 0.48));
+    }
+    return 1;
+  }
+
+  double _fingerOpacity(double t) {
+    if (t < 0.08) return 0;
+    if (t < 0.16) return _helpGate(t, 0.08, 0.16);
+    if (t < 0.88) return 1;
+    if (t < 0.96) return 1 - _helpGate(t, 0.88, 0.96);
+    return 0;
+  }
+
+  double _fingerPress(double t) {
+    final a = _helpPulse(t, 0.18, 0.26, 0.36);
+    final b = _helpPulse(t, 0.48, 0.56, 0.66);
+    return a > b ? a : b;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    return AnimatedBuilder(
+      animation: _loop,
+      builder: (context, child) {
+        final t = _loop.value;
+        final weekly = t < 0.22
+            ? 0.0
+            : Curves.easeOutCubic.transform(_helpGate(t, 0.22, 0.32));
+        final monthly = t < 0.50
+            ? 0.0
+            : Curves.easeOutCubic.transform(_helpGate(t, 0.50, 0.60));
+        final ons = [weekly, monthly];
+        final finger = _fingerOpacity(t);
+        final press = _fingerPress(t);
+        final fingerRow = _fingerRow(t);
+        return IgnorePointer(
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: colors.border),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(17),
+              child: SizedBox(
+                height: _sceneHeight + _rowHeight * _labels.length,
+                width: double.infinity,
+                child: Stack(
+                  children: [
+                    Column(
+                      children: [
+                        SizedBox(
+                          height: _sceneHeight,
+                          width: double.infinity,
+                          child: ColoredBox(
+                            color: colors.groupedBackground,
+                            child: Padding(
+                              padding: const EdgeInsets.fromLTRB(
+                                12,
+                                14,
+                                12,
+                                10,
+                              ),
+                              child: Align(
+                                alignment: Alignment.topCenter,
+                                child: SingleChildScrollView(
+                                  physics: const NeverScrollableScrollPhysics(),
+                                  child: Column(
+                                    children: [
+                                      _HomeCollapsingCard(
+                                        open: weekly,
+                                        child: const _FakeStatsPeek(
+                                          headline:
+                                              AppStrings.weeklyStatsHeadline,
+                                          todoCount: 8,
+                                          rate: 80,
+                                        ),
+                                      ),
+                                      _HomeCollapsingCard(
+                                        open: monthly,
+                                        child: _FakeStatsPeek(
+                                          headline:
+                                              AppStrings.monthlyStatsHeadlineMonth(
+                                                7,
+                                              ),
+                                          todoCount: 12,
+                                          rate: 67,
+                                          roundCount: 5,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        ColoredBox(
+                          color: colors.card,
+                          child: Column(
+                            children: [
+                              for (var i = 0; i < _labels.length; i++)
+                                _HelpSwitchRow(
+                                  label: _labels[i],
+                                  on: ons[i],
+                                  height: _rowHeight,
+                                ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (finger > 0)
+                      Positioned(
+                        right: 26,
+                        top:
+                            _sceneHeight +
+                            fingerRow * _rowHeight +
+                            (_rowHeight - 28) / 2,
+                        child: _HelpFinger(pressed: press, opacity: finger),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _TodoSettingsDemo extends StatefulWidget {
+  const _TodoSettingsDemo();
+
+  @override
+  State<_TodoSettingsDemo> createState() => _TodoSettingsDemoState();
+}
+
+class _TodoSettingsDemoState extends State<_TodoSettingsDemo>
+    with SingleTickerProviderStateMixin {
+  static const _sceneHeight = 236.0;
+  static const _rowHeight = 40.0;
+  static const _itemH = 46.0;
+  static const _gap = 6.0;
+  static const _labels = [AppStrings.timeSortView, AppStrings.timeDisplay];
+  static const _titles = ['면접 연습', '자기소개서 제출', '코딩테스트 준비'];
+  static const _categories = ['면접', '서류', '코딩테스트'];
+  static const _colors = [
+    Color(0xFF22C55E),
+    Color(0xFF3B82F6),
+    Color(0xFFF59E0B),
+  ];
+  static const _times = ['오후 4:00', '오전 9:00', '오후 2:00'];
+  static const _sortedSlot = [2.0, 0.0, 1.0];
+
+  late final AnimationController _loop;
+
+  @override
+  void initState() {
+    super.initState();
+    _loop = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 5600),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _loop.dispose();
+    super.dispose();
+  }
+
+  double _fingerRow(double t) {
+    if (t < 0.38) return 1;
+    if (t < 0.48) {
+      return 1 - Curves.easeInOutCubic.transform(_helpGate(t, 0.38, 0.48));
+    }
+    return 0;
+  }
+
+  double _fingerOpacity(double t) {
+    if (t < 0.08) return 0;
+    if (t < 0.16) return _helpGate(t, 0.08, 0.16);
+    if (t < 0.88) return 1;
+    if (t < 0.96) return 1 - _helpGate(t, 0.88, 0.96);
+    return 0;
+  }
+
+  double _fingerPress(double t) {
+    final a = _helpPulse(t, 0.18, 0.26, 0.36);
+    final b = _helpPulse(t, 0.48, 0.56, 0.66);
+    return a > b ? a : b;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    return AnimatedBuilder(
+      animation: _loop,
+      builder: (context, child) {
+        final t = _loop.value;
+        final showTime = t < 0.22
+            ? 0.0
+            : Curves.easeOutCubic.transform(_helpGate(t, 0.22, 0.32));
+        final sort = t < 0.50
+            ? 0.0
+            : Curves.easeOutCubic.transform(_helpGate(t, 0.50, 0.60));
+        final ons = [sort, showTime];
+        final finger = _fingerOpacity(t);
+        final press = _fingerPress(t);
+        final fingerRow = _fingerRow(t);
+        final slot = _itemH + _gap;
+        return IgnorePointer(
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: colors.border),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(17),
+              child: SizedBox(
+                height: _sceneHeight + _rowHeight * _labels.length,
+                width: double.infinity,
+                child: Stack(
+                  children: [
+                    Column(
+                      children: [
+                        SizedBox(
+                          height: _sceneHeight,
+                          width: double.infinity,
+                          child: ColoredBox(
+                            color: colors.groupedBackground,
+                            child: Padding(
+                              padding: const EdgeInsets.fromLTRB(
+                                12,
+                                14,
+                                12,
+                                10,
+                              ),
+                              child: Align(
+                                alignment: Alignment.topCenter,
+                                child: _FakeHomeCard(
+                                  title: AppStrings.todayTitle,
+                                  children: [
+                                    SizedBox(
+                                      width: double.infinity,
+                                      height: _itemH * 3 + _gap * 2,
+                                      child: Stack(
+                                        children: [
+                                          for (
+                                            var i = 0;
+                                            i < _titles.length;
+                                            i++
+                                          )
+                                            Positioned(
+                                              top:
+                                                  lerpDouble(
+                                                    i.toDouble(),
+                                                    _sortedSlot[i],
+                                                    sort,
+                                                  )! *
+                                                  slot,
+                                              left: 0,
+                                              right: 0,
+                                              height: _itemH,
+                                              child: _FakeTodo(
+                                                title: _titles[i],
+                                                category: _categories[i],
+                                                color: _colors[i],
+                                                timeText: _times[i],
+                                                timeOpacity: showTime,
+                                              ),
+                                            ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        ColoredBox(
+                          color: colors.card,
+                          child: Column(
+                            children: [
+                              for (var i = 0; i < _labels.length; i++)
+                                _HelpCheckRow(
+                                  label: _labels[i],
+                                  on: ons[i],
+                                  height: _rowHeight,
+                                ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (finger > 0)
+                      Positioned(
+                        right: 28,
+                        top:
+                            _sceneHeight +
+                            fingerRow * _rowHeight +
+                            (_rowHeight - 28) / 2,
+                        child: _HelpFinger(pressed: press, opacity: finger),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _HelpCheckRow extends StatelessWidget {
+  const _HelpCheckRow({
+    required this.label,
+    required this.on,
+    required this.height,
+  });
+
+  final String label;
+  final double on;
+  final double height;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    return SizedBox(
+      height: height,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontFamily: AppFonts.of(context),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w400,
+                  color: colors.text,
+                ),
+              ),
+            ),
+            Opacity(
+              opacity: on.clamp(0.0, 1.0),
+              child: Icon(Icons.check_rounded, size: 20, color: colors.text),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _HomeReorderDemo extends StatefulWidget {
+  const _HomeReorderDemo();
+
+  @override
+  State<_HomeReorderDemo> createState() => _HomeReorderDemoState();
+}
+
+class _HomeReorderDemoState extends State<_HomeReorderDemo>
+    with SingleTickerProviderStateMixin {
+  static const _cardH = 44.0;
+  static const _gap = 8.0;
+
+  late final AnimationController _loop;
+
+  @override
+  void initState() {
+    super.initState();
+    _loop = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 4800),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _loop.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    return AnimatedBuilder(
+      animation: _loop,
+      builder: (context, child) {
+        final t = _loop.value;
+        final move = t < 0.22
+            ? 0.0
+            : t < 0.48
+            ? Curves.easeInOutCubic.transform(_helpGate(t, 0.22, 0.48))
+            : t < 0.78
+            ? 1.0
+            : t < 0.92
+            ? 1 - Curves.easeInOutCubic.transform(_helpGate(t, 0.78, 0.92))
+            : 0.0;
+        final finger = () {
+          if (t < 0.10) return 0.0;
+          if (t < 0.18) return _helpGate(t, 0.10, 0.18);
+          if (t < 0.88) return 1.0;
+          if (t < 0.96) return 1 - _helpGate(t, 0.88, 0.96);
+          return 0.0;
+        }();
+        final press = (t >= 0.16 && t <= 0.86) ? 0.7 : 0.0;
+        final travel = _cardH + _gap;
+        return IgnorePointer(
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: colors.border),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(17),
+              child: ColoredBox(
+                color: colors.groupedBackground,
+                child: SizedBox(
+                  height: 168,
+                  width: double.infinity,
+                  child: Stack(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(12, 18, 12, 12),
+                        child: Stack(
+                          children: [
+                            _HomeMiniCard(
+                              title: AppStrings.homeShowToday,
+                              top: 8 + travel * move,
+                              lifted: false,
+                            ),
+                            _HomeMiniCard(
+                              title: AppStrings.homeShowTomorrow,
+                              top: 8 + travel - travel * move,
+                              lifted: move > 0.04 && move < 0.96,
+                            ),
+                          ],
+                        ),
+                      ),
+                      if (finger > 0)
+                        Positioned(
+                          right: 36,
+                          top: 18 + 8 + travel - travel * move + 8,
+                          child: _HelpFinger(pressed: press, opacity: finger),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _HomeMiniCard extends StatelessWidget {
+  const _HomeMiniCard({
+    required this.title,
+    required this.top,
+    required this.lifted,
+  });
+
+  final String title;
+  final double top;
+  final bool lifted;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    return Positioned(
+      left: 0,
+      right: 0,
+      top: top,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: colors.card,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: colors.border),
+          boxShadow: lifted
+              ? [
+                  BoxShadow(
+                    color: colors.shadow,
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ]
+              : null,
+        ),
+        child: SizedBox(
+          height: 44,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                title,
+                style: TextStyle(
+                  fontFamily: AppFonts.of(context),
+                  fontSize: 15,
+                  fontWeight: FontWeight.w800,
+                  color: colors.text,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _HelpMiniSwitch extends StatelessWidget {
+  const _HelpMiniSwitch({required this.on});
+
+  final double on;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    return SizedBox(
+      height: 24,
+      child: FittedBox(
+        child: SizedBox(
+          width: 51,
+          height: 31,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: Color.lerp(colors.border, colors.accentBright, on),
+              borderRadius: BorderRadius.circular(999),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(2),
+              child: Align(
+                alignment: Alignment.lerp(
+                  Alignment.centerLeft,
+                  Alignment.centerRight,
+                  on,
+                )!,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.12),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: const SizedBox(width: 27, height: 27),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _FakeStatsPeek extends StatelessWidget {
+  const _FakeStatsPeek({
+    required this.headline,
+    required this.todoCount,
+    required this.rate,
+    this.roundCount,
+  });
+
+  final String headline;
+  final int todoCount;
+  final int rate;
+  final int? roundCount;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    final font = AppFonts.of(context);
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: colors.card,
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
             color: colors.shadow,
@@ -1547,24 +3048,103 @@ class _FakeBannerCard extends StatelessWidget {
         border: Border.all(color: colors.border.withValues(alpha: 0.7)),
       ),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 12, 10, 12),
-        child: Row(
+        padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(
-              child: Text(
-                title,
+            Text.rich(
+              TextSpan(
                 style: TextStyle(
-                  fontFamily: AppFonts.of(context),
-                  fontSize: 15,
+                  fontFamily: font,
+                  fontSize: 14,
                   fontWeight: FontWeight.w800,
-                  color: colors.accentBright,
+                  height: 1.3,
+                  color: colors.text,
                 ),
+                children: [
+                  TextSpan(text: '$headline\n'),
+                  TextSpan(
+                    text: AppStrings.monthlyStatsTodoCount(todoCount),
+                    style: TextStyle(color: colors.accent),
+                  ),
+                  if (roundCount != null) ...[
+                    TextSpan(text: AppStrings.monthlyStatsCompleteAnd),
+                    const TextSpan(text: '\n'),
+                    TextSpan(
+                      text: AppStrings.monthlyStatsRoundCount(roundCount!),
+                      style: TextStyle(color: colors.accent),
+                    ),
+                    TextSpan(text: AppStrings.monthlyStatsRoundsTail),
+                  ] else
+                    TextSpan(text: AppStrings.monthlyStatsCompletedTail),
+                ],
               ),
             ),
-            Icon(
-              Icons.chevron_right_rounded,
-              size: 24,
-              color: colors.accentBright,
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  child: _FakeStatsTile(
+                    label: AppStrings.monthlyStatsCompletedLabel,
+                    value: '$todoCount',
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: _FakeStatsTile(
+                    label: AppStrings.monthlyStatsRateLabel,
+                    value: AppStrings.monthlyStatsRateValue(rate),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _FakeStatsTile extends StatelessWidget {
+  const _FakeStatsTile({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: colors.groupedBackground,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontFamily: AppFonts.of(context),
+                fontSize: 10,
+                fontWeight: FontWeight.w600,
+                color: colors.secondary,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              value,
+              style: TextStyle(
+                fontFamily: AppFonts.of(context),
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+                height: 1,
+                color: colors.accentBright,
+              ),
             ),
           ],
         ),
@@ -1654,440 +3234,13 @@ class _FakeLeftoverPeek extends StatelessWidget {
   }
 }
 
-class _FakeMonthlySummary extends StatelessWidget {
-  const _FakeMonthlySummary();
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = AppColors.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Text.rich(
-          TextSpan(
-            style: TextStyle(
-              fontFamily: AppFonts.of(context),
-              fontSize: 18,
-              fontWeight: FontWeight.w800,
-              height: 1.3,
-              color: colors.text,
-            ),
-            children: [
-              TextSpan(text: '${AppStrings.monthlyStatsHeadlineMonth(7)}\n'),
-              TextSpan(
-                text: AppStrings.monthlyStatsTodoCount(12),
-                style: TextStyle(color: colors.accent),
-              ),
-              const TextSpan(text: '${AppStrings.monthlyStatsCompleteAnd}\n'),
-              TextSpan(
-                text: AppStrings.monthlyStatsRoundCount(5),
-                style: TextStyle(color: colors.accent),
-              ),
-              const TextSpan(text: AppStrings.monthlyStatsRoundsTail),
-            ],
-          ),
-        ),
-        const SizedBox(height: 12),
-        Row(
-          children: const [
-            Expanded(
-              child: _FakeHighlightTile(
-                label: AppStrings.monthlyStatsCompletedLabel,
-                value: '12',
-              ),
-            ),
-            SizedBox(width: 8),
-            Expanded(
-              child: _FakeHighlightTile(
-                label: AppStrings.monthlyStatsRateLabel,
-                value: '67%',
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        Row(
-          children: const [
-            Expanded(
-              child: _FakeHighlightTile(
-                label: AppStrings.monthlyStatsRoundsLabel,
-                value: '5',
-              ),
-            ),
-            SizedBox(width: 8),
-            Expanded(
-              child: _FakeHighlightTile(
-                label: AppStrings.monthlyStatsCompaniesLabel,
-                value: '3',
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-}
-
-class _FakeHighlightTile extends StatelessWidget {
-  const _FakeHighlightTile({
-    required this.label,
-    required this.value,
-  });
-
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = AppColors.of(context);
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: colors.card,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: colors.border.withValues(alpha: 0.7)),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontFamily: AppFonts.of(context),
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                color: colors.secondary,
-              ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              value,
-              style: TextStyle(
-                fontFamily: AppFonts.of(context),
-                fontSize: 22,
-                fontWeight: FontWeight.w800,
-                height: 1,
-                color: colors.accentBright,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _FakeMonthlyTodos extends StatelessWidget {
-  const _FakeMonthlyTodos();
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = AppColors.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        _FakeMiniCard(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      AppStrings.monthlyStatsRateLabel,
-                      style: TextStyle(
-                        fontFamily: AppFonts.of(context),
-                        fontSize: 13,
-                        fontWeight: FontWeight.w400,
-                        color: colors.text,
-                      ),
-                    ),
-                  ),
-                  Text(
-                    '67%',
-                    style: TextStyle(
-                      fontFamily: AppFonts.of(context),
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                      color: colors.text,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(999),
-                child: LinearProgressIndicator(
-                  value: 0.67,
-                  minHeight: 6,
-                  backgroundColor: colors.border,
-                  color: colors.accentBright,
-                ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                AppStrings.monthlyStatsFraction(12, 18),
-                style: TextStyle(
-                  fontFamily: AppFonts.of(context),
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: colors.muted,
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 8),
-        _FakeMiniCard(
-          child: Column(
-            children: const [
-              _FakeStatLine(
-                label: AppStrings.monthlyStatsCompletedLabel,
-                value: '12',
-              ),
-              _FakeStatLine(
-                label: AppStrings.monthlyStatsIncompleteLabel,
-                value: '6',
-              ),
-              _FakeStatLine(
-                label: AppStrings.monthlyStatsTotalLabel,
-                value: '18',
-                last: true,
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 8),
-        _FakeMiniCard(
-          child: Column(
-            children: [
-              _FakeCategoryBar(
-                label: '서류',
-                done: 5,
-                total: 7,
-                color: const Color(0xFF3B82F6),
-              ),
-              _FakeCategoryBar(
-                label: '면접',
-                done: 4,
-                total: 6,
-                color: const Color(0xFF22C55E),
-                last: true,
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _FakeMonthlyJobs extends StatelessWidget {
-  const _FakeMonthlyJobs();
-
-  @override
-  Widget build(BuildContext context) {
-    return _FakeMiniCard(
-      child: Column(
-        children: const [
-          _FakeStatLine(
-            label: AppStrings.monthlyStatsRoundsLabel,
-            value: '5',
-          ),
-          _FakeStatLine(
-            label: AppStrings.monthlyStatsCompaniesLabel,
-            value: '3',
-          ),
-          _FakeStatLine(
-            label: AppStrings.monthlyStatsCoverLettersLabel,
-            value: '2',
-          ),
-          _FakeStatLine(
-            label: AppStrings.monthlyStatsFinalPassedLabel,
-            value: '1',
-            dotColor: Color(0xFF1F4D08),
-          ),
-          _FakeStatLine(
-            label: AppStrings.monthlyStatsPassedLabel,
-            value: '1',
-            dotColor: Color(0xFF4A8A10),
-          ),
-          _FakeStatLine(
-            label: AppStrings.monthlyStatsRejectedLabel,
-            value: '1',
-            dotColor: Color(0xFF94A3B8),
-          ),
-          _FakeStatLine(
-            label: AppStrings.monthlyStatsInProgressLabel,
-            value: '1',
-            dotColor: Color(0xFF3B82F6),
-            last: true,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _FakeMiniCard extends StatelessWidget {
-  const _FakeMiniCard({required this.child});
-
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = AppColors.of(context);
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: colors.card,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: colors.border.withValues(alpha: 0.7)),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        child: child,
-      ),
-    );
-  }
-}
-
-class _FakeStatLine extends StatelessWidget {
-  const _FakeStatLine({
-    required this.label,
-    required this.value,
-    this.dotColor,
-    this.last = false,
-  });
-
-  final String label;
-  final String value;
-  final Color? dotColor;
-  final bool last;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = AppColors.of(context);
-    return Padding(
-      padding: EdgeInsets.only(bottom: last ? 0 : 10),
-      child: Row(
-        children: [
-          if (dotColor != null) ...[
-            Container(
-              width: 7,
-              height: 7,
-              decoration: BoxDecoration(
-                color: dotColor,
-                shape: BoxShape.circle,
-              ),
-            ),
-            const SizedBox(width: 8),
-          ],
-          Expanded(
-            child: Text(
-              label,
-              style: TextStyle(
-                fontFamily: AppFonts.of(context),
-                fontSize: 13,
-                fontWeight: FontWeight.w400,
-                color: colors.text,
-              ),
-            ),
-          ),
-          Text(
-            value,
-            style: TextStyle(
-              fontFamily: AppFonts.of(context),
-              fontSize: 13,
-              fontWeight: FontWeight.w700,
-              color: colors.text,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _FakeCategoryBar extends StatelessWidget {
-  const _FakeCategoryBar({
-    required this.label,
-    required this.done,
-    required this.total,
-    required this.color,
-    this.last = false,
-  });
-
-  final String label;
-  final int done;
-  final int total;
-  final Color color;
-  final bool last;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = AppColors.of(context);
-    return Padding(
-      padding: EdgeInsets.only(bottom: last ? 0 : 10),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 7,
-                height: 7,
-                decoration: BoxDecoration(
-                  color: color,
-                  shape: BoxShape.circle,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  label,
-                  style: TextStyle(
-                    fontFamily: AppFonts.of(context),
-                    fontSize: 13,
-                    fontWeight: FontWeight.w400,
-                    color: colors.text,
-                  ),
-                ),
-              ),
-              Text(
-                AppStrings.monthlyStatsFraction(done, total),
-                style: TextStyle(
-                  fontFamily: AppFonts.of(context),
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  color: colors.text,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 6),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(999),
-            child: LinearProgressIndicator(
-              value: done / total,
-              minHeight: 5,
-              backgroundColor: colors.border,
-              color: color,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _FakeTodo extends StatelessWidget {
   const _FakeTodo({
     required this.title,
     required this.category,
     required this.color,
     this.timeText,
+    this.timeOpacity = 1,
     this.trailingText,
     this.showCategory = true,
     this.showComplete = true,
@@ -2098,6 +3251,7 @@ class _FakeTodo extends StatelessWidget {
   final String category;
   final Color color;
   final String? timeText;
+  final double timeOpacity;
   final String? trailingText;
   final bool showCategory;
   final bool showComplete;
@@ -2160,13 +3314,16 @@ class _FakeTodo extends StatelessWidget {
                             else
                               const Spacer(),
                             if (timeText != null)
-                              Text(
-                                timeText!,
-                                style: TextStyle(
-                                  fontFamily: AppFonts.of(context),
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w700,
-                                  color: color,
+                              Opacity(
+                                opacity: timeOpacity.clamp(0.0, 1.0),
+                                child: Text(
+                                  timeText!,
+                                  style: TextStyle(
+                                    fontFamily: AppFonts.of(context),
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w700,
+                                    color: color,
+                                  ),
                                 ),
                               ),
                           ],
@@ -2184,7 +3341,7 @@ class _FakeTodo extends StatelessWidget {
                     style: TextStyle(
                       fontFamily: AppFonts.of(context),
                       fontSize: 14,
-                      fontWeight: FontWeight.w800,
+                      fontWeight: FontWeight.w600,
                       height: 1,
                       color: color,
                     ),

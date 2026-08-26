@@ -314,13 +314,13 @@ class _AddEventFormState extends State<AddEventForm>
     final scope = AppScope.of(context);
     final previous = await scope.getCalendarEvents();
     final initialRepeatId = initial?.repeatId;
-    final editingInstance = initial != null &&
-        initialRepeatId != null &&
+    final editingInPlace = initial != null &&
+        initial.groupId == null &&
         !_isRange &&
         !_isMultiple &&
         _dateMode != AppCalendarMode.repeat &&
         days.length == 1;
-    if (editingInstance) {
+    if (editingInPlace) {
       await scope.updateCalendarEvent.instance(
         initial.copyWith(
           title: title,
@@ -334,7 +334,7 @@ class _AddEventFormState extends State<AddEventForm>
           clearTime: _startMinutes == null || _endMinutes == null,
         ),
       );
-      if (title != initial.title) {
+      if (initialRepeatId != null && title != initial.title) {
         await scope.updateCalendarEvent.repeatTitles(initialRepeatId, title);
       }
       if (!mounted) return;
@@ -377,7 +377,7 @@ class _AddEventFormState extends State<AddEventForm>
           completed: completedByDay[day] ?? false,
           groupId: groupId,
           repeatId: repeatId,
-          sortOrder: now + i,
+          sortOrder: i == 0 && initial != null ? initial.sortOrder : now + i,
           startMinutes: _startMinutes,
           endMinutes: _endMinutes,
         ),

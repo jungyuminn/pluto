@@ -12,7 +12,7 @@ class EventActionIcon extends StatelessWidget {
     this.label,
     this.text,
     this.selected = false,
-    this.size = 20,
+    this.size = 18,
   });
 
   final VoidCallback onPressed;
@@ -46,11 +46,14 @@ class EventActionIcon extends StatelessWidget {
                 child: SizedBox(
                   width: size,
                   height: size,
-                  child: Center(child: child),
+                  child: FittedBox(
+                    fit: BoxFit.contain,
+                    child: child,
+                  ),
                 ),
               ),
               if (hasText) ...[
-                const SizedBox(width: 4),
+                const SizedBox(width: 6),
                 Text(
                   caption,
                   style: TextStyle(

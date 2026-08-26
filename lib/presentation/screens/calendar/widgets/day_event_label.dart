@@ -218,7 +218,7 @@ class _DayEventLabelState extends State<DayEventLabel> {
                       style: TextStyle(
                         fontFamily: AppFonts.of(context),
                         fontSize: 14 * scale,
-                        fontWeight: FontWeight.w800,
+                        fontWeight: widget.titleWeight,
                         height: 1,
                         color: accent,
                       ),

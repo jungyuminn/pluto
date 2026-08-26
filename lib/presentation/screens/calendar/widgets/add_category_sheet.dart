@@ -51,19 +51,19 @@ class _AddCategorySheetState extends State<AddCategorySheet> {
   final _usedColors = <int>{};
 
   static const _colors = [
+    0xFFE53935,
+    0xFFFF8A65,
+    0xFFFB8C00,
+    0xFFF6C000,
+    0xFF7CB342,
+    0xFF2E7D32,
+    0xFF00897B,
+    0xFF00ACC1,
     0xFF3B82F6,
-    0xFF0EA5E9,
-    0xFF06B6D4,
-    0xFF14B8A6,
-    0xFF22C55E,
-    0xFF84CC16,
-    0xFFF59E0B,
-    0xFFF97316,
-    0xFFEF4444,
-    0xFFE11D48,
-    0xFFEC4899,
-    0xFF8B5CF6,
-    0xFF6366F1,
+    0xFFA855F7,
+    0xFFF48FB1,
+    0xFFD81B60,
+    0xFF8D6E63,
     0xFF64748B,
   ];
 

@@ -5,6 +5,7 @@ import 'package:job_planner/core/constants/app_fonts.dart';
 import 'package:job_planner/core/theme/app_colors.dart';
 import 'package:job_planner/domain/entities/calendar_event.dart';
 import 'package:job_planner/domain/entities/diary_entry.dart';
+import 'package:job_planner/domain/entities/ledger_entry.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/calendar_day_cell.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/calendar_week_diaries.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/calendar_week_events.dart';
@@ -64,7 +65,9 @@ class CalendarMonthGrid extends StatefulWidget {
     this.onRangeDragChanged,
     this.eventsOf,
     this.diariesOf,
+    this.ledgersOf,
     this.showDiary = false,
+    this.showLedger = false,
     this.startMonday = false,
     this.searchDay,
     this.searchHitKey,
@@ -77,7 +80,9 @@ class CalendarMonthGrid extends StatefulWidget {
   final ValueChanged<bool>? onRangeDragChanged;
   final List<CalendarEvent> Function(DateTime date)? eventsOf;
   final List<DiaryEntry> Function(DateTime date)? diariesOf;
+  final List<LedgerEntry> Function(DateTime date)? ledgersOf;
   final bool showDiary;
+  final bool showLedger;
   final bool startMonday;
   final DateTime? searchDay;
   final String? searchHitKey;
@@ -87,7 +92,7 @@ class CalendarMonthGrid extends StatefulWidget {
 }
 
 class _CalendarMonthGridState extends State<CalendarMonthGrid>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   static const _modeDuration = Duration(milliseconds: 460);
 
   final _keys = <DateTime, GlobalKey>{};
@@ -99,11 +104,17 @@ class _CalendarMonthGridState extends State<CalendarMonthGrid>
   var _searchAnimate = false;
   var _dragging = false;
   late final AnimationController _mode;
+  late final AnimationController _alt;
   late final CurvedAnimation _ease;
+  late final CurvedAnimation _altEase;
   late final Animation<double> _eventsOpacity;
   late final Animation<double> _diaryOpacity;
   late final Animation<double> _eventsScale;
   late final Animation<double> _diaryScale;
+  late final Animation<double> _diaryAltOpacity;
+  late final Animation<double> _ledgerAltOpacity;
+  late final Animation<double> _diaryAltScale;
+  late final Animation<double> _ledgerAltScale;
 
   @override
   void initState() {
@@ -113,10 +124,21 @@ class _CalendarMonthGridState extends State<CalendarMonthGrid>
       vsync: this,
       duration: _modeDuration,
       reverseDuration: _modeDuration,
-      value: widget.showDiary ? 1 : 0,
+      value: (widget.showDiary || widget.showLedger) ? 1 : 0,
+    );
+    _alt = AnimationController(
+      vsync: this,
+      duration: _modeDuration,
+      reverseDuration: _modeDuration,
+      value: widget.showLedger ? 1 : 0,
     );
     _ease = CurvedAnimation(
       parent: _mode,
+      curve: Curves.easeInOutCubic,
+      reverseCurve: Curves.easeInOutCubic,
+    );
+    _altEase = CurvedAnimation(
+      parent: _alt,
       curve: Curves.easeInOutCubic,
       reverseCurve: Curves.easeInOutCubic,
     );
@@ -124,6 +146,10 @@ class _CalendarMonthGridState extends State<CalendarMonthGrid>
     _diaryOpacity = Tween<double>(begin: 0, end: 1).animate(_ease);
     _eventsScale = Tween<double>(begin: 1, end: 0.97).animate(_ease);
     _diaryScale = Tween<double>(begin: 0.97, end: 1).animate(_ease);
+    _diaryAltOpacity = Tween<double>(begin: 1, end: 0).animate(_altEase);
+    _ledgerAltOpacity = Tween<double>(begin: 0, end: 1).animate(_altEase);
+    _diaryAltScale = Tween<double>(begin: 1, end: 0.97).animate(_altEase);
+    _ledgerAltScale = Tween<double>(begin: 0.97, end: 1).animate(_altEase);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _syncSearchHighlight(animate: false);
     });
@@ -132,11 +158,20 @@ class _CalendarMonthGridState extends State<CalendarMonthGrid>
   @override
   void didUpdateWidget(CalendarMonthGrid oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.showDiary != widget.showDiary) {
-      if (widget.showDiary) {
+    final wasAlt = oldWidget.showDiary || oldWidget.showLedger;
+    final isAlt = widget.showDiary || widget.showLedger;
+    if (wasAlt != isAlt) {
+      if (isAlt) {
+        _alt.value = widget.showLedger ? 1 : 0;
         _mode.forward();
       } else {
         _mode.reverse();
+      }
+    } else if (isAlt && oldWidget.showLedger != widget.showLedger) {
+      if (widget.showLedger) {
+        _alt.forward();
+      } else {
+        _alt.reverse();
       }
     }
     if (oldWidget.searchDay != widget.searchDay ||
@@ -151,12 +186,20 @@ class _CalendarMonthGridState extends State<CalendarMonthGrid>
   void dispose() {
     CalendarDayDropTarget._grids.remove(this);
     _ease.dispose();
+    _altEase.dispose();
     _mode.dispose();
+    _alt.dispose();
     super.dispose();
   }
 
   DateTime _dateOnly(DateTime date) =>
       DateTime(date.year, date.month, date.day);
+
+  List<CalendarEvent> _ledgerEventsOn(DateTime date) {
+    final ledgersOf = widget.ledgersOf;
+    if (ledgersOf == null) return const [];
+    return [for (final entry in ledgersOf(date)) entry.toCalendarEvent()];
+  }
 
   GlobalKey _keyFor(DateTime date) {
     return _keys.putIfAbsent(_dateOnly(date), GlobalKey.new);
@@ -294,7 +337,8 @@ class _CalendarMonthGridState extends State<CalendarMonthGrid>
               final minWeekHeight = constraints.maxHeight / weekCount;
               final calendarScale = AppFonts.calendarScaleOf(context);
               final labelScale = AppFonts.calendarLabelScaleOf(context);
-              final allowRange = widget.onRangeSelected != null;
+              final allowRange =
+                  widget.onRangeSelected != null && !widget.showLedger;
               return GestureDetector(
                 behavior: HitTestBehavior.translucent,
                 onLongPressStart: allowRange ? _onLongPressStart : null,
@@ -346,18 +390,27 @@ class _CalendarMonthGridState extends State<CalendarMonthGrid>
                       calendarScale: calendarScale,
                       labelScale: labelScale,
                     );
+                    final ledgerHeight = CalendarWeekEvents.heightFor(
+                      days: weekDays,
+                      eventsOf: _ledgerEventsOn,
+                      minHeight: minWeekHeight,
+                      calendarScale: calendarScale,
+                      labelScale: labelScale,
+                    );
                     return AnimatedBuilder(
-                      animation: _ease,
+                      animation: Listenable.merge([_ease, _altEase]),
                       builder: (context, child) {
                         final t = _ease.value;
+                        final altHeight = diaryHeight +
+                            (ledgerHeight - diaryHeight) * _altEase.value;
                         return AnimatedContainer(
                           key: _weekKey(week),
-                          duration: _mode.isAnimating
+                          duration: _mode.isAnimating || _alt.isAnimating
                               ? Duration.zero
                               : CalendarWeekDiaries.fadeDuration,
                           curve: Curves.easeOutCubic,
                           height:
-                              eventHeight + (diaryHeight - eventHeight) * t,
+                              eventHeight + (altHeight - eventHeight) * t,
                           child: child,
                         );
                       },
@@ -413,19 +466,59 @@ class _CalendarMonthGridState extends State<CalendarMonthGrid>
                                 ),
                               ),
                             ),
-                          if (widget.diariesOf != null)
+                          if (widget.diariesOf != null ||
+                              widget.ledgersOf != null)
                             Positioned.fill(
                               child: FadeTransition(
                                 opacity: _diaryOpacity,
                                 child: ScaleTransition(
                                   alignment: Alignment.topCenter,
                                   scale: _diaryScale,
-                                  child: CalendarWeekDiaries(
-                                    days: weekDays,
-                                    diariesOf: widget.diariesOf!,
-                                    calendarScale: calendarScale,
-                                    labelScale: labelScale,
-                                    searchHitKey: widget.searchHitKey,
+                                  child: Stack(
+                                    children: [
+                                      if (widget.diariesOf != null)
+                                        Positioned.fill(
+                                          child: FadeTransition(
+                                            opacity: _diaryAltOpacity,
+                                            child: ScaleTransition(
+                                              alignment: Alignment.topCenter,
+                                              scale: _diaryAltScale,
+                                              child: IgnorePointer(
+                                                ignoring: _alt.value >= 0.5,
+                                                child: CalendarWeekDiaries(
+                                                  days: weekDays,
+                                                  diariesOf: widget.diariesOf!,
+                                                  calendarScale: calendarScale,
+                                                  labelScale: labelScale,
+                                                  searchHitKey:
+                                                      widget.searchHitKey,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      if (widget.ledgersOf != null)
+                                        Positioned.fill(
+                                          child: FadeTransition(
+                                            opacity: _ledgerAltOpacity,
+                                            child: ScaleTransition(
+                                              alignment: Alignment.topCenter,
+                                              scale: _ledgerAltScale,
+                                              child: IgnorePointer(
+                                                ignoring: _alt.value < 0.5,
+                                                child: CalendarWeekEvents(
+                                                  days: weekDays,
+                                                  eventsOf: _ledgerEventsOn,
+                                                  calendarScale: calendarScale,
+                                                  labelScale: labelScale,
+                                                  searchHitKey:
+                                                      widget.searchHitKey,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                    ],
                                   ),
                                 ),
                               ),

@@ -8,7 +8,6 @@ import 'package:job_planner/core/constants/app_strings.dart';
 import 'package:job_planner/core/theme/app_colors.dart';
 import 'package:job_planner/core/utils/press_bounce.dart';
 import 'package:job_planner/domain/entities/event_category.dart';
-import 'package:job_planner/presentation/screens/add_company/widgets/missing_fields_dialog.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/add_category_sheet.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/delete_event_dialog.dart';
 
@@ -209,14 +208,7 @@ class _CategoryPickerSheetState extends State<CategoryPickerSheet>
   }
 
   Future<void> _editMarked() async {
-    if (_marked.length > 1) {
-      await showMissingFieldsDialog(
-        context,
-        title: AppStrings.editOneCategoryTitle,
-        body: AppStrings.editOneCategoryBody,
-      );
-      return;
-    }
+    if (_marked.length != 1) return;
     EventCategory? target;
     for (final category in _categories) {
       if (!_marked.contains(category.id)) continue;
@@ -415,6 +407,7 @@ class _CategoryPickerSheetState extends State<CategoryPickerSheet>
                         editColor: colors.accent,
                         idlePressed: colors.rangeFill,
                         editPressed: colors.rangeFill,
+                        visible: !_editing || _marked.length <= 1,
                         onPressed: _editing ? _editMarked : _toggleEdit,
                       ),
                       Expanded(
@@ -483,48 +476,62 @@ class _CategoryPickerSheetState extends State<CategoryPickerSheet>
     required Color idlePressed,
     required Color editPressed,
     required VoidCallback onPressed,
+    bool visible = true,
   }) {
     final label = editing ? editLabel : idleLabel;
     final color = editing ? editColor : idleColor;
-    return PressBounce(
-      onPressed: onPressed,
-      pressedScale: 0.96,
-      color: Colors.transparent,
-      pressedColor: editing ? editPressed : idlePressed,
-      borderRadius: BorderRadius.circular(10),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-        child: AnimatedDefaultTextStyle(
-          duration: const Duration(milliseconds: 200),
-          curve: Curves.easeOutCubic,
-          style: TextStyle(
-            fontFamily: AppFonts.of(context),
-            fontSize: 16,
-            fontWeight: FontWeight.w800,
-            color: color,
-          ),
-          child: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 240),
-            layoutBuilder: (current, previous) {
-              return Stack(
-                alignment: Alignment.center,
-                children: [
-                  ...previous,
-                  if (current != null) current,
-                ],
-              );
-            },
-            transitionBuilder: (child, animation) {
-              return FadeTransition(
-                opacity: CurvedAnimation(
-                  parent: animation,
-                  curve: const Interval(0.45, 1, curve: Curves.easeOut),
-                  reverseCurve: const Interval(0, 0.4, curve: Curves.easeIn),
+    return AnimatedOpacity(
+      duration: const Duration(milliseconds: 280),
+      curve: Curves.easeOutCubic,
+      opacity: visible ? 1 : 0,
+      child: AnimatedScale(
+        duration: const Duration(milliseconds: 280),
+        curve: visible ? Curves.easeOutBack : Curves.easeInCubic,
+        scale: visible ? 1 : 0.4,
+        child: IgnorePointer(
+          ignoring: !visible,
+          child: PressBounce(
+            onPressed: onPressed,
+            pressedScale: 0.96,
+            color: Colors.transparent,
+            pressedColor: editing ? editPressed : idlePressed,
+            borderRadius: BorderRadius.circular(10),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+              child: AnimatedDefaultTextStyle(
+                duration: const Duration(milliseconds: 200),
+                curve: Curves.easeOutCubic,
+                style: TextStyle(
+                  fontFamily: AppFonts.of(context),
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  color: color,
                 ),
-                child: child,
-              );
-            },
-            child: Text(label, key: ValueKey(label)),
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 240),
+                  layoutBuilder: (current, previous) {
+                    return Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        ...previous,
+                        if (current != null) current,
+                      ],
+                    );
+                  },
+                  transitionBuilder: (child, animation) {
+                    return FadeTransition(
+                      opacity: CurvedAnimation(
+                        parent: animation,
+                        curve: const Interval(0.45, 1, curve: Curves.easeOut),
+                        reverseCurve: const Interval(0, 0.4, curve: Curves.easeIn),
+                      ),
+                      child: child,
+                    );
+                  },
+                  child: Text(label, key: ValueKey(label)),
+                ),
+              ),
+            ),
           ),
         ),
       ),

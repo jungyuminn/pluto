@@ -2,9 +2,11 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:job_planner/core/constants/app_fonts.dart';
+import 'package:job_planner/core/constants/app_icons.dart';
 import 'package:job_planner/core/theme/app_colors.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/calendar_event_label.dart';
 import 'package:job_planner/presentation/tutorial/tutorial_controller.dart';
+import 'package:job_planner/presentation/widgets/themed_asset.dart';
 
 class TutorialDemoView extends StatelessWidget {
   const TutorialDemoView({super.key, required this.demo});
@@ -438,7 +440,13 @@ class _MenuDemo extends StatelessWidget {
                           child: const SizedBox(
                             width: 32,
                             height: 32,
-                            child: Icon(Icons.more_horiz, size: 18),
+                            child: Center(
+                              child: ThemedAsset(
+                                asset: AppIcons.more,
+                                width: 18,
+                                height: 18,
+                              ),
+                            ),
                           ),
                         ),
                       ],
@@ -550,6 +558,10 @@ class _MenuDemo extends StatelessWidget {
                                                 ),
                                                 const _MenuLine(
                                                   label: '일기 전환',
+                                                  trailing: _MiniSwitch(on: 0),
+                                                ),
+                                                const _MenuLine(
+                                                  label: '가계부 전환',
                                                   trailing: _MiniSwitch(on: 0),
                                                 ),
                                               ],

@@ -14,6 +14,7 @@ import 'package:job_planner/data/datasources/backup_preference.dart';
 import 'package:job_planner/data/datasources/calendar_preference.dart';
 import 'package:job_planner/data/datasources/calendar_event_local_datasource.dart';
 import 'package:job_planner/data/datasources/diary_local_datasource.dart';
+import 'package:job_planner/data/datasources/ledger_local_datasource.dart';
 import 'package:job_planner/data/datasources/event_category_local_datasource.dart';
 import 'package:job_planner/data/datasources/day_events_view_preference.dart';
 import 'package:job_planner/data/datasources/font_preference.dart';
@@ -28,6 +29,8 @@ import 'package:job_planner/data/repositories/calendar_event_memory_repository.d
 import 'package:job_planner/data/repositories/calendar_event_repository_impl.dart';
 import 'package:job_planner/data/repositories/diary_memory_repository.dart';
 import 'package:job_planner/data/repositories/diary_repository_impl.dart';
+import 'package:job_planner/data/repositories/ledger_memory_repository.dart';
+import 'package:job_planner/data/repositories/ledger_repository_impl.dart';
 import 'package:job_planner/data/repositories/event_category_memory_repository.dart';
 import 'package:job_planner/data/repositories/event_category_repository_impl.dart';
 import 'package:job_planner/data/repositories/job_application_memory_repository.dart';
@@ -39,15 +42,18 @@ import 'package:job_planner/domain/usecases/delete_event_category.dart';
 import 'package:job_planner/domain/usecases/add_job_application.dart';
 import 'package:job_planner/domain/usecases/delete_calendar_event.dart';
 import 'package:job_planner/domain/usecases/delete_diary.dart';
+import 'package:job_planner/domain/usecases/delete_ledger.dart';
 import 'package:job_planner/domain/usecases/delete_job_application.dart';
 import 'package:job_planner/domain/usecases/get_calendar_events.dart';
 import 'package:job_planner/domain/usecases/get_diaries.dart';
+import 'package:job_planner/domain/usecases/get_ledgers.dart';
 import 'package:job_planner/domain/usecases/get_event_categories.dart';
 import 'package:job_planner/domain/usecases/get_job_applications.dart';
 import 'package:job_planner/domain/usecases/reorder_calendar_events.dart';
 import 'package:job_planner/domain/usecases/reorder_job_applications.dart';
 import 'package:job_planner/domain/usecases/reorder_event_categories.dart';
 import 'package:job_planner/domain/usecases/save_diary.dart';
+import 'package:job_planner/domain/usecases/save_ledger.dart';
 import 'package:job_planner/domain/usecases/update_calendar_event.dart';
 import 'package:job_planner/domain/usecases/update_event_category.dart';
 import 'package:job_planner/domain/usecases/update_job_application.dart';
@@ -71,6 +77,9 @@ class JobPlannerApp extends StatelessWidget {
     this.getDiaries,
     this.saveDiary,
     this.deleteDiary,
+    this.getLedgers,
+    this.saveLedger,
+    this.deleteLedger,
     this.getEventCategories,
     this.addEventCategory,
     this.updateEventCategory,
@@ -105,6 +114,9 @@ class JobPlannerApp extends StatelessWidget {
   final GetDiaries? getDiaries;
   final SaveDiary? saveDiary;
   final DeleteDiary? deleteDiary;
+  final GetLedgers? getLedgers;
+  final SaveLedger? saveLedger;
+  final DeleteLedger? deleteLedger;
   final GetEventCategories? getEventCategories;
   final AddEventCategory? addEventCategory;
   final UpdateEventCategory? updateEventCategory;
@@ -141,6 +153,7 @@ class JobPlannerApp extends StatelessWidget {
 
     final calendarRepository = CalendarEventMemoryRepository();
     final diaryRepository = DiaryMemoryRepository();
+    final ledgerRepository = LedgerMemoryRepository();
     final categoryRepository = EventCategoryMemoryRepository();
     final companyCategoryRepository =
         EventCategoryMemoryRepository(EventCategory.companyPresets);
@@ -164,6 +177,9 @@ class JobPlannerApp extends StatelessWidget {
       getDiaries: getDiaries ?? GetDiaries(diaryRepository),
       saveDiary: saveDiary ?? SaveDiary(diaryRepository),
       deleteDiary: deleteDiary ?? DeleteDiary(diaryRepository),
+      getLedgers: getLedgers ?? GetLedgers(ledgerRepository),
+      saveLedger: saveLedger ?? SaveLedger(ledgerRepository),
+      deleteLedger: deleteLedger ?? DeleteLedger(ledgerRepository),
       getEventCategories:
           getEventCategories ?? GetEventCategories(categoryRepository),
       addEventCategory:
@@ -223,6 +239,9 @@ class _AppBootstrapState extends State<_AppBootstrap> {
   GetDiaries? _getDiaries;
   SaveDiary? _saveDiary;
   DeleteDiary? _deleteDiary;
+  GetLedgers? _getLedgers;
+  SaveLedger? _saveLedger;
+  DeleteLedger? _deleteLedger;
   GetEventCategories? _getEventCategories;
   AddEventCategory? _addEventCategory;
   UpdateEventCategory? _updateEventCategory;
@@ -254,6 +273,7 @@ class _AppBootstrapState extends State<_AppBootstrap> {
     final prefs = await SharedPreferences.getInstance();
     final eventDataSource = CalendarEventLocalDataSource(prefs);
     final diaryDataSource = DiaryLocalDataSource(prefs);
+    final ledgerDataSource = LedgerLocalDataSource(prefs);
     final jobDataSource = JobApplicationLocalDataSource(prefs);
     final notificationPreference = NotificationPreference(prefs: prefs);
     await TodoReminderService.instance.init(
@@ -289,6 +309,7 @@ class _AppBootstrapState extends State<_AppBootstrap> {
     final jobRepository = JobApplicationRepositoryImpl(jobDataSource);
     final eventRepository = CalendarEventRepositoryImpl(eventDataSource);
     final diaryRepository = DiaryRepositoryImpl(diaryDataSource);
+    final ledgerRepository = LedgerRepositoryImpl(ledgerDataSource);
     final categoryRepository = EventCategoryRepositoryImpl(categoryDataSource);
     final companyCategoryRepository =
         EventCategoryRepositoryImpl(companyCategoryDataSource);
@@ -307,6 +328,9 @@ class _AppBootstrapState extends State<_AppBootstrap> {
       _getDiaries = GetDiaries(diaryRepository);
       _saveDiary = SaveDiary(diaryRepository);
       _deleteDiary = DeleteDiary(diaryRepository);
+      _getLedgers = GetLedgers(ledgerRepository);
+      _saveLedger = SaveLedger(ledgerRepository);
+      _deleteLedger = DeleteLedger(ledgerRepository);
       _getEventCategories = GetEventCategories(categoryRepository);
       _addEventCategory = AddEventCategory(categoryRepository);
       _updateEventCategory = UpdateEventCategory(categoryRepository);
@@ -368,6 +392,9 @@ class _AppBootstrapState extends State<_AppBootstrap> {
     final getDiaries = _getDiaries;
     final saveDiary = _saveDiary;
     final deleteDiary = _deleteDiary;
+    final getLedgers = _getLedgers;
+    final saveLedger = _saveLedger;
+    final deleteLedger = _deleteLedger;
     final getCategories = _getEventCategories;
     final addCategory = _addEventCategory;
     final updateCategory = _updateEventCategory;
@@ -401,6 +428,9 @@ class _AppBootstrapState extends State<_AppBootstrap> {
         getDiaries == null ||
         saveDiary == null ||
         deleteDiary == null ||
+        getLedgers == null ||
+        saveLedger == null ||
+        deleteLedger == null ||
         getCategories == null ||
         addCategory == null ||
         updateCategory == null ||
@@ -447,6 +477,9 @@ class _AppBootstrapState extends State<_AppBootstrap> {
       getDiaries: getDiaries,
       saveDiary: saveDiary,
       deleteDiary: deleteDiary,
+      getLedgers: getLedgers,
+      saveLedger: saveLedger,
+      deleteLedger: deleteLedger,
       getEventCategories: getCategories,
       addEventCategory: addCategory,
       updateEventCategory: updateCategory,

@@ -5,13 +5,13 @@
 <h1 align="center">잡플래너</h1>
 
 <p align="center">
-  취업 준비의 할 일, 기업 일정, 일기, 목표를 한곳에서 보는 Flutter 앱입니다.<br>
+  취업 준비의 할 일, 기업 일정, 일기, 언젠가를 한곳에서 보는 Flutter 앱입니다.<br>
   서버 없이 기기에만 저장하고, 안드로이드와 iOS를 같은 코드로 만듭니다.
 </p>
 
 <p align="center">
   <img alt="Flutter" src="https://img.shields.io/badge/Flutter-3-02569B?logo=flutter&logoColor=white">
-  <img alt="version" src="https://img.shields.io/badge/version-1.0.18-5B8DEF">
+  <img alt="version" src="https://img.shields.io/badge/version-1.0.19-5B8DEF">
   <img alt="platform" src="https://img.shields.io/badge/Android%20%7C%20iOS-local%20first-34C759">
 </p>
 
@@ -27,8 +27,8 @@
 
 | 화면 | 하는 일 |
 | --- | --- |
-| **홈** | 오늘·내일 할 일, 남은 할 일, 언젠가 목표. 카드를 길게 눌러 순서를 바꿀 수 있습니다. |
-| **캘린더** | 할 일·기업 전형을 한 달에 모읍니다. 기간·반복·여러 날을 고를 수 있고, 날짜마다 일기와 사진을 남길 수 있습니다. |
+| **홈** | 오늘·내일 할 일, 남은 할 일, 언젠가. 카드를 길게 눌러 순서를 바꿀 수 있습니다. |
+| **캘린더** | 할 일·기업 전형을 한 달에 모읍니다. 기간·반복·여러 날을 고를 수 있고, 날짜마다 일기·가계부를 남길 수 있습니다. |
 | **기업** | 지원 중인 회사를 카드로 두고, 전형과 카테고리로 나눠 봅니다. |
 | **설정** | 테마·글꼴·알림·백업·캘린더 가져오기·앱 둘러보기 |
 

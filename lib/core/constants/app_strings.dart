@@ -93,7 +93,7 @@ class AppStrings {
   static const tutorialBadgeJob = '취업';
   static const tutorialWelcomeTitle = '잡플래너에 오신 걸 환영해요';
   static const tutorialWelcomeBody =
-      '할 일, 달력, 취업 지원을 한곳에서 관리해요. 화면을 따라가며 어디를 누르면 되는지 알려줄게요';
+      '할 일, 캘린더, 취업 지원을 한곳에서 관리해요. 화면을 따라가며 어디를 누르면 되는지 알려줄게요';
   static const tutorialNavBarTitle = '아래 탭으로 이동';
   static const tutorialNavBarBody =
       '왼쪽이 홈, 가운데가 캘린더, 오른쪽이 취업이에요. 알약을 눌러 화면을 바꿔요';
@@ -114,16 +114,16 @@ class AppStrings {
       '날짜를 눌러 열린 창에서 동그라미를 누르면 완료예요';
   static const tutorialCalendarMenuTitle = '표시 바꾸기';
   static const tutorialCalendarMenuBody =
-      '오른쪽 ··· 을 누르면 메뉴가 열려요. 할 일·기업만 보거나 일기로 바꿀 수 있어요';
+      '오른쪽 ··· 을 누르면 메뉴가 열려요. 할 일·기업만 보거나 일기·가계부로 바꿀 수 있어요';
   static const tutorialNavHomeTitle = '홈 화면';
   static const tutorialNavHomeBody =
-      '오늘·내일 할 일과 목표가 모여 있어요';
+      '오늘·내일 할 일과 언젠가 카드가 모여 있어요';
   static const tutorialHomeToolsTitle = '위쪽 버튼';
   static const tutorialHomeToolsBody =
       '검색, 간략히 보기, 설정이에요';
   static const tutorialHomeListTitle = '할 일 카드';
   static const tutorialHomeListBody =
-      '오늘·내일·목표 카드예요. 눌러 열거나, 길게 눌러 순서를 바꿀 수 있어요';
+      '오늘·내일·언젠가 카드예요. 눌러 열거나, 길게 눌러 순서를 바꿀 수 있어요';
   static const tutorialNavJobTitle = '취업 화면';
   static const tutorialNavJobBody = '지원 기업이 모여 있어요';
   static const tutorialJobToolsTitle = '위쪽 버튼';
@@ -144,13 +144,15 @@ class AppStrings {
   static const homeShowTomorrow = '내일';
   static const homeShowWeek = '이번 주';
   static const homeShowMonth = '이번 달';
-  static const homeShowLongGoal = '목표';
-  static const longGoalTitle = '목표';
-  static const longGoalAdd = '+ 목표를 추가하세요';
-  static const longGoalNameHint = '목표 이름을 입력하세요';
+  static const homeShowLongGoal = '언젠가';
+  static const homePickCards = '보여줄 카드';
+  static const homeReorderCards = '순서 바꾸기';
+  static const longGoalTitle = '언젠가';
+  static const longGoalAdd = '+ 할 일을 추가하세요';
+  static const longGoalNameHint = '할 일을 입력하세요';
   static const longGoalUnitHint = '단위';
   static const longGoalTargetHint = '목표치';
-  static const longGoalMissingName = '목표 이름은 필수사항이에요!';
+  static const longGoalMissingName = '할 일은 필수사항이에요!';
   static const longGoalMissingTarget = '목표치는 필수사항이에요!';
   static const longGoalMissingCategory = '카테고리는 필수사항이에요!';
   static const longGoalKindMeasure = '수치';
@@ -159,8 +161,8 @@ class AppStrings {
   static const longGoalKindStreak = '연속';
   static const longGoalKindMeasureHint = '다이어트, 점수처럼 오늘의 값을 적어요';
   static const longGoalKindSumHint = '총 시간, 총 권수처럼 한 양을 더해요';
-  static const longGoalKindDailyHint = '매일 독서, 매일 운동처럼 했는지 남겨요';
-  static const longGoalKindStreakHint = '하루라도 빠지면 처음부터예요';
+  static const longGoalKindDailyHint = '매일 독서, 매일 운동처럼 했는지 기록해요';
+  static const longGoalKindStreakHint = '하루라도 빠지면 처음부터 다시해요';
   static const longGoalKindAction = '분류';
   static const longGoalNotLogged = '오늘 미기록';
   static const longGoalTodayLog = '오늘의 기록';
@@ -174,7 +176,7 @@ class AppStrings {
   static const longGoalProgress = '진척도';
   static const longGoalRecent = '최근 기록';
   static const longGoalEmptyHistory = '아직 기록이 없어요';
-  static const longGoalDeleteBody = '목표와 기록이 사라져요';
+  static const longGoalDeleteBody = '언젠가와 기록이 사라져요';
   static String longGoalPercent(int value) => '$value%';
   static const settingsMonthlyStatsSection = '통계 알림';
   static const homeShowMonthlyStats = '지난달 요약';
@@ -239,14 +241,14 @@ class AppStrings {
   static const settingsAppearanceHelp = '화면을 밝은 테마나 어두운 테마로 바꿀 수 있어요';
   static const settingsThemeHelp = '홈·캘린더 배경 분위기와 아이콘·버튼 색을 바꿀 수 있어요';
   static const settingsBackupHelp =
-      '할 일·기업·일기 데이터를 최근 3개까지 앱에 저장하고, 필요할 때 다시 가져올 수 있어요. 앱을 켜면 정한 주기마다 자동으로도 저장해요';
+      '할 일·기업·일기·가계부 데이터를 최근 3개까지 앱에 저장하고, 필요할 때 다시 가져올 수 있어요. 앱을 켜면 정한 주기마다 자동으로도 저장해요';
   static const settingsCalendarSyncHelp =
       '폰 캘린더에 있는 일정을 할 일로 가져와요. 안드로이드는 삼성 캘린더, 아이폰은 iOS 캘린더를 쓰면 돼요. 가져올 기간을 고르고, 카테고리는 하나에 몰아넣거나 할 일마다 고를 수 있어요. 기업 카드는 그대로 둬요';
   static const settingsAppHelp =
       '앱 사용법을 처음부터 다시 보거나, 이 버전에 새로 생긴 기능과 고친 내용을 볼 수 있어요';
-  static const settingsCalendarHelp = '달력의 첫 요일을 바꿀 수 있어요';
+  static const settingsCalendarHelp = '캘린더의 첫 요일을 바꿀 수 있어요';
   static const settingsCalendarHelpWithFontSize =
-      '달력의 첫 요일과, 할 일·기업·날짜·라벨의 글자 크기를 바꿀 수 있어요';
+      '캘린더의 첫 요일과, 할 일·기업·날짜·라벨의 글자 크기를 바꿀 수 있어요';
   static const calendarStartSunday = '일요일부터 시작';
   static const settingsMonthlyStatsHelp =
       '매달 1일에는 지난달 요약을, 매주 월요일에는 지난주 요약을 보여줘요';
@@ -391,14 +393,92 @@ class AppStrings {
   static const calendarVisibleItems = '캘린더에 표시할 항목';
   static const calendarSortMode = '정렬 방식';
   static const calendarDiaryMode = '일기 전환';
+  static const calendarLedgerMode = '가계부 전환';
   static const calendarSearchHint = '할 일, 기업, 카테고리 검색';
   static const calendarDiarySearchHint = '제목, 내용 검색';
+  static const calendarLedgerSearchHint = '내역, 금액 검색';
+  static const ledgerExpense = '지출';
+  static const ledgerConsumption = '소비';
+  static const ledgerSalary = '월급';
+  static const ledgerTitleHint = '내역을 입력하세요';
+  static const ledgerWorkplaceHint = '근무지명을 입력하세요';
+  static const ledgerAmountHint = '금액을 입력하세요';
+  static const ledgerHourlyHint = '시급을 입력하세요';
+  static const ledgerMonthlyHint = '월급을 입력하세요';
+  static const ledgerAmountSuffix = '원';
+  static const ledgerWageHourly = '시급';
+  static const ledgerWageMonthly = '월급';
+  static const ledgerPaySameDay = '당일';
+  static const ledgerPayWeekly = '일주일';
+  static const ledgerPayBiweekly = '2주';
+  static const ledgerPayMonthly = '한 달';
+  static const ledgerPayTwiceMonthly = '한 달에 2번';
+  static const ledgerPayTwiceMonthlyShort = '월 2회';
+  static const ledgerPayLastDay = '말일';
+  static String ledgerMonthDay(int day) => day <= 0 ? ledgerPayLastDay : '$day일';
+  static const ledgerPayCycleLabel = '급여일';
+  static const ledgerPayDayLabel = '받는 날';
+  static const ledgerPayDayFirst = '첫 지급일';
+  static const ledgerPayDaySecond = '둘째 지급일';
+  static const ledgerWageTypeLabel = '급여';
+  static const ledgerWorkLabel = '근무';
+  static const ledgerBreak = '휴게';
+  static const ledgerBreakNone = '없음';
+  static String ledgerBreakMinutes(int minutes) => '$minutes분';
+  static const ledgerDeductionLabel = '공제';
+  static const ledgerTax = '세금';
+  static const ledgerInsuranceNone = '없음';
+  static const ledgerInsuranceEmployment = '고용보험';
+  static const ledgerInsuranceAll = '4대보험';
+  static const ledgerWeeklyHoliday = '주휴수당';
+  static const ledgerWorkTime = '근무시간';
+  static const ledgerBasePay = '기본급';
+  static const ledgerHolidayPay = '주휴';
+  static const ledgerPension = '국민연금';
+  static const ledgerHealth = '건강보험';
+  static const ledgerLongTermCare = '장기요양';
+  static const ledgerEmploymentInsurance = '고용보험';
+  static const ledgerNetPay = '실수령';
+  static const missingLedgerBody = '내역, 금액, 날짜는 필수사항이에요!';
+  static const missingLedgerSalaryBody = '근무지, 시급, 근무시간은 필수사항이에요!';
+  static const missingLedgerSalaryMonthlyBody = '근무지, 월급은 필수사항이에요!';
+  static const deleteLedgerBody = '내역이 사라져요';
+  static const addLedger = '+ 내역을 추가하세요';
+  static const ledgerEmptyDay = '이날 내역이 없어요';
+  static const ledgerNet = '합계';
   static const calendarSearchLabel = '검색';
   static const diaryTitleHint = '제목을 입력하세요';
   static const diaryBodyHint = '내용을 입력하세요';
-  static const diaryPhotoHint = '이미지를 추가하세요';
+  static const diaryPhotoHint = '사진이나 그림을 넣어 보세요';
+  static const diaryPhotoPick = '사진';
+  static const diaryPhotoDraw = '그림';
+  static const diaryPhotoChange = '바꾸기';
+  static const diaryPhotoDrawOn = '그리기';
+  static const diaryDrawEdit = '수정';
+  static const diaryDrawTitle = '그림';
+  static const diaryDrawUndo = '되돌리기';
+  static const diaryDrawRedo = '다시 실행';
+  static const diaryDrawClear = '모두 지우기';
+  static const diaryDrawPen = '펜';
+  static const diaryDrawBrush = '브러시';
+  static const diaryDrawCrayon = '크레용';
+  static const diaryDrawCalligraphy = '붓글씨';
+  static const diaryDrawWatercolor = '수채화';
+  static const diaryDrawPencil = '연필';
+  static const diaryDrawMarker = '마커';
+  static const diaryDrawHighlighter = '형광펜';
+  static const diaryDrawChalk = '분필';
+  static const diaryDrawSpray = '스프레이';
+  static const diaryDrawLine = '선';
+  static const diaryDrawRect = '네모';
+  static const diaryDrawOval = '원';
+  static const diaryDrawFill = '채우기';
+  static const diaryDrawEraser = '지우개';
+  static const diaryDrawZoomIn = '확대';
+  static const diaryDrawZoomOut = '축소';
+  static const diaryDrawZoomPanHint = '두 손가락으로 드래그하면 화면을 옮길 수 있어요';
   static const diaryFallback = '일기';
-  static const missingDiaryBody = '제목이나 사진, 카테고리는 필수사항이에요!';
+  static const missingDiaryBody = '제목, 날짜, 카테고리는 필수사항이에요!';
   static const deleteDiaryBody = '일기가 사라져요';
   static const deleteDiaryPhotoTitle = '사진을 삭제하시나요?';
   static const deleteDiaryPhotoBody = '사진이 사라져요';

@@ -9,6 +9,7 @@ import 'package:job_planner/core/theme/app_skin_background.dart';
 import 'package:job_planner/core/utils/fade_in.dart';
 import 'package:job_planner/core/utils/korean_search.dart';
 import 'package:job_planner/core/utils/plain_text_editing_controller.dart';
+import 'package:job_planner/core/utils/press_bounce.dart';
 import 'package:job_planner/data/datasources/app_backup_service.dart';
 import 'package:job_planner/domain/entities/event_category.dart';
 import 'package:job_planner/domain/entities/job_application.dart';
@@ -207,10 +208,16 @@ class _JobScreenState extends State<JobScreen>
         backgroundColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,
         titleSpacing: 8,
-        title: ThemedAsset(
-          asset: AppIcons.jobLogo,
-          height: 120,
-          semanticLabel: AppStrings.jobScreenTitle,
+        title: PressBounce(
+          onPressed: () {},
+          pressedScale: 0.96,
+          pressedColor: AppColors.of(context).pressed,
+          borderRadius: BorderRadius.circular(999),
+          child: const ThemedAsset(
+            asset: AppIcons.jobLogo,
+            height: 120,
+            semanticLabel: AppStrings.jobScreenTitle,
+          ),
         ),
         actions: [
           Padding(

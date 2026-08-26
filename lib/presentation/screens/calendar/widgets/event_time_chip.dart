@@ -13,17 +13,21 @@ class EventTimeChip extends StatelessWidget {
     required this.onPressed,
     this.startMinutes,
     this.endMinutes,
+    this.emptyLabel,
   });
 
   final Color color;
   final VoidCallback onPressed;
   final int? startMinutes;
   final int? endMinutes;
+  final String? emptyLabel;
 
   String get _label {
     final start = startMinutes;
     final end = endMinutes;
-    if (start == null || end == null) return AppStrings.allDayLabel;
+    if (start == null || end == null) {
+      return emptyLabel ?? AppStrings.allDayLabel;
+    }
     return '${CalendarEvent.formatMinutes(start)}–${CalendarEvent.formatMinutes(end)}';
   }
 

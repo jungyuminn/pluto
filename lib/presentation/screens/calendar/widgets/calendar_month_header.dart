@@ -8,6 +8,7 @@ import 'package:job_planner/presentation/screens/calendar/widgets/category_picke
 import 'package:job_planner/presentation/tutorial/tutorial_anchor.dart';
 import 'package:job_planner/presentation/widgets/app_bar_icon_group.dart';
 import 'package:job_planner/presentation/widgets/app_calendar/calendar_zoom_picker.dart';
+import 'package:job_planner/presentation/widgets/themed_asset.dart';
 
 class CalendarMonthHeader extends StatelessWidget {
   const CalendarMonthHeader({
@@ -18,9 +19,11 @@ class CalendarMonthHeader extends StatelessWidget {
     this.showTodos = true,
     this.showCompanies = true,
     this.showDiary = false,
+    this.showLedger = false,
     this.onShowTodosChanged,
     this.onShowCompaniesChanged,
     this.onShowDiaryChanged,
+    this.onShowLedgerChanged,
     this.onSortPrefsChanged,
     this.searchOpen = false,
     this.onSearchPressed,
@@ -32,9 +35,11 @@ class CalendarMonthHeader extends StatelessWidget {
   final bool showTodos;
   final bool showCompanies;
   final bool showDiary;
+  final bool showLedger;
   final ValueChanged<bool>? onShowTodosChanged;
   final ValueChanged<bool>? onShowCompaniesChanged;
   final ValueChanged<bool>? onShowDiaryChanged;
+  final ValueChanged<bool>? onShowLedgerChanged;
   final VoidCallback? onSortPrefsChanged;
   final bool searchOpen;
   final VoidCallback? onSearchPressed;
@@ -84,9 +89,11 @@ class CalendarMonthHeader extends StatelessWidget {
                   showTodos: showTodos,
                   showCompanies: showCompanies,
                   showDiary: showDiary,
+                  showLedger: showLedger,
                   onShowTodosChanged: onShowTodosChanged,
                   onShowCompaniesChanged: onShowCompaniesChanged,
                   onShowDiaryChanged: onShowDiaryChanged,
+                  onShowLedgerChanged: onShowLedgerChanged,
                   onSortPrefsChanged: onSortPrefsChanged,
                 ),
               ],
@@ -109,15 +116,19 @@ class CalendarMonthMenuButton extends StatefulWidget {
     this.onShowTodosChanged,
     this.onShowCompaniesChanged,
     this.onShowDiaryChanged,
+    this.onShowLedgerChanged,
+    this.showLedger = false,
     this.onSortPrefsChanged,
   });
 
   final bool showTodos;
   final bool showCompanies;
   final bool showDiary;
+  final bool showLedger;
   final ValueChanged<bool>? onShowTodosChanged;
   final ValueChanged<bool>? onShowCompaniesChanged;
   final ValueChanged<bool>? onShowDiaryChanged;
+  final ValueChanged<bool>? onShowLedgerChanged;
   final VoidCallback? onSortPrefsChanged;
 
   @override
@@ -227,6 +238,10 @@ class _CalendarMonthMenuButtonState extends State<CalendarMonthMenuButton>
         onShowDiaryChanged: (value) {
           widget.onShowDiaryChanged?.call(value);
         },
+        showLedger: widget.showLedger,
+        onShowLedgerChanged: (value) {
+          widget.onShowLedgerChanged?.call(value);
+        },
       ),
     };
   }
@@ -307,10 +322,10 @@ class _CalendarMonthMenuButtonState extends State<CalendarMonthMenuButton>
         child: AppBarIconSlot(
           selected: _portal.isShowing,
           onPressed: _toggle,
-          child: Icon(
-            Icons.more_horiz,
-            size: 22,
-            color: AppColors.of(context).icon,
+          child: ThemedAsset(
+            asset: AppIcons.more,
+            width: 18,
+            height: 18,
           ),
         ),
       ),

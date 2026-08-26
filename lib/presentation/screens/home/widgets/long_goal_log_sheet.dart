@@ -320,7 +320,7 @@ class _LongGoalLogSheetState extends State<LongGoalLogSheet> {
                         style: TextStyle(
                           fontFamily: font,
                           fontSize: 14,
-                          fontWeight: FontWeight.w700,
+                          fontWeight: FontWeight.w600,
                           color: colors.text,
                         ),
                       ),
@@ -334,7 +334,7 @@ class _LongGoalLogSheetState extends State<LongGoalLogSheet> {
                           style: TextStyle(
                             fontFamily: font,
                             fontSize: 14,
-                            fontWeight: FontWeight.w800,
+                            fontWeight: FontWeight.w600,
                             color: accent,
                           ),
                         );
@@ -345,9 +345,10 @@ class _LongGoalLogSheetState extends State<LongGoalLogSheet> {
                 const SizedBox(height: 10),
                 _GoalProgressBar(
                   value: progress.barValue,
-                  ticks: _goal.kind.isCheckIn ? progress.barSegments : 0,
+                  ticks: progress.barSegments,
                   color: accent,
                   background: colors.border,
+                  gapColor: colors.tint(accent),
                 ),
                 AnimatedSwitcher(
                   duration: const Duration(milliseconds: 360),
@@ -590,18 +591,21 @@ class _GoalProgressBar extends StatelessWidget {
     required this.ticks,
     required this.color,
     required this.background,
+    required this.gapColor,
   });
 
   static const _height = 12.0;
+  static const _gap = 2.0;
 
   final double value;
   final int ticks;
   final Color color;
   final Color background;
+  final Color gapColor;
 
   @override
   Widget build(BuildContext context) {
-    final markCount = ticks.clamp(0, 12);
+    final markCount = ticks.clamp(2, 12);
     return _AnimatedProgress(
       value: value.clamp(0.0, 1.0),
       builder: (context, filled) {
@@ -635,19 +639,18 @@ class _GoalProgressBar extends StatelessWidget {
                           ),
                         ),
                       ),
-                    if (markCount >= 2)
-                      Row(
-                        children: [
-                          for (var i = 1; i < markCount; i++) ...[
-                            const Expanded(child: SizedBox.expand()),
-                            ColoredBox(
-                              color: background,
-                              child: SizedBox(width: 1, height: _height),
-                            ),
-                          ],
+                    Row(
+                      children: [
+                        for (var i = 1; i < markCount; i++) ...[
                           const Expanded(child: SizedBox.expand()),
+                          ColoredBox(
+                            color: gapColor,
+                            child: const SizedBox(width: _gap, height: _height),
+                          ),
                         ],
-                      ),
+                        const Expanded(child: SizedBox.expand()),
+                      ],
+                    ),
                   ],
                 );
               },
@@ -929,109 +932,71 @@ class _CheckInWeekState extends State<_CheckInWeek>
               ? () => widget.onToggle!(day)
               : null,
       pressedScale: 0.92,
-      pressedColor: Colors.transparent,
+      color: selected
+          ? widget.color.withValues(alpha: 0.16)
+          : Colors.transparent,
+      pressedColor: widget.color.withValues(alpha: selected ? 0.28 : 0.18),
       borderRadius: BorderRadius.circular(10),
       child: Padding(
         padding: inset,
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            color: selected ? widget.color.withValues(alpha: 0.16) : null,
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Padding(
-            padding: inner,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  weekday,
-                  style: TextStyle(
-                    fontFamily: font,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    height: 1,
-                    color: _weekdayColor(
-                      day,
-                      colors,
-                      isToday: isToday || selected,
-                      isFuture: isFuture,
-                    ),
+        child: Padding(
+          padding: inner,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                weekday,
+                style: TextStyle(
+                  fontFamily: font,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  height: 1,
+                  color: _weekdayColor(
+                    day,
+                    colors,
+                    isToday: isToday || selected,
+                    isFuture: isFuture,
                   ),
                 ),
-                const SizedBox(height: 6),
-                Text(
-                  '${day.day}',
-                  style: TextStyle(
-                    fontFamily: font,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w800,
-                    height: 1,
-                    color: missed || isFuture
-                        ? colors.muted
-                        : isToday || selected
-                            ? widget.color
-                            : colors.text,
-                  ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                '${day.day}',
+                style: TextStyle(
+                  fontFamily: font,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w800,
+                  height: 1,
+                  color: missed || isFuture
+                      ? colors.muted
+                      : isToday || selected
+                          ? widget.color
+                          : colors.text,
                 ),
-                const SizedBox(height: 8),
-                SizedBox(
-                  width: _cellWidth - 12,
-                  height: widget.valueOf == null ? 22 : 32,
-                  child: widget.valueOf == null
-                      ? _checkMark(
-                          colors,
-                          checked: checked,
-                          missed: missed,
-                          isToday: isToday,
-                        )
-                      : _valueMark(
-                          colors,
-                          font,
-                          label: widget.valueOf!(day),
-                          isToday: isToday || selected,
-                          isFuture: isFuture,
-                        ),
-                ),
-              ],
-            ),
+              ),
+              const SizedBox(height: 8),
+              SizedBox(
+                width: _cellWidth - 12,
+                height: widget.valueOf == null ? 22 : 32,
+                child: widget.valueOf == null
+                    ? _CheckInMark(
+                        checked: checked,
+                        missed: missed,
+                        isToday: isToday,
+                        color: widget.color,
+                        muted: colors.muted,
+                        border: colors.border,
+                      )
+                    : _valueMark(
+                        colors,
+                        font,
+                        label: widget.valueOf!(day),
+                        isToday: isToday || selected,
+                        isFuture: isFuture,
+                      ),
+              ),
+            ],
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _checkMark(
-    AppColors colors, {
-    required bool checked,
-    required bool missed,
-    required bool isToday,
-  }) {
-    return Center(
-      child: SizedBox(
-        width: 22,
-        height: 22,
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: checked ? widget.color : Colors.transparent,
-            border: Border.all(
-              color: checked
-                  ? widget.color
-                  : isToday
-                      ? widget.color
-                      : colors.border,
-              width: isToday && !checked ? 2 : 1.5,
-            ),
-          ),
-          child: missed
-              ? Center(
-                  child: Icon(
-                    Icons.close_rounded,
-                    size: 16,
-                    color: colors.muted,
-                  ),
-                )
-              : null,
         ),
       ),
     );
@@ -1124,5 +1089,166 @@ class _CheckInWeekState extends State<_CheckInWeek>
               ),
       ),
     );
+  }
+}
+
+class _CheckInMark extends StatefulWidget {
+  const _CheckInMark({
+    required this.checked,
+    required this.missed,
+    required this.isToday,
+    required this.color,
+    required this.muted,
+    required this.border,
+  });
+
+  final bool checked;
+  final bool missed;
+  final bool isToday;
+  final Color color;
+  final Color muted;
+  final Color border;
+
+  @override
+  State<_CheckInMark> createState() => _CheckInMarkState();
+}
+
+class _CheckInMarkState extends State<_CheckInMark>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _draw;
+
+  @override
+  void initState() {
+    super.initState();
+    _draw = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 420),
+      reverseDuration: const Duration(milliseconds: 320),
+    );
+    if (widget.checked) _draw.value = 1;
+  }
+
+  @override
+  void didUpdateWidget(_CheckInMark oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!oldWidget.checked && widget.checked) {
+      _draw.forward();
+    } else if (oldWidget.checked && !widget.checked) {
+      _draw.reverse();
+    }
+  }
+
+  @override
+  void dispose() {
+    _draw.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: SizedBox(
+        width: 22,
+        height: 22,
+        child: widget.missed
+            ? DecoratedBox(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(color: widget.border, width: 1.5),
+                ),
+                child: Center(
+                  child: Icon(
+                    Icons.close_rounded,
+                    size: 16,
+                    color: widget.muted,
+                  ),
+                ),
+              )
+            : AnimatedBuilder(
+                animation: _draw,
+                builder: (context, _) {
+                  return CustomPaint(
+                    painter: _CheckInPainter(
+                      t: _draw.value,
+                      color: widget.color,
+                      border: widget.border,
+                      isToday: widget.isToday,
+                    ),
+                  );
+                },
+              ),
+      ),
+    );
+  }
+}
+
+class _CheckInPainter extends CustomPainter {
+  const _CheckInPainter({
+    required this.t,
+    required this.color,
+    required this.border,
+    required this.isToday,
+  });
+
+  final double t;
+  final Color color;
+  final Color border;
+  final bool isToday;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final fill = Curves.easeOutCubic.transform((t / 0.5).clamp(0.0, 1.0));
+    final check = Curves.easeInOutCubic.transform(
+      ((t - 0.4) / 0.6).clamp(0.0, 1.0),
+    );
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = size.width / 2;
+    final idleWidth = isToday ? 2.0 : 1.5;
+    final strokeWidth = idleWidth + (1.5 - idleWidth) * fill;
+    final strokeColor = Color.lerp(isToday ? color : border, color, fill)!;
+
+    canvas.drawCircle(
+      center,
+      radius - strokeWidth / 2,
+      Paint()
+        ..color = strokeColor
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = strokeWidth,
+    );
+
+    if (fill > 0) {
+      canvas.drawCircle(
+        center,
+        (radius - 0.5) * fill,
+        Paint()
+          ..color = color
+          ..style = PaintingStyle.fill,
+      );
+    }
+
+    if (check <= 0) return;
+    final checkPaint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+    final path = Path()
+      ..moveTo(size.width * 0.27, size.height * 0.52)
+      ..lineTo(size.width * 0.43, size.height * 0.68)
+      ..lineTo(size.width * 0.73, size.height * 0.32);
+    final metric = path.computeMetrics().first;
+    canvas.drawPath(
+      metric.extractPath(0, metric.length * check),
+      checkPaint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _CheckInPainter oldDelegate) {
+    return oldDelegate.t != t ||
+        oldDelegate.color != color ||
+        oldDelegate.border != border ||
+        oldDelegate.isToday != isToday;
   }
 }

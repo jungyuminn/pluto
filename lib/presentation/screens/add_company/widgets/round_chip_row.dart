@@ -45,6 +45,7 @@ class _RoundChipRowState extends State<RoundChipRow>
   int? _exitingIndex;
   int? _draggingIndex;
   var _cellWidth = 0.0;
+  var _emergeGen = 0;
 
   int _nextKey() => _keySeed++;
 
@@ -84,6 +85,7 @@ class _RoundChipRowState extends State<RoundChipRow>
       _exitingIndex = null;
       _draggingIndex = null;
       _count = next;
+      _clearEmergeAfterAnim();
     } else if (next < _count) {
       _exit.stop();
       final ghost = _exitingIndex != null ? _shown.last : _shown[_count - 1];
@@ -104,6 +106,15 @@ class _RoundChipRowState extends State<RoundChipRow>
   void dispose() {
     _exit.dispose();
     super.dispose();
+  }
+
+  void _clearEmergeAfterAnim() {
+    final gen = ++_emergeGen;
+    Future<void>.delayed(RoundChipRow._anim, () {
+      if (!mounted || gen != _emergeGen) return;
+      if (_emergeIndex == null) return;
+      setState(() => _emergeIndex = null);
+    });
   }
 
   void _onDragStarted(int index) {
@@ -287,7 +298,7 @@ class _RoundChipRowState extends State<RoundChipRow>
         ),
       );
     }
-    if (exiting || _emergeIndex != null) return chip;
+    if (exiting || emerging) return chip;
     return LongPressDraggable<int>(
       data: _itemKeys[index],
       delay: const Duration(milliseconds: 400),

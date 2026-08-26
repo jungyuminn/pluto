@@ -18,6 +18,7 @@ import 'package:job_planner/presentation/screens/calendar/widgets/delete_event_d
 import 'package:job_planner/presentation/screens/calendar/widgets/event_action_icon.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/event_category_chip.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/event_memo_field.dart';
+import 'package:job_planner/presentation/widgets/sliding_kind_bar.dart';
 
 Future<bool> showLongGoalEditSheet(
   BuildContext context, {
@@ -448,9 +449,9 @@ class _LongGoalEditSheetState extends State<LongGoalEditSheet>
                     selected: _kindOpen,
                     onPressed: _toggleKind,
                     child: Image.asset(
-                      _kindOpen ? AppIcons.goal : AppIcons.goalOutlined,
-                      width: 20,
-                      height: 20,
+                      AppIcons.longGoalKind(_kind, filled: _kindOpen),
+                      width: 14,
+                      height: 14,
                     ),
                   ),
                   const SizedBox(width: 4),
@@ -497,7 +498,13 @@ class _LongGoalEditSheetState extends State<LongGoalEditSheet>
                               mainAxisSize: MainAxisSize.min,
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
-                                _kindSelector(accent, colors, font),
+                                SlidingKindBar(
+                                  values: LongGoalKind.values,
+                                  selected: _kind,
+                                  labelOf: _kindLabel,
+                                  accent: accent,
+                                  onChanged: _setKind,
+                                ),
                                 const SizedBox(height: 12),
                                 Row(
                                   children: [
@@ -592,77 +599,6 @@ class _LongGoalEditSheetState extends State<LongGoalEditSheet>
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _kindSelector(Color accent, AppColors colors, String? font) {
-    const kinds = LongGoalKind.values;
-    final index = kinds.indexOf(_kind);
-    return Container(
-      height: 42,
-      padding: const EdgeInsets.all(3),
-      decoration: BoxDecoration(
-        color: colors.card.withValues(alpha: 0.55),
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final cell = constraints.maxWidth / kinds.length;
-          return Stack(
-            fit: StackFit.expand,
-            children: [
-              AnimatedPositioned(
-                duration: const Duration(milliseconds: 280),
-                curve: Curves.easeOutCubic,
-                left: index * cell,
-                top: 0,
-                bottom: 0,
-                width: cell,
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 280),
-                  curve: Curves.easeOutCubic,
-                  decoration: BoxDecoration(
-                    color: accent,
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                ),
-              ),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  for (final kind in kinds)
-                    Expanded(
-                      child: PressBounce(
-                        onPressed: () => _setKind(kind),
-                        expand: true,
-                        pressedScale: 0.92,
-                        color: Colors.transparent,
-                        pressedColor: Colors.transparent,
-                        borderRadius: BorderRadius.circular(999),
-                        child: Center(
-                          child: AnimatedDefaultTextStyle(
-                            duration: const Duration(milliseconds: 220),
-                            curve: Curves.easeOutCubic,
-                            style: TextStyle(
-                              fontFamily: font,
-                              fontSize: 13,
-                              fontWeight: FontWeight.w700,
-                              color: _kind == kind ? Colors.white : colors.text,
-                            ),
-                            child: FittedBox(
-                              fit: BoxFit.scaleDown,
-                              child: Text(_kindLabel(kind)),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ],
-          );
-        },
       ),
     );
   }

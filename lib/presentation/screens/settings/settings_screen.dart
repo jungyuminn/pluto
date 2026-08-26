@@ -883,6 +883,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               _SettingsTile(
                 label: AppStrings.releaseNotesTitle,
+                value: ReleaseNotes.latestVersion,
+                chevron: true,
                 onPressed: _openReleaseNotes,
               ),
             ],

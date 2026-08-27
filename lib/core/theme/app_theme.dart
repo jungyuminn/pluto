@@ -18,15 +18,20 @@ class AppTheme {
     required bool dark,
     AppTypeface typeface = AppTypeface.pretendard,
     AppSkin skin = AppSkin.classic,
+    Color? customAccent,
   }) {
     final base = dark ? AppColors.dark : AppColors.light;
-    final accent = AppSkinAssets.accentColor(skin, dark, base.accent);
-    final accentBright =
-        AppSkinAssets.accentColor(skin, dark, base.accentBright);
+    final accent =
+        customAccent ?? AppSkinAssets.accentColor(skin, dark, base.accent);
+    final accentBright = customAccent == null
+        ? AppSkinAssets.accentColor(skin, dark, base.accentBright)
+        : Color.lerp(customAccent, Colors.white, dark ? 0.18 : 0.08)!;
     final colors = base.copyWith(
       accent: accent,
       accentBright: accentBright,
-      icon: skin == AppSkin.classic ? base.icon : accentBright,
+      icon: skin == AppSkin.classic && customAccent == null
+          ? base.icon
+          : accentBright,
       rangeFill: Color.lerp(base.card, accent, dark ? 0.32 : 0.22),
       rangePressed: Color.lerp(base.card, accent, dark ? 0.42 : 0.32),
     );

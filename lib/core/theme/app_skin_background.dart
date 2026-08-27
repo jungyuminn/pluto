@@ -1,3 +1,6 @@
+import 'dart:io';
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:job_planner/app_scope.dart';
 import 'package:job_planner/core/constants/app_icons.dart';
@@ -24,6 +27,42 @@ class AppSkinAssets {
   static const hillsDark =
       'assets/themes/blossom/blossom_bottom_hills_dark.png';
 
+  static const cloverDecorationLight =
+      'assets/themes/clover/clover_decoration_light.png';
+  static const cloverDecorationDark =
+      'assets/themes/clover/clover_decoration_dark.png';
+  static const cloverBottomLight =
+      'assets/themes/clover/clover_bottom_light.png';
+  static const cloverBottomDark =
+      'assets/themes/clover/clover_bottom_dark.png';
+
+  static const fluffyBearFaceLight =
+      'assets/themes/fluffy_bear/bear_face_decoration_light.png';
+  static const fluffyBearFaceDark =
+      'assets/themes/fluffy_bear/bear_face_decoration_dark.png';
+  static const fluffyBearBottomLight =
+      'assets/themes/fluffy_bear/bear_face_bottom_light.png';
+  static const fluffyBearBottomDark =
+      'assets/themes/fluffy_bear/bear_face_bottom_dark.png';
+
+  static const fluffyRabbitFaceLight =
+      'assets/themes/fluffy_rabbit/bunny_face_decoration_light.png';
+  static const fluffyRabbitFaceDark =
+      'assets/themes/fluffy_rabbit/bunny_face_decoration_dark.png';
+  static const fluffyRabbitBottomLight =
+      'assets/themes/fluffy_rabbit/bunny_face_bottom_light.png';
+  static const fluffyRabbitBottomDark =
+      'assets/themes/fluffy_rabbit/bunny_face_bottom_dark.png';
+
+  static const pinkHeartFaceLight =
+      'assets/themes/pink_heart/heart_decoration_light.png';
+  static const pinkHeartFaceDark =
+      'assets/themes/pink_heart/heart_decoration_dark.png';
+  static const pinkHeartBottomLight =
+      'assets/themes/pink_heart/heart_bottom_light.png';
+  static const pinkHeartBottomDark =
+      'assets/themes/pink_heart/heart_bottom_dark.png';
+
   static const sunLight = 'assets/themes/summer_beach/summer_sun_light.png';
   static const sunDark = 'assets/themes/summer_beach/summer_sun_dark.png';
   static const duckLight = 'assets/themes/summer_beach/duck_ring_light.png';
@@ -48,30 +87,12 @@ class AppSkinAssets {
   static const snowGroundDark =
       'assets/themes/snowy_winter/snow_ground_dark.png';
 
-  static const mapleLeafLight =
-      'assets/themes/autumn_forest/maple_leaf_light.png';
-  static const mapleLeafDark =
-      'assets/themes/autumn_forest/maple_leaf_dark.png';
-  static const mushroomLight =
-      'assets/themes/autumn_forest/mushroom_light.png';
-  static const mushroomDark =
-      'assets/themes/autumn_forest/mushroom_dark.png';
-  static const acornLight = 'assets/themes/autumn_forest/acorn_light.png';
-  static const acornDark = 'assets/themes/autumn_forest/acorn_dark.png';
-  static const leafGroundLight =
-      'assets/themes/autumn_forest/leaf_ground_light.png';
-  static const leafGroundDark =
-      'assets/themes/autumn_forest/leaf_ground_dark.png';
-
   static const squishyBearLight =
       'assets/themes/squishy_bear/squishy_bear_light.png';
   static const squishyBearDark =
       'assets/themes/squishy_bear/squishy_bear_dark.png';
   static const bearPawLight = 'assets/themes/squishy_bear/bear_paw_light.png';
   static const bearPawDark = 'assets/themes/squishy_bear/bear_paw_dark.png';
-  static const honeyJarLight =
-      'assets/themes/squishy_bear/honey_jar_light.png';
-  static const honeyJarDark = 'assets/themes/squishy_bear/honey_jar_dark.png';
   static const softHillsLight =
       'assets/themes/squishy_bear/soft_hills_light.png';
   static const softHillsDark =
@@ -91,21 +112,6 @@ class AppSkinAssets {
       'assets/themes/strawberry_milk/milk_foam_ground_light.png';
   static const milkFoamDark =
       'assets/themes/strawberry_milk/milk_foam_ground_dark.png';
-
-  static const onionVillagerLight =
-      'assets/themes/onion_village/onion_villager_light.png';
-  static const onionVillagerDark =
-      'assets/themes/onion_village/onion_villager_dark.png';
-  static const sproutLight = 'assets/themes/onion_village/sprout_light.png';
-  static const sproutDark = 'assets/themes/onion_village/sprout_dark.png';
-  static const cottageLight =
-      'assets/themes/onion_village/vegetable_cottage_light.png';
-  static const cottageDark =
-      'assets/themes/onion_village/vegetable_cottage_dark.png';
-  static const villageGroundLight =
-      'assets/themes/onion_village/village_ground_light.png';
-  static const villageGroundDark =
-      'assets/themes/onion_village/village_ground_dark.png';
 
   static const heartBearLight =
       'assets/themes/lovely_bear/heart_bear_light.png';
@@ -154,40 +160,6 @@ class AppSkinAssets {
   static const bandStageGroundDark =
       'assets/themes/band/band_stage_ground_dark.png';
 
-  static const hoodedCarLight =
-      'assets/themes/boyhood/hooded_car_light.png';
-  static const hoodedCarDark =
-      'assets/themes/boyhood/hooded_car_dark.png';
-  static const shootingStarLight =
-      'assets/themes/boyhood/shooting_star_light.png';
-  static const shootingStarDark =
-      'assets/themes/boyhood/shooting_star_dark.png';
-  static const brightStarLight =
-      'assets/themes/boyhood/bright_star_light.png';
-  static const brightStarDark =
-      'assets/themes/boyhood/bright_star_dark.png';
-  static const nightRoadGroundLight =
-      'assets/themes/boyhood/night_road_ground_light.png';
-  static const nightRoadGroundDark =
-      'assets/themes/boyhood/night_road_ground_dark.png';
-
-  static const memoryPianoLight =
-      'assets/themes/interlude/memory_piano_light.png';
-  static const memoryPianoDark =
-      'assets/themes/interlude/memory_piano_dark.png';
-  static const neonReunionLight =
-      'assets/themes/interlude/neon_reunion_light.png';
-  static const neonReunionDark =
-      'assets/themes/interlude/neon_reunion_dark.png';
-  static const unfinishedHeartLight =
-      'assets/themes/interlude/unfinished_heart_light.png';
-  static const unfinishedHeartDark =
-      'assets/themes/interlude/unfinished_heart_dark.png';
-  static const pianoCityGroundLight =
-      'assets/themes/interlude/piano_city_ground_light.png';
-  static const pianoCityGroundDark =
-      'assets/themes/interlude/piano_city_ground_dark.png';
-
   static const cloudHouseLight =
       'assets/themes/cloud/cloud_house_light.png';
   static const cloudHouseDark =
@@ -233,6 +205,57 @@ class AppSkinAssets {
   static const hamsterBakeryGroundDark =
       'assets/themes/hamster_bakery/hamster_bakery_ground_dark.png';
 
+  static const ottersInTubLight =
+      'assets/themes/otter_bathhouse/light/otters-in-tub.png';
+  static const ottersInTubDark =
+      'assets/themes/otter_bathhouse/dark/otters-in-tub.png';
+  static const bathToysLight =
+      'assets/themes/otter_bathhouse/light/bath-toys.png';
+  static const bathToysDark =
+      'assets/themes/otter_bathhouse/dark/bath-toys.png';
+  static const bubbleOttersLight =
+      'assets/themes/otter_bathhouse/light/bubble-otters.png';
+  static const bubbleOttersDark =
+      'assets/themes/otter_bathhouse/dark/bubble-otters.png';
+  static const bottomBathhouseLight =
+      'assets/themes/otter_bathhouse/light/bottom-bathhouse.png';
+  static const bottomBathhouseDark =
+      'assets/themes/otter_bathhouse/dark/bottom-bathhouse.png';
+
+  static const rabbitFlowerStallLight =
+      'assets/themes/rabbit_flower_market/light/rabbit-flower-stall.png';
+  static const rabbitFlowerStallDark =
+      'assets/themes/rabbit_flower_market/dark/rabbit-flower-stall.png';
+  static const flowerMarketSuppliesLight =
+      'assets/themes/rabbit_flower_market/light/flower-market-supplies.png';
+  static const flowerMarketSuppliesDark =
+      'assets/themes/rabbit_flower_market/dark/flower-market-supplies.png';
+  static const rabbitsInFlowerBasketLight =
+      'assets/themes/rabbit_flower_market/light/rabbits-in-flower-basket.png';
+  static const rabbitsInFlowerBasketDark =
+      'assets/themes/rabbit_flower_market/dark/rabbits-in-flower-basket.png';
+  static const bottomFlowerMarketLight =
+      'assets/themes/rabbit_flower_market/light/bottom-flower-market.png';
+  static const bottomFlowerMarketDark =
+      'assets/themes/rabbit_flower_market/dark/bottom-flower-market.png';
+
+  static const bearPancakeCounterLight =
+      'assets/themes/bear_pancake_cafe/light/bear-pancake-counter.png';
+  static const bearPancakeCounterDark =
+      'assets/themes/bear_pancake_cafe/dark/bear-pancake-counter.png';
+  static const pancakeCafeSuppliesLight =
+      'assets/themes/bear_pancake_cafe/light/pancake-cafe-supplies.png';
+  static const pancakeCafeSuppliesDark =
+      'assets/themes/bear_pancake_cafe/dark/pancake-cafe-supplies.png';
+  static const bearsAndPancakeStackLight =
+      'assets/themes/bear_pancake_cafe/light/bears-and-pancake-stack.png';
+  static const bearsAndPancakeStackDark =
+      'assets/themes/bear_pancake_cafe/dark/bears-and-pancake-stack.png';
+  static const bottomPancakeCafeLight =
+      'assets/themes/bear_pancake_cafe/light/bottom-pancake-cafe.png';
+  static const bottomPancakeCafeDark =
+      'assets/themes/bear_pancake_cafe/dark/bottom-pancake-cafe.png';
+
   static const precacheDecorations = [
     petal90Light,
     petal180Light,
@@ -242,6 +265,22 @@ class AppSkinAssets {
     petal270Dark,
     hillsLight,
     hillsDark,
+    cloverDecorationLight,
+    cloverDecorationDark,
+    cloverBottomLight,
+    cloverBottomDark,
+    fluffyBearFaceLight,
+    fluffyBearFaceDark,
+    fluffyBearBottomLight,
+    fluffyBearBottomDark,
+    fluffyRabbitFaceLight,
+    fluffyRabbitFaceDark,
+    fluffyRabbitBottomLight,
+    fluffyRabbitBottomDark,
+    pinkHeartFaceLight,
+    pinkHeartFaceDark,
+    pinkHeartBottomLight,
+    pinkHeartBottomDark,
     sunLight,
     sunDark,
     duckLight,
@@ -258,20 +297,10 @@ class AppSkinAssets {
     snowCloudDark,
     snowGroundLight,
     snowGroundDark,
-    mapleLeafLight,
-    mapleLeafDark,
-    mushroomLight,
-    mushroomDark,
-    acornLight,
-    acornDark,
-    leafGroundLight,
-    leafGroundDark,
     squishyBearLight,
     squishyBearDark,
     bearPawLight,
     bearPawDark,
-    honeyJarLight,
-    honeyJarDark,
     softHillsLight,
     softHillsDark,
     strawberryLight,
@@ -282,14 +311,6 @@ class AppSkinAssets {
     strawDark,
     milkFoamLight,
     milkFoamDark,
-    onionVillagerLight,
-    onionVillagerDark,
-    sproutLight,
-    sproutDark,
-    cottageLight,
-    cottageDark,
-    villageGroundLight,
-    villageGroundDark,
     heartBearLight,
     heartBearDark,
     heartBalloonsLight,
@@ -312,22 +333,6 @@ class AppSkinAssets {
     stickerAmpDark,
     bandStageGroundLight,
     bandStageGroundDark,
-    hoodedCarLight,
-    hoodedCarDark,
-    shootingStarLight,
-    shootingStarDark,
-    brightStarLight,
-    brightStarDark,
-    nightRoadGroundLight,
-    nightRoadGroundDark,
-    memoryPianoLight,
-    memoryPianoDark,
-    neonReunionLight,
-    neonReunionDark,
-    unfinishedHeartLight,
-    unfinishedHeartDark,
-    pianoCityGroundLight,
-    pianoCityGroundDark,
     cloudHouseLight,
     cloudHouseDark,
     cloudSheepLight,
@@ -352,38 +357,68 @@ class AppSkinAssets {
     hamsterBreadBasketDark,
     hamsterBakeryGroundLight,
     hamsterBakeryGroundDark,
+    ottersInTubLight,
+    ottersInTubDark,
+    bathToysLight,
+    bathToysDark,
+    bubbleOttersLight,
+    bubbleOttersDark,
+    bottomBathhouseLight,
+    bottomBathhouseDark,
+    rabbitFlowerStallLight,
+    rabbitFlowerStallDark,
+    flowerMarketSuppliesLight,
+    flowerMarketSuppliesDark,
+    rabbitsInFlowerBasketLight,
+    rabbitsInFlowerBasketDark,
+    bottomFlowerMarketLight,
+    bottomFlowerMarketDark,
+    bearPancakeCounterLight,
+    bearPancakeCounterDark,
+    pancakeCafeSuppliesLight,
+    pancakeCafeSuppliesDark,
+    bearsAndPancakeStackLight,
+    bearsAndPancakeStackDark,
+    bottomPancakeCafeLight,
+    bottomPancakeCafeDark,
   ];
 
   static const blossomLightFill = Color(0xFFF8E8ED);
   static const blossomDarkFill = Color(0xFF1C1418);
+  static const cloverLightFill = Color(0xFFEAF6EC);
+  static const cloverDarkFill = Color(0xFF121A14);
+  static const fluffyBearLightFill = Color(0xFFEBF8FF);
+  static const fluffyBearDarkFill = Color(0xFF101820);
+  static const fluffyRabbitLightFill = Color(0xFFFFF2F6);
+  static const fluffyRabbitDarkFill = Color(0xFF1A1014);
+  static const pinkHeartLightFill = Color(0xFFFFF5F8);
+  static const pinkHeartDarkFill = Color(0xFF161014);
   static const summerLightFill = Color(0xFFEAF6FB);
   static const summerDarkFill = Color(0xFF101820);
   static const winterLightFill = Color(0xFFEEF5FB);
   static const winterDarkFill = Color(0xFF12141C);
-  static const autumnLightFill = Color(0xFFF6EDE4);
-  static const autumnDarkFill = Color(0xFF17120E);
   static const bearLightFill = Color(0xFFF6EEE6);
   static const bearDarkFill = Color(0xFF15110E);
   static const milkLightFill = Color(0xFFFCEEF1);
   static const milkDarkFill = Color(0xFF1A1215);
-  static const onionLightFill = Color(0xFFF1F4EA);
-  static const onionDarkFill = Color(0xFF131510);
   static const lovelyLightFill = Color(0xFFFDEEF2);
   static const lovelyDarkFill = Color(0xFF1A1216);
   static const rainyLightFill = Color(0xFFE6EEF3);
   static const rainyDarkFill = Color(0xFF12161C);
   static const concertLightFill = Color(0xFFF6F0F5);
   static const concertDarkFill = Color(0xFF161318);
-  static const boyhoodLightFill = Color(0xFFE7EEF6);
-  static const boyhoodDarkFill = Color(0xFF0B1018);
-  static const interludeLightFill = Color(0xFFF1EAF4);
-  static const interludeDarkFill = Color(0xFF141018);
   static const fluffyCloudLightFill = Color(0xFFEEF4FC);
   static const fluffyCloudDarkFill = Color(0xFF10141C);
   static const catVillageLightFill = Color(0xFFF7F0E8);
   static const catVillageDarkFill = Color(0xFF15110E);
   static const hamsterBakeryLightFill = Color(0xFFF8F0E4);
   static const hamsterBakeryDarkFill = Color(0xFF16120C);
+  static const otterBathhouseLightFill = Color(0xFFF8F0F2);
+  static const otterBathhouseDarkFill = Color(0xFF18282B);
+  static const rabbitFlowerMarketLightFill = Color(0xFFF7F1EC);
+  static const rabbitFlowerMarketDarkFill = Color(0xFF171410);
+  static const bearPancakeCafeLightFill = Color(0xFFF8F1E8);
+  static const bearPancakeCafeDarkFill = Color(0xFF17130E);
 
   static Color accentColor(AppSkin skin, bool dark, Color fallback) {
     switch (skin) {
@@ -391,34 +426,40 @@ class AppSkinAssets {
         return fallback;
       case AppSkin.blossom:
         return dark ? const Color(0xFFF0A3B8) : const Color(0xFFE56B8A);
+      case AppSkin.clover:
+        return dark ? const Color(0xFF7EB989) : const Color(0xFF48A65C);
+      case AppSkin.fluffyBear:
+        return dark ? const Color(0xFF8BB8D0) : const Color(0xFF6AA8C8);
+      case AppSkin.fluffyRabbit:
+        return dark ? const Color(0xFFE09BB0) : const Color(0xFFD47A96);
+      case AppSkin.pinkHeart:
+        return dark ? const Color(0xFFDC9EB5) : const Color(0xFFE86B88);
       case AppSkin.summerBeach:
         return dark ? const Color(0xFF5EC8E8) : const Color(0xFF3BAFD4);
-      case AppSkin.autumnForest:
-        return dark ? const Color(0xFFE0A06A) : const Color(0xFFD4844A);
       case AppSkin.snowyWinter:
         return dark ? const Color(0xFF8BB8E8) : const Color(0xFF6A9FD4);
       case AppSkin.squishyBear:
         return dark ? const Color(0xFFD4B08A) : const Color(0xFFC4956A);
       case AppSkin.strawberryMilk:
         return dark ? const Color(0xFFF4A0B8) : const Color(0xFFEE7A9A);
-      case AppSkin.onionVillage:
-        return dark ? const Color(0xFFA3C46A) : const Color(0xFF8AAE4E);
       case AppSkin.lovelyBear:
         return dark ? const Color(0xFFF090A8) : const Color(0xFFE86B88);
       case AppSkin.rainyDay:
         return dark ? const Color(0xFF8AA4B8) : const Color(0xFF6B8A9E);
       case AppSkin.concertDay:
         return dark ? const Color(0xFFC4A0E0) : const Color(0xFFB07AD0);
-      case AppSkin.boyhood:
-        return dark ? const Color(0xFF7EB0F0) : const Color(0xFF5B8ED4);
-      case AppSkin.interlude:
-        return dark ? const Color(0xFFC4A0E8) : const Color(0xFFB08AD4);
       case AppSkin.fluffyCloud:
         return dark ? const Color(0xFF8BB4E8) : const Color(0xFF6A9FD4);
       case AppSkin.catVillage:
         return dark ? const Color(0xFFE0A888) : const Color(0xFFD4896A);
       case AppSkin.hamsterBakery:
         return dark ? const Color(0xFFE0B888) : const Color(0xFFD4A06A);
+      case AppSkin.otterBathhouse:
+        return dark ? const Color(0xFFF0A8BC) : const Color(0xFFE07A96);
+      case AppSkin.rabbitFlowerMarket:
+        return dark ? const Color(0xFFE8A0B0) : const Color(0xFFD97A90);
+      case AppSkin.bearPancakeCafe:
+        return dark ? const Color(0xFF8EC4B0) : const Color(0xFF6AAD94);
     }
   }
 
@@ -428,34 +469,40 @@ class AppSkinAssets {
         return fallback;
       case AppSkin.blossom:
         return dark ? blossomDarkFill : blossomLightFill;
+      case AppSkin.clover:
+        return dark ? cloverDarkFill : cloverLightFill;
+      case AppSkin.fluffyBear:
+        return dark ? fluffyBearDarkFill : fluffyBearLightFill;
+      case AppSkin.fluffyRabbit:
+        return dark ? fluffyRabbitDarkFill : fluffyRabbitLightFill;
+      case AppSkin.pinkHeart:
+        return dark ? pinkHeartDarkFill : pinkHeartLightFill;
       case AppSkin.summerBeach:
         return dark ? summerDarkFill : summerLightFill;
-      case AppSkin.autumnForest:
-        return dark ? autumnDarkFill : autumnLightFill;
       case AppSkin.snowyWinter:
         return dark ? winterDarkFill : winterLightFill;
       case AppSkin.squishyBear:
         return dark ? bearDarkFill : bearLightFill;
       case AppSkin.strawberryMilk:
         return dark ? milkDarkFill : milkLightFill;
-      case AppSkin.onionVillage:
-        return dark ? onionDarkFill : onionLightFill;
       case AppSkin.lovelyBear:
         return dark ? lovelyDarkFill : lovelyLightFill;
       case AppSkin.rainyDay:
         return dark ? rainyDarkFill : rainyLightFill;
       case AppSkin.concertDay:
         return dark ? concertDarkFill : concertLightFill;
-      case AppSkin.boyhood:
-        return dark ? boyhoodDarkFill : boyhoodLightFill;
-      case AppSkin.interlude:
-        return dark ? interludeDarkFill : interludeLightFill;
       case AppSkin.fluffyCloud:
         return dark ? fluffyCloudDarkFill : fluffyCloudLightFill;
       case AppSkin.catVillage:
         return dark ? catVillageDarkFill : catVillageLightFill;
       case AppSkin.hamsterBakery:
         return dark ? hamsterBakeryDarkFill : hamsterBakeryLightFill;
+      case AppSkin.otterBathhouse:
+        return dark ? otterBathhouseDarkFill : otterBathhouseLightFill;
+      case AppSkin.rabbitFlowerMarket:
+        return dark ? rabbitFlowerMarketDarkFill : rabbitFlowerMarketLightFill;
+      case AppSkin.bearPancakeCafe:
+        return dark ? bearPancakeCafeDarkFill : bearPancakeCafeLightFill;
     }
   }
 
@@ -463,20 +510,23 @@ class AppSkinAssets {
     switch (skin) {
       case AppSkin.classic:
       case AppSkin.blossom:
+      case AppSkin.clover:
+      case AppSkin.fluffyBear:
+      case AppSkin.fluffyRabbit:
+      case AppSkin.pinkHeart:
       case AppSkin.summerBeach:
-      case AppSkin.autumnForest:
       case AppSkin.snowyWinter:
       case AppSkin.squishyBear:
       case AppSkin.strawberryMilk:
-      case AppSkin.onionVillage:
       case AppSkin.lovelyBear:
       case AppSkin.rainyDay:
       case AppSkin.concertDay:
-      case AppSkin.boyhood:
-      case AppSkin.interlude:
       case AppSkin.fluffyCloud:
       case AppSkin.catVillage:
       case AppSkin.hamsterBakery:
+      case AppSkin.otterBathhouse:
+      case AppSkin.rabbitFlowerMarket:
+      case AppSkin.bearPancakeCafe:
         return const [
           (filled: AppIcons.home, outlined: AppIcons.homeOutlined),
           (filled: AppIcons.calendar, outlined: AppIcons.calendarOutlined),
@@ -492,6 +542,7 @@ class AppSkinBackground extends StatelessWidget {
     required this.child,
     this.color,
     this.skin,
+    this.customTheme,
     this.liftForNav = true,
     this.scaleByWidth = false,
     this.animate = false,
@@ -503,6 +554,7 @@ class AppSkinBackground extends StatelessWidget {
   final Widget child;
   final Color? color;
   final AppSkin? skin;
+  final UserTheme? customTheme;
   final bool liftForNav;
   final bool scaleByWidth;
   final bool animate;
@@ -512,37 +564,91 @@ class AppSkinBackground extends StatelessWidget {
   Widget build(BuildContext context) {
     final preference = AppScope.maybeOf(context)?.themePreference;
     if (preference == null) {
-      return _buildStack(context, skin ?? AppSkin.classic);
+      return _buildStack(
+        context,
+        skin ?? AppSkin.classic,
+        custom: customTheme,
+      );
     }
     return ListenableBuilder(
       listenable: preference,
       builder: (context, _) {
-        return _buildStack(context, skin ?? preference.skin);
+        return _buildStack(
+          context,
+          skin ?? preference.skin,
+          custom: customTheme ?? (skin == null ? preference.customTheme : null),
+        );
       },
     );
   }
 
-  Widget _buildStack(BuildContext context, AppSkin skin) {
+  Widget _buildStack(
+    BuildContext context,
+    AppSkin skin, {
+    UserTheme? custom,
+  }) {
     final colors = AppColors.of(context);
     final dark = Theme.of(context).brightness == Brightness.dark;
-    final fill = AppSkinAssets.fillColor(
-      skin,
-      dark,
-      color ?? colors.background,
-    );
-    final decorations = switch (skin) {
+    final fill = custom == null
+        ? AppSkinAssets.fillColor(
+            skin,
+            dark,
+            color ?? colors.background,
+          )
+        : custom.fillColorFor(dark);
+    final Widget? decorations = custom == null
+        ? switch (skin) {
       AppSkin.classic => null,
       AppSkin.blossom => _BlossomDecorations(
           liftForNav: liftForNav,
           scaleByWidth: scaleByWidth,
           simple: simple,
         ),
-      AppSkin.summerBeach => _SummerBeachDecorations(
+      AppSkin.clover => _CloverDecorations(
           liftForNav: liftForNav,
           scaleByWidth: scaleByWidth,
           simple: simple,
         ),
-      AppSkin.autumnForest => _AutumnForestDecorations(
+      AppSkin.fluffyBear => _FluffyMascotDecorations(
+          liftForNav: liftForNav,
+          scaleByWidth: scaleByWidth,
+          simple: simple,
+          faceLight: AppSkinAssets.fluffyBearFaceLight,
+          faceDark: AppSkinAssets.fluffyBearFaceDark,
+          bottomLight: AppSkinAssets.fluffyBearBottomLight,
+          bottomDark: AppSkinAssets.fluffyBearBottomDark,
+          faceTintLight: const Color(0xFFB7D4E4),
+          faceTintDark: const Color(0xFF5A7388),
+          hillTintLight: const Color(0xFFDAECF6),
+          hillTintDark: const Color(0xFF1C2A36),
+        ),
+      AppSkin.fluffyRabbit => _FluffyMascotDecorations(
+          liftForNav: liftForNav,
+          scaleByWidth: scaleByWidth,
+          simple: simple,
+          faceLight: AppSkinAssets.fluffyRabbitFaceLight,
+          faceDark: AppSkinAssets.fluffyRabbitFaceDark,
+          bottomLight: AppSkinAssets.fluffyRabbitBottomLight,
+          bottomDark: AppSkinAssets.fluffyRabbitBottomDark,
+          faceTintLight: const Color(0xFFE8B8C8),
+          faceTintDark: const Color(0xFF885A6E),
+          hillTintLight: const Color(0xFFFADDE6),
+          hillTintDark: const Color(0xFF36202A),
+        ),
+      AppSkin.pinkHeart => _FluffyMascotDecorations(
+          liftForNav: liftForNav,
+          scaleByWidth: scaleByWidth,
+          simple: simple,
+          faceLight: AppSkinAssets.pinkHeartFaceLight,
+          faceDark: AppSkinAssets.pinkHeartFaceDark,
+          bottomLight: AppSkinAssets.pinkHeartBottomLight,
+          bottomDark: AppSkinAssets.pinkHeartBottomDark,
+          faceTintLight: const Color(0xFFF0C4D0),
+          faceTintDark: const Color(0xFFDC9EB5),
+          hillTintLight: const Color(0xFFFCE7ED),
+          hillTintDark: const Color(0xFF5D3A49),
+        ),
+      AppSkin.summerBeach => _SummerBeachDecorations(
           liftForNav: liftForNav,
           scaleByWidth: scaleByWidth,
           simple: simple,
@@ -562,11 +668,6 @@ class AppSkinBackground extends StatelessWidget {
           scaleByWidth: scaleByWidth,
           simple: simple,
         ),
-      AppSkin.onionVillage => _OnionVillageDecorations(
-          liftForNav: liftForNav,
-          scaleByWidth: scaleByWidth,
-          simple: simple,
-        ),
       AppSkin.lovelyBear => _LovelyBearDecorations(
           liftForNav: liftForNav,
           scaleByWidth: scaleByWidth,
@@ -578,16 +679,6 @@ class AppSkinBackground extends StatelessWidget {
           simple: simple,
         ),
       AppSkin.concertDay => _ConcertDayDecorations(
-          liftForNav: liftForNav,
-          scaleByWidth: scaleByWidth,
-          simple: simple,
-        ),
-      AppSkin.boyhood => _BoyhoodDecorations(
-          liftForNav: liftForNav,
-          scaleByWidth: scaleByWidth,
-          simple: simple,
-        ),
-      AppSkin.interlude => _InterludeDecorations(
           liftForNav: liftForNav,
           scaleByWidth: scaleByWidth,
           simple: simple,
@@ -607,7 +698,35 @@ class AppSkinBackground extends StatelessWidget {
           scaleByWidth: scaleByWidth,
           simple: simple,
         ),
-    };
+      AppSkin.otterBathhouse => _OtterBathhouseDecorations(
+          liftForNav: liftForNav,
+          scaleByWidth: scaleByWidth,
+          simple: simple,
+        ),
+      AppSkin.rabbitFlowerMarket => _RabbitFlowerMarketDecorations(
+          liftForNav: liftForNav,
+          scaleByWidth: scaleByWidth,
+          simple: simple,
+        ),
+      AppSkin.bearPancakeCafe => _BearPancakeCafeDecorations(
+          liftForNav: liftForNav,
+          scaleByWidth: scaleByWidth,
+          simple: simple,
+        ),
+    }
+        : custom.kind == UserThemeKind.photo
+            ? _CustomPhotoDecorations(
+                path: custom.photoPath,
+                dark: dark,
+                wash: custom.photoWash,
+              )
+            : _CustomPatternDecorations(
+                decorationPath: custom.decorationPath,
+                bottomPath: custom.bottomPath,
+                liftForNav: liftForNav,
+                scaleByWidth: scaleByWidth,
+                simple: simple,
+              );
     return Stack(
       fit: StackFit.expand,
       children: [
@@ -621,11 +740,15 @@ class AppSkinBackground extends StatelessWidget {
           ColoredBox(color: fill),
         if (animate)
           AnimatedSwitcher(
-            duration: transitionDuration,
-            switchInCurve: Curves.easeInOut,
-            switchOutCurve: Curves.easeInOut,
+            duration: const Duration(milliseconds: 280),
+            switchInCurve: Curves.easeOutCubic,
+            layoutBuilder: (currentChild, previousChildren) {
+              return currentChild ?? const SizedBox.expand();
+            },
             child: KeyedSubtree(
-              key: ValueKey(skin),
+              key: ValueKey(
+                '${custom?.id ?? skin.name}-${custom?.kind.name ?? ''}',
+              ),
               child: decorations ?? const SizedBox.expand(),
             ),
           )
@@ -633,6 +756,145 @@ class AppSkinBackground extends StatelessWidget {
           decorations,
         child,
       ],
+    );
+  }
+}
+
+class _CustomPhotoDecorations extends StatelessWidget {
+  const _CustomPhotoDecorations({
+    required this.path,
+    required this.dark,
+    required this.wash,
+  });
+
+  final String path;
+  final bool dark;
+  final double wash;
+
+  @override
+  Widget build(BuildContext context) {
+    final file = File(path);
+    if (path.isEmpty || !file.existsSync()) return const SizedBox.expand();
+    final amount = wash.clamp(0.0, 1.0);
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        Image.file(
+          file,
+          fit: BoxFit.cover,
+          alignment: Alignment.center,
+          filterQuality: FilterQuality.medium,
+          errorBuilder: (_, _, _) => const SizedBox.expand(),
+        ),
+        if (amount > 0)
+          ColoredBox(
+            color: (dark ? Colors.black : Colors.white).withValues(alpha: amount),
+          ),
+      ],
+    );
+  }
+}
+
+class _CustomPatternDecorations extends StatelessWidget {
+  const _CustomPatternDecorations({
+    required this.decorationPath,
+    required this.bottomPath,
+    required this.liftForNav,
+    this.scaleByWidth = false,
+    this.simple = false,
+  });
+
+  final String decorationPath;
+  final String bottomPath;
+  final bool liftForNav;
+  final bool scaleByWidth;
+  final bool simple;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        final height = constraints.maxHeight;
+        final span = scaleByWidth ? width : constraints.biggest.shortestSide;
+        final paddingBottom = MediaQuery.paddingOf(context).bottom;
+        final motifBottom = liftForNav ? 66 + paddingBottom : height * 0.04;
+        final hillsHeight = _SkinGround.heightOf(
+          width,
+          height,
+          assetRatio: 600 / 2000,
+          maxFraction: 0.32,
+        );
+
+        Widget motif({double angle = 0}) {
+          final file = File(decorationPath);
+          if (decorationPath.isEmpty || !file.existsSync()) {
+            return const SizedBox.shrink();
+          }
+          Widget child = Image.file(
+            file,
+            fit: BoxFit.contain,
+            filterQuality: FilterQuality.medium,
+            errorBuilder: (_, _, _) => const SizedBox.shrink(),
+          );
+          if (angle != 0) {
+            child = Transform.rotate(angle: angle, child: child);
+          }
+          return child;
+        }
+
+        return IgnorePointer(
+          child: Stack(
+            children: [
+              if (bottomPath.isNotEmpty)
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  height: hillsHeight,
+                  child: _SkinGround.coverFile(
+                    bottomPath,
+                    width: width,
+                    bandHeight: hillsHeight,
+                    assetRatio: 600 / 2000,
+                  ),
+                ),
+              if (decorationPath.isNotEmpty) ...[
+                Positioned(
+                  top: span * 0.02,
+                  right: span * 0.02,
+                  width: span * (simple ? 0.16 : 0.24),
+                  child: motif(angle: math.pi / 8),
+                ),
+                Positioned(
+                  left: span * 0.02,
+                  top: span * (simple ? 0.06 : 0.16),
+                  width: span * (simple ? 0.13 : 0.16),
+                  child: motif(angle: -math.pi / 7),
+                ),
+                Positioned(
+                  left: span * 0.06,
+                  bottom: motifBottom,
+                  width: span * (simple ? 0.14 : 0.2),
+                  child: motif(angle: math.pi / 5),
+                ),
+                Positioned(
+                  right: span * 0.04,
+                  bottom: motifBottom + span * 0.08,
+                  width: span * (simple ? 0.13 : 0.16),
+                  child: motif(angle: -math.pi / 10),
+                ),
+                Positioned(
+                  top: height * (simple ? 0.32 : 0.38),
+                  right: span * (simple ? 0.1 : 0.08),
+                  width: span * (simple ? 0.12 : 0.15),
+                  child: motif(angle: math.pi / 9),
+                ),
+              ],
+            ],
+          ),
+        );
+      },
     );
   }
 }
@@ -655,7 +917,44 @@ abstract final class _SkinGround {
     required double bandHeight,
     double assetRatio = 887 / 1774,
   }) {
-    final natural = width * assetRatio;
+    return _fade(
+      bandHeight: bandHeight,
+      natural: width * assetRatio,
+      child: Image.asset(
+        asset,
+        fit: BoxFit.cover,
+        alignment: Alignment.bottomCenter,
+        filterQuality: FilterQuality.medium,
+      ),
+    );
+  }
+
+  static Widget coverFile(
+    String path, {
+    required double width,
+    required double bandHeight,
+    double assetRatio = 887 / 1774,
+  }) {
+    final file = File(path);
+    if (!file.existsSync()) return const SizedBox.expand();
+    return _fade(
+      bandHeight: bandHeight,
+      natural: width * assetRatio,
+      child: Image.file(
+        file,
+        fit: BoxFit.cover,
+        alignment: Alignment.bottomCenter,
+        filterQuality: FilterQuality.medium,
+        errorBuilder: (_, _, _) => const SizedBox.expand(),
+      ),
+    );
+  }
+
+  static Widget _fade({
+    required double bandHeight,
+    required double natural,
+    required Widget child,
+  }) {
     final cropped =
         natural <= 0 ? 0.0 : (1 - bandHeight / natural).clamp(0.0, 1.0);
     final fadeEnd = (0.12 + cropped * 0.78).clamp(0.12, 0.55);
@@ -669,12 +968,7 @@ abstract final class _SkinGround {
         ).createShader(rect);
       },
       blendMode: BlendMode.dstIn,
-      child: Image.asset(
-        asset,
-        fit: BoxFit.cover,
-        alignment: Alignment.bottomCenter,
-        filterQuality: FilterQuality.medium,
-      ),
+      child: child,
     );
   }
 }
@@ -838,6 +1132,291 @@ class _BlossomDecorations extends StatelessWidget {
                   child: petal(petal90),
                 ),
               ],
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _CloverDecorations extends StatelessWidget {
+  const _CloverDecorations({
+    required this.liftForNav,
+    this.scaleByWidth = false,
+    this.simple = false,
+  });
+
+  final bool liftForNav;
+  final bool scaleByWidth;
+  final bool simple;
+
+  @override
+  Widget build(BuildContext context) {
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        final height = constraints.maxHeight;
+        final span = scaleByWidth
+            ? width
+            : constraints.biggest.shortestSide;
+        final paddingBottom = MediaQuery.paddingOf(context).bottom;
+        final cloverBottomLift = liftForNav ? 66 + paddingBottom : height * 0.04;
+        final safe = _LogoSafe(
+          screenWidth: width,
+          paddingTop: MediaQuery.paddingOf(context).top,
+          enabled: !simple,
+        );
+        final decoration = dark
+            ? AppSkinAssets.cloverDecorationDark
+            : AppSkinAssets.cloverDecorationLight;
+        final hills = dark
+            ? AppSkinAssets.cloverBottomDark
+            : AppSkinAssets.cloverBottomLight;
+        final hillsHeight = _SkinGround.heightOf(
+          width,
+          height,
+          assetRatio: 600 / 2000,
+          maxFraction: 0.32,
+        );
+
+        Widget clover({double angle = 0}) {
+          Widget child = Image.asset(
+            decoration,
+            fit: BoxFit.contain,
+            filterQuality: FilterQuality.medium,
+          );
+          if (angle != 0) {
+            child = Transform.rotate(angle: angle, child: child);
+          }
+          return child;
+        }
+
+        return IgnorePointer(
+          child: Stack(
+            children: [
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                height: hillsHeight,
+                child: _SkinGround.cover(
+                  hills,
+                  width: width,
+                  bandHeight: hillsHeight,
+                  assetRatio: 600 / 2000,
+                ),
+              ),
+              Positioned(
+                top: span * 0.02,
+                right: span * 0.02,
+                width: span * (simple ? 0.18 : 0.26),
+                child: clover(angle: math.pi / 8),
+              ),
+              Positioned(
+                left: span * 0.02,
+                top: span * (simple ? 0.04 : 0.16),
+                width: span * (simple ? 0.14 : 0.2),
+                child: clover(angle: -math.pi / 7),
+              ),
+              Positioned(
+                left: span * 0.06,
+                bottom: cloverBottomLift,
+                width: span * (simple ? 0.16 : 0.22),
+                child: clover(angle: math.pi / 5),
+              ),
+              Positioned(
+                right: span * 0.04,
+                bottom: cloverBottomLift + span * 0.08,
+                width: span * (simple ? 0.14 : 0.18),
+                child: clover(angle: -math.pi / 10),
+              ),
+              if (!simple) ...[
+                safe.topLeft(
+                  left: span * 0.22,
+                  top: span * 0.04,
+                  width: span * 0.14,
+                  child: clover(angle: math.pi / 6),
+                ),
+                Positioned(
+                  top: height * 0.28,
+                  right: span * 0.08,
+                  width: span * 0.16,
+                  child: clover(angle: -math.pi / 12),
+                ),
+                safe.topLeft(
+                  left: width * 0.5 - span * 0.1,
+                  top: height * 0.38,
+                  width: span * 0.2,
+                  child: clover(),
+                ),
+                safe.topLeft(
+                  left: width * 0.58,
+                  top: height * 0.52,
+                  width: span * 0.14,
+                  child: clover(angle: math.pi / 9),
+                ),
+              ],
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _FluffyMascotDecorations extends StatelessWidget {
+  const _FluffyMascotDecorations({
+    required this.liftForNav,
+    required this.faceLight,
+    required this.faceDark,
+    required this.bottomLight,
+    required this.bottomDark,
+    required this.faceTintLight,
+    required this.faceTintDark,
+    required this.hillTintLight,
+    required this.hillTintDark,
+    this.scaleByWidth = false,
+    this.simple = false,
+  });
+
+  final bool liftForNav;
+  final bool scaleByWidth;
+  final bool simple;
+  final String faceLight;
+  final String faceDark;
+  final String bottomLight;
+  final String bottomDark;
+  final Color faceTintLight;
+  final Color faceTintDark;
+  final Color hillTintLight;
+  final Color hillTintDark;
+
+  @override
+  Widget build(BuildContext context) {
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        final height = constraints.maxHeight;
+        final span = scaleByWidth
+            ? width
+            : constraints.biggest.shortestSide;
+        final paddingBottom = MediaQuery.paddingOf(context).bottom;
+        final faceBottomLift = liftForNav ? 66 + paddingBottom : height * 0.04;
+        final safe = _LogoSafe(
+          screenWidth: width,
+          paddingTop: MediaQuery.paddingOf(context).top,
+          enabled: !simple,
+        );
+        final decoration = dark ? faceDark : faceLight;
+        final hills = dark ? bottomDark : bottomLight;
+        final faceTint = dark ? faceTintDark : faceTintLight;
+        final hillTint = dark ? hillTintDark : hillTintLight;
+        final hillsHeight = _SkinGround.heightOf(
+          width,
+          height,
+          assetRatio: 600 / 2000,
+          maxFraction: 0.32,
+        );
+
+        Widget tinted(String asset, Color color, {BoxFit fit = BoxFit.contain}) {
+          return ColorFiltered(
+            colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
+            child: Image.asset(
+              asset,
+              fit: fit,
+              filterQuality: FilterQuality.medium,
+            ),
+          );
+        }
+
+        Widget face({double angle = 0}) {
+          Widget child = Opacity(
+            opacity: dark ? 0.55 : 0.42,
+            child: tinted(decoration, faceTint),
+          );
+          if (angle != 0) {
+            child = Transform.rotate(angle: angle, child: child);
+          }
+          return child;
+        }
+
+        final compact = scaleByWidth || simple;
+        final faces = compact
+            ? <Widget>[
+                Positioned(
+                  top: height * 0.04,
+                  right: width * 0.03,
+                  width: math.min(width, height) * 0.22,
+                  child: face(angle: 0.12),
+                ),
+                Positioned(
+                  left: width * 0.04,
+                  bottom: height * 0.08,
+                  width: math.min(width, height) * 0.2,
+                  child: face(angle: -0.1),
+                ),
+                Positioned(
+                  right: width * 0.08,
+                  bottom: height * 0.22,
+                  width: math.min(width, height) * 0.16,
+                  child: face(angle: 0.06),
+                ),
+              ]
+            : <Widget>[
+                Positioned(
+                  top: span * 0.02,
+                  right: span * 0.02,
+                  width: span * 0.36,
+                  child: face(angle: 0.12),
+                ),
+                safe.topLeft(
+                  left: span * 0.02,
+                  top: span * 0.14,
+                  width: span * 0.3,
+                  child: face(angle: -0.14),
+                ),
+                Positioned(
+                  left: span * 0.04,
+                  bottom: faceBottomLift,
+                  width: span * 0.32,
+                  child: face(angle: 0.08),
+                ),
+                Positioned(
+                  right: span * 0.03,
+                  bottom: faceBottomLift + span * 0.06,
+                  width: span * 0.28,
+                  child: face(angle: -0.1),
+                ),
+                Positioned(
+                  top: height * 0.32,
+                  right: span * 0.06,
+                  width: span * 0.3,
+                  child: face(angle: 0.06),
+                ),
+              ];
+
+        return IgnorePointer(
+          child: Stack(
+            children: [
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                height: hillsHeight,
+                child: ColorFiltered(
+                  colorFilter: ColorFilter.mode(hillTint, BlendMode.srcIn),
+                  child: _SkinGround.cover(
+                    hills,
+                    width: width,
+                    bandHeight: hillsHeight,
+                    assetRatio: 600 / 2000,
+                  ),
+                ),
+              ),
+              ...faces,
             ],
           ),
         );
@@ -1027,12 +1606,6 @@ class _SnowyWinterDecorations extends StatelessWidget {
                   child: sticker(flake),
                 ),
                 safe.topLeft(
-                  left: span * 0.06,
-                  top: height * 0.52,
-                  width: span * 0.11,
-                  child: sticker(flake),
-                ),
-                safe.topLeft(
                   left: span * 0.02,
                   top: span * 0.02,
                   width: span * 0.3,
@@ -1044,123 +1617,6 @@ class _SnowyWinterDecorations extends StatelessWidget {
                 bottom: groundBottom,
                 width: span * 0.28,
                 child: sticker(snowman),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _AutumnForestDecorations extends StatelessWidget {
-  const _AutumnForestDecorations({
-    required this.liftForNav,
-    this.scaleByWidth = false,
-    this.simple = false,
-  });
-
-  final bool liftForNav;
-  final bool scaleByWidth;
-  final bool simple;
-
-  @override
-  Widget build(BuildContext context) {
-    final dark = Theme.of(context).brightness == Brightness.dark;
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final width = constraints.maxWidth;
-        final height = constraints.maxHeight;
-        final span = scaleByWidth
-            ? width
-            : constraints.biggest.shortestSide;
-        final paddingBottom = MediaQuery.paddingOf(context).bottom;
-        final groundBottom = liftForNav ? 58 + paddingBottom : height * 0.02;
-        final safe = _LogoSafe(
-          screenWidth: width,
-          paddingTop: MediaQuery.paddingOf(context).top,
-          enabled: !simple,
-        );
-        final leaf =
-            dark ? AppSkinAssets.mapleLeafDark : AppSkinAssets.mapleLeafLight;
-        final mushroom =
-            dark ? AppSkinAssets.mushroomDark : AppSkinAssets.mushroomLight;
-        final acorn =
-            dark ? AppSkinAssets.acornDark : AppSkinAssets.acornLight;
-        final ground = dark
-            ? AppSkinAssets.leafGroundDark
-            : AppSkinAssets.leafGroundLight;
-        final groundHeight = _SkinGround.heightOf(
-          width,
-          height,
-          maxFraction: 0.32,
-        );
-
-        Widget sticker(String asset) {
-          return Image.asset(
-            asset,
-            fit: BoxFit.contain,
-            filterQuality: FilterQuality.medium,
-          );
-        }
-
-        return IgnorePointer(
-          child: Stack(
-            children: [
-              Positioned(
-                left: 0,
-                right: 0,
-                bottom: 0,
-                height: groundHeight,
-                child: _SkinGround.cover(
-                  ground,
-                  width: width,
-                  bandHeight: groundHeight,
-                ),
-              ),
-              if (!simple) ...[
-                Positioned(
-                  top: span * 0.02,
-                  right: span * 0.03,
-                  width: span * 0.18,
-                  child: sticker(leaf),
-                ),
-                safe.topLeft(
-                  left: span * 0.06,
-                  top: span * 0.12,
-                  width: span * 0.14,
-                  child: sticker(leaf),
-                ),
-                Positioned(
-                  top: height * 0.28,
-                  right: span * 0.16,
-                  width: span * 0.15,
-                  child: sticker(leaf),
-                ),
-                safe.topLeft(
-                  left: width * 0.4,
-                  top: height * 0.4,
-                  width: span * 0.17,
-                  child: sticker(leaf),
-                ),
-                safe.topLeft(
-                  left: span * 0.08,
-                  top: height * 0.5,
-                  width: span * 0.12,
-                  child: sticker(leaf),
-                ),
-                Positioned(
-                  right: span * 0.05,
-                  bottom: groundBottom + span * 0.02,
-                  width: span * 0.22,
-                  child: sticker(acorn),
-                ),
-              ],
-              Positioned(
-                left: span * 0.04,
-                bottom: groundBottom,
-                width: span * 0.24,
-                child: sticker(mushroom),
               ),
             ],
           ),
@@ -1203,8 +1659,6 @@ class _SquishyBearDecorations extends StatelessWidget {
             : AppSkinAssets.squishyBearLight;
         final paw =
             dark ? AppSkinAssets.bearPawDark : AppSkinAssets.bearPawLight;
-        final honey =
-            dark ? AppSkinAssets.honeyJarDark : AppSkinAssets.honeyJarLight;
         final hills = dark
             ? AppSkinAssets.softHillsDark
             : AppSkinAssets.softHillsLight;
@@ -1260,12 +1714,6 @@ class _SquishyBearDecorations extends StatelessWidget {
                   right: span * 0.2,
                   width: span * 0.12,
                   child: sticker(paw),
-                ),
-                Positioned(
-                  left: span * 0.05,
-                  bottom: groundBottom + span * 0.04,
-                  width: span * 0.2,
-                  child: sticker(honey),
                 ),
               ],
               Positioned(
@@ -1386,106 +1834,6 @@ class _StrawberryMilkDecorations extends StatelessWidget {
                 bottom: groundBottom,
                 width: span * 0.28,
                 child: sticker(carton),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _OnionVillageDecorations extends StatelessWidget {
-  const _OnionVillageDecorations({
-    required this.liftForNav,
-    this.scaleByWidth = false,
-    this.simple = false,
-  });
-
-  final bool liftForNav;
-  final bool scaleByWidth;
-  final bool simple;
-
-  @override
-  Widget build(BuildContext context) {
-    final dark = Theme.of(context).brightness == Brightness.dark;
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final width = constraints.maxWidth;
-        final height = constraints.maxHeight;
-        final span = scaleByWidth
-            ? width
-            : constraints.biggest.shortestSide;
-        final paddingBottom = MediaQuery.paddingOf(context).bottom;
-        final groundBottom = liftForNav ? 58 + paddingBottom : height * 0.02;
-        final safe = _LogoSafe(
-          screenWidth: width,
-          paddingTop: MediaQuery.paddingOf(context).top,
-          enabled: !simple,
-        );
-        final villager = dark
-            ? AppSkinAssets.onionVillagerDark
-            : AppSkinAssets.onionVillagerLight;
-        final sprout =
-            dark ? AppSkinAssets.sproutDark : AppSkinAssets.sproutLight;
-        final ground = dark
-            ? AppSkinAssets.villageGroundDark
-            : AppSkinAssets.villageGroundLight;
-        final groundHeight = _SkinGround.heightOf(width, height);
-
-        Widget sticker(String asset) {
-          return Image.asset(
-            asset,
-            fit: BoxFit.contain,
-            filterQuality: FilterQuality.medium,
-          );
-        }
-
-        return IgnorePointer(
-          child: Stack(
-            children: [
-              Positioned(
-                left: 0,
-                right: 0,
-                bottom: 0,
-                height: groundHeight,
-                child: _SkinGround.cover(
-                  ground,
-                  width: width,
-                  bandHeight: groundHeight,
-                ),
-              ),
-              if (!simple) ...[
-                Positioned(
-                  top: span * 0.03,
-                  right: span * 0.05,
-                  width: span * 0.14,
-                  child: sticker(sprout),
-                ),
-                safe.topLeft(
-                  left: span * 0.08,
-                  top: span * 0.16,
-                  width: span * 0.12,
-                  child: sticker(sprout),
-                ),
-                safe.topLeft(
-                  left: width * 0.46,
-                  top: height * 0.34,
-                  width: span * 0.13,
-                  child: sticker(sprout),
-                ),
-                safe.topLeft(
-                  left: span * 0.12,
-                  top: height * 0.48,
-                  width: span * 0.11,
-                  child: sticker(sprout),
-                ),
-              ],
-              Positioned(
-                right: span * 0.03,
-                bottom: groundBottom,
-                width: span * 0.32,
-                child: sticker(villager),
               ),
             ],
           ),
@@ -1721,174 +2069,6 @@ class _ConcertDayDecorations extends StatelessWidget {
                 width: size,
                 child: Image.asset(
                   guitarist,
-                  fit: BoxFit.contain,
-                  filterQuality: FilterQuality.medium,
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _BoyhoodDecorations extends StatelessWidget {
-  const _BoyhoodDecorations({
-    required this.liftForNav,
-    this.scaleByWidth = false,
-    this.simple = false,
-  });
-
-  final bool liftForNav;
-  final bool scaleByWidth;
-  final bool simple;
-
-  @override
-  Widget build(BuildContext context) {
-    final dark = Theme.of(context).brightness == Brightness.dark;
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final width = constraints.maxWidth;
-        final height = constraints.maxHeight;
-        final span = scaleByWidth
-            ? width
-            : constraints.biggest.shortestSide;
-        final paddingBottom = MediaQuery.paddingOf(context).bottom;
-        final groundBottom = liftForNav ? 58 + paddingBottom : height * 0.02;
-        final safe = _LogoSafe(
-          screenWidth: width,
-          paddingTop: MediaQuery.paddingOf(context).top,
-          enabled: !simple,
-        );
-        final car = dark
-            ? AppSkinAssets.hoodedCarDark
-            : AppSkinAssets.hoodedCarLight;
-        final shooting = dark
-            ? AppSkinAssets.shootingStarDark
-            : AppSkinAssets.shootingStarLight;
-        final star = dark
-            ? AppSkinAssets.brightStarDark
-            : AppSkinAssets.brightStarLight;
-        final ground = dark
-            ? AppSkinAssets.nightRoadGroundDark
-            : AppSkinAssets.nightRoadGroundLight;
-        final groundHeight = _SkinGround.heightOf(width, height);
-
-        Widget sticker(String asset) {
-          return Image.asset(
-            asset,
-            fit: BoxFit.contain,
-            filterQuality: FilterQuality.medium,
-          );
-        }
-
-        return IgnorePointer(
-          child: Stack(
-            children: [
-              Positioned(
-                left: 0,
-                right: 0,
-                bottom: 0,
-                height: groundHeight,
-                child: _SkinGround.cover(
-                  ground,
-                  width: width,
-                  bandHeight: groundHeight,
-                ),
-              ),
-              if (!simple) ...[
-                safe.topLeft(
-                  left: span * 0.02,
-                  top: span * 0.02,
-                  width: span * 0.26,
-                  child: sticker(shooting),
-                ),
-                Positioned(
-                  top: span * 0.03,
-                  right: span * 0.04,
-                  width: span * 0.16,
-                  child: sticker(star),
-                ),
-                Positioned(
-                  top: height * 0.22,
-                  right: span * 0.18,
-                  width: span * 0.12,
-                  child: sticker(star),
-                ),
-                safe.topLeft(
-                  left: width * 0.42,
-                  top: height * 0.12,
-                  width: span * 0.14,
-                  child: sticker(star),
-                ),
-              ],
-              Positioned(
-                right: span * 0.02,
-                bottom: groundBottom,
-                width: span * 0.38,
-                child: sticker(car),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _InterludeDecorations extends StatelessWidget {
-  const _InterludeDecorations({
-    required this.liftForNav,
-    this.scaleByWidth = false,
-    this.simple = false,
-  });
-
-  final bool liftForNav;
-  final bool scaleByWidth;
-  final bool simple;
-
-  @override
-  Widget build(BuildContext context) {
-    final dark = Theme.of(context).brightness == Brightness.dark;
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final width = constraints.maxWidth;
-        final height = constraints.maxHeight;
-        final span = scaleByWidth
-            ? width
-            : constraints.biggest.shortestSide;
-        final paddingBottom = MediaQuery.paddingOf(context).bottom;
-        final groundBottom = liftForNav ? 58 + paddingBottom : height * 0.02;
-        final size = (span * 0.3).clamp(0.0, height * 0.34);
-        final reunion = dark
-            ? AppSkinAssets.neonReunionDark
-            : AppSkinAssets.neonReunionLight;
-        final ground = dark
-            ? AppSkinAssets.pianoCityGroundDark
-            : AppSkinAssets.pianoCityGroundLight;
-        final groundHeight = _SkinGround.heightOf(width, height);
-
-        return IgnorePointer(
-          child: Stack(
-            children: [
-              Positioned(
-                left: 0,
-                right: 0,
-                bottom: 0,
-                height: groundHeight,
-                child: _SkinGround.cover(
-                  ground,
-                  width: width,
-                  bandHeight: groundHeight,
-                ),
-              ),
-              Positioned(
-                left: (width - size) / 2,
-                bottom: groundBottom,
-                width: size,
-                child: Image.asset(
-                  reunion,
                   fit: BoxFit.contain,
                   filterQuality: FilterQuality.medium,
                 ),
@@ -2157,6 +2337,279 @@ class _HamsterBakeryDecorations extends StatelessWidget {
                 bottom: groundBottom,
                 width: span * 0.34,
                 child: sticker(bakers),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _OtterBathhouseDecorations extends StatelessWidget {
+  const _OtterBathhouseDecorations({
+    required this.liftForNav,
+    this.scaleByWidth = false,
+    this.simple = false,
+  });
+
+  final bool liftForNav;
+  final bool scaleByWidth;
+  final bool simple;
+
+  @override
+  Widget build(BuildContext context) {
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        final height = constraints.maxHeight;
+        final span = scaleByWidth
+            ? width
+            : constraints.biggest.shortestSide;
+        final paddingBottom = MediaQuery.paddingOf(context).bottom;
+        final groundBottom = liftForNav ? 58 + paddingBottom : height * 0.02;
+        final safe = _LogoSafe(
+          screenWidth: width,
+          paddingTop: MediaQuery.paddingOf(context).top,
+          enabled: !simple,
+        );
+        final tub = dark
+            ? AppSkinAssets.ottersInTubDark
+            : AppSkinAssets.ottersInTubLight;
+        final toys = dark
+            ? AppSkinAssets.bathToysDark
+            : AppSkinAssets.bathToysLight;
+        final bubbles = dark
+            ? AppSkinAssets.bubbleOttersDark
+            : AppSkinAssets.bubbleOttersLight;
+        final ground = dark
+            ? AppSkinAssets.bottomBathhouseDark
+            : AppSkinAssets.bottomBathhouseLight;
+        final groundHeight = _SkinGround.heightOf(width, height);
+
+        Widget sticker(String asset) {
+          return Image.asset(
+            asset,
+            fit: BoxFit.contain,
+            filterQuality: FilterQuality.medium,
+          );
+        }
+
+        return IgnorePointer(
+          child: Stack(
+            children: [
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                height: groundHeight,
+                child: _SkinGround.cover(
+                  ground,
+                  width: width,
+                  bandHeight: groundHeight,
+                ),
+              ),
+              if (!simple)
+                safe.topLeft(
+                  left: span * 0.04,
+                  top: span * 0.02,
+                  width: span * 0.28,
+                  child: sticker(bubbles),
+                ),
+              Positioned(
+                left: span * 0.02,
+                bottom: groundBottom + span * 0.02,
+                width: span * 0.28,
+                child: sticker(toys),
+              ),
+              Positioned(
+                right: span * 0.02,
+                bottom: groundBottom,
+                width: span * 0.34,
+                child: sticker(tub),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _RabbitFlowerMarketDecorations extends StatelessWidget {
+  const _RabbitFlowerMarketDecorations({
+    required this.liftForNav,
+    this.scaleByWidth = false,
+    this.simple = false,
+  });
+
+  final bool liftForNav;
+  final bool scaleByWidth;
+  final bool simple;
+
+  @override
+  Widget build(BuildContext context) {
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        final height = constraints.maxHeight;
+        final span = scaleByWidth
+            ? width
+            : constraints.biggest.shortestSide;
+        final paddingBottom = MediaQuery.paddingOf(context).bottom;
+        final groundBottom = liftForNav ? 58 + paddingBottom : height * 0.02;
+        final safe = _LogoSafe(
+          screenWidth: width,
+          paddingTop: MediaQuery.paddingOf(context).top,
+          enabled: !simple,
+        );
+        final stall = dark
+            ? AppSkinAssets.rabbitFlowerStallDark
+            : AppSkinAssets.rabbitFlowerStallLight;
+        final supplies = dark
+            ? AppSkinAssets.flowerMarketSuppliesDark
+            : AppSkinAssets.flowerMarketSuppliesLight;
+        final basket = dark
+            ? AppSkinAssets.rabbitsInFlowerBasketDark
+            : AppSkinAssets.rabbitsInFlowerBasketLight;
+        final ground = dark
+            ? AppSkinAssets.bottomFlowerMarketDark
+            : AppSkinAssets.bottomFlowerMarketLight;
+        final groundHeight = _SkinGround.heightOf(width, height);
+
+        Widget sticker(String asset) {
+          return Image.asset(
+            asset,
+            fit: BoxFit.contain,
+            filterQuality: FilterQuality.medium,
+          );
+        }
+
+        return IgnorePointer(
+          child: Stack(
+            children: [
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                height: groundHeight,
+                child: _SkinGround.cover(
+                  ground,
+                  width: width,
+                  bandHeight: groundHeight,
+                ),
+              ),
+              if (!simple)
+                safe.topLeft(
+                  left: span * 0.04,
+                  top: span * 0.02,
+                  width: span * 0.28,
+                  child: sticker(basket),
+                ),
+              Positioned(
+                left: span * 0.02,
+                bottom: groundBottom + span * 0.02,
+                width: span * 0.28,
+                child: sticker(supplies),
+              ),
+              Positioned(
+                right: span * 0.02,
+                bottom: groundBottom,
+                width: span * 0.34,
+                child: sticker(stall),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _BearPancakeCafeDecorations extends StatelessWidget {
+  const _BearPancakeCafeDecorations({
+    required this.liftForNav,
+    this.scaleByWidth = false,
+    this.simple = false,
+  });
+
+  final bool liftForNav;
+  final bool scaleByWidth;
+  final bool simple;
+
+  @override
+  Widget build(BuildContext context) {
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        final height = constraints.maxHeight;
+        final span = scaleByWidth
+            ? width
+            : constraints.biggest.shortestSide;
+        final paddingBottom = MediaQuery.paddingOf(context).bottom;
+        final groundBottom = liftForNav ? 58 + paddingBottom : height * 0.02;
+        final safe = _LogoSafe(
+          screenWidth: width,
+          paddingTop: MediaQuery.paddingOf(context).top,
+          enabled: !simple,
+        );
+        final counter = dark
+            ? AppSkinAssets.bearPancakeCounterDark
+            : AppSkinAssets.bearPancakeCounterLight;
+        final supplies = dark
+            ? AppSkinAssets.pancakeCafeSuppliesDark
+            : AppSkinAssets.pancakeCafeSuppliesLight;
+        final stack = dark
+            ? AppSkinAssets.bearsAndPancakeStackDark
+            : AppSkinAssets.bearsAndPancakeStackLight;
+        final ground = dark
+            ? AppSkinAssets.bottomPancakeCafeDark
+            : AppSkinAssets.bottomPancakeCafeLight;
+        final groundHeight = _SkinGround.heightOf(width, height);
+
+        Widget sticker(String asset) {
+          return Image.asset(
+            asset,
+            fit: BoxFit.contain,
+            filterQuality: FilterQuality.medium,
+          );
+        }
+
+        return IgnorePointer(
+          child: Stack(
+            children: [
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                height: groundHeight,
+                child: _SkinGround.cover(
+                  ground,
+                  width: width,
+                  bandHeight: groundHeight,
+                ),
+              ),
+              if (!simple)
+                safe.topLeft(
+                  left: span * 0.04,
+                  top: span * 0.02,
+                  width: span * 0.28,
+                  child: sticker(stack),
+                ),
+              Positioned(
+                left: span * 0.02,
+                bottom: groundBottom + span * 0.02,
+                width: span * 0.28,
+                child: sticker(supplies),
+              ),
+              Positioned(
+                right: span * 0.02,
+                bottom: groundBottom,
+                width: span * 0.34,
+                child: sticker(counter),
               ),
             ],
           ),

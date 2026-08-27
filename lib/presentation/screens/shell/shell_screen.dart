@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:job_planner/app_scope.dart';
+import 'package:job_planner/data/datasources/calendar_event_local_datasource.dart';
 import 'package:job_planner/presentation/screens/calendar/calendar_screen.dart';
 import 'package:job_planner/presentation/screens/home/home_screen.dart';
 import 'package:job_planner/presentation/screens/job/job_screen.dart';
@@ -98,8 +99,12 @@ class _ShellScreenState extends State<ShellScreen>
     final diaries = await scope.getDiaries();
     if (!mounted) return;
     await tutorial.maybeAutoStart(
-      hasExistingData:
-          events.isNotEmpty || jobs.isNotEmpty || diaries.isNotEmpty,
+      hasExistingData: jobs.isNotEmpty ||
+          diaries.isNotEmpty ||
+          events.any(
+            (event) =>
+                !event.id.startsWith(CalendarEventLocalDataSource.starterIdPrefix),
+          ),
     );
   }
 

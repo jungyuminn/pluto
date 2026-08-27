@@ -30,7 +30,9 @@ class ThemedAsset extends StatelessWidget {
     final dark = Theme.of(context).brightness == Brightness.dark;
     final skin =
         AppScope.maybeOf(context)?.themePreference.skin ?? AppSkin.classic;
-    if (!dark && !forceTint && skin == AppSkin.classic) return image;
+    final custom =
+        AppScope.maybeOf(context)?.themePreference.usesCustom ?? false;
+    if (!dark && !forceTint && skin == AppSkin.classic && !custom) return image;
     return ColorFiltered(
       colorFilter: ColorFilter.mode(
         AppColors.of(context).icon,

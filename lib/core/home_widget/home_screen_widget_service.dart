@@ -608,6 +608,7 @@ class HomeScreenWidgetService {
       builder: (context) {
         return AppSkinBackground(
           skin: skin,
+          customTheme: _theme?.customTheme,
           color: AppColors.of(context).card,
           liftForNav: false,
           scaleByWidth: true,
@@ -736,6 +737,7 @@ class HomeScreenWidgetService {
             dark: isDark,
             typeface: typeface,
             skin: _theme?.skin ?? AppSkin.classic,
+            customAccent: _theme?.customTheme?.accentColor,
           ),
           child: FontScope(
             typeface: typeface,

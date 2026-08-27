@@ -11,7 +11,7 @@
 
 <p align="center">
   <img alt="Flutter" src="https://img.shields.io/badge/Flutter-3-02569B?logo=flutter&logoColor=white">
-  <img alt="version" src="https://img.shields.io/badge/version-1.0.19-5B8DEF">
+  <img alt="version" src="https://img.shields.io/badge/version-1.0.20-5B8DEF">
   <img alt="platform" src="https://img.shields.io/badge/Android%20%7C%20iOS-local%20first-34C759">
 </p>
 
@@ -40,12 +40,12 @@
 
 ### 테마와 글꼴
 
-라이트/다크와 함께 벚꽃, 여름 해변, 고양이 마을, 햄스터 빵집처럼 분위기를 고를 수 있습니다. 본문 글꼴과 할 일·달력 글자 크기도 설정에서 바꿉니다.
+라이트/다크와 함께 벚꽃, 여름 해변, 고양이 마을처럼 분위기를 고르거나, 사진·패턴으로 나만의 테마를 만들 수 있습니다. 본문 글꼴과 할 일·달력 글자 크기도 설정에서 바꿉니다.
 
 ### 데이터
 
 - 할 일·기업·일기는 기기의 SharedPreferences와 앱 문서 폴더에 둡니다.
-- 설정에서 zip으로 백업하고, 최근 3개까지 앱 안에 남겨 둡니다.
+- 설정에서 zip으로 백업하고, 최근 3개까지 앱과 다운로드에 남겨 둡니다.
 - 앱을 켤 때 매일·3일·일주일·한 달 주기로 자동 저장할 수 있습니다.
 
 ### 캘린더 가져오기

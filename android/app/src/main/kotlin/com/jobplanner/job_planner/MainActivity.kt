@@ -9,6 +9,7 @@ class MainActivity : FlutterActivity() {
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         deviceCalendar = DeviceCalendarPlugin.register(this, flutterEngine)
+        BackupStorePlugin.register(this, flutterEngine)
     }
 
     override fun onRequestPermissionsResult(

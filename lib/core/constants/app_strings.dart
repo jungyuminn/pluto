@@ -62,7 +62,8 @@ class AppStrings {
   static const backupData = '데이터 백업하기';
   static const restoreData = '데이터 복구하기';
   static const backupSavedTitle = '백업했어요';
-  static const backupSavedBody = '최근 백업 3개까지 앱에 저장해 둬요';
+  static const backupSavedBody =
+      '최근 3개까지 앱과 다운로드에 남겨 둬요. 앱을 지워도 다운로드 파일로 복구할 수 있어요';
   static const backupFailedTitle = '백업하지 못했어요';
   static const backupFailedBody = '잠시 후 다시 시도해 주세요';
   static const restoreConfirmTitle = '데이터를 복구할까요?';
@@ -134,6 +135,9 @@ class AppStrings {
       '아래 + 로 기업을 넣고, 카드를 밀어 순서를 바꾸고, 왼쪽으로 밀면 지울 수 있어요';
   static const tutorialDoneTitle = '이제 시작할 수 있어요';
   static const tutorialDoneBody = '설정 > 앱 둘러보기에서 언제든 다시 볼 수 있어요';
+  static const starterTodoComplete = '오른쪽 동그라미를 눌러 완료할 수 있어요';
+  static const starterTodoReorder = '꾹 눌러서 위치를 바꿀 수 있어요';
+  static const starterTodoMove = '밖으로 빼서 날짜를 옮길 수 있어요';
   static const releaseNotesTitle = '릴리즈 노트';
   static const releaseNotesFeatures = '새로운 기능';
   static const releaseNotesFixes = '버그 수정';
@@ -185,22 +189,46 @@ class AppStrings {
   static const settingsAppearanceSection = '화면 모드';
   static const settingsThemeSection = '테마 설정';
   static const themeKind = '테마 종류';
+  static const themeGroupPattern = '패턴';
+  static const themeGroupScene = '이미지';
+  static const themeGroupMine = '내 테마';
+  static const themeMineEmpty = '아직 만든 테마가 없어요';
+  static const themeMineCreate = '테마 만들기';
+  static const themeMineEdit = '테마 수정';
+  static const themeMineNameHint = '테마 이름을 입력하세요';
+  static const themeMineAccent = '테마색';
+  static const themeMineKindPhoto = '이미지';
+  static const themeMineKindPattern = '패턴';
+  static const themeMinePhoto = '이미지';
+  static const themeMinePhotoWash = '투명도';
+  static const themeMineDecoration = '장식';
+  static const themeMineDecorationHint = '512×512 정사각, 투명 배경이 좋아요';
+  static const themeMineBottom = '하단';
+  static const themeMineBottomHint = '2000×600처럼 가로로 긴 사진이 좋아요';
+  static const themeMinePatternToast =
+      '장식은 정사각형, 하단은 가로로 긴 사진이 좋아요';
+  static const themeMinePickImage = '사진을 고르세요';
+  static const themeMineMissingName = '테마 이름을 입력해 주세요';
+  static const themeMineDeleteBody = '만든 테마가 사라져요';
   static const themeClassic = '기본';
   static const themeBlossom = '블라썸';
+  static const themeClover = '네잎클로버';
+  static const themeFluffyBear = '몽글곰도리';
+  static const themeFluffyRabbit = '몽글토끼';
+  static const themePinkHeart = '핑크하트';
   static const themeSummerBeach = '한여름 바닷가';
-  static const themeAutumnForest = '가을숲';
   static const themeSnowyWinter = '눈 내리는 겨울';
   static const themeSquishyBear = '말랑곰탱이';
   static const themeStrawberryMilk = '딸기우유';
-  static const themeOnionVillage = '양파마을';
   static const themeLovelyBear = '러블리베어';
   static const themeRainyDay = '비와 같이 폴짝';
   static const themeConcertDay = '공연하는 날';
-  static const themeBoyhood = 'Boyhood';
-  static const themeInterlude = 'Interlude';
   static const themeFluffyCloud = '몽실구름';
   static const themeCatVillage = '고양이 마을';
   static const themeHamsterBakery = '햄스터 빵집';
+  static const themeOtterBathhouse = '아기 수달 목욕탕';
+  static const themeRabbitFlowerMarket = '꽃집 토끼들';
+  static const themeBearPancakeCafe = '곰돌이 팬케이크';
   static const settingsFontSection = '폰트 설정';
   static const fontFamily = '폰트 종류';
   static const fontTodoSize = '할 일·기업 크기';
@@ -241,7 +269,7 @@ class AppStrings {
   static const settingsAppearanceHelp = '화면을 밝은 테마나 어두운 테마로 바꿀 수 있어요';
   static const settingsThemeHelp = '홈·캘린더 배경 분위기와 아이콘·버튼 색을 바꿀 수 있어요';
   static const settingsBackupHelp =
-      '할 일·기업·일기·가계부 데이터를 최근 3개까지 앱에 저장하고, 필요할 때 다시 가져올 수 있어요. 앱을 켜면 정한 주기마다 자동으로도 저장해요';
+      '할 일·기업·일기·가계부 데이터를 최근 3개까지 앱과 다운로드에 저장해요. 앱을 지운 뒤에는 다운로드에 있는 zip으로 복구하면 돼요. 앱을 켜면 정한 주기마다 자동으로도 저장해요';
   static const settingsCalendarSyncHelp =
       '폰 캘린더에 있는 일정을 할 일로 가져와요. 안드로이드는 삼성 캘린더, 아이폰은 iOS 캘린더를 쓰면 돼요. 가져올 기간을 고르고, 카테고리는 하나에 몰아넣거나 할 일마다 고를 수 있어요. 기업 카드는 그대로 둬요';
   static const settingsAppHelp =
@@ -454,7 +482,7 @@ class AppStrings {
   static const diaryPhotoDraw = '그림';
   static const diaryPhotoChange = '바꾸기';
   static const diaryPhotoDrawOn = '그리기';
-  static const diaryDrawEdit = '수정';
+  static const diaryDrawEdit = '수정하기';
   static const diaryDrawTitle = '그림';
   static const diaryDrawUndo = '되돌리기';
   static const diaryDrawRedo = '다시 실행';

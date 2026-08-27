@@ -43,7 +43,7 @@ class CalendarOverflowMenu extends StatelessWidget {
         ),
         _MenuItem(
           label: AppStrings.categoryEditTitle,
-          trailingAsset: AppIcons.categoryEdit,
+          trailingAsset: AppIcons.editOutlined,
           onPressed: onEditCategories,
         ),
         _FilterItem(
@@ -218,7 +218,7 @@ class _MenuItem extends StatelessWidget {
                   quarterTurns: trailingQuarterTurns,
                   child: ColorFiltered(
                     colorFilter: ColorFilter.mode(
-                      AppColors.of(context).icon,
+                      AppColors.light.icon,
                       BlendMode.srcIn,
                     ),
                     child: Image.asset(

@@ -1,19 +1,27 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:ui';
 
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:job_planner/app_scope.dart';
 import 'package:job_planner/core/constants/app_fonts.dart';
+import 'package:job_planner/core/constants/app_icons.dart';
 import 'package:job_planner/core/constants/app_strings.dart';
 import 'package:job_planner/core/constants/release_notes.dart';
 import 'package:job_planner/core/theme/app_colors.dart';
 import 'package:job_planner/core/theme/app_skin_background.dart';
+import 'package:job_planner/core/theme/app_theme.dart';
 import 'package:job_planner/core/home_widget/home_screen_widget_service.dart';
 import 'package:job_planner/core/notifications/todo_reminder_service.dart';
+import 'package:job_planner/core/utils/plain_text_editing_controller.dart';
 import 'package:job_planner/core/utils/press_bounce.dart';
+import 'package:job_planner/domain/entities/event_category.dart';
+import 'package:job_planner/presentation/screens/add_company/widgets/missing_fields_dialog.dart';
+import 'package:job_planner/presentation/screens/add_company/widgets/save_company_button.dart';
 import 'package:job_planner/data/datasources/app_backup_service.dart';
 import 'package:job_planner/data/datasources/backup_preference.dart';
 import 'package:job_planner/data/datasources/device_calendar_import.dart';
@@ -28,7 +36,9 @@ import 'package:job_planner/presentation/screens/settings/widgets/calendar_impor
 import 'package:job_planner/presentation/screens/settings/widgets/calendar_import_wizard.dart';
 import 'package:job_planner/presentation/screens/settings/widgets/settings_section_help.dart';
 import 'package:job_planner/presentation/tutorial/tutorial_controller.dart';
+import 'package:job_planner/presentation/widgets/sliding_kind_bar.dart';
 import 'package:job_planner/presentation/widgets/themed_asset.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -143,7 +153,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _restore() async {
-    final files = await AppBackupService.listLocalBackups();
+    final prefs = await SharedPreferences.getInstance();
+    final files = AppBackupService.isStarterOnly(prefs)
+        ? <File>[]
+        : await AppBackupService.listLocalBackups();
     if (!mounted) return;
     try {
       if (files.isEmpty) {
@@ -514,34 +527,40 @@ class _SettingsScreenState extends State<SettingsScreen> {
         return AppStrings.themeClassic;
       case AppSkin.blossom:
         return AppStrings.themeBlossom;
+      case AppSkin.clover:
+        return AppStrings.themeClover;
+      case AppSkin.fluffyBear:
+        return AppStrings.themeFluffyBear;
+      case AppSkin.fluffyRabbit:
+        return AppStrings.themeFluffyRabbit;
+      case AppSkin.pinkHeart:
+        return AppStrings.themePinkHeart;
       case AppSkin.summerBeach:
         return AppStrings.themeSummerBeach;
-      case AppSkin.autumnForest:
-        return AppStrings.themeAutumnForest;
       case AppSkin.snowyWinter:
         return AppStrings.themeSnowyWinter;
       case AppSkin.squishyBear:
         return AppStrings.themeSquishyBear;
       case AppSkin.strawberryMilk:
         return AppStrings.themeStrawberryMilk;
-      case AppSkin.onionVillage:
-        return AppStrings.themeOnionVillage;
       case AppSkin.lovelyBear:
         return AppStrings.themeLovelyBear;
       case AppSkin.rainyDay:
         return AppStrings.themeRainyDay;
       case AppSkin.concertDay:
         return AppStrings.themeConcertDay;
-      case AppSkin.boyhood:
-        return AppStrings.themeBoyhood;
-      case AppSkin.interlude:
-        return AppStrings.themeInterlude;
       case AppSkin.fluffyCloud:
         return AppStrings.themeFluffyCloud;
       case AppSkin.catVillage:
         return AppStrings.themeCatVillage;
       case AppSkin.hamsterBakery:
         return AppStrings.themeHamsterBakery;
+      case AppSkin.otterBathhouse:
+        return AppStrings.themeOtterBathhouse;
+      case AppSkin.rabbitFlowerMarket:
+        return AppStrings.themeRabbitFlowerMarket;
+      case AppSkin.bearPancakeCafe:
+        return AppStrings.themeBearPancakeCafe;
     }
   }
 
@@ -611,7 +630,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
             children: [
               _SettingsTile(
                 label: AppStrings.themeKind,
-                value: _skinLabel(_skin),
+                value: AppScope.of(context).themePreference.customTheme?.name ??
+                    _skinLabel(_skin),
                 chevron: true,
                 onPressed: _openThemeSettings,
               ),
@@ -954,7 +974,9 @@ class _FontLivePreview extends StatelessWidget {
 }
 
 class _ThemeLivePreview extends StatefulWidget {
-  const _ThemeLivePreview();
+  const _ThemeLivePreview({this.customTheme});
+
+  final UserTheme? customTheme;
 
   @override
   State<_ThemeLivePreview> createState() => _ThemeLivePreviewState();
@@ -1006,6 +1028,55 @@ class _ThemeLivePreviewState extends State<_ThemeLivePreview> {
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
+    final custom = widget.customTheme;
+    Widget preview = AppSkinBackground(
+      liftForNav: false,
+      scaleByWidth: true,
+      animate: true,
+      skin: custom == null ? null : AppSkin.classic,
+      customTheme: custom,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(
+            child: PageView(
+              controller: _pages,
+              onPageChanged: (page) {
+                setState(() => _page = page);
+                _startTimer();
+              },
+              children: const [
+                _ThemeHomePreviewPage(),
+                _ThemeCalendarPreviewPage(),
+                _ThemeJobPreviewPage(),
+              ],
+            ),
+          ),
+          _ThemePreviewDots(
+            selected: _page,
+            onSelected: (page) => _goTo(page, fromUser: true),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 4, 14, 12),
+            child: _ThemePreviewNav(
+              selected: _page,
+              onSelected: (page) => _goTo(page, fromUser: true),
+            ),
+          ),
+        ],
+      ),
+    );
+    if (custom != null) {
+      final dark = Theme.of(context).brightness == Brightness.dark;
+      preview = Theme(
+        data: AppTheme.themed(
+          dark: dark,
+          typeface: AppScope.of(context).fontPreference.typeface,
+          customAccent: custom.accentColor,
+        ),
+        child: preview,
+      );
+    }
     return DecoratedBox(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
@@ -1015,41 +1086,7 @@ class _ThemeLivePreviewState extends State<_ThemeLivePreview> {
         borderRadius: BorderRadius.circular(16),
         child: SizedBox(
           height: 280,
-          child: AppSkinBackground(
-            liftForNav: false,
-            scaleByWidth: true,
-            animate: true,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Expanded(
-                  child: PageView(
-                    controller: _pages,
-                    onPageChanged: (page) {
-                      setState(() => _page = page);
-                      _startTimer();
-                    },
-                    children: const [
-                      _ThemeHomePreviewPage(),
-                      _ThemeCalendarPreviewPage(),
-                      _ThemeJobPreviewPage(),
-                    ],
-                  ),
-                ),
-                _ThemePreviewDots(
-                  selected: _page,
-                  onSelected: (page) => _goTo(page, fromUser: true),
-                ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(14, 4, 14, 12),
-                  child: _ThemePreviewNav(
-                    selected: _page,
-                    onSelected: (page) => _goTo(page, fromUser: true),
-                  ),
-                ),
-              ],
-            ),
-          ),
+          child: preview,
         ),
       ),
     );
@@ -1449,12 +1486,55 @@ class _ThemeSettingsPage extends StatefulWidget {
 }
 
 class _ThemeSettingsPageState extends State<_ThemeSettingsPage> {
+  AppSkinGroup? _group;
+  var _groupDir = 1.0;
+  final _scroll = ScrollController();
+  final _selectedKey = GlobalKey();
+  var _scrolledToSelected = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await Future<void>.delayed(const Duration(milliseconds: 240));
+      if (!mounted) return;
+      await _scrollToSelected();
+    });
+  }
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     for (final asset in AppSkinAssets.precacheDecorations) {
       precacheImage(AssetImage(asset), context);
     }
+    precacheImage(const AssetImage(AppIcons.editOutlined), context);
+    precacheImage(const AssetImage(AppIcons.trashCan), context);
+  }
+
+  @override
+  void dispose() {
+    _scroll.dispose();
+    super.dispose();
+  }
+
+  Future<void> _scrollToSelected({int attempt = 0}) async {
+    if (!mounted || _scrolledToSelected) return;
+    final target = _selectedKey.currentContext?.findRenderObject();
+    if (target == null || !_scroll.hasClients) {
+      if (attempt >= 12) return;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _scrollToSelected(attempt: attempt + 1);
+      });
+      return;
+    }
+    _scrolledToSelected = true;
+    await _scroll.position.ensureVisible(
+      target,
+      alignment: 0.28,
+      duration: const Duration(milliseconds: 420),
+      curve: Curves.easeOutCubic,
+    );
   }
 
   @override
@@ -1465,6 +1545,9 @@ class _ThemeSettingsPageState extends State<_ThemeSettingsPage> {
       listenable: theme,
       builder: (context, _) {
         final colors = AppColors.of(context);
+        final group = _group ??
+            AppSkin.groupOf(theme.skin, custom: theme.usesCustom);
+
         return Scaffold(
           backgroundColor: colors.groupedBackground,
           extendBodyBehindAppBar: true,
@@ -1480,23 +1563,91 @@ class _ThemeSettingsPageState extends State<_ThemeSettingsPage> {
                 padding: EdgeInsets.fromLTRB(16, 0, 16, 8),
                 child: _ThemeLivePreview(),
               ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                child: SlidingKindBar(
+                  values: AppSkinGroup.values,
+                  selected: group,
+                  labelOf: _groupLabel,
+                  barColor: colors.card,
+                  accent: theme.usesCustom || theme.skin != AppSkin.classic
+                      ? colors.accent
+                      : Color.lerp(colors.pressed, Colors.black, 0.06)!,
+                  onChanged: (value) {
+                    final from = AppSkinGroup.values.indexOf(group);
+                    final to = AppSkinGroup.values.indexOf(value);
+                    setState(() {
+                      _groupDir = to >= from ? 1.0 : -1.0;
+                      _group = value;
+                    });
+                  },
+                ),
+              ),
               Expanded(
                 child: ListView(
+                  controller: _scroll,
                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
                   children: [
-                    _SectionLabel(AppStrings.themeKind),
-                    _SettingsCard(
-                      children: [
-                        for (final skin in AppSkin.selectable)
-                          _SettingsTile(
-                            label: _SettingsScreenState._skinLabel(skin),
-                            checked: theme.skin == skin,
-                            onPressed: () async {
-                              await theme.setSkin(skin);
-                              await HomeScreenWidgetService.instance.sync();
-                            },
-                          ),
-                      ],
+                    AnimatedSize(
+                      duration: const Duration(milliseconds: 280),
+                      curve: Curves.easeOutCubic,
+                      alignment: Alignment.topCenter,
+                      child: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 280),
+                        switchInCurve: Curves.easeOutCubic,
+                        switchOutCurve: Curves.easeOutCubic,
+                        layoutBuilder: (current, _) {
+                          return current ?? const SizedBox.shrink();
+                        },
+                        transitionBuilder: (child, animation) {
+                          final offset = Tween<Offset>(
+                            begin: Offset(_groupDir * 0.12, 0),
+                            end: Offset.zero,
+                          ).animate(animation);
+                          return FadeTransition(
+                            opacity: animation,
+                            child: SlideTransition(
+                              position: offset,
+                              child: child,
+                            ),
+                          );
+                        },
+                        child: KeyedSubtree(
+                          key: ValueKey(group),
+                          child: group == AppSkinGroup.mine
+                              ? _MineThemesPanel(
+                                  selectedKey: _selectedKey,
+                                  onCreate: () => _openEditor(context),
+                                  onEdit: (item) =>
+                                      _openEditor(context, initial: item),
+                                )
+                              : _SettingsCard(
+                                  children: [
+                                    for (final skin in group.skins)
+                                      KeyedSubtree(
+                                        key: theme.skin == skin &&
+                                                !theme.usesCustom
+                                            ? _selectedKey
+                                            : ValueKey(skin),
+                                        child: _SettingsTile(
+                                          label:
+                                              _SettingsScreenState._skinLabel(
+                                            skin,
+                                          ),
+                                          checked: !theme.usesCustom &&
+                                              theme.skin == skin,
+                                          onPressed: () async {
+                                            await theme.setSkin(skin);
+                                            await HomeScreenWidgetService
+                                                .instance
+                                                .sync();
+                                          },
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -1505,6 +1656,1121 @@ class _ThemeSettingsPageState extends State<_ThemeSettingsPage> {
           ),
         );
       },
+    );
+  }
+
+  static String _groupLabel(AppSkinGroup group) {
+    return switch (group) {
+      AppSkinGroup.pattern => AppStrings.themeGroupPattern,
+      AppSkinGroup.scene => AppStrings.themeGroupScene,
+      AppSkinGroup.mine => AppStrings.themeGroupMine,
+    };
+  }
+
+  Future<void> _openEditor(
+    BuildContext context, {
+    UserTheme? initial,
+  }) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (context) => _CustomThemeEditorPage(initial: initial),
+      ),
+    );
+  }
+}
+
+class _MineThemesPanel extends StatefulWidget {
+  const _MineThemesPanel({
+    required this.selectedKey,
+    required this.onCreate,
+    required this.onEdit,
+  });
+
+  final GlobalKey selectedKey;
+  final VoidCallback onCreate;
+  final ValueChanged<UserTheme> onEdit;
+
+  @override
+  State<_MineThemesPanel> createState() => _MineThemesPanelState();
+}
+
+class _MineThemesPanelState extends State<_MineThemesPanel> {
+  final _openId = ValueNotifier<String?>(null);
+
+  @override
+  void dispose() {
+    _openId.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = AppScope.of(context).themePreference;
+    final colors = AppColors.of(context);
+    final items = theme.customThemes;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (items.isEmpty)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(8, 0, 8, 12),
+            child: Text(
+              AppStrings.themeMineEmpty,
+              style: TextStyle(
+                fontFamily: AppFonts.of(context),
+                fontSize: 15,
+                fontWeight: FontWeight.w400,
+                color: colors.muted,
+              ),
+            ),
+          ),
+        DecoratedBox(
+          decoration: BoxDecoration(
+            color: colors.card,
+            borderRadius: BorderRadius.circular(24),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(24),
+            child: Column(
+              children: [
+                _SettingsTile(
+                  label: AppStrings.themeMineCreate,
+                  chevron: true,
+                  onPressed: widget.onCreate,
+                ),
+                if (items.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(left: 20),
+                    child: Divider(
+                      height: 1,
+                      thickness: 0.5,
+                      color: colors.border,
+                    ),
+                  ),
+                if (items.isNotEmpty)
+                  ReorderableListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    padding: EdgeInsets.zero,
+                    buildDefaultDragHandles: false,
+                    itemCount: items.length,
+                    proxyDecorator: (child, index, animation) {
+                      return AnimatedBuilder(
+                        animation: animation,
+                        builder: (context, child) {
+                          final t = Curves.easeOutBack.transform(
+                            animation.value,
+                          );
+                          return Transform.translate(
+                            offset: Offset(0, -4 * t),
+                            child: Transform.scale(
+                              scale: 1 + 0.02 * t,
+                              child: child,
+                            ),
+                          );
+                        },
+                        child: child,
+                      );
+                    },
+                    onReorderStart: (_) {
+                      _openId.value = null;
+                      HapticFeedback.mediumImpact();
+                    },
+                    onReorder: (oldIndex, newIndex) {
+                      if (newIndex > oldIndex) newIndex -= 1;
+                      final next = [...items];
+                      final moved = next.removeAt(oldIndex);
+                      next.insert(newIndex, moved);
+                      theme.reorderCustomThemes(next);
+                    },
+                    itemBuilder: (context, index) {
+                      final item = items[index];
+                      final selected = theme.customTheme?.id == item.id;
+                      return ReorderableDelayedDragStartListener(
+                        key: ValueKey(item.id),
+                        index: index,
+                        child: Column(
+                          children: [
+                            if (index > 0)
+                              Padding(
+                                padding: const EdgeInsets.only(left: 20),
+                                child: Divider(
+                                  height: 1,
+                                  thickness: 0.5,
+                                  color: colors.border,
+                                ),
+                              ),
+                            Stack(
+                              children: [
+                                _ThemeSwipeRow(
+                                  key: ValueKey('swipe-${item.id}'),
+                                  id: item.id,
+                                  openId: _openId,
+                                  onEdit: () => widget.onEdit(item),
+                                  onDelete: () => _confirmDelete(context, item),
+                                  child: _SettingsTile(
+                                    label: item.name,
+                                    checked: selected,
+                                    onPressed: () async {
+                                      _openId.value = null;
+                                      if (selected) {
+                                        widget.onEdit(item);
+                                        return;
+                                      }
+                                      await theme.setCustomTheme(item.id);
+                                      await HomeScreenWidgetService.instance
+                                          .sync();
+                                    },
+                                  ),
+                                ),
+                                if (selected)
+                                  Positioned.fill(
+                                    child: IgnorePointer(
+                                      child: KeyedSubtree(
+                                        key: widget.selectedKey,
+                                        child: const SizedBox.expand(),
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _confirmDelete(BuildContext context, UserTheme item) async {
+    _openId.value = null;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => _DeleteCustomThemeDialog(name: item.name),
+    );
+    if (confirmed != true || !context.mounted) return;
+    await AppScope.of(context).themePreference.deleteCustomTheme(item.id);
+    await HomeScreenWidgetService.instance.sync();
+  }
+}
+
+class _ThemeSwipeRow extends StatefulWidget {
+  const _ThemeSwipeRow({
+    super.key,
+    required this.id,
+    required this.openId,
+    required this.child,
+    required this.onEdit,
+    required this.onDelete,
+  });
+
+  final String id;
+  final ValueNotifier<String?> openId;
+  final Widget child;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
+
+  static const _reveal = 120.0;
+
+  @override
+  State<_ThemeSwipeRow> createState() => _ThemeSwipeRowState();
+}
+
+class _ThemeSwipeRowState extends State<_ThemeSwipeRow>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _offset;
+  var _swiping = false;
+  var _velocity = 0.0;
+  Duration _lastMove = Duration.zero;
+
+  @override
+  void initState() {
+    super.initState();
+    _offset = AnimationController(
+      vsync: this,
+      value: 0,
+      lowerBound: -_ThemeSwipeRow._reveal,
+      upperBound: 0,
+    );
+    widget.openId.addListener(_onOpenId);
+  }
+
+  @override
+  void didUpdateWidget(covariant _ThemeSwipeRow oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.openId != widget.openId) {
+      oldWidget.openId.removeListener(_onOpenId);
+      widget.openId.addListener(_onOpenId);
+    }
+  }
+
+  @override
+  void dispose() {
+    widget.openId.removeListener(_onOpenId);
+    _offset.dispose();
+    super.dispose();
+  }
+
+  void _onOpenId() {
+    if (widget.openId.value == widget.id) return;
+    if (_offset.value == 0) return;
+    _offset.animateTo(
+      0,
+      duration: const Duration(milliseconds: 180),
+      curve: Curves.easeOutCubic,
+    );
+  }
+
+  Future<void> _snapTo(double target) {
+    return _offset.animateTo(
+      target,
+      duration: const Duration(milliseconds: 180),
+      curve: Curves.easeOutCubic,
+    );
+  }
+
+  void _endSwipe() {
+    if (!_swiping) return;
+    final open =
+        _offset.value < -_ThemeSwipeRow._reveal * 0.36 || _velocity < -500;
+    if (open) {
+      widget.openId.value = widget.id;
+    } else if (widget.openId.value == widget.id) {
+      widget.openId.value = null;
+    }
+    _snapTo(open ? -_ThemeSwipeRow._reveal : 0);
+    _swiping = false;
+    _velocity = 0;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    return ClipRect(
+      child: AnimatedBuilder(
+        animation: _offset,
+        builder: (context, child) {
+          return Stack(
+            children: [
+              Positioned.fill(
+                child: ColoredBox(
+                  color: colors.card,
+                  child: Align(
+                    alignment: Alignment.centerRight,
+                    child: SizedBox(
+                      width: _ThemeSwipeRow._reveal,
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: _ThemeSwipeAction(
+                              asset: AppIcons.editOutlined,
+                              color: AppColors.light.icon,
+                              onPressed: () {
+                                widget.openId.value = null;
+                                widget.onEdit();
+                              },
+                            ),
+                          ),
+                          Expanded(
+                            child: _ThemeSwipeAction(
+                              asset: AppIcons.trashCan,
+                              color: colors.danger,
+                              onPressed: () {
+                                widget.openId.value = null;
+                                widget.onDelete();
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              Listener(
+                onPointerDown: (_) {
+                  _swiping = false;
+                  _velocity = 0;
+                },
+                onPointerMove: (event) {
+                  final dx = event.delta.dx;
+                  final dy = event.delta.dy;
+                  if (!_swiping) {
+                    if (dx.abs() < 1.2 && dy.abs() < 1.2) return;
+                    if (dx.abs() <= dy.abs()) return;
+                    _swiping = true;
+                    _lastMove = event.timeStamp;
+                    widget.openId.value = widget.id;
+                  }
+                  final dt = (event.timeStamp - _lastMove).inMilliseconds;
+                  if (dt > 0) _velocity = dx / dt * 1000;
+                  _lastMove = event.timeStamp;
+                  _offset.value = (_offset.value + dx).clamp(
+                    -_ThemeSwipeRow._reveal,
+                    0,
+                  );
+                },
+                onPointerUp: (_) => _endSwipe(),
+                onPointerCancel: (_) => _endSwipe(),
+                child: Transform.translate(
+                  offset: Offset(_offset.value, 0),
+                  child: child,
+                ),
+              ),
+            ],
+          );
+        },
+        child: widget.child,
+      ),
+    );
+  }
+}
+
+class _ThemeSwipeAction extends StatelessWidget {
+  const _ThemeSwipeAction({
+    required this.asset,
+    required this.color,
+    required this.onPressed,
+  });
+
+  final String asset;
+  final Color color;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return PressBounce(
+      onPressed: onPressed,
+      pressedScale: 0.9,
+      color: Colors.transparent,
+      pressedColor: Colors.transparent,
+      child: Center(
+        child: ColorFiltered(
+          colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
+          child: Image.asset(
+            asset,
+            width: 22,
+            height: 22,
+            cacheWidth: (22 * MediaQuery.devicePixelRatioOf(context)).round(),
+            cacheHeight: (22 * MediaQuery.devicePixelRatioOf(context)).round(),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _CustomThemeEditorPage extends StatefulWidget {
+  const _CustomThemeEditorPage({this.initial});
+
+  final UserTheme? initial;
+
+  @override
+  State<_CustomThemeEditorPage> createState() => _CustomThemeEditorPageState();
+}
+
+class _CustomThemeEditorPageState extends State<_CustomThemeEditorPage> {
+  late final PlainTextEditingController _name;
+  late UserThemeKind _kind;
+  late int _accent;
+  late double _photoWash;
+  String? _photoPath;
+  String? _photoName;
+  String? _decorationPath;
+  String? _decorationName;
+  String? _bottomPath;
+  String? _bottomName;
+  var _saving = false;
+  var _hintVisible = false;
+  Timer? _hintTimer;
+
+  String? get _photoPreview => _photoPath ?? widget.initial?.photoPath;
+  String? get _decorationPreview =>
+      _decorationPath ?? widget.initial?.decorationPath;
+  String? get _bottomPreview => _bottomPath ?? widget.initial?.bottomPath;
+
+  UserTheme get _draft {
+    return UserTheme(
+      id: widget.initial?.id ?? 'draft',
+      name: _name.text,
+      kind: _kind,
+      accent: _accent,
+      photoPath: _photoPreview ?? '',
+      decorationPath: _decorationPreview ?? '',
+      bottomPath: _bottomPreview ?? '',
+      photoWash: _photoWash,
+    );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    final initial = widget.initial;
+    _name = PlainTextEditingController(text: initial?.name ?? '');
+    _kind = initial?.kind ?? UserThemeKind.photo;
+    _accent = initial?.accent ?? ThemePreference.defaultAccent;
+    _photoWash = initial?.photoWash ?? UserTheme.defaultPhotoWash;
+  }
+
+  @override
+  void dispose() {
+    _hintTimer?.cancel();
+    _name.dispose();
+    super.dispose();
+  }
+
+  Future<void> _pickPhoto() async {
+    final file = await FilePicker.pickFile(type: FileType.image);
+    final path = file?.path;
+    if (file == null || path == null) return;
+    setState(() {
+      _photoPath = path;
+      _photoName = file.name;
+    });
+  }
+
+  Future<void> _pick({required bool decoration}) async {
+    final file = await FilePicker.pickFile(type: FileType.image);
+    final path = file?.path;
+    if (file == null || path == null) return;
+    setState(() {
+      if (decoration) {
+        _decorationPath = path;
+        _decorationName = file.name;
+      } else {
+        _bottomPath = path;
+        _bottomName = file.name;
+      }
+    });
+  }
+
+  Future<void> _save() async {
+    final name = _name.text.trim();
+    if (name.isEmpty) {
+      await showMissingFieldsDialog(
+        context,
+        body: AppStrings.themeMineMissingName,
+      );
+      return;
+    }
+    if (_saving) return;
+    setState(() => _saving = true);
+    try {
+      await AppScope.of(context).themePreference.saveCustomTheme(
+        name: name,
+        kind: _kind,
+        accent: _accent,
+        photoWash: _photoWash,
+        photoSource: _photoPreview,
+        photoName: _photoName ?? _photoPreview,
+        decorationSource: _decorationPreview,
+        decorationName: _decorationName ?? _decorationPreview,
+        bottomSource: _bottomPreview,
+        bottomName: _bottomName ?? _bottomPreview,
+        editing: widget.initial,
+      );
+      await HomeScreenWidgetService.instance.sync();
+      if (mounted) Navigator.pop(context);
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  Future<void> _delete() async {
+    final initial = widget.initial;
+    if (initial == null) return;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => _DeleteCustomThemeDialog(name: initial.name),
+    );
+    if (confirmed != true || !mounted) return;
+    await AppScope.of(context).themePreference.deleteCustomTheme(initial.id);
+    await HomeScreenWidgetService.instance.sync();
+    if (mounted) Navigator.pop(context);
+  }
+
+  void _showPatternHint() {
+    _hintTimer?.cancel();
+    setState(() => _hintVisible = true);
+    _hintTimer = Timer(const Duration(milliseconds: 1700), () {
+      if (!mounted) return;
+      setState(() => _hintVisible = false);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    final accent = Color(_accent);
+    final top = MediaQuery.paddingOf(context).top;
+    final bottom = MediaQuery.paddingOf(context).bottom;
+    return Scaffold(
+      backgroundColor: colors.groupedBackground,
+      extendBodyBehindAppBar: true,
+      appBar: _FrostedAppBar(
+        title: widget.initial == null
+            ? AppStrings.themeMineCreate
+            : AppStrings.themeMineEdit,
+        onBack: () => Navigator.pop(context),
+      ),
+      body: Stack(
+        children: [
+          ListView(
+            padding: EdgeInsets.fromLTRB(
+              16,
+              top + 56,
+              16,
+              24 + bottom + MediaQuery.viewInsetsOf(context).bottom,
+            ),
+            children: [
+              _ThemeLivePreview(customTheme: _draft),
+              const SizedBox(height: 8),
+              SlidingKindBar(
+                values: const [
+                  UserThemeKind.pattern,
+                  UserThemeKind.photo,
+                ],
+                selected: _kind,
+                labelOf: (kind) => switch (kind) {
+                  UserThemeKind.photo => AppStrings.themeMineKindPhoto,
+                  UserThemeKind.pattern => AppStrings.themeMineKindPattern,
+                },
+                barColor: colors.card,
+                accent: accent,
+                onChanged: (value) {
+                  setState(() => _kind = value);
+                  if (value == UserThemeKind.pattern) {
+                    _showPatternHint();
+                  } else {
+                    _hintTimer?.cancel();
+                    setState(() => _hintVisible = false);
+                  }
+                },
+              ),
+              const SizedBox(height: 16),
+              TweenAnimationBuilder<Color?>(
+            duration: const Duration(milliseconds: 280),
+            curve: Curves.easeOutCubic,
+            tween: ColorTween(end: accent),
+            builder: (context, color, _) {
+              final tint = colors.tint(color ?? accent);
+              return AnimatedContainer(
+                duration: const Duration(milliseconds: 280),
+                curve: Curves.easeOutCubic,
+                decoration: BoxDecoration(
+                  color: tint,
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    TextField(
+                      controller: _name,
+                      textInputAction: TextInputAction.done,
+                      style: TextStyle(
+                        fontFamily: AppFonts.of(context),
+                        fontWeight: FontWeight.w700,
+                        fontSize: 20,
+                        color: colors.text,
+                      ),
+                      decoration: InputDecoration(
+                        hintText: AppStrings.themeMineNameHint,
+                        hintStyle: TextStyle(
+                          fontFamily: AppFonts.of(context),
+                          color: colors.hint,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 20,
+                        ),
+                        border: InputBorder.none,
+                        isDense: true,
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    _kind == UserThemeKind.photo
+                        ? Column(
+                            children: [
+                              _ThemeImageWell(
+                                label: AppStrings.themeMinePhoto,
+                                path: _photoPreview,
+                                height: 168,
+                                onPressed: _pickPhoto,
+                              ),
+                              const SizedBox(height: 12),
+                              _WashSlider(
+                                label: AppStrings.themeMinePhotoWash,
+                                value: _photoWash,
+                                color: color ?? accent,
+                                onChanged: (value) =>
+                                    setState(() => _photoWash = value),
+                              ),
+                            ],
+                          )
+                        : Column(
+                            children: [
+                              _ThemeImageWell(
+                                label: AppStrings.themeMineDecoration,
+                                path: _decorationPreview,
+                                height: 120,
+                                onPressed: () => _pick(decoration: true),
+                              ),
+                              const SizedBox(height: 8),
+                              _ThemeImageWell(
+                                label: AppStrings.themeMineBottom,
+                                path: _bottomPreview,
+                                height: 72,
+                                alignBottom: true,
+                                onPressed: () => _pick(decoration: false),
+                              ),
+                            ],
+                          ),
+                    const SizedBox(height: 16),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Expanded(
+                          child: _ColorDots(
+                            values: EventCategory.palette,
+                            selected: _accent,
+                            onSelected: (value) =>
+                                setState(() => _accent = value),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        SaveCompanyButton(
+                          onPressed: _saving ? () {} : _save,
+                          color: color ?? accent,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+          if (widget.initial != null) ...[
+            const SizedBox(height: 8),
+            PressBounce(
+              onPressed: _delete,
+              pressedScale: 0.96,
+              color: Colors.transparent,
+              pressedColor: Colors.transparent,
+              child: SizedBox(
+                height: 44,
+                child: Center(
+                  child: Text(
+                    AppStrings.delete,
+                    style: TextStyle(
+                      fontFamily: AppFonts.of(context),
+                      fontSize: 15,
+                      fontWeight: FontWeight.w800,
+                      color: colors.danger,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ],
+          ),
+          Positioned(
+            left: 24,
+            right: 24,
+            bottom: 20 + bottom,
+            child: IgnorePointer(
+              child: AnimatedSlide(
+                duration: const Duration(milliseconds: 280),
+                curve: _hintVisible ? Curves.easeOutCubic : Curves.easeInCubic,
+                offset: _hintVisible ? Offset.zero : const Offset(0, 0.18),
+                child: AnimatedOpacity(
+                  duration: const Duration(milliseconds: 280),
+                  curve: _hintVisible ? Curves.easeOutCubic : Curves.easeInCubic,
+                  opacity: _hintVisible ? 1 : 0,
+                  child: _HintToast(text: AppStrings.themeMinePatternToast),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _WashSlider extends StatefulWidget {
+  const _WashSlider({
+    required this.label,
+    required this.value,
+    required this.color,
+    required this.onChanged,
+  });
+
+  final String label;
+  final double value;
+  final Color color;
+  final ValueChanged<double> onChanged;
+
+  @override
+  State<_WashSlider> createState() => _WashSliderState();
+}
+
+class _WashSliderState extends State<_WashSlider>
+    with SingleTickerProviderStateMixin {
+  static const _thumbRadius = 9.5;
+  static const _pressedThumbRadius = 11.5;
+  static const _trackHeight = 8.0;
+
+  late final AnimationController _press;
+  late double _t;
+  var _dragging = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _t = widget.value.clamp(0.0, 1.0);
+    _press = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 140),
+      reverseDuration: const Duration(milliseconds: 180),
+    )..addListener(() => setState(() {}));
+  }
+
+  @override
+  void didUpdateWidget(covariant _WashSlider oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (_dragging) return;
+    _t = widget.value.clamp(0.0, 1.0);
+  }
+
+  @override
+  void dispose() {
+    _press.dispose();
+    super.dispose();
+  }
+
+  double _tFromDx(double dx, double width) {
+    final inner = (width - _thumbRadius * 2).clamp(1.0, width);
+    return ((dx - _thumbRadius) / inner).clamp(0.0, 1.0);
+  }
+
+  void _start(double dx, double width) {
+    _dragging = true;
+    _press.forward();
+    HapticFeedback.selectionClick();
+    _emit(_tFromDx(dx, width));
+  }
+
+  void _move(double dx, double width) {
+    if (!_dragging) {
+      _dragging = true;
+      _press.forward();
+    }
+    _emit(_tFromDx(dx, width));
+  }
+
+  void _end() {
+    if (!_dragging) return;
+    _dragging = false;
+    _press.reverse();
+  }
+
+  void _emit(double t) {
+    setState(() => _t = t);
+    widget.onChanged(t);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    return Row(
+      children: [
+        Text(
+          widget.label,
+          style: TextStyle(
+            fontFamily: AppFonts.of(context),
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+            color: colors.text,
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final width = constraints.maxWidth;
+              return GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTapDown: (details) =>
+                    _start(details.localPosition.dx, width),
+                onTapUp: (_) => _end(),
+                onTapCancel: _end,
+                onHorizontalDragStart: (details) =>
+                    _start(details.localPosition.dx, width),
+                onHorizontalDragUpdate: (details) =>
+                    _move(details.localPosition.dx, width),
+                onHorizontalDragEnd: (_) => _end(),
+                onHorizontalDragCancel: _end,
+                child: SizedBox(
+                  width: width,
+                  height: 36,
+                  child: CustomPaint(
+                    painter: _SteppedSliderPainter(
+                      progress: _t,
+                      count: 0,
+                      press: Curves.easeOut.transform(_press.value),
+                      thumbRadius: _thumbRadius,
+                      pressedThumbRadius: _pressedThumbRadius,
+                      trackHeight: _trackHeight,
+                      dotRadius: 0,
+                      active: widget.color,
+                      inactive: colors.card,
+                      activeDot: Colors.transparent,
+                      inactiveDot: Colors.transparent,
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _ColorDots extends StatelessWidget {
+  const _ColorDots({
+    required this.values,
+    required this.selected,
+    required this.onSelected,
+  });
+
+  final List<int> values;
+  final int selected;
+  final ValueChanged<int> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    return Wrap(
+      spacing: 10,
+      runSpacing: 10,
+      children: [
+        for (final value in values)
+          PressBounce(
+            onPressed: () => onSelected(value),
+            pressedScale: 0.9,
+            color: Colors.transparent,
+            pressedColor: Colors.transparent,
+            borderRadius: BorderRadius.circular(999),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 220),
+              curve: Curves.easeOutCubic,
+              width: 28,
+              height: 28,
+              decoration: BoxDecoration(
+                color: Color(value),
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: selected == value ? colors.card : Colors.transparent,
+                  width: 3,
+                ),
+                boxShadow: selected == value
+                    ? const [
+                        BoxShadow(
+                          color: Color(0x33000000),
+                          blurRadius: 6,
+                        ),
+                      ]
+                    : const [],
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class _ThemeImageWell extends StatelessWidget {
+  const _ThemeImageWell({
+    required this.label,
+    required this.path,
+    required this.onPressed,
+    this.height = 132,
+    this.alignBottom = false,
+  });
+
+  final String label;
+  final String? path;
+  final VoidCallback onPressed;
+  final double height;
+  final bool alignBottom;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    final imagePath = path;
+    final hasImage = imagePath != null && imagePath.isNotEmpty;
+    return PressBounce(
+      onPressed: onPressed,
+      pressedScale: 0.99,
+      color: Colors.transparent,
+      pressedColor: Colors.transparent,
+      borderRadius: BorderRadius.circular(16),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: SizedBox(
+          height: height,
+          width: double.infinity,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              ColoredBox(color: colors.card.withValues(alpha: 0.55)),
+              if (hasImage)
+                Image.file(
+                  File(imagePath),
+                  fit: BoxFit.cover,
+                  alignment: alignBottom
+                      ? Alignment.bottomCenter
+                      : Alignment.center,
+                  filterQuality: FilterQuality.medium,
+                  errorBuilder: (_, _, _) => const SizedBox.shrink(),
+                ),
+              if (!hasImage)
+                Center(
+                  child: Text(
+                    label,
+                    style: TextStyle(
+                      fontFamily: AppFonts.of(context),
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: colors.muted,
+                    ),
+                  ),
+                )
+              else
+                Align(
+                  alignment: Alignment.bottomLeft,
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
+                    child: Text(
+                      label,
+                      style: TextStyle(
+                        fontFamily: AppFonts.of(context),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: colors.text.withValues(alpha: 0.72),
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _DeleteCustomThemeDialog extends StatelessWidget {
+  const _DeleteCustomThemeDialog({required this.name});
+
+  final String name;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    return AlertDialog(
+      backgroundColor: colors.card,
+      surfaceTintColor: Colors.transparent,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      title: Text(
+        AppStrings.deleteTitle,
+        style: TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.w800,
+          color: colors.text,
+        ),
+      ),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text.rich(
+            TextSpan(
+              children: [
+                TextSpan(
+                  text: name,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w800,
+                    color: colors.danger,
+                  ),
+                ),
+                const TextSpan(text: ' ${AppStrings.themeMineDeleteBody}'),
+              ],
+            ),
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              color: colors.secondary,
+            ),
+          ),
+          const SizedBox(height: 20),
+          Row(
+            children: [
+              Expanded(
+                child: PressBounce(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  color: colors.border,
+                  pressedColor: Color.lerp(colors.border, Colors.black, 0.12)!,
+                  borderRadius: BorderRadius.circular(14),
+                  child: SizedBox(
+                    height: 48,
+                    child: Center(
+                      child: Text(
+                        AppStrings.cancel,
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w800,
+                          color: colors.text,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: PressBounce(
+                  onPressed: () => Navigator.of(context).pop(true),
+                  color: colors.danger,
+                  pressedColor: Color.lerp(colors.danger, Colors.black, 0.16)!,
+                  borderRadius: BorderRadius.circular(14),
+                  child: const SizedBox(
+                    height: 48,
+                    child: Center(
+                      child: Text(
+                        AppStrings.delete,
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }
@@ -2835,6 +4101,7 @@ class _SettingsTile extends StatelessWidget {
   const _SettingsTile({
     required this.label,
     required this.onPressed,
+    this.onLongPressed,
     this.checked = false,
     this.value,
     this.chevron = false,
@@ -2849,12 +4116,14 @@ class _SettingsTile extends StatelessWidget {
   final String? labelFontFamily;
   final bool previewLabelFont;
   final VoidCallback onPressed;
+  final VoidCallback? onLongPressed;
 
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
     return PressBounce(
       onPressed: onPressed,
+      onLongPressed: onLongPressed,
       pressedScale: 0.98,
       color: colors.card,
       pressedColor: colors.pressed,

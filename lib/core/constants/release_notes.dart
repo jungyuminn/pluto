@@ -17,6 +17,15 @@ class ReleaseNote {
 abstract final class ReleaseNotes {
   static const all = [
     ReleaseNote(
+      version: '1.0.20',
+      items: [
+        '사진이나 패턴으로 나만의 테마를 만들 수 있어요',
+        '만든 테마는 꾹 눌러 순서를 바꾸고, 밀어서 고치거나 지울 수 있어요',
+        '클로버·곰·토끼·하트 패턴과 수달 목욕탕·꽃집·팬케이크 테마가 생겼어요',
+        '백업이 다운로드에도 남아서 앱을 지워도 복구할 수 있어요',
+      ],
+    ),
+    ReleaseNote(
       version: '1.0.19',
       items: [
         '캘린더에서 가계부로 수입과 지출을 적을 수 있어요',

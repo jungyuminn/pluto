@@ -11,6 +11,7 @@ class SlidingKindBar<T> extends StatefulWidget {
     required this.labelOf,
     required this.accent,
     required this.onChanged,
+    this.barColor,
   });
 
   final List<T> values;
@@ -18,6 +19,7 @@ class SlidingKindBar<T> extends StatefulWidget {
   final String Function(T value) labelOf;
   final Color accent;
   final ValueChanged<T> onChanged;
+  final Color? barColor;
 
   @override
   State<SlidingKindBar<T>> createState() => _SlidingKindBarState<T>();
@@ -57,7 +59,7 @@ class _SlidingKindBarState<T> extends State<SlidingKindBar<T>> {
       height: 42,
       padding: const EdgeInsets.all(3),
       decoration: BoxDecoration(
-        color: colors.card.withValues(alpha: 0.55),
+        color: widget.barColor ?? colors.card.withValues(alpha: 0.55),
         borderRadius: BorderRadius.circular(999),
       ),
       child: LayoutBuilder(
@@ -129,7 +131,7 @@ class _SlidingKindBarState<T> extends State<SlidingKindBar<T>> {
                               fontSize: 13,
                               fontWeight: FontWeight.w700,
                               color: value == widget.selected
-                                  ? Colors.white
+                                  ? _onAccent(colors)
                                   : colors.text,
                             ),
                             child: FittedBox(
@@ -153,5 +155,11 @@ class _SlidingKindBarState<T> extends State<SlidingKindBar<T>> {
     if (width <= 0 || widget.values.isEmpty) return 0;
     final cell = width / widget.values.length;
     return (dx / cell).floor().clamp(0, widget.values.length - 1);
+  }
+
+  Color _onAccent(AppColors colors) {
+    return widget.accent.computeLuminance() > 0.45
+        ? colors.text
+        : Colors.white;
   }
 }

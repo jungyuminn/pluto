@@ -4,11 +4,15 @@ import 'dart:io';
 import 'package:archive/archive.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:job_planner/app_scope.dart';
 import 'package:job_planner/core/constants/app_strings.dart';
 import 'package:job_planner/core/home_widget/home_screen_widget_service.dart';
 import 'package:job_planner/core/notifications/todo_reminder_service.dart';
 import 'package:job_planner/data/datasources/backup_preference.dart';
+import 'package:job_planner/data/datasources/calendar_event_local_datasource.dart';
+import 'package:job_planner/data/datasources/custom_theme_storage.dart';
+import 'package:job_planner/data/datasources/theme_preference.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -22,10 +26,13 @@ class AppBackupService {
 
   static const _jobsKey = 'job_applications';
   static const _diariesKey = 'diary_entries';
+  static const _eventsKey = 'calendar_events';
   static const _coverFolder = 'cover_letters';
   static const _diaryFolder = 'diaries';
+  static const _themesFolder = CustomThemeStorage.folderName;
   static const _autoFolder = 'auto_backups';
   static const _keepAutoCount = 3;
+  static const _downloadChannel = MethodChannel('job_planner/backup_store');
 
   static String fileName([DateTime? now]) {
     final stamp = now ?? DateTime.now();
@@ -35,13 +42,28 @@ class AppBackupService {
   }
 
   static Future<bool> backup() async {
-    await saveLocal();
+    final bytes = await saveLocal();
+    if (!kIsWeb && Platform.isIOS) {
+      try {
+        await FilePicker.saveFile(
+          fileName: fileName(),
+          bytes: bytes,
+          mimeType: 'application/zip',
+          type: FileType.custom,
+          allowedExtensions: const ['zip'],
+        );
+      } catch (error, stack) {
+        debugPrint('Export backup failed: $error\n$stack');
+      }
+    }
     return true;
   }
 
   static Future<void> runAutoIfDue(BackupPreference preference) async {
     if (!preference.isDue) return;
     try {
+      final prefs = await SharedPreferences.getInstance();
+      if (isStarterOnly(prefs)) return;
       await saveLocal();
       await preference.markBackedUp();
     } catch (error, stack) {
@@ -49,13 +71,15 @@ class AppBackupService {
     }
   }
 
-  static Future<void> saveLocal() async {
+  static Future<Uint8List> saveLocal() async {
     final bytes = await encode();
     final folder = await _autoBackupDirectory();
     await folder.create(recursive: true);
     final file = File(p.join(folder.path, fileName()));
     await file.writeAsBytes(bytes, flush: true);
     await _pruneAutoBackups(folder);
+    await _copyToDownloads(bytes);
+    return bytes;
   }
 
   static Future<List<File>> listLocalBackups() async {
@@ -112,6 +136,22 @@ class AppBackupService {
     }
   }
 
+  static Future<void> _copyToDownloads(Uint8List bytes) async {
+    if (kIsWeb || !Platform.isAndroid) return;
+    try {
+      await _downloadChannel.invokeMethod<void>('saveDownload', {
+        'fileName': fileName(),
+        'bytes': bytes,
+      });
+      await _downloadChannel.invokeMethod<void>('pruneDownloads', {
+        'keep': _keepAutoCount,
+        'prefix': '잡플래너_백업_',
+      });
+    } catch (error, stack) {
+      debugPrint('Download backup failed: $error\n$stack');
+    }
+  }
+
   static Future<bool> restoreFromPicker() async {
     final file = await FilePicker.pickFile(
       type: FileType.custom,
@@ -124,7 +164,6 @@ class AppBackupService {
   }
 
   static Future<void> applyToApp(AppScope scope) async {
-    await SharedPreferences.getInstance().then((prefs) => prefs.reload());
     scope.themePreference.hydrate();
     scope.fontPreference.hydrate();
     scope.calendarPreference.hydrate();
@@ -155,6 +194,11 @@ class AppBackupService {
     );
     await _addFolder(archive, Directory(p.join(documents.path, _coverFolder)), _coverFolder);
     await _addFolder(archive, Directory(p.join(documents.path, _diaryFolder)), _diaryFolder);
+    await _addFolder(
+      archive,
+      Directory(p.join(documents.path, _themesFolder)),
+      _themesFolder,
+    );
     await _addReferencedFiles(archive, prefs, documents.path);
     final encoded = ZipEncoder().encode(archive);
     return Uint8List.fromList(encoded);
@@ -179,8 +223,10 @@ class AppBackupService {
     final documents = await getApplicationDocumentsDirectory();
     final coverDir = Directory(p.join(documents.path, _coverFolder));
     final diaryDir = Directory(p.join(documents.path, _diaryFolder));
+    final themesDir = Directory(p.join(documents.path, _themesFolder));
     await coverDir.create(recursive: true);
     await diaryDir.create(recursive: true);
+    await themesDir.create(recursive: true);
 
     for (final file in archive.files) {
       if (!file.isFile) continue;
@@ -191,6 +237,8 @@ class AppBackupService {
         folder = coverDir;
       } else if (name.startsWith('$_diaryFolder/')) {
         folder = diaryDir;
+      } else if (name.startsWith('$_themesFolder/')) {
+        folder = themesDir;
       }
       if (folder == null) continue;
       final dest = File(p.join(folder.path, p.basename(name)));
@@ -199,7 +247,7 @@ class AppBackupService {
 
     final prefs = await SharedPreferences.getInstance();
     await _applyPrefs(prefs, prefsMap);
-    await _relocatePaths(prefs, coverDir.path, diaryDir.path);
+    await _relocatePaths(prefs, coverDir.path, diaryDir.path, themesDir.path);
   }
 
   static Map<String, dynamic> _dumpPrefs(SharedPreferences prefs) {
@@ -225,6 +273,12 @@ class AppBackupService {
     SharedPreferences prefs,
     Map<String, dynamic> raw,
   ) async {
+    final incoming = raw.keys.toSet();
+    for (final key in prefs.getKeys()) {
+      if (!incoming.contains(key)) {
+        await prefs.remove(key);
+      }
+    }
     for (final entry in raw.entries) {
       final payload = entry.value;
       if (payload is! Map) continue;
@@ -245,10 +299,38 @@ class AppBackupService {
     }
   }
 
+  static bool isStarterOnly(SharedPreferences prefs) {
+    if (_hasItems(prefs.getString(_jobsKey))) return false;
+    if (_hasItems(prefs.getString(_diariesKey))) return false;
+    final raw = prefs.getString(_eventsKey);
+    if (raw == null || raw.isEmpty) return true;
+    try {
+      final items = jsonDecode(raw) as List<dynamic>;
+      if (items.isEmpty) return true;
+      return items.every((item) {
+        final id = (item as Map)['id'] as String? ?? '';
+        return id.startsWith(CalendarEventLocalDataSource.starterIdPrefix);
+      });
+    } catch (_) {
+      return false;
+    }
+  }
+
+  static bool _hasItems(String? raw) {
+    if (raw == null || raw.isEmpty || raw == '[]') return false;
+    try {
+      final items = jsonDecode(raw);
+      return items is List && items.isNotEmpty;
+    } catch (_) {
+      return true;
+    }
+  }
+
   static Future<void> _relocatePaths(
     SharedPreferences prefs,
     String coverDir,
     String diaryDir,
+    String themesDir,
   ) async {
     final jobsRaw = prefs.getString(_jobsKey);
     if (jobsRaw != null && jobsRaw.isNotEmpty) {
@@ -268,6 +350,31 @@ class AppBackupService {
       ];
       await prefs.setString(_diariesKey, jsonEncode(next));
     }
+    final themesRaw = prefs.getString(ThemePreference.customThemesKey);
+    if (themesRaw != null && themesRaw.isNotEmpty) {
+      final themes = jsonDecode(themesRaw) as List<dynamic>;
+      final next = [
+        for (final item in themes)
+          _rewriteThemePaths(item as Map<String, dynamic>, themesDir),
+      ];
+      await prefs.setString(ThemePreference.customThemesKey, jsonEncode(next));
+    }
+  }
+
+  static Map<String, dynamic> _rewriteThemePaths(
+    Map<String, dynamic> json,
+    String folder,
+  ) {
+    var next = json;
+    for (final key in const [
+      'photoPath',
+      'decorationPath',
+      'bottomPath',
+      'imagePath',
+    ]) {
+      next = _rewritePath(next, key, folder);
+    }
+    return next;
   }
 
   static Map<String, dynamic> _rewritePath(
@@ -300,6 +407,7 @@ class AppBackupService {
   ) async {
     final coverDir = p.join(documentsPath, _coverFolder);
     final diaryDir = p.join(documentsPath, _diaryFolder);
+    final themesDir = p.join(documentsPath, _themesFolder);
     final jobsRaw = prefs.getString(_jobsKey);
     if (jobsRaw != null && jobsRaw.isNotEmpty) {
       final jobs = jsonDecode(jobsRaw) as List<dynamic>;
@@ -322,6 +430,26 @@ class AppBackupService {
         if (!file.existsSync()) continue;
         if (p.equals(p.dirname(path), diaryDir)) continue;
         await _addFile(archive, file, '$_diaryFolder/${p.basename(path)}');
+      }
+    }
+    final themesRaw = prefs.getString(ThemePreference.customThemesKey);
+    if (themesRaw != null && themesRaw.isNotEmpty) {
+      final themes = jsonDecode(themesRaw) as List<dynamic>;
+      for (final item in themes) {
+        final map = item as Map<String, dynamic>;
+        for (final key in const [
+          'photoPath',
+          'decorationPath',
+          'bottomPath',
+          'imagePath',
+        ]) {
+          final path = map[key] as String?;
+          if (path == null || path.isEmpty) continue;
+          final file = File(path);
+          if (!file.existsSync()) continue;
+          if (p.equals(p.dirname(path), themesDir)) continue;
+          await _addFile(archive, file, '$_themesFolder/${p.basename(path)}');
+        }
       }
     }
   }

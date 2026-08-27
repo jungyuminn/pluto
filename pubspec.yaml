@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 1.0.19+20
+version: 1.0.20+21
 
 environment:
   sdk: ^3.12.2
@@ -94,20 +94,26 @@ flutter:
     - assets/icons/
     - assets/images/
     - assets/themes/blossom/
+    - assets/themes/clover/
+    - assets/themes/fluffy_bear/
+    - assets/themes/fluffy_rabbit/
+    - assets/themes/pink_heart/
     - assets/themes/summer_beach/
     - assets/themes/snowy_winter/
-    - assets/themes/autumn_forest/
     - assets/themes/squishy_bear/
     - assets/themes/strawberry_milk/
-    - assets/themes/onion_village/
     - assets/themes/lovely_bear/
     - assets/themes/rainy_day/
     - assets/themes/band/
-    - assets/themes/boyhood/
-    - assets/themes/interlude/
     - assets/themes/cloud/
     - assets/themes/cat_village/
     - assets/themes/hamster_bakery/
+    - assets/themes/otter_bathhouse/light/
+    - assets/themes/otter_bathhouse/dark/
+    - assets/themes/rabbit_flower_market/light/
+    - assets/themes/rabbit_flower_market/dark/
+    - assets/themes/bear_pancake_cafe/light/
+    - assets/themes/bear_pancake_cafe/dark/
   fonts:
     - family: Pretendard
       fonts:

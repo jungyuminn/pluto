@@ -272,6 +272,7 @@ class _AppBootstrapState extends State<_AppBootstrap> {
   Future<void> _load() async {
     final prefs = await SharedPreferences.getInstance();
     final eventDataSource = CalendarEventLocalDataSource(prefs);
+    await eventDataSource.seedStartersIfNeeded();
     final diaryDataSource = DiaryLocalDataSource(prefs);
     final ledgerDataSource = LedgerLocalDataSource(prefs);
     final jobDataSource = JobApplicationLocalDataSource(prefs);
@@ -580,11 +581,13 @@ class _JobPlannerMaterialAppState extends State<_JobPlannerMaterialApp>
             dark: false,
             typeface: font.typeface,
             skin: theme.skin,
+            customAccent: theme.customTheme?.accentColor,
           ),
           darkTheme: AppTheme.themed(
             dark: true,
             typeface: font.typeface,
             skin: theme.skin,
+            customAccent: theme.customTheme?.accentColor,
           ),
           themeMode: theme.mode,
           locale: const Locale('ko', 'KR'),

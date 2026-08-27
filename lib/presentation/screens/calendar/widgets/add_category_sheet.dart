@@ -50,22 +50,7 @@ class _AddCategorySheetState extends State<AddCategorySheet> {
   var _saving = false;
   final _usedColors = <int>{};
 
-  static const _colors = [
-    0xFFE53935,
-    0xFFFF8A65,
-    0xFFFB8C00,
-    0xFFF6C000,
-    0xFF7CB342,
-    0xFF2E7D32,
-    0xFF00897B,
-    0xFF00ACC1,
-    0xFF3B82F6,
-    0xFFA855F7,
-    0xFFF48FB1,
-    0xFFD81B60,
-    0xFF8D6E63,
-    0xFF64748B,
-  ];
+  static const _colors = EventCategory.palette;
 
   @override
   void initState() {

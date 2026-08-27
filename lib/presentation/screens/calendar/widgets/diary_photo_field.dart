@@ -144,12 +144,15 @@ class _DiaryPhotoFieldState extends State<DiaryPhotoField> {
             ),
           ),
           Positioned.fill(
-            child: _ExistingPhotoActions(
-              visible: _actionsOpen,
-              drawing: drawing,
-              onDismiss: () => setState(() => _actionsOpen = false),
-              onChange: _pick,
-              onDraw: _draw,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: _ExistingPhotoActions(
+                visible: _actionsOpen,
+                drawing: drawing,
+                onDismiss: () => setState(() => _actionsOpen = false),
+                onChange: _pick,
+                onDraw: _draw,
+              ),
             ),
           ),
         ],
@@ -216,66 +219,65 @@ class _ExistingPhotoActions extends StatelessWidget {
   Widget build(BuildContext context) {
     return IgnorePointer(
       ignoring: !visible,
-      child: AnimatedOpacity(
-        duration: _anim,
-        curve: Curves.easeOutCubic,
-        opacity: visible ? 1 : 0,
-        child: GestureDetector(
-          onTap: onDismiss,
-          behavior: HitTestBehavior.opaque,
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(8),
-              gradient: LinearGradient(
-                begin: Alignment.center,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Colors.black.withValues(alpha: 0),
-                  Colors.black.withValues(alpha: 0.32),
-                ],
+      child: GestureDetector(
+        onTap: onDismiss,
+        behavior: HitTestBehavior.opaque,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            AnimatedOpacity(
+              duration: _anim,
+              curve: Curves.easeOutCubic,
+              opacity: visible ? 1 : 0,
+              child: const DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.center,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Color(0x00000000),
+                      Color(0x52000000),
+                    ],
+                  ),
+                ),
               ),
             ),
-            child: Align(
+            Align(
               alignment: Alignment.bottomCenter,
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
                 child: AnimatedSlide(
                   duration: _anim,
-                  curve: visible ? Curves.easeOutBack : Curves.easeInCubic,
-                  offset: visible ? Offset.zero : const Offset(0, 0.28),
-                  child: AnimatedScale(
-                    duration: _anim,
-                    curve: visible ? Curves.easeOutBack : Curves.easeInCubic,
-                    scale: visible ? 1 : 0.86,
-                    child: GestureDetector(
-                      onTap: () {},
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: _PhotoChoice(
-                              label: AppStrings.diaryPhotoChange,
-                              onPressed: onChange,
-                              onPhoto: true,
-                            ),
+                  curve: visible ? Curves.easeOutCubic : Curves.easeInCubic,
+                  offset: visible ? Offset.zero : const Offset(0, 1.2),
+                  child: GestureDetector(
+                    onTap: () {},
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: _PhotoChoice(
+                            label: AppStrings.diaryPhotoChange,
+                            onPressed: onChange,
+                            onPhoto: true,
                           ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: _PhotoChoice(
-                              label: drawing
-                                  ? AppStrings.diaryDrawEdit
-                                  : AppStrings.diaryPhotoDrawOn,
-                              onPressed: onDraw,
-                              onPhoto: true,
-                            ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: _PhotoChoice(
+                            label: drawing
+                                ? AppStrings.diaryDrawEdit
+                                : AppStrings.diaryPhotoDrawOn,
+                            onPressed: onDraw,
+                            onPhoto: true,
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
               ),
             ),
-          ),
+          ],
         ),
       ),
     );

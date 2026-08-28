@@ -16,6 +16,7 @@ import 'package:job_planner/data/datasources/calendar_event_local_datasource.dar
 import 'package:job_planner/data/datasources/diary_local_datasource.dart';
 import 'package:job_planner/data/datasources/ledger_local_datasource.dart';
 import 'package:job_planner/data/datasources/event_category_local_datasource.dart';
+import 'package:job_planner/data/datasources/day_emoji_store.dart';
 import 'package:job_planner/data/datasources/day_events_view_preference.dart';
 import 'package:job_planner/data/datasources/font_preference.dart';
 import 'package:job_planner/data/datasources/home_view_preference.dart';
@@ -93,6 +94,7 @@ class JobPlannerApp extends StatelessWidget {
     this.jobViewPreference,
     this.homeViewPreference,
     this.longGoalStore,
+    this.dayEmojiStore,
     this.dayEventsViewPreference,
     this.calendarPreference,
     this.fontPreference,
@@ -130,6 +132,7 @@ class JobPlannerApp extends StatelessWidget {
   final JobViewPreference? jobViewPreference;
   final HomeViewPreference? homeViewPreference;
   final LongGoalLocalDataSource? longGoalStore;
+  final DayEmojiStore? dayEmojiStore;
   final DayEventsViewPreference? dayEventsViewPreference;
   final CalendarPreference? calendarPreference;
   final FontPreference? fontPreference;
@@ -203,6 +206,7 @@ class JobPlannerApp extends StatelessWidget {
       jobViewPreference: jobViewPreference ?? JobViewPreference(),
       homeViewPreference: homeViewPreference ?? HomeViewPreference(),
       longGoalStore: longGoalStore ?? LongGoalLocalDataSource(),
+      dayEmojiStore: dayEmojiStore ?? DayEmojiStore(),
       dayEventsViewPreference:
           dayEventsViewPreference ?? DayEventsViewPreference(),
       calendarPreference: calendarPreference ?? CalendarPreference(),
@@ -255,6 +259,7 @@ class _AppBootstrapState extends State<_AppBootstrap> {
   JobViewPreference? _jobViewPreference;
   HomeViewPreference? _homeViewPreference;
   LongGoalLocalDataSource? _longGoalStore;
+  DayEmojiStore? _dayEmojiStore;
   DayEventsViewPreference? _dayEventsViewPreference;
   CalendarPreference? _calendarPreference;
   FontPreference? _fontPreference;
@@ -283,6 +288,7 @@ class _AppBootstrapState extends State<_AppBootstrap> {
       preference: notificationPreference,
     );
     final themePreference = ThemePreference(prefs: prefs);
+    await themePreference.seedStartersIfNeeded();
     final backupPreference = BackupPreference(prefs: prefs);
     final categoryDataSource = EventCategoryLocalDataSource(prefs);
     final companyCategoryDataSource = EventCategoryLocalDataSource(
@@ -293,6 +299,7 @@ class _AppBootstrapState extends State<_AppBootstrap> {
     );
     final homeViewPreference = HomeViewPreference(prefs: prefs);
     final longGoalStore = LongGoalLocalDataSource(prefs: prefs);
+    final dayEmojiStore = DayEmojiStore(prefs: prefs);
     final dayEventsViewPreference = DayEventsViewPreference(prefs: prefs);
     final calendarPreference = CalendarPreference(prefs: prefs);
     final fontPreference = FontPreference(prefs: prefs);
@@ -346,6 +353,7 @@ class _AppBootstrapState extends State<_AppBootstrap> {
       _jobViewPreference = JobViewPreference(prefs: prefs);
       _homeViewPreference = homeViewPreference;
       _longGoalStore = longGoalStore;
+      _dayEmojiStore = dayEmojiStore;
       _dayEventsViewPreference = dayEventsViewPreference;
       _calendarPreference = calendarPreference;
       _fontPreference = fontPreference;
@@ -409,6 +417,7 @@ class _AppBootstrapState extends State<_AppBootstrap> {
     final jobViewPreference = _jobViewPreference;
     final homeViewPreference = _homeViewPreference;
     final longGoalStore = _longGoalStore;
+    final dayEmojiStore = _dayEmojiStore;
     final dayEventsViewPreference = _dayEventsViewPreference;
     final calendarPreference = _calendarPreference;
     final fontPreference = _fontPreference;
@@ -445,6 +454,7 @@ class _AppBootstrapState extends State<_AppBootstrap> {
         jobViewPreference == null ||
         homeViewPreference == null ||
         longGoalStore == null ||
+        dayEmojiStore == null ||
         dayEventsViewPreference == null ||
         calendarPreference == null ||
         fontPreference == null ||
@@ -494,6 +504,7 @@ class _AppBootstrapState extends State<_AppBootstrap> {
       jobViewPreference: jobViewPreference,
       homeViewPreference: homeViewPreference,
       longGoalStore: longGoalStore,
+      dayEmojiStore: dayEmojiStore,
       dayEventsViewPreference: dayEventsViewPreference,
       calendarPreference: calendarPreference,
       fontPreference: fontPreference,

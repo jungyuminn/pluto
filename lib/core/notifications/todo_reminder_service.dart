@@ -417,7 +417,9 @@ class TodoReminderService {
   }
 
   tz.TZDateTime? _fireAt(CalendarEvent event, int leadMinutes) {
-    if (event.isJob || event.completed || !event.hasTime) return null;
+    if (event.isJob || event.someday || event.completed || !event.hasTime) {
+      return null;
+    }
     final start = event.startMinutes!;
     final at = _wallTime(
       event.day,

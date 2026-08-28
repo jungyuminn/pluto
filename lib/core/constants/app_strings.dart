@@ -118,13 +118,13 @@ class AppStrings {
       '오른쪽 ··· 을 누르면 메뉴가 열려요. 할 일·기업만 보거나 일기·가계부로 바꿀 수 있어요';
   static const tutorialNavHomeTitle = '홈 화면';
   static const tutorialNavHomeBody =
-      '오늘·내일 할 일과 언젠가 카드가 모여 있어요';
+      '오늘·내일 할 일과 챌린지 카드가 모여 있어요';
   static const tutorialHomeToolsTitle = '위쪽 버튼';
   static const tutorialHomeToolsBody =
       '검색, 간략히 보기, 설정이에요';
   static const tutorialHomeListTitle = '할 일 카드';
   static const tutorialHomeListBody =
-      '오늘·내일·언젠가 카드예요. 눌러 열거나, 길게 눌러 순서를 바꿀 수 있어요';
+      '오늘·내일·챌린지 카드예요. 눌러 열거나, 길게 눌러 순서를 바꿀 수 있어요';
   static const tutorialNavJobTitle = '취업 화면';
   static const tutorialNavJobBody = '지원 기업이 모여 있어요';
   static const tutorialJobToolsTitle = '위쪽 버튼';
@@ -148,10 +148,12 @@ class AppStrings {
   static const homeShowTomorrow = '내일';
   static const homeShowWeek = '이번 주';
   static const homeShowMonth = '이번 달';
-  static const homeShowLongGoal = '언젠가';
+  static const homeShowSomeday = '언젠가';
+  static const homeShowLongGoal = '챌린지';
+  static const somedayTitle = '언젠가';
   static const homePickCards = '보여줄 카드';
   static const homeReorderCards = '순서 바꾸기';
-  static const longGoalTitle = '언젠가';
+  static const longGoalTitle = '챌린지';
   static const longGoalAdd = '+ 할 일을 추가하세요';
   static const longGoalNameHint = '할 일을 입력하세요';
   static const longGoalUnitHint = '단위';
@@ -180,7 +182,7 @@ class AppStrings {
   static const longGoalProgress = '진척도';
   static const longGoalRecent = '최근 기록';
   static const longGoalEmptyHistory = '아직 기록이 없어요';
-  static const longGoalDeleteBody = '언젠가와 기록이 사라져요';
+  static const longGoalDeleteBody = '챌린지와 기록이 사라져요';
   static String longGoalPercent(int value) => '$value%';
   static const settingsMonthlyStatsSection = '통계 알림';
   static const homeShowMonthlyStats = '지난달 요약';
@@ -192,8 +194,9 @@ class AppStrings {
   static const themeGroupPattern = '패턴';
   static const themeGroupScene = '이미지';
   static const themeGroupMine = '내 테마';
-  static const themeMineEmpty = '아직 만든 테마가 없어요';
   static const themeMineCreate = '테마 만들기';
+  static const starterThemeReorder = '꾹 눌러서 위치를 바꿀 수 있어요';
+  static const starterThemeSwipe = '왼쪽으로 밀어서 수정 및 삭제를 할 수 있어요';
   static const themeMineEdit = '테마 수정';
   static const themeMineNameHint = '테마 이름을 입력하세요';
   static const themeMineAccent = '테마색';
@@ -260,6 +263,7 @@ class AppStrings {
   static const settingsFontHelp = '앱에 쓰는 글꼴과, 할 일·캘린더 라벨의 크기를 바꿀 수 있어요';
   static const settingsCalendarSection = '캘린더 설정';
   static const calendarStartMonday = '월요일부터 시작';
+  static const calendarShowLunar = '음력 날짜 표시';
   static const settingsHelpPreview = '미리보기';
   static const settingsHomeLayoutHelp =
       '홈 화면에 보여줄 카드를 고르고, 홈에서 카드를 길게 눌러 순서를 바꿀 수 있어요';
@@ -274,9 +278,9 @@ class AppStrings {
       '폰 캘린더에 있는 일정을 할 일로 가져와요. 안드로이드는 삼성 캘린더, 아이폰은 iOS 캘린더를 쓰면 돼요. 가져올 기간을 고르고, 카테고리는 하나에 몰아넣거나 할 일마다 고를 수 있어요. 기업 카드는 그대로 둬요';
   static const settingsAppHelp =
       '앱 사용법을 처음부터 다시 보거나, 이 버전에 새로 생긴 기능과 고친 내용을 볼 수 있어요';
-  static const settingsCalendarHelp = '캘린더의 첫 요일을 바꿀 수 있어요';
+  static const settingsCalendarHelp = '캘린더의 첫 요일과 음력 날짜를 바꿀 수 있어요';
   static const settingsCalendarHelpWithFontSize =
-      '캘린더의 첫 요일과, 할 일·기업·날짜·라벨의 글자 크기를 바꿀 수 있어요';
+      '캘린더의 첫 요일과 음력 날짜, 할 일·기업·날짜·라벨의 글자 크기를 바꿀 수 있어요';
   static const calendarStartSunday = '일요일부터 시작';
   static const settingsMonthlyStatsHelp =
       '매달 1일에는 지난달 요약을, 매주 월요일에는 지난주 요약을 보여줘요';
@@ -529,6 +533,8 @@ class AppStrings {
   static const missingCategoryBody = '카테고리명은 필수사항이에요!';
   static const dateAction = '날짜';
   static const memoAction = '메모';
+  static const emojiAction = '스티커';
+  static const emojiClear = '스티커 떼어내기';
   static const roundAction = '전형';
   static const timeAction = '시간';
   static const timeSortView = '시간 순으로 보기';

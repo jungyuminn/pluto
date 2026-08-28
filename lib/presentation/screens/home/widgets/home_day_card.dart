@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:job_planner/app_scope.dart';
 import 'package:job_planner/core/constants/app_fonts.dart';
+import 'package:job_planner/core/constants/app_icons.dart';
 import 'package:job_planner/core/constants/app_strings.dart';
 import 'package:job_planner/core/theme/app_colors.dart';
 import 'package:job_planner/core/utils/press_bounce.dart';
@@ -13,9 +14,11 @@ import 'package:job_planner/presentation/screens/add_company/widgets/add_company
 import 'package:job_planner/presentation/screens/add_company/widgets/missing_fields_dialog.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/add_event_button.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/add_event_sheet.dart';
+import 'package:job_planner/presentation/screens/calendar/widgets/day_emoji_sheet.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/day_event_label.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/delete_event_dialog.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/delete_repeat_event_dialog.dart';
+import 'package:job_planner/presentation/widgets/app_bar_pill.dart';
 
 class HomeDayCard extends StatefulWidget {
   const HomeDayCard({
@@ -30,6 +33,7 @@ class HomeDayCard extends StatefulWidget {
     required this.onEventsChanged,
     this.showAddButton = true,
     this.showEventDates = false,
+    this.someday = false,
     this.dateLabel,
     this.groupDates,
   });
@@ -44,6 +48,7 @@ class HomeDayCard extends StatefulWidget {
   final VoidCallback onEventsChanged;
   final bool showAddButton;
   final bool showEventDates;
+  final bool someday;
   final String? dateLabel;
   final List<DateTime>? groupDates;
 
@@ -81,7 +86,7 @@ class _HomeDayCardState extends State<HomeDayCard> {
   }
 
   String? _timeText(CalendarEvent event) {
-    if (!widget.showTime) return null;
+    if (!widget.showTime || event.someday) return null;
     return event.timeLabel ?? (event.isJob ? null : AppStrings.allDayLabel);
   }
 
@@ -301,9 +306,16 @@ class _HomeDayCardState extends State<HomeDayCard> {
   }
 
   Future<void> _add() async {
-    final date = widget.date;
-    if (date == null) return;
-    final saved = await showAddEventSheet(context, date: date);
+    final now = DateTime.now();
+    final saved = widget.someday
+        ? await showAddEventSheet(
+            context,
+            date: DateTime(now.year, now.month, now.day),
+            someday: true,
+          )
+        : widget.date == null
+            ? false
+            : await showAddEventSheet(context, date: widget.date!);
     if (saved) widget.onEventsChanged();
   }
 
@@ -316,6 +328,7 @@ class _HomeDayCardState extends State<HomeDayCard> {
       context,
       date: event.date,
       event: event,
+      someday: event.someday,
     );
     if (saved) widget.onEventsChanged();
   }
@@ -530,6 +543,17 @@ class _HomeDayCardState extends State<HomeDayCard> {
     widget.onEventsChanged();
   }
 
+  Future<void> _pickEmoji(DateTime date) async {
+    final store = AppScope.of(context).dayEmojiStore;
+    final current = store.on(date);
+    final picked = await showDayEmojiSheet(
+      context,
+      selected: DayStickers.isAsset(current) ? current : null,
+    );
+    if (picked == null || !mounted) return;
+    await store.set(date, picked.isEmpty ? null : picked);
+  }
+
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
@@ -554,35 +578,99 @@ class _HomeDayCardState extends State<HomeDayCard> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text(
-                widget.title,
-                style: TextStyle(
-                  fontFamily: AppFonts.of(context),
-                  fontSize: 17,
-                  fontWeight: FontWeight.w600,
-                  height: 1.1,
-                  color: colors.text,
-                ),
-              ),
-              if (_dateLabel != null) ...[
-                const SizedBox(height: 4),
-                Text(
-                  _dateLabel!,
-                  style: TextStyle(
-                    fontFamily: AppFonts.of(context),
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    height: 1.2,
-                    color: colors.muted,
-                  ),
-                ),
-              ],
+              _buildHeader(context, colors),
               const SizedBox(height: 16),
               _buildList(),
               if (widget.showAddButton) AddEventButton(onPressed: _add),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildHeader(BuildContext context, AppColors colors) {
+    final date = widget.date;
+    if (date == null) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _titleText(context, colors),
+          if (_dateLabel != null) ...[
+            const SizedBox(height: 4),
+            _dateText(context, colors),
+          ],
+        ],
+      );
+    }
+
+    return ListenableBuilder(
+      listenable: AppScope.of(context).dayEmojiStore,
+      builder: (context, _) {
+        final sticker = AppScope.of(context).dayEmojiStore.on(date);
+        final emoji = DayStickers.isAsset(sticker) ? sticker : null;
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            if (emoji != null) ...[
+              Padding(
+                padding: const EdgeInsets.only(right: 10),
+                child: SizedBox(
+                  width: 48,
+                  height: 48,
+                  child: Image.asset(
+                    emoji,
+                    fit: BoxFit.contain,
+                    filterQuality: FilterQuality.medium,
+                  ),
+                ),
+              ),
+            ],
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _titleText(context, colors),
+                  if (_dateLabel != null) ...[
+                    const SizedBox(height: 4),
+                    _dateText(context, colors),
+                  ],
+                ],
+              ),
+            ),
+            AppBarPill(
+              asset: AppIcons.emoji,
+              label: AppStrings.emojiAction,
+              onPressed: () => _pickEmoji(date),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _titleText(BuildContext context, AppColors colors) {
+    return Text(
+      widget.title,
+      style: TextStyle(
+        fontFamily: AppFonts.of(context),
+        fontSize: 17,
+        fontWeight: FontWeight.w600,
+        height: 1.1,
+        color: colors.text,
+      ),
+    );
+  }
+
+  Widget _dateText(BuildContext context, AppColors colors) {
+    return Text(
+      _dateLabel!,
+      style: TextStyle(
+        fontFamily: AppFonts.of(context),
+        fontSize: 12,
+        fontWeight: FontWeight.w500,
+        height: 1.2,
+        color: colors.muted,
       ),
     );
   }

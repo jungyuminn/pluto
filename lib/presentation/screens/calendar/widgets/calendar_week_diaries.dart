@@ -15,6 +15,7 @@ class CalendarWeekDiaries extends StatefulWidget {
     required this.diariesOf,
     this.calendarScale = 1,
     this.labelScale = 1,
+    this.showLunar = false,
     this.searchHitKey,
   });
 
@@ -22,6 +23,7 @@ class CalendarWeekDiaries extends StatefulWidget {
   final List<DiaryEntry> Function(DateTime date) diariesOf;
   final double calendarScale;
   final double labelScale;
+  final bool showLunar;
   final String? searchHitKey;
 
   static const photoHeight = 42.0;
@@ -42,18 +44,21 @@ class CalendarWeekDiaries extends StatefulWidget {
     required double minHeight,
     double calendarScale = 1,
     double labelScale = 1,
+    bool showLunar = false,
   }) {
     final tiles = _tilesFor(
       days: days,
       diariesOf: diariesOf,
       calendarScale: calendarScale,
       labelScale: labelScale,
+      showLunar: showLunar,
     );
     var content = 0.0;
     for (final day in days) {
       final top = CalendarDayCell.eventsTopFor(
         hasHoliday: day.isHoliday,
         scale: calendarScale,
+        showLunar: showLunar,
       );
       if (top > content) content = top;
     }
@@ -82,6 +87,7 @@ class _CalendarWeekDiariesState extends State<CalendarWeekDiaries> {
       diariesOf: widget.diariesOf,
       calendarScale: widget.calendarScale,
       labelScale: widget.labelScale,
+      showLunar: widget.showLunar,
     );
   }
 
@@ -93,11 +99,13 @@ class _CalendarWeekDiariesState extends State<CalendarWeekDiaries> {
       diariesOf: widget.diariesOf,
       calendarScale: widget.calendarScale,
       labelScale: widget.labelScale,
+      showLunar: widget.showLunar,
     );
     final sameWeek = widget.days.first.date == oldWidget.days.first.date &&
         widget.days.last.date == oldWidget.days.last.date &&
         widget.calendarScale == oldWidget.calendarScale &&
-        widget.labelScale == oldWidget.labelScale;
+        widget.labelScale == oldWidget.labelScale &&
+        widget.showLunar == oldWidget.showLunar;
     if (!sameWeek) {
       _exitGen++;
       setState(() {
@@ -207,6 +215,7 @@ List<_DiaryTile> _tilesFor({
   required List<DiaryEntry> Function(DateTime date) diariesOf,
   required double calendarScale,
   required double labelScale,
+  required bool showLunar,
 }) {
   bool sameGroup(DiaryEntry diary, DiaryEntry other) {
     if (diary.groupId != null) return diary.groupId == other.groupId;
@@ -310,6 +319,7 @@ List<_DiaryTile> _tilesFor({
       CalendarDayCell.eventsTopFor(
         hasHoliday: day.isHoliday,
         scale: calendarScale,
+        showLunar: showLunar,
       ),
   ];
   var shifted = true;

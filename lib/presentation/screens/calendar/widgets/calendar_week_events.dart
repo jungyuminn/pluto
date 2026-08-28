@@ -5,21 +5,26 @@ import 'package:job_planner/core/calendar/month_grid.dart';
 import 'package:job_planner/domain/entities/calendar_event.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/calendar_day_cell.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/calendar_event_label.dart';
+import 'package:job_planner/presentation/screens/calendar/widgets/day_emoji_sheet.dart';
 
 class CalendarWeekEvents extends StatefulWidget {
   const CalendarWeekEvents({
     super.key,
     required this.days,
     required this.eventsOf,
+    this.emojisOf,
     this.calendarScale = 1,
     this.labelScale = 1,
+    this.showLunar = false,
     this.searchHitKey,
   });
 
   final List<CalendarDay> days;
   final List<CalendarEvent> Function(DateTime date) eventsOf;
+  final String? Function(DateTime date)? emojisOf;
   final double calendarScale;
   final double labelScale;
+  final bool showLunar;
   final String? searchHitKey;
 
   static const _moveDuration = Duration(milliseconds: 280);
@@ -29,15 +34,24 @@ class CalendarWeekEvents extends StatefulWidget {
     required List<CalendarDay> days,
     required List<CalendarEvent> Function(DateTime date) eventsOf,
     required double minHeight,
+    String? Function(DateTime date)? emojisOf,
     double calendarScale = 1,
     double labelScale = 1,
+    bool showLunar = false,
   }) {
-    final blocks = _blocksFor(days, eventsOf, calendarScale, labelScale);
+    final blocks = _blocksFor(
+      days,
+      eventsOf,
+      calendarScale,
+      labelScale,
+      showLunar,
+    );
     var content = 0.0;
     for (final day in days) {
       final top = CalendarDayCell.eventsTopFor(
             hasHoliday: day.isHoliday,
             scale: calendarScale,
+            showLunar: showLunar,
           ) +
           6;
       if (top > content) content = top;
@@ -48,6 +62,28 @@ class CalendarWeekEvents extends StatefulWidget {
     for (final block in blocks) {
       final bottom = block.top + block.lane * stride + labelHeight + 6;
       if (bottom > content) content = bottom;
+    }
+    if (emojisOf != null) {
+      for (var i = 0; i < days.length; i++) {
+        final emoji = emojisOf(days[i].date);
+        if (!DayStickers.isAsset(emoji)) continue;
+        var bottom = CalendarDayCell.eventsTopFor(
+          hasHoliday: days[i].isHoliday,
+          scale: calendarScale,
+          showLunar: showLunar,
+        );
+        for (final block in blocks) {
+          if (block.start > i || block.end < i) continue;
+          final labelBottom = block.top + block.lane * stride + labelHeight;
+          if (labelBottom > bottom) bottom = labelBottom;
+        }
+        final emojiBottom =
+            bottom +
+            CalendarDayCell.labelGap +
+            CalendarDayCell.emojiHeightFor(calendarScale) +
+            6;
+        if (emojiBottom > content) content = emojiBottom;
+      }
     }
     return math.max(minHeight, content);
   }
@@ -70,6 +106,7 @@ class _CalendarWeekEventsState extends State<CalendarWeekEvents> {
       widget.eventsOf,
       widget.calendarScale,
       widget.labelScale,
+      widget.showLunar,
     );
   }
 
@@ -81,11 +118,13 @@ class _CalendarWeekEventsState extends State<CalendarWeekEvents> {
       widget.eventsOf,
       widget.calendarScale,
       widget.labelScale,
+      widget.showLunar,
     );
     final sameWeek = widget.days.first.date == oldWidget.days.first.date &&
         widget.days.last.date == oldWidget.days.last.date &&
         widget.calendarScale == oldWidget.calendarScale &&
-        widget.labelScale == oldWidget.labelScale;
+        widget.labelScale == oldWidget.labelScale &&
+        widget.showLunar == oldWidget.showLunar;
     if (!sameWeek) {
       _exitGen++;
       setState(() {
@@ -129,7 +168,15 @@ class _CalendarWeekEventsState extends State<CalendarWeekEvents> {
 
   @override
   Widget build(BuildContext context) {
-    if (_blocks.isEmpty && _exiting.isEmpty) return const SizedBox.expand();
+    final emojisOf = widget.emojisOf;
+    final hasEmoji = emojisOf != null &&
+        widget.days.any((day) {
+          final emoji = emojisOf(day.date);
+          return DayStickers.isAsset(emoji);
+        });
+    if (_blocks.isEmpty && _exiting.isEmpty && !hasEmoji) {
+      return const SizedBox.expand();
+    }
     final labelScale = widget.labelScale;
     final stride =
         CalendarDayCell.labelHeightFor(labelScale) + CalendarDayCell.labelGap;
@@ -172,11 +219,42 @@ class _CalendarWeekEventsState extends State<CalendarWeekEvents> {
                     matched: _isSearchMatch(block.event),
                   ),
                 ),
+              if (emojisOf != null)
+                for (var i = 0; i < widget.days.length; i++)
+                  if (DayStickers.isAsset(emojisOf(widget.days[i].date)))
+                    Positioned(
+                      left: cellWidth * i,
+                      width: cellWidth,
+                      top: _emojiTop(i, stride, labelHeight),
+                      height: CalendarDayCell.emojiHeightFor(widget.calendarScale),
+                      child: Opacity(
+                        opacity: widget.days[i].inMonth ? 1 : 0.45,
+                        child: Image.asset(
+                          emojisOf(widget.days[i].date)!,
+                          fit: BoxFit.contain,
+                          filterQuality: FilterQuality.medium,
+                        ),
+                      ),
+                    ),
             ],
           );
         },
       ),
     );
+  }
+
+  double _emojiTop(int dayIndex, double stride, double labelHeight) {
+    var bottom = CalendarDayCell.eventsTopFor(
+      hasHoliday: widget.days[dayIndex].isHoliday,
+      scale: widget.calendarScale,
+      showLunar: widget.showLunar,
+    );
+    for (final block in _blocks) {
+      if (block.start > dayIndex || block.end < dayIndex) continue;
+      final labelBottom = block.top + block.lane * stride + labelHeight;
+      if (labelBottom > bottom) bottom = labelBottom;
+    }
+    return bottom + CalendarDayCell.labelGap;
   }
 }
 
@@ -278,6 +356,7 @@ List<_WeekBlock> _blocksFor(
   List<CalendarEvent> Function(DateTime date) eventsOf,
   double calendarScale,
   double labelScale,
+  bool showLunar,
 ) {
   final occupied = List.generate(7, (_) => <_OccupiedRange>[]);
   final seenGroups = <String>{};
@@ -330,6 +409,7 @@ List<_WeekBlock> _blocksFor(
       CalendarDayCell.eventsTopFor(
         hasHoliday: day.isHoliday,
         scale: calendarScale,
+        showLunar: showLunar,
       ),
   ];
   var shifted = true;
@@ -362,6 +442,7 @@ List<_WeekBlock> _blocksFor(
       CalendarDayCell.labelHeightFor(labelScale) + CalendarDayCell.labelGap;
   final labelHeight = CalendarDayCell.labelHeightFor(labelScale);
   final blocks = <_WeekBlock>[];
+  final lastLane = List.filled(7, -1);
 
   void place(
     ({
@@ -385,6 +466,7 @@ List<_WeekBlock> _blocksFor(
       if (!taken) {
         for (var day = item.start; day <= item.end; day++) {
           occupied[day].add(_OccupiedRange(labelTop, labelBottom));
+          if (chosen > lastLane[day]) lastLane[day] = chosen;
         }
         blocks.add(
           _WeekBlock(
@@ -415,7 +497,12 @@ List<_WeekBlock> _blocksFor(
   }
   for (final item in raw) {
     if (item.event.isJob || item.event.isRange) continue;
-    place(item);
+    var minLane = 0;
+    for (var day = item.start; day <= item.end; day++) {
+      final next = lastLane[day] + 1;
+      if (next > minLane) minLane = next;
+    }
+    place(item, lane: minLane);
   }
   return blocks;
 }

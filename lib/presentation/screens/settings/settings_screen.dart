@@ -60,10 +60,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
   var _showTomorrow = true;
   var _showWeek = false;
   var _showMonth = false;
+  var _showSomeday = false;
   var _showLongGoal = false;
   var _showMonthlyStats = true;
   var _showWeeklyStats = false;
   var _startMonday = false;
+  var _showLunar = false;
   var _dark = false;
   var _skin = AppSkin.classic;
   var _typeface = AppTypeface.pretendard;
@@ -91,10 +93,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _showTomorrow = scope.homeViewPreference.showTomorrow;
     _showWeek = scope.homeViewPreference.showWeek;
     _showMonth = scope.homeViewPreference.showMonth;
+    _showSomeday = scope.homeViewPreference.showSomeday;
     _showLongGoal = scope.homeViewPreference.showLongGoal;
     _showMonthlyStats = scope.homeViewPreference.showMonthlyStats;
     _showWeeklyStats = scope.homeViewPreference.showWeeklyStats;
     _startMonday = scope.calendarPreference.startMonday;
+    _showLunar = scope.calendarPreference.showLunar;
     _dark = scope.themePreference.isDark;
     _skin = scope.themePreference.skin;
     _typeface = scope.fontPreference.typeface;
@@ -117,10 +121,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
       _showTomorrow = scope.homeViewPreference.showTomorrow;
       _showWeek = scope.homeViewPreference.showWeek;
       _showMonth = scope.homeViewPreference.showMonth;
+      _showSomeday = scope.homeViewPreference.showSomeday;
       _showLongGoal = scope.homeViewPreference.showLongGoal;
       _showMonthlyStats = scope.homeViewPreference.showMonthlyStats;
       _showWeeklyStats = scope.homeViewPreference.showWeeklyStats;
       _startMonday = scope.calendarPreference.startMonday;
+      _showLunar = scope.calendarPreference.showLunar;
       _dark = scope.themePreference.isDark;
       _skin = scope.themePreference.skin;
       _typeface = scope.fontPreference.typeface;
@@ -349,6 +355,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
     await AppScope.of(context).homeViewPreference.setShowMonth(value);
   }
 
+  Future<void> _setShowSomeday(bool value) async {
+    setState(() => _showSomeday = value);
+    await AppScope.of(context).homeViewPreference.setShowSomeday(value);
+  }
+
   Future<void> _setShowLongGoal(bool value) async {
     setState(() => _showLongGoal = value);
     await AppScope.of(context).homeViewPreference.setShowLongGoal(value);
@@ -362,6 +373,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _setShowWeeklyStats(bool value) async {
     setState(() => _showWeeklyStats = value);
     await AppScope.of(context).homeViewPreference.setShowWeeklyStats(value);
+  }
+
+  Future<void> _setShowLunar(bool value) async {
+    setState(() => _showLunar = value);
+    await AppScope.of(context).calendarPreference.setShowLunar(value);
   }
 
   Future<void> _setStartMonday(bool value) async {
@@ -701,6 +717,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 onChanged: _setShowMonth,
               ),
               _SettingsSwitchTile(
+                label: AppStrings.homeShowSomeday,
+                value: _showSomeday,
+                onChanged: _setShowSomeday,
+              ),
+              _SettingsSwitchTile(
                 label: AppStrings.homeShowLongGoal,
                 value: _showLongGoal,
                 onChanged: _setShowLongGoal,
@@ -739,6 +760,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 label: AppStrings.calendarStartMonday,
                 value: _startMonday,
                 onChanged: _setStartMonday,
+              ),
+              _SettingsSwitchTile(
+                label: AppStrings.calendarShowLunar,
+                value: _showLunar,
+                onChanged: _setShowLunar,
               ),
             ],
           ),
@@ -1570,6 +1596,7 @@ class _ThemeSettingsPageState extends State<_ThemeSettingsPage> {
                   selected: group,
                   labelOf: _groupLabel,
                   barColor: colors.card,
+                  height: 46,
                   accent: theme.usesCustom || theme.skin != AppSkin.classic
                       ? colors.accent
                       : Color.lerp(colors.pressed, Colors.black, 0.06)!,
@@ -1711,19 +1738,6 @@ class _MineThemesPanelState extends State<_MineThemesPanel> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (items.isEmpty)
-          Padding(
-            padding: const EdgeInsets.fromLTRB(8, 0, 8, 12),
-            child: Text(
-              AppStrings.themeMineEmpty,
-              style: TextStyle(
-                fontFamily: AppFonts.of(context),
-                fontSize: 15,
-                fontWeight: FontWeight.w400,
-                color: colors.muted,
-              ),
-            ),
-          ),
         DecoratedBox(
           decoration: BoxDecoration(
             color: colors.card,
@@ -1969,7 +1983,7 @@ class _ThemeSwipeRowState extends State<_ThemeSwipeRow>
                           Expanded(
                             child: _ThemeSwipeAction(
                               asset: AppIcons.editOutlined,
-                              color: AppColors.light.icon,
+                              color: colors.muted,
                               onPressed: () {
                                 widget.openId.value = null;
                                 widget.onEdit();
@@ -2112,9 +2126,15 @@ class _CustomThemeEditorPageState extends State<_CustomThemeEditorPage> {
     super.initState();
     final initial = widget.initial;
     _name = PlainTextEditingController(text: initial?.name ?? '');
-    _kind = initial?.kind ?? UserThemeKind.photo;
+    _kind = initial?.kind ?? UserThemeKind.pattern;
     _accent = initial?.accent ?? ThemePreference.defaultAccent;
     _photoWash = initial?.photoWash ?? UserTheme.defaultPhotoWash;
+    if (initial == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        _showPatternHint();
+      });
+    }
   }
 
   @override
@@ -2220,39 +2240,49 @@ class _CustomThemeEditorPageState extends State<_CustomThemeEditorPage> {
       ),
       body: Stack(
         children: [
-          ListView(
-            padding: EdgeInsets.fromLTRB(
-              16,
-              top + 56,
-              16,
-              24 + bottom + MediaQuery.viewInsetsOf(context).bottom,
-            ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _ThemeLivePreview(customTheme: _draft),
-              const SizedBox(height: 8),
-              SlidingKindBar(
-                values: const [
-                  UserThemeKind.pattern,
-                  UserThemeKind.photo,
-                ],
-                selected: _kind,
-                labelOf: (kind) => switch (kind) {
-                  UserThemeKind.photo => AppStrings.themeMineKindPhoto,
-                  UserThemeKind.pattern => AppStrings.themeMineKindPattern,
-                },
-                barColor: colors.card,
-                accent: accent,
-                onChanged: (value) {
-                  setState(() => _kind = value);
-                  if (value == UserThemeKind.pattern) {
-                    _showPatternHint();
-                  } else {
-                    _hintTimer?.cancel();
-                    setState(() => _hintVisible = false);
-                  }
-                },
+              SizedBox(height: top + 56),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                child: _ThemeLivePreview(customTheme: _draft),
               ),
-              const SizedBox(height: 16),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                child: SlidingKindBar(
+                  values: const [
+                    UserThemeKind.pattern,
+                    UserThemeKind.photo,
+                  ],
+                  selected: _kind,
+                  labelOf: (kind) => switch (kind) {
+                    UserThemeKind.photo => AppStrings.themeMineKindPhoto,
+                    UserThemeKind.pattern => AppStrings.themeMineKindPattern,
+                  },
+                  barColor: colors.card,
+                  height: 46,
+                  accent: accent,
+                  onChanged: (value) {
+                    setState(() => _kind = value);
+                    if (value == UserThemeKind.pattern) {
+                      _showPatternHint();
+                    } else {
+                      _hintTimer?.cancel();
+                      setState(() => _hintVisible = false);
+                    }
+                  },
+                ),
+              ),
+              Expanded(
+                child: ListView(
+                  padding: EdgeInsets.fromLTRB(
+                    16,
+                    16,
+                    16,
+                    24 + bottom + MediaQuery.viewInsetsOf(context).bottom,
+                  ),
+                  children: [
               TweenAnimationBuilder<Color?>(
             duration: const Duration(milliseconds: 280),
             curve: Curves.easeOutCubic,
@@ -2377,7 +2407,10 @@ class _CustomThemeEditorPageState extends State<_CustomThemeEditorPage> {
               ),
             ),
           ],
-        ],
+                  ],
+                ),
+              ),
+            ],
           ),
           Positioned(
             left: 24,
@@ -4133,9 +4166,27 @@ class _SettingsTile extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(20, 16, 16, 16),
           child: Row(
             children: [
-              Expanded(
-                child: Text(
+              if (value == null)
+                Expanded(
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontFamily: previewLabelFont
+                          ? labelFontFamily
+                          : AppFonts.of(context),
+                      fontSize: 16,
+                      fontWeight: FontWeight.w400,
+                      color: colors.text,
+                    ),
+                  ),
+                )
+              else ...[
+                Text(
                   label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontFamily: previewLabelFont
                         ? labelFontFamily
@@ -4145,15 +4196,19 @@ class _SettingsTile extends StatelessWidget {
                     color: colors.text,
                   ),
                 ),
-              ),
-              if (value != null) ...[
-                Text(
-                  value!,
-                  style: TextStyle(
-                    fontFamily: AppFonts.of(context),
-                    fontSize: 15,
-                    fontWeight: FontWeight.w400,
-                    color: colors.muted,
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    value!,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.end,
+                    style: TextStyle(
+                      fontFamily: AppFonts.of(context),
+                      fontSize: 15,
+                      fontWeight: FontWeight.w400,
+                      color: colors.muted,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 2),

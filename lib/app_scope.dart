@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:job_planner/data/datasources/backup_preference.dart';
 import 'package:job_planner/data/datasources/calendar_preference.dart';
 import 'package:job_planner/data/datasources/day_events_view_preference.dart';
+import 'package:job_planner/data/datasources/day_emoji_store.dart';
 import 'package:job_planner/data/datasources/font_preference.dart';
 import 'package:job_planner/data/datasources/home_view_preference.dart';
 import 'package:job_planner/data/datasources/long_goal_local_datasource.dart';
@@ -63,6 +64,7 @@ class AppScope extends InheritedWidget {
     required this.jobViewPreference,
     required this.homeViewPreference,
     required this.longGoalStore,
+    required this.dayEmojiStore,
     required this.dayEventsViewPreference,
     required this.calendarPreference,
     required this.fontPreference,
@@ -101,6 +103,7 @@ class AppScope extends InheritedWidget {
   final JobViewPreference jobViewPreference;
   final HomeViewPreference homeViewPreference;
   final LongGoalLocalDataSource longGoalStore;
+  final DayEmojiStore dayEmojiStore;
   final DayEventsViewPreference dayEventsViewPreference;
   final CalendarPreference calendarPreference;
   final FontPreference fontPreference;
@@ -149,6 +152,7 @@ class AppScope extends InheritedWidget {
         jobViewPreference != oldWidget.jobViewPreference ||
         homeViewPreference != oldWidget.homeViewPreference ||
         longGoalStore != oldWidget.longGoalStore ||
+        dayEmojiStore != oldWidget.dayEmojiStore ||
         dayEventsViewPreference != oldWidget.dayEventsViewPreference ||
         calendarPreference != oldWidget.calendarPreference ||
         fontPreference != oldWidget.fontPreference ||

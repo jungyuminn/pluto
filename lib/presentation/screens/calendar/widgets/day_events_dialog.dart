@@ -21,6 +21,7 @@ import 'package:job_planner/presentation/screens/calendar/widgets/calendar_month
 import 'package:job_planner/presentation/screens/calendar/widgets/day_event_label.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/delete_event_dialog.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/delete_repeat_event_dialog.dart';
+import 'package:job_planner/presentation/screens/calendar/widgets/day_emoji_sheet.dart';
 import 'package:job_planner/presentation/widgets/app_bar_pill.dart';
 
 Future<void> showDayEventsDialog(
@@ -136,6 +137,7 @@ class _DayEventsDialogState extends State<DayEventsDialog> {
   var _sortByTime = false;
   var _showTime = false;
   var _initialized = false;
+  String? _emoji;
   String? _draggingId;
   var _draggingOutside = false;
   final _reveals = <String, double>{};
@@ -161,6 +163,8 @@ class _DayEventsDialogState extends State<DayEventsDialog> {
     _compact = scope.homeViewPreference.isCompact;
     _sortByTime = scope.dayEventsViewPreference.sortByTime;
     _showTime = scope.dayEventsViewPreference.showTime;
+    final sticker = scope.dayEmojiStore.on(widget.date);
+    _emoji = DayStickers.isAsset(sticker) ? sticker : null;
     _items = _itemsForView;
     _loadCategories();
   }
@@ -345,6 +349,21 @@ class _DayEventsDialogState extends State<DayEventsDialog> {
         );
       });
     });
+  }
+
+  Future<void> _pickEmoji() async {
+    final picked = await showDayEmojiSheet(context, selected: _emoji);
+    if (picked == null || !mounted) return;
+    await AppScope.of(context).dayEmojiStore.set(
+      widget.date,
+      picked.isEmpty ? null : picked,
+    );
+    if (!mounted) return;
+    setState(() {
+      final next = AppScope.of(context).dayEmojiStore.on(widget.date);
+      _emoji = DayStickers.isAsset(next) ? next : null;
+    });
+    widget.onEventsChanged?.call();
   }
 
   Future<void> _toggleCompact() async {
@@ -693,6 +712,20 @@ class _DayEventsDialogState extends State<DayEventsDialog> {
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        if (_emoji != null) ...[
+                          Padding(
+                            padding: const EdgeInsets.only(right: 8, top: 1),
+                            child: SizedBox(
+                              width: 42,
+                              height: 42,
+                              child: Image.asset(
+                                _emoji!,
+                                fit: BoxFit.contain,
+                                filterQuality: FilterQuality.medium,
+                              ),
+                            ),
+                          ),
+                        ],
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -726,6 +759,12 @@ class _DayEventsDialogState extends State<DayEventsDialog> {
                               ? AppStrings.defaultView
                               : AppStrings.categoryView,
                           onPressed: _toggleCompact,
+                        ),
+                        const SizedBox(width: 8),
+                        AppBarPill(
+                          asset: AppIcons.emoji,
+                          label: AppStrings.emojiAction,
+                          onPressed: _pickEmoji,
                         ),
                       ],
                     ),

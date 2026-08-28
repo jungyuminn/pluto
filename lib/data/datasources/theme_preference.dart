@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:job_planner/core/constants/app_strings.dart';
 import 'package:job_planner/data/datasources/custom_theme_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -216,6 +217,33 @@ class ThemePreference extends ChangeNotifier {
         _customThemes = _decodeThemes(prefs?.getString(customThemesKey)),
         _customId = prefs?.getString(_customIdKey) {
     if (customTheme == null) _customId = null;
+  }
+
+  static const starterIdPrefix = 'starter_theme_';
+
+  Future<void> seedStartersIfNeeded() async {
+    final prefs = _prefs;
+    if (prefs == null || prefs.containsKey(customThemesKey)) return;
+    _customThemes = _starterThemes();
+    notifyListeners();
+    await _persistThemes();
+  }
+
+  static List<UserTheme> _starterThemes() {
+    return const [
+      UserTheme(
+        id: '${starterIdPrefix}0',
+        name: AppStrings.starterThemeReorder,
+        kind: UserThemeKind.pattern,
+        accent: defaultAccent,
+      ),
+      UserTheme(
+        id: '${starterIdPrefix}1',
+        name: AppStrings.starterThemeSwipe,
+        kind: UserThemeKind.pattern,
+        accent: 0xFFF48FB1,
+      ),
+    ];
   }
 
   static const _darkKey = 'app_dark_mode';

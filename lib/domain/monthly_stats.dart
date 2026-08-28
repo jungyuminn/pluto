@@ -131,7 +131,7 @@ class MonthlyStats {
     final todosByDay = <DateTime, int>{};
 
     for (final event in events) {
-      if (event.isJob) continue;
+      if (event.isJob || event.someday) continue;
       if (!_inRange(event.date, startDay, endDay)) continue;
       totalTodos++;
       final category = event.categoryName;

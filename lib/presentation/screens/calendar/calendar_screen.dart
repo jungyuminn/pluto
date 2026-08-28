@@ -281,7 +281,7 @@ class _CalendarScreenState extends State<CalendarScreen>
     } else {
       if (_showTodos) {
         for (final event in _events) {
-          if (event.isJob) continue;
+          if (event.isJob || event.someday) continue;
           consider(
             event.groupId ?? event.id,
             event.day,
@@ -469,6 +469,9 @@ class _CalendarScreenState extends State<CalendarScreen>
                       final startMonday = AppScope.of(
                         context,
                       ).calendarPreference.startMonday;
+                      final showLunar = AppScope.of(
+                        context,
+                      ).calendarPreference.showLunar;
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
@@ -568,27 +571,39 @@ class _CalendarScreenState extends State<CalendarScreen>
                                                 );
                                               },
                                               itemBuilder: (context, page) {
-                                                return CalendarMonthGrid(
-                                                  month: _monthAt(page),
-                                                  startMonday: startMonday,
-                                                  eventsOf: _eventsOn,
-                                                  diariesOf: _diariesOn,
-                                                  ledgersOf: _ledgersOn,
-                                                  showDiary: _showDiary,
-                                                  showLedger: _showLedger,
-                                                  searchDay: _searchDay,
-                                                  searchHitKey: _searchHitKey,
-                                                  onDayPressed: _openDay,
-                                                  onRangeDragChanged:
-                                                      (dragging) {
-                                                    setState(
-                                                      () => _rangeDragging =
-                                                          dragging,
+                                                final emojis =
+                                                    AppScope.of(context)
+                                                        .dayEmojiStore;
+                                                return ListenableBuilder(
+                                                  listenable: emojis,
+                                                  builder: (context, _) {
+                                                    return CalendarMonthGrid(
+                                                      month: _monthAt(page),
+                                                      startMonday: startMonday,
+                                                      showLunar: showLunar,
+                                                      eventsOf: _eventsOn,
+                                                      diariesOf: _diariesOn,
+                                                      ledgersOf: _ledgersOn,
+                                                      emojisOf: emojis.on,
+                                                      showDiary: _showDiary,
+                                                      showLedger: _showLedger,
+                                                      searchDay: _searchDay,
+                                                      searchHitKey:
+                                                          _searchHitKey,
+                                                      onDayPressed: _openDay,
+                                                      onRangeDragChanged:
+                                                          (dragging) {
+                                                        setState(
+                                                          () => _rangeDragging =
+                                                              dragging,
+                                                        );
+                                                      },
+                                                      onRangeSelected:
+                                                          _showLedger
+                                                              ? null
+                                                              : _openRange,
                                                     );
                                                   },
-                                                  onRangeSelected: _showLedger
-                                                      ? null
-                                                      : _openRange,
                                                 );
                                               },
                                             ),

@@ -12,6 +12,7 @@ import 'package:job_planner/core/notifications/todo_reminder_service.dart';
 import 'package:job_planner/data/datasources/backup_preference.dart';
 import 'package:job_planner/data/datasources/calendar_event_local_datasource.dart';
 import 'package:job_planner/data/datasources/custom_theme_storage.dart';
+import 'package:job_planner/data/datasources/day_emoji_store.dart';
 import 'package:job_planner/data/datasources/theme_preference.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
@@ -27,6 +28,7 @@ class AppBackupService {
   static const _jobsKey = 'job_applications';
   static const _diariesKey = 'diary_entries';
   static const _eventsKey = 'calendar_events';
+  static const _emojisKey = DayEmojiStore.key;
   static const _coverFolder = 'cover_letters';
   static const _diaryFolder = 'diaries';
   static const _themesFolder = CustomThemeStorage.folderName;
@@ -173,6 +175,7 @@ class AppBackupService {
     scope.dayEventsViewPreference.hydrate();
     scope.backupPreference.hydrate();
     scope.longGoalStore.reload();
+    scope.dayEmojiStore.reload();
     await TodoReminderService.instance.sync();
     await HomeScreenWidgetService.instance.sync();
     revision.value++;
@@ -302,6 +305,7 @@ class AppBackupService {
   static bool isStarterOnly(SharedPreferences prefs) {
     if (_hasItems(prefs.getString(_jobsKey))) return false;
     if (_hasItems(prefs.getString(_diariesKey))) return false;
+    if (_hasEmojiItems(prefs.getString(_emojisKey))) return false;
     final raw = prefs.getString(_eventsKey);
     if (raw == null || raw.isEmpty) return true;
     try {
@@ -313,6 +317,16 @@ class AppBackupService {
       });
     } catch (_) {
       return false;
+    }
+  }
+
+  static bool _hasEmojiItems(String? raw) {
+    if (raw == null || raw.isEmpty || raw == '{}') return false;
+    try {
+      final items = jsonDecode(raw);
+      return items is Map && items.isNotEmpty;
+    } catch (_) {
+      return true;
     }
   }
 

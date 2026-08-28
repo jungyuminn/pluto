@@ -24,11 +24,13 @@ class AddEventForm extends StatefulWidget {
     required this.date,
     this.rangeEnd,
     this.initial,
+    this.someday = false,
   });
 
   final DateTime date;
   final DateTime? rangeEnd;
   final CalendarEvent? initial;
+  final bool someday;
 
   @override
   State<AddEventForm> createState() => _AddEventFormState();
@@ -55,6 +57,9 @@ class _AddEventFormState extends State<AddEventForm>
   int? _endMinutes;
   Animation<double>? _sheetAnimation;
 
+  bool get _isSomeday =>
+      widget.someday || (widget.initial?.someday ?? false);
+
   bool get _hasCategory =>
       _categoryId != null && (_categoryName?.trim().isNotEmpty ?? false);
 
@@ -70,8 +75,8 @@ class _AddEventFormState extends State<AddEventForm>
     _categoryId = initial?.categoryId ?? travel.id;
     _categoryName = initial?.categoryName ?? travel.name;
     _categoryColor = initial?.categoryColor ?? travel.color;
-    _startMinutes = initial?.startMinutes;
-    _endMinutes = initial?.endMinutes;
+    _startMinutes = (initial?.someday ?? false) ? null : initial?.startMinutes;
+    _endMinutes = (initial?.someday ?? false) ? null : initial?.endMinutes;
     final date = initial?.date ?? widget.date;
     _date = DateTime(date.year, date.month, date.day);
     final rangeEnd = widget.rangeEnd;
@@ -110,8 +115,10 @@ class _AddEventFormState extends State<AddEventForm>
       } else {
         animation.addStatusListener(_onSheetOpened);
       }
-      _loadGroup();
       _loadLastCategory();
+      if (!widget.someday && !(widget.initial?.someday ?? false)) {
+        _loadGroup();
+      }
     });
   }
 
@@ -329,9 +336,12 @@ class _AddEventFormState extends State<AddEventForm>
           categoryId: categoryId,
           categoryName: categoryName,
           categoryColor: categoryColor,
-          startMinutes: _startMinutes,
-          endMinutes: _endMinutes,
-          clearTime: _startMinutes == null || _endMinutes == null,
+          startMinutes: _isSomeday ? null : _startMinutes,
+          endMinutes: _isSomeday ? null : _endMinutes,
+          someday: _isSomeday,
+          clearTime: _isSomeday ||
+              _startMinutes == null ||
+              _endMinutes == null,
         ),
       );
       if (initialRepeatId != null && title != initial.title) {
@@ -378,8 +388,9 @@ class _AddEventFormState extends State<AddEventForm>
           groupId: groupId,
           repeatId: repeatId,
           sortOrder: i == 0 && initial != null ? initial.sortOrder : now + i,
-          startMinutes: _startMinutes,
-          endMinutes: _endMinutes,
+          startMinutes: _isSomeday ? null : _startMinutes,
+          endMinutes: _isSomeday ? null : _endMinutes,
+          someday: _isSomeday,
         ),
       );
     }
@@ -405,7 +416,7 @@ class _AddEventFormState extends State<AddEventForm>
         ],
       ),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -450,27 +461,29 @@ class _AddEventFormState extends State<AddEventForm>
                           selected: _hasCategory,
                           onPressed: _pickCategory,
                         ),
-                        const SizedBox(width: 4),
-                        EventDateChip(
-                          date: _date,
-                          color: _accent,
-                          label: _isRange
-                              ? AppStrings.rangeEventLabel
-                              : _isMultiple
-                              ? AppStrings.multipleEventLabel
-                              : _dateMode == AppCalendarMode.repeat ||
-                                    widget.initial?.repeatId != null
-                              ? AppStrings.repeatEventLabel
-                              : null,
-                          onPressed: _pickDate,
-                        ),
-                        const SizedBox(width: 4),
-                        EventTimeChip(
-                          color: _accent,
-                          startMinutes: _startMinutes,
-                          endMinutes: _endMinutes,
-                          onPressed: _pickTime,
-                        ),
+                        if (!_isSomeday) ...[
+                          const SizedBox(width: 4),
+                          EventDateChip(
+                            date: _date,
+                            color: _accent,
+                            label: _isRange
+                                ? AppStrings.rangeEventLabel
+                                : _isMultiple
+                                ? AppStrings.multipleEventLabel
+                                : _dateMode == AppCalendarMode.repeat ||
+                                      widget.initial?.repeatId != null
+                                ? AppStrings.repeatEventLabel
+                                : null,
+                            onPressed: _pickDate,
+                          ),
+                          const SizedBox(width: 4),
+                          EventTimeChip(
+                            color: _accent,
+                            startMinutes: _startMinutes,
+                            endMinutes: _endMinutes,
+                            onPressed: _pickTime,
+                          ),
+                        ],
                         const SizedBox(width: 4),
                         EventActionIcon(
                           label: AppStrings.memoAction,

@@ -17,6 +17,7 @@ class CalendarEvent {
     this.sortOrder = 0,
     this.startMinutes,
     this.endMinutes,
+    this.someday = false,
   });
 
   static const defaultCategoryColor = 0xFF3B82F6;
@@ -37,6 +38,7 @@ class CalendarEvent {
   final int sortOrder;
   final int? startMinutes;
   final int? endMinutes;
+  final bool someday;
 
   Color get color => Color(categoryColor);
 
@@ -155,6 +157,7 @@ class CalendarEvent {
     int? sortOrder,
     int? startMinutes,
     int? endMinutes,
+    bool? someday,
     bool clearTime = false,
   }) {
     return CalendarEvent(
@@ -173,6 +176,7 @@ class CalendarEvent {
       sortOrder: sortOrder ?? this.sortOrder,
       startMinutes: clearTime ? null : startMinutes ?? this.startMinutes,
       endMinutes: clearTime ? null : endMinutes ?? this.endMinutes,
+      someday: someday ?? this.someday,
     );
   }
 }

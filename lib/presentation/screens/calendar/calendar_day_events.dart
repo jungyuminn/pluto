@@ -70,12 +70,12 @@ List<CalendarEvent> calendarEventsOn({
   );
   final todos = CalendarEvent.withRangesFirst(
     events.where((event) {
-      if (event.isJob) return false;
+      if (event.isJob || event.someday) return false;
       return event.date.year == date.year &&
           event.date.month == date.month &&
           event.date.day == date.day;
     }),
-    all: events.where((event) => !event.isJob),
+    all: events.where((event) => !event.isJob && !event.someday),
   );
   return [...jobs, ...todos];
 }
@@ -159,7 +159,7 @@ List<CalendarEvent> leftoverTodosBefore(
   final leftover = <CalendarEvent>[];
   final rangeByGroup = <String, CalendarEvent>{};
   for (final event in events) {
-    if (event.isJob || event.completed) continue;
+    if (event.isJob || event.completed || event.someday) continue;
     if (!event.day.isBefore(today)) continue;
     if (event.isRange) {
       final end = rangeEnd[event.groupId] ?? event.day;

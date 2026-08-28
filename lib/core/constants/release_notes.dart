@@ -17,6 +17,18 @@ class ReleaseNote {
 abstract final class ReleaseNotes {
   static const all = [
     ReleaseNote(
+      version: '1.0.21',
+      items: [
+        '날짜에 스티커를 붙일 수 있어요',
+        '홈에 언젠가 할 일 카드가 생겼어요',
+        '장기목표가 챌린지로 바뀌었어요',
+        '캘린더에 음력 날짜를 켤 수 있어요',
+      ],
+      fixes: [
+        '기간 일정 아래에 하루 할 일이 겹치던 문제를 고쳤어요',
+      ],
+    ),
+    ReleaseNote(
       version: '1.0.20',
       items: [
         '사진이나 패턴으로 나만의 테마를 만들 수 있어요',

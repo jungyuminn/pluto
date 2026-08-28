@@ -12,7 +12,7 @@ class EventActionIcon extends StatelessWidget {
     this.label,
     this.text,
     this.selected = false,
-    this.size = 18,
+    this.size = 20,
   });
 
   final VoidCallback onPressed;

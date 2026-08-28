@@ -51,6 +51,7 @@ class _HomeScreenState extends State<HomeScreen>
   var _weekEvents = <CalendarEvent>[];
   var _monthEvents = <CalendarEvent>[];
   var _leftoverEvents = <CalendarEvent>[];
+  var _somedayEvents = <CalendarEvent>[];
   var _categories = <EventCategory>[];
   var _longGoals = <LongGoal>[];
   var _loading = true;
@@ -215,6 +216,10 @@ class _HomeScreenState extends State<HomeScreen>
           ? calendarRangeLabel(_today, monthEnd)
           : null;
       _leftoverEvents = leftoverTodosBefore(_today, events);
+      _somedayEvents = [
+        for (final event in events)
+          if (event.someday && !event.isJob) event,
+      ]..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
       _categories = categories;
       _longGoals = List.of(scope.longGoalStore.goals);
       _loading = false;
@@ -522,6 +527,7 @@ class _HomeScreenState extends State<HomeScreen>
       HomeCardKind.tomorrow => homePrefs.showTomorrow,
       HomeCardKind.week => homePrefs.showWeek,
       HomeCardKind.month => homePrefs.showMonth,
+      HomeCardKind.someday => homePrefs.showSomeday,
       HomeCardKind.longGoal => homePrefs.showLongGoal,
     };
   }
@@ -582,6 +588,17 @@ class _HomeScreenState extends State<HomeScreen>
             _today,
             DateTime(_today.year, _today.month + 1, 0),
           ),
+          onEventsChanged: _reload,
+        ),
+      HomeCardKind.someday => HomeDayCard(
+          title: AppStrings.somedayTitle,
+          date: null,
+          events: _filter(_somedayEvents),
+          categories: _categories,
+          compact: _compact,
+          sortByTime: sortPrefs.sortByTime,
+          showTime: false,
+          someday: true,
           onEventsChanged: _reload,
         ),
       HomeCardKind.longGoal => HomeLongGoalCard(

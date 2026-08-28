@@ -12,6 +12,7 @@ class HomeViewPreference {
     bool showTomorrow = true,
     bool showWeek = false,
     bool showMonth = false,
+    bool showSomeday = false,
     bool showLongGoal = false,
     bool showMonthlyStats = true,
     bool showWeeklyStats = false,
@@ -22,6 +23,7 @@ class HomeViewPreference {
         _showTomorrow = prefs?.getBool(_tomorrowKey) ?? showTomorrow,
         _showWeek = prefs?.getBool(_weekKey) ?? showWeek,
         _showMonth = prefs?.getBool(_monthKey) ?? showMonth,
+        _showSomeday = prefs?.getBool(_somedayKey) ?? showSomeday,
         _showLongGoal = prefs?.getBool(_longGoalKey) ?? showLongGoal,
         _showMonthlyStats =
             prefs?.getBool(_monthlyStatsKey) ?? showMonthlyStats,
@@ -36,6 +38,7 @@ class HomeViewPreference {
   static const _tomorrowKey = 'home_show_tomorrow';
   static const _weekKey = 'home_show_week';
   static const _monthKey = 'home_show_month';
+  static const _somedayKey = 'home_show_someday';
   static const _longGoalKey = 'home_show_long_goal';
   static const _monthlyStatsKey = 'home_show_monthly_stats';
   static const _monthlyStatsSeenKey = 'home_monthly_stats_seen';
@@ -50,6 +53,7 @@ class HomeViewPreference {
   bool _showTomorrow;
   bool _showWeek;
   bool _showMonth;
+  bool _showSomeday;
   bool _showLongGoal;
   bool _showMonthlyStats;
   String? _monthlyStatsSeen;
@@ -63,6 +67,7 @@ class HomeViewPreference {
   bool get showTomorrow => _showTomorrow;
   bool get showWeek => _showWeek;
   bool get showMonth => _showMonth;
+  bool get showSomeday => _showSomeday;
   bool get showLongGoal => _showLongGoal;
   bool get showMonthlyStats => _showMonthlyStats;
   bool get showWeeklyStats => _showWeeklyStats;
@@ -113,6 +118,11 @@ class HomeViewPreference {
     await _prefs?.setBool(_monthKey, value);
   }
 
+  Future<void> setShowSomeday(bool value) async {
+    _showSomeday = value;
+    await _prefs?.setBool(_somedayKey, value);
+  }
+
   Future<void> setShowLongGoal(bool value) async {
     _showLongGoal = value;
     await _prefs?.setBool(_longGoalKey, value);
@@ -142,6 +152,12 @@ class HomeViewPreference {
       for (final part in raw.split(',')) {
         final kind = HomeCardKind.fromName(part);
         if (kind != null && !found.contains(kind)) found.add(kind);
+      }
+    }
+    if (!found.contains(HomeCardKind.someday)) {
+      final longIdx = found.indexOf(HomeCardKind.longGoal);
+      if (longIdx >= 0) {
+        found.insert(longIdx, HomeCardKind.someday);
       }
     }
     for (final kind in HomeCardKind.defaults) {
@@ -184,6 +200,7 @@ class HomeViewPreference {
     _showTomorrow = prefs.getBool(_tomorrowKey) ?? _showTomorrow;
     _showWeek = prefs.getBool(_weekKey) ?? _showWeek;
     _showMonth = prefs.getBool(_monthKey) ?? _showMonth;
+    _showSomeday = prefs.getBool(_somedayKey) ?? _showSomeday;
     _showLongGoal = prefs.getBool(_longGoalKey) ?? _showLongGoal;
     _showMonthlyStats = prefs.getBool(_monthlyStatsKey) ?? _showMonthlyStats;
     _monthlyStatsSeen = prefs.getString(_monthlyStatsSeenKey);
@@ -199,6 +216,7 @@ enum HomeCardKind {
   tomorrow,
   week,
   month,
+  someday,
   longGoal;
 
   static const defaults = [
@@ -207,6 +225,7 @@ enum HomeCardKind {
     tomorrow,
     week,
     month,
+    someday,
     longGoal,
   ];
 

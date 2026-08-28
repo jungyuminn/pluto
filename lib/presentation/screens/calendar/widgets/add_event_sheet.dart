@@ -7,6 +7,7 @@ Future<bool> showAddEventSheet(
   required DateTime date,
   DateTime? rangeEnd,
   CalendarEvent? event,
+  bool someday = false,
 }) async {
   final saved = await showModalBottomSheet<bool>(
     context: context,
@@ -24,6 +25,7 @@ Future<bool> showAddEventSheet(
       date: date,
       rangeEnd: rangeEnd,
       event: event,
+      someday: someday,
     ),
   );
   return saved == true;
@@ -35,11 +37,13 @@ class AddEventSheet extends StatelessWidget {
     required this.date,
     this.rangeEnd,
     this.event,
+    this.someday = false,
   });
 
   final DateTime date;
   final DateTime? rangeEnd;
   final CalendarEvent? event;
+  final bool someday;
 
   @override
   Widget build(BuildContext context) {
@@ -53,6 +57,7 @@ class AddEventSheet extends StatelessWidget {
           date: date,
           rangeEnd: rangeEnd,
           initial: event,
+          someday: someday,
         ),
       ),
     );

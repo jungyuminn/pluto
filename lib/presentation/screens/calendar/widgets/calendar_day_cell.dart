@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:job_planner/core/calendar/lunar_date.dart';
 import 'package:job_planner/core/calendar/month_grid.dart';
 import 'package:job_planner/core/constants/app_fonts.dart';
 import 'package:job_planner/core/theme/app_colors.dart';
@@ -12,6 +13,7 @@ class CalendarDayCell extends StatelessWidget {
     this.onLongPressed,
     this.inRange = false,
     this.highlighted = false,
+    this.showLunar = false,
   });
 
   final CalendarDay day;
@@ -19,14 +21,20 @@ class CalendarDayCell extends StatelessWidget {
   final VoidCallback? onLongPressed;
   final bool inRange;
   final bool highlighted;
+  final bool showLunar;
 
   static const dateTop = 10.0;
   static const dateSize = 20.0;
   static const holidayGap = 3.0;
   static const holidayHeight = 12.0;
+  static const lunarGap = 1.0;
+  static const lunarHeight = 11.0;
   static const eventsTopGap = 2.0;
   static const labelHeight = 18.0;
   static const labelGap = 2.0;
+  static const emojiHeight = 56.0;
+
+  static double emojiHeightFor(double scale) => emojiHeight * scale;
   static const sideInset = 2.0;
 
   static double dateSizeFor(double scale) => dateSize * scale;
@@ -35,8 +43,15 @@ class CalendarDayCell extends StatelessWidget {
 
   static double labelHeightFor(double scale) => labelHeight * scale;
 
-  static double eventsTopFor({required bool hasHoliday, double scale = 1}) {
+  static double lunarHeightFor(double scale) => lunarHeight * scale;
+
+  static double eventsTopFor({
+    required bool hasHoliday,
+    double scale = 1,
+    bool showLunar = false,
+  }) {
     var top = dateTop + dateSizeFor(scale) + eventsTopGap;
+    if (showLunar) top += lunarGap + lunarHeightFor(scale);
     if (hasHoliday) top += holidayGap + holidayHeightFor(scale);
     return top;
   }
@@ -105,6 +120,25 @@ class CalendarDayCell extends StatelessWidget {
                 ),
               ),
             ),
+            if (showLunar) ...[
+              const SizedBox(height: lunarGap),
+              SizedBox(
+                height: lunarHeightFor(scale),
+                child: Text(
+                  LunarDate.labelOf(day.date) ?? '',
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontFamily: AppFonts.of(context),
+                    fontSize: 9 * scale,
+                    fontWeight: FontWeight.w500,
+                    height: 1.1,
+                    color: day.inMonth ? colors.muted : colors.outside,
+                  ),
+                ),
+              ),
+            ],
             if (holiday != null) ...[
               const SizedBox(height: holidayGap),
               SizedBox(

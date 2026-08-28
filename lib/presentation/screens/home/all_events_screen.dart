@@ -125,12 +125,17 @@ class _AllEventsScreenState extends State<AllEventsScreen> {
             event.title,
             event.categoryName,
             event.memo,
-            _dateLabel(event.day),
+            _eventDateLabel(event),
           ],
           query,
         ))
           event,
     ];
+  }
+
+  String _eventDateLabel(CalendarEvent event) {
+    if (event.someday) return AppStrings.somedayTitle;
+    return _dateLabel(event.day);
   }
 
   String _dateLabel(DateTime date) {
@@ -193,6 +198,7 @@ class _AllEventsScreenState extends State<AllEventsScreen> {
       context,
       date: event.date,
       event: event,
+      someday: event.someday,
     );
     if (saved && mounted) await _reload();
   }
@@ -374,13 +380,14 @@ class _AllEventsScreenState extends State<AllEventsScreen> {
                                     padding: const EdgeInsets.only(bottom: 8),
                                     child: DayEventLabel(
                                       title: event.title,
-                                      categoryName: _dateLabel(event.day),
+                                      categoryName: _eventDateLabel(event),
                                       color: event.color,
                                       completed: event.completed,
                                       isRepeat: event.isRepeat,
                                       isRange: event.isRange,
                                       memo: event.memo,
-                                      timeText: event.timeLabel,
+                                      timeText:
+                                          event.someday ? null : event.timeLabel,
                                       onPressed: () => _edit(event),
                                     ),
                                   ),

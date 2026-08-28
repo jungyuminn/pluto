@@ -20,6 +20,7 @@ class CalendarEventModel {
       sortOrder: json['sortOrder'] as int? ?? 0,
       startMinutes: json['startMinutes'] as int?,
       endMinutes: json['endMinutes'] as int?,
+      someday: json['someday'] as bool? ?? false,
     );
   }
 
@@ -38,6 +39,7 @@ class CalendarEventModel {
       'sortOrder': event.sortOrder,
       'startMinutes': event.startMinutes,
       'endMinutes': event.endMinutes,
+      'someday': event.someday,
     };
   }
 

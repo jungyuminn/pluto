@@ -447,6 +447,7 @@ class _LongGoalEditSheetState extends State<LongGoalEditSheet>
                     text: _kindLabel(_kind),
                     color: accent,
                     selected: _kindOpen,
+                    size: 14,
                     onPressed: _toggleKind,
                     child: Image.asset(
                       AppIcons.longGoalKind(_kind, filled: _kindOpen),

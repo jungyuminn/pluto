@@ -6,12 +6,14 @@ import 'package:job_planner/core/theme/app_skin_background.dart';
 import 'package:job_planner/core/utils/korean_search.dart';
 import 'package:job_planner/core/utils/plain_text_editing_controller.dart';
 import 'package:job_planner/data/datasources/app_backup_service.dart';
-import 'package:job_planner/domain/entities/apply_status.dart';
+import 'package:job_planner/data/datasources/job_view_preference.dart';
 import 'package:job_planner/domain/entities/calendar_event.dart';
 import 'package:job_planner/domain/entities/diary_entry.dart';
 import 'package:job_planner/domain/entities/ledger_entry.dart';
 import 'package:job_planner/domain/entities/event_category.dart';
 import 'package:job_planner/domain/entities/job_application.dart';
+import 'package:job_planner/domain/ledger_month_stats.dart';
+import 'package:job_planner/domain/ledger_salary_repeat.dart';
 import 'package:job_planner/presentation/screens/calendar/calendar_day_events.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/calendar_month_grid.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/calendar_month_header.dart';
@@ -22,6 +24,7 @@ import 'package:job_planner/presentation/screens/calendar/widgets/add_event_shee
 import 'package:job_planner/presentation/tutorial/tutorial_anchor.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/diary_sheet.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/ledger_day_sheet.dart';
+import 'package:job_planner/presentation/screens/calendar/widgets/ledger_month_stats_sheet.dart';
 import 'package:job_planner/presentation/widgets/app_calendar/calendar_zoom_picker.dart';
 
 class CalendarScreen extends StatefulWidget {
@@ -50,6 +53,7 @@ class _CalendarScreenState extends State<CalendarScreen>
   var _ledgers = <LedgerEntry>[];
   var _applications = <JobApplication>[];
   var _companyCategories = <EventCategory>[];
+  var _eventCategories = <EventCategory>[];
   var _initialized = false;
   var _rangeDragging = false;
   var _showTodos = true;
@@ -57,10 +61,12 @@ class _CalendarScreenState extends State<CalendarScreen>
   var _showDiary = false;
   var _showLedger = false;
   var _zoom = CalendarZoomLevel.days;
+  var _zoomEpoch = 0;
   var _hits = <_SearchHit>[];
   var _hitIndex = 0;
   DateTime? _searchDay;
   String? _searchHitKey;
+  JobViewPreference? _jobView;
 
   @override
   void initState() {
@@ -88,9 +94,19 @@ class _CalendarScreenState extends State<CalendarScreen>
     if (mounted) _reload();
   }
 
+  void _onJobView() {
+    if (mounted) setState(() {});
+  }
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    final next = AppScope.of(context).jobViewPreference;
+    if (!identical(next, _jobView)) {
+      _jobView?.removeListener(_onJobView);
+      _jobView = next;
+      _jobView!.addListener(_onJobView);
+    }
     if (_initialized) return;
     _initialized = true;
     _reload();
@@ -99,12 +115,22 @@ class _CalendarScreenState extends State<CalendarScreen>
   @override
   void didUpdateWidget(CalendarScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.visible && !oldWidget.visible) _reload();
+    if (widget.visible && !oldWidget.visible) {
+      _collapseZoom();
+      _reload();
+    }
+  }
+
+  void _collapseZoom() {
+    if (_zoom == CalendarZoomLevel.days) return;
+    _zoom = CalendarZoomLevel.days;
+    _zoomEpoch++;
   }
 
   @override
   void dispose() {
     AppBackupService.revision.removeListener(_onBackupRestored);
+    _jobView?.removeListener(_onJobView);
     WidgetsBinding.instance.removeObserver(this);
     _searchFade.dispose();
     _searchAnimation.dispose();
@@ -192,6 +218,7 @@ class _CalendarScreenState extends State<CalendarScreen>
     final ledgers = await scope.getLedgers();
     final applications = await scope.getJobApplications();
     final companyCategories = await scope.fetchCategories(CategoryKind.company);
+    final eventCategories = await scope.fetchCategories(CategoryKind.event);
     if (!mounted) return;
     setState(() {
       _events = events;
@@ -199,6 +226,7 @@ class _CalendarScreenState extends State<CalendarScreen>
       _ledgers = ledgers;
       _applications = applications;
       _companyCategories = companyCategories;
+      _eventCategories = eventCategories;
     });
     if (_searchOpen.value) _refreshHits(jump: false);
   }
@@ -268,7 +296,7 @@ class _CalendarScreenState extends State<CalendarScreen>
       for (final entry in _ledgers) {
         consider(
           entry.id,
-          entry.day,
+          LedgerSalaryRepeat.searchDay(entry),
           [
             entry.title,
             entry.memo,
@@ -290,8 +318,10 @@ class _CalendarScreenState extends State<CalendarScreen>
         }
       }
       if (_showCompanies) {
+        final showRejected =
+            AppScope.of(context).jobViewPreference.showRejected;
         for (final application in _applications) {
-          if (ApplyStatus.isRejected(application.applyStatus)) continue;
+          if (!showRejected && application.isRejected) continue;
           for (var i = 0; i < application.rounds.length; i++) {
             final round = application.rounds[i];
             final date = round.date;
@@ -343,10 +373,17 @@ class _CalendarScreenState extends State<CalendarScreen>
       events: _showTodos ? _events : const [],
       applications: _showCompanies ? _applications : const [],
       companyCategories: _companyCategories,
+      includeRejected: AppScope.of(context).jobViewPreference.showRejected,
     );
-    if (!AppScope.of(context).dayEventsViewPreference.sortByTime) {
-      return events;
+    final prefs = AppScope.of(context).dayEventsViewPreference;
+    if (prefs.categoryView) {
+      return calendarEventsByCategory(
+        events,
+        categories: _eventCategories,
+        sortByTime: prefs.sortByTime,
+      );
     }
+    if (!prefs.sortByTime) return events;
     return CalendarEvent.withLockedThenStartTime(events);
   }
 
@@ -354,8 +391,9 @@ class _CalendarScreenState extends State<CalendarScreen>
     final day = DateTime(date.year, date.month, date.day);
     return [
       for (final entry in _ledgers)
-        if (entry.day == day) entry,
-    ]..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+        if (LedgerSalaryRepeat.occursOn(entry, day))
+          LedgerSalaryRepeat.onDay(entry, day),
+    ]..sort(LedgerEntry.compareDisplay);
   }
 
   List<DiaryEntry> _diariesOn(DateTime date) {
@@ -410,6 +448,7 @@ class _CalendarScreenState extends State<CalendarScreen>
         context,
         date: date,
         entries: _ledgersOn(date),
+        origin: origin,
       );
       if (mounted) await _reload();
       return;
@@ -472,6 +511,8 @@ class _CalendarScreenState extends State<CalendarScreen>
                       final showLunar = AppScope.of(
                         context,
                       ).calendarPreference.showLunar;
+                      final viewPrefs =
+                          AppScope.of(context).dayEventsViewPreference;
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
@@ -517,6 +558,25 @@ class _CalendarScreenState extends State<CalendarScreen>
                                   if (_searchOpen.value) _refreshHits();
                                 },
                                 onSortPrefsChanged: () => setState(() {}),
+                                onCategoriesChanged: _reload,
+                                ledgerMonthStats:
+                                    _showLedger &&
+                                        _zoom == CalendarZoomLevel.days
+                                    ? LedgerMonthStats.of(
+                                        month: _visibleMonth,
+                                        entries: _ledgers,
+                                      )
+                                    : null,
+                                onLedgerStatsPressed: () {
+                                  showLedgerMonthStatsSheet(
+                                    context,
+                                    month: _visibleMonth,
+                                    stats: LedgerMonthStats.of(
+                                      month: _visibleMonth,
+                                      entries: _ledgers,
+                                    ),
+                                  );
+                                },
                               );
                             },
                           ),
@@ -551,6 +611,7 @@ class _CalendarScreenState extends State<CalendarScreen>
                                 id: TutorialAnchorId.calendarGrid,
                                 child: RepaintBoundary(
                                   child: CalendarZoomTransition(
+                                    key: ValueKey(_zoomEpoch),
                                     level: _zoom,
                                     child: switch (_zoom) {
                                       CalendarZoomLevel.days => Column(
@@ -587,6 +648,15 @@ class _CalendarScreenState extends State<CalendarScreen>
                                                       emojisOf: emojis.on,
                                                       showDiary: _showDiary,
                                                       showLedger: _showLedger,
+                                                      showLedgerTitle:
+                                                          viewPrefs
+                                                              .showLedgerTitle,
+                                                      showLedgerAmount:
+                                                          viewPrefs
+                                                              .showLedgerAmount,
+                                                      ledgerCategoryView:
+                                                          viewPrefs
+                                                              .categoryView,
                                                       searchDay: _searchDay,
                                                       searchHitKey:
                                                           _searchHitKey,

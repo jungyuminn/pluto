@@ -6,6 +6,7 @@ import 'package:job_planner/domain/entities/calendar_event.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/calendar_day_cell.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/calendar_event_label.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/day_emoji_sheet.dart';
+import 'package:job_planner/presentation/screens/calendar/widgets/day_sticker_image.dart';
 
 class CalendarWeekEvents extends StatefulWidget {
   const CalendarWeekEvents({
@@ -17,6 +18,7 @@ class CalendarWeekEvents extends StatefulWidget {
     this.labelScale = 1,
     this.showLunar = false,
     this.searchHitKey,
+    this.showAccent = true,
   });
 
   final List<CalendarDay> days;
@@ -26,6 +28,7 @@ class CalendarWeekEvents extends StatefulWidget {
   final double labelScale;
   final bool showLunar;
   final String? searchHitKey;
+  final bool showAccent;
 
   static const _moveDuration = Duration(milliseconds: 280);
   static const _fadeDuration = Duration(milliseconds: 220);
@@ -96,7 +99,20 @@ class _CalendarWeekEventsState extends State<CalendarWeekEvents> {
   var _blocks = <_WeekBlock>[];
   var _exiting = <_WeekBlock>[];
   var _appearing = <String>{};
+  var _appearingEmojis = <int>{};
+  var _emojiPaths = <String?>[];
   var _exitGen = 0;
+
+  List<String?> _emojiPathsOf() {
+    final emojisOf = widget.emojisOf;
+    if (emojisOf == null) {
+      return List<String?>.filled(widget.days.length, null);
+    }
+    return [
+      for (final day in widget.days)
+        DayStickers.isAsset(emojisOf(day.date)) ? emojisOf(day.date) : null,
+    ];
+  }
 
   @override
   void initState() {
@@ -108,6 +124,7 @@ class _CalendarWeekEventsState extends State<CalendarWeekEvents> {
       widget.labelScale,
       widget.showLunar,
     );
+    _emojiPaths = _emojiPathsOf();
   }
 
   @override
@@ -125,12 +142,15 @@ class _CalendarWeekEventsState extends State<CalendarWeekEvents> {
         widget.calendarScale == oldWidget.calendarScale &&
         widget.labelScale == oldWidget.labelScale &&
         widget.showLunar == oldWidget.showLunar;
+    final nextEmojis = _emojiPathsOf();
     if (!sameWeek) {
       _exitGen++;
       setState(() {
         _blocks = next;
         _exiting = [];
         _appearing = {};
+        _appearingEmojis = {};
+        _emojiPaths = nextEmojis;
       });
       return;
     }
@@ -145,12 +165,20 @@ class _CalendarWeekEventsState extends State<CalendarWeekEvents> {
       for (final block in next)
         if (!currentIds.contains(block.event.id)) block.event.id,
     };
+    final appearingEmojis = {
+      for (var i = 0; i < nextEmojis.length; i++)
+        if (nextEmojis[i] != null &&
+            (i >= _emojiPaths.length || nextEmojis[i] != _emojiPaths[i]))
+          i,
+    };
 
     _exitGen++;
     final gen = _exitGen;
     setState(() {
       _exiting = leaving;
       _appearing = appearing;
+      _appearingEmojis = appearingEmojis;
+      _emojiPaths = nextEmojis;
       _blocks = next;
     });
     if (leaving.isEmpty) return;
@@ -187,6 +215,7 @@ class _CalendarWeekEventsState extends State<CalendarWeekEvents> {
         builder: (context, constraints) {
           final cellWidth = constraints.maxWidth / 7;
           return Stack(
+            clipBehavior: Clip.none,
             children: [
               for (final block in _exiting)
                 Positioned(
@@ -200,6 +229,7 @@ class _CalendarWeekEventsState extends State<CalendarWeekEvents> {
                     visible: false,
                     searching: widget.searchHitKey != null,
                     matched: _isSearchMatch(block.event),
+                    showAccent: widget.showAccent,
                   ),
                 ),
               for (final block in _blocks)
@@ -217,6 +247,7 @@ class _CalendarWeekEventsState extends State<CalendarWeekEvents> {
                     appear: _appearing.contains(block.event.id),
                     searching: widget.searchHitKey != null,
                     matched: _isSearchMatch(block.event),
+                    showAccent: widget.showAccent,
                   ),
                 ),
               if (emojisOf != null)
@@ -227,13 +258,13 @@ class _CalendarWeekEventsState extends State<CalendarWeekEvents> {
                       width: cellWidth,
                       top: _emojiTop(i, stride, labelHeight),
                       height: CalendarDayCell.emojiHeightFor(widget.calendarScale),
-                      child: Opacity(
-                        opacity: widget.days[i].inMonth ? 1 : 0.45,
-                        child: Image.asset(
-                          emojisOf(widget.days[i].date)!,
-                          fit: BoxFit.contain,
-                          filterQuality: FilterQuality.medium,
+                      child: DayStickerImage(
+                        key: ValueKey(
+                          '${widget.days[i].date.toIso8601String()}-${emojisOf(widget.days[i].date)}',
                         ),
+                        asset: emojisOf(widget.days[i].date)!,
+                        opacity: widget.days[i].inMonth ? 1 : 0.45,
+                        pop: _appearingEmojis.contains(i),
                       ),
                     ),
             ],
@@ -265,6 +296,7 @@ class _FadingLabel extends StatefulWidget {
     this.appear = false,
     this.searching = false,
     this.matched = false,
+    this.showAccent = true,
   });
 
   final _WeekBlock block;
@@ -272,6 +304,7 @@ class _FadingLabel extends StatefulWidget {
   final bool appear;
   final bool searching;
   final bool matched;
+  final bool showAccent;
 
   @override
   State<_FadingLabel> createState() => _FadingLabelState();
@@ -311,7 +344,7 @@ class _FadingLabelState extends State<_FadingLabel> {
         title: block.event.title,
         color: block.event.color,
         completed: block.event.completed,
-        showAccent: block.showAccent,
+        showAccent: widget.showAccent && block.showAccent,
         isJob: block.event.isJob,
       ),
     );

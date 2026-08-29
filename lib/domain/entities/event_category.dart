@@ -36,10 +36,9 @@ class EventCategory {
   ];
 
   static const companyPresets = [
+    EventCategory(id: 'company_large', name: '대기업', color: 0xFF3B82F6),
     EventCategory(id: 'company_public', name: '공기업', color: 0xFF00ACC1),
-    EventCategory(id: 'company_private', name: '사기업', color: 0xFF3B82F6),
-    EventCategory(id: 'company_startup', name: '스타트업', color: 0xFFA855F7),
-    EventCategory(id: 'company_intern', name: '인턴', color: 0xFF7CB342),
+    EventCategory(id: 'company_university', name: '대학교', color: 0xFFA855F7),
   ];
 
   static const fallback = EventCategory(

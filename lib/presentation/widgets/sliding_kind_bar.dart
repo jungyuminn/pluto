@@ -11,6 +11,7 @@ class SlidingKindBar<T> extends StatefulWidget {
     required this.labelOf,
     required this.accent,
     required this.onChanged,
+    this.onReselected,
     this.barColor,
     this.height = 42,
   });
@@ -20,6 +21,7 @@ class SlidingKindBar<T> extends StatefulWidget {
   final String Function(T value) labelOf;
   final Color accent;
   final ValueChanged<T> onChanged;
+  final VoidCallback? onReselected;
   final Color? barColor;
   final double height;
 
@@ -36,10 +38,13 @@ class _SlidingKindBarState<T> extends State<SlidingKindBar<T>> {
     return index < 0 ? 0 : index;
   }
 
-  void _selectIndex(int index) {
+  void _selectIndex(int index, {bool fromTap = false}) {
     if (index < 0 || index >= widget.values.length) return;
     final next = widget.values[index];
-    if (next == widget.selected) return;
+    if (next == widget.selected) {
+      if (fromTap) widget.onReselected?.call();
+      return;
+    }
     HapticFeedback.selectionClick();
     widget.onChanged(next);
   }
@@ -75,6 +80,7 @@ class _SlidingKindBarState<T> extends State<SlidingKindBar<T>> {
             behavior: HitTestBehavior.opaque,
             onTapDown: (details) => _selectIndex(
               _indexAt(details.localPosition.dx, width),
+              fromTap: true,
             ),
             onHorizontalDragStart: (details) {
               setState(() {

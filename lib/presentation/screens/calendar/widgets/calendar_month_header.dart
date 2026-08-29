@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:job_planner/app_scope.dart';
+import 'package:job_planner/core/constants/app_fonts.dart';
 import 'package:job_planner/core/constants/app_icons.dart';
 import 'package:job_planner/core/constants/app_strings.dart';
 import 'package:job_planner/core/theme/app_colors.dart';
+import 'package:job_planner/core/utils/press_bounce.dart';
+import 'package:job_planner/domain/entities/ledger_entry.dart';
+import 'package:job_planner/domain/ledger_month_stats.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/calendar_filter_menu.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/category_picker_sheet.dart';
+import 'package:job_planner/presentation/screens/calendar/widgets/ledger_kind_stats.dart';
 import 'package:job_planner/presentation/tutorial/tutorial_anchor.dart';
 import 'package:job_planner/presentation/widgets/app_bar_icon_group.dart';
 import 'package:job_planner/presentation/widgets/app_calendar/calendar_zoom_picker.dart';
@@ -25,8 +30,11 @@ class CalendarMonthHeader extends StatelessWidget {
     this.onShowDiaryChanged,
     this.onShowLedgerChanged,
     this.onSortPrefsChanged,
+    this.onCategoriesChanged,
     this.searchOpen = false,
     this.onSearchPressed,
+    this.ledgerMonthStats,
+    this.onLedgerStatsPressed,
   });
 
   final DateTime month;
@@ -41,8 +49,11 @@ class CalendarMonthHeader extends StatelessWidget {
   final ValueChanged<bool>? onShowDiaryChanged;
   final ValueChanged<bool>? onShowLedgerChanged;
   final VoidCallback? onSortPrefsChanged;
+  final VoidCallback? onCategoriesChanged;
   final bool searchOpen;
   final VoidCallback? onSearchPressed;
+  final LedgerMonthStats? ledgerMonthStats;
+  final VoidCallback? onLedgerStatsPressed;
 
   String get _title {
     if (title != null) return title!;
@@ -53,15 +64,15 @@ class CalendarMonthHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final stats = ledgerMonthStats;
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 20, 12),
       child: Row(
         children: [
           Expanded(
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: IntrinsicWidth(
-                child: TutorialAnchor(
+            child: Row(
+              children: [
+                TutorialAnchor(
                   id: TutorialAnchorId.calendarTitle,
                   child: CalendarZoomTitle(
                     text: _title,
@@ -69,7 +80,13 @@ class CalendarMonthHeader extends StatelessWidget {
                     fontSize: 36,
                   ),
                 ),
-              ),
+                Flexible(
+                  child: _LedgerMonthNet(
+                    stats: stats,
+                    onPressed: onLedgerStatsPressed,
+                  ),
+                ),
+              ],
             ),
           ),
           TutorialAnchor(
@@ -95,11 +112,105 @@ class CalendarMonthHeader extends StatelessWidget {
                   onShowDiaryChanged: onShowDiaryChanged,
                   onShowLedgerChanged: onShowLedgerChanged,
                   onSortPrefsChanged: onSortPrefsChanged,
+                  onCategoriesChanged: onCategoriesChanged,
                 ),
               ],
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _LedgerMonthNet extends StatefulWidget {
+  const _LedgerMonthNet({
+    required this.stats,
+    this.onPressed,
+  });
+
+  final LedgerMonthStats? stats;
+  final VoidCallback? onPressed;
+
+  @override
+  State<_LedgerMonthNet> createState() => _LedgerMonthNetState();
+}
+
+class _LedgerMonthNetState extends State<_LedgerMonthNet>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final CurvedAnimation _fade;
+  LedgerMonthStats? _shown;
+
+  @override
+  void initState() {
+    super.initState();
+    _shown = widget.stats;
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 280),
+      reverseDuration: const Duration(milliseconds: 220),
+      value: widget.stats == null ? 0 : 1,
+    );
+    _fade = CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeOutCubic,
+      reverseCurve: Curves.easeInCubic,
+    );
+  }
+
+  @override
+  void didUpdateWidget(_LedgerMonthNet oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final visible = widget.stats != null;
+    final wasVisible = oldWidget.stats != null;
+    if (widget.stats != null) _shown = widget.stats;
+    if (visible == wasVisible) return;
+    if (visible) {
+      _controller.forward();
+    } else {
+      _controller.reverse().whenComplete(() {
+        if (!mounted || widget.stats != null) return;
+        setState(() => _shown = null);
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _fade.dispose();
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final stats = widget.stats ?? _shown;
+    if (stats == null) return const SizedBox.shrink();
+    final colors = AppColors.of(context);
+    return FadeTransition(
+      opacity: _fade,
+      child: IgnorePointer(
+        ignoring: widget.stats == null,
+        child: PressBounce(
+          onPressed: widget.onPressed,
+          pressedScale: 0.97,
+          alignment: Alignment.centerLeft,
+          child: Padding(
+            padding: const EdgeInsets.only(left: 8),
+            child: LedgerStatAmount(
+              amount: stats.net,
+              sign: LedgerSignMode.signed,
+              style: TextStyle(
+                fontFamily: AppFonts.of(context),
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                height: 1.1,
+                color: LedgerEntry.netColor(stats.net, colors.muted),
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -119,6 +230,7 @@ class CalendarMonthMenuButton extends StatefulWidget {
     this.onShowLedgerChanged,
     this.showLedger = false,
     this.onSortPrefsChanged,
+    this.onCategoriesChanged,
   });
 
   final bool showTodos;
@@ -130,6 +242,7 @@ class CalendarMonthMenuButton extends StatefulWidget {
   final ValueChanged<bool>? onShowDiaryChanged;
   final ValueChanged<bool>? onShowLedgerChanged;
   final VoidCallback? onSortPrefsChanged;
+  final VoidCallback? onCategoriesChanged;
 
   @override
   State<CalendarMonthMenuButton> createState() =>
@@ -195,11 +308,14 @@ class _CalendarMonthMenuButtonState extends State<CalendarMonthMenuButton>
   Future<void> _openCategories() async {
     await _close();
     if (!mounted) return;
-    await showCategoryPickerSheet(context, startModifying: true);
+    await showCategoryPickerSheet(context, selectable: false);
+    if (!mounted) return;
+    widget.onCategoriesChanged?.call();
   }
 
   Widget _menuPage() {
     final prefs = AppScope.of(context).dayEventsViewPreference;
+    final ledger = widget.showLedger;
     return switch (_page) {
       _MenuPage.filter => CalendarFilterMenu(
         key: const ValueKey('filter'),
@@ -210,6 +326,19 @@ class _CalendarMonthMenuButtonState extends State<CalendarMonthMenuButton>
         },
         onShowCompaniesChanged: (value) {
           widget.onShowCompaniesChanged?.call(value);
+        },
+        ledgerMode: ledger,
+        showLedgerTitle: prefs.showLedgerTitle,
+        showLedgerAmount: prefs.showLedgerAmount,
+        onShowLedgerTitleChanged: (value) async {
+          await prefs.setShowLedgerTitle(value);
+          if (mounted) setState(() {});
+          widget.onSortPrefsChanged?.call();
+        },
+        onShowLedgerAmountChanged: (value) async {
+          await prefs.setShowLedgerAmount(value);
+          if (mounted) setState(() {});
+          widget.onSortPrefsChanged?.call();
         },
         onBack: () => setState(() => _page = _MenuPage.root),
       ),
@@ -227,6 +356,15 @@ class _CalendarMonthMenuButtonState extends State<CalendarMonthMenuButton>
           if (mounted) setState(() {});
           widget.onSortPrefsChanged?.call();
         },
+        showTimeOption: !ledger,
+        showTimeSortOption: !ledger,
+        showCategoryOption: true,
+        categoryView: prefs.categoryView,
+        onCategoryViewChanged: (value) async {
+          await prefs.setCategoryView(value);
+          if (mounted) setState(() {});
+          widget.onSortPrefsChanged?.call();
+        },
         onBack: () => setState(() => _page = _MenuPage.root),
       ),
       _MenuPage.root => CalendarOverflowMenu(
@@ -237,10 +375,12 @@ class _CalendarMonthMenuButtonState extends State<CalendarMonthMenuButton>
         showDiary: widget.showDiary,
         onShowDiaryChanged: (value) {
           widget.onShowDiaryChanged?.call(value);
+          setState(() {});
         },
-        showLedger: widget.showLedger,
+        showLedger: ledger,
         onShowLedgerChanged: (value) {
           widget.onShowLedgerChanged?.call(value);
+          setState(() {});
         },
       ),
     };

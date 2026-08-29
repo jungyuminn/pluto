@@ -1056,41 +1056,41 @@ class _ThemeLivePreviewState extends State<_ThemeLivePreview> {
     final colors = AppColors.of(context);
     final custom = widget.customTheme;
     Widget preview = AppSkinBackground(
-      liftForNav: false,
-      scaleByWidth: true,
-      animate: true,
+            liftForNav: false,
+            scaleByWidth: true,
+            animate: true,
       skin: custom == null ? null : AppSkin.classic,
       customTheme: custom,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Expanded(
-            child: PageView(
-              controller: _pages,
-              onPageChanged: (page) {
-                setState(() => _page = page);
-                _startTimer();
-              },
-              children: const [
-                _ThemeHomePreviewPage(),
-                _ThemeCalendarPreviewPage(),
-                _ThemeJobPreviewPage(),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(
+                  child: PageView(
+                    controller: _pages,
+                    onPageChanged: (page) {
+                      setState(() => _page = page);
+                      _startTimer();
+                    },
+                    children: const [
+                      _ThemeHomePreviewPage(),
+                      _ThemeCalendarPreviewPage(),
+                      _ThemeJobPreviewPage(),
+                    ],
+                  ),
+                ),
+                _ThemePreviewDots(
+                  selected: _page,
+                  onSelected: (page) => _goTo(page, fromUser: true),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(14, 4, 14, 12),
+                  child: _ThemePreviewNav(
+                    selected: _page,
+                    onSelected: (page) => _goTo(page, fromUser: true),
+                  ),
+                ),
               ],
             ),
-          ),
-          _ThemePreviewDots(
-            selected: _page,
-            onSelected: (page) => _goTo(page, fromUser: true),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(14, 4, 14, 12),
-            child: _ThemePreviewNav(
-              selected: _page,
-              onSelected: (page) => _goTo(page, fromUser: true),
-            ),
-          ),
-        ],
-      ),
     );
     if (custom != null) {
       final dark = Theme.of(context).brightness == Brightness.dark;
@@ -1649,7 +1649,7 @@ class _ThemeSettingsPageState extends State<_ThemeSettingsPage> {
                                       _openEditor(context, initial: item),
                                 )
                               : _SettingsCard(
-                                  children: [
+                      children: [
                                     for (final skin in group.skins)
                                       KeyedSubtree(
                                         key: theme.skin == skin &&
@@ -1663,8 +1663,8 @@ class _ThemeSettingsPageState extends State<_ThemeSettingsPage> {
                                           ),
                                           checked: !theme.usesCustom &&
                                               theme.skin == skin,
-                                          onPressed: () async {
-                                            await theme.setSkin(skin);
+                            onPressed: () async {
+                              await theme.setSkin(skin);
                                             await HomeScreenWidgetService
                                                 .instance
                                                 .sync();
@@ -1869,7 +1869,7 @@ class _MineThemesPanelState extends State<_MineThemesPanel> {
     );
     if (confirmed != true || !context.mounted) return;
     await AppScope.of(context).themePreference.deleteCustomTheme(item.id);
-    await HomeScreenWidgetService.instance.sync();
+                              await HomeScreenWidgetService.instance.sync();
   }
 }
 
@@ -2379,10 +2379,10 @@ class _CustomThemeEditorPageState extends State<_CustomThemeEditorPage> {
                         ),
                       ],
                     ),
-                  ],
-                ),
-              );
-            },
+            ],
+          ),
+        );
+      },
           ),
           if (widget.initial != null) ...[
             const SizedBox(height: 8),
@@ -4167,20 +4167,20 @@ class _SettingsTile extends StatelessWidget {
           child: Row(
             children: [
               if (value == null)
-                Expanded(
-                  child: Text(
-                    label,
+              Expanded(
+                child: Text(
+                  label,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontFamily: previewLabelFont
-                          ? labelFontFamily
-                          : AppFonts.of(context),
-                      fontSize: 16,
-                      fontWeight: FontWeight.w400,
-                      color: colors.text,
-                    ),
+                  style: TextStyle(
+                    fontFamily: previewLabelFont
+                        ? labelFontFamily
+                        : AppFonts.of(context),
+                    fontSize: 16,
+                    fontWeight: FontWeight.w400,
+                    color: colors.text,
                   ),
+                ),
                 )
               else ...[
                 Text(
@@ -4199,15 +4199,15 @@ class _SettingsTile extends StatelessWidget {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    value!,
+                  value!,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     textAlign: TextAlign.end,
-                    style: TextStyle(
-                      fontFamily: AppFonts.of(context),
-                      fontSize: 15,
-                      fontWeight: FontWeight.w400,
-                      color: colors.muted,
+                  style: TextStyle(
+                    fontFamily: AppFonts.of(context),
+                    fontSize: 15,
+                    fontWeight: FontWeight.w400,
+                    color: colors.muted,
                     ),
                   ),
                 ),

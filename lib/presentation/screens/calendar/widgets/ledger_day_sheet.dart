@@ -1,35 +1,104 @@
+import 'dart:ui' show lerpDouble;
+
 import 'package:flutter/material.dart';
-import 'package:job_planner/core/constants/app_fonts.dart';
+import 'package:flutter/services.dart';
+import 'package:job_planner/app_scope.dart';
+import 'package:job_planner/core/constants/app_icons.dart';
 import 'package:job_planner/core/constants/app_strings.dart';
 import 'package:job_planner/core/theme/app_colors.dart';
-import 'package:job_planner/core/utils/press_bounce.dart';
+import 'package:job_planner/core/theme/app_skin_background.dart';
 import 'package:job_planner/core/utils/swipe_to_delete.dart';
 import 'package:job_planner/domain/entities/ledger_entry.dart';
+import 'package:job_planner/domain/ledger_salary_repeat.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/add_event_button.dart';
+import 'package:job_planner/presentation/screens/calendar/widgets/calendar_month_grid.dart';
+import 'package:job_planner/presentation/screens/calendar/widgets/day_event_label.dart';
+import 'package:job_planner/presentation/screens/calendar/widgets/day_emoji_sheet.dart';
+import 'package:job_planner/presentation/screens/calendar/widgets/day_sticker_image.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/delete_event_dialog.dart';
+import 'package:job_planner/presentation/screens/calendar/widgets/ledger_kind_stats.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/ledger_sheet.dart';
-import 'package:job_planner/app_scope.dart';
+import 'package:job_planner/presentation/widgets/app_bar_pill.dart';
 
-Future<bool> showLedgerDaySheet(
+Future<void> showLedgerDaySheet(
   BuildContext context, {
   required DateTime date,
   required List<LedgerEntry> entries,
-}) async {
-  if (entries.isEmpty) {
-    return showLedgerSheet(context, date: date);
-  }
-  final changed = await showModalBottomSheet<bool>(
+  Rect? origin,
+}) {
+  CalendarDayDropTarget.reset();
+  return showGeneralDialog<void>(
     context: context,
-    isScrollControlled: true,
-    useSafeArea: false,
-    showDragHandle: false,
-    enableDrag: true,
-    backgroundColor: Colors.transparent,
-    barrierColor: const Color(0x40000000),
-    elevation: 0,
-    builder: (context) => LedgerDaySheet(date: date, initial: entries),
+    barrierDismissible: false,
+    barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
+    barrierColor: const Color(0x00000000),
+    transitionDuration: const Duration(milliseconds: 150),
+    pageBuilder: (context, animation, secondaryAnimation) {
+      return LedgerDaySheet(date: date, initial: entries);
+    },
+    transitionBuilder: (context, animation, secondaryAnimation, child) {
+      final t = Curves.easeOutCubic.transform(animation.value);
+      final fade = (0.25 + animation.value * 1.5).clamp(0.0, 1.0);
+      final source = origin;
+      Widget dialog = child;
+      if (source == null || source.isEmpty) {
+        dialog = Opacity(
+          opacity: fade,
+          child: Transform.scale(
+            scale: lerpDouble(0.92, 1, t)!,
+            child: child,
+          ),
+        );
+      } else {
+        final size = MediaQuery.sizeOf(context);
+        const dialogWidth = 260.0;
+        final dialogHeight =
+            (size.height * 0.56).clamp(420.0, 530.0).toDouble();
+        final beginScale =
+            ((source.width / dialogWidth + source.height / dialogHeight) / 2)
+                .clamp(0.12, 0.38);
+        final delta = source.center - Offset(size.width / 2, size.height / 2);
+        dialog = Opacity(
+          opacity: fade,
+          child: Transform.translate(
+            offset: delta * (1 - t),
+            child: Transform.scale(
+              scale: lerpDouble(beginScale, 1, t)!,
+              child: child,
+            ),
+          ),
+        );
+      }
+
+      return Stack(
+        children: [
+          Positioned.fill(
+            child: FadeTransition(
+              opacity: animation,
+              child: ValueListenableBuilder<bool>(
+                valueListenable: CalendarDayDropTarget.hidingScrim,
+                builder: (context, hiding, _) {
+                  return IgnorePointer(
+                    ignoring: hiding,
+                    child: AnimatedOpacity(
+                      opacity: hiding ? 0 : 1,
+                      duration: const Duration(milliseconds: 140),
+                      child: GestureDetector(
+                        onTap: () => Navigator.of(context).maybePop(),
+                        behavior: HitTestBehavior.opaque,
+                        child: const ColoredBox(color: Color(0x33000000)),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+          dialog,
+        ],
+      );
+    },
   );
-  return changed == true;
 }
 
 class LedgerDaySheet extends StatefulWidget {
@@ -47,14 +116,80 @@ class LedgerDaySheet extends StatefulWidget {
 }
 
 class _LedgerDaySheetState extends State<LedgerDaySheet> {
+  final _listController = ScrollController();
+  final _listBoxKey = GlobalKey();
+  final _dialogKey = GlobalKey();
   late List<LedgerEntry> _entries;
-  var _changed = false;
+  var _items = <_ListEntry>[];
+  var _compact = false;
+  var _initialized = false;
+  String? _emoji;
+  var _emojiPop = false;
+  var _animateEmojiSlot = false;
+  String? _draggingId;
+  var _draggingOutside = false;
+  final _reveals = <String, double>{};
+
+  static const _eventExtent = 62.0;
+  static const _headerExtent = 24.0;
+  static const _headerGap = 6.0;
+  static const _slotAnim = Duration(milliseconds: 240);
 
   @override
   void initState() {
     super.initState();
-    _entries = [...widget.initial]
-      ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+    _entries = [...widget.initial]..sort(LedgerEntry.compareDisplay);
+    _items = _itemsForView;
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_initialized) return;
+    _initialized = true;
+    final scope = AppScope.of(context);
+    _compact = scope.dayEventsViewPreference.categoryView;
+    final sticker = scope.dayEmojiStore.on(widget.date);
+    _emoji = DayStickers.isAsset(sticker) ? sticker : null;
+    _entries.sort(
+      _compact ? LedgerEntry.compareByKind : LedgerEntry.compareDisplay,
+    );
+    _items = _itemsForView;
+  }
+
+  @override
+  void dispose() {
+    CalendarDayDropTarget.clear();
+    _listController.dispose();
+    super.dispose();
+  }
+
+  String get _title {
+    final date = widget.date;
+    final weekday = AppStrings.weekdays[date.weekday % 7];
+    final dayLabel =
+        '${date.month}${AppStrings.monthSuffix} ${date.day}${AppStrings.daySuffix} ($weekday)';
+    if (date.year == DateTime.now().year) return dayLabel;
+    return '${date.year}${AppStrings.yearSuffix} $dayLabel';
+  }
+
+  int get _daysFromToday {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final target =
+        DateTime(widget.date.year, widget.date.month, widget.date.day);
+    return target.difference(today).inDays;
+  }
+
+  String get _dDayLabel {
+    final days = _daysFromToday;
+    if (days == 0) return 'D-Day';
+    if (days > 0) return 'D-$days';
+    return 'D+${-days}';
+  }
+
+  Color _dDayColor(AppColors colors) {
+    return _daysFromToday < 0 ? colors.accent : colors.danger;
   }
 
   int get _salaryTotal => _entries
@@ -69,35 +204,127 @@ class _LedgerDaySheetState extends State<LedgerDaySheet> {
       .where((e) => e.kind == LedgerKind.expense)
       .fold(0, (sum, e) => sum + e.amount);
 
-  int get _net => _salaryTotal - _consumption - _expense;
+  int get _net => _salaryTotal + _expense - _consumption;
 
-  Future<void> _reload() async {
+  List<_ListEntry> get _itemsForView {
+    if (!_compact) {
+      return [for (final entry in _entries) _ListEntry.entry(entry)];
+    }
+
+    final groups = <LedgerKind, List<LedgerEntry>>{};
+    for (final entry in _entries) {
+      groups.putIfAbsent(entry.kind, () => []).add(entry);
+    }
+
+    const order = [
+      LedgerKind.salary,
+      LedgerKind.consumption,
+      LedgerKind.expense,
+    ];
+    final items = <_ListEntry>[];
+    var firstHeader = true;
+    for (final kind in order) {
+      final section = groups[kind];
+      if (section == null || section.isEmpty) continue;
+      items.add(
+        _ListEntry.header(
+          key: kind.name,
+          name: section.first.kindLabel,
+          color: section.first.color,
+          showTopGap: !firstHeader,
+        ),
+      );
+      firstHeader = false;
+      items.addAll([for (final entry in section) _ListEntry.entry(entry)]);
+    }
+    return items;
+  }
+
+  void _syncItems(List<_ListEntry> next, {required bool animate}) {
+    final oldIds = {for (final item in _items) item.id};
+    final appearing = <String>[];
+    for (final item in next) {
+      if (!animate || oldIds.contains(item.id)) {
+        _reveals[item.id] = 1;
+        continue;
+      }
+      _reveals[item.id] = 0;
+      appearing.add(item.id);
+    }
+    setState(() => _items = next);
+    if (appearing.isEmpty || !animate) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      setState(() {
+        for (final id in appearing) {
+          _reveals[id] = 1;
+        }
+      });
+    });
+  }
+
+  Future<void> _reload({bool animate = true}) async {
     final all = await AppScope.of(context).getLedgers();
     final day = DateTime(widget.date.year, widget.date.month, widget.date.day);
     if (!mounted) return;
+    _entries = [
+      for (final entry in all)
+        if (LedgerSalaryRepeat.occursOn(entry, day))
+          LedgerSalaryRepeat.onDay(entry, day),
+    ]..sort(
+        _compact ? LedgerEntry.compareByKind : LedgerEntry.compareDisplay,
+      );
+    _syncItems(_itemsForView, animate: animate);
+  }
+
+  Future<void> _pickEmoji() async {
+    final picked = await showDayEmojiSheet(context, selected: _emoji);
+    if (picked == null || !mounted) return;
+    await AppScope.of(context).dayEmojiStore.set(
+      widget.date,
+      picked.isEmpty ? null : picked,
+    );
+    if (!mounted) return;
     setState(() {
-      _entries = [
-        for (final entry in all)
-          if (entry.day == day) entry,
-      ]..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
-      _changed = true;
+      final next = AppScope.of(context).dayEmojiStore.on(widget.date);
+      _emoji = DayStickers.isAsset(next) ? next : null;
+      _emojiPop = _emoji != null;
+      _animateEmojiSlot = true;
+    });
+    if (_emoji != null) return;
+    Future<void>.delayed(DayStickerImage.popDuration, () {
+      if (!mounted || _emoji != null) return;
+      setState(() => _animateEmojiSlot = false);
     });
   }
 
   Future<void> _open([LedgerEntry? entry]) async {
+    LedgerEntry? initial = entry;
+    if (entry != null) {
+      final all = await AppScope.of(context).getLedgers();
+      for (final item in all) {
+        if (item.id == entry.id) {
+          initial = item;
+          break;
+        }
+      }
+      if (!mounted) return;
+    }
     final saved = await showLedgerSheet(
       context,
       date: widget.date,
-      initial: entry,
+      initial: initial,
     );
-    if (saved && mounted) await _reload();
+    if (saved && mounted) await _reload(animate: entry == null);
   }
 
   Future<bool> _confirmDelete(LedgerEntry entry) async {
     final confirmed = await showDeleteEventDialog(
       context,
-      title: AppStrings.deleteTitle,
-      body: AppStrings.deleteLedgerBody,
+      title: entry.title.trim().isEmpty ? entry.kindLabel : entry.title,
+      body: LedgerSalaryRepeat.isRepeating(entry)
+          ? AppStrings.deleteLedgerRepeatBody
+          : AppStrings.deleteLedgerBody,
     );
     if (!confirmed || !mounted) return false;
     await AppScope.of(context).deleteLedger(entry.id);
@@ -105,161 +332,544 @@ class _LedgerDaySheetState extends State<LedgerDaySheet> {
     return true;
   }
 
+  bool _sameGroup(LedgerEntry dragged, _ListEntry item) {
+    final entry = item.entry;
+    if (entry == null) return false;
+    if (!_compact) return true;
+    return entry.kind == dragged.kind;
+  }
+
+  double _extent(_ListEntry item) {
+    if (item.isHeader) {
+      return _headerExtent + (item.showTopGap ? _headerGap : 0);
+    }
+    return _eventExtent;
+  }
+
+  double _layoutExtent(_ListEntry item) {
+    return _extent(item) * (_reveals[item.id] ?? 1);
+  }
+
+  double _offsetOfEntry(String id) {
+    var y = 0.0;
+    for (final item in _items) {
+      if (item.entry?.id == id) return y;
+      y += _layoutExtent(item);
+    }
+    return y;
+  }
+
+  bool _contains(GlobalKey key, Offset global) {
+    final box = key.currentContext?.findRenderObject() as RenderBox?;
+    if (box == null || !box.hasSize) return false;
+    return (box.localToGlobal(Offset.zero) & box.size).contains(global);
+  }
+
+  LedgerEntry? get _draggedEntry {
+    final id = _draggingId;
+    if (id == null) return null;
+    for (final entry in _entries) {
+      if (entry.id == id) return entry;
+    }
+    return null;
+  }
+
+  void _onDragStarted(LedgerEntry entry) {
+    setState(() {
+      _draggingId = entry.id;
+      _draggingOutside = false;
+    });
+  }
+
+  void _onDragUpdate(Offset global) {
+    final dragged = _draggedEntry;
+    if (dragged == null) return;
+
+    if (!_draggingOutside) {
+      final insideDialog = _contains(_dialogKey, global);
+      final insideList = insideDialog && _contains(_listBoxKey, global);
+      if (insideList) {
+        CalendarDayDropTarget.clear();
+        final box =
+            _listBoxKey.currentContext?.findRenderObject() as RenderBox?;
+        if (box == null || !box.hasSize) return;
+        _moveInGroup(
+          dragged,
+          _groupIndexAt(box.globalToLocal(global).dy, dragged),
+        );
+        return;
+      }
+      if (insideDialog) {
+        CalendarDayDropTarget.clear();
+        return;
+      }
+      if (dragged.kind == LedgerKind.salary) {
+        CalendarDayDropTarget.clear();
+        return;
+      }
+      setState(() => _draggingOutside = true);
+      CalendarDayDropTarget.setScrimHidden(true);
+    }
+
+    final overDate = CalendarDayDropTarget.dateAt(global);
+    if (overDate != null &&
+        !CalendarDayDropTarget.isSameDay(overDate, widget.date)) {
+      final was = CalendarDayDropTarget.highlighted.value;
+      CalendarDayDropTarget.highlight(overDate);
+      if (was == null || !CalendarDayDropTarget.isSameDay(was, overDate)) {
+        HapticFeedback.selectionClick();
+      }
+      return;
+    }
+    CalendarDayDropTarget.clear();
+  }
+
+  Future<void> _onDragEnded() async {
+    final entry = _draggedEntry;
+    final dropDate = CalendarDayDropTarget.highlighted.value;
+    final shouldSaveOrder = _draggingId != null;
+    final moving = entry != null &&
+        entry.kind != LedgerKind.salary &&
+        dropDate != null &&
+        !CalendarDayDropTarget.isSameDay(dropDate, widget.date);
+    CalendarDayDropTarget.clear();
+    if (!moving) CalendarDayDropTarget.setScrimHidden(false);
+    if (!mounted) return;
+    setState(() {
+      _draggingId = null;
+      _draggingOutside = false;
+    });
+    if (moving) {
+      await _moveToDate(entry, dropDate);
+      if (mounted) Navigator.of(context).pop();
+      return;
+    }
+    if (shouldSaveOrder) await _persistOrder();
+  }
+
+  Future<void> _moveToDate(LedgerEntry entry, DateTime date) async {
+    var original = entry;
+    final all = await AppScope.of(context).getLedgers();
+    for (final item in all) {
+      if (item.id == entry.id) {
+        original = item;
+        break;
+      }
+    }
+    if (!mounted) return;
+    await AppScope.of(context).saveLedger(
+      original.copyWith(
+        date: DateTime(date.year, date.month, date.day),
+      ),
+    );
+  }
+
+  int _groupIndexAt(double y, LedgerEntry dragged) {
+    final group = [
+      for (final item in _items)
+        if (_sameGroup(dragged, item)) item.entry!,
+    ];
+    if (group.isEmpty) return 0;
+    final from = group.indexWhere((entry) => entry.id == dragged.id);
+    var closest = 0;
+    var best = double.infinity;
+    var acc = 0.0;
+    var gi = 0;
+    for (final item in _items) {
+      final height = _extent(item);
+      if (_sameGroup(dragged, item)) {
+        final dist = (y - (acc + height / 2)).abs();
+        if (dist < best) {
+          best = dist;
+          closest = gi;
+        }
+        gi++;
+      }
+      acc += height;
+    }
+    if (from >= 0 && closest != from) {
+      final top = _offsetOfEntry(dragged.id);
+      if (y >= top - _eventExtent * 0.18 && y < top + _eventExtent * 1.18) {
+        return from;
+      }
+    }
+    return closest;
+  }
+
+  void _moveInGroup(LedgerEntry dragged, int to) {
+    final group = [
+      for (final entry in _entries)
+        if (!_compact || entry.kind == dragged.kind) entry,
+    ];
+    final from = group.indexWhere((entry) => entry.id == dragged.id);
+    if (from < 0 || to < 0 || from == to) return;
+    final nextTo = to.clamp(0, group.length - 1);
+    if (from == nextTo) return;
+    final moved = group.removeAt(from);
+    group.insert(nextTo, moved);
+
+    if (_compact) {
+      var gi = 0;
+      final ids = {for (final entry in group) entry.id};
+      for (var i = 0; i < _entries.length; i++) {
+        if (!ids.contains(_entries[i].id)) continue;
+        _entries[i] = group[gi++];
+      }
+    } else {
+      _entries
+        ..clear()
+        ..addAll(group);
+    }
+
+    setState(() => _items = _itemsForView);
+    HapticFeedback.selectionClick();
+  }
+
+  Future<void> _persistOrder() async {
+    if (!mounted) return;
+    final all = await AppScope.of(context).getLedgers();
+    if (!mounted) return;
+    final byId = {for (final entry in all) entry.id: entry};
+    for (var i = 0; i < _entries.length; i++) {
+      final original = byId[_entries[i].id];
+      if (original == null || original.sortOrder == i) continue;
+      await AppScope.of(context).saveLedger(original.copyWith(sortOrder: i));
+      if (!mounted) return;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
-    final font = AppFonts.of(context);
-    final weekday = AppStrings.weekdays[widget.date.weekday % 7];
-    final dateLabel =
-        '${widget.date.month}. ${widget.date.day}. ($weekday)';
-    return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (didPop, _) {
-        if (!didPop) Navigator.of(context).pop(_changed);
-      },
-      child: Padding(
-        padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            color: colors.card,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(
-                  dateLabel,
-                  style: TextStyle(
-                    fontFamily: font,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w800,
-                    color: colors.text,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  '${AppStrings.ledgerSalary} ${LedgerEntry.formatWon(_salaryTotal)} · ${AppStrings.ledgerConsumption} ${LedgerEntry.formatWon(_consumption)} · ${AppStrings.ledgerExpense} ${LedgerEntry.formatWon(_expense)} · ${AppStrings.ledgerNet} ${_net >= 0 ? '+' : '-'}${LedgerEntry.formatWon(_net.abs())}',
-                  maxLines: 2,
-                  style: TextStyle(
-                    fontFamily: font,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: colors.muted,
-                  ),
-                ),
-                const SizedBox(height: 14),
-                if (_entries.isEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: Text(
-                      AppStrings.ledgerEmptyDay,
-                      style: TextStyle(
-                        fontFamily: font,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: colors.muted,
-                      ),
-                    ),
-                  )
-                else
-                  ConstrainedBox(
-                    constraints: const BoxConstraints(maxHeight: 360),
-                    child: ListView.separated(
-                      shrinkWrap: true,
-                      itemCount: _entries.length,
-                      separatorBuilder: (_, _) => const SizedBox(height: 8),
-                      itemBuilder: (context, index) {
-                        final entry = _entries[index];
-                        return SwipeToDelete(
-                          onSwipeLeft: () => _confirmDelete(entry),
-                          child: _LedgerRow(
-                            entry: entry,
-                            onPressed: () => _open(entry),
+    final height =
+        (MediaQuery.sizeOf(context).height * 0.56).clamp(420.0, 530.0).toDouble();
+
+    return MediaQuery.removeViewInsets(
+      context: context,
+      removeBottom: true,
+      child: AnimatedOpacity(
+        opacity: _draggingOutside ? 0 : 1,
+        duration: const Duration(milliseconds: 140),
+        child: IgnorePointer(
+          ignoring: _draggingOutside,
+          child: Dialog(
+            backgroundColor: Colors.transparent,
+            surfaceTintColor: Colors.transparent,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(24),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(24),
+              child: SizedBox(
+                key: _dialogKey,
+                height: height,
+                width: 260,
+                child: AppSkinBackground(
+                  color: colors.card,
+                  liftForNav: false,
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 20, 16, 20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (_emoji != null || _animateEmojiSlot)
+                              ClipRect(
+                                child: AnimatedContainer(
+                                  duration: _animateEmojiSlot
+                                      ? DayStickerImage.popDuration
+                                      : Duration.zero,
+                                  curve: Curves.easeOutCubic,
+                                  width: _emoji == null ? 0 : 50,
+                                  height: _emoji == null ? 0 : 43,
+                                  alignment: Alignment.centerLeft,
+                                  child: _emoji == null
+                                      ? null
+                                      : Padding(
+                                          padding: const EdgeInsets.only(
+                                            right: 8,
+                                            top: 1,
+                                          ),
+                                          child: DayStickerImage(
+                                            key: ValueKey(_emoji),
+                                            asset: _emoji!,
+                                            width: 42,
+                                            height: 42,
+                                            pop: _emojiPop,
+                                          ),
+                                        ),
+                                ),
+                              ),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    _title,
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w800,
+                                      color: colors.text,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    _dDayLabel,
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w700,
+                                      height: 1,
+                                      color: _dDayColor(colors),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            AppBarPill(
+                              asset: AppIcons.emoji,
+                              label: AppStrings.emojiAction,
+                              onPressed: _pickEmoji,
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 15),
+                        Expanded(child: _buildList()),
+                        ClipRect(
+                          child: AnimatedSize(
+                            duration: const Duration(milliseconds: 280),
+                            curve: Curves.easeOutCubic,
+                            alignment: Alignment.topCenter,
+                            child: _entries.isEmpty
+                                ? const SizedBox(width: double.infinity)
+                                : Padding(
+                                    padding: const EdgeInsets.only(
+                                      top: 10,
+                                      right: 8,
+                                    ),
+                                    child: LedgerKindStats(
+                                      consumption: _consumption,
+                                      expense: _expense,
+                                      salary: _salaryTotal,
+                                      net: _net,
+                                      showSalary: _entries.any(
+                                        (e) => e.kind == LedgerKind.salary,
+                                      ),
+                                    ),
+                                  ),
                           ),
-                        );
-                      },
+                        ),
+                        const SizedBox(height: 12),
+                        Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: AddEventButton(
+                            label: AppStrings.addLedger,
+                            onPressed: () => _open(),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                const SizedBox(height: 12),
-                AddEventButton(
-                  label: AppStrings.addLedger,
-                  onPressed: () => _open(),
                 ),
-              ],
+              ),
             ),
           ),
         ),
       ),
     );
   }
-}
 
-class _LedgerRow extends StatelessWidget {
-  const _LedgerRow({required this.entry, required this.onPressed});
-
-  final LedgerEntry entry;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = AppColors.of(context);
-    return PressBounce(
-      onPressed: onPressed,
-      color: colors.tint(entry.color, 0.18),
-      pressedColor: colors.tint(entry.color, 0.28),
-      borderRadius: BorderRadius.circular(12),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
-        child: Row(
+  Widget _buildList() {
+    var height = 0.0;
+    final tops = <double>[];
+    for (final item in _items) {
+      tops.add(height);
+      height += _layoutExtent(item);
+    }
+    return SingleChildScrollView(
+      controller: _listController,
+      physics: _draggingId == null
+          ? const ClampingScrollPhysics()
+          : const NeverScrollableScrollPhysics(),
+      child: AnimatedContainer(
+        key: _listBoxKey,
+        duration: _slotAnim,
+        curve: Curves.easeOutCubic,
+        height: height,
+        child: Stack(
+          clipBehavior: Clip.none,
           children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    entry.title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontFamily: AppFonts.of(context),
-                      fontSize: 15,
-                      fontWeight: FontWeight.w700,
-                      color: colors.text,
+            for (var i = 0; i < _items.length; i++)
+              AnimatedPositioned(
+                key: ValueKey(_items[i].id),
+                duration: _slotAnim,
+                curve: Curves.easeOutCubic,
+                top: tops[i],
+                left: 0,
+                right: 0,
+                height: _layoutExtent(_items[i]),
+                child: ClipRect(
+                  child: AnimatedOpacity(
+                    duration: _slotAnim,
+                    curve: Curves.easeOutCubic,
+                    opacity: _reveals[_items[i].id] ?? 1,
+                    child: IgnorePointer(
+                      ignoring: (_reveals[_items[i].id] ?? 1) < 1,
+                      child: _tile(_items[i]),
                     ),
                   ),
-                  if (entry.memo.trim().isNotEmpty) ...[
-                    const SizedBox(height: 2),
-                    Text(
-                      entry.memo,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontFamily: AppFonts.of(context),
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: colors.muted,
-                      ),
-                    ),
-                  ],
-                ],
+                ),
               ),
-            ),
-            const SizedBox(width: 10),
-            Text(
-              entry.signedLabel,
-              style: TextStyle(
-                fontFamily: AppFonts.of(context),
-                fontSize: 15,
-                fontWeight: FontWeight.w800,
-                color: entry.color,
-              ),
-            ),
           ],
         ),
       ),
     );
   }
+
+  Widget _tile(_ListEntry item) {
+    if (item.isHeader) {
+      return Padding(
+        padding: EdgeInsets.only(
+          top: item.showTopGap ? _headerGap : 0,
+          bottom: 8,
+        ),
+        child: SizedBox(
+          height: 16,
+          child: Row(
+            children: [
+              Container(
+                width: 8,
+                height: 8,
+                decoration: BoxDecoration(
+                  color: item.headerColor,
+                  shape: BoxShape.circle,
+                ),
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  item.headerName ?? '',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w800,
+                    height: 1,
+                    color: AppColors.of(context).text,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    final entry = item.entry!;
+    final title =
+        entry.title.trim().isEmpty ? entry.kindLabel : entry.title.trim();
+    final label = DayEventLabel(
+      title: title,
+      categoryName: entry.kindLabel,
+      color: entry.color,
+      showCategory: entry.title.trim().isNotEmpty,
+      memo: entry.memo,
+      trailingText: '${entry.signedLabel}원',
+      isRepeat: LedgerSalaryRepeat.isRepeating(entry),
+      onPressed: () => _open(entry),
+    );
+    final body = Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: SwipeToDelete(
+        onSwipeLeft: () => _confirmDelete(entry),
+        child: label,
+      ),
+    );
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return LongPressDraggable<String>(
+          data: entry.id,
+          delay: const Duration(milliseconds: 400),
+          hapticFeedbackOnStart: true,
+          rootOverlay: true,
+          maxSimultaneousDrags: 1,
+          onDragStarted: () => _onDragStarted(entry),
+          onDragUpdate: (details) => _onDragUpdate(details.globalPosition),
+          onDragEnd: (_) => _onDragEnded(),
+          feedback: Material(
+            color: Colors.transparent,
+            child: SizedBox(
+              width: constraints.maxWidth,
+              child: Transform.scale(
+                scale: 1.03,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(8),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Color(0x33000000),
+                        blurRadius: 12,
+                        offset: Offset(0, 6),
+                      ),
+                    ],
+                  ),
+                  child: DayEventLabel(
+                    title: title,
+                    categoryName: entry.kindLabel,
+                    color: entry.color,
+                    showCategory: entry.title.trim().isNotEmpty,
+                    memo: entry.memo,
+                    trailingText: '${entry.signedLabel}원',
+                    isRepeat: LedgerSalaryRepeat.isRepeating(entry),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          childWhenDragging: Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: AppColors.of(context).pressed,
+                borderRadius: const BorderRadius.all(Radius.circular(8)),
+              ),
+              child: const SizedBox(height: 52, width: double.infinity),
+            ),
+          ),
+          child: body,
+        );
+      },
+    );
+  }
 }
+
+class _ListEntry {
+  const _ListEntry.entry(this.entry)
+      : headerKey = null,
+        headerName = null,
+        headerColor = null,
+        showTopGap = false;
+
+  const _ListEntry.header({
+    required String key,
+    required String name,
+    required Color color,
+    this.showTopGap = false,
+  })  : entry = null,
+        headerKey = key,
+        headerName = name,
+        headerColor = color;
+
+  final LedgerEntry? entry;
+  final String? headerKey;
+  final String? headerName;
+  final Color? headerColor;
+  final bool showTopGap;
+
+  bool get isHeader => entry == null;
+
+  String get id => entry != null ? 'e:${entry!.id}' : 'h:$headerKey';
+}
+

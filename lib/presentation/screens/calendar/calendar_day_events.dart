@@ -1,5 +1,4 @@
 import 'package:job_planner/core/constants/app_strings.dart';
-import 'package:job_planner/domain/entities/apply_status.dart';
 import 'package:job_planner/domain/entities/calendar_event.dart';
 import 'package:job_planner/domain/entities/event_category.dart';
 import 'package:job_planner/domain/entities/job_application.dart';
@@ -21,11 +20,12 @@ List<CalendarEvent> jobEventsOn(
   DateTime date,
   Iterable<JobApplication> applications, {
   List<EventCategory> companyCategories = const [],
+  bool includeRejected = false,
 }) {
   final day = DateTime(date.year, date.month, date.day);
   final items = <CalendarEvent>[];
   for (final application in applications) {
-    if (ApplyStatus.isRejected(application.applyStatus)) continue;
+    if (!includeRejected && application.isRejected) continue;
     for (var i = 0; i < application.rounds.length; i++) {
       final round = application.rounds[i];
       final roundDate = round.date;
@@ -62,11 +62,13 @@ List<CalendarEvent> calendarEventsOn({
   required List<CalendarEvent> events,
   required List<JobApplication> applications,
   List<EventCategory> companyCategories = const [],
+  bool includeRejected = false,
 }) {
   final jobs = jobEventsOn(
     date,
     applications,
     companyCategories: companyCategories,
+    includeRejected: includeRejected,
   );
   final todos = CalendarEvent.withRangesFirst(
     events.where((event) {
@@ -78,6 +80,45 @@ List<CalendarEvent> calendarEventsOn({
     all: events.where((event) => !event.isJob && !event.someday),
   );
   return [...jobs, ...todos];
+}
+
+List<CalendarEvent> calendarEventsByCategory(
+  Iterable<CalendarEvent> events, {
+  required List<EventCategory> categories,
+  bool sortByTime = false,
+}) {
+  final jobs = [for (final event in events) if (event.isJob) event];
+  final todos = [for (final event in events) if (!event.isJob) event];
+  List<CalendarEvent> ordered(List<CalendarEvent> items) {
+    if (!sortByTime) return items;
+    return CalendarEvent.withLockedThenStartTime(items);
+  }
+
+  final groups = <String, List<CalendarEvent>>{};
+  for (final event in todos) {
+    final key = event.categoryId ?? event.categoryName;
+    groups.putIfAbsent(key, () => []).add(event);
+  }
+
+  final items = <CalendarEvent>[
+    ...ordered(jobs),
+  ];
+  final used = <String>{};
+  for (final category in categories) {
+    final grouped = groups[category.id];
+    if (grouped == null || grouped.isEmpty) continue;
+    used.add(category.id);
+    items.addAll(ordered(grouped));
+  }
+  for (final event in todos) {
+    final key = event.categoryId ?? event.categoryName;
+    if (used.contains(key)) continue;
+    final grouped = groups[key];
+    if (grouped == null || grouped.isEmpty) continue;
+    used.add(key);
+    items.addAll(ordered(grouped));
+  }
+  return items;
 }
 
 DateTime calendarDay(DateTime date) => DateTime(date.year, date.month, date.day);
@@ -99,6 +140,7 @@ List<CalendarEvent> calendarEventsInRange({
   required List<CalendarEvent> events,
   required List<JobApplication> applications,
   List<EventCategory> companyCategories = const [],
+  bool includeRejected = false,
 }) {
   final items = <CalendarEvent>[];
   var day = calendarDay(start);
@@ -110,6 +152,7 @@ List<CalendarEvent> calendarEventsInRange({
         events: events,
         applications: applications,
         companyCategories: companyCategories,
+        includeRejected: includeRejected,
       ),
     );
     day = day.add(const Duration(days: 1));

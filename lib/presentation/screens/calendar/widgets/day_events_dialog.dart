@@ -22,6 +22,7 @@ import 'package:job_planner/presentation/screens/calendar/widgets/day_event_labe
 import 'package:job_planner/presentation/screens/calendar/widgets/delete_event_dialog.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/delete_repeat_event_dialog.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/day_emoji_sheet.dart';
+import 'package:job_planner/presentation/screens/calendar/widgets/day_sticker_image.dart';
 import 'package:job_planner/presentation/widgets/app_bar_pill.dart';
 
 Future<void> showDayEventsDialog(
@@ -138,6 +139,8 @@ class _DayEventsDialogState extends State<DayEventsDialog> {
   var _showTime = false;
   var _initialized = false;
   String? _emoji;
+  var _emojiPop = false;
+  var _animateEmojiSlot = false;
   String? _draggingId;
   var _draggingOutside = false;
   final _reveals = <String, double>{};
@@ -160,7 +163,7 @@ class _DayEventsDialogState extends State<DayEventsDialog> {
     if (_initialized) return;
     _initialized = true;
     final scope = AppScope.of(context);
-    _compact = scope.homeViewPreference.isCompact;
+    _compact = scope.dayEventsViewPreference.categoryView;
     _sortByTime = scope.dayEventsViewPreference.sortByTime;
     _showTime = scope.dayEventsViewPreference.showTime;
     final sticker = scope.dayEmojiStore.on(widget.date);
@@ -309,6 +312,7 @@ class _DayEventsDialogState extends State<DayEventsDialog> {
           events: events,
           applications: applications,
           companyCategories: companyCategories,
+          includeRejected: scope.jobViewPreference.showRejected,
         ),
       );
     _syncItems(_itemsForView, animate: animate);
@@ -362,15 +366,15 @@ class _DayEventsDialogState extends State<DayEventsDialog> {
     setState(() {
       final next = AppScope.of(context).dayEmojiStore.on(widget.date);
       _emoji = DayStickers.isAsset(next) ? next : null;
+      _emojiPop = _emoji != null;
+      _animateEmojiSlot = true;
     });
     widget.onEventsChanged?.call();
-  }
-
-  Future<void> _toggleCompact() async {
-    final next = !_compact;
-    _compact = next;
-    _syncItems(_itemsForView, animate: true);
-    await AppScope.of(context).homeViewPreference.setCompact(next);
+    if (_emoji != null) return;
+    Future<void>.delayed(DayStickerImage.popDuration, () {
+      if (!mounted || _emoji != null) return;
+      setState(() => _animateEmojiSlot = false);
+    });
   }
 
   Future<void> _add() async {
@@ -712,20 +716,33 @@ class _DayEventsDialogState extends State<DayEventsDialog> {
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        if (_emoji != null) ...[
-                          Padding(
-                            padding: const EdgeInsets.only(right: 8, top: 1),
-                            child: SizedBox(
-                              width: 42,
-                              height: 42,
-                              child: Image.asset(
-                                _emoji!,
-                                fit: BoxFit.contain,
-                                filterQuality: FilterQuality.medium,
-                              ),
+                        if (_emoji != null || _animateEmojiSlot)
+                          ClipRect(
+                            child: AnimatedContainer(
+                              duration: _animateEmojiSlot
+                                  ? DayStickerImage.popDuration
+                                  : Duration.zero,
+                              curve: Curves.easeOutCubic,
+                              width: _emoji == null ? 0 : 50,
+                              height: _emoji == null ? 0 : 43,
+                              alignment: Alignment.centerLeft,
+                              child: _emoji == null
+                                  ? null
+                                  : Padding(
+                                      padding: const EdgeInsets.only(
+                                        right: 8,
+                                        top: 1,
+                                      ),
+                                      child: DayStickerImage(
+                                        key: ValueKey(_emoji),
+                                        asset: _emoji!,
+                                        width: 42,
+                                        height: 42,
+                                        pop: _emojiPop,
+                                      ),
+                                    ),
                             ),
                           ),
-                        ],
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -751,16 +768,6 @@ class _DayEventsDialogState extends State<DayEventsDialog> {
                             ],
                           ),
                         ),
-                        AppBarPill(
-                          asset: _compact
-                              ? AppIcons.detailView
-                              : AppIcons.quickView,
-                          label: _compact
-                              ? AppStrings.defaultView
-                              : AppStrings.categoryView,
-                          onPressed: _toggleCompact,
-                        ),
-                        const SizedBox(width: 8),
                         AppBarPill(
                           asset: AppIcons.emoji,
                           label: AppStrings.emojiAction,

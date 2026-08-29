@@ -100,7 +100,7 @@ class AppStrings {
       '왼쪽이 홈, 가운데가 캘린더, 오른쪽이 취업이에요. 알약을 눌러 화면을 바꿔요';
   static const tutorialNavCalendarTitle = '캘린더 화면';
   static const tutorialNavCalendarBody =
-      '지금 있는 화면이 캘린더예요. 할 일과 기업 일정이 날짜에 점으로 보여요';
+      '지금 있는 화면이 캘린더예요. 할 일과 지원서 일정이 날짜에 점으로 보여요';
   static const tutorialCalendarTitleTitle = '달·연도 고르기';
   static const tutorialCalendarTitleBody =
       '월 이름을 누르면 달을 고르고, 한 번 더 누르면 연도를 고를 수 있어요';
@@ -115,7 +115,7 @@ class AppStrings {
       '날짜를 눌러 열린 창에서 동그라미를 누르면 완료예요';
   static const tutorialCalendarMenuTitle = '표시 바꾸기';
   static const tutorialCalendarMenuBody =
-      '오른쪽 ··· 을 누르면 메뉴가 열려요. 할 일·기업만 보거나 일기·가계부로 바꿀 수 있어요';
+      '오른쪽 ··· 을 누르면 메뉴가 열려요. 할 일·지원서만 보거나 일기·가계부로 바꿀 수 있어요';
   static const tutorialNavHomeTitle = '홈 화면';
   static const tutorialNavHomeBody =
       '오늘·내일 할 일과 챌린지 카드가 모여 있어요';
@@ -126,13 +126,13 @@ class AppStrings {
   static const tutorialHomeListBody =
       '오늘·내일·챌린지 카드예요. 눌러 열거나, 길게 눌러 순서를 바꿀 수 있어요';
   static const tutorialNavJobTitle = '취업 화면';
-  static const tutorialNavJobBody = '지원 기업이 모여 있어요';
+  static const tutorialNavJobBody = '지원서가 모여 있어요';
   static const tutorialJobToolsTitle = '위쪽 버튼';
   static const tutorialJobToolsBody =
-      '검색, 보기, 날짜순 정렬이에요';
-  static const tutorialJobAddTitle = '기업 추가';
+      '검색과 오른쪽 메뉴예요';
+  static const tutorialJobAddTitle = '지원서 추가';
   static const tutorialJobAddBody =
-      '아래 + 로 기업을 넣고, 카드를 밀어 순서를 바꾸고, 왼쪽으로 밀면 지울 수 있어요';
+      '아래 + 로 지원서를 넣고, 카드를 밀어 순서를 바꾸고, 왼쪽으로 밀면 지울 수 있어요';
   static const tutorialDoneTitle = '이제 시작할 수 있어요';
   static const tutorialDoneBody = '설정 > 앱 둘러보기에서 언제든 다시 볼 수 있어요';
   static const starterTodoComplete = '오른쪽 동그라미를 눌러 완료할 수 있어요';
@@ -234,7 +234,7 @@ class AppStrings {
   static const themeBearPancakeCafe = '곰돌이 팬케이크';
   static const settingsFontSection = '폰트 설정';
   static const fontFamily = '폰트 종류';
-  static const fontTodoSize = '할 일·기업 크기';
+  static const fontTodoSize = '할 일·지원서 크기';
   static const fontCalendarSize = '캘린더 크기';
   static const fontCalendarLabelSize = '캘린더 라벨 크기';
   static const fontLabelScale = '할 일 폰트 크기';
@@ -273,14 +273,14 @@ class AppStrings {
   static const settingsAppearanceHelp = '화면을 밝은 테마나 어두운 테마로 바꿀 수 있어요';
   static const settingsThemeHelp = '홈·캘린더 배경 분위기와 아이콘·버튼 색을 바꿀 수 있어요';
   static const settingsBackupHelp =
-      '할 일·기업·일기·가계부 데이터를 최근 3개까지 앱과 다운로드에 저장해요. 앱을 지운 뒤에는 다운로드에 있는 zip으로 복구하면 돼요. 앱을 켜면 정한 주기마다 자동으로도 저장해요';
+      '할 일·지원서·일기·가계부 데이터를 최근 3개까지 앱과 다운로드에 저장해요. 앱을 지운 뒤에는 다운로드에 있는 zip으로 복구하면 돼요. 앱을 켜면 정한 주기마다 자동으로도 저장해요';
   static const settingsCalendarSyncHelp =
-      '폰 캘린더에 있는 일정을 할 일로 가져와요. 안드로이드는 삼성 캘린더, 아이폰은 iOS 캘린더를 쓰면 돼요. 가져올 기간을 고르고, 카테고리는 하나에 몰아넣거나 할 일마다 고를 수 있어요. 기업 카드는 그대로 둬요';
+      '폰 캘린더에 있는 일정을 할 일로 가져와요. 안드로이드는 삼성 캘린더, 아이폰은 iOS 캘린더를 쓰면 돼요. 가져올 기간을 고르고, 카테고리는 하나에 몰아넣거나 할 일마다 고를 수 있어요. 지원서 카드는 그대로 둬요';
   static const settingsAppHelp =
       '앱 사용법을 처음부터 다시 보거나, 이 버전에 새로 생긴 기능과 고친 내용을 볼 수 있어요';
   static const settingsCalendarHelp = '캘린더의 첫 요일과 음력 날짜를 바꿀 수 있어요';
   static const settingsCalendarHelpWithFontSize =
-      '캘린더의 첫 요일과 음력 날짜, 할 일·기업·날짜·라벨의 글자 크기를 바꿀 수 있어요';
+      '캘린더의 첫 요일과 음력 날짜, 할 일·지원서·날짜·라벨의 글자 크기를 바꿀 수 있어요';
   static const calendarStartSunday = '일요일부터 시작';
   static const settingsMonthlyStatsHelp =
       '매달 1일에는 지난달 요약을, 매주 월요일에는 지난주 요약을 보여줘요';
@@ -325,30 +325,30 @@ class AppStrings {
   static const tomorrowNotificationEmpty = '내일 일정이 없어요';
   static const todayTomorrowNotificationEmpty = '오늘과 내일 일정이 없어요';
   static const weekNotificationEmpty = '이번 주 일정이 없어요';
-  static const companySection = '기업';
-  static const jobScreenTitle = '기업관리';
-  static const searchHint = '기업명, 직무, 카테고리 검색';
-  static const homeSearchHint = '할 일, 기업, 카테고리 검색';
-  static const addCompany = '+ 기업을 추가하세요';
-  static const addCompanyTitle = '기업 추가';
+  static const companySection = '지원서';
+  static const jobScreenTitle = '지원서';
+  static const searchHint = '지원서, 분야, 카테고리 검색';
+  static const homeSearchHint = '할 일, 지원서, 카테고리 검색';
+  static const addCompany = '+ 지원서를 추가하세요';
+  static const addCompanyTitle = '지원서 추가';
   static const save = '저장';
   static const missingFieldsTitle = '무언가 빠뜨렸어요 😭';
-  static const missingFieldsBody = '기업명과 카테고리는 필수사항이에요!';
+  static const missingFieldsBody = '지원서와 카테고리는 필수사항이에요!';
   static const confirm = '확인했어요';
   static const deleteTitle = '정말 삭제할까요?';
   static const deleteBody = '정보가 사라져요';
   static const deleteEventBody = '일정이 사라져요';
   static const deleteCategoryBody = '카테고리가 사라져요';
-  static const deleteCompanyBody = '기업이 사라져요';
+  static const deleteCompanyBody = '지원서가 사라져요';
   static const deleteCoverLetterTitle = '자소서를 삭제하시나요?';
   static const deleteCoverLetterBody = '파일이 사라져요';
   static const cancel = '취소';
   static const delete = '삭제';
-  static const companyNameHint = '기업명을 입력하세요';
-  static const colCompany = '기업명';
+  static const companyNameHint = '지원서를 입력하세요';
+  static const colCompany = '지원서';
   static const colApplyStatus = '지원상태';
-  static const colPosition = '직무';
-  static const positionHint = '직무를 입력하세요';
+  static const colPosition = '분야';
+  static const positionHint = '분야를 입력하세요';
   static String roundLabel(int number) => '$number차';
   static const roundStageNameHint = '전형을 입력하세요';
   static const roundDateHint = '날짜를 입력하세요';
@@ -403,7 +403,7 @@ class AppStrings {
   static const monthlyStatsTodoSection = '할 일';
   static const monthlyStatsJobSection = '취업';
   static const monthlyStatsRoundsLabel = '전형 일정';
-  static const monthlyStatsCompaniesLabel = '지원 기업';
+  static const monthlyStatsCompaniesLabel = '지원서';
   static const monthlyStatsCoverLettersLabel = '자기소개서';
   static const monthlyStatsPassedLabel = '합격';
   static const monthlyStatsFinalPassedLabel = '최종합격';
@@ -421,19 +421,23 @@ class AppStrings {
   static const completeAll = '모두 완료';
   static const postpone = '미루기';
   static const calendarShowTodos = '할일 보기';
-  static const calendarShowCompanies = '기업 보기';
+  static const calendarShowCompanies = '지원서 보기';
+  static const calendarShowLedgerTitle = '내역 보기';
+  static const calendarShowLedgerAmount = '금액 보기';
   static const calendarVisibleItems = '캘린더에 표시할 항목';
+  static const jobVisibleItems = '지원서에 표시할 항목';
+  static const jobShowRejected = '탈락한 지원서';
   static const calendarSortMode = '정렬 방식';
   static const calendarDiaryMode = '일기 전환';
   static const calendarLedgerMode = '가계부 전환';
-  static const calendarSearchHint = '할 일, 기업, 카테고리 검색';
+  static const calendarSearchHint = '할 일, 지원서, 카테고리 검색';
   static const calendarDiarySearchHint = '제목, 내용 검색';
   static const calendarLedgerSearchHint = '내역, 금액 검색';
-  static const ledgerExpense = '지출';
+  static const ledgerExpense = '수입';
   static const ledgerConsumption = '소비';
   static const ledgerSalary = '월급';
   static const ledgerTitleHint = '내역을 입력하세요';
-  static const ledgerWorkplaceHint = '근무지명을 입력하세요';
+  static const ledgerWorkplaceHint = '근무지를 입력하세요';
   static const ledgerAmountHint = '금액을 입력하세요';
   static const ledgerHourlyHint = '시급을 입력하세요';
   static const ledgerMonthlyHint = '월급을 입력하세요';
@@ -449,7 +453,13 @@ class AppStrings {
   static const ledgerPayLastDay = '말일';
   static String ledgerMonthDay(int day) => day <= 0 ? ledgerPayLastDay : '$day일';
   static const ledgerPayCycleLabel = '급여일';
-  static const ledgerPayDayLabel = '받는 날';
+  static const ledgerSalaryRepeatHint = '고른 날부터 1년 동안 캘린더에 나와요';
+  static const ledgerPayByWeekday = '요일';
+  static const ledgerPayWeekFirst = '첫째 주';
+  static const ledgerPayWeekSecond = '둘째 주';
+  static const ledgerPayWeekThird = '셋째 주';
+  static const ledgerPayWeekFourth = '넷째 주';
+  static const ledgerPayWeekLast = '마지막 주';
   static const ledgerPayDayFirst = '첫 지급일';
   static const ledgerPayDaySecond = '둘째 지급일';
   static const ledgerWageTypeLabel = '급여';
@@ -458,6 +468,15 @@ class AppStrings {
   static const ledgerBreakNone = '없음';
   static String ledgerBreakMinutes(int minutes) => '$minutes분';
   static const ledgerDeductionLabel = '공제';
+  static const ledgerDeductionHelpNet =
+      '시급이면 휴게를 뺀 근무시간에 시급을 곱하고, 월급이면 입력한 금액을 총액으로 봐요. 고른 보험과 세금을 뺀 금액이 실수령이에요';
+  static const ledgerDeductionHelpAll =
+      '4대보험은 국민연금 4.75%, 건강보험 3.595%, 장기요양(건보의 13.14%), 고용보험 0.9%가 총액에서 빠져요';
+  static const ledgerDeductionHelpEmployment = '고용보험만 고르면 총액의 0.9%만 빠져요';
+  static const ledgerDeductionHelpTax = '세금을 켜면 총액의 3.3%가 빠져요';
+  static const ledgerDeductionHelpHoliday =
+      '주휴수당은 빼는 게 아니라 시급×8시간×(일한 시간÷40시간)이 더해져요. 실제 명세서와 조금 차이날 수 있어요';
+  static const ledgerDeductionHelpHourlySample = '시급 1만 원 · 8시간';
   static const ledgerTax = '세금';
   static const ledgerInsuranceNone = '없음';
   static const ledgerInsuranceEmployment = '고용보험';
@@ -475,9 +494,13 @@ class AppStrings {
   static const missingLedgerSalaryBody = '근무지, 시급, 근무시간은 필수사항이에요!';
   static const missingLedgerSalaryMonthlyBody = '근무지, 월급은 필수사항이에요!';
   static const deleteLedgerBody = '내역이 사라져요';
+  static const deleteLedgerRepeatBody = '1년 동안 나오는 월급도 같이 사라져요';
   static const addLedger = '+ 내역을 추가하세요';
   static const ledgerEmptyDay = '이날 내역이 없어요';
   static const ledgerNet = '합계';
+  static String ledgerMonthStatsTitle(int month) => '$month월 통계';
+  static String ledgerMonthStatsTitleWithYear(int year, int month) =>
+      '$year년 $month월 통계';
   static const calendarSearchLabel = '검색';
   static const diaryTitleHint = '제목을 입력하세요';
   static const diaryBodyHint = '내용을 입력하세요';
@@ -543,7 +566,7 @@ class AppStrings {
   static const timeSortLockBody = '시간 순으로 보기가 켜져 있어요!';
   static const dateSortAction = '날짜순 정리';
   static const dateSortLockBody = '날짜 순으로 보기가 켜져 있어요!';
-  static const rejectedReorderLockBody = '탈락한 기업은 순서를 바꿀 수 없어요';
+  static const rejectedReorderLockBody = '탈락한 지원서는 순서를 바꿀 수 없어요';
   static const timeStartLabel = '시작';
   static const timeEndLabel = '종료';
   static const timeClear = '시간 초기화';

@@ -26,15 +26,26 @@ class CalendarEventLabel extends StatelessWidget {
   final FontWeight fontWeight;
   final bool applyCalendarScale;
 
+  static bool _isAmount(String text) {
+    return text.startsWith('+') || text.startsWith('-');
+  }
+
   @override
   Widget build(BuildContext context) {
     final background =
         AppColors.of(context).tint(color, isJob ? 0.12 : 0.22);
     final radius = isJob ? 6.0 : 3.0;
-    final scale =
-        applyCalendarScale ? AppFonts.calendarLabelScaleOf(context) : 1.0;
+    final scale = applyCalendarScale
+        ? AppFonts.calendarLabelScaleOf(context)
+        : 1.0;
     final labelHeight = height * scale;
-    final labelSize = fontSize * scale;
+    final style = TextStyle(
+      fontFamily: AppFonts.of(context),
+      fontSize: fontSize * scale,
+      fontWeight: fontWeight,
+      height: 1,
+      color: color,
+    );
 
     return SizedBox(
       height: labelHeight,
@@ -59,19 +70,45 @@ class CalendarEventLabel extends StatelessWidget {
               Expanded(
                 child: Padding(
                   padding: EdgeInsets.symmetric(horizontal: isJob ? 4 : 3),
-                  child: Center(
-                    child: Text(
-                      title,
-                      maxLines: 1,
-                      softWrap: false,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontFamily: AppFonts.of(context),
-                        fontSize: labelSize,
-                        fontWeight: fontWeight,
-                        height: 1,
-                        color: color,
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 280),
+                    switchInCurve: Curves.easeOutCubic,
+                    switchOutCurve: Curves.easeInCubic,
+                    layoutBuilder: (current, previous) {
+                      return Stack(
+                        alignment: Alignment.center,
+                        fit: StackFit.expand,
+                        clipBehavior: Clip.hardEdge,
+                        children: [
+                          ...previous,
+                          if (current != null) current,
+                        ],
+                      );
+                    },
+                    transitionBuilder: (child, animation) {
+                      final fromRight = child.key is ValueKey<String> &&
+                          _isAmount((child.key! as ValueKey<String>).value);
+                      return FadeTransition(
+                        opacity: animation,
+                        child: SlideTransition(
+                          position: Tween<Offset>(
+                            begin: Offset(fromRight ? 0.35 : -0.35, 0),
+                            end: Offset.zero,
+                          ).animate(animation),
+                          child: child,
+                        ),
+                      );
+                    },
+                    child: Align(
+                      key: ValueKey(title),
+                      alignment: Alignment.center,
+                      child: Text(
+                        title,
+                        maxLines: 1,
+                        softWrap: false,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center,
+                        style: style,
                       ),
                     ),
                   ),

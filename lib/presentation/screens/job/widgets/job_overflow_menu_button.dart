@@ -1,0 +1,217 @@
+import 'package:flutter/material.dart';
+import 'package:job_planner/core/constants/app_icons.dart';
+import 'package:job_planner/domain/entities/event_category.dart';
+import 'package:job_planner/presentation/screens/calendar/widgets/calendar_filter_menu.dart';
+import 'package:job_planner/presentation/screens/calendar/widgets/category_picker_sheet.dart';
+import 'package:job_planner/presentation/widgets/app_bar_icon_group.dart';
+import 'package:job_planner/presentation/widgets/themed_asset.dart';
+
+class JobOverflowMenuButton extends StatefulWidget {
+  const JobOverflowMenuButton({
+    super.key,
+    required this.compact,
+    required this.onCompactChanged,
+    required this.showRejected,
+    required this.onShowRejectedChanged,
+    required this.sortByTime,
+    required this.onSortByTimeChanged,
+    this.onCategoriesChanged,
+  });
+
+  final bool compact;
+  final ValueChanged<bool> onCompactChanged;
+  final bool showRejected;
+  final ValueChanged<bool> onShowRejectedChanged;
+  final bool sortByTime;
+  final ValueChanged<bool> onSortByTimeChanged;
+  final VoidCallback? onCategoriesChanged;
+
+  @override
+  State<JobOverflowMenuButton> createState() => _JobOverflowMenuButtonState();
+}
+
+enum _MenuPage { root, visible, sort }
+
+class _JobOverflowMenuButtonState extends State<JobOverflowMenuButton>
+    with SingleTickerProviderStateMixin {
+  final _link = LayerLink();
+  final _portal = OverlayPortalController();
+  late final AnimationController _animation;
+  late final CurvedAnimation _fade;
+  late final Animation<double> _scale;
+  var _closing = false;
+  var _page = _MenuPage.root;
+
+  @override
+  void initState() {
+    super.initState();
+    _animation = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 200),
+      reverseDuration: const Duration(milliseconds: 140),
+    );
+    _fade = CurvedAnimation(
+      parent: _animation,
+      curve: Curves.easeOutCubic,
+      reverseCurve: Curves.easeInCubic,
+    );
+    _scale = Tween<double>(begin: 0.92, end: 1).animate(_fade);
+  }
+
+  @override
+  void dispose() {
+    _fade.dispose();
+    _animation.dispose();
+    super.dispose();
+  }
+
+  Future<void> _toggle() async {
+    if (_portal.isShowing) {
+      await _close();
+    } else {
+      _portal.show();
+      _page = _MenuPage.root;
+      _animation.forward(from: 0);
+      setState(() {});
+    }
+  }
+
+  Future<void> _close() async {
+    if (!_portal.isShowing || _closing) return;
+    _closing = true;
+    await _animation.reverse();
+    if (mounted) {
+      _portal.hide();
+      _page = _MenuPage.root;
+      setState(() {});
+    }
+    _closing = false;
+  }
+
+  Future<void> _openCategories() async {
+    await _close();
+    if (!mounted) return;
+    await showCategoryPickerSheet(
+      context,
+      selectable: false,
+      kind: CategoryKind.company,
+    );
+    if (!mounted) return;
+    widget.onCategoriesChanged?.call();
+  }
+
+  Widget _menuPage() {
+    return switch (_page) {
+      _MenuPage.visible => JobVisibleItemsMenu(
+        key: const ValueKey('visible'),
+        compact: widget.compact,
+        onCompactChanged: widget.onCompactChanged,
+        showRejected: widget.showRejected,
+        onShowRejectedChanged: widget.onShowRejectedChanged,
+        onBack: () => setState(() => _page = _MenuPage.root),
+      ),
+      _MenuPage.sort => CalendarSortMenu(
+        key: const ValueKey('sort'),
+        sortByTime: widget.sortByTime,
+        showTime: false,
+        showTimeOption: false,
+        onSortByTimeChanged: widget.onSortByTimeChanged,
+        onShowTimeChanged: (_) {},
+        onBack: () => setState(() => _page = _MenuPage.root),
+      ),
+      _MenuPage.root => JobOverflowMenu(
+        key: const ValueKey('root'),
+        onVisibleItems: () => setState(() => _page = _MenuPage.visible),
+        onSortMode: () => setState(() => _page = _MenuPage.sort),
+        onEditCategories: _openCategories,
+      ),
+    };
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return OverlayPortal(
+      controller: _portal,
+      overlayChildBuilder: (context) {
+        return SizedBox.expand(
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              Positioned.fill(
+                child: GestureDetector(
+                  behavior: HitTestBehavior.translucent,
+                  onTap: _close,
+                ),
+              ),
+              CompositedTransformFollower(
+                link: _link,
+                showWhenUnlinked: false,
+                targetAnchor: Alignment.bottomRight,
+                followerAnchor: Alignment.topRight,
+                offset: const Offset(0, 6),
+                child: UnconstrainedBox(
+                  alignment: Alignment.topRight,
+                  clipBehavior: Clip.none,
+                  child: FadeTransition(
+                    opacity: _fade,
+                    child: ScaleTransition(
+                      alignment: Alignment.topRight,
+                      scale: _scale,
+                      child: AnimatedSize(
+                        duration: const Duration(milliseconds: 260),
+                        curve: Curves.easeOutCubic,
+                        alignment: Alignment.topRight,
+                        child: AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 220),
+                          switchInCurve: Curves.easeOutCubic,
+                          switchOutCurve: Curves.easeInCubic,
+                          layoutBuilder: (current, previous) {
+                            return Stack(
+                              alignment: Alignment.topRight,
+                              clipBehavior: Clip.none,
+                              children: [
+                                ...previous,
+                                if (current != null) current,
+                              ],
+                            );
+                          },
+                          transitionBuilder: (child, animation) {
+                            final submenu =
+                                child.key != const ValueKey('root');
+                            return FadeTransition(
+                              opacity: animation,
+                              child: SlideTransition(
+                                position: Tween<Offset>(
+                                  begin: Offset(submenu ? 0.14 : -0.14, 0),
+                                  end: Offset.zero,
+                                ).animate(animation),
+                                child: child,
+                              ),
+                            );
+                          },
+                          child: _menuPage(),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+      child: CompositedTransformTarget(
+        link: _link,
+        child: AppBarIconSlot(
+          selected: _portal.isShowing,
+          onPressed: _toggle,
+          child: ThemedAsset(
+            asset: AppIcons.more,
+            width: 18,
+            height: 18,
+          ),
+        ),
+      ),
+    );
+  }
+}

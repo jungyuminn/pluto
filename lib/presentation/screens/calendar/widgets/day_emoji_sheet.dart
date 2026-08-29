@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:job_planner/app_scope.dart';
 import 'package:job_planner/core/constants/app_strings.dart';
 import 'package:job_planner/core/theme/app_colors.dart';
+import 'package:job_planner/core/utils/fade_in.dart';
 import 'package:job_planner/core/utils/press_bounce.dart';
 
 Future<String?> showDayEmojiSheet(
@@ -36,10 +38,28 @@ class DayStickers {
 
   static const prefix = 'assets/stickers/';
 
+  /// 고양이 → 토끼 → 강아지 → 심플캣, 그 안에서 데일리 → 유니버시티 → 컴패니.
+  static const defaultPackOrder = [
+    'university_cat',
+    'company_cat',
+    'daily_rabbit',
+    'university_rabbit',
+    'company_rabbit',
+    'daily_dog',
+    'simple_cat',
+    'simple_cat2',
+    'simple_cat3',
+  ];
+
+  static final _stickerFile = RegExp(
+    r'^\d{2}_.+\.(png|webp|jpe?g)$',
+    caseSensitive: false,
+  );
+
   static bool isAsset(String? value) {
     final path = value?.trim() ?? '';
-    return path.startsWith(prefix) &&
-        !path.startsWith('${prefix}university_cat/');
+    if (!path.startsWith(prefix)) return false;
+    return _stickerFile.hasMatch(path.split('/').last);
   }
 
   static Future<List<String>> load() async {
@@ -47,10 +67,7 @@ class DayStickers {
     return [
       for (final key in manifest.listAssets())
         if (key.startsWith(prefix) &&
-            (key.endsWith('.png') ||
-                key.endsWith('.webp') ||
-                key.endsWith('.jpg') ||
-                key.endsWith('.jpeg')))
+            _stickerFile.hasMatch(key.split('/').last))
           key,
     ]..sort();
   }
@@ -63,10 +80,37 @@ class DayStickers {
       final id = slash < 0 ? 'default' : rest.substring(0, slash);
       (grouped[id] ??= []).add(path);
     }
-    return [
+    return orderedPacks([
       for (final id in grouped.keys)
         if (grouped[id]!.isNotEmpty) StickerPack(id: id, assets: grouped[id]!),
-    ];
+    ]);
+  }
+
+  static List<StickerPack> orderedPacks(
+    List<StickerPack> packs, [
+    List<String> saved = const [],
+  ]) {
+    if (packs.length <= 1) return packs;
+    final byId = {for (final pack in packs) pack.id: pack};
+    final seen = <String>{};
+    final ordered = <StickerPack>[];
+    void add(String id) {
+      final pack = byId[id];
+      if (pack == null || seen.contains(id)) return;
+      ordered.add(pack);
+      seen.add(id);
+    }
+
+    for (final id in saved) {
+      add(id);
+    }
+    for (final id in defaultPackOrder) {
+      add(id);
+    }
+    for (final pack in packs) {
+      add(pack.id);
+    }
+    return ordered;
   }
 }
 
@@ -96,17 +140,36 @@ class _DayEmojiSheetState extends State<DayEmojiSheet> {
   Future<void> _load() async {
     final packs = await DayStickers.loadPacks();
     if (!mounted) return;
+    final ordered = DayStickers.orderedPacks(
+      packs,
+      AppScope.of(context).dayEmojiStore.packOrder,
+    );
     final current = widget.selected?.trim();
     var packIndex = 0;
     if (DayStickers.isAsset(current)) {
-      final found = packs.indexWhere((pack) => pack.assets.contains(current));
+      final found =
+          ordered.indexWhere((pack) => pack.assets.contains(current));
       if (found >= 0) packIndex = found;
     }
     setState(() {
-      _packs = packs;
+      _packs = ordered;
       _packIndex = packIndex;
       _loading = false;
     });
+  }
+
+  Future<void> _reorderPacks(int oldIndex, int newIndex) async {
+    if (oldIndex == newIndex) return;
+    final selectedId = _packs[_packIndex.clamp(0, _packs.length - 1)].id;
+    setState(() {
+      final item = _packs.removeAt(oldIndex);
+      _packs.insert(newIndex, item);
+      final next = _packs.indexWhere((pack) => pack.id == selectedId);
+      _packIndex = next < 0 ? 0 : next;
+    });
+    await AppScope.of(context).dayEmojiStore.setPackOrder([
+      for (final pack in _packs) pack.id,
+    ]);
   }
 
   @override
@@ -122,11 +185,9 @@ class _DayEmojiSheetState extends State<DayEmojiSheet> {
 
     return Padding(
       padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: colors.card,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-        ),
+      child: Material(
+        color: colors.card,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         child: SizedBox(
           width: MediaQuery.sizeOf(context).width,
           height: height,
@@ -158,68 +219,136 @@ class _DayEmojiSheetState extends State<DayEmojiSheet> {
                 else ...[
                   SizedBox(
                     height: _tabSize,
-                    child: ListView.separated(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: _packs.length,
-                      separatorBuilder: (_, __) => const SizedBox(width: 10),
-                      itemBuilder: (context, index) {
-                        final selected = index == _packIndex;
-                        return PressBounce(
-                          onPressed: () => setState(() => _packIndex = index),
-                          color: selected
-                              ? colors.accentBright
-                              : colors.groupedBackground,
-                          pressedColor: selected
-                              ? Color.lerp(colors.accentBright, Colors.black, 0.08)!
-                              : colors.pressed,
-                          borderRadius: BorderRadius.circular(16),
-                          child: SizedBox(
-                            width: _tabSize,
-                            height: _tabSize,
-                            child: Padding(
-                              padding: const EdgeInsets.all(4),
-                              child: Image.asset(
-                                _packs[index].cover,
-                                fit: BoxFit.contain,
-                                filterQuality: FilterQuality.medium,
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        final n = _packs.length;
+                        final contentWidth =
+                            n * _tabSize + (n > 1 ? (n - 1) * 10 : 0);
+                        final pad = ((constraints.maxWidth - contentWidth) / 2)
+                            .clamp(0.0, double.infinity);
+                        return SizedBox(
+                          width: constraints.maxWidth,
+                          child: ReorderableListView.builder(
+                          scrollDirection: Axis.horizontal,
+                          primary: false,
+                          buildDefaultDragHandles: false,
+                          clipBehavior: Clip.hardEdge,
+                          physics: pad > 0.5
+                              ? const NeverScrollableScrollPhysics()
+                              : const BouncingScrollPhysics(),
+                          padding: EdgeInsets.symmetric(horizontal: pad),
+                          itemCount: _packs.length,
+                          proxyDecorator: (child, index, animation) {
+                            return AnimatedBuilder(
+                              animation: animation,
+                              builder: (context, child) {
+                                final t = Curves.easeOutBack.transform(
+                                  animation.value,
+                                );
+                                return Transform.scale(
+                                  scale: 1 + 0.06 * t,
+                                  child: child,
+                                );
+                              },
+                              child: child,
+                            );
+                          },
+                          onReorderStart: (_) {
+                            HapticFeedback.mediumImpact();
+                          },
+                          onReorderItem: _reorderPacks,
+                          itemBuilder: (context, index) {
+                            final selected = index == _packIndex;
+                            return ReorderableDelayedDragStartListener(
+                              key: ValueKey(_packs[index].id),
+                              index: index,
+                              child: Padding(
+                                padding: EdgeInsets.only(
+                                  right: index == _packs.length - 1 ? 0 : 10,
+                                ),
+                                child: PressBounce(
+                                  passthrough: true,
+                                  color: selected
+                                      ? Color.lerp(
+                                          colors.groupedBackground,
+                                          colors.accentBright,
+                                          0.15,
+                                        )!
+                                      : colors.groupedBackground,
+                                  pressedColor: selected
+                                      ? Color.lerp(
+                                          colors.groupedBackground,
+                                          colors.accentBright,
+                                          0.58,
+                                        )!
+                                      : colors.pressed,
+                                  borderRadius: BorderRadius.circular(16),
+                                  child: GestureDetector(
+                                    behavior: HitTestBehavior.opaque,
+                                    onTap: () =>
+                                        setState(() => _packIndex = index),
+                                    child: SizedBox(
+                                      width: _tabSize,
+                                      height: _tabSize,
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(4),
+                                        child: Image.asset(
+                                          _packs[index].cover,
+                                          fit: BoxFit.contain,
+                                          filterQuality: FilterQuality.medium,
+                                          errorBuilder:
+                                              (context, error, stack) =>
+                                                  const SizedBox.shrink(),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
                               ),
-                            ),
-                          ),
+                            );
+                          },
+                        ),
                         );
                       },
                     ),
                   ),
                   const SizedBox(height: 16),
                   Expanded(
-                    child: GridView.builder(
-                      padding: EdgeInsets.zero,
-                      itemCount: stickers.length,
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: _columns,
-                        mainAxisSpacing: 6,
-                        crossAxisSpacing: 6,
-                        childAspectRatio: 1,
-                      ),
-                      itemBuilder: (context, index) {
-                        final sticker = stickers[index];
-                        final selected = sticker == current;
-                        return PressBounce(
-                          onPressed: () => Navigator.of(context).pop(sticker),
-                          color: selected
-                              ? colors.tint(colors.accent, 0.16)
-                              : Colors.transparent,
-                          pressedColor: colors.pressed,
-                          borderRadius: BorderRadius.circular(14),
-                          child: Padding(
-                            padding: const EdgeInsets.all(2),
-                            child: Image.asset(
-                              sticker,
-                              fit: BoxFit.contain,
-                              filterQuality: FilterQuality.medium,
+                    child: FadeIn(
+                      key: ValueKey(pack?.id ?? 'empty'),
+                      duration: const Duration(milliseconds: 320),
+                      offset: const Offset(0, 10),
+                      child: GridView.builder(
+                        padding: EdgeInsets.zero,
+                        itemCount: stickers.length,
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: _columns,
+                          mainAxisSpacing: 6,
+                          crossAxisSpacing: 6,
+                          childAspectRatio: 1,
+                        ),
+                        itemBuilder: (context, index) {
+                          final sticker = stickers[index];
+                          return PressBounce(
+                            onPressed: () =>
+                                Navigator.of(context).pop(sticker),
+                            color: Colors.transparent,
+                            pressedColor: colors.pressed,
+                            borderRadius: BorderRadius.circular(14),
+                            child: Padding(
+                              padding: const EdgeInsets.all(2),
+                              child: Image.asset(
+                                sticker,
+                                fit: BoxFit.contain,
+                                filterQuality: FilterQuality.medium,
+                                errorBuilder: (context, error, stack) =>
+                                    const SizedBox.shrink(),
+                              ),
                             ),
-                          ),
-                        );
-                      },
+                          );
+                        },
+                      ),
                     ),
                   ),
                   const SizedBox(height: 12),

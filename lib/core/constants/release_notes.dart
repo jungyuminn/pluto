@@ -17,6 +17,16 @@ class ReleaseNote {
 abstract final class ReleaseNotes {
   static const all = [
     ReleaseNote(
+      version: '1.0.22',
+      items: [
+        '가계부에서 이번 달 합계를 보고 월 통계를 열 수 있어요',
+        '날짜를 누르면 그날 소비·수입·월급과 합계가 나와요',
+        '월급을 매주·매달 반복해서 넣을 수 있어요',
+        '회사·대학·일상 스티커 팩이 늘었어요',
+        '가계부 라벨을 내역 또는 금액으로 볼 수 있어요',
+      ],
+    ),
+    ReleaseNote(
       version: '1.0.21',
       items: [
         '날짜에 스티커를 붙일 수 있어요',

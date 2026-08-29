@@ -41,7 +41,7 @@ void main() {
     expect(find.text('토'), findsOneWidget);
   });
 
-  testWidgets('취업관리 화면에 기업 추가 버튼이 보인다', (WidgetTester tester) async {
+  testWidgets('지원서관리 화면에 지원서 추가 버튼이 보인다', (WidgetTester tester) async {
     await tester.pumpWidget(_app());
     await tester.pumpAndSettle();
 
@@ -51,7 +51,7 @@ void main() {
     expect(find.text(AppStrings.addCompany), findsOneWidget);
   });
 
-  testWidgets('기업을 저장하면 취업관리에 카드가 생긴다', (WidgetTester tester) async {
+  testWidgets('지원서를 저장하면 지원서관리에 카드가 생긴다', (WidgetTester tester) async {
     await tester.pumpWidget(_app());
     await tester.pumpAndSettle();
 

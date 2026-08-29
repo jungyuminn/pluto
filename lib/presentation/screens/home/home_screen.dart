@@ -178,18 +178,21 @@ class _HomeScreenState extends State<HomeScreen>
     if (!mounted) return;
     final weekEnd = _weekEnd;
     final monthEnd = DateTime(_today.year, _today.month + 1, 0);
+    final includeRejected = scope.jobViewPreference.showRejected;
     setState(() {
       _todayEvents = calendarEventsOn(
         date: _today,
         events: events,
         applications: applications,
         companyCategories: companyCategories,
+        includeRejected: includeRejected,
       );
       _tomorrowEvents = calendarEventsOn(
         date: _tomorrow,
         events: events,
         applications: applications,
         companyCategories: companyCategories,
+        includeRejected: includeRejected,
       );
       _weekEvents = homePrefs.showWeek
           ? calendarEventsInRange(
@@ -198,6 +201,7 @@ class _HomeScreenState extends State<HomeScreen>
               events: events,
               applications: applications,
               companyCategories: companyCategories,
+              includeRejected: includeRejected,
             )
           : const <CalendarEvent>[];
       _weekLabel = homePrefs.showWeek
@@ -210,6 +214,7 @@ class _HomeScreenState extends State<HomeScreen>
               events: events,
               applications: applications,
               companyCategories: companyCategories,
+              includeRejected: includeRejected,
             )
           : const <CalendarEvent>[];
       _monthLabel = homePrefs.showMonth

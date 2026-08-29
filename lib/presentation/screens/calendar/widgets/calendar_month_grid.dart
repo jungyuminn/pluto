@@ -69,6 +69,9 @@ class CalendarMonthGrid extends StatefulWidget {
     this.emojisOf,
     this.showDiary = false,
     this.showLedger = false,
+    this.showLedgerTitle = true,
+    this.showLedgerAmount = false,
+    this.ledgerCategoryView = false,
     this.startMonday = false,
     this.showLunar = false,
     this.searchDay,
@@ -86,6 +89,9 @@ class CalendarMonthGrid extends StatefulWidget {
   final String? Function(DateTime date)? emojisOf;
   final bool showDiary;
   final bool showLedger;
+  final bool showLedgerTitle;
+  final bool showLedgerAmount;
+  final bool ledgerCategoryView;
   final bool startMonday;
   final bool showLunar;
   final DateTime? searchDay;
@@ -202,7 +208,24 @@ class _CalendarMonthGridState extends State<CalendarMonthGrid>
   List<CalendarEvent> _ledgerEventsOn(DateTime date) {
     final ledgersOf = widget.ledgersOf;
     if (ledgersOf == null) return const [];
-    return [for (final entry in ledgersOf(date)) entry.toCalendarEvent()];
+    if (!widget.showLedgerTitle && !widget.showLedgerAmount) return const [];
+    final entries = [...ledgersOf(date)];
+    if (widget.ledgerCategoryView) {
+      entries.sort(LedgerEntry.compareByKind);
+    }
+    return [
+      for (final entry in entries)
+        if (entry
+            .calendarLabel(
+              showTitle: widget.showLedgerTitle,
+              showAmount: widget.showLedgerAmount,
+            )
+            .isNotEmpty)
+          entry.toCalendarEvent(
+            showTitle: widget.showLedgerTitle,
+            showAmount: widget.showLedgerAmount,
+          ),
+    ];
   }
 
   GlobalKey _keyFor(DateTime date) {
@@ -400,6 +423,7 @@ class _CalendarMonthGridState extends State<CalendarMonthGrid>
                     final ledgerHeight = CalendarWeekEvents.heightFor(
                       days: weekDays,
                       eventsOf: _ledgerEventsOn,
+                      emojisOf: widget.emojisOf,
                       minHeight: minWeekHeight,
                       calendarScale: calendarScale,
                       labelScale: labelScale,
@@ -521,11 +545,13 @@ class _CalendarMonthGridState extends State<CalendarMonthGrid>
                                                 child: CalendarWeekEvents(
                                                   days: weekDays,
                                                   eventsOf: _ledgerEventsOn,
+                                                  emojisOf: widget.emojisOf,
                                                   calendarScale: calendarScale,
                                                   labelScale: labelScale,
                                                   showLunar: widget.showLunar,
                                                   searchHitKey:
                                                       widget.searchHitKey,
+                                                  showAccent: false,
                                                 ),
                                               ),
                                             ),

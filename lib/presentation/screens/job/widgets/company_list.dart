@@ -21,6 +21,7 @@ class CompanyList extends StatefulWidget {
     this.onReorderLocked,
     this.canReorder = true,
     this.compact = false,
+    this.showRejected = true,
   });
 
   final List<JobApplication> applications;
@@ -31,16 +32,20 @@ class CompanyList extends StatefulWidget {
   final VoidCallback? onReorderLocked;
   final bool canReorder;
   final bool compact;
+  final bool showRejected;
 
   @override
   State<CompanyList> createState() => _CompanyListState();
 }
 
-class _CompanyListState extends State<CompanyList> {
+class _CompanyListState extends State<CompanyList>
+    with SingleTickerProviderStateMixin {
   final _scroll = ScrollController();
   final _listBoxKey = GlobalKey();
   final _heights = <String, double>{};
   late final _items = List.of(widget.applications);
+  late final AnimationController _rejectedReveal;
+  late final CurvedAnimation _rejectedFade;
   String? _draggingId;
   var _dragY = 0.0;
   double? _grabOffset;
@@ -50,13 +55,38 @@ class _CompanyListState extends State<CompanyList> {
   double get _gap => widget.compact ? 8 : 12;
 
   @override
+  void initState() {
+    super.initState();
+    _rejectedReveal = AnimationController(
+      vsync: this,
+      duration: _slotAnim,
+      reverseDuration: const Duration(milliseconds: 220),
+      value: widget.showRejected ? 1 : 0,
+    );
+    _rejectedFade = CurvedAnimation(
+      parent: _rejectedReveal,
+      curve: Curves.easeOutCubic,
+      reverseCurve: Curves.easeInCubic,
+    );
+  }
+
+  @override
   void didUpdateWidget(CompanyList oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (oldWidget.showRejected != widget.showRejected) {
+      if (widget.showRejected) {
+        _rejectedReveal.forward();
+      } else {
+        _rejectedReveal.reverse();
+      }
+    }
     _sync(widget.applications);
   }
 
   @override
   void dispose() {
+    _rejectedFade.dispose();
+    _rejectedReveal.dispose();
     _scroll.dispose();
     super.dispose();
   }
@@ -269,9 +299,19 @@ class _CompanyListState extends State<CompanyList> {
             clip: true,
           ),
         if (rejected.isNotEmpty)
-          _stack(
-            items: rejected,
-            clip: false,
+          SizeTransition(
+            sizeFactor: _rejectedFade,
+            axisAlignment: -1,
+            child: FadeTransition(
+              opacity: _rejectedFade,
+              child: IgnorePointer(
+                ignoring: !widget.showRejected,
+                child: _stack(
+                  items: rejected,
+                  clip: false,
+                ),
+              ),
+            ),
           ),
       ],
     );

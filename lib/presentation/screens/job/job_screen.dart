@@ -17,6 +17,7 @@ import 'package:job_planner/presentation/screens/add_company/widgets/add_company
 import 'package:job_planner/presentation/screens/add_company/widgets/missing_fields_dialog.dart';
 import 'package:job_planner/presentation/screens/job/widgets/company_list.dart';
 import 'package:job_planner/presentation/screens/job/widgets/delete_company_dialog.dart';
+import 'package:job_planner/presentation/screens/job/widgets/job_overflow_menu_button.dart';
 import 'package:job_planner/presentation/widgets/app_bar_icon_group.dart';
 import 'package:job_planner/presentation/tutorial/tutorial_anchor.dart';
 import 'package:job_planner/presentation/widgets/themed_asset.dart';
@@ -41,6 +42,7 @@ class _JobScreenState extends State<JobScreen>
   var _compact = false;
   var _searchOpen = false;
   var _sortByDate = false;
+  var _showRejected = true;
 
   @override
   void initState() {
@@ -62,6 +64,7 @@ class _JobScreenState extends State<JobScreen>
     if (!mounted) return;
     _compact = AppScope.of(context).jobViewPreference.isCompact;
     _sortByDate = AppScope.of(context).jobViewPreference.sortByDate;
+    _showRejected = AppScope.of(context).jobViewPreference.showRejected;
     _reload();
   }
 
@@ -72,6 +75,7 @@ class _JobScreenState extends State<JobScreen>
     _initialized = true;
     _compact = AppScope.of(context).jobViewPreference.isCompact;
     _sortByDate = AppScope.of(context).jobViewPreference.sortByDate;
+    _showRejected = AppScope.of(context).jobViewPreference.showRejected;
     _reload();
   }
 
@@ -150,19 +154,19 @@ class _JobScreenState extends State<JobScreen>
 
   Future<void> _onReordered(List<JobApplication> ordered) async {
     if (_sortByDate) return;
-    final next = [
-      for (var i = 0; i < ordered.length; i++)
-        ordered[i].copyWith(sortOrder: i),
-    ];
-    setState(() => _items = next);
-    await AppScope.of(context).reorderJobApplications(next);
-  }
-
-  Future<void> _toggleDateSort() async {
-    HapticFeedback.selectionClick();
-    final next = !_sortByDate;
-    setState(() => _sortByDate = next);
-    await AppScope.of(context).jobViewPreference.setSortByDate(next);
+    final orders = {
+      for (var i = 0; i < ordered.length; i++) ordered[i].id: i,
+    };
+    setState(() {
+      _items = [
+        for (final item in _items)
+          if (orders.containsKey(item.id))
+            item.copyWith(sortOrder: orders[item.id])
+          else
+            item,
+      ];
+    });
+    await AppScope.of(context).reorderJobApplications(ordered);
   }
 
   Future<void> _explainDateSortLock() {
@@ -170,14 +174,8 @@ class _JobScreenState extends State<JobScreen>
     return showMissingFieldsDialog(
       context,
       title: AppStrings.timeSortLockTitle,
-      body: AppStrings.dateSortLockBody,
+      body: AppStrings.timeSortLockBody,
     );
-  }
-
-  Future<void> _toggleCompact() async {
-    final next = !_compact;
-    setState(() => _compact = next);
-    await AppScope.of(context).jobViewPreference.setCompact(next);
   }
 
   Future<void> _toggleSearch() async {
@@ -233,22 +231,35 @@ class _JobScreenState extends State<JobScreen>
                     selected: _searchOpen,
                     onPressed: _toggleSearch,
                   ),
-                  AppBarIconAction(
-                    asset: _compact
-                        ? AppIcons.detailView
-                        : AppIcons.quickView,
-                    label: _compact
-                        ? AppStrings.detailedView
-                        : AppStrings.compactView,
-                    onPressed: _toggleCompact,
-                  ),
-                  AppBarIconAction(
-                    asset: _sortByDate
-                        ? AppIcons.clock
-                        : AppIcons.clockOutlined,
-                    label: AppStrings.dateSortAction,
-                    selected: _sortByDate,
-                    onPressed: _toggleDateSort,
+                ],
+                trailing: [
+                  JobOverflowMenuButton(
+                    compact: _compact,
+                    onCompactChanged: (value) async {
+                      if (value == _compact) return;
+                      setState(() => _compact = value);
+                      await AppScope.of(context)
+                          .jobViewPreference
+                          .setCompact(value);
+                    },
+                    showRejected: _showRejected,
+                    onShowRejectedChanged: (value) async {
+                      if (value == _showRejected) return;
+                      setState(() => _showRejected = value);
+                      await AppScope.of(context)
+                          .jobViewPreference
+                          .setShowRejected(value);
+                    },
+                    sortByTime: _sortByDate,
+                    onSortByTimeChanged: (value) async {
+                      if (value == _sortByDate) return;
+                      HapticFeedback.selectionClick();
+                      setState(() => _sortByDate = value);
+                      await AppScope.of(context)
+                          .jobViewPreference
+                          .setSortByDate(value);
+                    },
+                    onCategoriesChanged: _reload,
                   ),
                 ],
                 ),
@@ -317,6 +328,7 @@ class _JobScreenState extends State<JobScreen>
                           !_sortByDate &&
                           KoreanSearch.compact(_search.text).isEmpty,
                       compact: _compact,
+                      showRejected: _showRejected,
                     ),
                   ),
                 ],

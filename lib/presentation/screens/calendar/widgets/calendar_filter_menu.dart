@@ -30,21 +30,30 @@ class CalendarOverflowMenu extends StatelessWidget {
   Widget build(BuildContext context) {
     return _MenuCard(
       children: [
-        _MenuItem(
-          label: AppStrings.calendarVisibleItems,
-          trailingAsset: AppIcons.calendarList,
-          onPressed: onVisibleItems,
+        _MenuReveal(
+          visible: !showDiary,
+          child: _MenuItem(
+            label: AppStrings.calendarVisibleItems,
+            trailingAsset: AppIcons.calendarList,
+            onPressed: onVisibleItems,
+          ),
         ),
-        _MenuItem(
-          label: AppStrings.calendarSortMode,
-          trailingAsset: AppIcons.calendarList,
-          trailingQuarterTurns: 1,
-          onPressed: onSortMode,
+        _MenuReveal(
+          visible: !showDiary,
+          child: _MenuItem(
+            label: AppStrings.calendarSortMode,
+            trailingAsset: AppIcons.calendarList,
+            trailingQuarterTurns: 1,
+            onPressed: onSortMode,
+          ),
         ),
-        _MenuItem(
-          label: AppStrings.categoryEditTitle,
-          trailingAsset: AppIcons.editOutlined,
-          onPressed: onEditCategories,
+        _MenuReveal(
+          visible: !showLedger,
+          child: _MenuItem(
+            label: AppStrings.categoryEditTitle,
+            trailingAsset: AppIcons.editOutlined,
+            onPressed: onEditCategories,
+          ),
         ),
         _FilterItem(
           label: AppStrings.calendarDiaryMode,
@@ -68,6 +77,11 @@ class CalendarFilterMenu extends StatelessWidget {
     required this.showCompanies,
     required this.onShowTodosChanged,
     required this.onShowCompaniesChanged,
+    this.ledgerMode = false,
+    this.showLedgerTitle = true,
+    this.showLedgerAmount = false,
+    this.onShowLedgerTitleChanged,
+    this.onShowLedgerAmountChanged,
     this.onBack,
   });
 
@@ -75,6 +89,11 @@ class CalendarFilterMenu extends StatelessWidget {
   final bool showCompanies;
   final ValueChanged<bool> onShowTodosChanged;
   final ValueChanged<bool> onShowCompaniesChanged;
+  final bool ledgerMode;
+  final bool showLedgerTitle;
+  final bool showLedgerAmount;
+  final ValueChanged<bool>? onShowLedgerTitleChanged;
+  final ValueChanged<bool>? onShowLedgerAmountChanged;
   final VoidCallback? onBack;
 
   @override
@@ -87,15 +106,45 @@ class CalendarFilterMenu extends StatelessWidget {
             leading: Icons.chevron_left_rounded,
             onPressed: onBack!,
           ),
-        _FilterItem(
-          label: AppStrings.calendarShowTodos,
-          checked: showTodos,
-          onChanged: onShowTodosChanged,
-        ),
-        _FilterItem(
-          label: AppStrings.calendarShowCompanies,
-          checked: showCompanies,
-          onChanged: onShowCompaniesChanged,
+        AnimatedSize(
+          duration: const Duration(milliseconds: 240),
+          curve: Curves.easeOutCubic,
+          alignment: Alignment.topCenter,
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 220),
+            switchInCurve: Curves.easeOutCubic,
+            switchOutCurve: Curves.easeInCubic,
+            child: Column(
+              key: ValueKey(ledgerMode),
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: ledgerMode
+                  ? [
+                      _FilterItem(
+                        label: AppStrings.calendarShowLedgerTitle,
+                        checked: showLedgerTitle,
+                        onChanged: onShowLedgerTitleChanged ?? (_) {},
+                      ),
+                      _FilterItem(
+                        label: AppStrings.calendarShowLedgerAmount,
+                        checked: showLedgerAmount,
+                        onChanged: onShowLedgerAmountChanged ?? (_) {},
+                      ),
+                    ]
+                  : [
+                      _FilterItem(
+                        label: AppStrings.calendarShowTodos,
+                        checked: showTodos,
+                        onChanged: onShowTodosChanged,
+                      ),
+                      _FilterItem(
+                        label: AppStrings.calendarShowCompanies,
+                        checked: showCompanies,
+                        onChanged: onShowCompaniesChanged,
+                      ),
+                    ],
+            ),
+          ),
         ),
       ],
     );
@@ -109,6 +158,11 @@ class CalendarSortMenu extends StatelessWidget {
     required this.showTime,
     required this.onSortByTimeChanged,
     required this.onShowTimeChanged,
+    this.showTimeOption = true,
+    this.showTimeSortOption = true,
+    this.categoryView = false,
+    this.onCategoryViewChanged,
+    this.showCategoryOption = false,
     this.onBack,
   });
 
@@ -116,6 +170,11 @@ class CalendarSortMenu extends StatelessWidget {
   final bool showTime;
   final ValueChanged<bool> onSortByTimeChanged;
   final ValueChanged<bool> onShowTimeChanged;
+  final bool showTimeOption;
+  final bool showTimeSortOption;
+  final bool categoryView;
+  final ValueChanged<bool>? onCategoryViewChanged;
+  final bool showCategoryOption;
   final VoidCallback? onBack;
 
   @override
@@ -128,15 +187,107 @@ class CalendarSortMenu extends StatelessWidget {
             leading: Icons.chevron_left_rounded,
             onPressed: onBack!,
           ),
+        _MenuReveal(
+          visible: showTimeSortOption,
+          child: _FilterItem(
+            label: AppStrings.timeSortView,
+            checked: sortByTime,
+            onChanged: onSortByTimeChanged,
+          ),
+        ),
+        _MenuReveal(
+          visible: showTimeOption,
+          child: _FilterItem(
+            label: AppStrings.timeDisplay,
+            checked: showTime,
+            onChanged: onShowTimeChanged,
+          ),
+        ),
+        _MenuReveal(
+          visible: showCategoryOption && onCategoryViewChanged != null,
+          child: _FilterItem(
+            label: AppStrings.categoryView,
+            checked: categoryView,
+            onChanged: onCategoryViewChanged ?? (_) {},
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class JobOverflowMenu extends StatelessWidget {
+  const JobOverflowMenu({
+    super.key,
+    required this.onVisibleItems,
+    required this.onSortMode,
+    required this.onEditCategories,
+  });
+
+  final VoidCallback onVisibleItems;
+  final VoidCallback onSortMode;
+  final VoidCallback onEditCategories;
+
+  @override
+  Widget build(BuildContext context) {
+    return _MenuCard(
+      children: [
+        _MenuItem(
+          label: AppStrings.jobVisibleItems,
+          trailingAsset: AppIcons.calendarList,
+          onPressed: onVisibleItems,
+        ),
+        _MenuItem(
+          label: AppStrings.calendarSortMode,
+          trailingAsset: AppIcons.calendarList,
+          trailingQuarterTurns: 1,
+          onPressed: onSortMode,
+        ),
+        _MenuItem(
+          label: AppStrings.categoryEditTitle,
+          trailingAsset: AppIcons.editOutlined,
+          onPressed: onEditCategories,
+        ),
+      ],
+    );
+  }
+}
+
+class JobVisibleItemsMenu extends StatelessWidget {
+  const JobVisibleItemsMenu({
+    super.key,
+    required this.compact,
+    required this.onCompactChanged,
+    required this.showRejected,
+    required this.onShowRejectedChanged,
+    this.onBack,
+  });
+
+  final bool compact;
+  final ValueChanged<bool> onCompactChanged;
+  final bool showRejected;
+  final ValueChanged<bool> onShowRejectedChanged;
+  final VoidCallback? onBack;
+
+  @override
+  Widget build(BuildContext context) {
+    return _MenuCard(
+      children: [
+        if (onBack != null)
+          _MenuItem(
+            label: AppStrings.jobVisibleItems,
+            leading: Icons.chevron_left_rounded,
+            onPressed: onBack!,
+          ),
         _FilterItem(
-          label: AppStrings.timeSortView,
-          checked: sortByTime,
-          onChanged: onSortByTimeChanged,
+          label: AppStrings.compactView,
+          checked: compact,
+          onChanged: onCompactChanged,
         ),
         _FilterItem(
-          label: AppStrings.timeDisplay,
-          checked: showTime,
-          onChanged: onShowTimeChanged,
+          label: AppStrings.jobShowRejected,
+          checked: showRejected,
+          onChanged: onShowRejectedChanged,
         ),
       ],
     );
@@ -148,6 +299,28 @@ class _MenuCard extends StatelessWidget {
 
   final List<Widget> children;
 
+  static double _minWidthOf(BuildContext context) {
+    final style = TextStyle(
+      fontFamily: AppFonts.of(context),
+      fontSize: 16,
+      fontWeight: FontWeight.w500,
+    );
+    double widthOf(String text) {
+      final painter = TextPainter(
+        text: TextSpan(text: text, style: style),
+        maxLines: 1,
+        textDirection: TextDirection.ltr,
+      )..layout();
+      return painter.width;
+    }
+
+    final label = [
+      AppStrings.calendarVisibleItems,
+      AppStrings.jobVisibleItems,
+    ].map(widthOf).reduce((a, b) => a > b ? a : b);
+    return label + 74;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Material(
@@ -156,13 +329,83 @@ class _MenuCard extends StatelessWidget {
       shadowColor: const Color(0x33000000),
       borderRadius: BorderRadius.circular(18),
       clipBehavior: Clip.antiAlias,
-      child: IntrinsicWidth(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: children,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(minWidth: _minWidthOf(context)),
+        child: IntrinsicWidth(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: children,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _MenuReveal extends StatefulWidget {
+  const _MenuReveal({required this.visible, required this.child});
+
+  final bool visible;
+  final Widget child;
+
+  @override
+  State<_MenuReveal> createState() => _MenuRevealState();
+}
+
+class _MenuRevealState extends State<_MenuReveal>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final CurvedAnimation _fade;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 240),
+      reverseDuration: const Duration(milliseconds: 180),
+      value: widget.visible ? 1 : 0,
+    );
+    _fade = CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeOutCubic,
+      reverseCurve: Curves.easeInCubic,
+    );
+  }
+
+  @override
+  void didUpdateWidget(_MenuReveal oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.visible == widget.visible) return;
+    if (widget.visible) {
+      _controller.forward();
+    } else {
+      _controller.reverse();
+    }
+  }
+
+  @override
+  void dispose() {
+    _fade.dispose();
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRect(
+      child: SizeTransition(
+        sizeFactor: _fade,
+        alignment: Alignment.topCenter,
+        child: FadeTransition(
+          opacity: _fade,
+          child: IgnorePointer(
+            ignoring: !widget.visible,
+            child: widget.child,
           ),
         ),
       ),

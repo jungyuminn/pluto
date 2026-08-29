@@ -1,17 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:job_planner/app_scope.dart';
 import 'package:job_planner/core/constants/app_fonts.dart';
-import 'package:job_planner/core/constants/app_icons.dart';
 import 'package:job_planner/core/constants/app_strings.dart';
 import 'package:job_planner/core/theme/app_colors.dart';
 import 'package:job_planner/core/utils/plain_text_editing_controller.dart';
-import 'package:job_planner/core/utils/press_bounce.dart';
 import 'package:job_planner/domain/entities/ledger_entry.dart';
 import 'package:job_planner/domain/entities/ledger_salary.dart';
 import 'package:job_planner/domain/ledger_salary_calc.dart';
 import 'package:job_planner/presentation/screens/add_company/widgets/missing_fields_dialog.dart';
 import 'package:job_planner/presentation/screens/add_company/widgets/save_company_button.dart';
-import 'package:job_planner/presentation/screens/calendar/widgets/delete_event_dialog.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/event_action_icon.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/event_date_chip.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/event_time_sheet.dart';
@@ -84,12 +81,13 @@ class _LedgerFormState extends State<LedgerForm>
     final initial = widget.initial;
     final date = initial?.date ?? widget.date;
     _date = DateTime(date.year, date.month, date.day);
-    _kind = initial?.kind ?? LedgerKind.expense;
+    _kind = initial?.kind ?? LedgerKind.consumption;
     _salary = initial?.salary ??
         LedgerSalaryDetails(
           weekday: _date.weekday,
           monthDay: _date.day,
           monthDay2: _date.day >= 20 ? 10 : 25,
+          monthWeek: SalaryMonthDate.weekOf(_date),
         );
     _breakEdited = initial?.salary != null;
     final amountText = _isSalary
@@ -174,12 +172,13 @@ class _LedgerFormState extends State<LedgerForm>
     final digits = raw.replaceAll(RegExp(r'[^0-9]'), '');
     final formatted =
         digits.isEmpty ? '' : LedgerEntry.formatWon(int.parse(digits));
-    if (formatted == _amount.text) return;
-    _amount.value = TextEditingValue(
-      text: formatted,
-      selection: TextSelection.collapsed(offset: formatted.length),
-    );
-    if (_isSalary) setState(() {});
+    if (formatted != _amount.text) {
+      _amount.value = TextEditingValue(
+        text: formatted,
+        selection: TextSelection.collapsed(offset: formatted.length),
+      );
+    }
+    setState(() {});
   }
 
   void _setKind(LedgerKind kind) {
@@ -218,11 +217,25 @@ class _LedgerFormState extends State<LedgerForm>
   }
 
   void _onSalaryChanged(LedgerSalaryDetails next, {bool fromTime = false}) {
+    var details = next;
     var date = _date;
-    if (next.usesWeekday && next.weekday != _salary.weekday) {
+    if (next.usesMonthPayDay && next.monthRule != _salary.monthRule) {
+      if (next.monthRule == SalaryMonthRule.weekday) {
+        details = next.copyWith(
+          weekday: _date.weekday,
+          monthWeek: SalaryMonthDate.weekOf(_date),
+        );
+      } else {
+        details = next.copyWith(monthDay: _date.day);
+      }
+    } else if (next.cycle.selectableCycle == SalaryPayCycle.weekly &&
+        next.weekday != _salary.weekday) {
       date = _dateWithWeekday(_date, next.weekday);
-    } else if (next.cycle == SalaryPayCycle.monthly &&
-        next.monthDay != _salary.monthDay) {
+    } else if (next.usesMonthWeekday &&
+        (next.weekday != _salary.weekday ||
+            next.monthWeek != _salary.monthWeek)) {
+      date = _dateWithMonthWeekday(_date, next.monthWeek, next.weekday);
+    } else if (next.usesMonthDay && next.monthDay != _salary.monthDay) {
       date = _dateWithMonthDay(_date, next.monthDay);
     } else if (next.cycle == SalaryPayCycle.twiceMonthly) {
       if (next.monthDay != _salary.monthDay) {
@@ -232,10 +245,10 @@ class _LedgerFormState extends State<LedgerForm>
       }
     }
     setState(() {
-      if (!fromTime && next.breakMinutes != _salary.breakMinutes) {
+      if (!fromTime && details.breakMinutes != _salary.breakMinutes) {
         _breakEdited = true;
       }
-      _salary = next;
+      _salary = details;
       _date = date;
     });
   }
@@ -258,6 +271,7 @@ class _LedgerFormState extends State<LedgerForm>
         monthDay: _salary.cycle == SalaryPayCycle.twiceMonthly
             ? _salary.monthDay
             : _date.day,
+        monthWeek: SalaryMonthDate.weekOf(_date),
       );
     });
   }
@@ -351,21 +365,6 @@ class _LedgerFormState extends State<LedgerForm>
     Navigator.of(context).pop(true);
   }
 
-  Future<void> _delete() async {
-    final initial = widget.initial;
-    if (initial == null) return;
-    final confirmed = await showDeleteEventDialog(
-      context,
-      title: AppStrings.deleteTitle,
-      body: AppStrings.deleteLedgerBody,
-    );
-    if (!confirmed || !mounted) return;
-    setState(() => _saving = true);
-    await AppScope.of(context).deleteLedger(initial.id);
-    if (!mounted) return;
-    Navigator.of(context).pop(true);
-  }
-
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
@@ -384,9 +383,8 @@ class _LedgerFormState extends State<LedgerForm>
           ),
         ],
       ),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
-        child: Column(
+      padding: EdgeInsets.fromLTRB(20, 16, 20, _isSalary ? 24 : 28),
+      child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -398,47 +396,22 @@ class _LedgerFormState extends State<LedgerForm>
                   ? AppStrings.ledgerWorkplaceHint
                   : AppStrings.ledgerTitleHint,
             ),
-            const SizedBox(height: 4),
-            TextField(
+            const SizedBox(height: 6),
+            _AmountField(
               controller: _amount,
               focusNode: _amountFocus,
-              keyboardType: TextInputType.number,
+              accent: _accent,
+              hintText: _isSalary
+                  ? (_salary.isMonthlyWage
+                      ? AppStrings.ledgerMonthlyHint
+                      : AppStrings.ledgerHourlyHint)
+                  : AppStrings.ledgerAmountHint,
+              suffixText: _isSalary
+                  ? '${AppStrings.ledgerAmountSuffix} (${_salary.isMonthlyWage ? AppStrings.ledgerWageMonthly : AppStrings.ledgerWageHourly})'
+                  : AppStrings.ledgerAmountSuffix,
               onChanged: _formatAmount,
-              style: TextStyle(
-                fontFamily: AppFonts.of(context),
-                fontWeight: FontWeight.w800,
-                fontSize: 22,
-                color: _accent,
-              ),
-              decoration: InputDecoration(
-                hintText: _isSalary
-                    ? (_salary.isMonthlyWage
-                        ? AppStrings.ledgerMonthlyHint
-                        : AppStrings.ledgerHourlyHint)
-                    : AppStrings.ledgerAmountHint,
-                hintStyle: TextStyle(
-                  fontFamily: AppFonts.of(context),
-                  color: colors.hint,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 20,
-                ),
-                suffixText: _amount.text.isEmpty
-                    ? null
-                    : _isSalary
-                        ? '${AppStrings.ledgerAmountSuffix} (${_salary.isMonthlyWage ? AppStrings.ledgerWageMonthly : AppStrings.ledgerWageHourly})'
-                        : AppStrings.ledgerAmountSuffix,
-                suffixStyle: TextStyle(
-                  fontFamily: AppFonts.of(context),
-                  fontWeight: FontWeight.w700,
-                  fontSize: 16,
-                  color: _accent,
-                ),
-                border: InputBorder.none,
-                isDense: true,
-                contentPadding: EdgeInsets.zero,
-              ),
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 6),
             Row(
               children: [
                 Expanded(
@@ -471,10 +444,6 @@ class _LedgerFormState extends State<LedgerForm>
                     ),
                   ),
                 ),
-                if (widget.initial != null) ...[
-                  const SizedBox(width: 8),
-                  _DeleteLedgerButton(onPressed: _saving ? null : _delete),
-                ],
                 const SizedBox(width: 8),
                 SaveCompanyButton(
                   onPressed: _saving ? () {} : _save,
@@ -493,7 +462,11 @@ class _LedgerFormState extends State<LedgerForm>
                     child: IgnorePointer(
                       ignoring: !_kindOpen,
                       child: SlidingKindBar(
-                        values: LedgerKind.values,
+                        values: const [
+                          LedgerKind.consumption,
+                          LedgerKind.expense,
+                          LedgerKind.salary,
+                        ],
                         selected: _kind,
                         labelOf: _kindLabel,
                         accent: _accent,
@@ -528,60 +501,140 @@ class _LedgerFormState extends State<LedgerForm>
             ),
           ],
         ),
-      ),
+    );
+  }
+}
+
+class _AmountField extends StatelessWidget {
+  const _AmountField({
+    required this.controller,
+    required this.focusNode,
+    required this.accent,
+    required this.hintText,
+    required this.suffixText,
+    required this.onChanged,
+  });
+
+  final TextEditingController controller;
+  final FocusNode focusNode;
+  final Color accent;
+  final String hintText;
+  final String suffixText;
+  final ValueChanged<String> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final font = AppFonts.of(context);
+    final colors = AppColors.of(context);
+    const size = 18.0;
+    final style = TextStyle(
+      fontFamily: font,
+      fontWeight: FontWeight.w700,
+      fontSize: size,
+      height: 1.2,
+      letterSpacing: 0,
+      color: accent,
+    );
+
+    return ListenableBuilder(
+      listenable: controller,
+      builder: (context, _) {
+        final hasAmount = controller.text.isNotEmpty;
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            final painter = TextPainter(
+              text: TextSpan(text: controller.text, style: style),
+              textDirection: Directionality.of(context),
+              textScaler: MediaQuery.textScalerOf(context),
+              maxLines: 1,
+            )..layout();
+            final textWidth = painter.width;
+            painter.dispose();
+
+            return Stack(
+              alignment: Alignment.centerLeft,
+              clipBehavior: Clip.none,
+              children: [
+                TextField(
+                  controller: controller,
+                  focusNode: focusNode,
+                  keyboardType: TextInputType.number,
+                  onChanged: onChanged,
+                  cursorWidth: 1.2,
+                  style: style,
+                  decoration: InputDecoration(
+                    hintText: hintText,
+                    hintStyle: TextStyle(
+                      fontFamily: font,
+                      color: colors.hint,
+                      fontWeight: FontWeight.w600,
+                      fontSize: size,
+                      height: 1.2,
+                    ),
+                    border: InputBorder.none,
+                    isDense: true,
+                    isCollapsed: true,
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+                if (hasAmount)
+                  Positioned(
+                    left: textWidth,
+                    top: 0,
+                    bottom: 0,
+                    child: IgnorePointer(
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(suffixText, style: style),
+                      ),
+                    ),
+                  ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 }
 
 DateTime _dateWithWeekday(DateTime date, int weekday) {
-  return date.add(Duration(days: weekday - date.weekday));
+  var delta = weekday - date.weekday;
+  if (delta < 0) delta += 7;
+  return date.add(Duration(days: delta));
 }
 
 DateTime _dateWithMonthDay(DateTime date, int day) {
-  final last = DateTime(date.year, date.month + 1, 0).day;
-  final resolved = day <= 0 ? last : day.clamp(1, last);
-  return DateTime(date.year, date.month, resolved);
+  DateTime inMonth(int year, int month) {
+    final last = DateTime(year, month + 1, 0).day;
+    final resolved = day <= 0 ? last : day.clamp(1, last);
+    return DateTime(year, month, resolved);
+  }
+
+  final candidate = inMonth(date.year, date.month);
+  if (candidate.isBefore(date)) {
+    return inMonth(date.year, date.month + 1);
+  }
+  return candidate;
 }
 
-class _DeleteLedgerButton extends StatelessWidget {
-  const _DeleteLedgerButton({this.onPressed});
-
-  final VoidCallback? onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = AppColors.of(context);
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        boxShadow: [
-          BoxShadow(
-            color: colors.shadow,
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: PressBounce(
-        onPressed: onPressed,
-        color: colors.card,
-        pressedColor: colors.pressed,
-        borderRadius: BorderRadius.circular(999),
-        child: SizedBox(
-          width: SaveCompanyButton.size,
-          height: SaveCompanyButton.size,
-          child: Center(
-            child: ColorFiltered(
-              colorFilter: ColorFilter.mode(colors.danger, BlendMode.srcIn),
-              child: Image.asset(
-                AppIcons.trashCan,
-                width: 18,
-                height: 18,
-              ),
-            ),
-          ),
-        ),
-      ),
+DateTime _dateWithMonthWeekday(
+  DateTime date,
+  SalaryMonthWeek week,
+  int weekday,
+) {
+  DateTime inMonth(int year, int month) {
+    return SalaryMonthDate.weekdayInMonth(
+      year: year,
+      month: month,
+      weekday: weekday,
+      week: week,
     );
   }
+
+  final candidate = inMonth(date.year, date.month);
+  if (candidate.isBefore(date)) {
+    return inMonth(date.year, date.month + 1);
+  }
+  return candidate;
 }

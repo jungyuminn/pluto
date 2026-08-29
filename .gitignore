@@ -43,3 +43,11 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Cursor / local agent
+.cursor/
+.agent/
+agent-transcripts/
+
+# Play listing and font scratch
+/store/

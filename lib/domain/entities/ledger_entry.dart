@@ -17,8 +17,13 @@ class LedgerEntry {
   });
 
   static const salaryColor = Color(0xFF22C55E);
-  static const consumptionColor = Color(0xFFF59E0B);
-  static const expenseColor = Color(0xFFEF4444);
+  static const consumptionColor = Color(0xFFEF4444);
+  static const expenseColor = Color(0xFF38BDF8);
+
+  static Color netColor(int net, Color zero) {
+    if (net == 0) return zero;
+    return net > 0 ? expenseColor : consumptionColor;
+  }
 
   final String id;
   final DateTime date;
@@ -29,7 +34,8 @@ class LedgerEntry {
   final int sortOrder;
   final LedgerSalaryDetails? salary;
 
-  bool get isIncome => kind == LedgerKind.salary;
+  bool get isIncome =>
+      kind == LedgerKind.salary || kind == LedgerKind.expense;
 
   Color get color => switch (kind) {
         LedgerKind.salary => salaryColor,
@@ -39,8 +45,8 @@ class LedgerEntry {
 
   int get colorValue => switch (kind) {
         LedgerKind.salary => 0xFF22C55E,
-        LedgerKind.consumption => 0xFFF59E0B,
-        LedgerKind.expense => 0xFFEF4444,
+        LedgerKind.consumption => 0xFFEF4444,
+        LedgerKind.expense => 0xFF38BDF8,
       };
 
   DateTime get day => DateTime(date.year, date.month, date.day);
@@ -48,7 +54,7 @@ class LedgerEntry {
   String get kindLabel => switch (kind) {
         LedgerKind.salary => '월급',
         LedgerKind.consumption => '소비',
-        LedgerKind.expense => '지출',
+        LedgerKind.expense => '수입',
       };
 
   String get signedLabel {
@@ -56,23 +62,43 @@ class LedgerEntry {
     return '$sign${formatWon(amount)}';
   }
 
-  String get calendarLabel {
-    final money = signedLabel;
-    final name = title.trim();
-    if (name.isEmpty) return money;
-    return '$name $money';
+  String calendarLabel({
+    bool showTitle = true,
+    bool showAmount = false,
+  }) {
+    if (showAmount) return signedLabel;
+    if (showTitle) return title.trim();
+    return '';
   }
 
-  CalendarEvent toCalendarEvent() {
+  CalendarEvent toCalendarEvent({
+    bool showTitle = true,
+    bool showAmount = false,
+  }) {
     return CalendarEvent(
       id: id,
-      title: calendarLabel,
+      title: calendarLabel(showTitle: showTitle, showAmount: showAmount),
       date: day,
       memo: memo,
       categoryName: kindLabel,
       categoryColor: colorValue,
       sortOrder: sortOrder,
     );
+  }
+
+  static int compareDisplay(LedgerEntry a, LedgerEntry b) {
+    return a.sortOrder.compareTo(b.sortOrder);
+  }
+
+  static int compareByKind(LedgerEntry a, LedgerEntry b) {
+    const order = [
+      LedgerKind.salary,
+      LedgerKind.consumption,
+      LedgerKind.expense,
+    ];
+    final byKind = order.indexOf(a.kind).compareTo(order.indexOf(b.kind));
+    if (byKind != 0) return byKind;
+    return a.sortOrder.compareTo(b.sortOrder);
   }
 
   static String formatWon(int amount) {

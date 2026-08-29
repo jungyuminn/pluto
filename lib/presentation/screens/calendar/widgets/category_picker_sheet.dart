@@ -15,6 +15,7 @@ Future<EventCategory?> showCategoryPickerSheet(
   BuildContext context, {
   String? selectedId,
   bool startModifying = false,
+  bool selectable = true,
   CategoryKind kind = CategoryKind.event,
 }) {
   return showModalBottomSheet<EventCategory>(
@@ -34,6 +35,7 @@ Future<EventCategory?> showCategoryPickerSheet(
       child: CategoryPickerSheet(
         selectedId: selectedId,
         startModifying: startModifying,
+        selectable: selectable,
         kind: kind,
       ),
     ),
@@ -45,11 +47,13 @@ class CategoryPickerSheet extends StatefulWidget {
     super.key,
     this.selectedId,
     this.startModifying = false,
+    this.selectable = true,
     this.kind = CategoryKind.event,
   });
 
   final String? selectedId;
   final bool startModifying;
+  final bool selectable;
   final CategoryKind kind;
 
   @override
@@ -195,6 +199,7 @@ class _CategoryPickerSheetState extends State<CategoryPickerSheet>
       });
       return;
     }
+    if (!widget.selectable) return;
     Navigator.of(context).pop(category);
   }
 

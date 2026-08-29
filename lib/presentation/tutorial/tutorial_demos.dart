@@ -541,7 +541,7 @@ class _MenuDemo extends StatelessWidget {
                                                       const _MiniSwitch(on: 1),
                                                 ),
                                                 _MenuLine(
-                                                  label: '기업 보기',
+                                                  label: '지원서 보기',
                                                   trailing: _MiniSwitch(
                                                     on: companyOn,
                                                   ),

@@ -287,6 +287,56 @@ struct WeekTimetableWidget: Widget {
   }
 }
 
+struct CompactTodayWidget: Widget {
+  let kind = "CompactTodayWidget"
+
+  var body: some WidgetConfiguration {
+    StaticConfiguration(
+      kind: kind,
+      provider: ImageProvider(
+        smallKey: "today_glance_image",
+        mediumKey: "today_glance_image",
+        largeKey: "today_glance_image",
+        fallbackKey: nil,
+        emptyKey: "today_glance_empty",
+        defaultEmpty: "오늘 일정이 없어요"
+      )
+    ) { entry in
+      FillImageView(entry: entry)
+        .widgetURL(URL(string: "jobplanner://home"))
+    }
+    .configurationDisplayName("오늘 간단히")
+    .description("오늘의 할 일을 간단히 보여줘요")
+    .supportedFamilies([.systemSmall])
+    .contentMarginsDisabled()
+  }
+}
+
+struct CompactTomorrowWidget: Widget {
+  let kind = "CompactTomorrowWidget"
+
+  var body: some WidgetConfiguration {
+    StaticConfiguration(
+      kind: kind,
+      provider: ImageProvider(
+        smallKey: "tomorrow_glance_image",
+        mediumKey: "tomorrow_glance_image",
+        largeKey: "tomorrow_glance_image",
+        fallbackKey: nil,
+        emptyKey: "tomorrow_glance_empty",
+        defaultEmpty: "내일 일정이 없어요"
+      )
+    ) { entry in
+      FillImageView(entry: entry)
+        .widgetURL(URL(string: "jobplanner://home"))
+    }
+    .configurationDisplayName("내일 간단히")
+    .description("내일의 할 일을 간단히 보여줘요")
+    .supportedFamilies([.systemSmall])
+    .contentMarginsDisabled()
+  }
+}
+
 struct LockItem {
   let title: String
   let time: String
@@ -410,6 +460,14 @@ struct HomeWidgetsBundle: WidgetBundle {
     TomorrowWidget()
     TodayTomorrowWidget()
     WeekTimetableWidget()
+    CompactWidgets()
+  }
+}
+
+struct CompactWidgets: WidgetBundle {
+  var body: some Widget {
+    CompactTodayWidget()
+    CompactTomorrowWidget()
   }
 }
 

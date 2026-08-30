@@ -95,6 +95,28 @@
                 android:name="android.appwidget.provider"
                 android:resource="@xml/week_timetable_widget_info" />
         </receiver>
+        <receiver
+            android:name=".CompactTodayWidgetProvider"
+            android:exported="true"
+            android:label="@string/compact_today_widget_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/compact_today_widget_info" />
+        </receiver>
+        <receiver
+            android:name=".CompactTomorrowWidgetProvider"
+            android:exported="true"
+            android:label="@string/compact_tomorrow_widget_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/compact_tomorrow_widget_info" />
+        </receiver>
         <service
             android:name=".TodayWidgetViewsService"
             android:exported="false"

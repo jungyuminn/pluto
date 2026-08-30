@@ -1,13 +1,13 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:job_planner/core/constants/app_fonts.dart';
 import 'package:job_planner/core/constants/app_icons.dart';
 import 'package:job_planner/core/constants/app_strings.dart';
 import 'package:job_planner/core/theme/app_colors.dart';
 import 'package:job_planner/core/utils/press_bounce.dart';
 import 'package:job_planner/presentation/screens/add_company/widgets/save_company_button.dart';
+import 'package:job_planner/presentation/widgets/flat_snap_picker.dart';
 
 class EventTimePickResult {
   const EventTimePickResult({this.startMinutes, this.endMinutes});
@@ -102,10 +102,7 @@ class _EventTimeSheetState extends State<EventTimeSheet> {
       return;
     }
     Navigator.of(context).pop(
-      EventTimePickResult(
-        startMinutes: _startMinutes,
-        endMinutes: _endMinutes,
-      ),
+      EventTimePickResult(startMinutes: _startMinutes, endMinutes: _endMinutes),
     );
   }
 
@@ -155,9 +152,9 @@ class _EventTimeSheetState extends State<EventTimeSheet> {
                           height: SaveCompanyButton.size,
                           child: PressBounce(
                             onPressed: () {
-                              Navigator.of(context).pop(
-                                const EventTimePickResult(),
-                              );
+                              Navigator.of(
+                                context,
+                              ).pop(const EventTimePickResult());
                             },
                             color: colors.card,
                             pressedColor: Color.lerp(
@@ -185,10 +182,7 @@ class _EventTimeSheetState extends State<EventTimeSheet> {
                         ),
                       ),
                       const Spacer(),
-                      SaveCompanyButton(
-                        onPressed: _save,
-                        color: widget.color,
-                      ),
+                      SaveCompanyButton(onPressed: _save, color: widget.color),
                     ],
                   ),
                   const SizedBox(height: 14),
@@ -222,20 +216,32 @@ class _EventTimeSheetState extends State<EventTimeSheet> {
                     ],
                   ),
                   const SizedBox(height: 8),
-                  SizedBox(
-                    height: _FlatWheel.extent * 5,
-                    child: _TimeWheels(
-                      minutes: _editStart ? _startMinutes : _endMinutes,
-                      selectedColor: widget.color,
-                      onChanged: (value) {
-                        setState(() {
-                          if (_editStart) {
-                            _startMinutes = value;
-                          } else {
-                            _endMinutes = value;
-                          }
-                        });
-                      },
+                  DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: colors.card,
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 6,
+                        horizontal: 8,
+                      ),
+                      child: SizedBox(
+                        height: _FlatWheel.extent * 5,
+                        child: _TimeWheels(
+                          minutes: _editStart ? _startMinutes : _endMinutes,
+                          selectedColor: widget.color,
+                          onChanged: (value) {
+                            setState(() {
+                              if (_editStart) {
+                                _startMinutes = value;
+                              } else {
+                                _endMinutes = value;
+                              }
+                            });
+                          },
+                        ),
+                      ),
                     ),
                   ),
                 ],
@@ -281,17 +287,15 @@ class _TimeCard extends StatelessWidget {
     final colors = AppColors.of(context);
     return PressBounce(
       onPressed: onPressed,
-      color: selected ? color.withValues(alpha: 0.16) : colors.card.withValues(alpha: 0.55),
-      pressedColor: color.withValues(alpha: 0.22),
+      color: colors.card,
+      pressedColor: Color.lerp(colors.card, Colors.black, 0.08)!,
       borderRadius: BorderRadius.circular(16),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
         curve: Curves.easeOutCubic,
         width: double.infinity,
         padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        decoration: BoxDecoration(borderRadius: BorderRadius.circular(16)),
         child: Column(
           children: [
             Text(
@@ -309,7 +313,7 @@ class _TimeCard extends StatelessWidget {
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontFamily: AppFonts.of(context),
-                fontSize: 20,
+                fontSize: 17,
                 fontWeight: FontWeight.w600,
                 height: 1.1,
                 color: selected ? color : colors.muted,
@@ -389,230 +393,133 @@ class _TimeWheelsState extends State<_TimeWheels> {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        Center(
-          child: IgnorePointer(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 2),
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  color: widget.selectedColor.withValues(alpha: 0.14),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: const SizedBox(
-                  height: _FlatWheel.extent,
-                  width: double.infinity,
-                ),
-              ),
+    return ShaderMask(
+      blendMode: BlendMode.dstIn,
+      shaderCallback: (rect) {
+        return const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Color(0x00000000),
+            Color(0xFF000000),
+            Color(0xFF000000),
+            Color(0x00000000),
+          ],
+          stops: [0, 0.18, 0.82, 1],
+        ).createShader(rect);
+      },
+      child: Row(
+        children: [
+          Expanded(
+            flex: 6,
+            child: _FlatWheel(
+              selectedColor: widget.selectedColor,
+              itemCount: 2,
+              index: _pm ? 1 : 0,
+              labelAt: (index) =>
+                  index == 0 ? AppStrings.amLabel : AppStrings.pmLabel,
+              onChanged: (index) {
+                _pm = index == 1;
+                _emit();
+              },
             ),
           ),
-        ),
-        ShaderMask(
-          blendMode: BlendMode.dstIn,
-          shaderCallback: (rect) {
-            return const LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                Color(0x00000000),
-                Color(0xFF000000),
-                Color(0xFF000000),
-                Color(0x00000000),
-              ],
-              stops: [0, 0.18, 0.82, 1],
-            ).createShader(rect);
-          },
-          child: Row(
-            children: [
-              Expanded(
-                flex: 6,
-                child: _FlatWheel(
-                  selectedColor: widget.selectedColor,
-                  itemCount: 2,
-                  index: _pm ? 1 : 0,
-                  labelAt: (index) =>
-                      index == 0 ? AppStrings.amLabel : AppStrings.pmLabel,
-                  onChanged: (index) {
-                    _pm = index == 1;
-                    _emit();
-                  },
-                ),
-              ),
-              Expanded(
-                flex: 5,
-                child: _FlatWheel(
-                  selectedColor: widget.selectedColor,
-                  itemCount: 12,
-                  index: _hour12 - 1,
-                  labelAt: (index) => '${index + 1}',
-                  onChanged: (index) {
-                    _hour12 = index + 1;
-                    _emit();
-                  },
-                ),
-              ),
-              IgnorePointer(
-                child: Text(
-                  ':',
-                  style: TextStyle(
-                    fontFamily: AppFonts.of(context),
-                    fontSize: 20,
-                    fontWeight: FontWeight.w600,
-                    height: 1,
-                    color: widget.selectedColor,
-                  ),
-                ),
-              ),
-              Expanded(
-                flex: 5,
-                child: _FlatWheel(
-                  selectedColor: widget.selectedColor,
-                  itemCount: 60 ~/ _interval,
-                  index: _minuteValue ~/ _interval,
-                  labelAt: (index) =>
-                      (index * _interval).toString().padLeft(2, '0'),
-                  onChanged: (index) {
-                    _minuteValue = index * _interval;
-                    _emit();
-                  },
-                ),
-              ),
-            ],
+          Expanded(
+            flex: 5,
+            child: _FlatWheel(
+              selectedColor: widget.selectedColor,
+              itemCount: 12,
+              index: _hour12 - 1,
+              loop: true,
+              labelAt: (index) => '${index + 1}',
+              onChanged: (index) {
+                _hour12 = index + 1;
+                _emit();
+              },
+            ),
           ),
-        ),
-      ],
+          Expanded(
+            flex: 5,
+            child: _FlatWheel(
+              selectedColor: widget.selectedColor,
+              itemCount: 60 ~/ _interval,
+              index: _minuteValue ~/ _interval,
+              loop: true,
+              labelAt: (index) =>
+                  (index * _interval).toString().padLeft(2, '0'),
+              onChanged: (index) {
+                _minuteValue = index * _interval;
+                _emit();
+              },
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
 
-class _FlatWheel extends StatefulWidget {
+class _FlatWheel extends StatelessWidget {
   const _FlatWheel({
     required this.itemCount,
     required this.index,
     required this.labelAt,
     required this.onChanged,
     required this.selectedColor,
+    this.loop = false,
   });
 
-  static const extent = 44.0;
+  static const extent = 36.0;
+  static const highlightWidth = 52.0;
+  static const highlightHeight = 32.0;
 
   final int itemCount;
   final int index;
   final String Function(int index) labelAt;
   final ValueChanged<int> onChanged;
   final Color selectedColor;
-
-  @override
-  State<_FlatWheel> createState() => _FlatWheelState();
-}
-
-class _FlatWheelState extends State<_FlatWheel> {
-  late final FixedExtentScrollController _controller;
-  late int _index;
-  var _programmatic = false;
-
-  static const _extent = _FlatWheel.extent;
-
-  @override
-  void initState() {
-    super.initState();
-    _index = widget.index.clamp(0, widget.itemCount - 1);
-    _controller = FixedExtentScrollController(initialItem: _index);
-  }
-
-  @override
-  void didUpdateWidget(_FlatWheel oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.index == oldWidget.index) return;
-    final next = widget.index.clamp(0, widget.itemCount - 1);
-    if (_controller.hasClients && _controller.selectedItem == next) {
-      _index = next;
-      return;
-    }
-    _animateTo(next);
-  }
-
-  void _animateTo(int index) {
-    _programmatic = true;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted || !_controller.hasClients) {
-        _programmatic = false;
-        return;
-      }
-      final current = _controller.selectedItem;
-      if (current == index) {
-        _programmatic = false;
-        if (_index != index) setState(() => _index = index);
-        return;
-      }
-      final delta = (index - current).abs();
-      final ms = (200 + delta * 28).clamp(200, 520);
-      _controller
-          .animateToItem(
-            index,
-            duration: Duration(milliseconds: ms),
-            curve: Curves.easeOutCubic,
-          )
-          .whenComplete(() {
-            if (mounted) _programmatic = false;
-          });
-    });
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
+  final bool loop;
 
   @override
   Widget build(BuildContext context) {
     final muted = AppColors.of(context).muted;
-    return NotificationListener<ScrollNotification>(
-      onNotification: (notification) {
-        if (notification is ScrollStartNotification &&
-            notification.dragDetails != null) {
-          _programmatic = false;
-        }
-        return false;
-      },
-      child: ListWheelScrollView.useDelegate(
-        controller: _controller,
-        itemExtent: _extent,
-        physics: const FixedExtentScrollPhysics(),
-        diameterRatio: 2.4,
-        perspective: 0.002,
-        offAxisFraction: 0,
-        onSelectedItemChanged: (index) {
-          setState(() => _index = index);
-          if (_programmatic) return;
-          HapticFeedback.selectionClick();
-          widget.onChanged(index);
-        },
-        childDelegate: ListWheelChildBuilderDelegate(
-          childCount: widget.itemCount,
-          builder: (context, index) {
-            final selected = index == _index;
-            return Center(
-              child: AnimatedDefaultTextStyle(
-                duration: const Duration(milliseconds: 120),
-                curve: Curves.easeOut,
-                style: TextStyle(
-                  fontFamily: AppFonts.of(context),
-                  fontSize: selected ? 20 : 16,
-                  fontWeight: FontWeight.w600,
-                  height: 1,
-                  color: selected
-                      ? widget.selectedColor
-                      : muted.withValues(alpha: 0.7),
-                ),
-                child: Text(widget.labelAt(index)),
+    return FlatSnapPicker(
+      itemCount: itemCount,
+      index: index,
+      itemExtent: extent,
+      loop: loop,
+      onChanged: onChanged,
+      itemBuilder: (context, itemIndex, selected) {
+        return Center(
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 120),
+            curve: Curves.easeOut,
+            width: highlightWidth,
+            height: highlightHeight,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: selected
+                  ? selectedColor.withValues(alpha: 0.14)
+                  : Colors.transparent,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: AnimatedDefaultTextStyle(
+              duration: const Duration(milliseconds: 120),
+              curve: Curves.easeOut,
+              style: TextStyle(
+                fontFamily: AppFonts.of(context),
+                fontSize: selected ? 18 : 15,
+                fontWeight: FontWeight.w600,
+                height: 1,
+                color: selected
+                    ? selectedColor
+                    : muted.withValues(alpha: 0.7),
               ),
-            );
-          },
-        ),
-      ),
+              child: Text(labelAt(itemIndex)),
+            ),
+          ),
+        );
+      },
     );
   }
 }

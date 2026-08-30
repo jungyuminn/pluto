@@ -6,17 +6,25 @@ class LedgerEntryModel {
 
   static LedgerEntry fromJson(Map<String, dynamic> json) {
     final salaryJson = json['salary'];
+    final salary = salaryJson is Map<String, dynamic>
+        ? LedgerSalaryDetails.fromJson(salaryJson)
+        : null;
+    var kind = LedgerEntry.kindFrom(json['kind'] as String?);
+    if (kind == LedgerKind.salary && salary != null && !salary.isMonthlyWage) {
+      kind = LedgerKind.hourly;
+    }
     return LedgerEntry(
       id: json['id'] as String,
       date: _parseDate(json['date'] as String),
       title: json['title'] as String? ?? '',
       amount: (json['amount'] as num?)?.toInt() ?? 0,
-      kind: LedgerEntry.kindFrom(json['kind'] as String?),
+      kind: kind,
       memo: json['memo'] as String? ?? '',
       sortOrder: (json['sortOrder'] as num?)?.toInt() ?? 0,
-      salary: salaryJson is Map<String, dynamic>
-          ? LedgerSalaryDetails.fromJson(salaryJson)
-          : null,
+      salary: salary,
+      categoryId: json['categoryId'] as String?,
+      categoryName: json['categoryName'] as String? ?? '',
+      categoryColor: (json['categoryColor'] as num?)?.toInt() ?? 0,
     );
   }
 
@@ -30,6 +38,9 @@ class LedgerEntryModel {
       'memo': entry.memo,
       'sortOrder': entry.sortOrder,
       if (entry.salary != null) 'salary': entry.salary!.toJson(),
+      'categoryId': entry.categoryId,
+      'categoryName': entry.categoryName,
+      'categoryColor': entry.categoryColor,
     };
   }
 

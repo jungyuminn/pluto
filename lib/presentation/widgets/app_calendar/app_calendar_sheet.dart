@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:job_planner/app_scope.dart';
 import 'package:job_planner/core/calendar/month_grid.dart';
 import 'package:job_planner/core/calendar/repeat_dates.dart';
@@ -92,6 +93,9 @@ class _AppCalendarSheetState extends State<AppCalendarSheet> {
   late DateTime _repeatStart;
   DateTime? _repeatEnd;
   late Set<int> _weekdays;
+  var _monthRule = RepeatMonthRule.date;
+  var _monthWeek = RepeatMonthWeek.first;
+  var _monthWeekday = 0;
   var _zoom = CalendarZoomLevel.days;
 
   @override
@@ -116,6 +120,8 @@ class _AppCalendarSheetState extends State<AppCalendarSheet> {
     _selected = given;
     _repeatStart = seed;
     _weekdays = {RepeatDates.weekdayIndex(seed)};
+    _monthWeek = RepeatDates.weekOf(seed);
+    _monthWeekday = RepeatDates.weekdayIndex(seed);
     if (_mode == AppCalendarMode.range) {
       _rangeStart = given.first;
       _rangeEnd = given.length > 1 ? given.last : null;
@@ -164,6 +170,9 @@ class _AppCalendarSheetState extends State<AppCalendarSheet> {
       start: _repeatStart,
       end: _repeatEnd,
       weekdays: _weekdays,
+      monthRule: _monthRule,
+      monthWeek: _monthWeek,
+      monthWeekday: _monthWeekday,
     );
   }
 
@@ -184,7 +193,10 @@ class _AppCalendarSheetState extends State<AppCalendarSheet> {
         _repeatStart = keep;
         _repeatEnd = null;
         _repeatKind = RepeatKind.weekly;
+        _monthRule = RepeatMonthRule.date;
         _weekdays = {RepeatDates.weekdayIndex(keep)};
+        _monthWeek = RepeatDates.weekOf(keep);
+        _monthWeekday = RepeatDates.weekdayIndex(keep);
       } else {
         _rangeStart = null;
         _rangeEnd = null;
@@ -195,7 +207,10 @@ class _AppCalendarSheetState extends State<AppCalendarSheet> {
   }
 
   void _onTitlePressed() {
-    if (_zoom == CalendarZoomLevel.years) return;
+    if (_zoom == CalendarZoomLevel.years) {
+      _showMonth(_visibleMonth);
+      return;
+    }
     setState(() => _zoom = CalendarZoom.next(_zoom));
   }
 
@@ -220,14 +235,13 @@ class _AppCalendarSheetState extends State<AppCalendarSheet> {
   }
 
   Widget _zoomTitle(BuildContext context) {
-    final canZoom = _zoom != CalendarZoomLevel.years;
     return Align(
       alignment: Alignment.centerLeft,
       child: Padding(
         padding: const EdgeInsets.only(left: 8),
         child: CalendarZoomTitle(
           text: CalendarZoom.title(_zoom, _visibleMonth),
-          onPressed: canZoom ? _onTitlePressed : null,
+          onPressed: _onTitlePressed,
         ),
       ),
     );
@@ -245,21 +259,78 @@ class _AppCalendarSheetState extends State<AppCalendarSheet> {
     setState(() {
       _repeatStart = picked.date;
       _weekdays = {..._weekdays, RepeatDates.weekdayIndex(picked.date)};
+      _monthWeek = RepeatDates.weekOf(picked.date);
+      _monthWeekday = RepeatDates.weekdayIndex(picked.date);
       if (_repeatEnd != null && _repeatEnd!.isBefore(_repeatStart)) {
         _repeatEnd = null;
       }
+      _clearEndIfInvalid();
     });
+  }
+
+  List<DateTime> get _repeatEndOptions {
+    return RepeatDates.endOptions(
+      kind: _repeatKind,
+      start: _repeatStart,
+      monthRule: _monthRule,
+      monthWeek: _monthWeek,
+      monthWeekday: _monthWeekday,
+    );
+  }
+
+  void _clearEndIfInvalid() {
+    if (_repeatEnd == null) return;
+    if (_repeatEndOptions.any((date) => _isSameDay(date, _repeatEnd!))) return;
+    _repeatEnd = null;
   }
 
   void _setRepeatKind(RepeatKind kind) {
     setState(() {
       _repeatKind = kind;
-      final options = RepeatDates.endOptions(kind: kind, start: _repeatStart);
-      if (_repeatEnd != null &&
-          !options.any((date) => _isSameDay(date, _repeatEnd!))) {
-        _repeatEnd = null;
+      if (kind == RepeatKind.monthly) {
+        _monthRule = RepeatMonthRule.date;
+        _monthWeek = RepeatDates.weekOf(_repeatStart);
+        _monthWeekday = RepeatDates.weekdayIndex(_repeatStart);
       }
+      _clearEndIfInvalid();
     });
+  }
+
+  void _setMonthRule(RepeatMonthRule rule) {
+    setState(() {
+      _monthRule = rule;
+      if (rule == RepeatMonthRule.weekday) {
+        _monthWeek = RepeatDates.weekOf(_repeatStart);
+        _monthWeekday = RepeatDates.weekdayIndex(_repeatStart);
+        _snapStartToMonthWeekday();
+      }
+      _clearEndIfInvalid();
+    });
+  }
+
+  void _setMonthWeek(RepeatMonthWeek week) {
+    setState(() {
+      _monthWeek = week;
+      _snapStartToMonthWeekday();
+      _clearEndIfInvalid();
+    });
+  }
+
+  void _setMonthWeekday(int index) {
+    setState(() {
+      _monthWeekday = index;
+      _snapStartToMonthWeekday();
+      _clearEndIfInvalid();
+    });
+  }
+
+  void _snapStartToMonthWeekday() {
+    _repeatStart = RepeatDates.weekdayInMonth(
+      year: _repeatStart.year,
+      month: _repeatStart.month,
+      weekdayIndex: _monthWeekday,
+      week: _monthWeek,
+    );
   }
 
   void _toggleWeekday(int index) {
@@ -405,11 +476,18 @@ class _AppCalendarSheetState extends State<AppCalendarSheet> {
                               weekdays: _weekdays,
                               start: _repeatStart,
                               end: _repeatEnd,
+                              accent: _accent,
                               startMonday: AppScope.of(
                                 context,
                               ).calendarPreference.startMonday,
+                              monthRule: _monthRule,
+                              monthWeek: _monthWeek,
+                              monthWeekday: _monthWeekday,
                               onKindChanged: _setRepeatKind,
                               onWeekdayPressed: _toggleWeekday,
+                              onMonthRuleChanged: _setMonthRule,
+                              onMonthWeekChanged: _setMonthWeek,
+                              onMonthWeekdayChanged: _setMonthWeekday,
                               onStartPressed: _pickRepeatStart,
                               onEndChanged: (value) {
                                 setState(() => _repeatEnd = value);
@@ -598,7 +676,7 @@ class _CircleButton extends StatelessWidget {
   }
 }
 
-class _ModeTabs extends StatelessWidget {
+class _ModeTabs extends StatefulWidget {
   const _ModeTabs({
     required this.mode,
     required this.onChanged,
@@ -609,6 +687,11 @@ class _ModeTabs extends StatelessWidget {
   final ValueChanged<AppCalendarMode> onChanged;
   final List<AppCalendarMode>? modes;
 
+  @override
+  State<_ModeTabs> createState() => _ModeTabsState();
+}
+
+class _ModeTabsState extends State<_ModeTabs> {
   static const _all = [
     (AppCalendarMode.single, AppStrings.calendarModeSingle),
     (AppCalendarMode.range, AppStrings.calendarModeRange),
@@ -619,8 +702,12 @@ class _ModeTabs extends StatelessWidget {
   static const _pillHeight = 34.0;
   static const _duration = Duration(milliseconds: 240);
 
+  var _dragging = false;
+  double? _dragLeft;
+  int? _hoverIndex;
+
   List<(AppCalendarMode, String)> get _items {
-    final allowed = modes;
+    final allowed = widget.modes;
     if (allowed == null || allowed.isEmpty) return _all;
     return [
       for (final item in _all)
@@ -628,43 +715,111 @@ class _ModeTabs extends StatelessWidget {
     ];
   }
 
+  int _indexOf(List<(AppCalendarMode, String)> items) {
+    return items
+        .indexWhere((item) => item.$1 == widget.mode)
+        .clamp(0, items.length - 1);
+  }
+
+  int _indexAt(double dx, double width, int count) {
+    if (width <= 0 || count <= 0) return 0;
+    final cell = width / count;
+    return (dx / cell).floor().clamp(0, count - 1);
+  }
+
+  void _select(List<(AppCalendarMode, String)> items, int index) {
+    if (index < 0 || index >= items.length) return;
+    final next = items[index].$1;
+    if (next == widget.mode) return;
+    HapticFeedback.selectionClick();
+    widget.onChanged(next);
+  }
+
+  void _moveTo(double dx, double width, int count) {
+    if (width <= 0 || count <= 0) return;
+    final cell = width / count;
+    final pillWidth = cell - 6;
+    final inset = (cell - pillWidth) / 2;
+    final left = (dx - pillWidth / 2).clamp(inset, width - cell + inset);
+    final index = _indexAt(dx, width, count);
+    if (_hoverIndex != index) HapticFeedback.selectionClick();
+    setState(() {
+      _dragLeft = left;
+      _hoverIndex = index;
+    });
+  }
+
+  void _endDrag(List<(AppCalendarMode, String)> items) {
+    final index = _hoverIndex;
+    setState(() {
+      _dragging = false;
+      _dragLeft = null;
+      _hoverIndex = null;
+    });
+    if (index == null || index < 0 || index >= items.length) return;
+    final next = items[index].$1;
+    if (next == widget.mode) return;
+    widget.onChanged(next);
+  }
+
   @override
   Widget build(BuildContext context) {
     final items = _items;
-    final index = items.indexWhere((item) => item.$1 == mode).clamp(0, items.length - 1);
+    final index = _indexOf(items);
+    final highlight = _hoverIndex ?? index;
+    final colors = AppColors.of(context);
 
     return SizedBox(
       height: 38,
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final cellWidth = constraints.maxWidth / items.length;
+          final width = constraints.maxWidth;
+          final cellWidth = width / items.length;
           final pillWidth = cellWidth - 6;
-          final left = cellWidth * index + (cellWidth - pillWidth) / 2;
+          final restLeft = cellWidth * index + (cellWidth - pillWidth) / 2;
+          final left = _dragging ? (_dragLeft ?? restLeft) : restLeft;
 
-          return Stack(
-            children: [
-              AnimatedPositioned(
-                duration: _duration,
-                curve: Curves.easeOutCubic,
-                left: left,
-                top: (constraints.maxHeight - _pillHeight) / 2,
-                width: pillWidth,
-                height: _pillHeight,
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: AppColors.of(context).card,
-                    borderRadius: const BorderRadius.all(Radius.circular(999)),
+          return GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTapUp: (details) {
+              _select(
+                items,
+                _indexAt(details.localPosition.dx, width, items.length),
+              );
+            },
+            onHorizontalDragStart: (details) {
+              setState(() {
+                _dragging = true;
+                _dragLeft = restLeft;
+                _hoverIndex = index;
+              });
+              _moveTo(details.localPosition.dx, width, items.length);
+            },
+            onHorizontalDragUpdate: (details) {
+              _moveTo(details.localPosition.dx, width, items.length);
+            },
+            onHorizontalDragEnd: (_) => _endDrag(items),
+            onHorizontalDragCancel: () => _endDrag(items),
+            child: Stack(
+              children: [
+                AnimatedPositioned(
+                  duration: _dragging ? Duration.zero : _duration,
+                  curve: Curves.easeOutCubic,
+                  left: left,
+                  top: (constraints.maxHeight - _pillHeight) / 2,
+                  width: pillWidth,
+                  height: _pillHeight,
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: colors.card,
+                      borderRadius: const BorderRadius.all(Radius.circular(999)),
+                    ),
                   ),
                 ),
-              ),
-              Row(
-                children: [
-                  for (var i = 0; i < items.length; i++)
-                    Expanded(
-                      child: PressBounce(
-                        onPressed: () => onChanged(items[i].$1),
-                        pressedScale: 0.96,
-                        pressedColor: Colors.transparent,
+                Row(
+                  children: [
+                    for (var i = 0; i < items.length; i++)
+                      Expanded(
                         child: Center(
                           child: AnimatedDefaultTextStyle(
                             duration: _duration,
@@ -673,18 +828,18 @@ class _ModeTabs extends StatelessWidget {
                               fontFamily: AppFonts.of(context),
                               fontSize: 14,
                               fontWeight: FontWeight.w700,
-                              color: i == index
-                                  ? AppColors.of(context).secondary
-                                  : AppColors.of(context).muted,
+                              color: i == highlight
+                                  ? colors.secondary
+                                  : colors.muted,
                             ),
                             child: Text(items[i].$2),
                           ),
                         ),
                       ),
-                    ),
-                ],
-              ),
-            ],
+                  ],
+                ),
+              ],
+            ),
           );
         },
       ),

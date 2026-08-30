@@ -119,12 +119,23 @@ class _AddCategorySheetState extends State<AddCategorySheet> {
           if (goal.categoryId != category.id) continue;
           await store.upsertGoal(goal.copyWith(color: category.color));
         }
-      } else {
+      } else if (widget.kind == CategoryKind.company) {
         final jobs = await scope.getJobApplications();
         for (final job in jobs) {
           if (job.categoryId != category.id) continue;
           await scope.updateJobApplication(
             job.copyWith(
+              categoryName: category.name,
+              categoryColor: category.color,
+            ),
+          );
+        }
+      } else {
+        final ledgers = await scope.getLedgers();
+        for (final entry in ledgers) {
+          if (entry.categoryId != category.id) continue;
+          await scope.saveLedger(
+            entry.copyWith(
               categoryName: category.name,
               categoryColor: category.color,
             ),

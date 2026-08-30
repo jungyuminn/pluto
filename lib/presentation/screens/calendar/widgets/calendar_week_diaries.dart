@@ -104,8 +104,7 @@ class _CalendarWeekDiariesState extends State<CalendarWeekDiaries> {
     final sameWeek = widget.days.first.date == oldWidget.days.first.date &&
         widget.days.last.date == oldWidget.days.last.date &&
         widget.calendarScale == oldWidget.calendarScale &&
-        widget.labelScale == oldWidget.labelScale &&
-        widget.showLunar == oldWidget.showLunar;
+        widget.labelScale == oldWidget.labelScale;
     if (!sameWeek) {
       _exitGen++;
       setState(() {
@@ -200,7 +199,9 @@ class _CalendarWeekDiariesState extends State<CalendarWeekDiaries> {
     required double cellWidth,
     required Widget child,
   }) {
-    return Positioned(
+    return AnimatedPositioned(
+      duration: CalendarDayCell.lunarAnim,
+      curve: Curves.easeOutCubic,
       left: cellWidth * tile.start + CalendarDayCell.sideInset,
       width: cellWidth * tile.span - CalendarDayCell.sideInset * 2,
       top: tile.top,

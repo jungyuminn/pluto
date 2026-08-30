@@ -17,6 +17,7 @@ class EventCategoryLocalDataSource {
 
   static const eventKey = 'event_categories';
   static const companyKey = 'company_categories';
+  static const ledgerKey = 'ledger_categories';
 
   final SharedPreferences _prefs;
   final String _key;

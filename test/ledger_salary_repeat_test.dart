@@ -16,7 +16,7 @@ LedgerEntry _salary({
     date: date,
     title: '알바',
     amount: 100000,
-    kind: LedgerKind.salary,
+    kind: LedgerKind.hourly,
     salary: LedgerSalaryDetails(
       cycle: cycle,
       monthRule: monthRule,
@@ -107,5 +107,38 @@ void main() {
       LedgerSalaryRepeat.searchDay(entry, DateTime(2026, 9, 10)),
       DateTime(2026, 9, 6),
     );
+  });
+
+  test('월급은 고른 날에만 나온다', () {
+    final entry = LedgerEntry(
+      id: '2',
+      date: DateTime(2026, 8, 30),
+      title: '직장',
+      amount: 2500000,
+      kind: LedgerKind.salary,
+    );
+    expect(LedgerSalaryRepeat.isRepeating(entry), isFalse);
+    expect(LedgerSalaryRepeat.occursOn(entry, DateTime(2026, 8, 30)), isTrue);
+    expect(LedgerSalaryRepeat.occursOn(entry, DateTime(2026, 9, 30)), isFalse);
+  });
+
+  test('월급 한 달은 고른 날부터 12개월 나온다', () {
+    final entry = LedgerEntry(
+      id: '3',
+      date: DateTime(2026, 8, 25),
+      title: '직장',
+      amount: 2500000,
+      kind: LedgerKind.salary,
+      salary: const LedgerSalaryDetails(
+        wageType: SalaryWageType.monthly,
+        monthlyWage: 2500000,
+        cycle: SalaryPayCycle.monthly,
+        monthDay: 25,
+      ),
+    );
+    expect(LedgerSalaryRepeat.isRepeating(entry), isTrue);
+    expect(LedgerSalaryRepeat.occursOn(entry, DateTime(2026, 8, 25)), isTrue);
+    expect(LedgerSalaryRepeat.occursOn(entry, DateTime(2026, 9, 25)), isTrue);
+    expect(LedgerSalaryRepeat.occursOn(entry, DateTime(2026, 8, 26)), isFalse);
   });
 }

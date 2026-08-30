@@ -257,20 +257,18 @@ class TodoReminderService {
           applications: applications,
         ).where((event) => event.isJob || !event.completed),
       );
+      if (items.isEmpty) continue;
       final lines = [
         for (final event in items.take(12)) _summaryLine(event),
       ];
       if (items.length > 12) {
         lines.add('외 ${items.length - 12}개');
       }
-      final body = lines.isEmpty
-          ? AppStrings.summaryNotificationEmpty
-          : lines.join('\n');
       final id = _summaryIdBase + i;
       final ok = await _schedule(
         id: id,
         title: AppStrings.summaryNotificationTitle(items.length),
-        body: body,
+        body: lines.join('\n'),
         at: at,
         channelId: _summaryChannelId,
         channelName: AppStrings.summaryReminderChannelName,
@@ -308,13 +306,22 @@ class TodoReminderService {
     for (var i = 0; i < _summaryDays && scheduled.length < max; i++) {
       final at = next.add(Duration(days: i));
       final day = DateTime(at.year, at.month, at.day);
-      final items = CalendarEvent.withLockedThenStartTime(
+      final leftover = leftoverTodosBefore(day, allEvents)
+          .where((event) => !event.isJob && !event.completed)
+          .toList();
+      final todayOpen = CalendarEvent.withLockedThenStartTime(
         calendarEventsOn(
           date: day,
           events: allEvents,
           applications: applications,
-        ).where((event) => !event.isJob && !event.completed),
+        ).where((event) => !event.isJob && !event.completed && !event.someday),
       );
+      final seen = {for (final event in leftover) event.id};
+      final items = [
+        ...leftover,
+        for (final event in todayOpen)
+          if (!seen.contains(event.id)) event,
+      ];
       if (items.isEmpty) continue;
       final lines = [
         for (final event in items.take(12)) event.title,

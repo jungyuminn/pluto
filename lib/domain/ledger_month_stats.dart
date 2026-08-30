@@ -33,7 +33,11 @@ class LedgerMonthStats {
     var expense = 0;
     var salary = 0;
     var hasSalary = false;
-    for (var day = start; !day.isAfter(end); day = day.add(const Duration(days: 1))) {
+    for (
+      var day = start;
+      !day.isAfter(end);
+      day = day.add(const Duration(days: 1))
+    ) {
       for (final entry in entries) {
         if (!LedgerSalaryRepeat.occursOn(entry, day)) continue;
         switch (entry.kind) {
@@ -41,6 +45,7 @@ class LedgerMonthStats {
             consumption += entry.amount;
           case LedgerKind.expense:
             expense += entry.amount;
+          case LedgerKind.hourly:
           case LedgerKind.salary:
             salary += entry.amount;
             hasSalary = true;

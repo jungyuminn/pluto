@@ -29,6 +29,7 @@ class CalendarDayCell extends StatelessWidget {
   static const holidayHeight = 12.0;
   static const lunarGap = 1.0;
   static const lunarHeight = 11.0;
+  static const lunarAnim = Duration(milliseconds: 280);
   static const eventsTopGap = 2.0;
   static const labelHeight = 18.0;
   static const labelGap = 2.0;
@@ -120,25 +121,34 @@ class CalendarDayCell extends StatelessWidget {
                 ),
               ),
             ),
-            if (showLunar) ...[
-              const SizedBox(height: lunarGap),
-              SizedBox(
-                height: lunarHeightFor(scale),
-                child: Text(
-                  LunarDate.labelOf(day.date) ?? '',
-                  textAlign: TextAlign.center,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontFamily: AppFonts.of(context),
-                    fontSize: 9 * scale,
-                    fontWeight: FontWeight.w500,
-                    height: 1.1,
-                    color: day.inMonth ? colors.muted : colors.outside,
-                  ),
-                ),
+            ClipRect(
+              child: AnimatedSize(
+                duration: lunarAnim,
+                curve: Curves.easeOutCubic,
+                alignment: Alignment.topCenter,
+                child: showLunar
+                    ? Padding(
+                        padding: const EdgeInsets.only(top: lunarGap),
+                        child: SizedBox(
+                          height: lunarHeightFor(scale),
+                          child: Text(
+                            LunarDate.labelOf(day.date) ?? '',
+                            textAlign: TextAlign.center,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontFamily: AppFonts.of(context),
+                              fontSize: 9 * scale,
+                              fontWeight: FontWeight.w500,
+                              height: 1.1,
+                              color: day.inMonth ? colors.muted : colors.outside,
+                            ),
+                          ),
+                        ),
+                      )
+                    : const SizedBox(width: double.infinity),
               ),
-            ],
+            ),
             if (holiday != null) ...[
               const SizedBox(height: holidayGap),
               SizedBox(

@@ -5,6 +5,7 @@ import 'package:job_planner/core/constants/app_icons.dart';
 import 'package:job_planner/core/constants/app_strings.dart';
 import 'package:job_planner/core/theme/app_colors.dart';
 import 'package:job_planner/core/utils/press_bounce.dart';
+import 'package:job_planner/presentation/widgets/sliding_kind_bar.dart';
 
 class AppCalendarRepeatPanel extends StatelessWidget {
   const AppCalendarRepeatPanel({
@@ -13,9 +14,16 @@ class AppCalendarRepeatPanel extends StatelessWidget {
     required this.weekdays,
     required this.start,
     required this.end,
+    required this.accent,
     this.startMonday = false,
+    this.monthRule = RepeatMonthRule.date,
+    this.monthWeek = RepeatMonthWeek.first,
+    this.monthWeekday = 0,
     required this.onKindChanged,
     required this.onWeekdayPressed,
+    required this.onMonthRuleChanged,
+    required this.onMonthWeekChanged,
+    required this.onMonthWeekdayChanged,
     required this.onStartPressed,
     required this.onEndChanged,
   });
@@ -24,9 +32,16 @@ class AppCalendarRepeatPanel extends StatelessWidget {
   final Set<int> weekdays;
   final DateTime start;
   final DateTime? end;
+  final Color accent;
   final bool startMonday;
+  final RepeatMonthRule monthRule;
+  final RepeatMonthWeek monthWeek;
+  final int monthWeekday;
   final ValueChanged<RepeatKind> onKindChanged;
   final ValueChanged<int> onWeekdayPressed;
+  final ValueChanged<RepeatMonthRule> onMonthRuleChanged;
+  final ValueChanged<RepeatMonthWeek> onMonthWeekChanged;
+  final ValueChanged<int> onMonthWeekdayChanged;
   final VoidCallback onStartPressed;
   final ValueChanged<DateTime?> onEndChanged;
 
@@ -36,9 +51,26 @@ class AppCalendarRepeatPanel extends StatelessWidget {
     RepeatKind.yearly: AppStrings.repeatKindYearly,
   };
 
+  static String _weekLabel(RepeatMonthWeek week) {
+    return switch (week) {
+      RepeatMonthWeek.first => AppStrings.ledgerPayWeekFirst,
+      RepeatMonthWeek.second => AppStrings.ledgerPayWeekSecond,
+      RepeatMonthWeek.third => AppStrings.ledgerPayWeekThird,
+      RepeatMonthWeek.fourth => AppStrings.ledgerPayWeekFourth,
+      RepeatMonthWeek.last => AppStrings.ledgerPayWeekLast,
+    };
+  }
+
   @override
   Widget build(BuildContext context) {
-    final endOptions = RepeatDates.endOptions(kind: kind, start: start);
+    final endOptions = RepeatDates.endOptions(
+      kind: kind,
+      start: start,
+      monthRule: monthRule,
+      monthWeek: monthWeek,
+      monthWeekday: monthWeekday,
+    );
+    final highlight = AppColors.of(context).tint(accent, 0.22);
 
     return DecoratedBox(
       decoration: BoxDecoration(
@@ -72,17 +104,38 @@ class AppCalendarRepeatPanel extends StatelessWidget {
                   ? _WeekdayRow(
                       selected: weekdays,
                       startMonday: startMonday,
+                      selectedColor: highlight,
                       onPressed: onWeekdayPressed,
                     )
-                  : const SizedBox(width: double.infinity),
+                  : kind == RepeatKind.monthly
+                      ? _MonthlyRule(
+                          accent: highlight,
+                          startMonday: startMonday,
+                          monthRule: monthRule,
+                          monthWeek: monthWeek,
+                          monthWeekday: monthWeekday,
+                          weekLabel: _weekLabel,
+                          onRuleChanged: onMonthRuleChanged,
+                          onWeekChanged: onMonthWeekChanged,
+                          onWeekdayChanged: onMonthWeekdayChanged,
+                        )
+                      : const SizedBox(width: double.infinity),
             ),
-            _RepeatRow(
-              iconAsset: AppIcons.calendar,
-              label: AppStrings.repeatStartLabel,
-              child: _ChevronButton(
-                label: RepeatDates.format(start),
-                onPressed: onStartPressed,
-              ),
+            AnimatedSize(
+              duration: const Duration(milliseconds: 240),
+              curve: Curves.easeOutCubic,
+              alignment: Alignment.topCenter,
+              child: kind == RepeatKind.monthly &&
+                      monthRule == RepeatMonthRule.weekday
+                  ? const SizedBox(width: double.infinity)
+                  : _RepeatRow(
+                      iconAsset: AppIcons.calendar,
+                      label: AppStrings.repeatStartLabel,
+                      child: _ChevronButton(
+                        label: RepeatDates.format(start),
+                        onPressed: onStartPressed,
+                      ),
+                    ),
             ),
             _RepeatRow(
               iconAsset: AppIcons.calendar,
@@ -100,6 +153,83 @@ class AppCalendarRepeatPanel extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _MonthlyRule extends StatelessWidget {
+  const _MonthlyRule({
+    required this.accent,
+    required this.startMonday,
+    required this.monthRule,
+    required this.monthWeek,
+    required this.monthWeekday,
+    required this.weekLabel,
+    required this.onRuleChanged,
+    required this.onWeekChanged,
+    required this.onWeekdayChanged,
+  });
+
+  final Color accent;
+  final bool startMonday;
+  final RepeatMonthRule monthRule;
+  final RepeatMonthWeek monthWeek;
+  final int monthWeekday;
+  final String Function(RepeatMonthWeek week) weekLabel;
+  final ValueChanged<RepeatMonthRule> onRuleChanged;
+  final ValueChanged<RepeatMonthWeek> onWeekChanged;
+  final ValueChanged<int> onWeekdayChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8, top: 4),
+      child: Column(
+        children: [
+          SlidingKindBar(
+            values: RepeatMonthRule.values,
+            selected: monthRule,
+            height: 36,
+            accent: accent,
+            barColor: colors.pressed,
+            labelOf: (rule) => rule == RepeatMonthRule.date
+                ? AppStrings.repeatMonthByDate
+                : AppStrings.repeatMonthByWeekday,
+            onChanged: onRuleChanged,
+          ),
+          AnimatedSize(
+            duration: const Duration(milliseconds: 220),
+            curve: Curves.easeOutCubic,
+            alignment: Alignment.topCenter,
+            child: monthRule == RepeatMonthRule.weekday
+                ? Padding(
+                    padding: const EdgeInsets.only(top: 6),
+                    child: Column(
+                      children: [
+                        SlidingKindBar(
+                          values: RepeatMonthWeek.values,
+                          selected: monthWeek,
+                          height: 36,
+                          accent: accent,
+                          barColor: colors.pressed,
+                          labelOf: weekLabel,
+                          onChanged: onWeekChanged,
+                        ),
+                        _WeekdayRow(
+                          selected: {monthWeekday},
+                          startMonday: startMonday,
+                          padding: const EdgeInsets.only(top: 2),
+                          selectedColor: accent,
+                          onPressed: onWeekdayChanged,
+                        ),
+                      ],
+                    ),
+                  )
+                : const SizedBox(width: double.infinity),
+          ),
+        ],
       ),
     );
   }
@@ -161,20 +291,28 @@ class _WeekdayRow extends StatelessWidget {
     required this.selected,
     required this.onPressed,
     this.startMonday = false,
+    this.padding = const EdgeInsets.only(bottom: 12, top: 8),
+    this.selectedColor,
   });
 
   final Set<int> selected;
   final ValueChanged<int> onPressed;
   final bool startMonday;
+  final EdgeInsetsGeometry padding;
+  final Color? selectedColor;
 
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
+    final highlight = selectedColor ?? colors.text;
+    final onHighlight = highlight.computeLuminance() > 0.45
+        ? colors.text
+        : Colors.white;
     final order = startMonday
         ? const [1, 2, 3, 4, 5, 6, 0]
         : const [0, 1, 2, 3, 4, 5, 6];
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12, top: 8),
+      padding: padding,
       child: Row(
         children: [
           for (final i in order)
@@ -194,7 +332,7 @@ class _WeekdayRow extends StatelessWidget {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: selected.contains(i)
-                          ? colors.text
+                          ? highlight
                           : Colors.transparent,
                     ),
                     child: Text(
@@ -204,7 +342,7 @@ class _WeekdayRow extends StatelessWidget {
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
                         color: selected.contains(i)
-                            ? colors.card
+                            ? onHighlight
                             : colors.text,
                       ),
                     ),

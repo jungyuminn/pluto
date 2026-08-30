@@ -34,6 +34,7 @@ import 'package:job_planner/presentation/screens/calendar/widgets/day_event_labe
 import 'package:job_planner/presentation/screens/settings/widgets/backup_dialogs.dart';
 import 'package:job_planner/presentation/screens/settings/widgets/calendar_import_dialogs.dart';
 import 'package:job_planner/presentation/screens/settings/widgets/calendar_import_wizard.dart';
+import 'package:job_planner/presentation/screens/settings/widgets/release_notes_page.dart';
 import 'package:job_planner/presentation/screens/settings/widgets/settings_section_help.dart';
 import 'package:job_planner/presentation/tutorial/tutorial_controller.dart';
 import 'package:job_planner/presentation/widgets/sliding_kind_bar.dart';
@@ -404,7 +405,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> _openReleaseNotes() {
     return Navigator.of(context).push(
-      MaterialPageRoute<void>(builder: (context) => const _ReleaseNotesPage()),
+      MaterialPageRoute<void>(builder: (context) => const ReleaseNotesPage()),
     );
   }
 
@@ -3587,109 +3588,6 @@ class _HintToast extends StatelessWidget {
             color: colors.text,
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _ReleaseNotesPage extends StatelessWidget {
-  const _ReleaseNotesPage();
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = AppColors.of(context);
-    final top = MediaQuery.paddingOf(context).top;
-    return Scaffold(
-      backgroundColor: colors.groupedBackground,
-      extendBodyBehindAppBar: true,
-      appBar: _FrostedAppBar(
-        title: AppStrings.releaseNotesTitle,
-        onBack: () => Navigator.pop(context),
-      ),
-      body: ListView(
-        padding: EdgeInsets.fromLTRB(16, top + 48, 16, 32),
-        children: [
-          for (final note in ReleaseNotes.all) ...[
-            _SectionLabel(note.version),
-            _SettingsCard(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      if (note.items.isNotEmpty) ...[
-                        const _ReleaseNoteHeading(
-                          AppStrings.releaseNotesFeatures,
-                        ),
-                        for (final item in note.items) _ReleaseNoteBullet(item),
-                      ],
-                      if (note.fixes.isNotEmpty) ...[
-                        _ReleaseNoteHeading(
-                          AppStrings.releaseNotesFixes,
-                          padTop: note.items.isNotEmpty,
-                        ),
-                        for (final item in note.fixes) _ReleaseNoteBullet(item),
-                      ],
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 24),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-class _ReleaseNoteHeading extends StatelessWidget {
-  const _ReleaseNoteHeading(this.text, {this.padTop = false});
-
-  final String text;
-  final bool padTop;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.only(bottom: 8, top: padTop ? 8 : 0),
-      child: Text(
-        text,
-        style: TextStyle(
-          fontFamily: AppFonts.of(context),
-          fontSize: 13,
-          fontWeight: FontWeight.w700,
-          color: AppColors.of(context).muted,
-        ),
-      ),
-    );
-  }
-}
-
-class _ReleaseNoteBullet extends StatelessWidget {
-  const _ReleaseNoteBullet(this.text);
-
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = AppColors.of(context);
-    final style = TextStyle(
-      fontFamily: AppFonts.of(context),
-      fontSize: 15,
-      fontWeight: FontWeight.w400,
-      height: 1.45,
-      color: colors.text,
-    );
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(width: 16, child: Text('·', style: style)),
-          Expanded(child: Text(text, style: style)),
-        ],
       ),
     );
   }

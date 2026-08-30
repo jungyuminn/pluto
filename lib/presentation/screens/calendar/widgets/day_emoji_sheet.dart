@@ -45,6 +45,7 @@ class DayStickers {
     'daily_rabbit',
     'university_rabbit',
     'company_rabbit',
+    'travel_hamster',
     'daily_dog',
     'simple_cat',
     'simple_cat2',

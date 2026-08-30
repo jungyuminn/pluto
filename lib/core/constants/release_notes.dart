@@ -17,6 +17,17 @@ class ReleaseNote {
 abstract final class ReleaseNotes {
   static const all = [
     ReleaseNote(
+      version: '1.0.23',
+      items: [
+        '홈 화면에 오늘·내일 할 일을 작은 위젯으로 둘 수 있어요',
+        '릴리즈 노트를 누르면 바뀐 모습을 볼 수 있어요',
+        '아직 남은 할 일이 몇 개인지 한눈에 보여요',
+        '할 일이 없으면 요약·미완료 알림을 보내지 않아요',
+        '시간을 고를 때 숫자가 찌그러지지 않아요',
+        '여행 햄스터 스티커가 생겼어요',
+      ],
+    ),
+    ReleaseNote(
       version: '1.0.22',
       items: [
         '가계부에서 이번 달 합계를 보고 월 통계를 열 수 있어요',

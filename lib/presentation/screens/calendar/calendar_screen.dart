@@ -41,8 +41,9 @@ class _CalendarScreenState extends State<CalendarScreen>
   static const _initialPage = 12000;
 
   late DateTime _baseMonth;
-  late final PageController _pages;
+  late PageController _pages;
   late DateTime _visibleMonth;
+  late DateTime _daysMonth;
   late final PlainTextEditingController _search;
   late final FocusNode _searchFocus;
   late final AnimationController _searchAnimation;
@@ -73,7 +74,8 @@ class _CalendarScreenState extends State<CalendarScreen>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _showCurrentMonth();
-    _pages = PageController(initialPage: _initialPage, keepPage: false);
+    _daysMonth = _visibleMonth;
+    _pages = PageController(initialPage: _initialPage);
     _search = PlainTextEditingController();
     _searchFocus = FocusNode();
     _searchAnimation = AnimationController(
@@ -116,15 +118,13 @@ class _CalendarScreenState extends State<CalendarScreen>
   void didUpdateWidget(CalendarScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.visible && !oldWidget.visible) {
-      _collapseZoom();
+      _restoreVisibleMonth();
       _reload();
     }
   }
 
-  void _collapseZoom() {
-    if (_zoom == CalendarZoomLevel.days) return;
-    _zoom = CalendarZoomLevel.days;
-    _zoomEpoch++;
+  void _restoreVisibleMonth() {
+    _showDays(_visibleMonth);
   }
 
   @override
@@ -148,15 +148,44 @@ class _CalendarScreenState extends State<CalendarScreen>
   }
 
   Future<void> _onTitlePressed() async {
-    if (_zoom == CalendarZoomLevel.years) return;
+    if (_zoom == CalendarZoomLevel.years) {
+      await _showDays();
+      return;
+    }
+    if (_zoom == CalendarZoomLevel.days) {
+      _daysMonth = DateTime(_visibleMonth.year, _visibleMonth.month);
+    }
     setState(() => _zoom = CalendarZoom.next(_zoom));
   }
 
   Future<void> _pickMonth(DateTime month) async {
+    await _showDays(month);
+  }
+
+  Future<void> _showDays([DateTime? month]) async {
+    final target = DateTime(
+      (month ?? _visibleMonth).year,
+      (month ?? _visibleMonth).month,
+    );
+    _attachPagesAt(_daysMonth);
+    if (!mounted) return;
     setState(() => _zoom = CalendarZoomLevel.days);
     await WidgetsBinding.instance.endOfFrame;
     if (!mounted) return;
-    await _goToMonth(month);
+    if (!_pages.hasClients) {
+      await WidgetsBinding.instance.endOfFrame;
+      if (!mounted) return;
+    }
+    await _goToMonth(target);
+    _daysMonth = target;
+  }
+
+  void _attachPagesAt(DateTime month) {
+    if (_pages.hasClients) return;
+    final page = _pageOf(DateTime(month.year, month.month));
+    final previous = _pages;
+    _pages = PageController(initialPage: page);
+    previous.dispose();
   }
 
   void _pickYear(int year) {
@@ -171,6 +200,7 @@ class _CalendarScreenState extends State<CalendarScreen>
     final current = DateTime(now.year, now.month);
     _baseMonth = current;
     _visibleMonth = current;
+    _daysMonth = current;
     _zoom = CalendarZoomLevel.days;
     if (!jump) return;
     if (_pages.hasClients) _pages.jumpToPage(_initialPage);
@@ -179,24 +209,22 @@ class _CalendarScreenState extends State<CalendarScreen>
 
   Future<void> _goToMonth(DateTime month) async {
     final target = DateTime(month.year, month.month);
-    if (_visibleMonth.year == target.year &&
-        _visibleMonth.month == target.month) {
-      return;
-    }
     if (!_pages.hasClients) {
-      _baseMonth = target;
-      _visibleMonth = target;
-      if (mounted) setState(() {});
+      if (mounted) setState(() => _visibleMonth = target);
       return;
     }
-    final delta =
-        (target.year - _baseMonth.year) * 12 +
-        (target.month - _baseMonth.month);
-    final page = _initialPage + delta;
-    final distance = (page - _pages.page!.round()).abs();
+    final page = _pageOf(target);
+    final current = _pages.page?.round() ?? _initialPage;
+    if (current == page) {
+      if (_visibleMonth.year != target.year ||
+          _visibleMonth.month != target.month) {
+        setState(() => _visibleMonth = target);
+      }
+      return;
+    }
+    final distance = (page - current).abs();
     if (distance > 18) {
-      _pages.jumpToPage(page);
-      setState(() => _visibleMonth = target);
+      _jumpToMonth(target);
       return;
     }
     final ms = (200 + distance * 45).clamp(240, 560);
@@ -205,6 +233,32 @@ class _CalendarScreenState extends State<CalendarScreen>
       duration: Duration(milliseconds: ms),
       curve: Curves.easeOutCubic,
     );
+    if (!mounted) return;
+    if (_visibleMonth.year != target.year ||
+        _visibleMonth.month != target.month) {
+      setState(() => _visibleMonth = target);
+    }
+  }
+
+  int _pageOf(DateTime month) {
+    final delta =
+        (month.year - _baseMonth.year) * 12 + (month.month - _baseMonth.month);
+    return _initialPage + delta;
+  }
+
+  void _jumpToMonth(DateTime month) {
+    final target = DateTime(month.year, month.month);
+    if (_pages.hasClients) {
+      final page = _pageOf(target);
+      if ((_pages.page?.round() ?? _initialPage) != page) {
+        _pages.jumpToPage(page);
+      }
+    }
+    if (_visibleMonth.year == target.year &&
+        _visibleMonth.month == target.month) {
+      return;
+    }
+    if (mounted) setState(() => _visibleMonth = target);
   }
 
   DateTime _monthAt(int page) {
@@ -303,6 +357,7 @@ class _CalendarScreenState extends State<CalendarScreen>
             entry.signedLabel,
             '${entry.amount}',
             entry.kindLabel,
+            entry.displayCategoryName,
           ],
         );
       }
@@ -526,9 +581,7 @@ class _CalendarScreenState extends State<CalendarScreen>
                                   _visibleMonth,
                                   hideCurrentYear: true,
                                 ),
-                                onTitlePressed: _zoom == CalendarZoomLevel.years
-                                    ? null
-                                    : _onTitlePressed,
+                                onTitlePressed: _onTitlePressed,
                                 showTodos: _showTodos,
                                 showCompanies: _showCompanies,
                                 showDiary: _showDiary,
@@ -561,7 +614,8 @@ class _CalendarScreenState extends State<CalendarScreen>
                                 onCategoriesChanged: _reload,
                                 ledgerMonthStats:
                                     _showLedger &&
-                                        _zoom == CalendarZoomLevel.days
+                                        _zoom == CalendarZoomLevel.days &&
+                                        viewPrefs.showLedgerMonthStats
                                     ? LedgerMonthStats.of(
                                         month: _visibleMonth,
                                         entries: _ledgers,
@@ -626,10 +680,11 @@ class _CalendarScreenState extends State<CalendarScreen>
                                                   ? const NeverScrollableScrollPhysics()
                                                   : null,
                                               onPageChanged: (page) {
-                                                setState(
-                                                  () => _visibleMonth =
-                                                      _monthAt(page),
-                                                );
+                                                setState(() {
+                                                  _visibleMonth =
+                                                      _monthAt(page);
+                                                  _daysMonth = _visibleMonth;
+                                                });
                                               },
                                               itemBuilder: (context, page) {
                                                 final emojis =
@@ -657,6 +712,9 @@ class _CalendarScreenState extends State<CalendarScreen>
                                                       ledgerCategoryView:
                                                           viewPrefs
                                                               .categoryView,
+                                                      ledgerKindColor:
+                                                          viewPrefs
+                                                              .ledgerKindColor,
                                                       searchDay: _searchDay,
                                                       searchHitKey:
                                                           _searchHitKey,

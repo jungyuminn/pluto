@@ -61,6 +61,11 @@ class AppScope extends InheritedWidget {
     required this.updateCompanyCategory,
     required this.deleteCompanyCategory,
     required this.reorderCompanyCategories,
+    required this.getLedgerCategories,
+    required this.addLedgerCategory,
+    required this.updateLedgerCategory,
+    required this.deleteLedgerCategory,
+    required this.reorderLedgerCategories,
     required this.jobViewPreference,
     required this.homeViewPreference,
     required this.longGoalStore,
@@ -100,6 +105,11 @@ class AppScope extends InheritedWidget {
   final UpdateEventCategory updateCompanyCategory;
   final DeleteEventCategory deleteCompanyCategory;
   final ReorderEventCategories reorderCompanyCategories;
+  final GetEventCategories getLedgerCategories;
+  final AddEventCategory addLedgerCategory;
+  final UpdateEventCategory updateLedgerCategory;
+  final DeleteEventCategory deleteLedgerCategory;
+  final ReorderEventCategories reorderLedgerCategories;
   final JobViewPreference jobViewPreference;
   final HomeViewPreference homeViewPreference;
   final LongGoalLocalDataSource longGoalStore;
@@ -149,6 +159,11 @@ class AppScope extends InheritedWidget {
         updateCompanyCategory != oldWidget.updateCompanyCategory ||
         deleteCompanyCategory != oldWidget.deleteCompanyCategory ||
         reorderCompanyCategories != oldWidget.reorderCompanyCategories ||
+        getLedgerCategories != oldWidget.getLedgerCategories ||
+        addLedgerCategory != oldWidget.addLedgerCategory ||
+        updateLedgerCategory != oldWidget.updateLedgerCategory ||
+        deleteLedgerCategory != oldWidget.deleteLedgerCategory ||
+        reorderLedgerCategories != oldWidget.reorderLedgerCategories ||
         jobViewPreference != oldWidget.jobViewPreference ||
         homeViewPreference != oldWidget.homeViewPreference ||
         longGoalStore != oldWidget.longGoalStore ||
@@ -165,6 +180,7 @@ class AppScope extends InheritedWidget {
     return switch (kind) {
       CategoryKind.event => getEventCategories(),
       CategoryKind.company => getCompanyCategories(),
+      CategoryKind.ledger => getLedgerCategories(),
     };
   }
 
@@ -172,6 +188,7 @@ class AppScope extends InheritedWidget {
     return switch (kind) {
       CategoryKind.event => addEventCategory(category),
       CategoryKind.company => addCompanyCategory(category),
+      CategoryKind.ledger => addLedgerCategory(category),
     };
   }
 
@@ -179,6 +196,7 @@ class AppScope extends InheritedWidget {
     return switch (kind) {
       CategoryKind.event => updateEventCategory(category),
       CategoryKind.company => updateCompanyCategory(category),
+      CategoryKind.ledger => updateLedgerCategory(category),
     };
   }
 
@@ -186,6 +204,7 @@ class AppScope extends InheritedWidget {
     return switch (kind) {
       CategoryKind.event => deleteEventCategory(ids),
       CategoryKind.company => deleteCompanyCategory(ids),
+      CategoryKind.ledger => deleteLedgerCategory(ids),
     };
   }
 
@@ -196,6 +215,7 @@ class AppScope extends InheritedWidget {
     return switch (kind) {
       CategoryKind.event => reorderEventCategories(categories),
       CategoryKind.company => reorderCompanyCategories(categories),
+      CategoryKind.ledger => reorderLedgerCategories(categories),
     };
   }
 }

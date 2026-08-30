@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:job_planner/core/constants/app_fonts.dart';
 import 'package:job_planner/core/theme/app_colors.dart';
+import 'package:job_planner/core/utils/animated_accent.dart';
 
 class CalendarEventLabel extends StatelessWidget {
   const CalendarEventLabel({
@@ -32,92 +33,100 @@ class CalendarEventLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final background =
-        AppColors.of(context).tint(color, isJob ? 0.12 : 0.22);
+    final colors = AppColors.of(context);
     final radius = isJob ? 6.0 : 3.0;
     final scale = applyCalendarScale
         ? AppFonts.calendarLabelScaleOf(context)
         : 1.0;
     final labelHeight = height * scale;
-    final style = TextStyle(
-      fontFamily: AppFonts.of(context),
-      fontSize: fontSize * scale,
-      fontWeight: fontWeight,
-      height: 1,
-      color: color,
-    );
 
-    return SizedBox(
-      height: labelHeight,
-      width: double.infinity,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: background,
-          borderRadius: BorderRadius.circular(radius),
-          border: isJob ? Border.all(color: color, width: 1) : null,
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(radius),
-          child: Row(
-            children: [
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 240),
-                curve: Curves.easeOutCubic,
-                width: (showAccent && !completed && !isJob) ? 3 : 0,
-                height: labelHeight,
-                color: color,
-              ),
-              Expanded(
-                child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: isJob ? 4 : 3),
-                  child: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 280),
-                    switchInCurve: Curves.easeOutCubic,
-                    switchOutCurve: Curves.easeInCubic,
-                    layoutBuilder: (current, previous) {
-                      return Stack(
-                        alignment: Alignment.center,
-                        fit: StackFit.expand,
-                        clipBehavior: Clip.hardEdge,
-                        children: [
-                          ...previous,
-                          if (current != null) current,
-                        ],
-                      );
-                    },
-                    transitionBuilder: (child, animation) {
-                      final fromRight = child.key is ValueKey<String> &&
-                          _isAmount((child.key! as ValueKey<String>).value);
-                      return FadeTransition(
-                        opacity: animation,
-                        child: SlideTransition(
-                          position: Tween<Offset>(
-                            begin: Offset(fromRight ? 0.35 : -0.35, 0),
-                            end: Offset.zero,
-                          ).animate(animation),
-                          child: child,
+    return AnimatedAccent(
+      color: color,
+      builder: (context, accent) {
+        final background = colors.tint(accent, isJob ? 0.12 : 0.22);
+        final style = TextStyle(
+          fontFamily: AppFonts.of(context),
+          fontSize: fontSize * scale,
+          fontWeight: fontWeight,
+          height: 1,
+          color: accent,
+        );
+
+        return SizedBox(
+          height: labelHeight,
+          width: double.infinity,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: background,
+              borderRadius: BorderRadius.circular(radius),
+              border: isJob ? Border.all(color: accent, width: 1) : null,
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(radius),
+              child: Row(
+                children: [
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 240),
+                    curve: Curves.easeOutCubic,
+                    width: (showAccent && !completed && !isJob) ? 3 : 0,
+                    height: labelHeight,
+                    child: ColoredBox(color: accent),
+                  ),
+                  Expanded(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(horizontal: isJob ? 4 : 3),
+                      child: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 280),
+                        switchInCurve: Curves.easeOutCubic,
+                        switchOutCurve: Curves.easeInCubic,
+                        layoutBuilder: (current, previous) {
+                          return Stack(
+                            alignment: Alignment.center,
+                            fit: StackFit.expand,
+                            clipBehavior: Clip.hardEdge,
+                            children: [
+                              ...previous,
+                              if (current != null) current,
+                            ],
+                          );
+                        },
+                        transitionBuilder: (child, animation) {
+                          final fromRight = child.key is ValueKey<String> &&
+                              _isAmount(
+                                (child.key! as ValueKey<String>).value,
+                              );
+                          return FadeTransition(
+                            opacity: animation,
+                            child: SlideTransition(
+                              position: Tween<Offset>(
+                                begin: Offset(fromRight ? 0.35 : -0.35, 0),
+                                end: Offset.zero,
+                              ).animate(animation),
+                              child: child,
+                            ),
+                          );
+                        },
+                        child: Align(
+                          key: ValueKey(title),
+                          alignment: Alignment.center,
+                          child: Text(
+                            title,
+                            maxLines: 1,
+                            softWrap: false,
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.center,
+                            style: style,
+                          ),
                         ),
-                      );
-                    },
-                    child: Align(
-                      key: ValueKey(title),
-                      alignment: Alignment.center,
-                      child: Text(
-                        title,
-                        maxLines: 1,
-                        softWrap: false,
-                        overflow: TextOverflow.ellipsis,
-                        textAlign: TextAlign.center,
-                        style: style,
                       ),
                     ),
                   ),
-                ),
+                ],
               ),
-            ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }

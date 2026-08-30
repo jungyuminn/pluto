@@ -28,6 +28,7 @@ class AppBackupService {
   static const _jobsKey = 'job_applications';
   static const _diariesKey = 'diary_entries';
   static const _eventsKey = 'calendar_events';
+  static const _ledgersKey = 'ledger_entries';
   static const _emojisKey = DayEmojiStore.key;
   static const _coverFolder = 'cover_letters';
   static const _diaryFolder = 'diaries';
@@ -305,6 +306,7 @@ class AppBackupService {
   static bool isStarterOnly(SharedPreferences prefs) {
     if (_hasItems(prefs.getString(_jobsKey))) return false;
     if (_hasItems(prefs.getString(_diariesKey))) return false;
+    if (_hasItems(prefs.getString(_ledgersKey))) return false;
     if (_hasEmojiItems(prefs.getString(_emojisKey))) return false;
     final raw = prefs.getString(_eventsKey);
     if (raw == null || raw.isEmpty) return true;

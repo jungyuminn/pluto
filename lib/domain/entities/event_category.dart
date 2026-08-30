@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:job_planner/domain/entities/calendar_event.dart';
 
-enum CategoryKind { event, company }
+enum CategoryKind { event, company, ledger }
 
 class EventCategory {
   const EventCategory({
@@ -39,6 +39,12 @@ class EventCategory {
     EventCategory(id: 'company_large', name: '대기업', color: 0xFF3B82F6),
     EventCategory(id: 'company_public', name: '공기업', color: 0xFF00ACC1),
     EventCategory(id: 'company_university', name: '대학교', color: 0xFFA855F7),
+  ];
+
+  static const ledgerPresets = [
+    EventCategory(id: 'ledger_food', name: '식비', color: 0xFFFF8A65),
+    EventCategory(id: 'ledger_transport', name: '교통', color: 0xFF3B82F6),
+    EventCategory(id: 'ledger_living', name: '생활', color: 0xFF7CB342),
   ];
 
   static const fallback = EventCategory(

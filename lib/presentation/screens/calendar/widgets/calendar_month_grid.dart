@@ -72,6 +72,7 @@ class CalendarMonthGrid extends StatefulWidget {
     this.showLedgerTitle = true,
     this.showLedgerAmount = false,
     this.ledgerCategoryView = false,
+    this.ledgerKindColor = false,
     this.startMonday = false,
     this.showLunar = false,
     this.searchDay,
@@ -92,6 +93,7 @@ class CalendarMonthGrid extends StatefulWidget {
   final bool showLedgerTitle;
   final bool showLedgerAmount;
   final bool ledgerCategoryView;
+  final bool ledgerKindColor;
   final bool startMonday;
   final bool showLunar;
   final DateTime? searchDay;
@@ -125,10 +127,12 @@ class _CalendarMonthGridState extends State<CalendarMonthGrid>
   late final Animation<double> _ledgerAltOpacity;
   late final Animation<double> _diaryAltScale;
   late final Animation<double> _ledgerAltScale;
+  late bool _showLunar;
 
   @override
   void initState() {
     super.initState();
+    _showLunar = widget.showLunar;
     CalendarDayDropTarget._grids.add(this);
     _mode = AnimationController(
       vsync: this,
@@ -166,8 +170,22 @@ class _CalendarMonthGridState extends State<CalendarMonthGrid>
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _syncLunar();
+  }
+
+  void _syncLunar() {
+    final canAnimate = TickerMode.of(context);
+    if (_showLunar == widget.showLunar) return;
+    if (!canAnimate) return;
+    setState(() => _showLunar = widget.showLunar);
+  }
+
+  @override
   void didUpdateWidget(CalendarMonthGrid oldWidget) {
     super.didUpdateWidget(oldWidget);
+    _syncLunar();
     final wasAlt = oldWidget.showDiary || oldWidget.showLedger;
     final isAlt = widget.showDiary || widget.showLedger;
     if (wasAlt != isAlt) {
@@ -211,7 +229,7 @@ class _CalendarMonthGridState extends State<CalendarMonthGrid>
     if (!widget.showLedgerTitle && !widget.showLedgerAmount) return const [];
     final entries = [...ledgersOf(date)];
     if (widget.ledgerCategoryView) {
-      entries.sort(LedgerEntry.compareByKind);
+      entries.sort(LedgerEntry.compareByCategory);
     }
     return [
       for (final entry in entries)
@@ -224,6 +242,7 @@ class _CalendarMonthGridState extends State<CalendarMonthGrid>
           entry.toCalendarEvent(
             showTitle: widget.showLedgerTitle,
             showAmount: widget.showLedgerAmount,
+            kindColor: widget.ledgerKindColor,
           ),
     ];
   }
@@ -410,7 +429,7 @@ class _CalendarMonthGridState extends State<CalendarMonthGrid>
                       minHeight: minWeekHeight,
                       calendarScale: calendarScale,
                       labelScale: labelScale,
-                      showLunar: widget.showLunar,
+                      showLunar: _showLunar,
                     );
                     final diaryHeight = CalendarWeekDiaries.heightFor(
                       days: weekDays,
@@ -418,7 +437,7 @@ class _CalendarMonthGridState extends State<CalendarMonthGrid>
                       minHeight: minWeekHeight,
                       calendarScale: calendarScale,
                       labelScale: labelScale,
-                      showLunar: widget.showLunar,
+                      showLunar: _showLunar,
                     );
                     final ledgerHeight = CalendarWeekEvents.heightFor(
                       days: weekDays,
@@ -427,7 +446,7 @@ class _CalendarMonthGridState extends State<CalendarMonthGrid>
                       minHeight: minWeekHeight,
                       calendarScale: calendarScale,
                       labelScale: labelScale,
-                      showLunar: widget.showLunar,
+                      showLunar: _showLunar,
                     );
                     return AnimatedBuilder(
                       animation: Listenable.merge([_ease, _altEase]),
@@ -439,7 +458,7 @@ class _CalendarMonthGridState extends State<CalendarMonthGrid>
                           key: _weekKey(week),
                           duration: _mode.isAnimating || _alt.isAnimating
                               ? Duration.zero
-                              : CalendarWeekDiaries.fadeDuration,
+                              : CalendarDayCell.lunarAnim,
                           curve: Curves.easeOutCubic,
                           height:
                               eventHeight + (altHeight - eventHeight) * t,
@@ -463,7 +482,7 @@ class _CalendarMonthGridState extends State<CalendarMonthGrid>
                                           weekDays[weekday].date,
                                           highlighted,
                                         ),
-                                        showLunar: widget.showLunar,
+                                        showLunar: _showLunar,
                                         onPressed: widget.onDayPressed == null
                                             ? null
                                             : (origin) => widget.onDayPressed!(
@@ -495,7 +514,7 @@ class _CalendarMonthGridState extends State<CalendarMonthGrid>
                                     emojisOf: widget.emojisOf,
                                     calendarScale: calendarScale,
                                     labelScale: labelScale,
-                                    showLunar: widget.showLunar,
+                                    showLunar: _showLunar,
                                     searchHitKey: widget.searchHitKey,
                                   ),
                                 ),
@@ -525,7 +544,7 @@ class _CalendarMonthGridState extends State<CalendarMonthGrid>
                                                   diariesOf: widget.diariesOf!,
                                                   calendarScale: calendarScale,
                                                   labelScale: labelScale,
-                                                  showLunar: widget.showLunar,
+                                                  showLunar: _showLunar,
                                                   searchHitKey:
                                                       widget.searchHitKey,
                                                 ),
@@ -548,7 +567,7 @@ class _CalendarMonthGridState extends State<CalendarMonthGrid>
                                                   emojisOf: widget.emojisOf,
                                                   calendarScale: calendarScale,
                                                   labelScale: labelScale,
-                                                  showLunar: widget.showLunar,
+                                                  showLunar: _showLunar,
                                                   searchHitKey:
                                                       widget.searchHitKey,
                                                   showAccent: false,

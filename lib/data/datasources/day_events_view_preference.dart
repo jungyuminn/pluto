@@ -11,6 +11,9 @@ class DayEventsViewPreference {
     bool categoryView = false,
     bool showLedgerTitle = true,
     bool showLedgerAmount = false,
+    bool showLedgerKind = true,
+    bool showLedgerMonthStats = true,
+    bool ledgerKindColor = false,
   })  : _prefs = prefs,
         _sortByTime = prefs?.getBool(_sortKey) ?? sortByTime,
         _showTime = prefs?.getBool(_showTimeKey) ?? showTime,
@@ -18,13 +21,22 @@ class DayEventsViewPreference {
         _showLedgerTitle =
             prefs?.getBool(_ledgerTitleKey) ?? showLedgerTitle,
         _showLedgerAmount =
-            prefs?.getBool(_ledgerAmountKey) ?? showLedgerAmount;
+            prefs?.getBool(_ledgerAmountKey) ?? showLedgerAmount,
+        _showLedgerKind =
+            prefs?.getBool(_ledgerKindKey) ?? showLedgerKind,
+        _showLedgerMonthStats =
+            prefs?.getBool(_ledgerMonthStatsKey) ?? showLedgerMonthStats,
+        _ledgerKindColor =
+            prefs?.getBool(_ledgerKindColorKey) ?? ledgerKindColor;
 
   static const _sortKey = 'day_events_sort_by_time';
   static const _showTimeKey = 'day_events_show_time';
   static const _categoryViewKey = 'day_events_category_view';
   static const _ledgerTitleKey = 'calendar_show_ledger_title';
   static const _ledgerAmountKey = 'calendar_show_ledger_amount';
+  static const _ledgerKindKey = 'calendar_show_ledger_kind';
+  static const _ledgerMonthStatsKey = 'calendar_show_ledger_month_stats';
+  static const _ledgerKindColorKey = 'calendar_ledger_kind_color';
 
   final SharedPreferences? _prefs;
   bool _sortByTime;
@@ -32,6 +44,9 @@ class DayEventsViewPreference {
   bool _categoryView;
   bool _showLedgerTitle;
   bool _showLedgerAmount;
+  bool _showLedgerKind;
+  bool _showLedgerMonthStats;
+  bool _ledgerKindColor;
 
   bool get sortByTime => _prefs?.getBool(_sortKey) ?? _sortByTime;
   bool get showTime => _prefs?.getBool(_showTimeKey) ?? _showTime;
@@ -49,6 +64,15 @@ class DayEventsViewPreference {
     if (title && amount) return false;
     return amount;
   }
+
+  bool get showLedgerKind =>
+      _prefs?.getBool(_ledgerKindKey) ?? _showLedgerKind;
+
+  bool get showLedgerMonthStats =>
+      _prefs?.getBool(_ledgerMonthStatsKey) ?? _showLedgerMonthStats;
+
+  bool get ledgerKindColor =>
+      _prefs?.getBool(_ledgerKindColorKey) ?? _ledgerKindColor;
 
   Future<void> setSortByTime(bool value) async {
     _sortByTime = value;
@@ -85,6 +109,21 @@ class DayEventsViewPreference {
     }
   }
 
+  Future<void> setShowLedgerKind(bool value) async {
+    _showLedgerKind = value;
+    await _prefs?.setBool(_ledgerKindKey, value);
+  }
+
+  Future<void> setShowLedgerMonthStats(bool value) async {
+    _showLedgerMonthStats = value;
+    await _prefs?.setBool(_ledgerMonthStatsKey, value);
+  }
+
+  Future<void> setLedgerKindColor(bool value) async {
+    _ledgerKindColor = value;
+    await _prefs?.setBool(_ledgerKindColorKey, value);
+  }
+
   void hydrate() {
     final prefs = _prefs;
     if (prefs == null) return;
@@ -93,5 +132,9 @@ class DayEventsViewPreference {
     _categoryView = prefs.getBool(_categoryViewKey) ?? _categoryView;
     _showLedgerTitle = prefs.getBool(_ledgerTitleKey) ?? _showLedgerTitle;
     _showLedgerAmount = prefs.getBool(_ledgerAmountKey) ?? _showLedgerAmount;
+    _showLedgerKind = prefs.getBool(_ledgerKindKey) ?? _showLedgerKind;
+    _showLedgerMonthStats =
+        prefs.getBool(_ledgerMonthStatsKey) ?? _showLedgerMonthStats;
+    _ledgerKindColor = prefs.getBool(_ledgerKindColorKey) ?? _ledgerKindColor;
   }
 }

@@ -8,6 +8,7 @@ import 'package:home_widget/home_widget.dart';
 import 'package:job_planner/core/constants/app_fonts.dart';
 import 'package:job_planner/core/constants/app_icons.dart';
 import 'package:job_planner/core/constants/app_strings.dart';
+import 'package:job_planner/core/home_widget/compact_day_card.dart';
 import 'package:job_planner/core/home_widget/today_widget_card.dart';
 import 'package:job_planner/core/home_widget/week_timetable_card.dart';
 import 'package:job_planner/core/theme/app_colors.dart';
@@ -236,6 +237,30 @@ class HomeScreenWidgetService {
         allEvents: allEvents,
         applications: applications,
         showTime: dayEventsView.showTime,
+        isDark: theme.isDark,
+        skin: theme.skin,
+        pixelRatio: pixelRatio,
+      );
+      await _syncCompactDay(
+        today: true,
+        date: today,
+        events: calendarEventsOn(
+          date: today,
+          events: allEvents,
+          applications: applications,
+        ),
+        isDark: theme.isDark,
+        skin: theme.skin,
+        pixelRatio: pixelRatio,
+      );
+      await _syncCompactDay(
+        today: false,
+        date: tomorrow,
+        events: calendarEventsOn(
+          date: tomorrow,
+          events: allEvents,
+          applications: applications,
+        ),
         isDark: theme.isDark,
         skin: theme.skin,
         pixelRatio: pixelRatio,
@@ -522,6 +547,66 @@ class HomeScreenWidgetService {
       androidName: WeekTimetableCard.androidName,
       iOSName: WeekTimetableCard.iOSName,
       qualifiedAndroidName: WeekTimetableCard.qualifiedAndroidName,
+    );
+  }
+
+  Future<void> _syncCompactDay({
+    required bool today,
+    required DateTime date,
+    required List<CalendarEvent> events,
+    required bool isDark,
+    required AppSkin skin,
+    required double pixelRatio,
+  }) async {
+    final size = CompactDayCard.logicalSize;
+    final title =
+        today ? AppStrings.todayTitle : AppStrings.tomorrowTitle;
+    final empty = today
+        ? AppStrings.summaryNotificationEmpty
+        : AppStrings.tomorrowNotificationEmpty;
+    await HomeWidget.renderFlutterWidget(
+      _wrapTheme(
+        isDark: isDark,
+        size: size,
+        pixelRatio: pixelRatio,
+        child: SizedBox(
+          width: size.width,
+          height: size.height,
+          child: _skinCard(
+            skin: skin,
+            clip: !Platform.isIOS,
+            child: CompactDayCard(
+              title: title,
+              dateLabel: CompactDayCard.monthDayLabel(date),
+              events: events,
+              emptyText: empty,
+            ),
+          ),
+        ),
+      ),
+      key: today
+          ? CompactDayCard.imageKeyToday
+          : CompactDayCard.imageKeyTomorrow,
+      logicalSize: size,
+      pixelRatio: pixelRatio,
+    );
+    await HomeWidget.saveWidgetData<String>(
+      today ? CompactDayCard.emptyKeyToday : CompactDayCard.emptyKeyTomorrow,
+      empty,
+    );
+    await HomeWidget.updateWidget(
+      name: today
+          ? CompactDayCard.androidTodayName
+          : CompactDayCard.androidTomorrowName,
+      androidName: today
+          ? CompactDayCard.androidTodayName
+          : CompactDayCard.androidTomorrowName,
+      iOSName: today
+          ? CompactDayCard.iOSTodayName
+          : CompactDayCard.iOSTomorrowName,
+      qualifiedAndroidName: today
+          ? CompactDayCard.qualifiedTodayName
+          : CompactDayCard.qualifiedTomorrowName,
     );
   }
 

@@ -6,6 +6,7 @@ import 'package:job_planner/core/constants/app_strings.dart';
 import 'package:job_planner/core/theme/app_colors.dart';
 import 'package:job_planner/core/utils/press_bounce.dart';
 import 'package:job_planner/domain/entities/ledger_entry.dart';
+import 'package:job_planner/domain/entities/event_category.dart';
 import 'package:job_planner/domain/ledger_month_stats.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/calendar_filter_menu.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/category_picker_sheet.dart';
@@ -77,7 +78,7 @@ class CalendarMonthHeader extends StatelessWidget {
                   child: CalendarZoomTitle(
                     text: _title,
                     onPressed: onTitlePressed,
-                    fontSize: 36,
+                    fontSize: 32,
                   ),
                 ),
                 Flexible(
@@ -308,7 +309,11 @@ class _CalendarMonthMenuButtonState extends State<CalendarMonthMenuButton>
   Future<void> _openCategories() async {
     await _close();
     if (!mounted) return;
-    await showCategoryPickerSheet(context, selectable: false);
+    await showCategoryPickerSheet(
+      context,
+      selectable: false,
+      kind: widget.showLedger ? CategoryKind.ledger : CategoryKind.event,
+    );
     if (!mounted) return;
     widget.onCategoriesChanged?.call();
   }
@@ -330,6 +335,8 @@ class _CalendarMonthMenuButtonState extends State<CalendarMonthMenuButton>
         ledgerMode: ledger,
         showLedgerTitle: prefs.showLedgerTitle,
         showLedgerAmount: prefs.showLedgerAmount,
+        showLedgerKind: prefs.showLedgerKind,
+        showLedgerMonthStats: prefs.showLedgerMonthStats,
         onShowLedgerTitleChanged: (value) async {
           await prefs.setShowLedgerTitle(value);
           if (mounted) setState(() {});
@@ -337,6 +344,16 @@ class _CalendarMonthMenuButtonState extends State<CalendarMonthMenuButton>
         },
         onShowLedgerAmountChanged: (value) async {
           await prefs.setShowLedgerAmount(value);
+          if (mounted) setState(() {});
+          widget.onSortPrefsChanged?.call();
+        },
+        onShowLedgerKindChanged: (value) async {
+          await prefs.setShowLedgerKind(value);
+          if (mounted) setState(() {});
+          widget.onSortPrefsChanged?.call();
+        },
+        onShowLedgerMonthStatsChanged: (value) async {
+          await prefs.setShowLedgerMonthStats(value);
           if (mounted) setState(() {});
           widget.onSortPrefsChanged?.call();
         },
@@ -362,6 +379,13 @@ class _CalendarMonthMenuButtonState extends State<CalendarMonthMenuButton>
         categoryView: prefs.categoryView,
         onCategoryViewChanged: (value) async {
           await prefs.setCategoryView(value);
+          if (mounted) setState(() {});
+          widget.onSortPrefsChanged?.call();
+        },
+        showLedgerKindColorOption: ledger,
+        ledgerKindColor: prefs.ledgerKindColor,
+        onLedgerKindColorChanged: (value) async {
+          await prefs.setLedgerKindColor(value);
           if (mounted) setState(() {});
           widget.onSortPrefsChanged?.call();
         },

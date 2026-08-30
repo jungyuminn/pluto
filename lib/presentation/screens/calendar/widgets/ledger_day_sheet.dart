@@ -8,6 +8,7 @@ import 'package:job_planner/core/constants/app_strings.dart';
 import 'package:job_planner/core/theme/app_colors.dart';
 import 'package:job_planner/core/theme/app_skin_background.dart';
 import 'package:job_planner/core/utils/swipe_to_delete.dart';
+import 'package:job_planner/domain/entities/event_category.dart';
 import 'package:job_planner/domain/entities/ledger_entry.dart';
 import 'package:job_planner/domain/ledger_salary_repeat.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/add_event_button.dart';
@@ -44,16 +45,14 @@ Future<void> showLedgerDaySheet(
       if (source == null || source.isEmpty) {
         dialog = Opacity(
           opacity: fade,
-          child: Transform.scale(
-            scale: lerpDouble(0.92, 1, t)!,
-            child: child,
-          ),
+          child: Transform.scale(scale: lerpDouble(0.92, 1, t)!, child: child),
         );
       } else {
         final size = MediaQuery.sizeOf(context);
         const dialogWidth = 260.0;
-        final dialogHeight =
-            (size.height * 0.56).clamp(420.0, 530.0).toDouble();
+        final dialogHeight = (size.height * 0.56)
+            .clamp(420.0, 530.0)
+            .toDouble();
         final beginScale =
             ((source.width / dialogWidth + source.height / dialogHeight) / 2)
                 .clamp(0.12, 0.38);
@@ -102,11 +101,7 @@ Future<void> showLedgerDaySheet(
 }
 
 class LedgerDaySheet extends StatefulWidget {
-  const LedgerDaySheet({
-    super.key,
-    required this.date,
-    required this.initial,
-  });
+  const LedgerDaySheet({super.key, required this.date, required this.initial});
 
   final DateTime date;
   final List<LedgerEntry> initial;
@@ -115,13 +110,17 @@ class LedgerDaySheet extends StatefulWidget {
   State<LedgerDaySheet> createState() => _LedgerDaySheetState();
 }
 
-class _LedgerDaySheetState extends State<LedgerDaySheet> {
+class _LedgerDaySheetState extends State<LedgerDaySheet>
+    with SingleTickerProviderStateMixin {
   final _listController = ScrollController();
   final _listBoxKey = GlobalKey();
   final _dialogKey = GlobalKey();
   late List<LedgerEntry> _entries;
   var _items = <_ListEntry>[];
+  var _categories = <EventCategory>[];
   var _compact = false;
+  var _kindColorView = false;
+  var _showKind = true;
   var _initialized = false;
   String? _emoji;
   var _emojiPop = false;
@@ -129,6 +128,13 @@ class _LedgerDaySheetState extends State<LedgerDaySheet> {
   String? _draggingId;
   var _draggingOutside = false;
   final _reveals = <String, double>{};
+  late final AnimationController _statsAnimation;
+  late final CurvedAnimation _statsFade;
+  var _statsConsumption = 0;
+  var _statsExpense = 0;
+  var _statsSalary = 0;
+  var _statsNet = 0;
+  var _statsShowSalary = false;
 
   static const _eventExtent = 62.0;
   static const _headerExtent = 24.0;
@@ -140,6 +146,18 @@ class _LedgerDaySheetState extends State<LedgerDaySheet> {
     super.initState();
     _entries = [...widget.initial]..sort(LedgerEntry.compareDisplay);
     _items = _itemsForView;
+    if (_entries.isNotEmpty) _captureStats();
+    _statsAnimation = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 280),
+      reverseDuration: const Duration(milliseconds: 240),
+      value: _entries.isEmpty ? 0 : 1,
+    );
+    _statsFade = CurvedAnimation(
+      parent: _statsAnimation,
+      curve: Curves.easeOutCubic,
+      reverseCurve: Curves.easeInCubic,
+    );
   }
 
   @override
@@ -149,19 +167,64 @@ class _LedgerDaySheetState extends State<LedgerDaySheet> {
     _initialized = true;
     final scope = AppScope.of(context);
     _compact = scope.dayEventsViewPreference.categoryView;
+    _kindColorView = scope.dayEventsViewPreference.ledgerKindColor;
+    _showKind = scope.dayEventsViewPreference.showLedgerKind;
     final sticker = scope.dayEmojiStore.on(widget.date);
     _emoji = DayStickers.isAsset(sticker) ? sticker : null;
-    _entries.sort(
-      _compact ? LedgerEntry.compareByKind : LedgerEntry.compareDisplay,
-    );
+    _entries.sort(_compare);
     _items = _itemsForView;
+    _loadCategories();
   }
+
+  Future<void> _loadCategories() async {
+    final categories = await AppScope.of(
+      context,
+    ).fetchCategories(CategoryKind.ledger);
+    if (!mounted) return;
+    setState(() {
+      _categories = categories;
+      _entries.sort(_compare);
+      _items = _itemsForView;
+    });
+  }
+
+  Color _labelColor(LedgerEntry entry) {
+    return _kindColorView ? entry.color : entry.displayColor;
+  }
+
+  int _compare(LedgerEntry a, LedgerEntry b) {
+    if (!_compact) return LedgerEntry.compareDisplay(a, b);
+    return LedgerEntry.compareByCategory(a, b, _categoryOrder);
+  }
+
+  List<String> get _categoryOrder => [
+    for (final category in _categories) category.id,
+  ];
 
   @override
   void dispose() {
     CalendarDayDropTarget.clear();
+    _statsFade.dispose();
+    _statsAnimation.dispose();
     _listController.dispose();
     super.dispose();
+  }
+
+  void _captureStats() {
+    _statsConsumption = _consumption;
+    _statsExpense = _expense;
+    _statsSalary = _salaryTotal;
+    _statsNet = _net;
+    _statsShowSalary = _entries.any((e) => e.isWage);
+  }
+
+  void _syncStats() {
+    if (_entries.isNotEmpty) _captureStats();
+    if (_entries.isEmpty) {
+      _statsAnimation.reverse();
+    } else {
+      _statsAnimation.forward();
+    }
   }
 
   String get _title {
@@ -176,8 +239,11 @@ class _LedgerDaySheetState extends State<LedgerDaySheet> {
   int get _daysFromToday {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    final target =
-        DateTime(widget.date.year, widget.date.month, widget.date.day);
+    final target = DateTime(
+      widget.date.year,
+      widget.date.month,
+      widget.date.day,
+    );
     return target.difference(today).inDays;
   }
 
@@ -192,9 +258,8 @@ class _LedgerDaySheetState extends State<LedgerDaySheet> {
     return _daysFromToday < 0 ? colors.accent : colors.danger;
   }
 
-  int get _salaryTotal => _entries
-      .where((e) => e.kind == LedgerKind.salary)
-      .fold(0, (sum, e) => sum + e.amount);
+  int get _salaryTotal =>
+      _entries.where((e) => e.isWage).fold(0, (sum, e) => sum + e.amount);
 
   int get _consumption => _entries
       .where((e) => e.kind == LedgerKind.consumption)
@@ -211,31 +276,56 @@ class _LedgerDaySheetState extends State<LedgerDaySheet> {
       return [for (final entry in _entries) _ListEntry.entry(entry)];
     }
 
-    final groups = <LedgerKind, List<LedgerEntry>>{};
+    final groups = <String, List<LedgerEntry>>{};
     for (final entry in _entries) {
-      groups.putIfAbsent(entry.kind, () => []).add(entry);
+      groups.putIfAbsent(entry.categoryKey, () => []).add(entry);
     }
 
-    const order = [
-      LedgerKind.salary,
-      LedgerKind.consumption,
-      LedgerKind.expense,
-    ];
     final items = <_ListEntry>[];
+    final used = <String>{};
     var firstHeader = true;
-    for (final kind in order) {
-      final section = groups[kind];
-      if (section == null || section.isEmpty) continue;
+
+    void addSection({
+      required String key,
+      required String name,
+      required Color color,
+      required List<LedgerEntry> section,
+    }) {
       items.add(
         _ListEntry.header(
-          key: kind.name,
-          name: section.first.kindLabel,
-          color: section.first.color,
+          key: key,
+          name: name,
+          color: color,
           showTopGap: !firstHeader,
         ),
       );
       firstHeader = false;
       items.addAll([for (final entry in section) _ListEntry.entry(entry)]);
+    }
+
+    for (final category in _categories) {
+      final section = groups[category.id];
+      if (section == null || section.isEmpty) continue;
+      used.add(category.id);
+      addSection(
+        key: category.id,
+        name: category.name,
+        color: category.tint,
+        section: section,
+      );
+    }
+    for (final entry in _entries) {
+      final key = entry.categoryKey;
+      if (used.contains(key)) continue;
+      final section = groups[key];
+      if (section == null || section.isEmpty) continue;
+      used.add(key);
+      addSection(
+        key: key,
+        name: entry.displayCategoryName,
+        color: entry.displayColor,
+        section: section,
+      );
     }
     return items;
   }
@@ -252,6 +342,7 @@ class _LedgerDaySheetState extends State<LedgerDaySheet> {
       appearing.add(item.id);
     }
     setState(() => _items = next);
+    _syncStats();
     if (appearing.isEmpty || !animate) return;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
@@ -264,26 +355,26 @@ class _LedgerDaySheetState extends State<LedgerDaySheet> {
   }
 
   Future<void> _reload({bool animate = true}) async {
-    final all = await AppScope.of(context).getLedgers();
+    final scope = AppScope.of(context);
+    final all = await scope.getLedgers();
+    final categories = await scope.fetchCategories(CategoryKind.ledger);
     final day = DateTime(widget.date.year, widget.date.month, widget.date.day);
     if (!mounted) return;
+    _categories = categories;
     _entries = [
       for (final entry in all)
         if (LedgerSalaryRepeat.occursOn(entry, day))
           LedgerSalaryRepeat.onDay(entry, day),
-    ]..sort(
-        _compact ? LedgerEntry.compareByKind : LedgerEntry.compareDisplay,
-      );
+    ]..sort(_compare);
     _syncItems(_itemsForView, animate: animate);
   }
 
   Future<void> _pickEmoji() async {
     final picked = await showDayEmojiSheet(context, selected: _emoji);
     if (picked == null || !mounted) return;
-    await AppScope.of(context).dayEmojiStore.set(
-      widget.date,
-      picked.isEmpty ? null : picked,
-    );
+    await AppScope.of(
+      context,
+    ).dayEmojiStore.set(widget.date, picked.isEmpty ? null : picked);
     if (!mounted) return;
     setState(() {
       final next = AppScope.of(context).dayEmojiStore.on(widget.date);
@@ -321,7 +412,9 @@ class _LedgerDaySheetState extends State<LedgerDaySheet> {
   Future<bool> _confirmDelete(LedgerEntry entry) async {
     final confirmed = await showDeleteEventDialog(
       context,
-      title: entry.title.trim().isEmpty ? entry.kindLabel : entry.title,
+      title: entry.title.trim().isEmpty
+          ? entry.displayCategoryName
+          : entry.title,
       body: LedgerSalaryRepeat.isRepeating(entry)
           ? AppStrings.deleteLedgerRepeatBody
           : AppStrings.deleteLedgerBody,
@@ -336,7 +429,7 @@ class _LedgerDaySheetState extends State<LedgerDaySheet> {
     final entry = item.entry;
     if (entry == null) return false;
     if (!_compact) return true;
-    return entry.kind == dragged.kind;
+    return entry.categoryKey == dragged.categoryKey;
   }
 
   double _extent(_ListEntry item) {
@@ -403,7 +496,7 @@ class _LedgerDaySheetState extends State<LedgerDaySheet> {
         CalendarDayDropTarget.clear();
         return;
       }
-      if (dragged.kind == LedgerKind.salary) {
+      if (LedgerSalaryRepeat.isRepeating(dragged)) {
         CalendarDayDropTarget.clear();
         return;
       }
@@ -428,8 +521,9 @@ class _LedgerDaySheetState extends State<LedgerDaySheet> {
     final entry = _draggedEntry;
     final dropDate = CalendarDayDropTarget.highlighted.value;
     final shouldSaveOrder = _draggingId != null;
-    final moving = entry != null &&
-        entry.kind != LedgerKind.salary &&
+    final moving =
+        entry != null &&
+        !LedgerSalaryRepeat.isRepeating(entry) &&
         dropDate != null &&
         !CalendarDayDropTarget.isSameDay(dropDate, widget.date);
     CalendarDayDropTarget.clear();
@@ -458,9 +552,7 @@ class _LedgerDaySheetState extends State<LedgerDaySheet> {
     }
     if (!mounted) return;
     await AppScope.of(context).saveLedger(
-      original.copyWith(
-        date: DateTime(date.year, date.month, date.day),
-      ),
+      original.copyWith(date: DateTime(date.year, date.month, date.day)),
     );
   }
 
@@ -499,7 +591,7 @@ class _LedgerDaySheetState extends State<LedgerDaySheet> {
   void _moveInGroup(LedgerEntry dragged, int to) {
     final group = [
       for (final entry in _entries)
-        if (!_compact || entry.kind == dragged.kind) entry,
+        if (!_compact || entry.categoryKey == dragged.categoryKey) entry,
     ];
     final from = group.indexWhere((entry) => entry.id == dragged.id);
     if (from < 0 || to < 0 || from == to) return;
@@ -541,8 +633,9 @@ class _LedgerDaySheetState extends State<LedgerDaySheet> {
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
-    final height =
-        (MediaQuery.sizeOf(context).height * 0.56).clamp(420.0, 530.0).toDouble();
+    final height = (MediaQuery.sizeOf(context).height * 0.56)
+        .clamp(420.0, 530.0)
+        .toDouble();
 
     return MediaQuery.removeViewInsets(
       context: context,
@@ -637,27 +730,25 @@ class _LedgerDaySheetState extends State<LedgerDaySheet> {
                         const SizedBox(height: 15),
                         Expanded(child: _buildList()),
                         ClipRect(
-                          child: AnimatedSize(
-                            duration: const Duration(milliseconds: 280),
-                            curve: Curves.easeOutCubic,
-                            alignment: Alignment.topCenter,
-                            child: _entries.isEmpty
-                                ? const SizedBox(width: double.infinity)
-                                : Padding(
-                                    padding: const EdgeInsets.only(
-                                      top: 10,
-                                      right: 8,
-                                    ),
-                                    child: LedgerKindStats(
-                                      consumption: _consumption,
-                                      expense: _expense,
-                                      salary: _salaryTotal,
-                                      net: _net,
-                                      showSalary: _entries.any(
-                                        (e) => e.kind == LedgerKind.salary,
-                                      ),
-                                    ),
-                                  ),
+                          child: SizeTransition(
+                            sizeFactor: _statsFade,
+                            axisAlignment: -1,
+                            child: FadeTransition(
+                              opacity: _statsFade,
+                              child: Padding(
+                                padding: const EdgeInsets.only(
+                                  top: 10,
+                                  right: 8,
+                                ),
+                                child: LedgerKindStats(
+                                  consumption: _statsConsumption,
+                                  expense: _statsExpense,
+                                  salary: _statsSalary,
+                                  net: _statsNet,
+                                  showSalary: _statsShowSalary,
+                                ),
+                              ),
+                            ),
                           ),
                         ),
                         const SizedBox(height: 12),
@@ -767,16 +858,19 @@ class _LedgerDaySheetState extends State<LedgerDaySheet> {
     }
 
     final entry = item.entry!;
-    final title =
-        entry.title.trim().isEmpty ? entry.kindLabel : entry.title.trim();
+    final title = entry.title.trim().isEmpty
+        ? entry.displayCategoryName
+        : entry.title.trim();
+    final subtitle = entry.listSubtitle(showKind: _showKind);
     final label = DayEventLabel(
       title: title,
-      categoryName: entry.kindLabel,
-      color: entry.color,
-      showCategory: entry.title.trim().isNotEmpty,
+      categoryName: subtitle,
+      color: _labelColor(entry),
+      showCategory: subtitle.isNotEmpty,
       memo: entry.memo,
       trailingText: '${entry.signedLabel}원',
       isRepeat: LedgerSalaryRepeat.isRepeating(entry),
+      showAccent: false,
       onPressed: () => _open(entry),
     );
     final body = Padding(
@@ -817,12 +911,13 @@ class _LedgerDaySheetState extends State<LedgerDaySheet> {
                   ),
                   child: DayEventLabel(
                     title: title,
-                    categoryName: entry.kindLabel,
-                    color: entry.color,
-                    showCategory: entry.title.trim().isNotEmpty,
+                    categoryName: subtitle,
+                    color: _labelColor(entry),
+                    showCategory: subtitle.isNotEmpty,
                     memo: entry.memo,
                     trailingText: '${entry.signedLabel}원',
                     isRepeat: LedgerSalaryRepeat.isRepeating(entry),
+                    showAccent: false,
                   ),
                 ),
               ),
@@ -847,20 +942,20 @@ class _LedgerDaySheetState extends State<LedgerDaySheet> {
 
 class _ListEntry {
   const _ListEntry.entry(this.entry)
-      : headerKey = null,
-        headerName = null,
-        headerColor = null,
-        showTopGap = false;
+    : headerKey = null,
+      headerName = null,
+      headerColor = null,
+      showTopGap = false;
 
   const _ListEntry.header({
     required String key,
     required String name,
     required Color color,
     this.showTopGap = false,
-  })  : entry = null,
-        headerKey = key,
-        headerName = name,
-        headerColor = color;
+  }) : entry = null,
+       headerKey = key,
+       headerName = name,
+       headerColor = color;
 
   final LedgerEntry? entry;
   final String? headerKey;
@@ -872,4 +967,3 @@ class _ListEntry {
 
   String get id => entry != null ? 'e:${entry!.id}' : 'h:$headerKey';
 }
-

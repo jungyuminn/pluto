@@ -47,13 +47,10 @@ class CalendarOverflowMenu extends StatelessWidget {
             onPressed: onSortMode,
           ),
         ),
-        _MenuReveal(
-          visible: !showLedger,
-          child: _MenuItem(
-            label: AppStrings.categoryEditTitle,
-            trailingAsset: AppIcons.editOutlined,
-            onPressed: onEditCategories,
-          ),
+        _MenuItem(
+          label: AppStrings.categoryEditTitle,
+          trailingAsset: AppIcons.editOutlined,
+          onPressed: onEditCategories,
         ),
         _FilterItem(
           label: AppStrings.calendarDiaryMode,
@@ -80,8 +77,12 @@ class CalendarFilterMenu extends StatelessWidget {
     this.ledgerMode = false,
     this.showLedgerTitle = true,
     this.showLedgerAmount = false,
+    this.showLedgerKind = true,
+    this.showLedgerMonthStats = true,
     this.onShowLedgerTitleChanged,
     this.onShowLedgerAmountChanged,
+    this.onShowLedgerKindChanged,
+    this.onShowLedgerMonthStatsChanged,
     this.onBack,
   });
 
@@ -92,8 +93,12 @@ class CalendarFilterMenu extends StatelessWidget {
   final bool ledgerMode;
   final bool showLedgerTitle;
   final bool showLedgerAmount;
+  final bool showLedgerKind;
+  final bool showLedgerMonthStats;
   final ValueChanged<bool>? onShowLedgerTitleChanged;
   final ValueChanged<bool>? onShowLedgerAmountChanged;
+  final ValueChanged<bool>? onShowLedgerKindChanged;
+  final ValueChanged<bool>? onShowLedgerMonthStatsChanged;
   final VoidCallback? onBack;
 
   @override
@@ -130,6 +135,16 @@ class CalendarFilterMenu extends StatelessWidget {
                         checked: showLedgerAmount,
                         onChanged: onShowLedgerAmountChanged ?? (_) {},
                       ),
+                      _FilterItem(
+                        label: AppStrings.calendarShowLedgerKind,
+                        checked: showLedgerKind,
+                        onChanged: onShowLedgerKindChanged ?? (_) {},
+                      ),
+                      _FilterItem(
+                        label: AppStrings.calendarShowLedgerMonthStats,
+                        checked: showLedgerMonthStats,
+                        onChanged: onShowLedgerMonthStatsChanged ?? (_) {},
+                      ),
                     ]
                   : [
                       _FilterItem(
@@ -163,6 +178,9 @@ class CalendarSortMenu extends StatelessWidget {
     this.categoryView = false,
     this.onCategoryViewChanged,
     this.showCategoryOption = false,
+    this.ledgerKindColor = false,
+    this.onLedgerKindColorChanged,
+    this.showLedgerKindColorOption = false,
     this.onBack,
   });
 
@@ -175,6 +193,9 @@ class CalendarSortMenu extends StatelessWidget {
   final bool categoryView;
   final ValueChanged<bool>? onCategoryViewChanged;
   final bool showCategoryOption;
+  final bool ledgerKindColor;
+  final ValueChanged<bool>? onLedgerKindColorChanged;
+  final bool showLedgerKindColorOption;
   final VoidCallback? onBack;
 
   @override
@@ -209,6 +230,15 @@ class CalendarSortMenu extends StatelessWidget {
             label: AppStrings.categoryView,
             checked: categoryView,
             onChanged: onCategoryViewChanged ?? (_) {},
+          ),
+        ),
+        _MenuReveal(
+          visible: showLedgerKindColorOption &&
+              onLedgerKindColorChanged != null,
+          child: _FilterItem(
+            label: AppStrings.ledgerKindColorView,
+            checked: ledgerKindColor,
+            onChanged: onLedgerKindColorChanged ?? (_) {},
           ),
         ),
       ],

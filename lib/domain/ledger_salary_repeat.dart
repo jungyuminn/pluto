@@ -8,7 +8,7 @@ class LedgerSalaryRepeat {
   static const monthlyCount = 12;
 
   static bool isRepeating(LedgerEntry entry) {
-    if (entry.kind != LedgerKind.salary) return false;
+    if (!_hasPayCycle(entry)) return false;
     final cycle = entry.salary?.cycle.selectableCycle;
     return cycle == SalaryPayCycle.weekly || cycle == SalaryPayCycle.monthly;
   }
@@ -16,7 +16,7 @@ class LedgerSalaryRepeat {
   static bool occursOn(LedgerEntry entry, DateTime date) {
     final day = DateTime(date.year, date.month, date.day);
     final start = entry.day;
-    if (entry.kind != LedgerKind.salary || entry.salary == null) {
+    if (!_hasPayCycle(entry)) {
       return day == start;
     }
     if (day.isBefore(start)) return false;
@@ -31,8 +31,7 @@ class LedgerSalaryRepeat {
         return day.difference(start).inDays % 7 == 0 && weeks < weeklyCount;
       case SalaryPayCycle.monthly:
       case SalaryPayCycle.twiceMonthly:
-        final months =
-            (day.year - start.year) * 12 + (day.month - start.month);
+        final months = (day.year - start.year) * 12 + (day.month - start.month);
         if (months < 0 || months >= monthlyCount) return false;
         return _occurrence(entry.salary!, start, months) == day;
     }
@@ -86,5 +85,9 @@ class LedgerSalaryRepeat {
     }
     final day = start.day > last ? last : start.day;
     return DateTime(first.year, first.month, day);
+  }
+
+  static bool _hasPayCycle(LedgerEntry entry) {
+    return entry.isWage && entry.salary != null;
   }
 }

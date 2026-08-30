@@ -91,6 +91,11 @@ class JobPlannerApp extends StatelessWidget {
     this.updateCompanyCategory,
     this.deleteCompanyCategory,
     this.reorderCompanyCategories,
+    this.getLedgerCategories,
+    this.addLedgerCategory,
+    this.updateLedgerCategory,
+    this.deleteLedgerCategory,
+    this.reorderLedgerCategories,
     this.jobViewPreference,
     this.homeViewPreference,
     this.longGoalStore,
@@ -129,6 +134,11 @@ class JobPlannerApp extends StatelessWidget {
   final UpdateEventCategory? updateCompanyCategory;
   final DeleteEventCategory? deleteCompanyCategory;
   final ReorderEventCategories? reorderCompanyCategories;
+  final GetEventCategories? getLedgerCategories;
+  final AddEventCategory? addLedgerCategory;
+  final UpdateEventCategory? updateLedgerCategory;
+  final DeleteEventCategory? deleteLedgerCategory;
+  final ReorderEventCategories? reorderLedgerCategories;
   final JobViewPreference? jobViewPreference;
   final HomeViewPreference? homeViewPreference;
   final LongGoalLocalDataSource? longGoalStore;
@@ -160,6 +170,8 @@ class JobPlannerApp extends StatelessWidget {
     final categoryRepository = EventCategoryMemoryRepository();
     final companyCategoryRepository =
         EventCategoryMemoryRepository(EventCategory.companyPresets);
+    final ledgerCategoryRepository =
+        EventCategoryMemoryRepository(EventCategory.ledgerPresets);
     return AppScope(
       getJobApplications: getApplications,
       addJobApplication: addApplication,
@@ -203,6 +215,16 @@ class JobPlannerApp extends StatelessWidget {
           DeleteEventCategory(companyCategoryRepository),
       reorderCompanyCategories: reorderCompanyCategories ??
           ReorderEventCategories(companyCategoryRepository),
+      getLedgerCategories: getLedgerCategories ??
+          GetEventCategories(ledgerCategoryRepository),
+      addLedgerCategory:
+          addLedgerCategory ?? AddEventCategory(ledgerCategoryRepository),
+      updateLedgerCategory: updateLedgerCategory ??
+          UpdateEventCategory(ledgerCategoryRepository),
+      deleteLedgerCategory: deleteLedgerCategory ??
+          DeleteEventCategory(ledgerCategoryRepository),
+      reorderLedgerCategories: reorderLedgerCategories ??
+          ReorderEventCategories(ledgerCategoryRepository),
       jobViewPreference: jobViewPreference ?? JobViewPreference(),
       homeViewPreference: homeViewPreference ?? HomeViewPreference(),
       longGoalStore: longGoalStore ?? LongGoalLocalDataSource(),
@@ -256,6 +278,11 @@ class _AppBootstrapState extends State<_AppBootstrap> {
   UpdateEventCategory? _updateCompanyCategory;
   DeleteEventCategory? _deleteCompanyCategory;
   ReorderEventCategories? _reorderCompanyCategories;
+  GetEventCategories? _getLedgerCategories;
+  AddEventCategory? _addLedgerCategory;
+  UpdateEventCategory? _updateLedgerCategory;
+  DeleteEventCategory? _deleteLedgerCategory;
+  ReorderEventCategories? _reorderLedgerCategories;
   JobViewPreference? _jobViewPreference;
   HomeViewPreference? _homeViewPreference;
   LongGoalLocalDataSource? _longGoalStore;
@@ -297,6 +324,12 @@ class _AppBootstrapState extends State<_AppBootstrap> {
       presets: EventCategory.companyPresets,
       syncHomeWidget: false,
     );
+    final ledgerCategoryDataSource = EventCategoryLocalDataSource(
+      prefs,
+      key: EventCategoryLocalDataSource.ledgerKey,
+      presets: EventCategory.ledgerPresets,
+      syncHomeWidget: false,
+    );
     final homeViewPreference = HomeViewPreference(prefs: prefs);
     final longGoalStore = LongGoalLocalDataSource(prefs: prefs);
     final dayEmojiStore = DayEmojiStore(prefs: prefs);
@@ -321,6 +354,8 @@ class _AppBootstrapState extends State<_AppBootstrap> {
     final categoryRepository = EventCategoryRepositoryImpl(categoryDataSource);
     final companyCategoryRepository =
         EventCategoryRepositoryImpl(companyCategoryDataSource);
+    final ledgerCategoryRepository =
+        EventCategoryRepositoryImpl(ledgerCategoryDataSource);
     if (!mounted) return;
     setState(() {
       _getJobApplications = GetJobApplications(jobRepository);
@@ -350,6 +385,12 @@ class _AppBootstrapState extends State<_AppBootstrap> {
       _deleteCompanyCategory = DeleteEventCategory(companyCategoryRepository);
       _reorderCompanyCategories =
           ReorderEventCategories(companyCategoryRepository);
+      _getLedgerCategories = GetEventCategories(ledgerCategoryRepository);
+      _addLedgerCategory = AddEventCategory(ledgerCategoryRepository);
+      _updateLedgerCategory = UpdateEventCategory(ledgerCategoryRepository);
+      _deleteLedgerCategory = DeleteEventCategory(ledgerCategoryRepository);
+      _reorderLedgerCategories =
+          ReorderEventCategories(ledgerCategoryRepository);
       _jobViewPreference = JobViewPreference(prefs: prefs);
       _homeViewPreference = homeViewPreference;
       _longGoalStore = longGoalStore;
@@ -414,6 +455,11 @@ class _AppBootstrapState extends State<_AppBootstrap> {
     final updateCompanyCategory = _updateCompanyCategory;
     final deleteCompanyCategory = _deleteCompanyCategory;
     final reorderCompanyCategories = _reorderCompanyCategories;
+    final getLedgerCategories = _getLedgerCategories;
+    final addLedgerCategory = _addLedgerCategory;
+    final updateLedgerCategory = _updateLedgerCategory;
+    final deleteLedgerCategory = _deleteLedgerCategory;
+    final reorderLedgerCategories = _reorderLedgerCategories;
     final jobViewPreference = _jobViewPreference;
     final homeViewPreference = _homeViewPreference;
     final longGoalStore = _longGoalStore;
@@ -451,6 +497,11 @@ class _AppBootstrapState extends State<_AppBootstrap> {
         updateCompanyCategory == null ||
         deleteCompanyCategory == null ||
         reorderCompanyCategories == null ||
+        getLedgerCategories == null ||
+        addLedgerCategory == null ||
+        updateLedgerCategory == null ||
+        deleteLedgerCategory == null ||
+        reorderLedgerCategories == null ||
         jobViewPreference == null ||
         homeViewPreference == null ||
         longGoalStore == null ||
@@ -501,6 +552,11 @@ class _AppBootstrapState extends State<_AppBootstrap> {
       updateCompanyCategory: updateCompanyCategory,
       deleteCompanyCategory: deleteCompanyCategory,
       reorderCompanyCategories: reorderCompanyCategories,
+      getLedgerCategories: getLedgerCategories,
+      addLedgerCategory: addLedgerCategory,
+      updateLedgerCategory: updateLedgerCategory,
+      deleteLedgerCategory: deleteLedgerCategory,
+      reorderLedgerCategories: reorderLedgerCategories,
       jobViewPreference: jobViewPreference,
       homeViewPreference: homeViewPreference,
       longGoalStore: longGoalStore,

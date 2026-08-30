@@ -7,8 +7,8 @@ class EventActionIcon extends StatelessWidget {
   const EventActionIcon({
     super.key,
     required this.onPressed,
-    required this.child,
     required this.color,
+    this.child,
     this.label,
     this.text,
     this.selected = false,
@@ -16,7 +16,7 @@ class EventActionIcon extends StatelessWidget {
   });
 
   final VoidCallback onPressed;
-  final Widget child;
+  final Widget? child;
   final Color color;
   final String? label;
   final String? text;
@@ -28,6 +28,7 @@ class EventActionIcon extends StatelessWidget {
     final colors = AppColors.of(context);
     final caption = text?.trim() ?? '';
     final hasText = caption.isNotEmpty;
+    final hasIcon = child != null;
     return Semantics(
       button: true,
       label: label ?? caption,
@@ -37,23 +38,24 @@ class EventActionIcon extends StatelessWidget {
         pressedColor: selected || hasText ? colors.pressed : Colors.transparent,
         borderRadius: BorderRadius.circular(999),
         child: Padding(
-          padding: EdgeInsets.fromLTRB(8, 5, hasText ? 10 : 8, 5),
+          padding: EdgeInsets.fromLTRB(hasIcon ? 8 : 10, 5, 10, 5),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              ColorFiltered(
-                colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
-                child: SizedBox(
-                  width: size,
-                  height: size,
-                  child: FittedBox(
-                    fit: BoxFit.contain,
-                    child: child,
+              if (hasIcon)
+                ColorFiltered(
+                  colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
+                  child: SizedBox(
+                    width: size,
+                    height: size,
+                    child: FittedBox(
+                      fit: BoxFit.contain,
+                      child: child,
+                    ),
                   ),
                 ),
-              ),
-              if (hasText) ...[
-                const SizedBox(width: 6),
+              if (hasIcon && hasText) const SizedBox(width: 6),
+              if (hasText)
                 Text(
                   caption,
                   style: TextStyle(
@@ -63,7 +65,6 @@ class EventActionIcon extends StatelessWidget {
                     color: color,
                   ),
                 ),
-              ],
             ],
           ),
         ),

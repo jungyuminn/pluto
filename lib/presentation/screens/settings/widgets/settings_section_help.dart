@@ -239,6 +239,10 @@ class _HomeLayoutPreview extends StatelessWidget {
           child: _HomeCardToggleDemo(),
         ),
         _PreviewFrame(
+          caption: AppStrings.homeShowLeftover,
+          child: _FakeLeftoverPeek(),
+        ),
+        _PreviewFrame(
           caption: AppStrings.homeReorderCards,
           child: _HomeReorderDemo(),
         ),
@@ -262,12 +266,30 @@ class _CalendarPreview extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const weekStart = _CalendarSwitchDemo();
-    if (!showFontSizeSettings) return weekStart;
+    const lunar = _LunarSwitchDemo();
+    if (!showFontSizeSettings) {
+      return const _CyclingPreview(
+        frames: [
+          _PreviewFrame(
+            caption: AppStrings.calendarStartMonday,
+            child: weekStart,
+          ),
+          _PreviewFrame(
+            caption: AppStrings.calendarShowLunar,
+            child: lunar,
+          ),
+        ],
+      );
+    }
     return const _CyclingPreview(
       frames: [
         _PreviewFrame(
           caption: AppStrings.calendarStartMonday,
           child: weekStart,
+        ),
+        _PreviewFrame(
+          caption: AppStrings.calendarShowLunar,
+          child: lunar,
         ),
         _PreviewFrame(
           caption: '${AppStrings.fontTodoSize} ${AppStrings.fontSizeLarge}',
@@ -387,7 +409,7 @@ class _TodoPreview extends StatelessWidget {
 class _NotificationPreview extends StatelessWidget {
   const _NotificationPreview();
 
-  static const _cards = [
+  static final _cards = [
     _FakeNotificationCard(title: '코딩테스트 준비', body: '10분 후 시작해요', time: '지금'),
     _FakeNotificationCard(
       title: '오늘의 일정 3개',
@@ -395,7 +417,7 @@ class _NotificationPreview extends StatelessWidget {
       time: '오전 8:00',
     ),
     _FakeNotificationCard(
-      title: '미완료 할 일 2개',
+      title: AppStrings.leftoverNotificationTitle(2),
       body: '자기소개서 제출, 면접 연습',
       time: '오후 9:00',
     ),
@@ -428,7 +450,7 @@ class _NotificationPreview extends StatelessWidget {
 class _BackupPreview extends StatelessWidget {
   const _BackupPreview();
 
-  static const _scenes = [
+  static final _scenes = [
     _FakeBackupScene(
       icon: Icons.ios_share_rounded,
       title: AppStrings.backupSavedTitle,
@@ -442,7 +464,7 @@ class _BackupPreview extends StatelessWidget {
     _FakeBackupScene(
       icon: Icons.sync_rounded,
       title: AppStrings.autoBackupDaily,
-      body: '앱을 켜면 매일 자동으로 저장해요',
+      body: AppStrings.autoBackupHint(AppStrings.autoBackupDaily),
     ),
   ];
 
@@ -487,7 +509,7 @@ class _CalendarSyncPreview extends StatelessWidget {
             child: _FakeBackupScene(
               icon: Icons.event_available_rounded,
               title: AppStrings.importDoneTitle,
-              body: '할 일 3개를 캘린더에 넣었어요',
+              body: AppStrings.importDoneBody(3),
             ),
           ),
         );
@@ -584,7 +606,7 @@ class _AppPreview extends StatelessWidget {
             switchKey: selected,
             child: selected == 0
                 ? const _FakeTutorialPeek()
-                : const _FakeReleaseNotesCard(),
+                : const _ReleaseNotesHelpDemo(),
           ),
         );
       },
@@ -691,6 +713,151 @@ class _FakeTutorialPeek extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _ReleaseNotesHelpDemo extends StatefulWidget {
+  const _ReleaseNotesHelpDemo();
+
+  @override
+  State<_ReleaseNotesHelpDemo> createState() => _ReleaseNotesHelpDemoState();
+}
+
+class _ReleaseNotesHelpDemoState extends State<_ReleaseNotesHelpDemo>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _loop;
+
+  @override
+  void initState() {
+    super.initState();
+    _loop = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 4800),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _loop.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    final font = AppFonts.of(context);
+    final note = ReleaseNotes.all.first;
+    return AnimatedBuilder(
+      animation: _loop,
+      builder: (context, child) {
+        final t = _loop.value;
+        final tap = _helpPulse(t, 0.18, 0.28, 0.42);
+        final sheet = Curves.easeOutCubic.transform(_helpGate(t, 0.30, 0.48));
+        return Stack(
+          children: [
+            const Align(
+              alignment: Alignment.topCenter,
+              child: _FakeReleaseNotesCard(),
+            ),
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: Transform.translate(
+                offset: Offset(0, (1 - sheet) * 80),
+                child: Opacity(
+                  opacity: sheet,
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: colors.card,
+                      borderRadius: const BorderRadius.vertical(
+                        top: Radius.circular(18),
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: colors.shadow,
+                          blurRadius: 12,
+                          offset: const Offset(0, -2),
+                        ),
+                      ],
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(14, 8, 14, 12),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Center(
+                            child: Container(
+                              width: 28,
+                              height: 3,
+                              decoration: BoxDecoration(
+                                color: colors.border,
+                                borderRadius: BorderRadius.circular(2),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            AppStrings.releaseNotesPreview,
+                            style: TextStyle(
+                              fontFamily: font,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: colors.muted,
+                            ),
+                          ),
+                          Text(
+                            note.version,
+                            style: TextStyle(
+                              fontFamily: font,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w800,
+                              color: colors.text,
+                            ),
+                          ),
+                          if (note.items.isNotEmpty) ...[
+                            const SizedBox(height: 6),
+                            DecoratedBox(
+                              decoration: BoxDecoration(
+                                color: colors.tint(colors.accentBright, 0.18),
+                                borderRadius: BorderRadius.circular(999),
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
+                                child: Text(
+                                  note.items.first,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontFamily: font,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w700,
+                                    height: 1.3,
+                                    color: colors.accentBright,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            if (tap > 0)
+              Positioned(
+                left: 36,
+                top: 28,
+                child: _HelpFinger(pressed: tap, opacity: tap),
+              ),
+          ],
+        );
+      },
     );
   }
 }
@@ -2417,6 +2584,162 @@ class _CalendarSwitchDemoState extends State<_CalendarSwitchDemo>
   }
 }
 
+class _LunarSwitchDemo extends StatefulWidget {
+  const _LunarSwitchDemo();
+
+  @override
+  State<_LunarSwitchDemo> createState() => _LunarSwitchDemoState();
+}
+
+class _LunarSwitchDemoState extends State<_LunarSwitchDemo>
+    with SingleTickerProviderStateMixin {
+  static const _sceneHeight = 148.0;
+  static const _rowHeight = 48.0;
+
+  late final AnimationController _loop;
+
+  @override
+  void initState() {
+    super.initState();
+    _loop = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 4800),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _loop.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    final font = AppFonts.of(context);
+    return AnimatedBuilder(
+      animation: _loop,
+      builder: (context, child) {
+        final t = _loop.value;
+        final on = t < 0.22
+            ? 0.0
+            : t < 0.34
+            ? Curves.easeOutCubic.transform(_helpGate(t, 0.22, 0.34))
+            : t < 0.68
+            ? 1.0
+            : t < 0.80
+            ? 1 - Curves.easeOutCubic.transform(_helpGate(t, 0.68, 0.80))
+            : 0.0;
+        final finger = () {
+          if (t < 0.10) return 0.0;
+          if (t < 0.18) return _helpGate(t, 0.10, 0.18);
+          if (t < 0.40) return 1.0;
+          if (t < 0.48) return 1 - _helpGate(t, 0.40, 0.48);
+          if (t < 0.56) return 0.0;
+          if (t < 0.64) return _helpGate(t, 0.56, 0.64);
+          if (t < 0.86) return 1.0;
+          if (t < 0.94) return 1 - _helpGate(t, 0.86, 0.94);
+          return 0.0;
+        }();
+        final a = _helpPulse(t, 0.18, 0.26, 0.36);
+        final b = _helpPulse(t, 0.64, 0.72, 0.82);
+        final press = a > b ? a : b;
+        final showLunar = on > 0.5;
+        return IgnorePointer(
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: colors.border),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(17),
+              child: SizedBox(
+                height: _sceneHeight + _rowHeight,
+                width: double.infinity,
+                child: Stack(
+                  children: [
+                    Column(
+                      children: [
+                        SizedBox(
+                          height: _sceneHeight,
+                          width: double.infinity,
+                          child: ColoredBox(
+                            color: colors.groupedBackground,
+                            child: Center(
+                              child: DecoratedBox(
+                                decoration: BoxDecoration(
+                                  color: colors.card,
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(
+                                    color: colors.border.withValues(alpha: 0.7),
+                                  ),
+                                ),
+                                child: SizedBox(
+                                  width: 64,
+                                  height: 72,
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        '15',
+                                        style: TextStyle(
+                                          fontFamily: font,
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.w800,
+                                          height: 1,
+                                          color: colors.text,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      AnimatedOpacity(
+                                        duration: const Duration(
+                                          milliseconds: 220,
+                                        ),
+                                        opacity: showLunar ? 1 : 0,
+                                        child: Text(
+                                          '6.22',
+                                          style: TextStyle(
+                                            fontFamily: font,
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.w700,
+                                            color: colors.muted,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        ColoredBox(
+                          color: colors.card,
+                          child: _HelpSwitchRow(
+                            label: AppStrings.calendarShowLunar,
+                            on: on,
+                            height: _rowHeight,
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (finger > 0)
+                      Positioned(
+                        right: 26,
+                        top: _sceneHeight + (_rowHeight - 28) / 2,
+                        child: _HelpFinger(pressed: press, opacity: finger),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
 class _StatsToggleDemo extends StatefulWidget {
   const _StatsToggleDemo();
 
@@ -3189,6 +3512,7 @@ class _FakeLeftoverPeek extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
+    final font = AppFonts.of(context);
     return DecoratedBox(
       decoration: BoxDecoration(
         color: colors.card,
@@ -3207,10 +3531,30 @@ class _FakeLeftoverPeek extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Text.rich(
+              TextSpan(
+                style: TextStyle(
+                  fontFamily: font,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  height: 1.25,
+                  color: colors.text,
+                ),
+                children: [
+                  const TextSpan(text: '${AppStrings.leftoverHeadline}\n'),
+                  TextSpan(
+                    text: AppStrings.leftoverCount(2),
+                    style: TextStyle(color: colors.accent),
+                  ),
+                  const TextSpan(text: ' ${AppStrings.leftoverTail}'),
+                ],
+              ),
+            ),
+            const SizedBox(height: 10),
             Text(
               'D + 2',
               style: TextStyle(
-                fontFamily: AppFonts.of(context),
+                fontFamily: font,
                 fontSize: 16,
                 fontWeight: FontWeight.w800,
                 height: 1.1,
@@ -3221,7 +3565,7 @@ class _FakeLeftoverPeek extends StatelessWidget {
             Text(
               '8. 17. (월)',
               style: TextStyle(
-                fontFamily: AppFonts.of(context),
+                fontFamily: font,
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
                 color: colors.muted,

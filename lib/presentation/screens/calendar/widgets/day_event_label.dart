@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:job_planner/core/constants/app_fonts.dart';
 import 'package:job_planner/core/constants/app_icons.dart';
 import 'package:job_planner/core/theme/app_colors.dart';
+import 'package:job_planner/core/utils/animated_accent.dart';
 import 'package:job_planner/core/utils/press_bounce.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/event_complete_button.dart';
 
@@ -24,6 +25,7 @@ class DayEventLabel extends StatefulWidget {
     this.trailingText,
     this.titleWeight = FontWeight.w600,
     this.disabled = false,
+    this.showAccent = true,
   });
 
   final String title;
@@ -42,6 +44,7 @@ class DayEventLabel extends StatefulWidget {
   final String? trailingText;
   final FontWeight titleWeight;
   final bool disabled;
+  final bool showAccent;
 
   @override
   State<DayEventLabel> createState() => _DayEventLabelState();
@@ -64,14 +67,18 @@ class _DayEventLabelState extends State<DayEventLabel> {
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
-    final accent = widget.disabled ? colors.muted : widget.color;
-    final background = colors.tint(accent, widget.disabled ? 0.14 : 0.22);
+    final target = widget.disabled ? colors.muted : widget.color;
     final scale = AppFonts.labelScaleOf(context);
     final height = _height * scale;
     final memoText = widget.memo.trim().replaceAll(RegExp(r'\s+'), ' ');
     final hasMemo = memoText.isNotEmpty;
 
-    return AnimatedOpacity(
+    return AnimatedAccent(
+      color: target,
+      builder: (context, accent) {
+        final background =
+            colors.tint(accent, widget.disabled ? 0.14 : 0.22);
+        return AnimatedOpacity(
       duration: const Duration(milliseconds: 420),
       curve: Curves.easeOutCubic,
       opacity: widget.disabled ? 0.42 : 1,
@@ -110,9 +117,13 @@ class _DayEventLabelState extends State<DayEventLabel> {
                 AnimatedContainer(
                   duration: const Duration(milliseconds: 240),
                   curve: Curves.easeOutCubic,
-                  width: (_completed || widget.isJob) ? 0 : 4,
+                  width: (widget.showAccent &&
+                          !_completed &&
+                          !widget.isJob)
+                      ? 4
+                      : 0,
                   height: height,
-                  color: accent,
+                  child: ColoredBox(color: accent),
                 ),
                 Expanded(
                   child: Padding(
@@ -252,7 +263,7 @@ class _DayEventLabelState extends State<DayEventLabel> {
                       child: Icon(
                         Icons.swap_horiz_rounded,
                         size: 22,
-                        color: widget.color,
+                        color: accent,
                       ),
                     ),
                   ),
@@ -267,7 +278,7 @@ class _DayEventLabelState extends State<DayEventLabel> {
                       child: Icon(
                         Icons.repeat_rounded,
                         size: 22,
-                        color: widget.color,
+                        color: accent,
                       ),
                     ),
                   ),
@@ -293,6 +304,8 @@ class _DayEventLabelState extends State<DayEventLabel> {
         ),
       ),
       ),
+        );
+      },
     );
   }
 }

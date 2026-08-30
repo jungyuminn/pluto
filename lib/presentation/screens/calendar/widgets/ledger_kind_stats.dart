@@ -32,24 +32,24 @@ class LedgerKindStats extends StatelessWidget {
           children: [
             _cell(
               context,
-              AppStrings.ledgerConsumption,
-              consumption,
-              LedgerEntry.consumptionColor,
-              LedgerSignMode.minus,
-            ),
-            const SizedBox(width: 10),
-            _cell(
-              context,
               AppStrings.ledgerExpense,
               expense,
               LedgerEntry.expenseColor,
               LedgerSignMode.plus,
             ),
+            const SizedBox(width: 10),
+            _cell(
+              context,
+              AppStrings.ledgerConsumption,
+              consumption,
+              LedgerEntry.consumptionColor,
+              LedgerSignMode.minus,
+            ),
             if (showSalary) ...[
               const SizedBox(width: 10),
               _cell(
                 context,
-                AppStrings.ledgerSalary,
+                AppStrings.ledgerPay,
                 salary,
                 LedgerEntry.salaryColor,
                 LedgerSignMode.plus,

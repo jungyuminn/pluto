@@ -140,8 +140,7 @@ class _CalendarWeekEventsState extends State<CalendarWeekEvents> {
     final sameWeek = widget.days.first.date == oldWidget.days.first.date &&
         widget.days.last.date == oldWidget.days.last.date &&
         widget.calendarScale == oldWidget.calendarScale &&
-        widget.labelScale == oldWidget.labelScale &&
-        widget.showLunar == oldWidget.showLunar;
+        widget.labelScale == oldWidget.labelScale;
     final nextEmojis = _emojiPathsOf();
     if (!sameWeek) {
       _exitGen++;
@@ -253,15 +252,17 @@ class _CalendarWeekEventsState extends State<CalendarWeekEvents> {
               if (emojisOf != null)
                 for (var i = 0; i < widget.days.length; i++)
                   if (DayStickers.isAsset(emojisOf(widget.days[i].date)))
-                    Positioned(
+                    AnimatedPositioned(
+                      key: ValueKey(
+                        '${widget.days[i].date.toIso8601String()}-${emojisOf(widget.days[i].date)}',
+                      ),
+                      duration: CalendarWeekEvents._moveDuration,
+                      curve: Curves.easeOutCubic,
                       left: cellWidth * i,
                       width: cellWidth,
                       top: _emojiTop(i, stride, labelHeight),
                       height: CalendarDayCell.emojiHeightFor(widget.calendarScale),
                       child: DayStickerImage(
-                        key: ValueKey(
-                          '${widget.days[i].date.toIso8601String()}-${emojisOf(widget.days[i].date)}',
-                        ),
                         asset: emojisOf(widget.days[i].date)!,
                         opacity: widget.days[i].inMonth ? 1 : 0.45,
                         pop: _appearingEmojis.contains(i),

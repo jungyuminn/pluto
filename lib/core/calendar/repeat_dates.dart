@@ -1,5 +1,9 @@
 enum RepeatKind { weekly, monthly, yearly }
 
+enum RepeatMonthRule { date, weekday }
+
+enum RepeatMonthWeek { first, second, third, fourth, last }
+
 class RepeatDates {
   RepeatDates._();
 
@@ -26,6 +30,40 @@ class RepeatDates {
 
   static int weekdayIndex(DateTime date) => date.weekday % 7;
 
+  static DateTime weekdayInMonth({
+    required int year,
+    required int month,
+    required int weekdayIndex,
+    required RepeatMonthWeek week,
+  }) {
+    final weekday = weekdayIndex == 0 ? DateTime.sunday : weekdayIndex;
+    if (week == RepeatMonthWeek.last) {
+      final last = DateTime(year, month + 1, 0);
+      var delta = last.weekday - weekday;
+      if (delta < 0) delta += 7;
+      return last.subtract(Duration(days: delta));
+    }
+    final first = DateTime(year, month, 1);
+    var delta = weekday - first.weekday;
+    if (delta < 0) delta += 7;
+    return DateTime(year, month, 1 + delta + week.index * 7);
+  }
+
+  static RepeatMonthWeek weekOf(DateTime date) {
+    final last = weekdayInMonth(
+      year: date.year,
+      month: date.month,
+      weekdayIndex: weekdayIndex(date),
+      week: RepeatMonthWeek.last,
+    );
+    if (date.year == last.year &&
+        date.month == last.month &&
+        date.day == last.day) {
+      return RepeatMonthWeek.last;
+    }
+    return RepeatMonthWeek.values[((date.day - 1) ~/ 7).clamp(0, 3)];
+  }
+
   static String format(DateTime date) {
     return '${date.year}년 ${date.month}월 ${date.day}일';
   }
@@ -34,6 +72,9 @@ class RepeatDates {
     required RepeatKind kind,
     required DateTime start,
     DateTime? now,
+    RepeatMonthRule monthRule = RepeatMonthRule.date,
+    RepeatMonthWeek monthWeek = RepeatMonthWeek.first,
+    int monthWeekday = 0,
   }) {
     final origin = today(now);
     final limit = horizon(now);
@@ -50,14 +91,21 @@ class RepeatDates {
       case RepeatKind.monthly:
         var month = 1;
         while (true) {
-          final current = clampDay(origin.year, origin.month + month, origin.day);
+          final current = monthRule == RepeatMonthRule.weekday
+              ? weekdayInMonth(
+                  year: floor.year,
+                  month: floor.month + month,
+                  weekdayIndex: monthWeekday,
+                  week: monthWeek,
+                )
+              : clampDay(floor.year, floor.month + month, floor.day);
           if (current.isAfter(limit)) break;
           if (!current.isBefore(floor)) options.add(current);
           month++;
         }
       case RepeatKind.yearly:
-        for (var year = origin.year + 1; year <= horizonYear; year++) {
-          final current = clampDay(year, origin.month, origin.day);
+        for (var year = floor.year + 1; year <= horizonYear; year++) {
+          final current = clampDay(year, floor.month, floor.day);
           if (current.isAfter(limit)) break;
           if (!current.isBefore(floor)) options.add(current);
         }
@@ -70,6 +118,9 @@ class RepeatDates {
     required DateTime start,
     DateTime? end,
     Set<int> weekdays = const {},
+    RepeatMonthRule monthRule = RepeatMonthRule.date,
+    RepeatMonthWeek monthWeek = RepeatMonthWeek.first,
+    int monthWeekday = 0,
     DateTime? now,
   }) {
     final first = dateOnly(start);
@@ -93,7 +144,14 @@ class RepeatDates {
         final days = <DateTime>[];
         var month = 0;
         while (true) {
-          final current = clampDay(first.year, first.month + month, first.day);
+          final current = monthRule == RepeatMonthRule.weekday
+              ? weekdayInMonth(
+                  year: first.year,
+                  month: first.month + month,
+                  weekdayIndex: monthWeekday,
+                  week: monthWeek,
+                )
+              : clampDay(first.year, first.month + month, first.day);
           if (current.isAfter(last)) break;
           if (!current.isBefore(first)) days.add(current);
           month++;

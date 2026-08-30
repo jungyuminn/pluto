@@ -10,6 +10,8 @@ class AppIcons {
   static const cursor = 'assets/icons/cursor.png';
   static const memo = 'assets/icons/memo.png';
   static const memoOutlined = 'assets/icons/memo_outlined.png';
+  static const wallet = 'assets/icons/wallet.png';
+  static const walletOutlined = 'assets/icons/wallet_outlined.png';
   static const quickView = 'assets/icons/quick_view.png';
   static const detailView = 'assets/icons/detail_view.png';
   static const search = 'assets/icons/search.png';

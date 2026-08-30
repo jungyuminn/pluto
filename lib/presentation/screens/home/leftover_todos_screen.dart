@@ -217,28 +217,29 @@ class _LeftoverTodosScreenState extends State<LeftoverTodosScreen> {
               ],
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(24, 12, 24, 20),
-            child: Text.rich(
-              TextSpan(
-                style: TextStyle(
-                  fontFamily: AppFonts.of(context),
-                  fontSize: 28,
-                  fontWeight: FontWeight.w800,
-                  height: 1.25,
-                  color: colors.text,
-                ),
-                children: [
-                  const TextSpan(text: '${AppStrings.leftoverHeadline}\n'),
-                  TextSpan(
-                    text: AppStrings.leftoverCount(_events.length),
-                    style: TextStyle(color: colors.accent),
+          if (!_loading)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 12, 24, 20),
+              child: Text.rich(
+                TextSpan(
+                  style: TextStyle(
+                    fontFamily: AppFonts.of(context),
+                    fontSize: 28,
+                    fontWeight: FontWeight.w800,
+                    height: 1.25,
+                    color: colors.text,
                   ),
-                  const TextSpan(text: ' ${AppStrings.leftoverExists}'),
-                ],
+                  children: [
+                    const TextSpan(text: '${AppStrings.leftoverHeadline}\n'),
+                    TextSpan(
+                      text: AppStrings.leftoverCount(_events.length),
+                      style: TextStyle(color: colors.accent),
+                    ),
+                    const TextSpan(text: ' ${AppStrings.leftoverTail}'),
+                  ],
+                ),
               ),
             ),
-          ),
           Expanded(
             child: _loading
                 ? const Center(child: CircularProgressIndicator())

@@ -7,8 +7,10 @@ import 'package:job_planner/core/constants/app_fonts.dart';
 import 'package:job_planner/core/constants/app_strings.dart';
 import 'package:job_planner/core/theme/app_colors.dart';
 import 'package:job_planner/core/utils/press_bounce.dart';
+import 'package:job_planner/data/datasources/app_backup_service.dart';
 import 'package:job_planner/domain/entities/event_category.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/add_category_sheet.dart';
+import 'package:job_planner/presentation/screens/calendar/widgets/delete_category_dialog.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/delete_event_dialog.dart';
 
 Future<EventCategory?> showCategoryPickerSheet(
@@ -231,18 +233,189 @@ class _CategoryPickerSheetState extends State<CategoryPickerSheet>
 
   Future<void> _deleteMarked() async {
     if (_marked.isEmpty) return;
-    final confirmed = await showDeleteEventDialog(
-      context,
-      title: '',
-      message: AppStrings.deleteSelectedCategoriesBody,
+    final multiple = _marked.length > 1;
+    final scope = await _confirmDelete(
+      ids: _marked,
+      categoryName: multiple ? null : _nameOf(_marked.single),
+      multiple: multiple,
     );
-    if (!confirmed || !mounted) return;
-    await AppScope.of(context).removeCategories(widget.kind, _marked);
+    if (scope == null || !mounted) return;
+    await _removeCategories(_marked, withItems: scope == CategoryDeleteScope.withItems);
+  }
+
+  String? _nameOf(String id) {
+    for (final category in _categories) {
+      if (category.id == id) return category.name;
+    }
+    return null;
+  }
+
+  Future<void> _deleteDragged(String id) async {
+    EventCategory? target;
+    for (final category in _categories) {
+      if (category.id == id) {
+        target = category;
+        break;
+      }
+    }
+    if (target == null) return;
+    final scope = await _confirmDelete(
+      ids: {id},
+      categoryName: target.name,
+    );
+    if (scope == null || !mounted) {
+      if (mounted) _restoreOrderBeforeDrag();
+      return;
+    }
+    await _removeCategories(
+      {id},
+      withItems: scope == CategoryDeleteScope.withItems,
+    );
+  }
+
+  Future<void> _removeCategories(
+    Iterable<String> ids, {
+    required bool withItems,
+  }) async {
+    final idSet = ids.toSet();
+    if (withItems) await _deleteItemsIn(idSet);
+    if (!mounted) return;
+    await AppScope.of(context).removeCategories(widget.kind, idSet);
+    _orderBeforeDrag = null;
     if (!mounted) return;
     await _reload();
-    if (_categories.isEmpty) {
-      _exitEdit();
+    if (_categories.isEmpty && _editing) _exitEdit();
+  }
+
+  Future<CategoryDeleteScope?> _confirmDelete({
+    required Set<String> ids,
+    String? categoryName,
+    bool multiple = false,
+  }) async {
+    final hasItems = await _hasItemsIn(ids);
+    if (!mounted) return null;
+    if (!hasItems) {
+      final confirmed = await showDeleteEventDialog(
+        context,
+        title: categoryName ?? '',
+        body: AppStrings.deleteCategoryBody,
+        message: multiple ? AppStrings.deleteSelectedCategoriesBody : null,
+      );
+      return confirmed ? CategoryDeleteScope.categoryOnly : null;
     }
+    return showDeleteCategoryDialog(
+      context,
+      categoryName: categoryName,
+      multiple: multiple,
+      kind: widget.kind,
+    );
+  }
+
+  Future<bool> _hasItemsIn(Set<String> ids) async {
+    final scope = AppScope.of(context);
+    final names = {
+      for (final category in _categories)
+        if (ids.contains(category.id)) category.name,
+    };
+    if (widget.kind == CategoryKind.event) {
+      final events = await scope.getCalendarEvents();
+      for (final event in events) {
+        if (event.isJob) continue;
+        if (_belongsTo(event.categoryId, event.categoryName, ids, names)) {
+          return true;
+        }
+      }
+      final diaries = await scope.getDiaries();
+      for (final diary in diaries) {
+        if (_belongsTo(diary.categoryId, diary.categoryName, ids, names)) {
+          return true;
+        }
+      }
+      for (final goal in scope.longGoalStore.goals) {
+        final id = goal.categoryId;
+        if (id != null && ids.contains(id)) return true;
+      }
+      return false;
+    }
+    if (widget.kind == CategoryKind.company) {
+      final jobs = await scope.getJobApplications();
+      for (final job in jobs) {
+        if (_belongsTo(job.categoryId, job.categoryName, ids, names)) {
+          return true;
+        }
+      }
+      return false;
+    }
+    final ledgers = await scope.getLedgers();
+    for (final entry in ledgers) {
+      if (_belongsTo(entry.categoryId, entry.categoryName, ids, names)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  bool _belongsTo(
+    String? categoryId,
+    String categoryName,
+    Set<String> ids,
+    Set<String> names,
+  ) {
+    if (categoryId != null && categoryId.isNotEmpty) {
+      return ids.contains(categoryId);
+    }
+    return categoryName.isNotEmpty && names.contains(categoryName);
+  }
+
+  Future<void> _deleteItemsIn(Set<String> ids) async {
+    final scope = AppScope.of(context);
+    final names = {
+      for (final category in _categories)
+        if (ids.contains(category.id)) category.name,
+    };
+    if (widget.kind == CategoryKind.event) {
+      final events = await scope.getCalendarEvents();
+      final seen = <String>{};
+      for (final event in events) {
+        if (event.isJob) continue;
+        if (!_belongsTo(event.categoryId, event.categoryName, ids, names)) {
+          continue;
+        }
+        final key = event.groupId ?? event.id;
+        if (!seen.add(key)) continue;
+        await scope.deleteCalendarEvent(event);
+      }
+      final diaries = await scope.getDiaries();
+      for (final diary in diaries) {
+        if (!_belongsTo(diary.categoryId, diary.categoryName, ids, names)) {
+          continue;
+        }
+        await scope.deleteDiary(diary.id);
+      }
+      final store = scope.longGoalStore;
+      for (final goal in [...store.goals]) {
+        final id = goal.categoryId;
+        if (id == null || !ids.contains(id)) continue;
+        await store.deleteGoal(goal.id);
+      }
+    } else if (widget.kind == CategoryKind.company) {
+      final jobs = await scope.getJobApplications();
+      for (final job in jobs) {
+        if (!_belongsTo(job.categoryId, job.categoryName, ids, names)) {
+          continue;
+        }
+        await scope.deleteJobApplication(job.id);
+      }
+    } else {
+      final ledgers = await scope.getLedgers();
+      for (final entry in ledgers) {
+        if (!_belongsTo(entry.categoryId, entry.categoryName, ids, names)) {
+          continue;
+        }
+        await scope.deleteLedger(entry.id);
+      }
+    }
+    AppBackupService.revision.value++;
   }
 
   void _onDragStarted(EventCategory category) {
@@ -289,31 +462,6 @@ class _CategoryPickerSheetState extends State<CategoryPickerSheet>
     }
     _orderBeforeDrag = null;
     await _persistOrder();
-  }
-
-  Future<void> _deleteDragged(String id) async {
-    EventCategory? target;
-    for (final category in _categories) {
-      if (category.id == id) {
-        target = category;
-        break;
-      }
-    }
-    if (target == null) return;
-    final confirmed = await showDeleteEventDialog(
-      context,
-      title: target.name,
-      body: AppStrings.deleteCategoryBody,
-    );
-    if (!confirmed || !mounted) {
-      if (mounted) _restoreOrderBeforeDrag();
-      return;
-    }
-    await AppScope.of(context).removeCategories(widget.kind, {id});
-    _orderBeforeDrag = null;
-    if (!mounted) return;
-    await _reload();
-    if (_categories.isEmpty && _editing) _exitEdit();
   }
 
   double _cellSize(double width) {

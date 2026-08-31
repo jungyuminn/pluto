@@ -17,6 +17,13 @@ class ReleaseNote {
 abstract final class ReleaseNotes {
   static const all = [
     ReleaseNote(
+      version: '1.0.24',
+      items: [
+        '홈 화면에 이번 달 달력을 위젯으로 둘 수 있어요',
+        '위젯을 고를 때 실제 모습이 미리 보여요',
+      ],
+    ),
+    ReleaseNote(
       version: '1.0.23',
       items: [
         '홈 화면에 오늘·내일 할 일을 작은 위젯으로 둘 수 있어요',

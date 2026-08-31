@@ -9,6 +9,7 @@ import 'package:job_planner/core/constants/app_fonts.dart';
 import 'package:job_planner/core/constants/app_icons.dart';
 import 'package:job_planner/core/constants/app_strings.dart';
 import 'package:job_planner/core/home_widget/compact_day_card.dart';
+import 'package:job_planner/core/home_widget/month_calendar_card.dart';
 import 'package:job_planner/core/home_widget/today_widget_card.dart';
 import 'package:job_planner/core/home_widget/week_timetable_card.dart';
 import 'package:job_planner/core/theme/app_colors.dart';
@@ -251,7 +252,7 @@ class HomeScreenWidgetService {
         ),
         isDark: theme.isDark,
         skin: theme.skin,
-        pixelRatio: pixelRatio,
+        sortByTime: dayEventsView.sortByTime,
       );
       await _syncCompactDay(
         today: false,
@@ -261,6 +262,14 @@ class HomeScreenWidgetService {
           events: allEvents,
           applications: applications,
         ),
+        isDark: theme.isDark,
+        skin: theme.skin,
+        sortByTime: dayEventsView.sortByTime,
+      );
+      await _syncMonthCalendar(
+        today: today,
+        allEvents: allEvents,
+        applications: applications,
         isDark: theme.isDark,
         skin: theme.skin,
         pixelRatio: pixelRatio,
@@ -556,44 +565,61 @@ class HomeScreenWidgetService {
     required List<CalendarEvent> events,
     required bool isDark,
     required AppSkin skin,
-    required double pixelRatio,
+    required bool sortByTime,
   }) async {
-    final size = CompactDayCard.logicalSize;
+    final prefix = today ? 'today_glance' : 'tomorrow_glance';
     final title =
         today ? AppStrings.todayTitle : AppStrings.tomorrowTitle;
     final empty = today
         ? AppStrings.summaryNotificationEmpty
         : AppStrings.tomorrowNotificationEmpty;
-    await HomeWidget.renderFlutterWidget(
-      _wrapTheme(
-        isDark: isDark,
-        size: size,
-        pixelRatio: pixelRatio,
-        child: SizedBox(
-          width: size.width,
-          height: size.height,
-          child: _skinCard(
-            skin: skin,
-            clip: !Platform.isIOS,
-            child: CompactDayCard(
-              title: title,
-              dateLabel: CompactDayCard.monthDayLabel(date),
-              events: events,
-              emptyText: empty,
-            ),
-          ),
-        ),
-      ),
-      key: today
-          ? CompactDayCard.imageKeyToday
-          : CompactDayCard.imageKeyTomorrow,
-      logicalSize: size,
-      pixelRatio: pixelRatio,
+    final items = CompactDayCard.visibleOf(
+      events,
+      sortByTime: sortByTime,
     );
+    final shown = items.take(CompactDayCard.maxEvents).toList();
+    final more = items.length - shown.length;
+    final colors = AppTheme.themed(
+      dark: isDark,
+      typeface: _font?.typeface ?? AppTypeface.pretendard,
+      skin: skin,
+      customAccent: _theme?.customTheme?.accentColor,
+    ).extension<AppColors>()!;
+
+    await HomeWidget.saveWidgetData<String>('${prefix}_title', title);
     await HomeWidget.saveWidgetData<String>(
-      today ? CompactDayCard.emptyKeyToday : CompactDayCard.emptyKeyTomorrow,
-      empty,
+      '${prefix}_date',
+      CompactDayCard.monthDayLabel(date),
     );
+    await HomeWidget.saveWidgetData<String>('${prefix}_empty', empty);
+    await HomeWidget.saveWidgetData<int>('${prefix}_count', shown.length);
+    await HomeWidget.saveWidgetData<int>('${prefix}_more', more);
+    await HomeWidget.saveWidgetData<int>(
+      '${prefix}_accent',
+      colors.accent.toARGB32(),
+    );
+    await HomeWidget.saveWidgetData<int>('widget_text', colors.text.toARGB32());
+    for (var i = 0; i < CompactDayCard.maxEvents; i++) {
+      if (i < shown.length) {
+        await HomeWidget.saveWidgetData<String>(
+          '${prefix}_item_${i}_title',
+          shown[i].title,
+        );
+        await HomeWidget.saveWidgetData<int>(
+          '${prefix}_item_${i}_color',
+          shown[i].categoryColor,
+        );
+      } else {
+        await HomeWidget.saveWidgetData<String>(
+          '${prefix}_item_${i}_title',
+          '',
+        );
+        await HomeWidget.saveWidgetData<int>(
+          '${prefix}_item_${i}_color',
+          0,
+        );
+      }
+    }
     await HomeWidget.updateWidget(
       name: today
           ? CompactDayCard.androidTodayName
@@ -607,6 +633,62 @@ class HomeScreenWidgetService {
       qualifiedAndroidName: today
           ? CompactDayCard.qualifiedTodayName
           : CompactDayCard.qualifiedTomorrowName,
+    );
+  }
+
+  Future<void> _syncMonthCalendar({
+    required DateTime today,
+    required List<CalendarEvent> allEvents,
+    required List<JobApplication> applications,
+    required bool isDark,
+    required AppSkin skin,
+    required double pixelRatio,
+  }) async {
+    final month = DateTime(today.year, today.month);
+    final startMonday = _calendar?.startMonday ?? false;
+    Future<void> render(Size size, String key) {
+      return HomeWidget.renderFlutterWidget(
+        _wrapTheme(
+          isDark: isDark,
+          size: size,
+          pixelRatio: pixelRatio,
+          child: SizedBox(
+            width: size.width,
+            height: size.height,
+            child: _skinCard(
+              skin: skin,
+              clip: !Platform.isIOS,
+              child: MonthCalendarCard(
+                month: month,
+                startMonday: startMonday,
+                eventsOf: (date) => calendarEventsOn(
+                  date: date,
+                  events: allEvents,
+                  applications: applications,
+                ),
+              ),
+            ),
+          ),
+        ),
+        key: key,
+        logicalSize: size,
+        pixelRatio: pixelRatio,
+      );
+    }
+
+    if (Platform.isIOS) {
+      await render(_iosLargeSize, 'month_calendar_image_large');
+    }
+    await render(MonthCalendarCard.logicalSize, MonthCalendarCard.imageKey);
+    await HomeWidget.saveWidgetData<String>(
+      MonthCalendarCard.emptyKey,
+      AppStrings.monthNotificationEmpty,
+    );
+    await HomeWidget.updateWidget(
+      name: MonthCalendarCard.androidName,
+      androidName: MonthCalendarCard.androidName,
+      iOSName: MonthCalendarCard.iOSName,
+      qualifiedAndroidName: MonthCalendarCard.qualifiedAndroidName,
     );
   }
 

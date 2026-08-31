@@ -6,10 +6,12 @@
     <string name="tomorrow_widget_description">내일의 일정을 보여줘요</string>
     <string name="today_tomorrow_widget_name">오늘과 내일</string>
     <string name="today_tomorrow_widget_description">오늘과 내일의 일정을 보여줘요</string>
-    <string name="week_widget_name">일주일</string>
-    <string name="week_widget_description">일주일의 일정을 보여줘요</string>
-    <string name="compact_today_widget_name">오늘 간단히</string>
-    <string name="compact_today_widget_description">오늘의 할 일을 간단히 보여줘요</string>
-    <string name="compact_tomorrow_widget_name">내일 간단히</string>
-    <string name="compact_tomorrow_widget_description">내일의 할 일을 간단히 보여줘요</string>
+    <string name="week_widget_name">이번 주</string>
+    <string name="week_widget_description">이번 주 일정을 보여줘요</string>
+    <string name="compact_today_widget_name">오늘</string>
+    <string name="compact_today_widget_description">오늘의 일정을 간단히 보여줘요</string>
+    <string name="compact_tomorrow_widget_name">내일</string>
+    <string name="compact_tomorrow_widget_description">내일의 일정을 간단히 보여줘요</string>
+    <string name="month_widget_name">이번 달</string>
+    <string name="month_widget_description">이번 달 일정을 보여줘요</string>
 </resources>

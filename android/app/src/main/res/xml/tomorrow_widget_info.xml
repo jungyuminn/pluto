@@ -6,6 +6,7 @@
     android:minHeight="220dp"
     android:minResizeWidth="180dp"
     android:minResizeHeight="180dp"
+    android:previewImage="@drawable/widget_preview_tomorrow"
     android:previewLayout="@layout/tomorrow_widget_preview"
     android:resizeMode="horizontal|vertical"
     android:targetCellWidth="4"

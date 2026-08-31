@@ -44,10 +44,13 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
-# Cursor / local agent
+# Cursor / local agent (never ship)
 .cursor/
+**/.cursor/
 .agent/
+**/.agent/
 agent-transcripts/
-
-# Play listing and font scratch
+**/agent-transcripts/
+.cursorignore
+.cursorindexingignore
 /store/

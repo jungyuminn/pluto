@@ -51,4 +51,15 @@ object WidgetSkin {
         }
         return BitmapFactory.decodeFile(file, options)
     }
+
+    fun decodeUnscaled(path: String?): android.graphics.Bitmap? {
+        val file = path?.takeIf { File(it).exists() } ?: return null
+        val options = BitmapFactory.Options().apply {
+            inScaled = false
+            inPreferredConfig = android.graphics.Bitmap.Config.ARGB_8888
+        }
+        return BitmapFactory.decodeFile(file, options)?.apply {
+            density = android.graphics.Bitmap.DENSITY_NONE
+        }
+    }
 }

@@ -49,52 +49,55 @@ class WeekTimetableCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
-    return Column(
-      children: [
-        SizedBox(
-          height: headerHeight,
-          child: Row(
-            children: [
-              for (var i = 0; i < days.length; i++)
-                Expanded(
-                  child: _DayHeader(
-                    date: days[i],
-                    isToday: _isSameDay(days[i], today),
-                  ),
-                ),
-            ],
-          ),
-        ),
-        Expanded(
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              border: Border(
-                top: BorderSide(color: colors.border),
-              ),
-            ),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(2, 12, 2, 6),
+      child: Column(
+        children: [
+          SizedBox(
+            height: headerHeight,
             child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                for (var i = 0; i < days.length; i++) ...[
-                  if (i > 0)
-                    VerticalDivider(
-                      width: 1,
-                      thickness: 1,
-                      color: colors.border,
-                    ),
+                for (var i = 0; i < days.length; i++)
                   Expanded(
-                    child: _DayColumn(
-                      events: columns[i],
+                    child: _DayHeader(
+                      date: days[i],
                       isToday: _isSameDay(days[i], today),
-                      showTime: showTime,
                     ),
                   ),
-                ],
               ],
             ),
           ),
-        ),
-      ],
+          Expanded(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                border: Border(
+                  top: BorderSide(color: colors.border),
+                ),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  for (var i = 0; i < days.length; i++) ...[
+                    if (i > 0)
+                      VerticalDivider(
+                        width: 1,
+                        thickness: 1,
+                        color: colors.border,
+                      ),
+                    Expanded(
+                      child: _DayColumn(
+                        events: columns[i],
+                        isToday: _isSameDay(days[i], today),
+                        showTime: showTime,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 

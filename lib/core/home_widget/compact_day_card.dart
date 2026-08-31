@@ -11,14 +11,10 @@ class CompactDayCard extends StatelessWidget {
     required this.dateLabel,
     required this.events,
     required this.emptyText,
+    this.sortByTime = false,
   });
 
-  static const logicalSize = Size(172, 172);
   static const maxEvents = 6;
-  static const imageKeyToday = 'today_glance_image';
-  static const imageKeyTomorrow = 'tomorrow_glance_image';
-  static const emptyKeyToday = 'today_glance_empty';
-  static const emptyKeyTomorrow = 'tomorrow_glance_empty';
   static const androidTodayName = 'CompactTodayWidgetProvider';
   static const androidTomorrowName = 'CompactTomorrowWidgetProvider';
   static const iOSTodayName = 'CompactTodayWidget';
@@ -32,26 +28,32 @@ class CompactDayCard extends StatelessWidget {
   final String dateLabel;
   final List<CalendarEvent> events;
   final String emptyText;
+  final bool sortByTime;
 
   static String monthDayLabel(DateTime date) =>
-      '${date.month}${AppStrings.monthSuffix} ${date.day}';
+      '${date.month}${AppStrings.monthSuffix} ${date.day}${AppStrings.daySuffix}';
 
-  static List<CalendarEvent> visibleOf(List<CalendarEvent> events) {
-    return CalendarEvent.withLockedThenStartTime([
+  static List<CalendarEvent> visibleOf(
+    List<CalendarEvent> events, {
+    required bool sortByTime,
+  }) {
+    final open = [
       for (final event in events)
         if (event.isJob || !event.completed) event,
-    ]);
+    ];
+    if (!sortByTime) return open;
+    return CalendarEvent.withLockedThenStartTime(open);
   }
 
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
     final font = AppFonts.of(context);
-    final items = visibleOf(events);
+    final items = visibleOf(events, sortByTime: sortByTime);
     final shown = items.take(maxEvents).toList();
     final more = items.length - shown.length;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(14, 12, 12, 10),
+      padding: const EdgeInsets.fromLTRB(12, 10, 10, 8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -62,18 +64,18 @@ class CompactDayCard extends StatelessWidget {
                   text: title,
                   style: TextStyle(
                     fontFamily: font,
-                    fontSize: 16,
+                    fontSize: 15,
                     fontWeight: FontWeight.w800,
                     height: 1.1,
-                    color: colors.accent,
+                    color: colors.text,
                   ),
                 ),
                 TextSpan(
                   text: ' $dateLabel',
                   style: TextStyle(
                     fontFamily: font,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w400,
                     height: 1.1,
                     color: colors.text,
                   ),
@@ -83,7 +85,7 @@ class CompactDayCard extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 8),
           Expanded(
             child: items.isEmpty
                 ? Text(
@@ -91,7 +93,7 @@ class CompactDayCard extends StatelessWidget {
                     style: TextStyle(
                       fontFamily: font,
                       fontSize: 13,
-                      fontWeight: FontWeight.w500,
+                      fontWeight: FontWeight.w400,
                       height: 1.3,
                       color: colors.muted,
                     ),
@@ -101,18 +103,18 @@ class CompactDayCard extends StatelessWidget {
                     children: [
                       for (final event in shown)
                         Padding(
-                          padding: const EdgeInsets.only(bottom: 7),
+                          padding: const EdgeInsets.only(bottom: 5),
                           child: Row(
                             children: [
                               Container(
-                                width: 8,
-                                height: 8,
+                                width: 7,
+                                height: 7,
                                 decoration: BoxDecoration(
                                   color: event.color,
                                   shape: BoxShape.circle,
                                 ),
                               ),
-                              const SizedBox(width: 8),
+                              const SizedBox(width: 6),
                               Expanded(
                                 child: Text(
                                   event.title,
@@ -121,7 +123,7 @@ class CompactDayCard extends StatelessWidget {
                                   style: TextStyle(
                                     fontFamily: font,
                                     fontSize: 13,
-                                    fontWeight: FontWeight.w600,
+                                    fontWeight: FontWeight.w400,
                                     height: 1.15,
                                     color: colors.text,
                                   ),
@@ -135,8 +137,8 @@ class CompactDayCard extends StatelessWidget {
                           '외 $more개',
                           style: TextStyle(
                             fontFamily: font,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w400,
                             height: 1.2,
                             color: colors.muted,
                           ),

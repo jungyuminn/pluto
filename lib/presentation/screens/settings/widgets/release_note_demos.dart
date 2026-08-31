@@ -52,6 +52,7 @@ enum ReleaseDemo {
   releaseNotes,
   weekWidget,
   compactWidget,
+  monthWidget,
   notification,
   somedayGoal,
   themeAccent,
@@ -127,6 +128,8 @@ ReleaseDemo releaseDemoFor(String text, {required bool isFix}) {
   if (text.contains('업데이트 내용') || text.contains('릴리즈 노트')) {
     return ReleaseDemo.releaseNotes;
   }
+  if (text.contains('이번 달 달력')) return ReleaseDemo.monthWidget;
+  if (text.contains('위젯을 고를 때')) return ReleaseDemo.homeWidget;
   if (text.contains('작은 위젯')) return ReleaseDemo.compactWidget;
   if (text.contains('일주일 위젯')) return ReleaseDemo.weekWidget;
   if (text.contains('언젠가 목표')) return ReleaseDemo.somedayGoal;
@@ -197,6 +200,7 @@ class ReleaseDemoView extends StatelessWidget {
       ReleaseDemo.releaseNotes => const _NotesPeekDemo(),
       ReleaseDemo.weekWidget || ReleaseDemo.homeWidget => const _WidgetDemo(),
       ReleaseDemo.compactWidget => const _CompactWidgetDemo(),
+      ReleaseDemo.monthWidget => const _MonthWidgetDemo(),
       ReleaseDemo.notification ||
       ReleaseDemo.todoReminder ||
       ReleaseDemo.dailySummary ||
@@ -2103,7 +2107,7 @@ class _CompactWidgetDemo extends StatelessWidget {
                     ],
                   ),
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(14, 12, 12, 10),
+                    padding: const EdgeInsets.fromLTRB(12, 10, 10, 8),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -2114,18 +2118,18 @@ class _CompactWidgetDemo extends StatelessWidget {
                                 text: AppStrings.todayTitle,
                                 style: TextStyle(
                                   fontFamily: font,
-                                  fontSize: 16,
+                                  fontSize: 15,
                                   fontWeight: FontWeight.w800,
                                   height: 1.1,
-                                  color: colors.accent,
+                                  color: colors.text,
                                 ),
                               ),
                               TextSpan(
-                                text: ' 8월 31',
+                                text: ' 8월 31일',
                                 style: TextStyle(
                                   fontFamily: font,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w400,
                                   height: 1.1,
                                   color: colors.text,
                                 ),
@@ -2133,30 +2137,30 @@ class _CompactWidgetDemo extends StatelessWidget {
                             ],
                           ),
                         ),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 8),
                         for (final item in const [
                           (Color(0xFFA78BFA), '자소서'),
                           (Color(0xFF60A5FA), '면접 준비'),
                         ])
                           Padding(
-                            padding: const EdgeInsets.only(bottom: 8),
+                            padding: const EdgeInsets.only(bottom: 5),
                             child: Row(
                               children: [
                                 Container(
-                                  width: 8,
-                                  height: 8,
+                                  width: 7,
+                                  height: 7,
                                   decoration: BoxDecoration(
                                     color: item.$1,
                                     shape: BoxShape.circle,
                                   ),
                                 ),
-                                const SizedBox(width: 8),
+                                const SizedBox(width: 6),
                                 Text(
                                   item.$2,
                                   style: TextStyle(
                                     fontFamily: font,
                                     fontSize: 13,
-                                    fontWeight: FontWeight.w600,
+                                    fontWeight: FontWeight.w400,
                                     color: colors.text,
                                   ),
                                 ),
@@ -2172,6 +2176,148 @@ class _CompactWidgetDemo extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+class _MonthWidgetDemo extends StatelessWidget {
+  const _MonthWidgetDemo();
+
+  static const _dots = {
+    3: Color(0xFFA78BFA),
+    10: Color(0xFF60A5FA),
+    17: Color(0xFFF9A8D4),
+    24: Color(0xFFA78BFA),
+    31: Color(0xFF60A5FA),
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final font = AppFonts.of(context);
+        final show = _gate(t, 0.16, 0.38);
+        return Center(
+          child: Opacity(
+            opacity: show,
+            child: Transform.scale(
+              scale: 0.86 + show * 0.14,
+              child: SizedBox(
+                width: 168,
+                height: 168,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: colors.card,
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: [
+                      BoxShadow(
+                        color: colors.shadow,
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(10, 10, 10, 8),
+                    child: Column(
+                      children: [
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            '8월',
+                            style: TextStyle(
+                              fontFamily: font,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w800,
+                              height: 1.1,
+                              color: colors.text,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Row(
+                          children: [
+                            for (var i = 0; i < 7; i++)
+                              Expanded(
+                                child: Text(
+                                  ['일', '월', '화', '수', '목', '금', '토'][i],
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontFamily: font,
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.w600,
+                                    color: i == 0
+                                        ? const Color(0xFFEF4444)
+                                        : i == 6
+                                        ? const Color(0xFF60A5FA)
+                                        : colors.muted,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                        const SizedBox(height: 2),
+                        for (var row = 0; row < 5; row++)
+                          Expanded(
+                            child: Row(
+                              children: [
+                                for (var col = 0; col < 7; col++)
+                                  Expanded(
+                                    child: _MonthDemoDay(
+                                      day: row * 7 + col + 1,
+                                      dot: _dots[row * 7 + col + 1],
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _MonthDemoDay extends StatelessWidget {
+  const _MonthDemoDay({required this.day, this.dot});
+
+  final int day;
+  final Color? dot;
+
+  @override
+  Widget build(BuildContext context) {
+    if (day > 31) return const SizedBox.shrink();
+    final colors = AppColors.of(context);
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Text(
+          '$day',
+          style: TextStyle(
+            fontFamily: AppFonts.of(context),
+            fontSize: 8,
+            fontWeight: FontWeight.w600,
+            height: 1,
+            color: colors.text,
+          ),
+        ),
+        const SizedBox(height: 2),
+        if (dot != null)
+          Container(
+            width: 4,
+            height: 4,
+            decoration: BoxDecoration(color: dot, shape: BoxShape.circle),
+          )
+        else
+          const SizedBox(height: 4),
+      ],
     );
   }
 }

@@ -322,6 +322,7 @@ class AppStrings {
   static const tomorrowNotificationEmpty = '내일 일정이 없어요';
   static const todayTomorrowNotificationEmpty = '오늘과 내일 일정이 없어요';
   static const weekNotificationEmpty = '이번 주 일정이 없어요';
+  static const monthNotificationEmpty = '이번 달 일정이 없어요';
   static const companySection = '지원서';
   static const jobScreenTitle = '지원서';
   static const searchHint = '지원서, 분야, 카테고리 검색';

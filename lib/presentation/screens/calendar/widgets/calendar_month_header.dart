@@ -36,6 +36,7 @@ class CalendarMonthHeader extends StatelessWidget {
     this.onSearchPressed,
     this.ledgerMonthStats,
     this.onLedgerStatsPressed,
+    this.tutorial = true,
   });
 
   final DateTime month;
@@ -55,6 +56,7 @@ class CalendarMonthHeader extends StatelessWidget {
   final VoidCallback? onSearchPressed;
   final LedgerMonthStats? ledgerMonthStats;
   final VoidCallback? onLedgerStatsPressed;
+  final bool tutorial;
 
   String get _title {
     if (title != null) return title!;
@@ -73,9 +75,9 @@ class CalendarMonthHeader extends StatelessWidget {
           Expanded(
             child: Row(
               children: [
-                TutorialAnchor(
-                  id: TutorialAnchorId.calendarTitle,
-                  child: CalendarZoomTitle(
+                _maybeAnchor(
+                  TutorialAnchorId.calendarTitle,
+                  CalendarZoomTitle(
                     text: _title,
                     onPressed: onTitlePressed,
                     fontSize: 32,
@@ -90,9 +92,9 @@ class CalendarMonthHeader extends StatelessWidget {
               ],
             ),
           ),
-          TutorialAnchor(
-            id: TutorialAnchorId.calendarMenu,
-            child: AppBarIconGroup(
+          _maybeAnchor(
+            TutorialAnchorId.calendarMenu,
+            AppBarIconGroup(
               actions: [
                 if (onSearchPressed != null)
                   AppBarIconAction(
@@ -121,6 +123,11 @@ class CalendarMonthHeader extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Widget _maybeAnchor(TutorialAnchorId id, Widget child) {
+    if (!tutorial) return child;
+    return TutorialAnchor(id: id, child: child);
   }
 }
 

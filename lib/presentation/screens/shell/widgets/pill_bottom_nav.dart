@@ -11,10 +11,12 @@ class PillBottomNav extends StatelessWidget {
     super.key,
     required this.currentIndex,
     required this.onChanged,
+    this.tutorial = true,
   });
 
   final int currentIndex;
   final ValueChanged<int> onChanged;
+  final bool tutorial;
 
   @override
   Widget build(BuildContext context) {
@@ -26,9 +28,7 @@ class PillBottomNav extends StatelessWidget {
       listenable: theme,
       builder: (context, _) {
         final items = AppSkinAssets.navIcons(theme.skin);
-        return TutorialAnchor(
-          id: TutorialAnchorId.navBar,
-          child: Padding(
+        Widget nav = Padding(
           padding: EdgeInsets.only(bottom: 4 + bottomInset),
           child: Material(
             color: colors.navBar,
@@ -52,13 +52,13 @@ class PillBottomNav extends StatelessWidget {
                       children: [
                         for (var i = 0; i < items.length; i++)
                           Expanded(
-                            child: TutorialAnchor(
-                              id: switch (i) {
+                            child: _maybeAnchor(
+                              switch (i) {
                                 0 => TutorialAnchorId.navHome,
                                 1 => TutorialAnchorId.navCalendar,
                                 _ => TutorialAnchorId.navJob,
                               },
-                              child: PillNavItem(
+                              PillNavItem(
                                 selected: i == currentIndex,
                                 onTap: () => onChanged(i),
                                 filledAsset: items[i].filled,
@@ -73,9 +73,18 @@ class PillBottomNav extends StatelessWidget {
               ),
             ),
           ),
-        ),
+        );
+        if (!tutorial) return nav;
+        return TutorialAnchor(
+          id: TutorialAnchorId.navBar,
+          child: nav,
         );
       },
     );
+  }
+
+  Widget _maybeAnchor(TutorialAnchorId id, Widget child) {
+    if (!tutorial) return child;
+    return TutorialAnchor(id: id, child: child);
   }
 }

@@ -19,7 +19,11 @@ import 'package:job_planner/core/home_widget/home_screen_widget_service.dart';
 import 'package:job_planner/core/notifications/todo_reminder_service.dart';
 import 'package:job_planner/core/utils/plain_text_editing_controller.dart';
 import 'package:job_planner/core/utils/press_bounce.dart';
+import 'package:job_planner/domain/entities/application_round.dart';
+import 'package:job_planner/domain/entities/apply_status.dart';
+import 'package:job_planner/domain/entities/calendar_event.dart';
 import 'package:job_planner/domain/entities/event_category.dart';
+import 'package:job_planner/domain/entities/job_application.dart';
 import 'package:job_planner/presentation/screens/add_company/widgets/missing_fields_dialog.dart';
 import 'package:job_planner/presentation/screens/add_company/widgets/save_company_button.dart';
 import 'package:job_planner/data/datasources/app_backup_service.dart';
@@ -30,15 +34,25 @@ import 'package:job_planner/data/datasources/font_preference.dart';
 import 'package:job_planner/data/datasources/notification_preference.dart';
 import 'package:job_planner/data/datasources/theme_preference.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/calendar_event_label.dart';
+import 'package:job_planner/presentation/screens/calendar/widgets/calendar_month_grid.dart';
+import 'package:job_planner/presentation/screens/calendar/widgets/calendar_month_header.dart';
+import 'package:job_planner/presentation/screens/calendar/widgets/calendar_weekday_header.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/day_event_label.dart';
+import 'package:job_planner/presentation/screens/home/widgets/home_day_card.dart';
+import 'package:job_planner/presentation/screens/job/widgets/add_company_button.dart';
+import 'package:job_planner/presentation/screens/job/widgets/company_card.dart';
+import 'package:job_planner/presentation/screens/job/widgets/job_overflow_menu_button.dart';
 import 'package:job_planner/presentation/screens/settings/widgets/backup_dialogs.dart';
 import 'package:job_planner/presentation/screens/settings/widgets/calendar_import_dialogs.dart';
 import 'package:job_planner/presentation/screens/settings/widgets/calendar_import_wizard.dart';
 import 'package:job_planner/presentation/screens/settings/widgets/release_notes_page.dart';
 import 'package:job_planner/presentation/screens/settings/widgets/settings_section_help.dart';
 import 'package:job_planner/presentation/tutorial/tutorial_controller.dart';
+import 'package:job_planner/presentation/widgets/app_back_button.dart';
+import 'package:job_planner/presentation/widgets/app_bar_icon_group.dart';
 import 'package:job_planner/presentation/widgets/sliding_kind_bar.dart';
 import 'package:job_planner/presentation/widgets/themed_asset.dart';
+import 'package:job_planner/presentation/screens/shell/widgets/pill_bottom_nav.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -1000,6 +1014,95 @@ class _FontLivePreview extends StatelessWidget {
   }
 }
 
+DateTime _themePreviewToday() {
+  final now = DateTime.now();
+  return DateTime(now.year, now.month, now.day);
+}
+
+const _themePreviewCategories = EventCategory.presets;
+
+List<CalendarEvent> _themePreviewEventsOn(DateTime date) {
+  final day = DateTime(date.year, date.month, date.day);
+  final today = _themePreviewToday();
+  final travel = EventCategory.presets[0];
+  final exercise = EventCategory.presets[1];
+  final offset = day.difference(today).inDays;
+  if (offset == 0) {
+    return [
+      CalendarEvent(
+        id: 'preview-exercise',
+        title: '헬스장',
+        date: today,
+        categoryId: exercise.id,
+        categoryName: exercise.name,
+        categoryColor: exercise.color,
+        startMinutes: 7 * 60,
+        endMinutes: 8 * 60,
+      ),
+    ];
+  }
+  if (offset == 2) {
+    return [
+      CalendarEvent(
+        id: 'preview-yoga',
+        title: '요가',
+        date: day,
+        categoryId: exercise.id,
+        categoryName: exercise.name,
+        categoryColor: exercise.color,
+        startMinutes: 19 * 60,
+        endMinutes: 20 * 60,
+      ),
+    ];
+  }
+  if (offset >= 4 && offset <= 6) {
+    return [
+      CalendarEvent(
+        id: 'preview-jeju-$offset',
+        title: '제주도',
+        date: day,
+        groupId: 'preview-jeju',
+        categoryId: travel.id,
+        categoryName: travel.name,
+        categoryColor: travel.color,
+      ),
+    ];
+  }
+  return const [];
+}
+
+List<JobApplication> _themePreviewJobs() {
+  final today = _themePreviewToday();
+  return [
+    JobApplication(
+      id: 'preview-job',
+      companyName: AppStrings.appName,
+      applyStatus: ApplyStatus.documentSubmitted,
+      position: '개발',
+      deadline: today.add(const Duration(days: 3)),
+      categoryId: 'company_large',
+      categoryName: '대기업',
+      categoryColor: 0xFF3B82F6,
+      rounds: [
+        ApplicationRound(name: '서류', date: today.add(const Duration(days: 3))),
+        const ApplicationRound(name: '면접'),
+      ],
+    ),
+    JobApplication(
+      id: 'preview-job-pass',
+      companyName: AppStrings.appName,
+      applyStatus: ApplyStatus.finalPassed,
+      position: '기획',
+      categoryId: 'company_public',
+      categoryName: '공기업',
+      categoryColor: 0xFF00ACC1,
+      rounds: [
+        ApplicationRound(name: '입사', date: today.add(const Duration(days: 5))),
+      ],
+    ),
+  ];
+}
+
 class _ThemeLivePreview extends StatefulWidget {
   const _ThemeLivePreview({this.customTheme});
 
@@ -1052,16 +1155,47 @@ class _ThemeLivePreviewState extends State<_ThemeLivePreview> {
     if (fromUser) _startTimer();
   }
 
+  Future<void> _openFullPreview() async {
+    _timer?.cancel();
+    await showGeneralDialog<void>(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: AppStrings.themeMineFullPreview,
+      barrierColor: const Color(0x4D000000),
+      transitionDuration: const Duration(milliseconds: 220),
+      pageBuilder: (context, animation, secondaryAnimation) {
+        return _ThemeFullPreview(
+          customTheme: widget.customTheme,
+          initialPage: _page,
+        );
+      },
+      transitionBuilder: (context, animation, secondaryAnimation, child) {
+        final t = Curves.easeOutCubic.transform(animation.value);
+        return Opacity(
+          opacity: t,
+          child: Transform.scale(
+            scale: 0.96 + 0.04 * t,
+            child: child,
+          ),
+        );
+      },
+    );
+    if (mounted) _startTimer();
+  }
+
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
     final custom = widget.customTheme;
     Widget preview = AppSkinBackground(
-            liftForNav: false,
-            scaleByWidth: true,
-            animate: true,
+      liftForNav: false,
+      scaleByWidth: true,
+      animate: true,
       skin: custom == null ? null : AppSkin.classic,
       customTheme: custom,
+      child: Stack(
+        children: [
+          Positioned.fill(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -1092,6 +1226,18 @@ class _ThemeLivePreviewState extends State<_ThemeLivePreview> {
                 ),
               ],
             ),
+          ),
+          Positioned(
+            top: 8,
+            right: 8,
+            child: _ThemePreviewIconButton(
+              asset: AppIcons.maximizeOutlined,
+              label: AppStrings.themeMineFullPreview,
+              onPressed: _openFullPreview,
+            ),
+          ),
+        ],
+      ),
     );
     if (custom != null) {
       final dark = Theme.of(context).brightness == Brightness.dark;
@@ -1121,67 +1267,145 @@ class _ThemeLivePreviewState extends State<_ThemeLivePreview> {
 }
 
 class _ThemeHomePreviewPage extends StatelessWidget {
-  const _ThemeHomePreviewPage();
+  const _ThemeHomePreviewPage({this.full = false});
+
+  final bool full;
 
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(14, 18, 14, 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const Spacer(),
-          DecoratedBox(
-            decoration: BoxDecoration(
-              color: colors.card,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: colors.shadow,
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
+    final card = DecoratedBox(
+      decoration: BoxDecoration(
+        color: colors.card,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: colors.shadow,
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              AppStrings.todayTitle,
+              style: TextStyle(
+                fontFamily: AppFonts.of(context),
+                fontSize: full ? 17 : 15,
+                fontWeight: FontWeight.w800,
+                color: colors.text,
+              ),
             ),
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    AppStrings.todayTitle,
-                    style: TextStyle(
-                      fontFamily: AppFonts.of(context),
-                      fontSize: 15,
-                      fontWeight: FontWeight.w800,
-                      color: colors.text,
-                    ),
+            Text(
+              '8. 21. (금)',
+              style: TextStyle(
+                fontFamily: AppFonts.of(context),
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: colors.muted,
+              ),
+            ),
+            const SizedBox(height: 8),
+            const DayEventLabel(
+              title: '헬스장',
+              categoryName: '운동',
+              color: Color(0xFF7CB342),
+              timeText: '07:00',
+            ),
+            const SizedBox(height: 6),
+            const CalendarEventLabel(
+              title: '제주도',
+              color: Color(0xFF00ACC1),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (!full) {
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(14, 18, 14, 12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const Spacer(),
+            card,
+          ],
+        ),
+      );
+    }
+    return _fullHomePage(context);
+  }
+
+  Widget _fullHomePage(BuildContext context) {
+    final scope = AppScope.of(context);
+    final today = _themePreviewToday();
+    final compact = scope.homeViewPreference.isCompact;
+    final sortPrefs = scope.dayEventsViewPreference;
+    final bottomGap = 88 + MediaQuery.paddingOf(context).bottom;
+    return Scaffold(
+      resizeToAvoidBottomInset: false,
+      backgroundColor: Colors.transparent,
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        backgroundColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
+        titleSpacing: 8,
+        title: PressBounce(
+          onPressed: () {},
+          pressedScale: 0.96,
+          pressedColor: AppColors.of(context).pressed,
+          borderRadius: BorderRadius.circular(999),
+          child: const ThemedAsset(
+            asset: AppIcons.logo,
+            height: 120,
+            semanticLabel: AppStrings.appName,
+          ),
+        ),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 12),
+            child: Center(
+              child: AppBarIconGroup(
+                actions: [
+                  AppBarIconAction(
+                    asset: AppIcons.search,
+                    label: AppStrings.homeSearchHint,
+                    onPressed: () {},
                   ),
-                  Text(
-                    '8. 21. (금)',
-                    style: TextStyle(
-                      fontFamily: AppFonts.of(context),
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: colors.muted,
-                    ),
+                  AppBarIconAction(
+                    asset: compact ? AppIcons.detailView : AppIcons.quickView,
+                    label: compact
+                        ? AppStrings.detailedView
+                        : AppStrings.compactView,
+                    onPressed: () {},
                   ),
-                  const SizedBox(height: 8),
-                  const DayEventLabel(
-                    title: '자기소개서 제출',
-                    categoryName: '서류',
-                    color: Color(0xFF3B82F6),
-                    timeText: '14:00',
-                  ),
-                  const SizedBox(height: 6),
-                  const CalendarEventLabel(
-                    title: '면접 연습',
-                    color: Color(0xFF22C55E),
+                  AppBarIconAction(
+                    asset: AppIcons.setting,
+                    label: AppStrings.settingsTitle,
+                    onPressed: () {},
                   ),
                 ],
               ),
             ),
+          ),
+        ],
+      ),
+      body: ListView(
+        padding: EdgeInsets.fromLTRB(16, 8, 16, bottomGap),
+        children: [
+          HomeDayCard(
+            title: AppStrings.todayTitle,
+            date: today,
+            events: _themePreviewEventsOn(today),
+            categories: _themePreviewCategories,
+            compact: compact,
+            sortByTime: sortPrefs.sortByTime,
+            showTime: sortPrefs.showTime,
+            onEventsChanged: () {},
           ),
         ],
       ),
@@ -1190,7 +1414,9 @@ class _ThemeHomePreviewPage extends StatelessWidget {
 }
 
 class _ThemeCalendarPreviewPage extends StatelessWidget {
-  const _ThemeCalendarPreviewPage();
+  const _ThemeCalendarPreviewPage({this.full = false});
+
+  final bool full;
 
   static const _weeks = [
     [2, 3, 4, 5, 6, 7, 8],
@@ -1201,6 +1427,7 @@ class _ThemeCalendarPreviewPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (full) return _fullCalendarPage(context);
     final colors = AppColors.of(context);
     return Padding(
       padding: const EdgeInsets.fromLTRB(10, 10, 10, 8),
@@ -1260,10 +1487,53 @@ class _ThemeCalendarPreviewPage extends StatelessWidget {
       ),
     );
   }
+
+  Widget _fullCalendarPage(BuildContext context) {
+    final scope = AppScope.of(context);
+    final today = _themePreviewToday();
+    final month = DateTime(today.year, today.month);
+    final startMonday = scope.calendarPreference.startMonday;
+    final showLunar = scope.calendarPreference.showLunar;
+    final calendar = scope.calendarPreference;
+    final bottomGap = 72 + MediaQuery.paddingOf(context).bottom;
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      body: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: EdgeInsets.only(bottom: bottomGap),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              CalendarMonthHeader(
+                month: month,
+                showTodos: calendar.showTodos,
+                showCompanies: calendar.showCompanies,
+                onSearchPressed: () {},
+                tutorial: false,
+              ),
+              CalendarWeekdayHeader(startMonday: startMonday),
+              Expanded(
+                child: CalendarMonthGrid(
+                  month: month,
+                  startMonday: startMonday,
+                  showLunar: showLunar,
+                  eventsOf: _themePreviewEventsOn,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class _ThemePreviewDayCell extends StatelessWidget {
-  const _ThemePreviewDayCell({required this.day, required this.today});
+  const _ThemePreviewDayCell({
+    required this.day,
+    required this.today,
+  });
 
   final int day;
   final bool today;
@@ -1290,28 +1560,98 @@ class _ThemePreviewDayCell extends StatelessWidget {
 }
 
 class _ThemeJobPreviewPage extends StatelessWidget {
-  const _ThemeJobPreviewPage();
+  const _ThemeJobPreviewPage({this.full = false});
+
+  final bool full;
 
   @override
   Widget build(BuildContext context) {
-    return const Padding(
-      padding: EdgeInsets.fromLTRB(14, 18, 14, 12),
-      child: Column(
+    final cards = [
+      _ThemePreviewCompanyCard(
+        name: AppStrings.appName,
+        dDay: 'D-3',
+        status: '서류제출',
+        color: const Color(0xFF3B82F6),
+      ),
+      const SizedBox(height: 8),
+      _ThemePreviewCompanyCard(
+        name: AppStrings.appName,
+        dDay: 'D-5',
+        status: '최종합격',
+        color: const Color(0xFF00ACC1),
+      ),
+    ];
+    if (!full) {
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(14, 18, 14, 12),
+        child: Column(
+          children: [
+            const Spacer(),
+            ...cards,
+          ],
+        ),
+      );
+    }
+    return _fullJobPage(context);
+  }
+
+  Widget _fullJobPage(BuildContext context) {
+    final compact = AppScope.of(context).jobViewPreference.isCompact;
+    final jobs = _themePreviewJobs();
+    return Scaffold(
+      resizeToAvoidBottomInset: false,
+      backgroundColor: Colors.transparent,
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        backgroundColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
+        titleSpacing: 8,
+        title: PressBounce(
+          onPressed: () {},
+          pressedScale: 0.96,
+          pressedColor: AppColors.of(context).pressed,
+          borderRadius: BorderRadius.circular(999),
+          child: const ThemedAsset(
+            asset: AppIcons.jobLogo,
+            height: 120,
+            semanticLabel: AppStrings.jobScreenTitle,
+          ),
+        ),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 12),
+            child: Center(
+              child: AppBarIconGroup(
+                actions: [
+                  AppBarIconAction(
+                    asset: AppIcons.search,
+                    label: AppStrings.searchHint,
+                    onPressed: () {},
+                  ),
+                ],
+                trailing: [
+                  JobOverflowMenuButton(
+                    compact: compact,
+                    onCompactChanged: (_) {},
+                    showRejected: true,
+                    onShowRejectedChanged: (_) {},
+                    sortByTime: false,
+                    onSortByTimeChanged: (_) {},
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
         children: [
-          Spacer(),
-          _ThemePreviewCompanyCard(
-            name: '삼성전자',
-            dDay: 'D-3',
-            status: '서류제출',
-            color: Color(0xFF3B82F6),
-          ),
-          SizedBox(height: 8),
-          _ThemePreviewCompanyCard(
-            name: '카카오',
-            dDay: 'D-12',
-            status: '면접합격',
-            color: Color(0xFF4A8A10),
-          ),
+          CompanyCard(application: jobs[0], compact: compact),
+          SizedBox(height: compact ? 8 : 12),
+          CompanyCard(application: jobs[1], compact: compact),
+          const SizedBox(height: 12),
+          const AddCompanyButton(),
         ],
       ),
     );
@@ -1321,13 +1661,13 @@ class _ThemeJobPreviewPage extends StatelessWidget {
 class _ThemePreviewCompanyCard extends StatelessWidget {
   const _ThemePreviewCompanyCard({
     required this.name,
-    required this.dDay,
+    this.dDay,
     required this.status,
     required this.color,
   });
 
   final String name;
-  final String dDay;
+  final String? dDay;
   final String status;
   final Color color;
 
@@ -1352,15 +1692,16 @@ class _ThemePreviewCompanyCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              dDay,
-              style: TextStyle(
-                fontFamily: AppFonts.of(context),
-                fontSize: 16,
-                fontWeight: FontWeight.w800,
-                color: colors.danger,
+            if (dDay != null)
+              Text(
+                dDay!,
+                style: TextStyle(
+                  fontFamily: AppFonts.of(context),
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  color: colors.danger,
+                ),
               ),
-            ),
             Row(
               children: [
                 Expanded(
@@ -1441,7 +1782,10 @@ class _ThemePreviewDots extends StatelessWidget {
 }
 
 class _ThemePreviewNav extends StatelessWidget {
-  const _ThemePreviewNav({required this.selected, required this.onSelected});
+  const _ThemePreviewNav({
+    required this.selected,
+    required this.onSelected,
+  });
 
   final int selected;
   final ValueChanged<int> onSelected;
@@ -1479,18 +1823,12 @@ class _ThemePreviewNav extends StatelessWidget {
                         pressedScale: 0.88,
                         pressedColor: Colors.transparent,
                         child: Center(
-                          child: AnimatedSwitcher(
-                            duration: AppSkinBackground.transitionDuration,
-                            child: ThemedAsset(
-                              key: ValueKey(
-                                '${theme.skin}-$i-${i == selected}',
-                              ),
-                              asset: i == selected
-                                  ? items[i].filled
-                                  : items[i].outlined,
-                              width: 20,
-                              height: 20,
-                            ),
+                          child: ThemedAsset(
+                            asset: i == selected
+                                ? items[i].filled
+                                : items[i].outlined,
+                            width: 20,
+                            height: 20,
                           ),
                         ),
                       ),
@@ -1502,6 +1840,151 @@ class _ThemePreviewNav extends StatelessWidget {
         );
       },
     );
+  }
+}
+
+class _ThemePreviewIconButton extends StatelessWidget {
+  const _ThemePreviewIconButton({
+    required this.asset,
+    required this.label,
+    required this.onPressed,
+  });
+
+  final String asset;
+  final String label;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: colors.card,
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+            color: colors.shadow,
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: PressBounce(
+        onPressed: onPressed,
+        color: colors.card,
+        pressedColor: colors.pressed,
+        borderRadius: BorderRadius.circular(999),
+        child: SizedBox(
+          width: 36,
+          height: 36,
+          child: Center(
+            child: ThemedAsset(
+              asset: asset,
+              width: 18,
+              height: 18,
+              semanticLabel: label,
+              forceTint: true,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ThemeFullPreview extends StatefulWidget {
+  const _ThemeFullPreview({
+    required this.initialPage,
+    this.customTheme,
+  });
+
+  final UserTheme? customTheme;
+  final int initialPage;
+
+  @override
+  State<_ThemeFullPreview> createState() => _ThemeFullPreviewState();
+}
+
+class _ThemeFullPreviewState extends State<_ThemeFullPreview> {
+  late final PageController _pages;
+  late var _page = widget.initialPage;
+
+  @override
+  void initState() {
+    super.initState();
+    _pages = PageController(initialPage: widget.initialPage);
+  }
+
+  @override
+  void dispose() {
+    _pages.dispose();
+    super.dispose();
+  }
+
+  void _goTo(int page) {
+    final next = page.clamp(0, 2);
+    if (next == _page) return;
+    _pages.animateToPage(
+      next,
+      duration: const Duration(milliseconds: 420),
+      curve: Curves.easeOutCubic,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final custom = widget.customTheme;
+    final top = MediaQuery.paddingOf(context).top;
+    Widget preview = AppSkinBackground(
+      liftForNav: true,
+      skin: custom == null ? null : AppSkin.classic,
+      customTheme: custom,
+      child: Material(
+        type: MaterialType.transparency,
+        child: Stack(
+          children: [
+            PageView(
+              controller: _pages,
+              onPageChanged: (page) => setState(() => _page = page),
+              children: const [
+                IgnorePointer(child: _ThemeHomePreviewPage(full: true)),
+                IgnorePointer(child: _ThemeCalendarPreviewPage(full: true)),
+                IgnorePointer(child: _ThemeJobPreviewPage(full: true)),
+              ],
+            ),
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: PillBottomNav(
+                currentIndex: _page,
+                onChanged: _goTo,
+                tutorial: false,
+              ),
+            ),
+            Positioned(
+              top: top + 8,
+              left: 16,
+              child: AppBackButton(
+                onPressed: () => Navigator.pop(context),
+                size: 36,
+                iconSize: 22,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (custom != null) {
+      final dark = Theme.of(context).brightness == Brightness.dark;
+      preview = Theme(
+        data: AppTheme.themed(
+          dark: dark,
+          typeface: AppScope.of(context).fontPreference.typeface,
+          customAccent: custom.accentColor,
+        ),
+        child: preview,
+      );
+    }
+    return preview;
   }
 }
 
@@ -1518,6 +2001,7 @@ class _ThemeSettingsPageState extends State<_ThemeSettingsPage> {
   final _scroll = ScrollController();
   final _selectedKey = GlobalKey();
   var _scrolledToSelected = false;
+  var _precached = false;
 
   @override
   void initState() {
@@ -1532,9 +2016,8 @@ class _ThemeSettingsPageState extends State<_ThemeSettingsPage> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    for (final asset in AppSkinAssets.precacheDecorations) {
-      precacheImage(AssetImage(asset), context);
-    }
+    if (_precached) return;
+    _precached = true;
     precacheImage(const AssetImage(AppIcons.editOutlined), context);
     precacheImage(const AssetImage(AppIcons.trashCan), context);
   }
@@ -2092,6 +2575,7 @@ class _CustomThemeEditorPage extends StatefulWidget {
 class _CustomThemeEditorPageState extends State<_CustomThemeEditorPage> {
   late final PlainTextEditingController _name;
   late UserThemeKind _kind;
+  var _kindDir = 1.0;
   late int _accent;
   late double _photoWash;
   String? _photoPath;
@@ -2263,9 +2747,14 @@ class _CustomThemeEditorPageState extends State<_CustomThemeEditorPage> {
                   },
                   barColor: colors.card,
                   height: 46,
-                  accent: accent,
+                  accent: Color.lerp(colors.pressed, Colors.black, 0.06)!,
                   onChanged: (value) {
-                    setState(() => _kind = value);
+                    setState(() {
+                      final from = _kind == UserThemeKind.pattern ? 0 : 1;
+                      final to = value == UserThemeKind.pattern ? 0 : 1;
+                      _kindDir = to >= from ? 1.0 : -1.0;
+                      _kind = value;
+                    });
                     if (value == UserThemeKind.pattern) {
                       _showPatternHint();
                     } else {
@@ -2289,14 +2778,12 @@ class _CustomThemeEditorPageState extends State<_CustomThemeEditorPage> {
             curve: Curves.easeOutCubic,
             tween: ColorTween(end: accent),
             builder: (context, color, _) {
-              final tint = colors.tint(color ?? accent);
-              return AnimatedContainer(
-                duration: const Duration(milliseconds: 280),
-                curve: Curves.easeOutCubic,
+              return DecoratedBox(
                 decoration: BoxDecoration(
-                  color: tint,
+                  color: colors.card,
                   borderRadius: BorderRadius.circular(24),
                 ),
+                child: Padding(
                 padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -2324,43 +2811,74 @@ class _CustomThemeEditorPageState extends State<_CustomThemeEditorPage> {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    _kind == UserThemeKind.photo
-                        ? Column(
-                            children: [
-                              _ThemeImageWell(
-                                label: AppStrings.themeMinePhoto,
-                                path: _photoPreview,
-                                height: 168,
-                                onPressed: _pickPhoto,
-                              ),
-                              const SizedBox(height: 12),
-                              _WashSlider(
-                                label: AppStrings.themeMinePhotoWash,
-                                value: _photoWash,
-                                color: color ?? accent,
-                                onChanged: (value) =>
-                                    setState(() => _photoWash = value),
-                              ),
-                            ],
-                          )
-                        : Column(
-                            children: [
-                              _ThemeImageWell(
-                                label: AppStrings.themeMineDecoration,
-                                path: _decorationPreview,
-                                height: 120,
-                                onPressed: () => _pick(decoration: true),
-                              ),
-                              const SizedBox(height: 8),
-                              _ThemeImageWell(
-                                label: AppStrings.themeMineBottom,
-                                path: _bottomPreview,
-                                height: 72,
-                                alignBottom: true,
-                                onPressed: () => _pick(decoration: false),
-                              ),
-                            ],
-                          ),
+                    AnimatedSize(
+                      duration: const Duration(milliseconds: 280),
+                      curve: Curves.easeOutCubic,
+                      alignment: Alignment.topCenter,
+                      child: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 280),
+                        switchInCurve: Curves.easeOutCubic,
+                        switchOutCurve: Curves.easeOutCubic,
+                        layoutBuilder: (current, _) {
+                          return current ?? const SizedBox.shrink();
+                        },
+                        transitionBuilder: (child, animation) {
+                          final offset = Tween<Offset>(
+                            begin: Offset(_kindDir * 0.12, 0),
+                            end: Offset.zero,
+                          ).animate(animation);
+                          return FadeTransition(
+                            opacity: animation,
+                            child: SlideTransition(
+                              position: offset,
+                              child: child,
+                            ),
+                          );
+                        },
+                        child: KeyedSubtree(
+                          key: ValueKey(_kind),
+                          child: _kind == UserThemeKind.photo
+                              ? Column(
+                                  children: [
+                                    _ThemeImageWell(
+                                      label: AppStrings.themeMinePhoto,
+                                      path: _photoPreview,
+                                      height: 168,
+                                      onPressed: _pickPhoto,
+                                    ),
+                                    const SizedBox(height: 12),
+                                    _WashSlider(
+                                      label: AppStrings.themeMinePhotoWash,
+                                      value: _photoWash,
+                                      color: color ?? accent,
+                                      onChanged: (value) =>
+                                          setState(() => _photoWash = value),
+                                    ),
+                                  ],
+                                )
+                              : Column(
+                                  children: [
+                                    _ThemeImageWell(
+                                      label: AppStrings.themeMineDecoration,
+                                      path: _decorationPreview,
+                                      height: 120,
+                                      onPressed: () =>
+                                          _pick(decoration: true),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    _ThemeImageWell(
+                                      label: AppStrings.themeMineBottom,
+                                      path: _bottomPreview,
+                                      height: 72,
+                                      alignBottom: true,
+                                      onPressed: () =>
+                                          _pick(decoration: false),
+                                    ),
+                                  ],
+                                ),
+                        ),
+                      ),
+                    ),
                     const SizedBox(height: 16),
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.end,
@@ -2382,6 +2900,7 @@ class _CustomThemeEditorPageState extends State<_CustomThemeEditorPage> {
                     ),
             ],
           ),
+        ),
         );
       },
           ),
@@ -2665,7 +3184,7 @@ class _ThemeImageWell extends StatelessWidget {
           child: Stack(
             fit: StackFit.expand,
             children: [
-              ColoredBox(color: colors.card.withValues(alpha: 0.55)),
+              ColoredBox(color: colors.groupedBackground),
               if (hasImage)
                 Image.file(
                   File(imagePath),

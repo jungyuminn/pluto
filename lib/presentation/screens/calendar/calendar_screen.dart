@@ -629,8 +629,8 @@ class _CalendarScreenState extends State<CalendarScreen>
                                         entries: _ledgers,
                                       )
                                     : null,
-                                onLedgerStatsPressed: () {
-                                  showLedgerMonthStatsSheet(
+                                onLedgerStatsPressed: () async {
+                                  final day = await showLedgerMonthStatsSheet(
                                     context,
                                     month: _visibleMonth,
                                     stats: LedgerMonthStats.of(
@@ -638,6 +638,8 @@ class _CalendarScreenState extends State<CalendarScreen>
                                       entries: _ledgers,
                                     ),
                                   );
+                                  if (!mounted || day == null) return;
+                                  await _openDay(day, Rect.zero);
                                 },
                               );
                             },

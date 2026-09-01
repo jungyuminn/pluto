@@ -7,6 +7,7 @@ import 'package:job_planner/core/constants/app_icons.dart';
 import 'package:job_planner/core/constants/app_strings.dart';
 import 'package:job_planner/core/theme/app_colors.dart';
 import 'package:job_planner/core/theme/app_skin_background.dart';
+import 'package:job_planner/core/utils/press_bounce.dart';
 import 'package:job_planner/core/utils/swipe_to_delete.dart';
 import 'package:job_planner/domain/entities/event_category.dart';
 import 'package:job_planner/domain/entities/ledger_entry.dart';
@@ -685,12 +686,16 @@ class _LedgerDaySheetState extends State<LedgerDaySheet>
                                             right: 8,
                                             top: 1,
                                           ),
-                                          child: DayStickerImage(
-                                            key: ValueKey(_emoji),
-                                            asset: _emoji!,
-                                            width: 42,
-                                            height: 42,
-                                            pop: _emojiPop,
+                                          child: PressBounce(
+                                            onPressed: _pickEmoji,
+                                            pressedScale: 0.92,
+                                            child: DayStickerImage(
+                                              key: ValueKey(_emoji),
+                                              asset: _emoji!,
+                                              width: 42,
+                                              height: 42,
+                                              pop: _emojiPop,
+                                            ),
                                           ),
                                         ),
                                 ),

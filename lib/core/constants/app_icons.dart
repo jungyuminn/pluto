@@ -32,6 +32,8 @@ class AppIcons {
   static const zoomInOutlined = 'assets/icons/zoom_in_outlined.png';
   static const zoomOut = 'assets/icons/zoom_out.png';
   static const zoomOutOutlined = 'assets/icons/zoom_out_outlined.png';
+  static const maximizeOutlined = 'assets/icons/maximize_outlined.png';
+  static const minimizeOutlined = 'assets/icons/minimize_outlined.png';
   static const logo = 'assets/images/logo.png';
   static const jobLogo = 'assets/images/job_logo.png';
   static const office = 'assets/icons/office.png';

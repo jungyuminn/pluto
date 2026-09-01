@@ -77,16 +77,26 @@ ReleaseDemo releaseDemoFor(String text, {required bool isFix}) {
   if (isFix) {
     if (text.contains('알림')) return ReleaseDemo.notification;
     if (text.contains('숨긴 할 일')) return ReleaseDemo.monthWidget;
+    if (text.contains('캘린더가 깨지') || text.contains('아이콘이 한 번')) {
+      return ReleaseDemo.customTheme;
+    }
     return ReleaseDemo.fix;
   }
-  if (text.contains('월 통계')) return ReleaseDemo.ledgerMonth;
+  if (text.contains('크게 볼') || text.contains('패턴과 사진')) {
+    return ReleaseDemo.customTheme;
+  }
+  if (text.contains('가장 많이 쓴') || text.contains('월 통계')) {
+    return ReleaseDemo.ledgerMonth;
+  }
   if (text.contains('그날 소비')) return ReleaseDemo.ledgerDay;
   if (text.contains('반복해서 넣을')) return ReleaseDemo.ledgerRepeat;
   if (text.contains('여행 햄스터') || text.contains('스티커 팩')) {
     return ReleaseDemo.stickers;
   }
   if (text.contains('내역 또는 금액')) return ReleaseDemo.ledgerLabel;
-  if (text.contains('날짜에 스티커')) return ReleaseDemo.daySticker;
+  if (text.contains('스티커를 누르면') || text.contains('날짜에 스티커')) {
+    return ReleaseDemo.daySticker;
+  }
   if (text.contains('남은 할 일')) return ReleaseDemo.leftoverCount;
   if (text.contains('언젠가 할 일 카드')) return ReleaseDemo.someday;
   if (text.contains('챌린지')) return ReleaseDemo.challenge;

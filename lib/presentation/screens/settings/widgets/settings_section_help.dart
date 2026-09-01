@@ -1400,9 +1400,6 @@ class _ThemePreview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    for (final asset in AppSkinAssets.precacheDecorations) {
-      precacheImage(AssetImage(asset), context);
-    }
     return _HelpSelectDemo(
       labels: [for (final skin in _skins) _themeCaption(skin)],
       scene: (context, selected) {

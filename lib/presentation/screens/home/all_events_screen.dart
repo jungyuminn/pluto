@@ -17,6 +17,7 @@ import 'package:job_planner/presentation/screens/calendar/widgets/add_event_shee
 import 'package:job_planner/presentation/screens/calendar/widgets/day_event_label.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/delete_event_dialog.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/delete_repeat_event_dialog.dart';
+import 'package:job_planner/presentation/widgets/app_back_button.dart';
 import 'package:job_planner/presentation/widgets/app_calendar/app_calendar_sheet.dart';
 
 class HomeAllEventsCard extends StatelessWidget {
@@ -504,7 +505,7 @@ class _AllEventsScreenState extends State<AllEventsScreen> {
             padding: EdgeInsets.fromLTRB(16, top + 8, 16, 8),
             child: Row(
               children: [
-                _BackButton(onPressed: () => Navigator.pop(context)),
+                AppBackButton(onPressed: () => Navigator.pop(context)),
                 const SizedBox(width: 10),
                 Expanded(
                   child: TextField(
@@ -859,40 +860,3 @@ class _FilterSlot extends StatelessWidget {
   }
 }
 
-class _BackButton extends StatelessWidget {
-  const _BackButton({required this.onPressed});
-
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = AppColors.of(context);
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(999),
-        boxShadow: [
-          BoxShadow(
-            color: colors.shadow,
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: PressBounce(
-        onPressed: onPressed,
-        color: colors.card,
-        pressedColor: colors.pressed,
-        borderRadius: BorderRadius.circular(999),
-        child: SizedBox(
-          width: 44,
-          height: 44,
-          child: Icon(
-            Icons.chevron_left_rounded,
-            size: 28,
-            color: colors.text,
-          ),
-        ),
-      ),
-    );
-  }
-}

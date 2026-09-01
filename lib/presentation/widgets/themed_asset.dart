@@ -26,13 +26,20 @@ class ThemedAsset extends StatelessWidget {
       width: width,
       height: height,
       semanticLabel: semanticLabel,
+      gaplessPlayback: true,
     );
     final dark = Theme.of(context).brightness == Brightness.dark;
     final skin =
         AppScope.maybeOf(context)?.themePreference.skin ?? AppSkin.classic;
     final custom =
         AppScope.maybeOf(context)?.themePreference.usesCustom ?? false;
-    if (!dark && !forceTint && skin == AppSkin.classic && !custom) return image;
+    if (!dark &&
+        !forceTint &&
+        skin == AppSkin.classic &&
+        !custom &&
+        AppColors.of(context).icon == AppColors.light.icon) {
+      return image;
+    }
     return ColorFiltered(
       colorFilter: ColorFilter.mode(
         AppColors.of(context).icon,

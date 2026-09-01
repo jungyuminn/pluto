@@ -17,6 +17,19 @@ class ReleaseNote {
 abstract final class ReleaseNotes {
   static const all = [
     ReleaseNote(
+      version: '1.0.26',
+      items: [
+        '테마를 홈·캘린더·지원서처럼 크게 볼 수 있어요',
+        '테마에서 패턴과 사진을 바꿀 때 화면이 부드럽게 바뀌어요',
+        '월 통계에서 가장 많이 쓴 날·번 날을 볼 수 있어요',
+        '날짜 창에서 스티커를 누르면 바로 고를 수 있어요',
+      ],
+      fixes: [
+        '테마 미리보기에서 캘린더가 깨지던 문제를 고쳤어요',
+        '테마 화면을 나왔다 들어가면 아이콘이 한 번 깜빡이던 문제를 고쳤어요',
+      ],
+    ),
+    ReleaseNote(
       version: '1.0.25',
       items: [
         '홈 돋보기로 할 일·지원서를 검색할 수 있어요',

@@ -204,6 +204,7 @@ class AppStrings {
   static const themeGroupScene = '이미지';
   static const themeGroupMine = '내 테마';
   static const themeMineCreate = '테마 만들기';
+  static const themeMineFullPreview = '전체 보기';
   static const starterThemeReorder = '꾹 눌러서 위치를 바꿀 수 있어요';
   static const starterThemeSwipe = '왼쪽으로 밀어서 수정 및 삭제를 할 수 있어요';
   static const themeMineEdit = '테마 수정';
@@ -217,7 +218,7 @@ class AppStrings {
   static const themeMineDecorationHint = '512×512 정사각, 투명 배경이 좋아요';
   static const themeMineBottom = '하단';
   static const themeMineBottomHint = '2000×600처럼 가로로 긴 사진이 좋아요';
-  static const themeMinePatternToast = '장식은 정사각형, 하단은 가로로 긴 사진이 좋아요';
+  static const themeMinePatternToast = '장식은 투명 배경, 하단은 가로로 긴 사진이 좋아요';
   static const themeMinePickImage = '사진을 고르세요';
   static const themeMineMissingName = '테마 이름을 입력해 주세요';
   static const themeMineDeleteBody = '만든 테마가 사라져요';
@@ -530,6 +531,12 @@ class AppStrings {
   static String ledgerMonthStatsTitle(int month) => '$month월 통계';
   static String ledgerMonthStatsTitleWithYear(int year, int month) =>
       '$year년 $month월 통계';
+  static const ledgerTopConsumptionDay = '가장 많이 쓴 날';
+  static const ledgerTopIncomeDay = '가장 많이 번 날';
+  static String ledgerStatsDayLabel(DateTime date) {
+    final weekday = weekdays[date.weekday % 7];
+    return '${date.month}. ${date.day}. ($weekday)';
+  }
   static const calendarSearchLabel = '검색';
   static const diaryTitleHint = '제목을 입력하세요';
   static const diaryBodyHint = '내용을 입력하세요';

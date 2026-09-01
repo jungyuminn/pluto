@@ -76,6 +76,7 @@ enum ReleaseDemo {
 ReleaseDemo releaseDemoFor(String text, {required bool isFix}) {
   if (isFix) {
     if (text.contains('알림')) return ReleaseDemo.notification;
+    if (text.contains('숨긴 할 일')) return ReleaseDemo.monthWidget;
     return ReleaseDemo.fix;
   }
   if (text.contains('월 통계')) return ReleaseDemo.ledgerMonth;
@@ -102,12 +103,13 @@ ReleaseDemo releaseDemoFor(String text, {required bool isFix}) {
   if (text.contains('카테고리 색')) return ReleaseDemo.categoryColor;
   if (text.contains('초성')) return ReleaseDemo.searchChoseong;
   if (text.contains('카테고리 이름으로도')) return ReleaseDemo.companySearch;
+  if (text.contains('기간을 정하거나')) return ReleaseDemo.search;
   if (text.contains('검색할 수')) return ReleaseDemo.search;
   if (text.contains('기간 일기') || text.contains('날짜를 밀어')) {
     return ReleaseDemo.rangeDiary;
   }
   if (text.contains('휴지통')) return ReleaseDemo.diaryDelete;
-  if (text.contains('앱 둘러보기에 동작')) return ReleaseDemo.tutorial;
+  if (text.contains('앱 둘러보기')) return ReleaseDemo.tutorial;
   if (text.contains('하단 탭')) return ReleaseDemo.tabTransition;
   if (text.contains('가져올 할 일을 체크')) return ReleaseDemo.importPick;
   if (text.contains('삼성 캘린더')) return ReleaseDemo.samsungImport;
@@ -129,6 +131,10 @@ ReleaseDemo releaseDemoFor(String text, {required bool isFix}) {
     return ReleaseDemo.releaseNotes;
   }
   if (text.contains('이번 달 달력')) return ReleaseDemo.monthWidget;
+  if (text.contains('숨긴 할 일')) return ReleaseDemo.monthWidget;
+  if (text.contains('밖으로 빼') || text.contains('다른 날로')) {
+    return ReleaseDemo.homeReorder;
+  }
   if (text.contains('위젯을 고를 때')) return ReleaseDemo.homeWidget;
   if (text.contains('작은 위젯')) return ReleaseDemo.compactWidget;
   if (text.contains('일주일 위젯')) return ReleaseDemo.weekWidget;
@@ -1669,59 +1675,67 @@ class _TutorialDemo extends StatelessWidget {
 class _TabDemo extends StatelessWidget {
   const _TabDemo();
 
+  static const _tabWidth = 56.0;
+
   @override
   Widget build(BuildContext context) {
-    const labels = ['홈', '캘린더', '취업'];
+    const labels = ['홈', '캘린더', '지원서'];
     return _Loop(
       builder: (context, t) {
         final colors = AppColors.of(context);
         final font = AppFonts.of(context);
         final selected = t < 0.42 ? 0 : 1;
         final tap = _pulse(t, 0.28, 0.4, 0.82);
-        return Stack(
-          alignment: Alignment.center,
-          children: [
-            DecoratedBox(
-              decoration: BoxDecoration(
-                color: colors.card,
-                borderRadius: BorderRadius.circular(999),
-                border: Border.all(color: colors.border),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(4),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    for (var i = 0; i < 3; i++)
-                      AnimatedContainer(
-                        duration: const Duration(milliseconds: 220),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 8,
-                        ),
-                        decoration: BoxDecoration(
-                          color: selected == i
-                              ? colors.accent
-                              : Colors.transparent,
-                          borderRadius: BorderRadius.circular(999),
-                        ),
-                        child: Text(
-                          labels[i],
-                          style: TextStyle(
-                            fontFamily: font,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w800,
-                            color: selected == i ? Colors.white : colors.muted,
+        return Center(
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  color: colors.card,
+                  borderRadius: BorderRadius.circular(999),
+                  border: Border.all(color: colors.border),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(4),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      for (var i = 0; i < 3; i++)
+                        AnimatedContainer(
+                          duration: const Duration(milliseconds: 220),
+                          width: _tabWidth,
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          decoration: BoxDecoration(
+                            color: selected == i
+                                ? colors.accent
+                                : Colors.transparent,
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          child: Text(
+                            labels[i],
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontFamily: font,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w800,
+                              color: selected == i ? Colors.white : colors.muted,
+                            ),
                           ),
                         ),
-                      ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
-            ),
-            if (tap > 0)
-              Positioned(left: 118, top: 78, child: _Finger(pressed: tap)),
-          ],
+              if (tap > 0)
+                Positioned.fill(
+                  child: Align(
+                    alignment: Alignment((selected - 1) * 2 / 3, 0),
+                    child: _Finger(pressed: tap),
+                  ),
+                ),
+            ],
+          ),
         );
       },
     );

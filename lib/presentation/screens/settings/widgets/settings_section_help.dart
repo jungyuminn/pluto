@@ -2749,7 +2749,7 @@ class _StatsToggleDemo extends StatefulWidget {
 
 class _StatsToggleDemoState extends State<_StatsToggleDemo>
     with SingleTickerProviderStateMixin {
-  static const _sceneHeight = 228.0;
+  static const _sceneHeight = 268.0;
   static const _rowHeight = 44.0;
   static const _labels = [
     AppStrings.homeShowWeeklyStats,
@@ -2852,6 +2852,8 @@ class _StatsToggleDemoState extends State<_StatsToggleDemo>
                                               AppStrings.weeklyStatsHeadline,
                                           todoCount: 8,
                                           rate: 80,
+                                          diaryCount: 3,
+                                          ledgerCount: 6,
                                         ),
                                       ),
                                       _HomeCollapsingCard(
@@ -3352,12 +3354,16 @@ class _FakeStatsPeek extends StatelessWidget {
     required this.todoCount,
     required this.rate,
     this.roundCount,
+    this.diaryCount,
+    this.ledgerCount,
   });
 
   final String headline;
   final int todoCount;
   final int rate;
   final int? roundCount;
+  final int? diaryCount;
+  final int? ledgerCount;
 
   @override
   Widget build(BuildContext context) {
@@ -3427,6 +3433,31 @@ class _FakeStatsPeek extends StatelessWidget {
                 ),
               ],
             ),
+            if (diaryCount != null || ledgerCount != null) ...[
+              const SizedBox(height: 6),
+              Row(
+                children: [
+                  if (diaryCount != null)
+                    Expanded(
+                      child: _FakeStatsTile(
+                        label: AppStrings.monthlyStatsDiaryCountLabel,
+                        value: '$diaryCount',
+                      ),
+                    ),
+                  if (diaryCount != null && ledgerCount != null)
+                    const SizedBox(width: 6),
+                  if (ledgerCount != null)
+                    Expanded(
+                      child: _FakeStatsTile(
+                        label: AppStrings.monthlyStatsLedgerCountLabel,
+                        value: '$ledgerCount',
+                      ),
+                    )
+                  else
+                    const Expanded(child: SizedBox()),
+                ],
+              ),
+            ],
           ],
         ),
       ),

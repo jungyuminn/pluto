@@ -494,6 +494,18 @@ class HomeScreenWidgetService {
     await HomeWidget.saveWidgetData<String>('lock_inline', inline);
   }
 
+  List<CalendarEvent> _visibleEventsOn(
+    DateTime date,
+    List<CalendarEvent> allEvents,
+    List<JobApplication> applications,
+  ) {
+    return calendarEventsOn(
+      date: date,
+      events: (_calendar?.showTodos ?? true) ? allEvents : const [],
+      applications: (_calendar?.showCompanies ?? true) ? applications : const [],
+    );
+  }
+
   Future<void> _syncWeekTimetable({
     required DateTime today,
     required List<CalendarEvent> allEvents,
@@ -661,11 +673,8 @@ class HomeScreenWidgetService {
               child: MonthCalendarCard(
                 month: month,
                 startMonday: startMonday,
-                eventsOf: (date) => calendarEventsOn(
-                  date: date,
-                  events: allEvents,
-                  applications: applications,
-                ),
+                eventsOf: (date) =>
+                    _visibleEventsOn(date, allEvents, applications),
               ),
             ),
           ),

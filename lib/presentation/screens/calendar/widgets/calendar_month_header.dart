@@ -328,9 +328,11 @@ class _CalendarMonthMenuButtonState extends State<CalendarMonthMenuButton>
         showCompanies: widget.showCompanies,
         onShowTodosChanged: (value) {
           widget.onShowTodosChanged?.call(value);
+          if (mounted) setState(() {});
         },
         onShowCompaniesChanged: (value) {
           widget.onShowCompaniesChanged?.call(value);
+          if (mounted) setState(() {});
         },
         ledgerMode: ledger,
         showLedgerTitle: prefs.showLedgerTitle,

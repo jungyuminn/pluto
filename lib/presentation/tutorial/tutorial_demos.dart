@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:job_planner/core/constants/app_fonts.dart';
 import 'package:job_planner/core/constants/app_icons.dart';
+import 'package:job_planner/core/constants/app_strings.dart';
 import 'package:job_planner/core/theme/app_colors.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/calendar_event_label.dart';
 import 'package:job_planner/presentation/tutorial/tutorial_controller.dart';
@@ -22,7 +23,10 @@ class TutorialDemoView extends StatelessWidget {
       TutorialDemo.calendarTap => const _TapDemo(),
       TutorialDemo.calendarRange => const _RangeDemo(),
       TutorialDemo.todoComplete => const _CompleteDemo(),
+      TutorialDemo.todoMove => const _MoveDemo(),
       TutorialDemo.calendarMenu => const _MenuDemo(),
+      TutorialDemo.homeSearch => const _SearchDemo(),
+      TutorialDemo.homeSettings => const _SettingsDemo(),
       TutorialDemo.homeReorder => const _ReorderDemo(),
       TutorialDemo.jobSwipe => const _SwipeDemo(),
     };
@@ -99,21 +103,22 @@ double _pulse(double t, double a, double b, double c) {
 class _NavDemo extends StatelessWidget {
   const _NavDemo();
 
+  static const _tabWidth = 56.0;
+
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
     final font = AppFonts.of(context);
-    const labels = ['홈', '캘린더', '취업'];
+    const labels = ['홈', '캘린더', '지원서'];
     return _DemoLoop(
       builder: (context, t) {
         final tap = _pulse(t, 0.28, 0.4, 0.86);
         final selected = t < 0.42 ? 1 : 0;
-        return Stack(
-          alignment: Alignment.center,
-          children: [
-            Align(
-              alignment: Alignment.center,
-              child: DecoratedBox(
+        return Center(
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              DecoratedBox(
                 decoration: BoxDecoration(
                   color: colors.card,
                   borderRadius: BorderRadius.circular(999),
@@ -128,10 +133,8 @@ class _NavDemo extends StatelessWidget {
                         AnimatedContainer(
                           duration: const Duration(milliseconds: 220),
                           curve: Curves.easeOutCubic,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 8,
-                          ),
+                          width: _tabWidth,
+                          padding: const EdgeInsets.symmetric(vertical: 8),
                           decoration: BoxDecoration(
                             color: selected == i
                                 ? colors.accent
@@ -140,6 +143,7 @@ class _NavDemo extends StatelessWidget {
                           ),
                           child: Text(
                             labels[i],
+                            textAlign: TextAlign.center,
                             style: TextStyle(
                               fontFamily: font,
                               fontSize: 12,
@@ -154,14 +158,15 @@ class _NavDemo extends StatelessWidget {
                   ),
                 ),
               ),
-            ),
-            if (tap > 0)
-              Positioned(
-                left: 78,
-                top: 44,
-                child: _Finger(pressed: tap),
-              ),
-          ],
+              if (tap > 0)
+                Positioned.fill(
+                  child: Align(
+                    alignment: Alignment((selected - 1) * 2 / 3, 0),
+                    child: _Finger(pressed: tap),
+                  ),
+                ),
+            ],
+          ),
         );
       },
     );
@@ -385,6 +390,308 @@ class _CompleteDemo extends StatelessWidget {
               Positioned(
                 right: 18,
                 top: 46,
+                child: _Finger(pressed: press),
+              ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _MoveDemo extends StatelessWidget {
+  const _MoveDemo();
+
+  @override
+  Widget build(BuildContext context) {
+    const accent = Color(0xFF3B82F6);
+    return _DemoLoop(
+      height: 156,
+      duration: const Duration(milliseconds: 3000),
+      builder: (context, t) {
+        final press = _pulse(t, 0.12, 0.24, 0.88);
+        final drag = t < 0.26
+            ? 0.0
+            : t < 0.62
+                ? Curves.easeInOutCubic.transform(_gate(t, 0.26, 0.62))
+                : t < 0.88
+                    ? 1.0
+                    : 0.0;
+        final land = Curves.easeOutCubic.transform(_gate(t, 0.58, 0.72));
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            const pad = 12.0;
+            const gap = 5.0;
+            final cell = (constraints.maxWidth - pad * 2 - gap * 6) / 7;
+            final startX = pad + 18;
+            final startY = 18.0;
+            final endX = pad + 4 * (cell + gap) + cell / 2 - 40;
+            final endY = 78.0;
+            return Stack(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+                  child: Opacity(
+                    opacity: (1 - drag * 0.85).clamp(0.2, 1),
+                    child: const _MiniCard(
+                      title: '자기소개서 제출',
+                      top: 0,
+                      full: true,
+                    ),
+                  ),
+                ),
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  height: 92,
+                  child: _WeekStrip(
+                    highlight: land > 0.5 ? 4 : -1,
+                    finger: 0,
+                    labels: {
+                      if (land > 0)
+                        4: _LabelAppear(
+                          progress: land,
+                          title: '자기소개서',
+                          color: accent,
+                        ),
+                    },
+                  ),
+                ),
+                if (drag > 0 && land < 1)
+                  Positioned(
+                    left: startX + (endX - startX) * drag,
+                    top: startY + (endY - startY) * drag,
+                    width: 88,
+                    child: Opacity(
+                      opacity: (press * (1 - land)).clamp(0.0, 1.0),
+                      child: Transform.rotate(
+                        angle: -0.08 * drag,
+                        child: CalendarEventLabel(
+                          title: '자기소개서',
+                          color: accent,
+                          height: 18,
+                          fontSize: 10,
+                          applyCalendarScale: false,
+                        ),
+                      ),
+                    ),
+                  ),
+                if (press > 0)
+                  Positioned(
+                    left: startX + (endX - startX) * drag + 28,
+                    top: startY + (endY - startY) * drag + 4,
+                    child: _Finger(pressed: press),
+                  ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+}
+
+class _SearchDemo extends StatelessWidget {
+  const _SearchDemo();
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    final font = AppFonts.of(context);
+    return _DemoLoop(
+      height: 148,
+      duration: const Duration(milliseconds: 3000),
+      builder: (context, t) {
+        final press = _pulse(t, 0.28, 0.40, 0.88);
+        final onlyTodos = t >= 0.40 && t < 0.88;
+        final jobs = onlyTodos
+            ? 1 - Curves.easeOutCubic.transform(_gate(t, 0.40, 0.56))
+            : 1.0;
+        return Stack(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: colors.card,
+                      borderRadius: BorderRadius.circular(999),
+                      border: Border.all(color: colors.border),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      child: Row(
+                        children: [
+                          ThemedAsset(
+                            asset: AppIcons.search,
+                            width: 14,
+                            height: 14,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              AppStrings.allEventsSearchHint,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontFamily: font,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: colors.muted,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      _FilterPill(
+                        label: AppStrings.calendarModeRange,
+                        selected: false,
+                      ),
+                      const SizedBox(width: 6),
+                      _FilterPill(
+                        label: AppStrings.monthlyStatsTodoSection,
+                        selected: onlyTodos,
+                      ),
+                      const SizedBox(width: 6),
+                      _FilterPill(
+                        label: AppStrings.monthlyStatsJobSection,
+                        selected: false,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  CalendarEventLabel(
+                    title: '자기소개서 제출',
+                    color: const Color(0xFF3B82F6),
+                    height: 18,
+                    fontSize: 10,
+                    applyCalendarScale: false,
+                  ),
+                  if (jobs > 0) ...[
+                    const SizedBox(height: 6),
+                    Opacity(
+                      opacity: jobs,
+                      child: CalendarEventLabel(
+                        title: '잡플래너',
+                        color: const Color(0xFF8B5CF6),
+                        isJob: true,
+                        height: 18,
+                        fontSize: 10,
+                        applyCalendarScale: false,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            if (press > 0)
+              Positioned(
+                left: 108,
+                top: 52,
+                child: _Finger(pressed: press),
+              ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _FilterPill extends StatelessWidget {
+  const _FilterPill({required this.label, required this.selected});
+
+  final String label;
+  final bool selected;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    final font = AppFonts.of(context);
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 180),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: selected ? colors.accent : colors.card,
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: selected ? colors.accent : colors.border),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontFamily: font,
+          fontSize: 11,
+          fontWeight: FontWeight.w800,
+          color: selected ? Colors.white : colors.text,
+        ),
+      ),
+    );
+  }
+}
+
+class _SettingsDemo extends StatelessWidget {
+  const _SettingsDemo();
+
+  static const _items = [
+    AppStrings.settingsThemeSection,
+    AppStrings.settingsFontSection,
+    AppStrings.settingsNotificationSection,
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    return _DemoLoop(
+      height: 140,
+      duration: const Duration(milliseconds: 3000),
+      builder: (context, t) {
+        final selected = (t * 2.99).floor().clamp(0, 2);
+        final local = (t * 3) % 1;
+        final press = _pulse(local, 0.18, 0.32, 0.78);
+        return Stack(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: colors.card,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: colors.border),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      for (var i = 0; i < _items.length; i++)
+                        _MenuLine(
+                          label: _items[i],
+                          highlighted: selected == i,
+                          trailing: Icon(
+                            Icons.chevron_right_rounded,
+                            size: 16,
+                            color: colors.muted,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            if (press > 0)
+              Positioned(
+                right: 28,
+                top: 28 + selected * 28.0,
                 child: _Finger(pressed: press),
               ),
           ],

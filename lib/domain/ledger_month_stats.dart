@@ -7,6 +7,7 @@ class LedgerMonthStats {
     required this.expense,
     required this.salary,
     required this.hasSalary,
+    this.count = 0,
   });
 
   static const empty = LedgerMonthStats(
@@ -20,8 +21,11 @@ class LedgerMonthStats {
   final int expense;
   final int salary;
   final bool hasSalary;
+  final int count;
 
   int get net => expense + salary - consumption;
+
+  bool get isEmpty => count == 0;
 
   static LedgerMonthStats of({
     required DateTime month,
@@ -29,17 +33,29 @@ class LedgerMonthStats {
   }) {
     final start = DateTime(month.year, month.month, 1);
     final end = DateTime(month.year, month.month + 1, 0);
+    return ofRange(start: start, end: end, entries: entries);
+  }
+
+  static LedgerMonthStats ofRange({
+    required DateTime start,
+    required DateTime end,
+    required Iterable<LedgerEntry> entries,
+  }) {
+    final startDay = DateTime(start.year, start.month, start.day);
+    final endDay = DateTime(end.year, end.month, end.day);
     var consumption = 0;
     var expense = 0;
     var salary = 0;
     var hasSalary = false;
+    var count = 0;
     for (
-      var day = start;
-      !day.isAfter(end);
+      var day = startDay;
+      !day.isAfter(endDay);
       day = day.add(const Duration(days: 1))
     ) {
       for (final entry in entries) {
         if (!LedgerSalaryRepeat.occursOn(entry, day)) continue;
+        count++;
         switch (entry.kind) {
           case LedgerKind.consumption:
             consumption += entry.amount;
@@ -57,6 +73,7 @@ class LedgerMonthStats {
       expense: expense,
       salary: salary,
       hasSalary: hasSalary,
+      count: count,
     );
   }
 }

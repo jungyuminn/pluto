@@ -57,8 +57,6 @@ class _CalendarScreenState extends State<CalendarScreen>
   var _eventCategories = <EventCategory>[];
   var _initialized = false;
   var _rangeDragging = false;
-  var _showTodos = true;
-  var _showCompanies = true;
   var _showDiary = false;
   var _showLedger = false;
   var _zoom = CalendarZoomLevel.days;
@@ -362,7 +360,8 @@ class _CalendarScreenState extends State<CalendarScreen>
         );
       }
     } else {
-      if (_showTodos) {
+      final calendarPrefs = AppScope.of(context).calendarPreference;
+      if (calendarPrefs.showTodos) {
         for (final event in _events) {
           if (event.isJob || event.someday) continue;
           consider(
@@ -372,7 +371,7 @@ class _CalendarScreenState extends State<CalendarScreen>
           );
         }
       }
-      if (_showCompanies) {
+      if (calendarPrefs.showCompanies) {
         final showRejected =
             AppScope.of(context).jobViewPreference.showRejected;
         for (final application in _applications) {
@@ -423,10 +422,11 @@ class _CalendarScreenState extends State<CalendarScreen>
   }
 
   List<CalendarEvent> _eventsOn(DateTime date) {
+    final calendarPrefs = AppScope.of(context).calendarPreference;
     final events = calendarEventsOn(
       date: date,
-      events: _showTodos ? _events : const [],
-      applications: _showCompanies ? _applications : const [],
+      events: calendarPrefs.showTodos ? _events : const [],
+      applications: calendarPrefs.showCompanies ? _applications : const [],
       companyCategories: _companyCategories,
       includeRejected: AppScope.of(context).jobViewPreference.showRejected,
     );
@@ -582,18 +582,26 @@ class _CalendarScreenState extends State<CalendarScreen>
                                   hideCurrentYear: true,
                                 ),
                                 onTitlePressed: _onTitlePressed,
-                                showTodos: _showTodos,
-                                showCompanies: _showCompanies,
+                                showTodos: AppScope.of(context)
+                                    .calendarPreference
+                                    .showTodos,
+                                showCompanies: AppScope.of(context)
+                                    .calendarPreference
+                                    .showCompanies,
                                 showDiary: _showDiary,
                                 showLedger: _showLedger,
                                 searchOpen: searchOpen,
                                 onSearchPressed: _toggleSearch,
-                                onShowTodosChanged: (value) {
-                                  setState(() => _showTodos = value);
+                                onShowTodosChanged: (value) async {
+                                  await AppScope.of(context)
+                                      .calendarPreference
+                                      .setShowTodos(value);
                                   if (_searchOpen.value) _refreshHits();
                                 },
-                                onShowCompaniesChanged: (value) {
-                                  setState(() => _showCompanies = value);
+                                onShowCompaniesChanged: (value) async {
+                                  await AppScope.of(context)
+                                      .calendarPreference
+                                      .setShowCompanies(value);
                                   if (_searchOpen.value) _refreshHits();
                                 },
                                 onShowDiaryChanged: (value) {

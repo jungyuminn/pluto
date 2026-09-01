@@ -92,16 +92,16 @@ class AppStrings {
   static const tutorialBadgeNav = '탭';
   static const tutorialBadgeCalendar = '캘린더';
   static const tutorialBadgeHome = '홈';
-  static const tutorialBadgeJob = '취업';
+  static const tutorialBadgeJob = '지원서';
   static const tutorialWelcomeTitle = '잡플래너에 오신 걸 환영해요';
   static const tutorialWelcomeBody =
-      '할 일, 캘린더, 취업 지원을 한곳에서 관리해요. 화면을 따라가며 어디를 누르면 되는지 알려줄게요';
+      '할 일, 캘린더, 지원서를 한곳에서 관리해요. 화면을 따라가며 어디를 누르면 되는지 알려줄게요';
   static const tutorialNavBarTitle = '아래 탭으로 이동';
   static const tutorialNavBarBody =
-      '왼쪽이 홈, 가운데가 캘린더, 오른쪽이 취업이에요. 알약을 눌러 화면을 바꿔요';
+      '왼쪽이 홈, 가운데가 캘린더, 오른쪽이 지원서에요. 하단 버튼을 눌러 화면을 이동해요';
   static const tutorialNavCalendarTitle = '캘린더 화면';
   static const tutorialNavCalendarBody =
-      '지금 있는 화면이 캘린더예요. 할 일과 지원서 일정이 날짜에 점으로 보여요';
+      '지금 있는 화면이 캘린더예요. 할 일과 지원서 일정이 날짜에 라벨로 보여요';
   static const tutorialCalendarTitleTitle = '달·연도 고르기';
   static const tutorialCalendarTitleBody =
       '월 이름을 누르면 달을 고르고, 한 번 더 누르면 연도를 고를 수 있어요';
@@ -112,18 +112,29 @@ class AppStrings {
   static const tutorialCalendarRangeBody =
       '날짜를 길게 누른 뒤 옆으로 밀면 기간 할 일을 만들 수 있어요';
   static const tutorialCalendarCompleteTitle = '할 일 완료하기';
-  static const tutorialCalendarCompleteBody = '날짜를 눌러 열린 창에서 동그라미를 누르면 완료예요';
+  static const tutorialCalendarCompleteBody =
+      '날짜를 눌러 열린 창에서 동그라미를 누르면 완료예요. 길게 누르면 순서를 바꿀 수 있어요';
+  static const tutorialCalendarMoveTitle = '다른 날로 옮기기';
+  static const tutorialCalendarMoveBody =
+      '열린 창에서 할 일을 밖으로 빼면 다른 날짜로 옮겨요';
   static const tutorialCalendarMenuTitle = '표시 바꾸기';
   static const tutorialCalendarMenuBody =
-      '오른쪽 ··· 을 누르면 메뉴가 열려요. 할 일·지원서만 보거나 일기·가계부로 바꿀 수 있어요';
+      '오른쪽 ··· 을 누르면 메뉴가 열려요. 할 일·지원서만 보거나 일기·가계부로 바꿀 수 있어요. 바꾼 뒤 날짜를 누르면 그날 기록을 보거나 추가해요';
   static const tutorialNavHomeTitle = '홈 화면';
-  static const tutorialNavHomeBody = '오늘·내일 할 일과 챌린지 카드가 모여 있어요';
+  static const tutorialNavHomeBody =
+      '오늘·내일 할 일, 챌린지, 지난주·지난달 요약이 모여 있어요';
   static const tutorialHomeToolsTitle = '위쪽 버튼';
-  static const tutorialHomeToolsBody = '검색, 간략히 보기, 설정이에요';
+  static const tutorialHomeToolsBody = '검색, 카테고리별 보기, 설정 버튼이에요';
+  static const tutorialHomeSearchTitle = '전체 일정 찾기';
+  static const tutorialHomeSearchBody =
+      '돋보기를 누르면 할 일과 지원서를 한곳에서 찾아요. 기간을 정하거나 할 일·지원서만 볼 수 있어요';
+  static const tutorialHomeSettingsTitle = '설정에서 바꾸기';
+  static const tutorialHomeSettingsBody =
+      '설정을 누르면 테마, 글꼴, 알림 등 여러 항목을 설정할 수 있어요';
   static const tutorialHomeListTitle = '할 일 카드';
   static const tutorialHomeListBody =
       '오늘·내일·챌린지 카드예요. 눌러 열거나, 길게 눌러 순서를 바꿀 수 있어요';
-  static const tutorialNavJobTitle = '취업 화면';
+  static const tutorialNavJobTitle = '지원서 화면';
   static const tutorialNavJobBody = '지원서가 모여 있어요';
   static const tutorialJobToolsTitle = '위쪽 버튼';
   static const tutorialJobToolsBody = '검색과 오른쪽 메뉴예요';
@@ -280,7 +291,7 @@ class AppStrings {
       '캘린더의 첫 요일과 음력 날짜, 할 일·지원서·날짜·라벨의 글자 크기를 바꿀 수 있어요';
   static const calendarStartSunday = '일요일부터 시작';
   static const settingsMonthlyStatsHelp =
-      '매달 1일에는 지난달 요약을, 매주 월요일에는 지난주 요약을 보여줘요';
+      '매달 1일에는 지난달 요약을, 매주 월요일에는 지난주 요약을 보여줘요. 할 일·지원서·일기·가계부가 있으면 그 통계도 같이 보여줘요';
   static const lightMode = '라이트 모드';
   static const darkMode = '다크 모드';
   static const settingsNotificationSection = '알림 설정';
@@ -383,8 +394,9 @@ class AppStrings {
   static const leftoverTail = '있어요';
   static const allEventsCard = '전체 일정 보기';
   static const allEventsTitle = '전체 일정';
-  static const allEventsSearchHint = '할 일, 카테고리 검색';
+  static const allEventsSearchHint = '할 일, 지원서, 카테고리 검색';
   static const allEventsEmpty = '할 일이 없어요';
+  static const allEventsSearchEmpty = '검색 결과가 없어요';
   static const allEventsDeleteAll = '전체 삭제';
   static String allEventsDeleteBody(int count) => '할 일 $count개가 사라져요';
   static String monthlyStatsCardTitle(int month) => '$month월 통계가 도착했어요';
@@ -396,7 +408,7 @@ class AppStrings {
   static const monthlyStatsCompleteAnd = '를 완료하고';
   static const monthlyStatsCompletedTail = '를 완료했어요';
   static const monthlyStatsTotalTail = '가 있었어요';
-  static const monthlyStatsRoundsTail = '를 소화했어요';
+  static const monthlyStatsRoundsTail = '가 있었어요';
   static const monthlyStatsAnd = '와';
   static const monthlyStatsEmptyTail = '기록이 없어요';
   static const monthlyStatsCompletedLabel = '완료한 할 일';
@@ -406,7 +418,7 @@ class AppStrings {
   static String monthlyStatsRateValue(int percent) => '$percent%';
   static String monthlyStatsFraction(int done, int total) => '$done / $total';
   static const monthlyStatsTodoSection = '할 일';
-  static const monthlyStatsJobSection = '취업';
+  static const monthlyStatsJobSection = '지원서';
   static const monthlyStatsRoundsLabel = '전형 일정';
   static const monthlyStatsCompaniesLabel = '지원서';
   static const monthlyStatsCoverLettersLabel = '자기소개서';
@@ -417,7 +429,17 @@ class AppStrings {
   static const monthlyStatsRoundTypeSection = '전형 종류';
   static const monthlyStatsCategorySection = '카테고리';
   static const monthlyStatsBusyDaySection = '가장 바빴던 날';
-  static String monthlyStatsBusyDayTodos(int count) => '할 일 $count개';
+  static String monthlyStatsBusyDayCount(int count) => '$count개';
+  static const monthlyStatsDiarySection = '일기';
+  static const monthlyStatsDiaryCountLabel = '일기';
+  static const monthlyStatsDiaryDaysLabel = '쓴 날';
+  static const monthlyStatsDiaryPhotosLabel = '사진';
+  static String monthlyStatsDiaryCount(int count) => '일기 $count개';
+  static String monthlyStatsDiaryDaysValue(int count) => '$count일';
+  static const monthlyStatsDiaryWroteTail = '를 썼어요';
+  static const monthlyStatsLedgerSection = '가계부';
+  static const monthlyStatsLedgerCountLabel = '내역';
+  static String monthlyStatsLedgerCount(int count) => '내역 $count개';
   static const monthlyStatsPreviewSummary = '지난달 요약';
   static const weeklyStatsPreviewSummary = '지난주 요약';
   static const completeAll = '모두 완료';

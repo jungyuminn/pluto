@@ -17,6 +17,20 @@ class ReleaseNote {
 abstract final class ReleaseNotes {
   static const all = [
     ReleaseNote(
+      version: '1.0.25',
+      items: [
+        '홈 돋보기로 할 일·지원서를 검색할 수 있어요',
+        '기간을 정하거나 할 일·지원서만 골라 볼 수 있어요',
+        '지난주·지난달 요약에 일기·가계부가 있으면 같이 보여요',
+        '날짜 창에서 할 일을 밖으로 빼 다른 날로 옮길 수 있어요',
+        '앱 둘러보기에 검색·설정 안내가 생겼어요',
+      ],
+      fixes: [
+        '시간 순으로 보기여도 날짜를 옮길 수 있어요',
+        '위젯이 캘린더에서 숨긴 할 일·지원서를 따라가요',
+      ],
+    ),
+    ReleaseNote(
       version: '1.0.24',
       items: [
         '홈 화면에 이번 달 달력을 위젯으로 둘 수 있어요',

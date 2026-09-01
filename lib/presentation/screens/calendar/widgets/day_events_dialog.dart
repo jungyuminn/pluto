@@ -143,6 +143,7 @@ class _DayEventsDialogState extends State<DayEventsDialog> {
   var _animateEmojiSlot = false;
   String? _draggingId;
   var _draggingOutside = false;
+  var _triedReorder = false;
   final _reveals = <String, double>{};
 
   static const _eventExtent = 62.0;
@@ -508,6 +509,7 @@ class _DayEventsDialogState extends State<DayEventsDialog> {
     setState(() {
       _draggingId = event.id;
       _draggingOutside = false;
+      _triedReorder = false;
     });
   }
 
@@ -520,14 +522,17 @@ class _DayEventsDialogState extends State<DayEventsDialog> {
       final insideList = insideDialog && _contains(_listBoxKey, global);
       if (insideList) {
         CalendarDayDropTarget.clear();
+        final box =
+            _listBoxKey.currentContext?.findRenderObject() as RenderBox?;
+        if (box == null || !box.hasSize) return;
+        final to = _groupIndexAt(box.globalToLocal(global).dy, dragged);
         if (!_sortByTime) {
-          final box =
-              _listBoxKey.currentContext?.findRenderObject() as RenderBox?;
-          if (box == null || !box.hasSize) return;
-          _moveInGroup(
-            dragged,
-            _groupIndexAt(box.globalToLocal(global).dy, dragged),
-          );
+          _moveInGroup(dragged, to);
+        } else if (!_triedReorder) {
+          final from = _groupIndexOf(dragged);
+          if (from >= 0 && to >= 0 && from != to) {
+            _triedReorder = true;
+          }
         }
         return;
       }
@@ -556,6 +561,7 @@ class _DayEventsDialogState extends State<DayEventsDialog> {
     final event = _draggedEvent;
     final dropDate = CalendarDayDropTarget.highlighted.value;
     final shouldSaveOrder = _draggingId != null && !_sortByTime;
+    final triedReorder = _triedReorder;
     final moving = event != null &&
         dropDate != null &&
         !CalendarDayDropTarget.isSameDay(dropDate, widget.date);
@@ -565,6 +571,7 @@ class _DayEventsDialogState extends State<DayEventsDialog> {
     setState(() {
       _draggingId = null;
       _draggingOutside = false;
+      _triedReorder = false;
     });
     if (moving) {
       await _moveToDate(event, dropDate);
@@ -572,17 +579,21 @@ class _DayEventsDialogState extends State<DayEventsDialog> {
       return;
     }
     if (shouldSaveOrder) await _persistTodoOrder();
+    if (_sortByTime && triedReorder && mounted) {
+      await _explainTimeSortLock();
+    }
   }
 
   Future<void> _moveToDate(CalendarEvent event, DateTime date) async {
-    final next = event.copyWith(
-      date: DateTime(date.year, date.month, date.day),
-    );
+    final target = DateTime(date.year, date.month, date.day);
     final updater = AppScope.of(context).updateCalendarEvent;
-    if (event.isRepeat) {
-      await updater.instance(next);
+    final groupId = event.groupId;
+    if (groupId != null) {
+      await updater.moveGroup(groupId, target);
+    } else if (event.isRepeat) {
+      await updater.instance(event.copyWith(date: target));
     } else {
-      await updater(next);
+      await updater(event.copyWith(date: target));
     }
     widget.onEventsChanged?.call();
   }
@@ -594,6 +605,16 @@ class _DayEventsDialogState extends State<DayEventsDialog> {
       if (event.id == id) return event;
     }
     return null;
+  }
+
+  int _groupIndexOf(CalendarEvent dragged) {
+    var index = 0;
+    for (final item in _items) {
+      if (!_sameGroup(dragged, item)) continue;
+      if (item.event?.id == dragged.id) return index;
+      index++;
+    }
+    return -1;
   }
 
   int _groupIndexAt(double y, CalendarEvent dragged) {
@@ -905,7 +926,6 @@ class _DayEventsDialogState extends State<DayEventsDialog> {
             memo: event.memo,
             timeText: timeText,
             onPressed: () => _edit(event),
-            onLongPressed: _sortByTime ? _explainTimeSortLock : null,
             onCompletePressed: () => _toggleComplete(event),
           );
 
@@ -919,7 +939,7 @@ class _DayEventsDialogState extends State<DayEventsDialog> {
             ),
     );
 
-    if (event.isLockedOrder || _sortByTime) return body;
+    if (event.isJob) return body;
 
     return LayoutBuilder(
       builder: (context, constraints) {

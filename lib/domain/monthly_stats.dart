@@ -1,6 +1,10 @@
 import 'package:job_planner/domain/entities/apply_status.dart';
 import 'package:job_planner/domain/entities/calendar_event.dart';
+import 'package:job_planner/domain/entities/diary_entry.dart';
 import 'package:job_planner/domain/entities/job_application.dart';
+import 'package:job_planner/domain/entities/ledger_entry.dart';
+import 'package:job_planner/domain/ledger_month_stats.dart';
+import 'package:job_planner/domain/ledger_salary_repeat.dart';
 
 class MonthlyCategoryStat {
   const MonthlyCategoryStat({
@@ -26,14 +30,34 @@ class MonthlyNamedCount {
   final int count;
 }
 
+enum MonthlyBusyDayKind { todo, job, diary, ledger }
+
+class MonthlyBusyDayItem {
+  const MonthlyBusyDayItem({
+    required this.title,
+    required this.color,
+    this.kind = MonthlyBusyDayKind.todo,
+    this.timeLabel,
+    this.trailing,
+    this.completed = false,
+  });
+
+  final String title;
+  final int color;
+  final MonthlyBusyDayKind kind;
+  final String? timeLabel;
+  final String? trailing;
+  final bool completed;
+}
+
 class MonthlyBusyDay {
   const MonthlyBusyDay({
     required this.date,
-    required this.todos,
+    this.items = const [],
   });
 
   final DateTime date;
-  final int todos;
+  final List<MonthlyBusyDayItem> items;
 }
 
 class MonthlyStats {
@@ -52,6 +76,12 @@ class MonthlyStats {
     required this.categories,
     required this.roundTypes,
     this.busyDay,
+    this.diaries = 0,
+    this.diaryDays = 0,
+    this.diaryPhotos = 0,
+    this.diaryCategories = const [],
+    this.ledger = LedgerMonthStats.empty,
+    this.ledgerCategories = const [],
   });
 
   final int year;
@@ -68,6 +98,12 @@ class MonthlyStats {
   final List<MonthlyCategoryStat> categories;
   final List<MonthlyNamedCount> roundTypes;
   final MonthlyBusyDay? busyDay;
+  final int diaries;
+  final int diaryDays;
+  final int diaryPhotos;
+  final List<MonthlyCategoryStat> diaryCategories;
+  final LedgerMonthStats ledger;
+  final List<MonthlyCategoryStat> ledgerCategories;
 
   int get incompleteTodos => totalTodos - completedTodos;
 
@@ -76,7 +112,11 @@ class MonthlyStats {
     return ((completedTodos / totalTodos) * 100).round();
   }
 
-  bool get isEmpty => totalTodos == 0 && jobRounds == 0;
+  bool get isEmpty =>
+      totalTodos == 0 &&
+      jobRounds == 0 &&
+      diaries == 0 &&
+      ledger.isEmpty;
 
   static DateTime previousMonth(DateTime today) {
     return DateTime(today.year, today.month - 1);
@@ -102,6 +142,8 @@ class MonthlyStats {
     required DateTime month,
     required List<CalendarEvent> events,
     required List<JobApplication> applications,
+    List<DiaryEntry> diaries = const [],
+    List<LedgerEntry> ledgers = const [],
   }) {
     final start = DateTime(month.year, month.month, 1);
     final end = DateTime(month.year, month.month + 1, 0);
@@ -110,6 +152,8 @@ class MonthlyStats {
       end: end,
       events: events,
       applications: applications,
+      diaries: diaries,
+      ledgers: ledgers,
     );
   }
 
@@ -118,6 +162,8 @@ class MonthlyStats {
     required DateTime end,
     required List<CalendarEvent> events,
     required List<JobApplication> applications,
+    List<DiaryEntry> diaries = const [],
+    List<LedgerEntry> ledgers = const [],
   }) {
     final startDay = DateTime(start.year, start.month, start.day);
     final endDay = DateTime(end.year, end.month, end.day);
@@ -128,7 +174,7 @@ class MonthlyStats {
     final categoryTotals = <String, int>{};
     final categoryCompleted = <String, int>{};
     final categoryColors = <String, int>{};
-    final todosByDay = <DateTime, int>{};
+    final busyScore = <DateTime, int>{};
 
     for (final event in events) {
       if (event.isJob || event.someday) continue;
@@ -138,7 +184,7 @@ class MonthlyStats {
       categoryTotals[category] = (categoryTotals[category] ?? 0) + 1;
       categoryColors[category] = event.categoryColor;
       final day = event.day;
-      todosByDay[day] = (todosByDay[day] ?? 0) + 1;
+      busyScore[day] = (busyScore[day] ?? 0) + 1;
       if (!event.completed) continue;
       completedTodos++;
       categoryCompleted[category] = (categoryCompleted[category] ?? 0) + 1;
@@ -154,6 +200,8 @@ class MonthlyStats {
         if (date == null || !_inRange(date, startDay, endDay)) continue;
         jobRounds++;
         hadRound = true;
+        final roundDay = DateTime(date.year, date.month, date.day);
+        busyScore[roundDay] = (busyScore[roundDay] ?? 0) + 1;
         final name = round.name.trim();
         if (name.isEmpty) continue;
         roundTypeCounts[name] = (roundTypeCounts[name] ?? 0) + 1;
@@ -201,15 +249,95 @@ class MonthlyStats {
         MonthlyNamedCount(name: entry.key, count: entry.value),
     ]..sort((a, b) => b.count.compareTo(a.count));
 
-    MonthlyBusyDay? busyDay;
-    for (final entry in todosByDay.entries) {
-      final current = busyDay;
-      if (current == null ||
-          entry.value > current.todos ||
-          (entry.value == current.todos && entry.key.isBefore(current.date))) {
-        busyDay = MonthlyBusyDay(date: entry.key, todos: entry.value);
+    DateTime? busyDate;
+    var best = 0;
+    for (final entry in busyScore.entries) {
+      if (busyDate == null ||
+          entry.value > best ||
+          (entry.value == best && entry.key.isBefore(busyDate))) {
+        busyDate = entry.key;
+        best = entry.value;
       }
     }
+    MonthlyBusyDay? busyDay;
+    if (busyDate != null) {
+      final items = _itemsOn(
+        busyDate,
+        events: events,
+        applications: applications,
+        diaries: diaries,
+        ledgers: ledgers,
+      );
+      if (items.isNotEmpty) {
+        busyDay = MonthlyBusyDay(date: busyDate, items: items);
+      }
+    }
+
+    final diaryKeys = <String>{};
+    final diaryDaySet = <DateTime>{};
+    final photoKeys = <String>{};
+    final diaryCategoryTotals = <String, int>{};
+    final diaryCategoryColors = <String, int>{};
+    for (final diary in diaries) {
+      if (!_inRange(diary.date, startDay, endDay)) continue;
+      final key = diary.groupId ?? diary.id;
+      diaryDaySet.add(diary.day);
+      final isNew = diaryKeys.add(key);
+      if (diary.hasPhoto) photoKeys.add(key);
+      if (!isNew) continue;
+      final category = diary.categoryName;
+      diaryCategoryTotals[category] = (diaryCategoryTotals[category] ?? 0) + 1;
+      diaryCategoryColors[category] = diary.categoryColor;
+    }
+
+    final diaryCategories = [
+      for (final entry in diaryCategoryTotals.entries)
+        MonthlyCategoryStat(
+          name: entry.key,
+          total: entry.value,
+          completed: entry.value,
+          color: diaryCategoryColors[entry.key] ??
+              CalendarEvent.defaultCategoryColor,
+        ),
+    ]..sort((a, b) => b.total.compareTo(a.total));
+
+    final ledger = LedgerMonthStats.ofRange(
+      start: startDay,
+      end: endDay,
+      entries: ledgers,
+    );
+    final ledgerCategoryTotals = <String, int>{};
+    final ledgerCategoryColors = <String, int>{};
+    var hasNamedLedgerCategory = false;
+    if (!ledger.isEmpty) {
+      for (
+        var day = startDay;
+        !day.isAfter(endDay);
+        day = day.add(const Duration(days: 1))
+      ) {
+        for (final entry in ledgers) {
+          if (!LedgerSalaryRepeat.occursOn(entry, day)) continue;
+          if (entry.categoryName.trim().isNotEmpty) {
+            hasNamedLedgerCategory = true;
+          }
+          final name = entry.displayCategoryName;
+          ledgerCategoryTotals[name] = (ledgerCategoryTotals[name] ?? 0) + 1;
+          ledgerCategoryColors[name] = entry.displayCategoryColor;
+        }
+      }
+    }
+
+    final ledgerCategories = [
+      if (hasNamedLedgerCategory)
+        for (final entry in ledgerCategoryTotals.entries)
+          MonthlyCategoryStat(
+            name: entry.key,
+            total: entry.value,
+            completed: entry.value,
+            color: ledgerCategoryColors[entry.key] ??
+              CalendarEvent.defaultCategoryColor,
+          ),
+    ]..sort((a, b) => b.total.compareTo(a.total));
 
     return MonthlyStats(
       year: year,
@@ -226,6 +354,100 @@ class MonthlyStats {
       categories: categories,
       roundTypes: roundTypes,
       busyDay: busyDay,
+      diaries: diaryKeys.length,
+      diaryDays: diaryDaySet.length,
+      diaryPhotos: photoKeys.length,
+      diaryCategories: diaryCategories,
+      ledger: ledger,
+      ledgerCategories: ledgerCategories,
     );
+  }
+
+  static List<MonthlyBusyDayItem> _itemsOn(
+    DateTime date, {
+    required List<CalendarEvent> events,
+    required List<JobApplication> applications,
+    required List<DiaryEntry> diaries,
+    required List<LedgerEntry> ledgers,
+  }) {
+    final items = <MonthlyBusyDayItem>[];
+    for (final application in applications) {
+      for (var i = 0; i < application.rounds.length; i++) {
+        final round = application.rounds[i];
+        final roundDate = round.date;
+        if (roundDate == null || !_inRange(roundDate, date, date)) continue;
+        items.add(
+          MonthlyBusyDayItem(
+            title: _jobRoundLabel(application.companyName, i + 1, round.name),
+            color:
+                application.categoryColor ?? CalendarEvent.defaultCategoryColor,
+            kind: MonthlyBusyDayKind.job,
+          ),
+        );
+      }
+    }
+
+    final dayTodos = [
+      for (final event in events)
+        if (!event.isJob &&
+            !event.someday &&
+            _inRange(event.date, date, date))
+          event,
+    ];
+    final ordered = CalendarEvent.withRangesFirst(
+      dayTodos,
+      all: events.where((event) => !event.isJob && !event.someday),
+    );
+    for (final event in ordered) {
+      items.add(
+        MonthlyBusyDayItem(
+          title: event.title,
+          color: event.categoryColor,
+          timeLabel: event.timeLabel,
+          completed: event.completed,
+        ),
+      );
+    }
+
+    final seenDiary = <String>{};
+    for (final diary in diaries) {
+      if (!_inRange(diary.date, date, date)) continue;
+      if (!seenDiary.add(diary.groupId ?? diary.id)) continue;
+      final title = diary.title.trim();
+      items.add(
+        MonthlyBusyDayItem(
+          title: title.isNotEmpty ? title : diary.body.trim().split('\n').first,
+          color: diary.categoryColor,
+          kind: MonthlyBusyDayKind.diary,
+        ),
+      );
+    }
+
+    final dayLedgers = [
+      for (final entry in ledgers)
+        if (LedgerSalaryRepeat.occursOn(entry, date)) entry,
+    ]..sort(LedgerEntry.compareDisplay);
+    for (final entry in dayLedgers) {
+      final title = entry.title.trim();
+      items.add(
+        MonthlyBusyDayItem(
+          title: title.isNotEmpty ? title : entry.displayCategoryName,
+          color: entry.displayCategoryColor,
+          trailing: '${entry.signedLabel}원',
+          kind: MonthlyBusyDayKind.ledger,
+        ),
+      );
+    }
+    return items;
+  }
+
+  static String _jobRoundLabel(
+    String companyName,
+    int number,
+    String roundName,
+  ) {
+    final name = roundName.trim();
+    if (name.isEmpty) return '$companyName-$number차';
+    return '$companyName-$number차($name)';
   }
 }

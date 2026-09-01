@@ -3,9 +3,11 @@ import 'package:job_planner/app_scope.dart';
 import 'package:job_planner/core/constants/app_fonts.dart';
 import 'package:job_planner/core/constants/app_strings.dart';
 import 'package:job_planner/core/theme/app_colors.dart';
+import 'package:job_planner/core/utils/fade_in.dart';
 import 'package:job_planner/core/utils/press_bounce.dart';
 import 'package:job_planner/domain/monthly_stats.dart';
 import 'package:job_planner/domain/entities/apply_status.dart';
+import 'package:job_planner/presentation/screens/calendar/widgets/ledger_kind_stats.dart';
 import 'package:job_planner/presentation/theme/apply_status_colors.dart';
 
 class MonthlyStatsScreen extends StatefulWidget {
@@ -36,6 +38,8 @@ class _MonthlyStatsScreenState extends State<MonthlyStatsScreen> {
     final scope = AppScope.of(context);
     final events = await scope.getCalendarEvents();
     final applications = await scope.getJobApplications();
+    final diaries = await scope.getDiaries();
+    final ledgers = await scope.getLedgers();
     if (!mounted) return;
     setState(() {
       if (widget.weekly) {
@@ -48,12 +52,16 @@ class _MonthlyStatsScreenState extends State<MonthlyStatsScreen> {
           end: week.end,
           events: events,
           applications: applications,
+          diaries: diaries,
+          ledgers: ledgers,
         );
       } else {
         _stats = MonthlyStats.of(
           month: MonthlyStats.previousMonth(_today),
           events: events,
           applications: applications,
+          diaries: diaries,
+          ledgers: ledgers,
         );
       }
       _loading = false;
@@ -138,164 +146,309 @@ class _MonthlyStatsScreenState extends State<MonthlyStatsScreen> {
             Expanded(
               child: ListView(
                 padding: const EdgeInsets.fromLTRB(24, 12, 24, 32),
-                children: [
-                  Text.rich(
-                    TextSpan(
-                      style: TextStyle(
-                        fontFamily: AppFonts.of(context),
-                        fontSize: 28,
-                        fontWeight: FontWeight.w800,
-                        height: 1.25,
-                        color: colors.text,
-                      ),
-                      children: [
-                        TextSpan(
-                          text: widget.weekly
-                              ? '${AppStrings.weeklyStatsHeadline}\n'
-                              : '${AppStrings.monthlyStatsHeadlineMonth(stats.month)}\n',
-                        ),
-                        ..._headline(stats, colors),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  _HighlightGrid(
-                    items: [
-                      _HighlightItem(
-                        label: AppStrings.monthlyStatsCompletedLabel,
-                        value: '${stats.completedTodos}',
-                      ),
-                      _HighlightItem(
-                        label: AppStrings.monthlyStatsRateLabel,
-                        value: AppStrings.monthlyStatsRateValue(
-                          stats.completionRate,
-                        ),
-                      ),
-                      _HighlightItem(
-                        label: AppStrings.monthlyStatsRoundsLabel,
-                        value: '${stats.jobRounds}',
-                      ),
-                      _HighlightItem(
-                        label: AppStrings.monthlyStatsCompaniesLabel,
-                        value: '${stats.companies}',
-                      ),
-                    ],
-                  ),
-                  if (stats.totalTodos > 0) ...[
-                    const SizedBox(height: 28),
-                    _SectionTitle(AppStrings.monthlyStatsTodoSection),
-                    const SizedBox(height: 8),
-                    _ProgressCard(
-                      done: stats.completedTodos,
-                      total: stats.totalTodos,
-                    ),
-                    const SizedBox(height: 12),
-                    _StatsCard(
-                      children: [
-                        _StatRow(
-                          label: AppStrings.monthlyStatsCompletedLabel,
-                          value: '${stats.completedTodos}',
-                        ),
-                        _StatRow(
-                          label: AppStrings.monthlyStatsIncompleteLabel,
-                          value: '${stats.incompleteTodos}',
-                        ),
-                        _StatRow(
-                          label: AppStrings.monthlyStatsTotalLabel,
-                          value: '${stats.totalTodos}',
-                        ),
-                      ],
-                    ),
-                  ],
-                  if (stats.categories.isNotEmpty) ...[
-                    const SizedBox(height: 28),
-                    _SectionTitle(AppStrings.monthlyStatsCategorySection),
-                    const SizedBox(height: 8),
-                    _StatsCard(
-                      children: [
-                        for (final category in stats.categories)
-                          _BarRow(
-                            label: category.name,
-                            done: category.completed,
-                            total: category.total,
-                            color: Color(category.color),
-                          ),
-                      ],
-                    ),
-                  ],
-                  if (stats.busyDay != null) ...[
-                    const SizedBox(height: 28),
-                    _SectionTitle(AppStrings.monthlyStatsBusyDaySection),
-                    const SizedBox(height: 8),
-                    _BusyDayCard(day: stats.busyDay!),
-                  ],
-                  if (stats.companies > 0) ...[
-                    const SizedBox(height: 28),
-                    _SectionTitle(AppStrings.monthlyStatsJobSection),
-                    const SizedBox(height: 8),
-                    _StatsCard(
-                      children: [
-                        _StatRow(
-                          label: AppStrings.monthlyStatsRoundsLabel,
-                          value: '${stats.jobRounds}',
-                        ),
-                        _StatRow(
-                          label: AppStrings.monthlyStatsCompaniesLabel,
-                          value: '${stats.companies}',
-                        ),
-                        _StatRow(
-                          label: AppStrings.monthlyStatsCoverLettersLabel,
-                          value: '${stats.coverLetters}',
-                        ),
-                        _StatRow(
-                          label: AppStrings.monthlyStatsFinalPassedLabel,
-                          value: '${stats.finalPassed}',
-                          dotColor: ApplyStatusColors.of(
-                            ApplyStatus.finalPassed,
-                          ),
-                        ),
-                        _StatRow(
-                          label: AppStrings.monthlyStatsPassedLabel,
-                          value: '${stats.passed}',
-                          dotColor: ApplyStatusColors.of(
-                            ApplyStatus.interviewPassed,
-                          ),
-                        ),
-                        _StatRow(
-                          label: AppStrings.monthlyStatsRejectedLabel,
-                          value: '${stats.rejected}',
-                          dotColor: ApplyStatusColors.rejected,
-                        ),
-                        _StatRow(
-                          label: AppStrings.monthlyStatsInProgressLabel,
-                          value: '${stats.inProgress}',
-                          dotColor: ApplyStatusColors.of(
-                            ApplyStatus.documentSubmitted,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                  if (stats.roundTypes.isNotEmpty) ...[
-                    const SizedBox(height: 28),
-                    _SectionTitle(AppStrings.monthlyStatsRoundTypeSection),
-                    const SizedBox(height: 8),
-                    _StatsCard(
-                      children: [
-                        for (final type in stats.roundTypes)
-                          _StatRow(
-                            label: type.name,
-                            value: '${type.count}',
-                          ),
-                      ],
-                    ),
-                  ],
-                ],
+                children: _items(stats, colors),
               ),
             ),
         ],
       ),
     );
+  }
+
+  Widget _appear(int order, Widget child) {
+    return FadeIn(
+      delay: Duration(milliseconds: 70 * order),
+      offset: const Offset(0, 16),
+      child: child,
+    );
+  }
+
+  Widget _section(int order, List<Widget> children) {
+    return _appear(
+      order,
+      Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: children,
+      ),
+    );
+  }
+
+  List<Widget> _items(MonthlyStats stats, AppColors colors) {
+    var order = 0;
+    final items = <Widget>[
+      _appear(
+        order++,
+        Text.rich(
+          TextSpan(
+            style: TextStyle(
+              fontFamily: AppFonts.of(context),
+              fontSize: 28,
+              fontWeight: FontWeight.w800,
+              height: 1.25,
+              color: colors.text,
+            ),
+            children: [
+              TextSpan(
+                text: widget.weekly
+                    ? '${AppStrings.weeklyStatsHeadline}\n'
+                    : '${AppStrings.monthlyStatsHeadlineMonth(stats.month)}\n',
+              ),
+              ..._headline(stats, colors),
+            ],
+          ),
+        ),
+      ),
+    ];
+    final highlights = _highlights(stats);
+    if (highlights.isNotEmpty) {
+      items.add(const SizedBox(height: 24));
+      items.add(
+        _HighlightGrid(
+          items: highlights,
+          startOrder: order,
+        ),
+      );
+      order += highlights.length;
+    }
+    if (stats.totalTodos > 0) {
+      items.add(
+        _section(order++, [
+          const SizedBox(height: 28),
+          _SectionTitle(AppStrings.monthlyStatsTodoSection),
+          const SizedBox(height: 8),
+          _ProgressCard(
+            done: stats.completedTodos,
+            total: stats.totalTodos,
+          ),
+          const SizedBox(height: 12),
+          _StatsCard(
+            children: [
+              _StatRow(
+                label: AppStrings.monthlyStatsCompletedLabel,
+                value: '${stats.completedTodos}',
+              ),
+              _StatRow(
+                label: AppStrings.monthlyStatsIncompleteLabel,
+                value: '${stats.incompleteTodos}',
+              ),
+              _StatRow(
+                label: AppStrings.monthlyStatsTotalLabel,
+                value: '${stats.totalTodos}',
+              ),
+            ],
+          ),
+        ]),
+      );
+    }
+    if (stats.categories.isNotEmpty) {
+      items.add(
+        _section(order++, [
+          const SizedBox(height: 28),
+          _SectionTitle(AppStrings.monthlyStatsCategorySection),
+          const SizedBox(height: 8),
+          _StatsCard(
+            children: [
+              for (final category in stats.categories)
+                _BarRow(
+                  label: category.name,
+                  done: category.completed,
+                  total: category.total,
+                  color: Color(category.color),
+                ),
+            ],
+          ),
+        ]),
+      );
+    }
+    if (stats.busyDay != null) {
+      items.add(
+        _section(order++, [
+          const SizedBox(height: 28),
+          _SectionTitle(AppStrings.monthlyStatsBusyDaySection),
+          const SizedBox(height: 8),
+          _BusyDayCard(day: stats.busyDay!),
+        ]),
+      );
+    }
+    if (stats.companies > 0) {
+      items.add(
+        _section(order++, [
+          const SizedBox(height: 28),
+          _SectionTitle(AppStrings.monthlyStatsJobSection),
+          const SizedBox(height: 8),
+          _StatsCard(
+            children: [
+              _StatRow(
+                label: AppStrings.monthlyStatsRoundsLabel,
+                value: '${stats.jobRounds}',
+              ),
+              _StatRow(
+                label: AppStrings.monthlyStatsCompaniesLabel,
+                value: '${stats.companies}',
+              ),
+              _StatRow(
+                label: AppStrings.monthlyStatsCoverLettersLabel,
+                value: '${stats.coverLetters}',
+              ),
+              _StatRow(
+                label: AppStrings.monthlyStatsFinalPassedLabel,
+                value: '${stats.finalPassed}',
+                dotColor: ApplyStatusColors.of(ApplyStatus.finalPassed),
+              ),
+              _StatRow(
+                label: AppStrings.monthlyStatsPassedLabel,
+                value: '${stats.passed}',
+                dotColor: ApplyStatusColors.of(ApplyStatus.interviewPassed),
+              ),
+              _StatRow(
+                label: AppStrings.monthlyStatsRejectedLabel,
+                value: '${stats.rejected}',
+                dotColor: ApplyStatusColors.rejected,
+              ),
+              _StatRow(
+                label: AppStrings.monthlyStatsInProgressLabel,
+                value: '${stats.inProgress}',
+                dotColor: ApplyStatusColors.of(ApplyStatus.documentSubmitted),
+              ),
+            ],
+          ),
+        ]),
+      );
+    }
+    if (stats.roundTypes.isNotEmpty) {
+      items.add(
+        _section(order++, [
+          const SizedBox(height: 28),
+          _SectionTitle(AppStrings.monthlyStatsRoundTypeSection),
+          const SizedBox(height: 8),
+          _StatsCard(
+            children: [
+              for (final type in stats.roundTypes)
+                _StatRow(
+                  label: type.name,
+                  value: '${type.count}',
+                ),
+            ],
+          ),
+        ]),
+      );
+    }
+    if (stats.diaries > 0) {
+      items.add(
+        _section(order++, [
+          const SizedBox(height: 28),
+          _SectionTitle(AppStrings.monthlyStatsDiarySection),
+          const SizedBox(height: 8),
+          _StatsCard(
+            children: [
+              _StatRow(
+                label: AppStrings.monthlyStatsDiaryCountLabel,
+                value: '${stats.diaries}',
+              ),
+              _StatRow(
+                label: AppStrings.monthlyStatsDiaryDaysLabel,
+                value: AppStrings.monthlyStatsDiaryDaysValue(stats.diaryDays),
+              ),
+              if (stats.diaryPhotos > 0)
+                _StatRow(
+                  label: AppStrings.monthlyStatsDiaryPhotosLabel,
+                  value: '${stats.diaryPhotos}',
+                ),
+              if (stats.diaryCategories.length > 1)
+                for (final category in stats.diaryCategories)
+                  _StatRow(
+                    label: category.name,
+                    value: '${category.total}',
+                    dotColor: Color(category.color),
+                  ),
+            ],
+          ),
+        ]),
+      );
+    }
+    if (!stats.ledger.isEmpty) {
+      items.add(
+        _section(order++, [
+          const SizedBox(height: 28),
+          _SectionTitle(AppStrings.monthlyStatsLedgerSection),
+          const SizedBox(height: 8),
+          _PaddedCard(
+            child: LedgerKindStats(
+              consumption: stats.ledger.consumption,
+              expense: stats.ledger.expense,
+              salary: stats.ledger.salary,
+              net: stats.ledger.net,
+              showSalary: stats.ledger.hasSalary,
+            ),
+          ),
+          const SizedBox(height: 12),
+          _StatsCard(
+            children: [
+              _StatRow(
+                label: AppStrings.monthlyStatsLedgerCountLabel,
+                value: '${stats.ledger.count}',
+              ),
+              for (final category in stats.ledgerCategories)
+                _StatRow(
+                  label: category.name,
+                  value: '${category.total}',
+                  dotColor: Color(category.color),
+                ),
+            ],
+          ),
+        ]),
+      );
+    }
+    return items;
+  }
+
+  List<_HighlightItem> _highlights(MonthlyStats stats) {
+    final items = <_HighlightItem>[];
+    if (stats.totalTodos > 0) {
+      items.add(
+        _HighlightItem(
+          label: AppStrings.monthlyStatsCompletedLabel,
+          value: '${stats.completedTodos}',
+        ),
+      );
+      items.add(
+        _HighlightItem(
+          label: AppStrings.monthlyStatsRateLabel,
+          value: AppStrings.monthlyStatsRateValue(stats.completionRate),
+        ),
+      );
+    }
+    if (stats.companies > 0) {
+      items.add(
+        _HighlightItem(
+          label: AppStrings.monthlyStatsRoundsLabel,
+          value: '${stats.jobRounds}',
+        ),
+      );
+      items.add(
+        _HighlightItem(
+          label: AppStrings.monthlyStatsCompaniesLabel,
+          value: '${stats.companies}',
+        ),
+      );
+    }
+    if (stats.diaries > 0 && items.length < 4) {
+      items.add(
+        _HighlightItem(
+          label: AppStrings.monthlyStatsDiaryCountLabel,
+          value: '${stats.diaries}',
+        ),
+      );
+    }
+    if (!stats.ledger.isEmpty && items.length < 4) {
+      items.add(
+        _HighlightItem(
+          label: AppStrings.monthlyStatsLedgerCountLabel,
+          value: '${stats.ledger.count}',
+        ),
+      );
+    }
+    if (items.length > 4) return items.sublist(0, 4);
+    return items;
   }
 
   List<InlineSpan> _headline(MonthlyStats stats, AppColors colors) {
@@ -338,6 +491,26 @@ class _MonthlyStatsScreenState extends State<MonthlyStatsScreen> {
         const TextSpan(text: '\n${AppStrings.monthlyStatsTotalTail}'),
       ];
     }
+    if (stats.diaries > 0 && !stats.ledger.isEmpty) {
+      return [
+        accent(AppStrings.monthlyStatsDiaryCount(stats.diaries)),
+        const TextSpan(text: '${AppStrings.monthlyStatsAnd}\n'),
+        accent(AppStrings.monthlyStatsLedgerCount(stats.ledger.count)),
+        const TextSpan(text: AppStrings.monthlyStatsTotalTail),
+      ];
+    }
+    if (stats.diaries > 0) {
+      return [
+        accent(AppStrings.monthlyStatsDiaryCount(stats.diaries)),
+        const TextSpan(text: '\n${AppStrings.monthlyStatsDiaryWroteTail}'),
+      ];
+    }
+    if (!stats.ledger.isEmpty) {
+      return [
+        accent(AppStrings.monthlyStatsLedgerCount(stats.ledger.count)),
+        const TextSpan(text: '\n${AppStrings.monthlyStatsTotalTail}'),
+      ];
+    }
     return const [TextSpan(text: AppStrings.monthlyStatsEmptyTail)];
   }
 }
@@ -369,31 +542,40 @@ class _HighlightItem {
 }
 
 class _HighlightGrid extends StatelessWidget {
-  const _HighlightGrid({required this.items});
+  const _HighlightGrid({
+    required this.items,
+    required this.startOrder,
+  });
 
   final List<_HighlightItem> items;
+  final int startOrder;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
+    Widget tile(int index) {
+      return FadeIn(
+        delay: Duration(milliseconds: 70 * (startOrder + index)),
+        offset: const Offset(0, 16),
+        child: _HighlightTile(item: items[index]),
+      );
+    }
+
+    final rows = <Widget>[];
+    for (var i = 0; i < items.length; i += 2) {
+      if (rows.isNotEmpty) rows.add(const SizedBox(height: 10));
+      rows.add(
         Row(
           children: [
-            Expanded(child: _HighlightTile(item: items[0])),
+            Expanded(child: tile(i)),
             const SizedBox(width: 10),
-            Expanded(child: _HighlightTile(item: items[1])),
+            Expanded(
+              child: i + 1 < items.length ? tile(i + 1) : const SizedBox(),
+            ),
           ],
         ),
-        const SizedBox(height: 10),
-        Row(
-          children: [
-            Expanded(child: _HighlightTile(item: items[2])),
-            const SizedBox(width: 10),
-            Expanded(child: _HighlightTile(item: items[3])),
-          ],
-        ),
-      ],
-    );
+      );
+    }
+    return Column(children: rows);
   }
 }
 
@@ -508,11 +690,18 @@ class _ProgressCard extends StatelessWidget {
             const SizedBox(height: 10),
             ClipRRect(
               borderRadius: BorderRadius.circular(999),
-              child: LinearProgressIndicator(
-                value: progress,
-                minHeight: 8,
-                backgroundColor: colors.border,
-                color: colors.accentBright,
+              child: TweenAnimationBuilder<double>(
+                tween: Tween(begin: 0, end: progress),
+                duration: const Duration(milliseconds: 700),
+                curve: Curves.easeOutCubic,
+                builder: (context, value, _) {
+                  return LinearProgressIndicator(
+                    value: value,
+                    minHeight: 8,
+                    backgroundColor: colors.border,
+                    color: colors.accentBright,
+                  );
+                },
               ),
             ),
             const SizedBox(height: 8),
@@ -537,6 +726,17 @@ class _BusyDayCard extends StatelessWidget {
 
   final MonthlyBusyDay day;
 
+  String _titleOf(MonthlyBusyDayItem item) {
+    final title = item.title.trim();
+    if (title.isNotEmpty) return title;
+    return switch (item.kind) {
+      MonthlyBusyDayKind.diary => AppStrings.monthlyStatsDiarySection,
+      MonthlyBusyDayKind.ledger => AppStrings.monthlyStatsLedgerCountLabel,
+      MonthlyBusyDayKind.job => AppStrings.monthlyStatsJobSection,
+      MonthlyBusyDayKind.todo => AppStrings.monthlyStatsTodoSection,
+    };
+  }
+
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
@@ -556,30 +756,132 @@ class _BusyDayCard extends StatelessWidget {
       ),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
-        child: Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Expanded(
-              child: Text(
-                dateLabel,
-                style: TextStyle(
-                  fontFamily: AppFonts.of(context),
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: colors.text,
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    dateLabel,
+                    style: TextStyle(
+                      fontFamily: AppFonts.of(context),
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: colors.text,
+                    ),
+                  ),
                 ),
-              ),
+                Text(
+                  AppStrings.monthlyStatsBusyDayCount(day.items.length),
+                  style: TextStyle(
+                    fontFamily: AppFonts.of(context),
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: colors.accentBright,
+                  ),
+                ),
+              ],
             ),
-            Text(
-              AppStrings.monthlyStatsBusyDayTodos(day.todos),
-              style: TextStyle(
-                fontFamily: AppFonts.of(context),
-                fontSize: 15,
-                fontWeight: FontWeight.w700,
-                color: colors.accentBright,
-              ),
-            ),
+            if (day.items.isNotEmpty) ...[
+              const SizedBox(height: 14),
+              for (var i = 0; i < day.items.length; i++) ...[
+                if (i > 0) const SizedBox(height: 10),
+                _BusyDayItemRow(
+                  title: _titleOf(day.items[i]),
+                  item: day.items[i],
+                ),
+              ],
+            ],
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _BusyDayItemRow extends StatelessWidget {
+  const _BusyDayItemRow({
+    required this.title,
+    required this.item,
+  });
+
+  final String title;
+  final MonthlyBusyDayItem item;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    final color = Color(item.color);
+    final muted = item.completed;
+    final trailing = item.trailing ?? item.timeLabel;
+    return Row(
+      children: [
+        Container(
+          width: 8,
+          height: 8,
+          decoration: BoxDecoration(
+            color: muted ? colors.muted : color,
+            shape: BoxShape.circle,
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(
+            title,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontFamily: AppFonts.of(context),
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              height: 1.2,
+              color: muted ? colors.muted : colors.text,
+            ),
+          ),
+        ),
+        if (trailing != null && trailing.isNotEmpty) ...[
+          const SizedBox(width: 8),
+          Text(
+            trailing,
+            maxLines: 1,
+            style: TextStyle(
+              fontFamily: AppFonts.of(context),
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              height: 1.2,
+              color: muted ? colors.muted : color,
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+class _PaddedCard extends StatelessWidget {
+  const _PaddedCard({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: colors.card,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: colors.shadow,
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
+        child: child,
       ),
     );
   }
@@ -740,11 +1042,18 @@ class _BarRow extends StatelessWidget {
           const SizedBox(height: 8),
           ClipRRect(
             borderRadius: BorderRadius.circular(999),
-            child: LinearProgressIndicator(
-              value: progress,
-              minHeight: 6,
-              backgroundColor: colors.border,
-              color: color,
+            child: TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0, end: progress),
+              duration: const Duration(milliseconds: 700),
+              curve: Curves.easeOutCubic,
+              builder: (context, value, _) {
+                return LinearProgressIndicator(
+                  value: value,
+                  minHeight: 6,
+                  backgroundColor: colors.border,
+                  color: color,
+                );
+              },
             ),
           ),
         ],

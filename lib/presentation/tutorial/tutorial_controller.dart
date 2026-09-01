@@ -28,7 +28,10 @@ enum TutorialDemo {
   calendarTap,
   calendarRange,
   todoComplete,
+  todoMove,
   calendarMenu,
+  homeSearch,
+  homeSettings,
   homeReorder,
   jobSwipe,
 }
@@ -93,6 +96,14 @@ class TutorialController extends ChangeNotifier {
     TutorialStep(
       tab: 1,
       badge: AppStrings.tutorialBadgeCalendar,
+      anchor: TutorialAnchorId.calendarGrid,
+      title: AppStrings.tutorialCalendarMoveTitle,
+      body: AppStrings.tutorialCalendarMoveBody,
+      demo: TutorialDemo.todoMove,
+    ),
+    TutorialStep(
+      tab: 1,
+      badge: AppStrings.tutorialBadgeCalendar,
       anchor: TutorialAnchorId.calendarMenu,
       title: AppStrings.tutorialCalendarMenuTitle,
       body: AppStrings.tutorialCalendarMenuBody,
@@ -111,6 +122,22 @@ class TutorialController extends ChangeNotifier {
       anchor: TutorialAnchorId.homeTools,
       title: AppStrings.tutorialHomeToolsTitle,
       body: AppStrings.tutorialHomeToolsBody,
+    ),
+    TutorialStep(
+      tab: 0,
+      badge: AppStrings.tutorialBadgeHome,
+      anchor: TutorialAnchorId.homeTools,
+      title: AppStrings.tutorialHomeSearchTitle,
+      body: AppStrings.tutorialHomeSearchBody,
+      demo: TutorialDemo.homeSearch,
+    ),
+    TutorialStep(
+      tab: 0,
+      badge: AppStrings.tutorialBadgeHome,
+      anchor: TutorialAnchorId.homeTools,
+      title: AppStrings.tutorialHomeSettingsTitle,
+      body: AppStrings.tutorialHomeSettingsBody,
+      demo: TutorialDemo.homeSettings,
     ),
     TutorialStep(
       tab: 0,

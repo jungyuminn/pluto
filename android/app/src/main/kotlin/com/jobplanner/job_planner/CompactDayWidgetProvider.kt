@@ -5,12 +5,15 @@ import android.appwidget.AppWidgetManager
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
+import android.graphics.Bitmap
 import android.graphics.Color
+import android.graphics.Typeface
 import android.util.Log
 import android.view.View
 import android.widget.RemoteViews
 import es.antonborri.home_widget.HomeWidgetPlugin
 import es.antonborri.home_widget.HomeWidgetProvider
+import kotlin.math.max
 
 abstract class CompactDayWidgetProvider : HomeWidgetProvider() {
     abstract val kind: String
@@ -51,6 +54,14 @@ abstract class CompactDayWidgetProvider : HomeWidgetProvider() {
         val empty = stringOf(widgetData, "${kind}_empty", defaultEmpty)
         val count = intOf(widgetData, "${kind}_count", 0)
         val more = intOf(widgetData, "${kind}_more", 0)
+        val density = context.resources.displayMetrics.density
+        val contentWidth = contentWidthPx(context, appWidgetManager, widgetId)
+        val regular = WidgetLabel.typeface(stringOf(widgetData, "widget_font_regular", ""))
+            ?: Typeface.create("sans-serif", Typeface.NORMAL)
+        val bold = WidgetLabel.typeface(stringOf(widgetData, "widget_font_bold", ""))
+            ?: Typeface.create("sans-serif", Typeface.BOLD)
+        val titleGap = (4 * density).toInt()
+        val itemInset = ((7 + 6) * density).toInt()
 
         val views = RemoteViews(context.packageName, R.layout.compact_day_widget).apply {
             WidgetSkin.apply(
@@ -61,12 +72,30 @@ abstract class CompactDayWidgetProvider : HomeWidgetProvider() {
                 R.id.widget_root,
                 R.id.widget_skin_bg,
             )
-            setTextViewText(R.id.widget_day_title, title)
-            setTextColor(R.id.widget_day_title, textColor)
-            setTextViewText(R.id.widget_day_date, date)
-            setTextColor(R.id.widget_day_date, textColor)
-            setTextViewText(R.id.widget_empty, empty)
-            setTextColor(R.id.widget_empty, mutedColor)
+            val titleBitmap = WidgetLabel.draw(
+                title,
+                bold,
+                15f,
+                textColor,
+                density,
+                contentWidth,
+            )
+            setLabel(R.id.widget_day_title, titleBitmap)
+            setLabel(
+                R.id.widget_day_date,
+                WidgetLabel.draw(
+                    date,
+                    regular,
+                    12f,
+                    textColor,
+                    density,
+                    max(1, contentWidth - titleBitmap.width - titleGap),
+                ),
+            )
+            setLabel(
+                R.id.widget_empty,
+                WidgetLabel.draw(empty, regular, 13f, mutedColor, density, contentWidth),
+            )
             setViewVisibility(R.id.widget_empty, if (count == 0) View.VISIBLE else View.GONE)
 
             for (index in 0 until rowCount) {
@@ -84,15 +113,33 @@ abstract class CompactDayWidgetProvider : HomeWidgetProvider() {
                     0xFF3B82F6.toInt(),
                 )
                 setViewVisibility(rowId, View.VISIBLE)
-                setTextViewText(titleId, itemTitle)
-                setTextColor(titleId, textColor)
+                setLabel(
+                    titleId,
+                    WidgetLabel.draw(
+                        itemTitle,
+                        regular,
+                        13f,
+                        textColor,
+                        density,
+                        max(1, contentWidth - itemInset),
+                    ),
+                )
                 setInt(dotId, "setColorFilter", itemColor)
             }
 
             if (more > 0 && count > 0) {
                 setViewVisibility(R.id.widget_more, View.VISIBLE)
-                setTextViewText(R.id.widget_more, "외 ${more}개")
-                setTextColor(R.id.widget_more, mutedColor)
+                setLabel(
+                    R.id.widget_more,
+                    WidgetLabel.draw(
+                        "외 ${more}개",
+                        regular,
+                        11f,
+                        mutedColor,
+                        density,
+                        contentWidth,
+                    ),
+                )
             } else {
                 setViewVisibility(R.id.widget_more, View.GONE)
             }
@@ -128,6 +175,27 @@ abstract class CompactDayWidgetProvider : HomeWidgetProvider() {
             intArrayOf(appWidgetId),
             HomeWidgetPlugin.getData(context),
         )
+    }
+
+    private fun contentWidthPx(
+        context: Context,
+        appWidgetManager: AppWidgetManager,
+        widgetId: Int,
+    ): Int {
+        val density = context.resources.displayMetrics.density
+        val options = appWidgetManager.getAppWidgetOptions(widgetId)
+        val widthDp = maxOf(
+            options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 0),
+            options.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_WIDTH, 0),
+            110,
+        )
+        return ((widthDp - 22) * density).toInt().coerceAtLeast(1)
+    }
+
+    private fun RemoteViews.setLabel(id: Int, bitmap: Bitmap) {
+        setImageViewBitmap(id, bitmap)
+        setInt(id, "setMaxWidth", bitmap.width)
+        setInt(id, "setMaxHeight", bitmap.height)
     }
 
     private fun intOf(prefs: SharedPreferences, key: String, fallback: Int): Int {

@@ -242,6 +242,11 @@ class AppStrings {
   static const themeRabbitFlowerMarket = '꽃집 토끼들';
   static const themeBearPancakeCafe = '곰돌이 팬케이크';
   static const settingsFontSection = '폰트 설정';
+  static const settingsWidgetSection = '위젯 설정';
+  static const widgetFollowTheme = '테마 동기화';
+  static const widgetFollowFont = '폰트 동기화';
+  static const settingsWidgetHelp =
+      '위젯이 앱의 테마나 폰트를 따라가요.';
   static const fontFamily = '폰트 종류';
   static const fontTodoSize = '할 일·지원서 크기';
   static const fontCalendarSize = '캘린더 크기';
@@ -280,19 +285,19 @@ class AppStrings {
   static const settingsNotificationHelp =
       '시간이 있는 할 일은 미리 알려주고, 매일 정해진 시간에 오늘 일정과 끝내지 않은 할 일을 알려줘요. 그날 할 일이 없으면 보내지 않아요';
   static const settingsAppearanceHelp = '화면을 밝은 테마나 어두운 테마로 바꿀 수 있어요';
-  static const settingsThemeHelp = '홈·캘린더 배경 분위기와 아이콘·버튼 색을 바꿀 수 있어요';
+  static const settingsThemeHelp = '앱의 배경 분위기와 아이콘·버튼 색을 바꿀 수 있어요';
   static const settingsBackupHelp =
-      '할 일·지원서·일기·가계부 데이터를 최근 3개까지 앱과 다운로드에 저장해요. 앱을 지운 뒤에는 다운로드에 있는 zip으로 복구하면 돼요. 앱을 켜면 정한 주기마다 자동으로도 저장해요';
+      '앱의 모든 데이터를 최근 3개까지 저장해요. 앱을 지운 뒤에도 데이터를 복구할 수 있어요';
   static const settingsCalendarSyncHelp =
-      '폰 캘린더에 있는 일정을 할 일로 가져와요. 안드로이드는 삼성 캘린더, 아이폰은 iOS 캘린더를 쓰면 돼요. 가져올 기간을 고르고, 카테고리는 하나에 몰아넣거나 할 일마다 고를 수 있어요. 지원서 카드는 그대로 둬요';
+      '기본 캘린더에 있는 일정을 잡플래너의 캘린더로 가져와요. 가져올 기간을 고르고, 카테고리는 하나에 몰아넣거나 할 일마다 고를 수 있어요.';
   static const settingsAppHelp =
-      '앱 사용법을 처음부터 다시 보거나, 릴리즈 노트에서 버전을 누르면 새로 생긴 기능이 어떻게 바뀌었는지 볼 수 있어요';
-  static const settingsCalendarHelp = '캘린더의 첫 요일과 음력 날짜를 바꿀 수 있어요';
+      '앱 사용법을 보거나, 릴리즈 노트에서 앱의 업데이트 내역을 읽을 수 있어요';
+  static const settingsCalendarHelp = '캘린더의 첫 요일과 음력 날짜를 표시할 수 있어요';
   static const settingsCalendarHelpWithFontSize =
       '캘린더의 첫 요일과 음력 날짜, 할 일·지원서·날짜·라벨의 글자 크기를 바꿀 수 있어요';
   static const calendarStartSunday = '일요일부터 시작';
   static const settingsMonthlyStatsHelp =
-      '매달 1일에는 지난달 요약을, 매주 월요일에는 지난주 요약을 보여줘요. 할 일·지원서·일기·가계부가 있으면 그 통계도 같이 보여줘요';
+      '매달 1일에는 지난달 요약을, 매주 월요일에는 지난주 요약을 보여줘요';
   static const lightMode = '라이트 모드';
   static const darkMode = '다크 모드';
   static const settingsNotificationSection = '알림 설정';
@@ -324,7 +329,7 @@ class AppStrings {
   }
 
   static String summaryReminderHint(int minutes) =>
-      '매일 ${summaryTimeLabel(minutes)}에 오늘 일정을 알려줘요. 할 일이 없으면 보내지 않아요';
+      '매일 ${summaryTimeLabel(minutes)}에 오늘 일정을 알려줘요.';
   static String summaryNotificationTitle(int count) =>
       count == 0 ? '오늘의 일정' : '오늘의 일정 $count개';
   static const summaryNotificationEmpty = '오늘 일정이 없어요';

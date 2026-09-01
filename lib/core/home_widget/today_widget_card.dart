@@ -73,6 +73,7 @@ class TodayWidgetCard extends StatelessWidget {
   static const listGap = 12.0;
   static const maxEvents = 40;
   static const cardWidth = 412.0;
+  static const headerSize = Size(cardWidth, titleBlock + 4 + dateBlock);
 
   final String dateLabel;
   final TodayWidgetSnapshot snapshot;
@@ -214,6 +215,48 @@ class TodayWidgetCard extends StatelessWidget {
   static String? timeTextFor(CalendarEvent event, bool showTime) {
     if (!showTime) return null;
     return event.timeLabel ?? (event.isJob ? null : AppStrings.allDayLabel);
+  }
+
+  static Widget header({
+    required String title,
+    required String dateLabel,
+  }) {
+    return Builder(
+      builder: (context) {
+        final colors = AppColors.of(context);
+        final font = AppFonts.of(context);
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontFamily: font,
+                fontSize: 17,
+                fontWeight: FontWeight.w600,
+                height: 1.1,
+                color: colors.text,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              dateLabel,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontFamily: font,
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                height: 1.2,
+                color: colors.muted,
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   static Widget row({

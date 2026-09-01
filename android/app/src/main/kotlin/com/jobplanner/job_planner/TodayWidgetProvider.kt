@@ -7,6 +7,7 @@ import android.content.Intent
 import android.content.SharedPreferences
 import android.graphics.Color
 import android.net.Uri
+import android.view.View
 import android.widget.RemoteViews
 import es.antonborri.home_widget.HomeWidgetProvider
 
@@ -35,16 +36,29 @@ abstract class ScheduleWidgetProvider : HomeWidgetProvider() {
                     R.id.widget_root,
                     R.id.widget_skin_bg,
                 )
-                setTextViewText(
-                    R.id.widget_title,
-                    widgetData.getString("${kind}_title", defaultTitle) ?: defaultTitle,
-                )
-                setTextColor(R.id.widget_title, textColor)
-                setTextViewText(
-                    R.id.widget_date,
-                    widgetData.getString("${kind}_date", "") ?: "",
-                )
-                setTextColor(R.id.widget_date, mutedColor)
+                val headerPath = widgetData.getString("${kind}_header", null)
+                val headerBitmap = WidgetSkin.decodeUnscaled(headerPath)
+                    ?: WidgetSkin.decode(context, headerPath)
+                if (headerBitmap != null) {
+                    setImageViewBitmap(R.id.widget_header, headerBitmap)
+                    setViewVisibility(R.id.widget_header, View.VISIBLE)
+                    setViewVisibility(R.id.widget_title, View.GONE)
+                    setViewVisibility(R.id.widget_date, View.GONE)
+                } else {
+                    setViewVisibility(R.id.widget_header, View.GONE)
+                    setViewVisibility(R.id.widget_title, View.VISIBLE)
+                    setViewVisibility(R.id.widget_date, View.VISIBLE)
+                    setTextViewText(
+                        R.id.widget_title,
+                        widgetData.getString("${kind}_title", defaultTitle) ?: defaultTitle,
+                    )
+                    setTextColor(R.id.widget_title, textColor)
+                    setTextViewText(
+                        R.id.widget_date,
+                        widgetData.getString("${kind}_date", "") ?: "",
+                    )
+                    setTextColor(R.id.widget_date, mutedColor)
+                }
                 setTextViewText(
                     R.id.widget_empty,
                     widgetData.getString("${kind}_empty", defaultEmpty) ?: defaultEmpty,
@@ -73,6 +87,7 @@ abstract class ScheduleWidgetProvider : HomeWidgetProvider() {
                     openApp,
                     PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
                 )
+                setOnClickPendingIntent(R.id.widget_header, openAppPending)
                 setOnClickPendingIntent(R.id.widget_title, openAppPending)
                 setOnClickPendingIntent(R.id.widget_date, openAppPending)
 

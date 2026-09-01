@@ -23,6 +23,7 @@ enum SettingsHelpSection {
   font,
   appearance,
   theme,
+  widget,
   backup,
   calendarSync,
   app,
@@ -161,6 +162,8 @@ extension on SettingsHelpSection {
         return AppStrings.settingsAppearanceSection;
       case SettingsHelpSection.theme:
         return AppStrings.settingsThemeSection;
+      case SettingsHelpSection.widget:
+        return AppStrings.settingsWidgetSection;
       case SettingsHelpSection.backup:
         return AppStrings.settingsBackupSection;
       case SettingsHelpSection.calendarSync:
@@ -190,6 +193,8 @@ extension on SettingsHelpSection {
         return AppStrings.settingsAppearanceHelp;
       case SettingsHelpSection.theme:
         return AppStrings.settingsThemeHelp;
+      case SettingsHelpSection.widget:
+        return AppStrings.settingsWidgetHelp;
       case SettingsHelpSection.backup:
         return AppStrings.settingsBackupHelp;
       case SettingsHelpSection.calendarSync:
@@ -217,6 +222,8 @@ extension on SettingsHelpSection {
         return const _AppearancePreview();
       case SettingsHelpSection.theme:
         return const _ThemePreview();
+      case SettingsHelpSection.widget:
+        return const _WidgetPreview();
       case SettingsHelpSection.backup:
         return const _BackupPreview();
       case SettingsHelpSection.calendarSync:
@@ -1435,6 +1442,236 @@ class _ThemePreview extends StatelessWidget {
   }
 }
 
+class _WidgetPreview extends StatefulWidget {
+  const _WidgetPreview();
+
+  @override
+  State<_WidgetPreview> createState() => _WidgetPreviewState();
+}
+
+class _WidgetPreviewState extends State<_WidgetPreview>
+    with SingleTickerProviderStateMixin {
+  static const _sceneHeight = 168.0;
+  static const _rowHeight = 44.0;
+  static const _labels = [
+    AppStrings.widgetFollowTheme,
+    AppStrings.widgetFollowFont,
+  ];
+
+  late final AnimationController _loop;
+
+  @override
+  void initState() {
+    super.initState();
+    _loop = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 5600),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _loop.dispose();
+    super.dispose();
+  }
+
+  double _fingerRow(double t) {
+    if (t < 0.38) return 0;
+    if (t < 0.48) {
+      return Curves.easeInOutCubic.transform(_helpGate(t, 0.38, 0.48));
+    }
+    return 1;
+  }
+
+  double _fingerOpacity(double t) {
+    if (t < 0.08) return 0;
+    if (t < 0.16) return _helpGate(t, 0.08, 0.16);
+    if (t < 0.88) return 1;
+    if (t < 0.96) return 1 - _helpGate(t, 0.88, 0.96);
+    return 0;
+  }
+
+  double _fingerPress(double t) {
+    final a = _helpPulse(t, 0.18, 0.26, 0.36);
+    final b = _helpPulse(t, 0.48, 0.56, 0.66);
+    return a > b ? a : b;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    return AnimatedBuilder(
+      animation: _loop,
+      builder: (context, child) {
+        final t = _loop.value;
+        final themeOn = t < 0.22
+            ? 0.0
+            : Curves.easeOutCubic.transform(_helpGate(t, 0.22, 0.32));
+        final fontOn = t < 0.50
+            ? 0.0
+            : Curves.easeOutCubic.transform(_helpGate(t, 0.50, 0.60));
+        final ons = [themeOn, fontOn];
+        final finger = _fingerOpacity(t);
+        final press = _fingerPress(t);
+        final fingerRow = _fingerRow(t);
+        return IgnorePointer(
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: colors.border),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(17),
+              child: SizedBox(
+                height: _sceneHeight + _rowHeight * _labels.length,
+                width: double.infinity,
+                child: Stack(
+                  children: [
+                    Column(
+                      children: [
+                        SizedBox(
+                          height: _sceneHeight,
+                          width: double.infinity,
+                          child: ColoredBox(
+                            color: Color.lerp(
+                              const Color(0xFFF1F5F9),
+                              const Color(0xFFFFF1F2),
+                              themeOn,
+                            )!,
+                            child: Padding(
+                              padding: const EdgeInsets.fromLTRB(16, 18, 16, 16),
+                              child: Align(
+                                child: _FakeWidgetCard(
+                                  themeOn: themeOn,
+                                  fontOn: fontOn,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        ColoredBox(
+                          color: colors.card,
+                          child: Column(
+                            children: [
+                              for (var i = 0; i < _labels.length; i++)
+                                _HelpSwitchRow(
+                                  label: _labels[i],
+                                  on: ons[i],
+                                  height: _rowHeight,
+                                ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (finger > 0)
+                      Positioned(
+                        right: 26,
+                        top:
+                            _sceneHeight +
+                            fingerRow * _rowHeight +
+                            (_rowHeight - 28) / 2,
+                        child: _HelpFinger(pressed: press, opacity: finger),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _FakeWidgetCard extends StatelessWidget {
+  const _FakeWidgetCard({
+    required this.themeOn,
+    required this.fontOn,
+  });
+
+  final double themeOn;
+  final double fontOn;
+
+  @override
+  Widget build(BuildContext context) {
+    const text = Color(0xFF0F172A);
+    final font = fontOn > 0.45 ? AppFonts.pretendard : null;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: Color.lerp(Colors.white, const Color(0xFFFFF1F2), themeOn),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0x14000000),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text.rich(
+              TextSpan(
+                children: [
+                  TextSpan(
+                    text: AppStrings.todayTitle,
+                    style: TextStyle(
+                      fontFamily: font,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w800,
+                      color: text,
+                    ),
+                  ),
+                  TextSpan(
+                    text: '  9월 1일',
+                    style: TextStyle(
+                      fontFamily: font,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w400,
+                      color: text,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: Color.lerp(
+                      const Color(0xFF3B82F6),
+                      const Color(0xFFFB7185),
+                      themeOn,
+                    ),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const SizedBox(width: 7, height: 7),
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  '자기소개서 제출',
+                  style: TextStyle(
+                    fontFamily: font,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w400,
+                    color: text,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 String _themeCaption(AppSkin skin) {
   switch (skin) {
     case AppSkin.classic:
@@ -1486,6 +1723,7 @@ class _HelpSelectDemo extends StatefulWidget {
     this.showCaption = true,
     this.chevron = false,
     this.values,
+    this.themeOf,
   });
 
   final List<String> labels;
@@ -1494,6 +1732,7 @@ class _HelpSelectDemo extends StatefulWidget {
   final bool showCaption;
   final bool chevron;
   final List<String>? values;
+  final ThemeData Function(int selected)? themeOf;
 
   @override
   State<_HelpSelectDemo> createState() => _HelpSelectDemoState();
@@ -1569,9 +1808,74 @@ class _HelpSelectDemoState extends State<_HelpSelectDemo>
     return [a, b, c].reduce((x, y) => x > y ? x : y);
   }
 
+  Widget _card({
+    required BuildContext context,
+    required int selected,
+    required double finger,
+    required double press,
+    required double fingerRow,
+  }) {
+    final colors = AppColors.of(context);
+    final labels = widget.labels;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: colors.border),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(17),
+        child: SizedBox(
+          height: widget.sceneHeight + _rowHeight * labels.length,
+          width: double.infinity,
+          child: Stack(
+            children: [
+              Column(
+                children: [
+                  SizedBox(
+                    height: widget.sceneHeight,
+                    width: double.infinity,
+                    child: ClipRect(
+                      child: widget.scene(context, selected),
+                    ),
+                  ),
+                  ColoredBox(
+                    color: colors.card,
+                    child: Column(
+                      children: [
+                        for (var i = 0; i < labels.length; i++)
+                          _HelpSelectRow(
+                            label: labels[i],
+                            selected: selected == i,
+                            height: _rowHeight,
+                            chevron: widget.chevron,
+                            value: widget.values == null
+                                ? null
+                                : widget.values![i],
+                          ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              if (finger > 0)
+                Positioned(
+                  right: 28,
+                  top:
+                      widget.sceneHeight +
+                      fingerRow * _rowHeight +
+                      (_rowHeight - 28) / 2,
+                  child: _HelpFinger(pressed: press, opacity: finger),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final colors = AppColors.of(context);
+    final sheetColors = AppColors.of(context);
     final labels = widget.labels;
     return AnimatedBuilder(
       animation: _loop,
@@ -1581,6 +1885,29 @@ class _HelpSelectDemoState extends State<_HelpSelectDemo>
         final finger = _fingerOpacity(t);
         final press = _fingerPress(t);
         final fingerRow = _fingerRow(t);
+        final theme = widget.themeOf?.call(selected);
+        final card = theme == null
+            ? _card(
+                context: context,
+                selected: selected,
+                finger: finger,
+                press: press,
+                fingerRow: fingerRow,
+              )
+            : Theme(
+                data: theme,
+                child: Builder(
+                  builder: (context) {
+                    return _card(
+                      context: context,
+                      selected: selected,
+                      finger: finger,
+                      press: press,
+                      fingerRow: fingerRow,
+                    );
+                  },
+                ),
+              );
         return Column(
           children: [
             if (widget.showCaption) ...[
@@ -1589,7 +1916,7 @@ class _HelpSelectDemoState extends State<_HelpSelectDemo>
                 child: DecoratedBox(
                   key: ValueKey(labels[selected]),
                   decoration: BoxDecoration(
-                    color: colors.tint(colors.accentBright, 0.18),
+                    color: sheetColors.tint(sheetColors.accentBright, 0.18),
                     borderRadius: BorderRadius.circular(999),
                   ),
                   child: Padding(
@@ -1604,7 +1931,7 @@ class _HelpSelectDemoState extends State<_HelpSelectDemo>
                         fontFamily: AppFonts.of(context),
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
-                        color: colors.accentBright,
+                        color: sheetColors.accentBright,
                       ),
                     ),
                   ),
@@ -1612,62 +1939,7 @@ class _HelpSelectDemoState extends State<_HelpSelectDemo>
               ),
               const SizedBox(height: 10),
             ],
-            IgnorePointer(
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(18),
-                  border: Border.all(color: colors.border),
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(17),
-                  child: SizedBox(
-                    height: widget.sceneHeight + _rowHeight * labels.length,
-                    width: double.infinity,
-                    child: Stack(
-                      children: [
-                        Column(
-                          children: [
-                            SizedBox(
-                              height: widget.sceneHeight,
-                              width: double.infinity,
-                              child: ClipRect(
-                                child: widget.scene(context, selected),
-                              ),
-                            ),
-                            ColoredBox(
-                              color: colors.card,
-                              child: Column(
-                                children: [
-                                  for (var i = 0; i < labels.length; i++)
-                                    _HelpSelectRow(
-                                      label: labels[i],
-                                      selected: selected == i,
-                                      height: _rowHeight,
-                                      chevron: widget.chevron,
-                                      value: widget.values == null
-                                          ? null
-                                          : widget.values![i],
-                                    ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                        if (finger > 0)
-                          Positioned(
-                            right: 28,
-                            top:
-                                widget.sceneHeight +
-                                fingerRow * _rowHeight +
-                                (_rowHeight - 28) / 2,
-                            child: _HelpFinger(pressed: press, opacity: finger),
-                          ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
+            IgnorePointer(child: card),
           ],
         );
       },
@@ -1838,6 +2110,7 @@ class _AppearancePreview extends StatelessWidget {
     return _HelpSelectDemo(
       labels: const [AppStrings.lightMode, AppStrings.darkMode],
       sceneHeight: 188,
+      themeOf: (selected) => selected == 0 ? AppTheme.light : AppTheme.dark,
       scene: (context, selected) {
         final theme = selected == 0 ? AppTheme.light : AppTheme.dark;
         return _helpKeyedSwitch(

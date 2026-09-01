@@ -17,6 +17,15 @@ class ReleaseNote {
 abstract final class ReleaseNotes {
   static const all = [
     ReleaseNote(
+      version: '1.0.27',
+      items: [
+        '설정에서 위젯이 앱 테마·폰트를 따라갈지 고를 수 있어요',
+      ],
+      fixes: [
+        '오늘·내일 작은 위젯 글씨가 흐릿하던 문제를 고쳤어요',
+      ],
+    ),
+    ReleaseNote(
       version: '1.0.26',
       items: [
         '테마를 홈·캘린더·지원서처럼 크게 볼 수 있어요',

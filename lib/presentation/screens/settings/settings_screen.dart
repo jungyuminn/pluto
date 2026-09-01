@@ -84,6 +84,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   var _dark = false;
   var _skin = AppSkin.classic;
   var _typeface = AppTypeface.pretendard;
+  var _followWidgetTheme = true;
+  var _followWidgetFont = true;
   var _todoSize = FontSizeLevel.medium;
   var _calendarSize = FontSizeLevel.medium;
   var _calendarLabelSize = FontSizeLevel.medium;
@@ -117,6 +119,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _dark = scope.themePreference.isDark;
     _skin = scope.themePreference.skin;
     _typeface = scope.fontPreference.typeface;
+    _followWidgetTheme = scope.widgetPreference.followTheme;
+    _followWidgetFont = scope.widgetPreference.followFont;
     _todoSize = scope.fontPreference.todoSize;
     _calendarSize = scope.fontPreference.calendarSize;
     _calendarLabelSize = scope.fontPreference.calendarLabelSize;
@@ -145,6 +149,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
       _dark = scope.themePreference.isDark;
       _skin = scope.themePreference.skin;
       _typeface = scope.fontPreference.typeface;
+      _followWidgetTheme = scope.widgetPreference.followTheme;
+      _followWidgetFont = scope.widgetPreference.followFont;
       _todoSize = scope.fontPreference.todoSize;
       _calendarSize = scope.fontPreference.calendarSize;
       _calendarLabelSize = scope.fontPreference.calendarLabelSize;
@@ -343,6 +349,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final next = !_showTime;
     setState(() => _showTime = next);
     await AppScope.of(context).dayEventsViewPreference.setShowTime(next);
+  }
+
+  Future<void> _setFollowWidgetTheme(bool value) async {
+    setState(() => _followWidgetTheme = value);
+    await AppScope.of(context).widgetPreference.setFollowTheme(value);
+  }
+
+  Future<void> _setFollowWidgetFont(bool value) async {
+    setState(() => _followWidgetFont = value);
+    await AppScope.of(context).widgetPreference.setFollowFont(value);
   }
 
   Future<void> _setShowLeftover(bool value) async {
@@ -926,6 +942,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 label: AppStrings.importIosCalendar,
                 chevron: true,
                 onPressed: _importIosCalendar,
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          _SectionLabel(
+            AppStrings.settingsWidgetSection,
+            onHelp: () =>
+                showSettingsSectionHelp(context, SettingsHelpSection.widget),
+          ),
+          _SettingsCard(
+            children: [
+              _SettingsSwitchTile(
+                label: AppStrings.widgetFollowTheme,
+                value: _followWidgetTheme,
+                onChanged: _setFollowWidgetTheme,
+              ),
+              _SettingsSwitchTile(
+                label: AppStrings.widgetFollowFont,
+                value: _followWidgetFont,
+                onChanged: _setFollowWidgetFont,
               ),
             ],
           ),
@@ -1857,10 +1893,11 @@ class _ThemePreviewIconButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
+    const radius = BorderRadius.all(Radius.circular(8));
     return DecoratedBox(
       decoration: BoxDecoration(
         color: colors.card,
-        shape: BoxShape.circle,
+        borderRadius: radius,
         boxShadow: [
           BoxShadow(
             color: colors.shadow,
@@ -1873,15 +1910,15 @@ class _ThemePreviewIconButton extends StatelessWidget {
         onPressed: onPressed,
         color: colors.card,
         pressedColor: colors.pressed,
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: radius,
         child: SizedBox(
-          width: 36,
-          height: 36,
+          width: 28,
+          height: 28,
           child: Center(
             child: ThemedAsset(
               asset: asset,
-              width: 18,
-              height: 18,
+              width: 15,
+              height: 15,
               semanticLabel: label,
               forceTint: true,
             ),

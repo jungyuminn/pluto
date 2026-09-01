@@ -24,40 +24,32 @@
         android:paddingBottom="8dp">
 
         <LinearLayout
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:gravity="bottom"
             android:orientation="horizontal">
 
-            <TextView
+            <ImageView
                 android:id="@+id/widget_day_title"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:ellipsize="end"
-                android:fontFamily="sans-serif-medium"
-                android:maxLines="1"
-                android:text="오늘"
-                android:textColor="#0F172A"
-                android:textFontWeight="800"
-                android:textSize="15sp" />
+                android:adjustViewBounds="true"
+                android:contentDescription="@null"
+                android:scaleType="center" />
 
-            <TextView
+            <ImageView
                 android:id="@+id/widget_day_date"
-                android:layout_width="0dp"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="4dp"
-                android:layout_weight="1"
-                android:ellipsize="end"
-                android:fontFamily="sans-serif"
-                android:maxLines="1"
-                android:textColor="#0F172A"
-                android:textFontWeight="400"
-                android:textSize="12sp" />
+                android:adjustViewBounds="true"
+                android:contentDescription="@null"
+                android:scaleType="center" />
         </LinearLayout>
 
         <LinearLayout
             android:id="@+id/widget_item_0"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:gravity="center_vertical"
@@ -70,23 +62,19 @@
                 android:contentDescription="@null"
                 android:src="@drawable/widget_dot" />
 
-            <TextView
+            <ImageView
                 android:id="@+id/widget_item_0_title"
-                android:layout_width="0dp"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="6dp"
-                android:layout_weight="1"
-                android:ellipsize="end"
-                android:fontFamily="sans-serif"
-                android:maxLines="1"
-                android:textColor="#0F172A"
-                android:textFontWeight="400"
-                android:textSize="13sp" />
+                android:adjustViewBounds="true"
+                android:contentDescription="@null"
+                android:scaleType="center" />
         </LinearLayout>
 
         <LinearLayout
             android:id="@+id/widget_item_1"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="5dp"
             android:gravity="center_vertical"
@@ -99,23 +87,19 @@
                 android:contentDescription="@null"
                 android:src="@drawable/widget_dot" />
 
-            <TextView
+            <ImageView
                 android:id="@+id/widget_item_1_title"
-                android:layout_width="0dp"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="6dp"
-                android:layout_weight="1"
-                android:ellipsize="end"
-                android:fontFamily="sans-serif"
-                android:maxLines="1"
-                android:textColor="#0F172A"
-                android:textFontWeight="400"
-                android:textSize="13sp" />
+                android:adjustViewBounds="true"
+                android:contentDescription="@null"
+                android:scaleType="center" />
         </LinearLayout>
 
         <LinearLayout
             android:id="@+id/widget_item_2"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="5dp"
             android:gravity="center_vertical"
@@ -128,23 +112,19 @@
                 android:contentDescription="@null"
                 android:src="@drawable/widget_dot" />
 
-            <TextView
+            <ImageView
                 android:id="@+id/widget_item_2_title"
-                android:layout_width="0dp"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="6dp"
-                android:layout_weight="1"
-                android:ellipsize="end"
-                android:fontFamily="sans-serif"
-                android:maxLines="1"
-                android:textColor="#0F172A"
-                android:textFontWeight="400"
-                android:textSize="13sp" />
+                android:adjustViewBounds="true"
+                android:contentDescription="@null"
+                android:scaleType="center" />
         </LinearLayout>
 
         <LinearLayout
             android:id="@+id/widget_item_3"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="5dp"
             android:gravity="center_vertical"
@@ -157,23 +137,19 @@
                 android:contentDescription="@null"
                 android:src="@drawable/widget_dot" />
 
-            <TextView
+            <ImageView
                 android:id="@+id/widget_item_3_title"
-                android:layout_width="0dp"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="6dp"
-                android:layout_weight="1"
-                android:ellipsize="end"
-                android:fontFamily="sans-serif"
-                android:maxLines="1"
-                android:textColor="#0F172A"
-                android:textFontWeight="400"
-                android:textSize="13sp" />
+                android:adjustViewBounds="true"
+                android:contentDescription="@null"
+                android:scaleType="center" />
         </LinearLayout>
 
         <LinearLayout
             android:id="@+id/widget_item_4"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="5dp"
             android:gravity="center_vertical"
@@ -186,23 +162,19 @@
                 android:contentDescription="@null"
                 android:src="@drawable/widget_dot" />
 
-            <TextView
+            <ImageView
                 android:id="@+id/widget_item_4_title"
-                android:layout_width="0dp"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="6dp"
-                android:layout_weight="1"
-                android:ellipsize="end"
-                android:fontFamily="sans-serif"
-                android:maxLines="1"
-                android:textColor="#0F172A"
-                android:textFontWeight="400"
-                android:textSize="13sp" />
+                android:adjustViewBounds="true"
+                android:contentDescription="@null"
+                android:scaleType="center" />
         </LinearLayout>
 
         <LinearLayout
             android:id="@+id/widget_item_5"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="5dp"
             android:gravity="center_vertical"
@@ -215,39 +187,34 @@
                 android:contentDescription="@null"
                 android:src="@drawable/widget_dot" />
 
-            <TextView
+            <ImageView
                 android:id="@+id/widget_item_5_title"
-                android:layout_width="0dp"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="6dp"
-                android:layout_weight="1"
-                android:ellipsize="end"
-                android:fontFamily="sans-serif"
-                android:maxLines="1"
-                android:textColor="#0F172A"
-                android:textFontWeight="400"
-                android:textSize="13sp" />
+                android:adjustViewBounds="true"
+                android:contentDescription="@null"
+                android:scaleType="center" />
         </LinearLayout>
 
-        <TextView
+        <ImageView
             android:id="@+id/widget_more"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="5dp"
-            android:fontFamily="sans-serif"
-            android:textColor="#94A3B8"
-            android:textSize="11sp"
+            android:adjustViewBounds="true"
+            android:contentDescription="@null"
+            android:scaleType="center"
             android:visibility="gone" />
 
-        <TextView
+        <ImageView
             android:id="@+id/widget_empty"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:fontFamily="sans-serif"
-            android:text="오늘 일정이 없어요"
-            android:textColor="#94A3B8"
-            android:textSize="13sp"
+            android:adjustViewBounds="true"
+            android:contentDescription="@null"
+            android:scaleType="center"
             android:visibility="gone" />
     </LinearLayout>
 </FrameLayout>

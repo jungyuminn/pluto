@@ -80,6 +80,9 @@ ReleaseDemo releaseDemoFor(String text, {required bool isFix}) {
     if (text.contains('캘린더가 깨지') || text.contains('아이콘이 한 번')) {
       return ReleaseDemo.customTheme;
     }
+    if (text.contains('흐릿') || text.contains('위젯 글씨')) {
+      return ReleaseDemo.compactWidget;
+    }
     return ReleaseDemo.fix;
   }
   if (text.contains('크게 볼') || text.contains('패턴과 사진')) {
@@ -139,6 +142,9 @@ ReleaseDemo releaseDemoFor(String text, {required bool isFix}) {
   if (text.contains('바운스')) return ReleaseDemo.homeBounce;
   if (text.contains('업데이트 내용') || text.contains('릴리즈 노트')) {
     return ReleaseDemo.releaseNotes;
+  }
+  if (text.contains('테마·폰트') || text.contains('따라갈지')) {
+    return ReleaseDemo.compactWidget;
   }
   if (text.contains('이번 달 달력')) return ReleaseDemo.monthWidget;
   if (text.contains('숨긴 할 일')) return ReleaseDemo.monthWidget;

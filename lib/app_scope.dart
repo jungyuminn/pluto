@@ -9,6 +9,7 @@ import 'package:job_planner/data/datasources/long_goal_local_datasource.dart';
 import 'package:job_planner/data/datasources/job_view_preference.dart';
 import 'package:job_planner/data/datasources/notification_preference.dart';
 import 'package:job_planner/data/datasources/theme_preference.dart';
+import 'package:job_planner/data/datasources/widget_preference.dart';
 import 'package:job_planner/domain/usecases/add_calendar_event.dart';
 import 'package:job_planner/domain/usecases/add_event_category.dart';
 import 'package:job_planner/domain/usecases/delete_event_category.dart';
@@ -75,6 +76,7 @@ class AppScope extends InheritedWidget {
     required this.fontPreference,
     required this.notificationPreference,
     required this.themePreference,
+    required this.widgetPreference,
     required this.backupPreference,
     required super.child,
   });
@@ -119,6 +121,7 @@ class AppScope extends InheritedWidget {
   final FontPreference fontPreference;
   final NotificationPreference notificationPreference;
   final ThemePreference themePreference;
+  final WidgetPreference widgetPreference;
   final BackupPreference backupPreference;
 
   static AppScope of(BuildContext context) {
@@ -173,6 +176,7 @@ class AppScope extends InheritedWidget {
         fontPreference != oldWidget.fontPreference ||
         notificationPreference != oldWidget.notificationPreference ||
         themePreference != oldWidget.themePreference ||
+        widgetPreference != oldWidget.widgetPreference ||
         backupPreference != oldWidget.backupPreference;
   }
 

@@ -23,10 +23,12 @@ import 'package:job_planner/data/datasources/font_preference.dart';
 import 'package:job_planner/data/datasources/home_view_preference.dart';
 import 'package:job_planner/data/datasources/job_application_local_datasource.dart';
 import 'package:job_planner/data/datasources/theme_preference.dart';
+import 'package:job_planner/data/datasources/widget_preference.dart';
 import 'package:job_planner/domain/entities/calendar_event.dart';
 import 'package:job_planner/domain/entities/event_category.dart';
 import 'package:job_planner/domain/entities/job_application.dart';
 import 'package:job_planner/presentation/screens/calendar/calendar_day_events.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 @pragma('vm:entry-point')
@@ -67,6 +69,7 @@ class HomeScreenWidgetService {
   DayEventsViewPreference? _dayEventsView;
   FontPreference? _font;
   CalendarPreference? _calendar;
+  WidgetPreference? _widget;
   var _syncing = false;
   var _queued = false;
 
@@ -79,6 +82,7 @@ class HomeScreenWidgetService {
     required DayEventsViewPreference dayEventsView,
     FontPreference? font,
     CalendarPreference? calendar,
+    WidgetPreference? widget,
   }) async {
     _events = events;
     _jobs = jobs;
@@ -88,6 +92,7 @@ class HomeScreenWidgetService {
     _dayEventsView = dayEventsView;
     _font = font;
     _calendar = calendar;
+    _widget = widget;
     await _ensureAppGroup();
   }
 
@@ -124,6 +129,7 @@ class HomeScreenWidgetService {
       dayEventsView: DayEventsViewPreference(prefs: prefs),
       font: FontPreference(prefs: prefs),
       calendar: CalendarPreference(prefs: prefs),
+      widget: WidgetPreference(prefs: prefs),
     );
   }
 
@@ -207,13 +213,19 @@ class HomeScreenWidgetService {
           PlatformDispatcher.instance.implicitView?.devicePixelRatio ?? 0;
       final pixelRatio = (liveRatio < 2 ? 3.0 : liveRatio).clamp(3.0, 4.0);
       officeIcon = await _loadOfficeIcon();
-      await HomeWidget.saveWidgetData<bool>('is_dark', theme.isDark);
+      final isDark = _widgetIsDark;
+      final skin = _widgetSkin;
+      await HomeWidget.saveWidgetData<bool>('is_dark', isDark);
       if (Platform.isAndroid) {
-        await _renderSkinBackground(
-          skin: theme.skin,
-          isDark: theme.isDark,
-          pixelRatio: pixelRatio,
-        );
+        if (_followTheme) {
+          await _renderSkinBackground(
+            skin: skin,
+            isDark: isDark,
+            pixelRatio: pixelRatio,
+          );
+        } else {
+          await HomeWidget.saveWidgetData<String>(skinBackgroundKey, '');
+        }
       }
 
       for (final kind in _kinds) {
@@ -227,8 +239,8 @@ class HomeScreenWidgetService {
           compact: homeView.isCompact,
           sortByTime: dayEventsView.sortByTime,
           showTime: dayEventsView.showTime,
-          isDark: theme.isDark,
-          skin: theme.skin,
+          isDark: isDark,
+          skin: skin,
           pixelRatio: pixelRatio,
           officeIcon: officeIcon,
         );
@@ -238,10 +250,11 @@ class HomeScreenWidgetService {
         allEvents: allEvents,
         applications: applications,
         showTime: dayEventsView.showTime,
-        isDark: theme.isDark,
-        skin: theme.skin,
+        isDark: isDark,
+        skin: skin,
         pixelRatio: pixelRatio,
       );
+      await _exportWidgetFonts();
       await _syncCompactDay(
         today: true,
         date: today,
@@ -250,8 +263,8 @@ class HomeScreenWidgetService {
           events: allEvents,
           applications: applications,
         ),
-        isDark: theme.isDark,
-        skin: theme.skin,
+        isDark: isDark,
+        skin: skin,
         sortByTime: dayEventsView.sortByTime,
       );
       await _syncCompactDay(
@@ -262,16 +275,16 @@ class HomeScreenWidgetService {
           events: allEvents,
           applications: applications,
         ),
-        isDark: theme.isDark,
-        skin: theme.skin,
+        isDark: isDark,
+        skin: skin,
         sortByTime: dayEventsView.sortByTime,
       );
       await _syncMonthCalendar(
         today: today,
         allEvents: allEvents,
         applications: applications,
-        isDark: theme.isDark,
-        skin: theme.skin,
+        isDark: isDark,
+        skin: skin,
         pixelRatio: pixelRatio,
       );
       if (Platform.isIOS) {
@@ -392,6 +405,25 @@ class HomeScreenWidgetService {
         await HomeWidget.saveWidgetData(kind.rowKey(i), null);
         await HomeWidget.saveWidgetData(kind.rowIdKey(i), null);
       }
+
+      await HomeWidget.renderFlutterWidget(
+        _wrapTheme(
+          isDark: isDark,
+          size: TodayWidgetCard.headerSize,
+          pixelRatio: pixelRatio,
+          child: SizedBox(
+            width: TodayWidgetCard.headerSize.width,
+            height: TodayWidgetCard.headerSize.height,
+            child: TodayWidgetCard.header(
+              title: kind.title,
+              dateLabel: kind.dateLabel(today, tomorrow),
+            ),
+          ),
+        ),
+        key: kind.headerKey,
+        logicalSize: TodayWidgetCard.headerSize,
+        pixelRatio: pixelRatio,
+      );
     }
 
     await HomeWidget.saveWidgetData<String>(kind.titleKey, kind.title);
@@ -593,9 +625,9 @@ class HomeScreenWidgetService {
     final more = items.length - shown.length;
     final colors = AppTheme.themed(
       dark: isDark,
-      typeface: _font?.typeface ?? AppTypeface.pretendard,
+      typeface: _widgetTypeface,
       skin: skin,
-      customAccent: _theme?.customTheme?.accentColor,
+      customAccent: _widgetCustomAccent,
     ).extension<AppColors>()!;
 
     await HomeWidget.saveWidgetData<String>('${prefix}_title', title);
@@ -645,6 +677,42 @@ class HomeScreenWidgetService {
       qualifiedAndroidName: today
           ? CompactDayCard.qualifiedTodayName
           : CompactDayCard.qualifiedTomorrowName,
+    );
+  }
+
+  Future<void> _exportWidgetFonts() async {
+    if (kIsWeb || !Platform.isAndroid) return;
+    if (!_followFont) {
+      await HomeWidget.saveWidgetData<String>('widget_font_regular', '');
+      await HomeWidget.saveWidgetData<String>('widget_font_bold', '');
+      return;
+    }
+    final typeface = _widgetTypeface;
+    final regularAsset = typeface.widgetRegularAsset;
+    final boldAsset = typeface.widgetBoldAsset ?? regularAsset;
+    if (regularAsset == null || boldAsset == null) {
+      await HomeWidget.saveWidgetData<String>('widget_font_regular', '');
+      await HomeWidget.saveWidgetData<String>('widget_font_bold', '');
+      return;
+    }
+    final dir = await getApplicationSupportDirectory();
+    Future<String> copy(String asset, String name) async {
+      final file = File('${dir.path}/$name');
+      final data = await rootBundle.load(asset);
+      await file.writeAsBytes(
+        data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes),
+        flush: true,
+      );
+      return file.path;
+    }
+
+    await HomeWidget.saveWidgetData<String>(
+      'widget_font_regular',
+      await copy(regularAsset, 'widget_font_regular.bin'),
+    );
+    await HomeWidget.saveWidgetData<String>(
+      'widget_font_bold',
+      await copy(boldAsset, 'widget_font_bold.bin'),
     );
   }
 
@@ -784,7 +852,7 @@ class HomeScreenWidgetService {
       builder: (context) {
         return AppSkinBackground(
           skin: skin,
-          customTheme: _theme?.customTheme,
+          customTheme: _followTheme ? _theme?.customTheme : null,
           color: AppColors.of(context).card,
           liftForNav: false,
           scaleByWidth: true,
@@ -898,8 +966,7 @@ class HomeScreenWidgetService {
     required double pixelRatio,
     required Widget child,
   }) {
-    final font = _font;
-    final typeface = font?.typeface ?? AppTypeface.pretendard;
+    final typeface = _widgetTypeface;
     return MediaQuery(
       data: MediaQueryData(
         size: size,
@@ -912,15 +979,15 @@ class HomeScreenWidgetService {
           data: AppTheme.themed(
             dark: isDark,
             typeface: typeface,
-            skin: _theme?.skin ?? AppSkin.classic,
-            customAccent: _theme?.customTheme?.accentColor,
+            skin: _widgetSkin,
+            customAccent: _widgetCustomAccent,
           ),
           child: FontScope(
             typeface: typeface,
-            todoScale: font?.todoScale ?? 1,
-            labelScale: font?.labelScale ?? 1,
-            calendarScale: font?.calendarScale ?? 1,
-            calendarLabelScale: font?.calendarLabelScale ?? 1,
+            todoScale: _font?.todoScale ?? 1,
+            labelScale: _font?.labelScale ?? 1,
+            calendarScale: _font?.calendarScale ?? 1,
+            calendarLabelScale: _font?.calendarLabelScale ?? 1,
             child: TickerMode(
               enabled: false,
               child: child,
@@ -930,6 +997,22 @@ class HomeScreenWidgetService {
       ),
     );
   }
+
+  bool get _followTheme => _widget?.followTheme ?? true;
+
+  bool get _followFont => _widget?.followFont ?? true;
+
+  bool get _widgetIsDark => _theme?.isDark ?? false;
+
+  AppSkin get _widgetSkin =>
+      _followTheme ? (_theme?.skin ?? AppSkin.classic) : AppSkin.classic;
+
+  AppTypeface get _widgetTypeface => _followFont
+      ? (_font?.typeface ?? AppTypeface.pretendard)
+      : AppTypeface.system;
+
+  Color? get _widgetCustomAccent =>
+      _followTheme ? _theme?.customTheme?.accentColor : null;
 
   Future<ui.Image?> _loadOfficeIcon() async {
     try {
@@ -986,6 +1069,7 @@ extension on _WidgetKind {
 
   String get titleKey => '${id}_title';
   String get dateKey => '${id}_date';
+  String get headerKey => '${id}_header';
   String get emptyKey => '${id}_empty';
   String get rowCountKey => '${id}_row_count';
   String rowKey(int index) => '${id}_row_$index';

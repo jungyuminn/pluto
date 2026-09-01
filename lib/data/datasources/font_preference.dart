@@ -92,6 +92,39 @@ enum AppTypeface {
       this == AppTypeface.babyShark ||
       this == AppTypeface.cookieRun;
 
+  String? get widgetRegularAsset => switch (this) {
+        AppTypeface.pretendard => 'assets/fonts/Pretendard-Regular.otf',
+        AppTypeface.paperlogy => 'assets/fonts/Paperlogy-4Regular.ttf',
+        AppTypeface.suit => 'assets/fonts/SUIT-Regular.otf',
+        AppTypeface.theJamsil => 'assets/fonts/The Jamsil OTF 3 Regular.otf',
+        AppTypeface.ownglyph => 'assets/fonts/park_dahyun.ttf',
+        AppTypeface.meetme => 'assets/fonts/meetme.ttf',
+        AppTypeface.leeSeoyoon => 'assets/fonts/lee_seoyoon.ttf',
+        AppTypeface.bandal => 'assets/fonts/bandal.otf',
+        AppTypeface.mona => 'assets/fonts/MonaS12.otf',
+        AppTypeface.omyu => 'assets/fonts/omyu.ttf',
+        AppTypeface.bazzi => 'assets/fonts/Bazzi.ttf',
+        AppTypeface.mabinogi => 'assets/fonts/Mabinogi_Classic_TTF.ttf',
+        AppTypeface.babyShark =>
+          'assets/fonts/Pinkfong Baby Shark Font_ Regular.ttf',
+        AppTypeface.cookieRun => 'assets/fonts/CookieRun Regular.otf',
+        AppTypeface.system ||
+        AppTypeface.gothic ||
+        AppTypeface.serif => null,
+      };
+
+  String? get widgetBoldAsset => switch (this) {
+        AppTypeface.pretendard => 'assets/fonts/Pretendard-ExtraBold.otf',
+        AppTypeface.paperlogy => 'assets/fonts/Paperlogy-8ExtraBold.ttf',
+        AppTypeface.suit => 'assets/fonts/SUIT-ExtraBold.otf',
+        AppTypeface.theJamsil => 'assets/fonts/The Jamsil OTF 6 ExtraBold.otf',
+        AppTypeface.mona => 'assets/fonts/MonaS12-Bold.otf',
+        AppTypeface.babyShark =>
+          'assets/fonts/Pinkfong Baby Shark Font_ Bold.ttf',
+        AppTypeface.cookieRun => 'assets/fonts/CookieRun Black.otf',
+        _ => widgetRegularAsset,
+      };
+
   static const selectable = [
     AppTypeface.pretendard,
     AppTypeface.theJamsil,

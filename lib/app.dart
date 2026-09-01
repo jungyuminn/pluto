@@ -26,6 +26,7 @@ import 'package:job_planner/data/datasources/job_application_local_datasource.da
 import 'package:job_planner/data/datasources/notification_preference.dart';
 import 'package:job_planner/data/datasources/theme_preference.dart';
 import 'package:job_planner/data/datasources/tutorial_preference.dart';
+import 'package:job_planner/data/datasources/widget_preference.dart';
 import 'package:job_planner/data/repositories/calendar_event_memory_repository.dart';
 import 'package:job_planner/data/repositories/calendar_event_repository_impl.dart';
 import 'package:job_planner/data/repositories/diary_memory_repository.dart';
@@ -105,6 +106,7 @@ class JobPlannerApp extends StatelessWidget {
     this.fontPreference,
     this.notificationPreference,
     this.themePreference,
+    this.widgetPreference,
     this.backupPreference,
   });
 
@@ -148,6 +150,7 @@ class JobPlannerApp extends StatelessWidget {
   final FontPreference? fontPreference;
   final NotificationPreference? notificationPreference;
   final ThemePreference? themePreference;
+  final WidgetPreference? widgetPreference;
   final BackupPreference? backupPreference;
 
   @override
@@ -236,6 +239,7 @@ class JobPlannerApp extends StatelessWidget {
       notificationPreference:
           notificationPreference ?? NotificationPreference(),
       themePreference: themePreference ?? ThemePreference(),
+      widgetPreference: widgetPreference ?? WidgetPreference(),
       backupPreference: backupPreference ?? BackupPreference(),
       child: const _TutorialHost(
         child: _JobPlannerMaterialApp(),
@@ -292,6 +296,7 @@ class _AppBootstrapState extends State<_AppBootstrap> {
   FontPreference? _fontPreference;
   NotificationPreference? _notificationPreference;
   ThemePreference? _themePreference;
+  WidgetPreference? _widgetPreference;
   BackupPreference? _backupPreference;
   SharedPreferences? _prefs;
 
@@ -336,6 +341,7 @@ class _AppBootstrapState extends State<_AppBootstrap> {
     final dayEventsViewPreference = DayEventsViewPreference(prefs: prefs);
     final calendarPreference = CalendarPreference(prefs: prefs);
     final fontPreference = FontPreference(prefs: prefs);
+    final widgetPreference = WidgetPreference(prefs: prefs);
     await HomeScreenWidgetService.instance.init(
       events: eventDataSource,
       jobs: jobDataSource,
@@ -345,6 +351,7 @@ class _AppBootstrapState extends State<_AppBootstrap> {
       dayEventsView: dayEventsViewPreference,
       font: fontPreference,
       calendar: calendarPreference,
+      widget: widgetPreference,
     );
 
     final jobRepository = JobApplicationRepositoryImpl(jobDataSource);
@@ -400,6 +407,7 @@ class _AppBootstrapState extends State<_AppBootstrap> {
       _fontPreference = fontPreference;
       _notificationPreference = notificationPreference;
       _themePreference = themePreference;
+      _widgetPreference = widgetPreference;
       _backupPreference = backupPreference;
       _prefs = prefs;
     });
@@ -469,6 +477,7 @@ class _AppBootstrapState extends State<_AppBootstrap> {
     final fontPreference = _fontPreference;
     final notificationPreference = _notificationPreference;
     final themePreference = _themePreference;
+    final widgetPreference = _widgetPreference;
     final backupPreference = _backupPreference;
 
     if (getApplications == null ||
@@ -511,6 +520,7 @@ class _AppBootstrapState extends State<_AppBootstrap> {
         fontPreference == null ||
         notificationPreference == null ||
         themePreference == null ||
+        widgetPreference == null ||
         backupPreference == null) {
       return const MaterialApp(
         debugShowCheckedModeBanner: false,
@@ -566,6 +576,7 @@ class _AppBootstrapState extends State<_AppBootstrap> {
       fontPreference: fontPreference,
       notificationPreference: notificationPreference,
       themePreference: themePreference,
+      widgetPreference: widgetPreference,
       backupPreference: backupPreference,
       child: _TutorialHost(
         prefs: _prefs,

@@ -111,6 +111,11 @@ ReleaseDemo releaseDemoFor(String text, {required bool isFix}) {
   if (text.contains('챌린지')) return ReleaseDemo.challenge;
   if (text.contains('음력')) return ReleaseDemo.lunar;
   if (text.contains('나만의 테마')) return ReleaseDemo.customTheme;
+  if (text.contains('일기장')) return ReleaseDemo.diaryNote;
+  if (text.contains('앱 문의')) return ReleaseDemo.settingsHelp;
+  if (text.contains('일상 모드') && text.contains('검색')) {
+    return ReleaseDemo.search;
+  }
   if (text.contains('꾹 눌러 순서를')) return ReleaseDemo.themeEdit;
   if (text.contains('클로버') || text.contains('수달') || text.contains('고양이 마을')) {
     return ReleaseDemo.themePacks;

@@ -1,4 +1,5 @@
 import 'package:job_planner/domain/entities/calendar_event.dart';
+import 'package:job_planner/domain/entities/diary_cover.dart';
 import 'package:job_planner/domain/entities/diary_entry.dart';
 
 class DiaryEntryModel {
@@ -18,6 +19,7 @@ class DiaryEntryModel {
       categoryColor:
           json['categoryColor'] as int? ?? CalendarEvent.defaultCategoryColor,
       groupId: json['groupId'] as String?,
+      cover: DiaryCover.fromId(json['cover'] as String?),
     );
   }
 
@@ -33,6 +35,7 @@ class DiaryEntryModel {
       'categoryName': entry.categoryName,
       'categoryColor': entry.categoryColor,
       'groupId': entry.groupId,
+      'cover': entry.cover.id,
     };
   }
 

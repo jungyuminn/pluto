@@ -54,6 +54,7 @@ import 'package:job_planner/presentation/widgets/sliding_kind_bar.dart';
 import 'package:job_planner/presentation/widgets/themed_asset.dart';
 import 'package:job_planner/presentation/screens/shell/widgets/pill_bottom_nav.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -94,6 +95,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   var _calendarLabelSize = FontSizeLevel.medium;
   var _autoBackupInterval = AutoBackupInterval.daily;
   var _ready = false;
+  var _contactHintVisible = false;
+  Timer? _contactHintTimer;
 
   @override
   void didChangeDependencies() {
@@ -130,6 +133,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _calendarSize = scope.fontPreference.calendarSize;
     _calendarLabelSize = scope.fontPreference.calendarLabelSize;
     _autoBackupInterval = scope.backupPreference.interval;
+  }
+
+  @override
+  void dispose() {
+    _contactHintTimer?.cancel();
+    super.dispose();
   }
 
   void _syncFromScope() {
@@ -450,6 +459,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
     tutorial.start();
   }
 
+  Future<void> _openAppContact() async {
+    final uri = Uri(
+      scheme: 'mailto',
+      path: AppStrings.appContactEmail,
+      queryParameters: {
+        'subject': AppStrings.appContactSubject,
+      },
+    );
+    try {
+      final launched = await launchUrl(uri);
+      if (launched || !mounted) return;
+    } catch (_) {}
+    if (!mounted) return;
+    await Clipboard.setData(
+      const ClipboardData(text: AppStrings.appContactEmail),
+    );
+    _contactHintTimer?.cancel();
+    setState(() => _contactHintVisible = true);
+    _contactHintTimer = Timer(const Duration(milliseconds: 1700), () {
+      if (!mounted) return;
+      setState(() => _contactHintVisible = false);
+    });
+  }
+
   Future<void> _openReleaseNotes() {
     return Navigator.of(context).push(
       MaterialPageRoute<void>(builder: (context) => const ReleaseNotesPage()),
@@ -674,6 +707,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final top = MediaQuery.paddingOf(context).top;
+    final bottom = MediaQuery.paddingOf(context).bottom;
+    final contactHint = _contactHintVisible;
 
     return Scaffold(
       backgroundColor: AppColors.of(context).groupedBackground,
@@ -682,7 +717,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
         title: AppStrings.settingsTitle,
         onBack: () => Navigator.pop(context),
       ),
-      body: ListView(
+      body: Stack(
+        children: [
+          ListView(
         padding: EdgeInsets.fromLTRB(16, top + 56, 16, 32),
         children: [
           _SectionLabel(
@@ -1034,12 +1071,37 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 onPressed: _openAppTutorial,
               ),
               _SettingsTile(
+                label: AppStrings.appContact,
+                chevron: true,
+                onPressed: _openAppContact,
+              ),
+              _SettingsTile(
                 label: AppStrings.releaseNotesTitle,
                 value: ReleaseNotes.latestVersion,
                 chevron: true,
                 onPressed: _openReleaseNotes,
               ),
             ],
+          ),
+        ],
+          ),
+          Positioned(
+            left: 24,
+            right: 24,
+            bottom: 20 + bottom,
+            child: IgnorePointer(
+              child: AnimatedSlide(
+                duration: const Duration(milliseconds: 280),
+                curve: contactHint ? Curves.easeOutCubic : Curves.easeInCubic,
+                offset: contactHint ? Offset.zero : const Offset(0, 0.18),
+                child: AnimatedOpacity(
+                  duration: const Duration(milliseconds: 280),
+                  curve: contactHint ? Curves.easeOutCubic : Curves.easeInCubic,
+                  opacity: contactHint ? 1 : 0,
+                  child: const _HintToast(text: AppStrings.appContactCopied),
+                ),
+              ),
+            ),
           ),
         ],
       ),

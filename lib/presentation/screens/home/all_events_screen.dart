@@ -196,9 +196,10 @@ class _AllEventsScreenState extends State<AllEventsScreen> {
   }
 
   bool _matches(CalendarEvent event) {
+    final showJobs = AppScope.of(context).navPreference.showJobTab;
     if (event.isJob) {
-      if (_typeFilter == _TypeFilter.todos) return false;
-    } else if (_typeFilter == _TypeFilter.jobs) {
+      if (!showJobs || _typeFilter == _TypeFilter.todos) return false;
+    } else if (showJobs && _typeFilter == _TypeFilter.jobs) {
       return false;
     }
     if (!_inDateRange(event)) return false;
@@ -491,12 +492,17 @@ class _AllEventsScreenState extends State<AllEventsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final colors = AppColors.of(context);
-    final top = MediaQuery.paddingOf(context).top;
-    final sections = _sections(_events);
-    final anyVisible = _events.any(_matches);
+    return ListenableBuilder(
+      listenable: AppScope.of(context).navPreference,
+      builder: (context, _) {
+        final colors = AppColors.of(context);
+        final top = MediaQuery.paddingOf(context).top;
+        final sections = _sections(_events);
+        final anyVisible = _events.any(_matches);
+        final showJobFilters =
+            AppScope.of(context).navPreference.showJobTab;
 
-    return Scaffold(
+        return Scaffold(
       backgroundColor: colors.background,
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -519,7 +525,9 @@ class _AllEventsScreenState extends State<AllEventsScreen> {
                       fontSize: 15,
                     ),
                     decoration: InputDecoration(
-                      hintText: AppStrings.allEventsSearchHint,
+                      hintText: showJobFilters
+                          ? AppStrings.allEventsSearchHint
+                          : AppStrings.allEventsSearchHintDaily,
                       hintStyle: TextStyle(
                         fontFamily: AppFonts.of(context),
                         color: colors.muted,
@@ -554,18 +562,20 @@ class _AllEventsScreenState extends State<AllEventsScreen> {
                     onPressed: _pickRange,
                     onClear: _rangeStart == null ? null : _clearRange,
                   ),
-                  const SizedBox(width: 8),
-                  _FilterChip(
-                    label: AppStrings.monthlyStatsTodoSection,
-                    selected: _typeFilter == _TypeFilter.todos,
-                    onPressed: () => _toggleType(_TypeFilter.todos),
-                  ),
-                  const SizedBox(width: 8),
-                  _FilterChip(
-                    label: AppStrings.monthlyStatsJobSection,
-                    selected: _typeFilter == _TypeFilter.jobs,
-                    onPressed: () => _toggleType(_TypeFilter.jobs),
-                  ),
+                  if (showJobFilters) ...[
+                    const SizedBox(width: 8),
+                    _FilterChip(
+                      label: AppStrings.monthlyStatsTodoSection,
+                      selected: _typeFilter == _TypeFilter.todos,
+                      onPressed: () => _toggleType(_TypeFilter.todos),
+                    ),
+                    const SizedBox(width: 8),
+                    _FilterChip(
+                      label: AppStrings.monthlyStatsJobSection,
+                      selected: _typeFilter == _TypeFilter.jobs,
+                      onPressed: () => _toggleType(_TypeFilter.jobs),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -732,6 +742,8 @@ class _AllEventsScreenState extends State<AllEventsScreen> {
           ),
         ],
       ),
+    );
+      },
     );
   }
 }

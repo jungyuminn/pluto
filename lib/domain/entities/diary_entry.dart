@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:job_planner/domain/entities/calendar_event.dart';
+import 'package:job_planner/domain/entities/diary_cover.dart';
 
 class DiaryEntry {
   const DiaryEntry({
@@ -13,6 +14,7 @@ class DiaryEntry {
     this.categoryName = CalendarEvent.defaultCategoryName,
     this.categoryColor = CalendarEvent.defaultCategoryColor,
     this.groupId,
+    this.cover = DiaryCover.fallback,
   });
 
   final String id;
@@ -25,6 +27,7 @@ class DiaryEntry {
   final String categoryName;
   final int categoryColor;
   final String? groupId;
+  final DiaryCover cover;
 
   Color get color => Color(categoryColor);
 
@@ -51,6 +54,7 @@ class DiaryEntry {
     String? categoryName,
     int? categoryColor,
     String? groupId,
+    DiaryCover? cover,
     bool clearPhoto = false,
     bool clearGroupId = false,
   }) {
@@ -65,6 +69,7 @@ class DiaryEntry {
       categoryName: categoryName ?? this.categoryName,
       categoryColor: categoryColor ?? this.categoryColor,
       groupId: clearGroupId ? null : groupId ?? this.groupId,
+      cover: cover ?? this.cover,
     );
   }
 }

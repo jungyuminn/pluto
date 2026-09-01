@@ -51,6 +51,8 @@ class AppIcons {
   static const trashCan = 'assets/icons/trash_can.png';
   static const editOutlined = 'assets/icons/edit_outlined.png';
   static const emoji = 'assets/icons/emoji.png';
+  static const diary = 'assets/icons/diary.png';
+  static const diaryOutlined = 'assets/icons/diary_outlined.png';
   static const longGoalMeasure = 'assets/icons/value.png';
   static const longGoalMeasureOutlined = 'assets/icons/value_outlined.png';
   static const longGoalSum = 'assets/icons/stack.png';

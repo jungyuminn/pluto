@@ -611,8 +611,12 @@ class _AppPreview extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _HelpSelectDemo(
-      labels: const [AppStrings.appTutorial, AppStrings.releaseNotesTitle],
-      values: ['', ReleaseNotes.latestVersion],
+      labels: const [
+        AppStrings.appTutorial,
+        AppStrings.appContact,
+        AppStrings.releaseNotesTitle,
+      ],
+      values: ['', '', ReleaseNotes.latestVersion],
       chevron: true,
       sceneHeight: 228,
       scene: (context, selected) {
@@ -621,10 +625,70 @@ class _AppPreview extends StatelessWidget {
             switchKey: selected,
             child: selected == 0
                 ? const _FakeTutorialPeek()
-                : const _ReleaseNotesHelpDemo(),
+                : selected == 1
+                    ? const _ContactHelpDemo()
+                    : const _ReleaseNotesHelpDemo(),
           ),
         );
       },
+    );
+  }
+}
+
+class _ContactHelpDemo extends StatelessWidget {
+  const _ContactHelpDemo();
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    final font = AppFonts.of(context);
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: colors.card,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: colors.shadow,
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+        border: Border.all(color: colors.border.withValues(alpha: 0.7)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 18, 16, 18),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.mail_outline_rounded,
+              size: 28,
+              color: colors.accentBright,
+            ),
+            const SizedBox(height: 10),
+            Text(
+              AppStrings.appContact,
+              style: TextStyle(
+                fontFamily: font,
+                fontSize: 15,
+                fontWeight: FontWeight.w800,
+                color: colors.text,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              AppStrings.appContactEmail,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontFamily: font,
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: colors.muted,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

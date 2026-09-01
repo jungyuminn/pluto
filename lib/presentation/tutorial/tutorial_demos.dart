@@ -28,7 +28,7 @@ class TutorialDemoView extends StatelessWidget {
       TutorialDemo.todoComplete => const _CompleteDemo(),
       TutorialDemo.todoMove => const _MoveDemo(),
       TutorialDemo.calendarMenu => _MenuDemo(dailyMode: daily),
-      TutorialDemo.homeSearch => const _SearchDemo(),
+      TutorialDemo.homeSearch => _SearchDemo(dailyMode: daily),
       TutorialDemo.homeSettings => const _SettingsDemo(),
       TutorialDemo.homeReorder => const _ReorderDemo(),
       TutorialDemo.jobSwipe => const _SwipeDemo(),
@@ -465,7 +465,9 @@ class _MoveDemo extends StatelessWidget {
 }
 
 class _SearchDemo extends StatelessWidget {
-  const _SearchDemo();
+  const _SearchDemo({this.dailyMode = false});
+
+  final bool dailyMode;
 
   @override
   Widget build(BuildContext context) {
@@ -476,10 +478,12 @@ class _SearchDemo extends StatelessWidget {
       duration: const Duration(milliseconds: 3000),
       builder: (context, t) {
         final press = _pulse(t, 0.28, 0.40, 0.88);
-        final onlyTodos = t >= 0.40 && t < 0.88;
-        final jobs = onlyTodos
-            ? 1 - Curves.easeOutCubic.transform(_gate(t, 0.40, 0.56))
-            : 1.0;
+        final onlyTodos = !dailyMode && t >= 0.40 && t < 0.88;
+        final jobs = dailyMode
+            ? 0.0
+            : onlyTodos
+                ? 1 - Curves.easeOutCubic.transform(_gate(t, 0.40, 0.56))
+                : 1.0;
         return Stack(
           children: [
             Padding(
@@ -508,7 +512,9 @@ class _SearchDemo extends StatelessWidget {
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
-                              AppStrings.allEventsSearchHint,
+                              dailyMode
+                                  ? AppStrings.allEventsSearchHintDaily
+                                  : AppStrings.allEventsSearchHint,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
@@ -530,16 +536,18 @@ class _SearchDemo extends StatelessWidget {
                         label: AppStrings.calendarModeRange,
                         selected: false,
                       ),
-                      const SizedBox(width: 6),
-                      _FilterPill(
-                        label: AppStrings.monthlyStatsTodoSection,
-                        selected: onlyTodos,
-                      ),
-                      const SizedBox(width: 6),
-                      _FilterPill(
-                        label: AppStrings.monthlyStatsJobSection,
-                        selected: false,
-                      ),
+                      if (!dailyMode) ...[
+                        const SizedBox(width: 6),
+                        _FilterPill(
+                          label: AppStrings.monthlyStatsTodoSection,
+                          selected: onlyTodos,
+                        ),
+                        const SizedBox(width: 6),
+                        _FilterPill(
+                          label: AppStrings.monthlyStatsJobSection,
+                          selected: false,
+                        ),
+                      ],
                     ],
                   ),
                   const SizedBox(height: 10),

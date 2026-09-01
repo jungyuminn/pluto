@@ -287,7 +287,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 actions: [
                   AppBarIconAction(
                     asset: AppIcons.search,
-                    label: AppStrings.homeSearchHint,
+                    label: AppScope.of(context).navPreference.showJobTab
+                        ? AppStrings.homeSearchHint
+                        : AppStrings.homeSearchHintDaily,
                     onPressed: _openSearch,
                   ),
                   AppBarIconAction(

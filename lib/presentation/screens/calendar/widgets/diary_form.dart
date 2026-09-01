@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 import 'package:job_planner/app_scope.dart';
 import 'package:job_planner/core/constants/app_fonts.dart';
@@ -9,24 +7,22 @@ import 'package:job_planner/core/theme/app_colors.dart';
 import 'package:job_planner/core/utils/plain_text_editing_controller.dart';
 import 'package:job_planner/core/utils/press_bounce.dart';
 import 'package:job_planner/data/datasources/diary_photo_storage.dart';
+import 'package:job_planner/domain/entities/diary_cover.dart';
 import 'package:job_planner/domain/entities/diary_entry.dart';
 import 'package:job_planner/domain/entities/event_category.dart';
 import 'package:job_planner/presentation/screens/add_company/widgets/missing_fields_dialog.dart';
 import 'package:job_planner/presentation/screens/add_company/widgets/save_company_button.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/category_picker_sheet.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/delete_event_dialog.dart';
+import 'package:job_planner/presentation/screens/calendar/widgets/diary_cover_sheet.dart';
+import 'package:job_planner/presentation/screens/calendar/widgets/diary_cover_style.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/diary_photo_field.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/event_category_chip.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/event_date_chip.dart';
 import 'package:job_planner/presentation/widgets/app_calendar/app_calendar.dart';
 
 class DiaryForm extends StatefulWidget {
-  const DiaryForm({
-    super.key,
-    required this.date,
-    this.rangeEnd,
-    this.initial,
-  });
+  const DiaryForm({super.key, required this.date, this.rangeEnd, this.initial});
 
   final DateTime date;
   final DateTime? rangeEnd;
@@ -50,6 +46,7 @@ class _DiaryFormState extends State<DiaryForm> {
   late String? _categoryId;
   String? _categoryName;
   int? _categoryColor;
+  late DiaryCover _cover;
   var _saving = false;
   Animation<double>? _sheetAnimation;
 
@@ -74,6 +71,7 @@ class _DiaryFormState extends State<DiaryForm> {
     _categoryId = initial?.categoryId ?? travel.id;
     _categoryName = initial?.categoryName ?? travel.name;
     _categoryColor = initial?.categoryColor ?? travel.color;
+    _cover = initial?.cover ?? DiaryCover.fallback;
     final rangeEnd = widget.rangeEnd;
     if (rangeEnd != null) {
       final end = DateTime(rangeEnd.year, rangeEnd.month, rangeEnd.day);
@@ -101,7 +99,7 @@ class _DiaryFormState extends State<DiaryForm> {
         }
       }
       _loadGroup();
-      _loadLastCategory();
+      _loadLastDefaults();
     });
   }
 
@@ -152,11 +150,12 @@ class _DiaryFormState extends State<DiaryForm> {
     final groupId = widget.initial?.groupId;
     if (groupId == null) return;
     final diaries = await AppScope.of(context).getDiaries();
-    final days = diaries
-        .where((diary) => diary.groupId == groupId)
-        .map((diary) => diary.day)
-        .toList()
-      ..sort((a, b) => a.compareTo(b));
+    final days =
+        diaries
+            .where((diary) => diary.groupId == groupId)
+            .map((diary) => diary.day)
+            .toList()
+          ..sort((a, b) => a.compareTo(b));
     if (!mounted || days.length < 2) return;
     setState(() {
       _dates = [days.first, days.last];
@@ -165,7 +164,7 @@ class _DiaryFormState extends State<DiaryForm> {
     });
   }
 
-  Future<void> _loadLastCategory() async {
+  Future<void> _loadLastDefaults() async {
     if (widget.initial != null) return;
     final scope = AppScope.of(context);
     final diaries = await scope.getDiaries();
@@ -173,10 +172,12 @@ class _DiaryFormState extends State<DiaryForm> {
     if (!mounted) return;
 
     EventCategory? last;
+    var cover = DiaryCover.fallback;
     if (diaries.isNotEmpty) {
       final newest = diaries.reduce(
         (a, b) => a.id.compareTo(b.id) >= 0 ? a : b,
       );
+      cover = newest.cover;
       for (final category in categories) {
         if (category.id == newest.categoryId) {
           last = category;
@@ -184,29 +185,36 @@ class _DiaryFormState extends State<DiaryForm> {
         }
       }
     }
-    if (last == null) {
+    final EventCategory selected;
+    if (last != null) {
+      selected = last;
+    } else {
+      EventCategory? travel;
       final travelId = EventCategory.presets.first.id;
       for (final category in categories) {
         if (category.id == travelId) {
-          last = category;
+          travel = category;
           break;
         }
       }
-      last ??= categories.isNotEmpty
-          ? categories.first
-          : EventCategory.presets.first;
+      selected =
+          travel ??
+          (categories.isNotEmpty
+              ? categories.first
+              : EventCategory.presets.first);
     }
 
-    final selected = last ?? EventCategory.presets.first;
     if (_categoryId == selected.id &&
         _categoryName == selected.name &&
-        _categoryColor == selected.color) {
+        _categoryColor == selected.color &&
+        _cover == cover) {
       return;
     }
     setState(() {
       _categoryId = selected.id;
       _categoryName = selected.name;
       _categoryColor = selected.color;
+      _cover = cover;
     });
   }
 
@@ -223,6 +231,18 @@ class _DiaryFormState extends State<DiaryForm> {
       _categoryName = picked.name;
       _categoryColor = picked.color;
     });
+  }
+
+  Future<void> _pickCover() async {
+    _titleFocus.unfocus();
+    _bodyFocus.unfocus();
+    final picked = await showDiaryCoverSheet(
+      context,
+      selected: _cover,
+      color: _accent,
+    );
+    if (picked == null || !mounted) return;
+    setState(() => _cover = picked);
   }
 
   Future<void> _pickDate() async {
@@ -251,10 +271,7 @@ class _DiaryFormState extends State<DiaryForm> {
     final body = _body.text.trim();
     final days = _daysToSave();
     if (title.isEmpty || days.isEmpty || !_hasCategory) {
-      await showMissingFieldsDialog(
-        context,
-        body: AppStrings.missingDiaryBody,
-      );
+      await showMissingFieldsDialog(context, body: AppStrings.missingDiaryBody);
       return;
     }
     if (_saving) return;
@@ -267,17 +284,13 @@ class _DiaryFormState extends State<DiaryForm> {
     if (initial != null) {
       final groupId = initial.groupId;
       if (groupId != null) {
-        editing.addAll(
-          previous.where((diary) => diary.groupId == groupId),
-        );
+        editing.addAll(previous.where((diary) => diary.groupId == groupId));
       } else {
         editing.add(initial);
       }
     }
     final writingDays = {for (final day in days) day};
-    final idByDay = {
-      for (final diary in editing) diary.day: diary.id,
-    };
+    final idByDay = {for (final diary in editing) diary.day: diary.id};
 
     final now = DateTime.now().microsecondsSinceEpoch.toString();
     final groupId = days.length >= 2 ? (initial?.groupId ?? now) : null;
@@ -314,6 +327,7 @@ class _DiaryFormState extends State<DiaryForm> {
           categoryName: _categoryName!,
           categoryColor: _categoryColor!,
           groupId: groupId,
+          cover: _cover,
         ),
       );
     }
@@ -381,133 +395,124 @@ class _DiaryFormState extends State<DiaryForm> {
     Navigator.of(context).pop(true);
   }
 
-  Color _paperColor(AppColors colors, Brightness brightness) {
-    if (brightness == Brightness.dark) {
-      return Color.lerp(colors.card, const Color(0xFF2C261E), 0.5)!;
-    }
-    return Color.lerp(colors.card, const Color(0xFFF7F1E3), 0.78)!;
-  }
-
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
     final font = AppFonts.of(context);
     final accent = _accent;
-    final paper = _paperColor(colors, Theme.of(context).brightness);
-    final rule = Color.lerp(paper, colors.text, 0.12)!;
+    final look = DiaryCoverLook.of(
+      _cover,
+      colors,
+      Theme.of(context).brightness,
+    );
+    final rule = look.rule;
     return SizedBox(
       width: double.infinity,
-      child: PhysicalShape(
-        clipper: const _TornNotebookClipper(),
-        color: paper,
+      child: DiaryCoverPaper(
+        look: look,
         elevation: 12,
-        shadowColor: const Color(0x4D000000),
-        clipBehavior: Clip.antiAlias,
-        child: CustomPaint(
-          painter: _TornEdgePainter(
-            edge: Color.lerp(paper, colors.text, 0.16)!,
-            fiber: Color.lerp(paper, Colors.white, 0.4)!,
-          ),
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 28, 20, 10),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                TextField(
-                  controller: _title,
-                  focusNode: _titleFocus,
-                  textInputAction: TextInputAction.next,
-                  onSubmitted: (_) => _bodyFocus.requestFocus(),
-                  style: TextStyle(
+        child: Padding(
+          padding: EdgeInsets.fromLTRB(20, look.torn ? 28 : 20, 20, 10),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              TextField(
+                controller: _title,
+                focusNode: _titleFocus,
+                textInputAction: TextInputAction.next,
+                onSubmitted: (_) => _bodyFocus.requestFocus(),
+                style: TextStyle(
+                  fontFamily: font,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 20,
+                  height: 1.3,
+                  color: colors.text,
+                ),
+                decoration: InputDecoration(
+                  hintText: AppStrings.diaryTitleHint,
+                  hintStyle: TextStyle(
                     fontFamily: font,
-                    fontWeight: FontWeight.w800,
+                    color: colors.hint,
+                    fontWeight: FontWeight.w600,
                     fontSize: 20,
-                    height: 1.3,
-                    color: colors.text,
                   ),
-                  decoration: InputDecoration(
-                    hintText: AppStrings.diaryTitleHint,
-                    hintStyle: TextStyle(
-                      fontFamily: font,
-                      color: colors.hint,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 20,
-                    ),
-                    border: InputBorder.none,
-                    isDense: true,
-                    contentPadding: const EdgeInsets.only(bottom: 8),
-                  ),
+                  border: InputBorder.none,
+                  isDense: true,
+                  contentPadding: const EdgeInsets.only(bottom: 8),
                 ),
-                ColoredBox(
-                  color: rule,
-                  child: const SizedBox(height: 1, width: double.infinity),
-                ),
-                const SizedBox(height: 12),
-                DiaryPhotoField(
-                  path: _previewPath,
-                  onPicked: (file) {
-                    setState(() {
-                      _pickedSource = file.path;
-                      _photoFileName = file.name;
-                    });
-                  },
-                  onCleared: () {
-                    setState(() {
-                      _pickedSource = null;
-                      _photoPath = null;
-                      _photoFileName = null;
-                    });
-                  },
-                ),
-                const SizedBox(height: 12),
-                _LinedDiaryBody(
-                  controller: _body,
-                  focusNode: _bodyFocus,
-                  lineColor: rule,
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: Row(
-                          children: [
-                            EventCategoryChip(
-                              name: _categoryName ?? AppStrings.categoryAction,
-                              color: _hasCategory ? accent : colors.muted,
-                              selected: _hasCategory,
-                              onPressed: _pickCategory,
-                            ),
-                            const SizedBox(width: 4),
-                            EventDateChip(
-                              date: _date,
-                              color: accent,
-                              label: _isRange
-                                  ? AppStrings.rangeDiaryLabel
-                                  : null,
-                              onPressed: _pickDate,
-                            ),
-                          ],
-                        ),
+              ),
+              ColoredBox(
+                color: rule,
+                child: const SizedBox(height: 1, width: double.infinity),
+              ),
+              const SizedBox(height: 12),
+              DiaryPhotoField(
+                path: _previewPath,
+                onPicked: (file) {
+                  setState(() {
+                    _pickedSource = file.path;
+                    _photoFileName = file.name;
+                  });
+                },
+                onCleared: () {
+                  setState(() {
+                    _pickedSource = null;
+                    _photoPath = null;
+                    _photoFileName = null;
+                  });
+                },
+              ),
+              const SizedBox(height: 12),
+              _LinedDiaryBody(
+                controller: _body,
+                focusNode: _bodyFocus,
+                cover: _cover,
+                lineColor: rule,
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: [
+                          EventCategoryChip(
+                            name: _categoryName ?? AppStrings.categoryAction,
+                            color: _hasCategory ? accent : colors.muted,
+                            selected: _hasCategory,
+                            onPressed: _pickCategory,
+                          ),
+                          const SizedBox(width: 4),
+                          EventDateChip(
+                            date: _date,
+                            color: accent,
+                            label: _isRange ? AppStrings.rangeDiaryLabel : null,
+                            onPressed: _pickDate,
+                          ),
+                          const SizedBox(width: 4),
+                          DiaryCoverChip(
+                            color: accent,
+                            name: DiaryCoverLook.label(_cover),
+                            onPressed: _pickCover,
+                          ),
+                        ],
                       ),
                     ),
-                    if (widget.initial != null) ...[
-                      const SizedBox(width: 8),
-                      _DeleteDiaryButton(
-                        onPressed: _saving ? null : _delete,
-                      ),
-                    ],
+                  ),
+                  if (widget.initial != null) ...[
                     const SizedBox(width: 8),
-                    SaveCompanyButton(
-                      onPressed: _saving ? () {} : _save,
-                      color: accent,
-                    ),
+                    _DeleteDiaryButton(onPressed: _saving ? null : _delete),
                   ],
-                ),
-              ],
-            ),
+                  const SizedBox(width: 8),
+                  SaveCompanyButton(
+                    onPressed: _saving ? () {} : _save,
+                    color: accent,
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
       ),
@@ -515,103 +520,11 @@ class _DiaryFormState extends State<DiaryForm> {
   }
 }
 
-class _TornNotebookClipper extends CustomClipper<Path> {
-  const _TornNotebookClipper();
-
-  @override
-  Path getClip(Size size) => _TornNotebook.path(size);
-
-  @override
-  bool shouldReclip(covariant CustomClipper<Path> oldClipper) => false;
-}
-
-class _TornNotebook {
-  static const inset = 12.0;
-  static const step = 6.5;
-
-  static double _jag(int i) {
-    final n = math.sin(i * 12.9898) * 43758.5453;
-    return n - n.floorToDouble();
-  }
-
-  static List<Offset> topEdge(Size size) {
-    final points = <Offset>[];
-    var i = 0;
-    for (var x = 0.0; x <= size.width + step; x += step) {
-      final dip = (_jag(i) - 0.5) * 9;
-      final notch = i % 13 == 4 ? 5.5 : (i % 9 == 2 ? 3.0 : 0.0);
-      final y = (inset + dip + notch).clamp(2.0, 18.0);
-      points.add(Offset(math.min(x, size.width), y));
-      i++;
-    }
-    return points;
-  }
-
-  static Path path(Size size) {
-    final points = topEdge(size);
-    final path = Path()..moveTo(0, size.height);
-    for (final point in points) {
-      path.lineTo(point.dx, point.dy);
-    }
-    path
-      ..lineTo(size.width, size.height)
-      ..close();
-    return path;
-  }
-}
-
-class _TornEdgePainter extends CustomPainter {
-  const _TornEdgePainter({
-    required this.edge,
-    required this.fiber,
-  });
-
-  final Color edge;
-  final Color fiber;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final points = _TornNotebook.topEdge(size);
-    if (points.isEmpty) return;
-
-    final torn = Path()..moveTo(points.first.dx, points.first.dy);
-    for (final point in points.skip(1)) {
-      torn.lineTo(point.dx, point.dy);
-    }
-    canvas.drawPath(
-      torn,
-      Paint()
-        ..color = edge
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.2
-        ..strokeJoin = StrokeJoin.round,
-    );
-
-    final ticks = Paint()
-      ..color = fiber
-      ..strokeWidth = 1.05
-      ..strokeCap = StrokeCap.round;
-    for (var i = 2; i < points.length - 2; i += 3) {
-      final point = points[i];
-      final len = 2.5 + _TornNotebook._jag(i + 7) * 3.5;
-      canvas.drawLine(
-        point,
-        Offset(point.dx + (i.isEven ? 1.6 : -1.6), point.dy + len),
-        ticks,
-      );
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _TornEdgePainter oldDelegate) {
-    return oldDelegate.edge != edge || oldDelegate.fiber != fiber;
-  }
-}
-
 class _LinedDiaryBody extends StatelessWidget {
   const _LinedDiaryBody({
     required this.controller,
     required this.focusNode,
+    required this.cover,
     required this.lineColor,
   });
 
@@ -619,6 +532,7 @@ class _LinedDiaryBody extends StatelessWidget {
 
   final TextEditingController controller;
   final FocusNode focusNode;
+  final DiaryCover cover;
   final Color lineColor;
 
   @override
@@ -627,16 +541,22 @@ class _LinedDiaryBody extends StatelessWidget {
     final font = AppFonts.of(context);
     final closeOnDone = Theme.of(context).platform == TargetPlatform.iOS;
     return CustomPaint(
-      painter: _NotebookLinesPainter(color: lineColor, lineHeight: _line),
+      painter: DiaryCoverPatternPainter(
+        cover: cover,
+        color: lineColor,
+        lineHeight: _line,
+      ),
       child: TextField(
         controller: controller,
         focusNode: focusNode,
         minLines: 4,
         maxLines: 12,
-        keyboardType:
-            closeOnDone ? TextInputType.text : TextInputType.multiline,
-        textInputAction:
-            closeOnDone ? TextInputAction.done : TextInputAction.newline,
+        keyboardType: closeOnDone
+            ? TextInputType.text
+            : TextInputType.multiline,
+        textInputAction: closeOnDone
+            ? TextInputAction.done
+            : TextInputAction.newline,
         onSubmitted: closeOnDone ? (_) => focusNode.unfocus() : null,
         style: TextStyle(
           fontFamily: font,
@@ -660,31 +580,6 @@ class _LinedDiaryBody extends StatelessWidget {
         ),
       ),
     );
-  }
-}
-
-class _NotebookLinesPainter extends CustomPainter {
-  const _NotebookLinesPainter({
-    required this.color,
-    required this.lineHeight,
-  });
-
-  final Color color;
-  final double lineHeight;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..strokeWidth = 1;
-    for (var y = lineHeight - 2; y < size.height; y += lineHeight) {
-      canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _NotebookLinesPainter oldDelegate) {
-    return oldDelegate.color != color || oldDelegate.lineHeight != lineHeight;
   }
 }
 
@@ -718,11 +613,7 @@ class _DeleteDiaryButton extends StatelessWidget {
           child: Center(
             child: ColorFiltered(
               colorFilter: ColorFilter.mode(colors.danger, BlendMode.srcIn),
-              child: Image.asset(
-                AppIcons.trashCan,
-                width: 22,
-                height: 22,
-              ),
+              child: Image.asset(AppIcons.trashCan, width: 22, height: 22),
             ),
           ),
         ),

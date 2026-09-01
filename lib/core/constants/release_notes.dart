@@ -17,6 +17,15 @@ class ReleaseNote {
 abstract final class ReleaseNotes {
   static const all = [
     ReleaseNote(
+      version: '1.0.30',
+      items: [
+        '일기 쓸 때 일기장 디자인을 고를 수 있어요',
+        '일기장 순서를 꾹 눌러 바꿀 수 있어요',
+        '설정에서 앱 문의하기를 보낼 수 있어요',
+        '일상 모드 검색은 할 일·카테고리만 보여요',
+      ],
+    ),
+    ReleaseNote(
       version: '1.0.29',
       items: [
         '아이폰 작은 위젯이 앱 테마를 따라가요',

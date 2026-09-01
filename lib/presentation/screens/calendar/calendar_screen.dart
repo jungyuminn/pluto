@@ -671,7 +671,10 @@ class _CalendarScreenState extends State<CalendarScreen>
                                       ? AppStrings.calendarLedgerSearchHint
                                       : _showDiary
                                           ? AppStrings.calendarDiarySearchHint
-                                          : AppStrings.calendarSearchHint,
+                                          : showJobItems
+                                              ? AppStrings.calendarSearchHint
+                                              : AppStrings
+                                                  .calendarSearchHintDaily,
                                   onChanged: _onSearchChanged,
                                   onSubmitted: () => _searchStep(1),
                                   onPrevious: () => _searchStep(-1),

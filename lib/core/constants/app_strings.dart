@@ -22,7 +22,7 @@ class AppStrings {
   static const importIosOnlyTitle = '아이폰에서 가져올 수 있어요';
   static const importIosOnlyBody = 'iOS 캘린더 가져오기는 아이폰에서 사용할 수 있어요';
   static const importPermissionTitle = '캘린더 권한이 필요해요';
-  static const importPermissionBody = '기본 캘린더에 있는 일정을 할 일로 가져오려면 권한이 필요해요';
+  static const importPermissionBody = '기본 캘린더에 있는 일정을 잡플래너로 가져오려면 권한이 필요해요';
   static const importPermissionSettings = '설정으로 이동';
   static const importCalendarsTitle = '가져올 캘린더';
   static const importCalendarsBody = '선택한 캘린더의 일정을 할 일로 가져와요';
@@ -83,6 +83,10 @@ class AppStrings {
   static const autoBackupMonthly = '한 달마다';
   static String autoBackupHint(String label) => '앱을 켜면 $label 자동으로 저장해요';
   static const appTutorial = '앱 둘러보기';
+  static const appContact = '앱 문의하기';
+  static const appContactEmail = 'jobplanner.info@gmail.com';
+  static const appContactSubject = '잡플래너 문의';
+  static const appContactCopied = '메일 주소를 복사했어요';
   static const tutorialSkip = '건너뛰기';
   static const tutorialPrev = '이전';
   static const tutorialStart = '시작하기';
@@ -306,7 +310,7 @@ class AppStrings {
   static const settingsCalendarSyncHelp =
       '기본 캘린더에 있는 일정을 잡플래너의 캘린더로 가져와요. 가져올 기간을 고르고, 카테고리는 하나에 몰아넣거나 할 일마다 고를 수 있어요.';
   static const settingsAppHelp =
-      '앱 사용법을 보거나, 릴리즈 노트에서 앱의 업데이트 내역을 읽을 수 있어요';
+      '앱 사용법을 보거나, 문의 메일을 보내거나, 릴리즈 노트에서 업데이트 내역을 읽을 수 있어요';
   static const settingsCalendarHelp = '캘린더의 첫 요일과 음력 날짜를 표시할 수 있어요';
   static const settingsCalendarHelpWithFontSize =
       '캘린더의 첫 요일과 음력 날짜, 할 일·지원서·날짜·라벨의 글자 크기를 바꿀 수 있어요';
@@ -359,6 +363,7 @@ class AppStrings {
   static const jobScreenTitle = '지원서';
   static const searchHint = '지원서, 분야, 카테고리 검색';
   static const homeSearchHint = '할 일, 지원서, 카테고리 검색';
+  static const homeSearchHintDaily = '할 일, 카테고리 검색';
   static const addCompany = '+ 지원서를 추가하세요';
   static const addCompanyTitle = '지원서 추가';
   static const save = '저장';
@@ -416,6 +421,7 @@ class AppStrings {
   static const allEventsCard = '전체 일정 보기';
   static const allEventsTitle = '전체 일정';
   static const allEventsSearchHint = '할 일, 지원서, 카테고리 검색';
+  static const allEventsSearchHintDaily = '할 일, 카테고리 검색';
   static const allEventsEmpty = '할 일이 없어요';
   static const allEventsSearchEmpty = '검색 결과가 없어요';
   static const allEventsDeleteAll = '전체 삭제';
@@ -478,6 +484,7 @@ class AppStrings {
   static const calendarDiaryMode = '일기 전환';
   static const calendarLedgerMode = '가계부 전환';
   static const calendarSearchHint = '할 일, 지원서, 카테고리 검색';
+  static const calendarSearchHintDaily = '할 일, 카테고리 검색';
   static const calendarDiarySearchHint = '제목, 내용 검색';
   static const calendarLedgerSearchHint = '내역, 금액, 카테고리 검색';
   static const ledgerExpense = '수입';
@@ -589,6 +596,15 @@ class AppStrings {
   static const diaryDrawZoomOut = '축소';
   static const diaryDrawZoomPanHint = '두 손가락으로 드래그하면 화면을 옮길 수 있어요';
   static const diaryFallback = '일기';
+  static const diaryCoverBasic = '기본';
+  static const diaryCoverLined = '줄노트';
+  static const diaryCoverGrid = '모눈';
+  static const diaryCoverDotted = '점노트';
+  static const diaryCoverKraft = '크라프트';
+  static const diaryCoverSky = '하늘';
+  static const diaryCoverRose = '복숭아';
+  static const diaryCoverMint = '민트';
+  static const diaryCoverBlank = '무지';
   static const missingDiaryBody = '제목, 날짜, 카테고리는 필수사항이에요!';
   static const deleteDiaryBody = '일기가 사라져요';
   static const deleteDiaryPhotoTitle = '사진을 삭제하시나요?';

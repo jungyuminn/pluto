@@ -318,18 +318,22 @@ struct CompactTodayWidget: Widget {
   var body: some WidgetConfiguration {
     StaticConfiguration(
       kind: kind,
-      provider: CompactGlanceProvider(
-        prefix: "today_glance",
-        defaultTitle: "오늘",
+      provider: ImageProvider(
+        smallKey: "today_glance_image_small",
+        mediumKey: "today_glance_image_small",
+        largeKey: "today_glance_image_small",
+        fallbackKey: nil,
+        emptyKey: "today_glance_empty",
         defaultEmpty: "오늘 일정이 없어요"
       )
     ) { entry in
-      CompactGlanceView(entry: entry)
+      FillImageView(entry: entry)
         .widgetURL(URL(string: "jobplanner://home"))
     }
     .configurationDisplayName("오늘")
     .description("오늘의 일정을 간단히 보여줘요")
     .supportedFamilies([.systemSmall])
+    .contentMarginsDisabled()
   }
 }
 
@@ -339,140 +343,22 @@ struct CompactTomorrowWidget: Widget {
   var body: some WidgetConfiguration {
     StaticConfiguration(
       kind: kind,
-      provider: CompactGlanceProvider(
-        prefix: "tomorrow_glance",
-        defaultTitle: "내일",
+      provider: ImageProvider(
+        smallKey: "tomorrow_glance_image_small",
+        mediumKey: "tomorrow_glance_image_small",
+        largeKey: "tomorrow_glance_image_small",
+        fallbackKey: nil,
+        emptyKey: "tomorrow_glance_empty",
         defaultEmpty: "내일 일정이 없어요"
       )
     ) { entry in
-      CompactGlanceView(entry: entry)
+      FillImageView(entry: entry)
         .widgetURL(URL(string: "jobplanner://home"))
     }
     .configurationDisplayName("내일")
     .description("내일의 일정을 간단히 보여줘요")
     .supportedFamilies([.systemSmall])
-  }
-}
-
-struct CompactGlanceItem {
-  let title: String
-  let color: Int
-}
-
-struct CompactGlanceEntry: TimelineEntry {
-  let date: Date
-  let title: String
-  let dateLabel: String
-  let empty: String
-  let isDark: Bool
-  let accent: Int
-  let text: Int
-  let items: [CompactGlanceItem]
-  let more: Int
-  let fontScale: Double
-}
-
-struct CompactGlanceProvider: TimelineProvider {
-  let prefix: String
-  let defaultTitle: String
-  let defaultEmpty: String
-
-  func placeholder(in context: Context) -> CompactGlanceEntry {
-    CompactGlanceEntry(
-      date: Date(),
-      title: defaultTitle,
-      dateLabel: "8월 31일",
-      empty: defaultEmpty,
-      isDark: false,
-      accent: 0xFFEF4444,
-      text: 0xFF0F172A,
-      items: [
-        CompactGlanceItem(title: "자소서", color: 0xFFA78BFA),
-        CompactGlanceItem(title: "면접 준비", color: 0xFF60A5FA),
-      ],
-      more: 0,
-      fontScale: 1
-    )
-  }
-
-  func getSnapshot(in context: Context, completion: @escaping (CompactGlanceEntry) -> Void) {
-    completion(load())
-  }
-
-  func getTimeline(in context: Context, completion: @escaping (Timeline<CompactGlanceEntry>) -> Void) {
-    completion(Timeline(entries: [load()], policy: .after(nextMidnight())))
-  }
-
-  private func load() -> CompactGlanceEntry {
-    let data = WidgetGroup.defaults
-    let count = min(max(intValue(data, "\(prefix)_count"), 0), 6)
-    let items = (0..<count).compactMap { index -> CompactGlanceItem? in
-      let title = data.string(forKey: "\(prefix)_item_\(index)_title") ?? ""
-      guard !title.isEmpty else { return nil }
-      return CompactGlanceItem(
-        title: title,
-        color: intValue(data, "\(prefix)_item_\(index)_color")
-      )
-    }
-    return CompactGlanceEntry(
-      date: Date(),
-      title: data.string(forKey: "\(prefix)_title") ?? defaultTitle,
-      dateLabel: data.string(forKey: "\(prefix)_date") ?? "",
-      empty: data.string(forKey: "\(prefix)_empty") ?? defaultEmpty,
-      isDark: data.bool(forKey: "is_dark"),
-      accent: intValue(data, "\(prefix)_accent"),
-      text: intValue(data, "widget_text"),
-      items: items,
-      more: intValue(data, "\(prefix)_more"),
-      fontScale: min(max(doubleValue(data, "widget_font_scale", 1), 0.7), 1.3)
-    )
-  }
-}
-
-struct CompactGlanceView: View {
-  var entry: CompactGlanceEntry
-
-  var body: some View {
-    let scale = entry.fontScale
-    VStack(alignment: .leading, spacing: 8) {
-      HStack(alignment: .firstTextBaseline, spacing: 4) {
-        Text(entry.title)
-          .font(.system(size: 15 * scale, weight: .bold))
-          .foregroundStyle(entry.text == 0 ? Color.primary : categoryColor(entry.text))
-        Text(entry.dateLabel)
-          .font(.system(size: 12 * scale, weight: .regular))
-          .foregroundStyle(entry.text == 0 ? Color.primary : categoryColor(entry.text))
-          .lineLimit(1)
-      }
-      if entry.items.isEmpty {
-        Text(entry.empty)
-          .font(.system(size: 13 * scale, weight: .regular))
-          .foregroundStyle(.secondary)
-      } else {
-        VStack(alignment: .leading, spacing: 5) {
-          ForEach(Array(entry.items.enumerated()), id: \.offset) { _, item in
-            HStack(spacing: 6) {
-              Circle()
-                .fill(categoryColor(item.color))
-                .frame(width: 7, height: 7)
-              Text(item.title)
-                .font(.system(size: 13 * scale, weight: .regular))
-                .foregroundStyle(entry.text == 0 ? Color.primary : categoryColor(entry.text))
-                .lineLimit(1)
-            }
-          }
-          if entry.more > 0 {
-            Text("외 \(entry.more)개")
-              .font(.system(size: 11 * scale, weight: .regular))
-              .foregroundStyle(.secondary)
-          }
-        }
-      }
-      Spacer(minLength: 0)
-    }
-    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-    .padding(EdgeInsets(top: 10, leading: 12, bottom: 8, trailing: 10))
-    .widgetEdgeFill(isDark: entry.isDark)
+    .contentMarginsDisabled()
   }
 }
 
@@ -595,23 +481,16 @@ struct LockInlineView: View {
 @main
 struct HomeWidgetsBundle: WidgetBundle {
   var body: some Widget {
-    CompactWidgets()
-    TodayWidget()
-    TomorrowWidget()
-    TodayTomorrowWidget()
-    RestWidgets()
-  }
-}
-
-struct CompactWidgets: WidgetBundle {
-  var body: some Widget {
     CompactTodayWidget()
     CompactTomorrowWidget()
+    TodayWidget()
+    TomorrowWidget()
+    extraWidgets
   }
-}
 
-struct RestWidgets: WidgetBundle {
-  var body: some Widget {
+  @WidgetBundleBuilder
+  var extraWidgets: some Widget {
+    TodayTomorrowWidget()
     WeekTimetableWidget()
     MonthCalendarWidget()
   }
@@ -661,14 +540,6 @@ private func intValue(_ defaults: UserDefaults, _ key: String) -> Int {
   if let number = raw as? NSNumber { return number.intValue }
   if let text = raw as? String { return Int(text) ?? 0 }
   return 0
-}
-
-private func doubleValue(_ defaults: UserDefaults, _ key: String, _ fallback: Double) -> Double {
-  let raw = defaults.object(forKey: key)
-  if let number = raw as? Double { return number }
-  if let number = raw as? NSNumber { return number.doubleValue }
-  if let text = raw as? String { return Double(text) ?? fallback }
-  return fallback
 }
 
 private func nextMidnight() -> Date {

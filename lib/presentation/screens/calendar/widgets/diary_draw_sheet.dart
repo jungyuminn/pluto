@@ -18,13 +18,48 @@ Future<DiaryDrawResult?> showDiaryDrawSheet(
   BuildContext context, {
   String? backgroundPath,
 }) {
-  FocusManager.instance.primaryFocus?.unfocus();
+  final captured = MediaQueryData.fromView(View.of(context));
   return Navigator.of(context, rootNavigator: true).push<DiaryDrawResult>(
-    MaterialPageRoute(
-      fullscreenDialog: true,
+    _DiaryDrawRoute(
+      mediaQuery: captured.copyWith(
+        viewInsets: EdgeInsets.zero,
+        padding: captured.viewPadding,
+      ),
       builder: (context) => DiaryDrawSheet(backgroundPath: backgroundPath),
     ),
   );
+}
+
+class _DiaryDrawRoute<T> extends PageRouteBuilder<T> {
+  _DiaryDrawRoute({
+    required this.mediaQuery,
+    required WidgetBuilder builder,
+  }) : super(
+          opaque: true,
+          fullscreenDialog: false,
+          transitionDuration: Duration.zero,
+          reverseTransitionDuration: Duration.zero,
+          pageBuilder: (context, animation, secondaryAnimation) {
+            return MediaQuery(
+              data: mediaQuery,
+              child: builder(context),
+            );
+          },
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return child;
+          },
+        );
+
+  final MediaQueryData mediaQuery;
+
+  @override
+  bool get barrierDismissible => false;
+
+  @override
+  bool canTransitionFrom(TransitionRoute<dynamic> previousRoute) => false;
+
+  @override
+  bool canTransitionTo(TransitionRoute<dynamic> nextRoute) => false;
 }
 
 class DiaryDrawResult {
@@ -125,6 +160,7 @@ class _DiaryDrawSheetState extends State<DiaryDrawSheet> {
   @override
   void initState() {
     super.initState();
+    FocusManager.instance.primaryFocus?.unfocus();
     _loadBackground();
   }
 
@@ -615,18 +651,13 @@ class _DiaryDrawSheetState extends State<DiaryDrawSheet> {
                   final canvasSize = Size(canvasW, canvasH);
                   if (_viewport != canvasSize) {
                     _viewport = canvasSize;
-                    WidgetsBinding.instance.addPostFrameCallback((_) {
-                      if (!mounted) return;
-                      _tx.value = _constrained(_tx.value);
-                      setState(() {});
-                    });
                   }
                   return Center(
                     child: SizedBox(
                       width: canvasW,
                       height: canvasH,
                       child: Stack(
-                        clipBehavior: Clip.none,
+                        clipBehavior: Clip.hardEdge,
                         children: [
                           DecoratedBox(
                             decoration: BoxDecoration(
@@ -657,10 +688,13 @@ class _DiaryDrawSheetState extends State<DiaryDrawSheet> {
                                       child: AnimatedBuilder(
                                         animation: _tx,
                                         builder: (context, child) {
+                                          final zoomed =
+                                              _zoom > _minZoom + 0.01;
+                                          if (!zoomed) return child!;
                                           return Transform(
                                             alignment: Alignment.topLeft,
                                             transform: _tx.value,
-                                            filterQuality: FilterQuality.medium,
+                                            filterQuality: FilterQuality.none,
                                             child: child,
                                           );
                                         },
@@ -776,10 +810,7 @@ class _DiaryDrawSheetState extends State<DiaryDrawSheet> {
               ),
             ),
             const SizedBox(height: 12),
-            Center(
-              child: SizedBox(
-                width: _viewport.width > 0 ? _viewport.width : double.infinity,
-                child: Column(
+            Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Wrap(
@@ -842,34 +873,26 @@ class _DiaryDrawSheetState extends State<DiaryDrawSheet> {
                           ),
                       ],
                     ),
-                    ClipRect(
-                      child: AnimatedSize(
-                        duration: const Duration(milliseconds: 280),
-                        curve: Curves.easeOutCubic,
-                        alignment: Alignment.topCenter,
-                        child: _tool == _DrawTool.pen
-                            ? Padding(
-                                padding: const EdgeInsets.only(top: 10),
-                                child: Wrap(
-                                  spacing: 8,
-                                  runSpacing: 8,
-                                  alignment: WrapAlignment.start,
-                                  crossAxisAlignment: WrapCrossAlignment.center,
-                                  children: [
-                                    for (final kind in _PenKind.values)
-                                      _ToolChip(
-                                        label: kind.label,
-                                        selected: _penKind == kind,
-                                        emphasis: true,
-                                        onPressed: () =>
-                                            setState(() => _penKind = kind),
-                                      ),
-                                  ],
-                                ),
-                              )
-                            : const SizedBox(width: double.infinity),
+                    if (_tool == _DrawTool.pen)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 10),
+                        child: Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          alignment: WrapAlignment.start,
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          children: [
+                            for (final kind in _PenKind.values)
+                              _ToolChip(
+                                label: kind.label,
+                                selected: _penKind == kind,
+                                emphasis: true,
+                                onPressed: () =>
+                                    setState(() => _penKind = kind),
+                              ),
+                          ],
+                        ),
                       ),
-                    ),
                     const SizedBox(height: 10),
                     Wrap(
                       spacing: 8,
@@ -893,8 +916,6 @@ class _DiaryDrawSheetState extends State<DiaryDrawSheet> {
                     ),
                   ],
                 ),
-              ),
-            ),
           ],
         ),
       ),

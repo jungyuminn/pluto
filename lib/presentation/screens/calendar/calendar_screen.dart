@@ -142,6 +142,13 @@ class _CalendarScreenState extends State<CalendarScreen>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state != AppLifecycleState.resumed) return;
+    if (!_pages.hasClients) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        _showCurrentMonth(jump: true);
+      });
+      return;
+    }
     _showCurrentMonth(jump: true);
   }
 
@@ -181,9 +188,12 @@ class _CalendarScreenState extends State<CalendarScreen>
   void _attachPagesAt(DateTime month) {
     if (_pages.hasClients) return;
     final page = _pageOf(DateTime(month.year, month.month));
+    if (_pages.initialPage == page) return;
     final previous = _pages;
     _pages = PageController(initialPage: page);
-    previous.dispose();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      previous.dispose();
+    });
   }
 
   void _pickYear(int year) {

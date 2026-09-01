@@ -77,85 +77,68 @@ class _DiaryPhotoFieldState extends State<DiaryPhotoField> {
     final photoPath = widget.path;
     if (photoPath != null && photoPath.isNotEmpty) {
       final drawing = DiaryPhotoSlot.isDrawingPath(photoPath);
-      return Stack(
-        children: [
-          PressBounce(
-            onPressed: () => setState(() => _actionsOpen = !_actionsOpen),
-            onLongPressed: _confirmDelete,
-            color: Colors.transparent,
-            pressedColor: colors.pressed,
-            borderRadius: BorderRadius.circular(8),
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                color: colors.card,
-                borderRadius: BorderRadius.circular(8),
-                boxShadow: [
-                  BoxShadow(
-                    color: colors.shadow,
-                    blurRadius: 10,
-                    offset: const Offset(0, 3),
-                  ),
-                ],
-              ),
-              child: drawing
-                  ? SizedBox(
-                      height: DiaryPhotoSlot.height,
-                      width: double.infinity,
-                      child: Padding(
-                        padding: DiaryPhotoSlot.imagePad,
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(4),
-                          child: Image.file(
-                            File(photoPath),
-                            width: double.infinity,
-                            height: double.infinity,
-                            fit: BoxFit.cover,
-                            alignment: Alignment.center,
-                            errorBuilder: (context, error, stackTrace) =>
-                                const SizedBox.expand(child: _EmptyPhoto()),
-                          ),
-                        ),
+      return SizedBox(
+        height: DiaryPhotoSlot.height,
+        width: double.infinity,
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Positioned.fill(
+              child: PressBounce(
+                onPressed: () => setState(() => _actionsOpen = !_actionsOpen),
+                onLongPressed: _confirmDelete,
+                color: Colors.transparent,
+                pressedColor: colors.pressed,
+                borderRadius: BorderRadius.circular(12),
+                expand: true,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: colors.card,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: colors.shadow,
+                        blurRadius: 10,
+                        offset: const Offset(0, 3),
                       ),
-                    )
-                  : Padding(
-                      padding: DiaryPhotoSlot.imagePad,
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(4),
-                        child: ConstrainedBox(
-                          constraints: BoxConstraints(
-                            maxHeight:
-                                MediaQuery.sizeOf(context).height * 0.32,
-                          ),
-                          child: Image.file(
-                            File(photoPath),
-                            width: double.infinity,
-                            fit: BoxFit.contain,
-                            alignment: Alignment.center,
-                            errorBuilder: (context, error, stackTrace) =>
-                                const SizedBox(
-                              height: 120,
-                              width: double.infinity,
-                              child: _EmptyPhoto(),
-                            ),
-                          ),
+                    ],
+                  ),
+                  child: Padding(
+                    padding: DiaryPhotoSlot.imagePad,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: ColoredBox(
+                        color: colors.card,
+                        child: Image.file(
+                          File(photoPath),
+                          fit: BoxFit.contain,
+                          width: double.infinity,
+                          height: double.infinity,
+                          alignment: Alignment.center,
+                          filterQuality: FilterQuality.medium,
+                          errorBuilder: (context, error, stackTrace) =>
+                              const _EmptyPhoto(),
                         ),
                       ),
                     ),
-            ),
-          ),
-          Positioned.fill(
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: _ExistingPhotoActions(
-                visible: _actionsOpen,
-                drawing: drawing,
-                onDismiss: () => setState(() => _actionsOpen = false),
-                onChange: _pick,
-                onDraw: _draw,
+                  ),
+                ),
               ),
             ),
-          ),
-        ],
+            Positioned.fill(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: _ExistingPhotoActions(
+                  visible: _actionsOpen,
+                  drawing: drawing,
+                  onDismiss: () => setState(() => _actionsOpen = false),
+                  onChange: _pick,
+                  onDraw: _draw,
+                ),
+              ),
+            ),
+          ],
+        ),
       );
     }
 

@@ -270,6 +270,7 @@ class HomeScreenWidgetService {
         isDark: isDark,
         skin: skin,
         sortByTime: dayEventsView.sortByTime,
+        pixelRatio: pixelRatio,
       );
       await _syncCompactDay(
         today: false,
@@ -282,6 +283,7 @@ class HomeScreenWidgetService {
         isDark: isDark,
         skin: skin,
         sortByTime: dayEventsView.sortByTime,
+        pixelRatio: pixelRatio,
       );
       await _syncMonthCalendar(
         today: today,
@@ -614,6 +616,7 @@ class HomeScreenWidgetService {
     required bool isDark,
     required AppSkin skin,
     required bool sortByTime,
+    required double pixelRatio,
   }) async {
     final prefix = today ? 'today_glance' : 'tomorrow_glance';
     final title =
@@ -647,6 +650,33 @@ class HomeScreenWidgetService {
       colors.accent.toARGB32(),
     );
     await HomeWidget.saveWidgetData<int>('widget_text', colors.text.toARGB32());
+    if (Platform.isIOS) {
+      await HomeWidget.renderFlutterWidget(
+        _wrapTheme(
+          isDark: isDark,
+          size: _iosSmallSize,
+          pixelRatio: pixelRatio,
+          child: SizedBox(
+            width: _iosSmallSize.width,
+            height: _iosSmallSize.height,
+            child: _skinCard(
+              skin: skin,
+              clip: false,
+              child: CompactDayCard(
+                title: title,
+                dateLabel: CompactDayCard.monthDayLabel(date),
+                events: events,
+                emptyText: empty,
+                sortByTime: sortByTime,
+              ),
+            ),
+          ),
+        ),
+        key: '${prefix}_image_small',
+        logicalSize: _iosSmallSize,
+        pixelRatio: pixelRatio,
+      );
+    }
     for (var i = 0; i < CompactDayCard.maxEvents; i++) {
       if (i < shown.length) {
         await HomeWidget.saveWidgetData<String>(

@@ -625,6 +625,7 @@ class _LinedDiaryBody extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
     final font = AppFonts.of(context);
+    final closeOnDone = Theme.of(context).platform == TargetPlatform.iOS;
     return CustomPaint(
       painter: _NotebookLinesPainter(color: lineColor, lineHeight: _line),
       child: TextField(
@@ -632,7 +633,11 @@ class _LinedDiaryBody extends StatelessWidget {
         focusNode: focusNode,
         minLines: 4,
         maxLines: 12,
-        textInputAction: TextInputAction.newline,
+        keyboardType:
+            closeOnDone ? TextInputType.text : TextInputType.multiline,
+        textInputAction:
+            closeOnDone ? TextInputAction.done : TextInputAction.newline,
+        onSubmitted: closeOnDone ? (_) => focusNode.unfocus() : null,
         style: TextStyle(
           fontFamily: font,
           fontWeight: FontWeight.w600,

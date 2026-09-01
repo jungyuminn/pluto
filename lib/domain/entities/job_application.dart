@@ -42,6 +42,11 @@ class JobApplication {
   bool get hasCategory =>
       (categoryId?.isNotEmpty ?? false) && categoryName.trim().isNotEmpty;
 
+  String get categoryKey {
+    if (categoryId != null && categoryId!.isNotEmpty) return categoryId!;
+    return categoryName;
+  }
+
   bool get isRejected => ApplyStatus.isRejected(applyStatus);
 
   static List<ApplicationRound> normalizeRounds(List<ApplicationRound>? rounds) {

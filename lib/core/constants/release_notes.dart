@@ -17,6 +17,16 @@ class ReleaseNote {
 abstract final class ReleaseNotes {
   static const all = [
     ReleaseNote(
+      version: '1.1.0',
+      items: [
+        '지원서에서 자격증을 모아 볼 수 있어요',
+        '자격증에도 파일을 올릴 수 있어요',
+        '화면 제목을 눌러 이름을 바꿀 수 있어요',
+        '지원서 상태와 자격증 점수가 테마색을 따라가요',
+        '자격증 간략 보기에서는 이름·카테고리·점수만 보여요',
+      ],
+    ),
+    ReleaseNote(
       version: '1.0.31',
       items: [
         '할 일·가계부·일기 스티커를 모드마다 따로 붙여요',

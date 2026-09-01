@@ -7,7 +7,6 @@ import 'package:job_planner/core/utils/press_bounce.dart';
 import 'package:job_planner/domain/entities/application_round.dart';
 import 'package:job_planner/domain/entities/apply_status.dart';
 import 'package:job_planner/domain/entities/job_application.dart';
-import 'package:job_planner/presentation/screens/add_company/widgets/apply_status_dot.dart';
 
 class CompanyCard extends StatefulWidget {
   const CompanyCard({
@@ -145,7 +144,7 @@ class _CompanyCardState extends State<CompanyCard>
                   children: [
                     Expanded(child: _title()),
                     const SizedBox(width: 8),
-                    _status(application.applyStatus, accent),
+                    _status(application.applyStatus, colors.accent),
                   ],
                 ),
                 if (_hasDetails)
@@ -264,20 +263,13 @@ class _CompanyCardState extends State<CompanyCard>
         color: accent.withValues(alpha: 0.16),
         borderRadius: BorderRadius.circular(999),
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          ApplyStatusDot(color: accent),
-          const SizedBox(width: 5),
-          Text(
-            status,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w800,
-              color: accent,
-            ),
-          ),
-        ],
+      child: Text(
+        status,
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w800,
+          color: accent,
+        ),
       ),
     );
   }
@@ -320,6 +312,7 @@ class _CompanyCardState extends State<CompanyCard>
               onTap: canOpen ? _openCoverLetter : null,
               child: Text(
                 fileName,
+                overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,

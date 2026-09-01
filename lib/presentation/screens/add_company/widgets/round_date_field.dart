@@ -11,11 +11,17 @@ class RoundDateField extends StatelessWidget {
     required this.date,
     required this.onPicked,
     this.color = const Color(0xFF3B82F6),
+    this.emptyLabel,
+    this.label,
+    this.filledIcon = false,
   });
 
   final DateTime? date;
   final ValueChanged<DateTime> onPicked;
   final Color color;
+  final String? emptyLabel;
+  final String? label;
+  final bool filledIcon;
 
   Future<void> _pick(BuildContext context) async {
     final picked = await showAppCalendarSheet(
@@ -31,11 +37,12 @@ class RoundDateField extends StatelessWidget {
   Widget build(BuildContext context) {
     if (date == null) {
       return EventActionIcon(
-        label: AppStrings.dateAction,
+        label: emptyLabel ?? AppStrings.dateAction,
+        text: emptyLabel,
         color: color,
         onPressed: () => _pick(context),
         child: Image.asset(
-          AppIcons.calendarOutlined,
+          filledIcon ? AppIcons.calendar : AppIcons.calendarOutlined,
           width: 20,
           height: 20,
         ),
@@ -45,6 +52,7 @@ class RoundDateField extends StatelessWidget {
     return EventDateChip(
       date: date!,
       color: color,
+      label: label,
       onPressed: () => _pick(context),
     );
   }

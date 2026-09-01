@@ -7,16 +7,15 @@ import 'package:job_planner/core/constants/app_strings.dart';
 import 'package:job_planner/core/theme/app_colors.dart';
 import 'package:job_planner/core/utils/swipe_to_delete.dart';
 import 'package:job_planner/domain/entities/event_category.dart';
-import 'package:job_planner/domain/entities/job_application.dart';
+import 'package:job_planner/domain/entities/license.dart';
 import 'package:job_planner/presentation/screens/add_company/widgets/missing_fields_dialog.dart';
-import 'package:job_planner/presentation/screens/job/widgets/add_company_button.dart';
-import 'package:job_planner/presentation/screens/job/widgets/company_card.dart';
-import 'package:job_planner/presentation/tutorial/tutorial_anchor.dart';
+import 'package:job_planner/presentation/screens/license/widgets/add_license_button.dart';
+import 'package:job_planner/presentation/screens/license/widgets/license_card.dart';
 
-class CompanyList extends StatefulWidget {
-  const CompanyList({
+class LicenseList extends StatefulWidget {
+  const LicenseList({
     super.key,
-    required this.applications,
+    required this.licenses,
     required this.onAdd,
     required this.onOpen,
     required this.onDelete,
@@ -24,37 +23,39 @@ class CompanyList extends StatefulWidget {
     this.onReorderLocked,
     this.canReorder = true,
     this.compact = false,
-    this.showRejected = true,
+    this.showExpired = true,
     this.categoryView = false,
     this.categories = const [],
     this.paddingTop = 0,
   });
 
-  final List<JobApplication> applications;
+  final List<License> licenses;
   final VoidCallback onAdd;
-  final ValueChanged<JobApplication> onOpen;
-  final Future<bool> Function(JobApplication application) onDelete;
-  final ValueChanged<List<JobApplication>>? onReordered;
+  final ValueChanged<License> onOpen;
+  final Future<bool> Function(License license) onDelete;
+  final ValueChanged<List<License>>? onReordered;
   final VoidCallback? onReorderLocked;
   final bool canReorder;
   final bool compact;
-  final bool showRejected;
+  final bool showExpired;
   final bool categoryView;
   final List<EventCategory> categories;
   final double paddingTop;
 
   @override
-  State<CompanyList> createState() => _CompanyListState();
+  State<LicenseList> createState() => _LicenseListState();
 }
 
-class _CompanyListState extends State<CompanyList>
+class _LicenseListState extends State<LicenseList>
     with SingleTickerProviderStateMixin {
   final _scroll = ScrollController();
   final _listBoxKey = GlobalKey();
   final _heights = <String, double>{};
-  late final _items = List.of(widget.applications);
-  late final AnimationController _rejectedReveal;
-  late final CurvedAnimation _rejectedFade;
+  late final _items = List.of(widget.licenses);
+  late final AnimationController _expiredReveal;
+  late final CurvedAnimation _expiredFade;
+  final _entering = <String>{};
+  var _ready = false;
   String? _draggingId;
   var _dragY = 0.0;
   double? _grabOffset;
@@ -66,49 +67,55 @@ class _CompanyListState extends State<CompanyList>
   @override
   void initState() {
     super.initState();
-    _rejectedReveal = AnimationController(
+    _expiredReveal = AnimationController(
       vsync: this,
       duration: _slotAnim,
       reverseDuration: const Duration(milliseconds: 220),
-      value: widget.showRejected ? 1 : 0,
+      value: widget.showExpired ? 1 : 0,
     );
-    _rejectedFade = CurvedAnimation(
-      parent: _rejectedReveal,
+    _expiredFade = CurvedAnimation(
+      parent: _expiredReveal,
       curve: Curves.easeOutCubic,
       reverseCurve: Curves.easeInCubic,
     );
+    if (_items.isEmpty) _ready = true;
   }
 
   @override
-  void didUpdateWidget(CompanyList oldWidget) {
+  void didUpdateWidget(LicenseList oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.showRejected != widget.showRejected) {
-      if (widget.showRejected) {
-        _rejectedReveal.forward();
+    if (oldWidget.showExpired != widget.showExpired) {
+      if (widget.showExpired) {
+        _expiredReveal.forward();
       } else {
-        _rejectedReveal.reverse();
+        _expiredReveal.reverse();
       }
     }
-    _sync(widget.applications);
+    _sync(widget.licenses);
   }
 
   @override
   void dispose() {
-    _rejectedFade.dispose();
-    _rejectedReveal.dispose();
+    _expiredFade.dispose();
+    _expiredReveal.dispose();
     _scroll.dispose();
     super.dispose();
   }
 
-  void _sync(List<JobApplication> next) {
+  void _sync(List<License> next) {
     if (_draggingId != null) return;
     final oldIds = [for (final item in _items) item.id];
-    final inserted = next.any((item) => !oldIds.contains(item.id));
-    final active = [for (final item in next) if (!item.isRejected) item];
-    final rejected = [for (final item in next) if (item.isRejected) item];
+    final arriving = [
+      for (final item in next)
+        if (!oldIds.contains(item.id)) item.id,
+    ];
+    final inserted = arriving.isNotEmpty;
+    final active = [for (final item in next) if (!item.isExpired()) item];
+    final expired = [for (final item in next) if (item.isExpired()) item];
+    _entering.addAll(arriving);
     _items
       ..clear()
-      ..addAll([...active, ...rejected]);
+      ..addAll([...active, ...expired]);
     setState(() {});
     if (!inserted) return;
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -128,15 +135,13 @@ class _CompanyListState extends State<CompanyList>
     return true;
   }
 
-  double _heightOf(JobApplication application) {
-    return _heights[application.id] ?? (widget.compact ? 64 : 88);
+  double _heightOf(License license) {
+    return _heights[license.id] ?? (widget.compact ? 64 : 88);
   }
 
-  double _blockHeight(JobApplication application) {
-    return _heightOf(application) + _gap;
-  }
+  double _blockHeight(License license) => _heightOf(license) + _gap;
 
-  double _sectionHeight(List<JobApplication> items) {
+  double _sectionHeight(List<License> items) {
     var y = 0.0;
     for (final item in items) {
       y += _blockHeight(item);
@@ -144,7 +149,7 @@ class _CompanyListState extends State<CompanyList>
     return y;
   }
 
-  List<double> _tops(List<JobApplication> items) {
+  List<double> _tops(List<License> items) {
     final tops = <double>[];
     var y = 0.0;
     for (final item in items) {
@@ -154,7 +159,7 @@ class _CompanyListState extends State<CompanyList>
     return tops;
   }
 
-  double _topAmong(List<JobApplication> items, String id) {
+  double _topAmong(List<License> items, String id) {
     var y = 0.0;
     for (final item in items) {
       if (item.id == id) return y;
@@ -166,31 +171,33 @@ class _CompanyListState extends State<CompanyList>
   void _setHeight(String id, double height) {
     final current = _heights[id];
     if (current != null && (current - height).abs() < 0.5) return;
-    setState(() => _heights[id] = height);
+    setState(() {
+      _heights[id] = height;
+      if (!_ready && _allMeasured) _ready = true;
+    });
   }
 
-  List<JobApplication> get _activeItems {
-    return [for (final item in _items) if (!item.isRejected) item];
+  List<License> get _activeItems {
+    return [for (final item in _items) if (!item.isExpired()) item];
   }
 
-  List<JobApplication> get _rejectedItems {
-    return [for (final item in _items) if (item.isRejected) item];
+  List<License> get _expiredItems {
+    return [for (final item in _items) if (item.isExpired()) item];
   }
 
-  List<_JobSection> _sectionsOf(List<JobApplication> items) {
-    final groups = <String, List<JobApplication>>{};
+  List<_LicenseSection> _sectionsOf(List<License> items) {
+    final groups = <String, List<License>>{};
     for (final item in items) {
       groups.putIfAbsent(item.categoryKey, () => []).add(item);
     }
-    final sections = <_JobSection>[];
+    final sections = <_LicenseSection>[];
     final used = <String>{};
     for (final category in widget.categories) {
       final grouped = groups[category.id];
       if (grouped == null || grouped.isEmpty) continue;
       used.add(category.id);
       sections.add(
-        _JobSection(
-          key: category.id,
+        _LicenseSection(
           name: category.name,
           color: category.tint,
           items: grouped,
@@ -204,8 +211,7 @@ class _CompanyListState extends State<CompanyList>
       if (grouped == null || grouped.isEmpty) continue;
       used.add(key);
       sections.add(
-        _JobSection(
-          key: key,
+        _LicenseSection(
           name: item.categoryName.trim().isEmpty
               ? AppStrings.categoryAction
               : item.categoryName,
@@ -219,28 +225,26 @@ class _CompanyListState extends State<CompanyList>
     return sections;
   }
 
-  void _onDragStarted(JobApplication application) {
+  void _onDragStarted(License license) {
     setState(() {
-      _draggingId = application.id;
-      _dragY = _topAmong(_activeItems, application.id);
+      _draggingId = license.id;
+      _dragY = _topAmong(_activeItems, license.id);
       _grabOffset = null;
     });
   }
 
   void _onDragUpdate(Offset global) {
     final dragged = _draggedItem;
-    if (dragged == null || dragged.isRejected) return;
+    if (dragged == null || dragged.isExpired()) return;
     final box = _listBoxKey.currentContext?.findRenderObject() as RenderBox?;
     if (box == null || !box.hasSize) return;
-
     final localY = box.globalToLocal(global).dy;
     _grabOffset ??= localY - _dragY;
     final height = _heightOf(dragged);
     final maxTop = math.max(0.0, _sectionHeight(_activeItems) - height);
     final nextY = (localY - _grabOffset!).clamp(0.0, maxTop);
-
     final active = _activeItems;
-    final rejected = _rejectedItems;
+    final expired = _expiredItems;
     final from = active.indexWhere((item) => item.id == dragged.id);
     final to = _activeIndexAt(nextY + height / 2, dragged);
     var moved = false;
@@ -250,10 +254,9 @@ class _CompanyListState extends State<CompanyList>
       next.insert(to.clamp(0, next.length), item);
       _items
         ..clear()
-        ..addAll([...next, ...rejected]);
+        ..addAll([...next, ...expired]);
       moved = true;
     }
-
     setState(() => _dragY = nextY);
     if (moved) HapticFeedback.selectionClick();
   }
@@ -267,7 +270,7 @@ class _CompanyListState extends State<CompanyList>
     if (shouldSave) widget.onReordered?.call(List.of(_items));
   }
 
-  JobApplication? get _draggedItem {
+  License? get _draggedItem {
     final id = _draggingId;
     if (id == null) return null;
     for (final item in _items) {
@@ -276,7 +279,7 @@ class _CompanyListState extends State<CompanyList>
     return null;
   }
 
-  int _activeIndexAt(double y, JobApplication dragged) {
+  int _activeIndexAt(double y, License dragged) {
     final active = _activeItems;
     if (active.isEmpty) return 0;
     final from = active.indexWhere((item) => item.id == dragged.id);
@@ -302,12 +305,12 @@ class _CompanyListState extends State<CompanyList>
     return closest;
   }
 
-  Future<void> _explainRejectedLock() {
+  Future<void> _explainExpiredLock() {
     HapticFeedback.lightImpact();
     return showMissingFieldsDialog(
       context,
       title: AppStrings.timeSortLockTitle,
-      body: AppStrings.rejectedReorderLockBody,
+      body: AppStrings.expiredReorderLockBody,
     );
   }
 
@@ -326,10 +329,7 @@ class _CompanyListState extends State<CompanyList>
         SliverPadding(
           padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
           sliver: SliverToBoxAdapter(
-            child: TutorialAnchor(
-              id: TutorialAnchorId.jobAdd,
-              child: AddCompanyButton(onPressed: widget.onAdd),
-            ),
+            child: AddLicenseButton(onPressed: widget.onAdd),
           ),
         ),
       ],
@@ -339,7 +339,7 @@ class _CompanyListState extends State<CompanyList>
   Widget _buildList() {
     if (_items.isEmpty) return const SizedBox.shrink();
     final active = _activeItems;
-    final rejected = _rejectedItems;
+    final expired = _expiredItems;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -347,23 +347,16 @@ class _CompanyListState extends State<CompanyList>
           if (widget.categoryView)
             _grouped(active)
           else
-            _stack(
-              items: active,
-              boxKey: _listBoxKey,
-              clip: true,
-            ),
-        if (rejected.isNotEmpty)
+            _stack(items: active, boxKey: _listBoxKey, clip: true),
+        if (expired.isNotEmpty)
           SizeTransition(
-            sizeFactor: _rejectedFade,
+            sizeFactor: _expiredFade,
             axisAlignment: -1,
             child: FadeTransition(
-              opacity: _rejectedFade,
+              opacity: _expiredFade,
               child: IgnorePointer(
-                ignoring: !widget.showRejected,
-                child: _stack(
-                  items: rejected,
-                  clip: false,
-                ),
+                ignoring: !widget.showExpired,
+                child: _stack(items: expired, clip: false),
               ),
             ),
           ),
@@ -371,7 +364,7 @@ class _CompanyListState extends State<CompanyList>
     );
   }
 
-  Widget _grouped(List<JobApplication> items) {
+  Widget _grouped(List<License> items) {
     final sections = _sectionsOf(items);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -414,13 +407,13 @@ class _CompanyListState extends State<CompanyList>
   }
 
   Widget _stack({
-    required List<JobApplication> items,
+    required List<License> items,
     Key? boxKey,
     required bool clip,
   }) {
     final tops = _tops(items);
     return AnimatedSize(
-      duration: _allMeasured ? _slotAnim : Duration.zero,
+      duration: _ready ? _slotAnim : Duration.zero,
       curve: Curves.easeOutCubic,
       alignment: Alignment.topCenter,
       child: SizedBox(
@@ -441,75 +434,92 @@ class _CompanyListState extends State<CompanyList>
     );
   }
 
-  Widget _positioned(JobApplication application, double slotTop) {
-    final dragging = _draggingId == application.id;
+  Widget _positioned(License license, double slotTop) {
+    final dragging = _draggingId == license.id;
     return AnimatedPositioned(
-      key: ValueKey(application.id),
-      duration: dragging || !_allMeasured ? Duration.zero : _slotAnim,
+      key: ValueKey(license.id),
+      duration: dragging || !_ready ? Duration.zero : _slotAnim,
       curve: Curves.easeOutCubic,
       top: dragging ? _dragY : slotTop,
       left: 0,
       right: 0,
       child: _MeasureHeight(
-        onHeight: (height) => _setHeight(application.id, height),
+        onHeight: (height) => _setHeight(license.id, height),
         child: Transform.scale(
           scale: dragging ? 1.03 : 1,
-          child: _tile(application),
+          child: _tile(license),
         ),
       ),
     );
   }
 
-  Widget _tile(JobApplication application) {
-    final rejected = application.isRejected;
-    final canDrag = widget.canReorder && !rejected;
+  Widget _tile(License license) {
+    final expired = license.isExpired();
+    final canDrag = widget.canReorder && !expired;
     final card = SwipeToDelete(
-      onSwipeLeft: () => widget.onDelete(application),
-      child: CompanyCard(
-        application: application,
-        onPressed: () => widget.onOpen(application),
-        onLongPressed: rejected
-            ? _explainRejectedLock
+      onSwipeLeft: () => widget.onDelete(license),
+      child: LicenseCard(
+        license: license,
+        onPressed: () => widget.onOpen(license),
+        onLongPressed: expired
+            ? _explainExpiredLock
             : (canDrag ? null : widget.onReorderLocked),
         compact: widget.compact,
       ),
     );
-    if (!canDrag) return card;
+    final entering = _entering.contains(license.id)
+        ? TweenAnimationBuilder<double>(
+            key: ValueKey('enter-${license.id}'),
+            tween: Tween(begin: 0, end: 1),
+            duration: _slotAnim,
+            curve: Curves.easeOutCubic,
+            onEnd: () {
+              if (!mounted) return;
+              setState(() => _entering.remove(license.id));
+            },
+            builder: (context, value, child) {
+              return Opacity(
+                opacity: value,
+                child: Transform.translate(
+                  offset: Offset(0, 16 * (1 - value)),
+                  child: child,
+                ),
+              );
+            },
+            child: card,
+          )
+        : card;
+    if (!canDrag) return entering;
     return LongPressDraggable<String>(
-      data: application.id,
+      data: license.id,
       delay: const Duration(milliseconds: 400),
       hapticFeedbackOnStart: true,
       rootOverlay: true,
       maxSimultaneousDrags: 1,
-      onDragStarted: () => _onDragStarted(application),
+      onDragStarted: () => _onDragStarted(license),
       onDragUpdate: (details) => _onDragUpdate(details.globalPosition),
       onDragEnd: (_) => _onDragEnded(),
       feedback: const SizedBox.shrink(),
-      childWhenDragging: card,
-      child: card,
+      childWhenDragging: entering,
+      child: entering,
     );
   }
 }
 
-class _JobSection {
-  const _JobSection({
-    required this.key,
+class _LicenseSection {
+  const _LicenseSection({
     required this.name,
     required this.color,
     required this.items,
   });
 
-  final String key;
   final String name;
   final Color color;
-  final List<JobApplication> items;
+  final List<License> items;
 }
 
 class _MeasureHeight extends StatefulWidget {
-  const _MeasureHeight({
-    required this.onHeight,
-    required this.child,
-  });
+  const _MeasureHeight({required this.onHeight, required this.child});
 
   final ValueChanged<double> onHeight;
   final Widget child;

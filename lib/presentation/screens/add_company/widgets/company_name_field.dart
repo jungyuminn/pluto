@@ -9,11 +9,13 @@ class CompanyNameField extends StatelessWidget {
     required this.controller,
     this.focusNode,
     this.autofocus = true,
+    this.hintText,
   });
 
   final TextEditingController controller;
   final FocusNode? focusNode;
   final bool autofocus;
+  final String? hintText;
 
   @override
   Widget build(BuildContext context) {
@@ -29,7 +31,7 @@ class CompanyNameField extends StatelessWidget {
         fontSize: 20,
       ),
       decoration: InputDecoration(
-        hintText: AppStrings.companyNameHint,
+        hintText: hintText ?? AppStrings.companyNameHint,
         hintStyle: TextStyle(
           fontFamily: AppFonts.of(context),
           color: colors.hint,

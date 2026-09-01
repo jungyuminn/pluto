@@ -18,6 +18,7 @@ class EventCategoryLocalDataSource {
   static const eventKey = 'event_categories';
   static const companyKey = 'company_categories';
   static const ledgerKey = 'ledger_categories';
+  static const licenseKey = 'license_categories';
 
   final SharedPreferences _prefs;
   final String _key;
@@ -35,7 +36,43 @@ class EventCategoryLocalDataSource {
     if (items.length == 1 && items.first.id == EventCategory.defaultId) {
       return List.of(_presets);
     }
+    if (_key == licenseKey) {
+      final migrated = _migratedLicenseCategories(items);
+      if (migrated != null) {
+        unawaited(saveAll(migrated));
+        return migrated;
+      }
+    }
     return items;
+  }
+
+  List<EventCategory>? _migratedLicenseCategories(List<EventCategory> items) {
+    var changed = false;
+    final next = <EventCategory>[];
+    final seen = <String>{};
+    for (final item in items) {
+      final mapped = switch (item.id) {
+        'license_national' => EventCategory.licensePresets[1],
+        'license_it' => EventCategory.licensePresets[2],
+        'license_other' => null,
+        'license_language' => EventCategory.licensePresets[0],
+        _ => item,
+      };
+      if (mapped == null) {
+        changed = true;
+        continue;
+      }
+      if (mapped.id != item.id || mapped.name != item.name) changed = true;
+      if (seen.add(mapped.id)) next.add(mapped);
+    }
+    for (final preset in EventCategory.licensePresets) {
+      if (seen.add(preset.id)) {
+        next.add(preset);
+        changed = true;
+      }
+    }
+    if (!changed) return null;
+    return next;
   }
 
   Future<void> saveAll(List<EventCategory> categories) async {

@@ -130,6 +130,17 @@ class _AddCategorySheetState extends State<AddCategorySheet> {
             ),
           );
         }
+      } else if (widget.kind == CategoryKind.license) {
+        final licenses = await scope.getLicenses();
+        for (final license in licenses) {
+          if (license.categoryId != category.id) continue;
+          await scope.updateLicense(
+            license.copyWith(
+              categoryName: category.name,
+              categoryColor: category.color,
+            ),
+          );
+        }
       } else {
         final ledgers = await scope.getLedgers();
         for (final entry in ledgers) {

@@ -3,30 +3,21 @@ import 'package:job_planner/core/constants/app_strings.dart';
 import 'package:job_planner/core/theme/app_colors.dart';
 import 'package:job_planner/core/utils/press_bounce.dart';
 
-Future<bool> showDeleteCoverLetterDialog(
+Future<bool> showDeleteLicenseDialog(
   BuildContext context, {
-  required String fileName,
-  String title = AppStrings.deleteCoverLetterTitle,
+  required String name,
 }) async {
   final confirmed = await showDialog<bool>(
     context: context,
-    builder: (context) => DeleteCoverLetterDialog(
-      fileName: fileName,
-      title: title,
-    ),
+    builder: (context) => DeleteLicenseDialog(name: name),
   );
   return confirmed == true;
 }
 
-class DeleteCoverLetterDialog extends StatelessWidget {
-  const DeleteCoverLetterDialog({
-    super.key,
-    required this.fileName,
-    this.title = AppStrings.deleteCoverLetterTitle,
-  });
+class DeleteLicenseDialog extends StatelessWidget {
+  const DeleteLicenseDialog({super.key, required this.name});
 
-  final String fileName;
-  final String title;
+  final String name;
 
   @override
   Widget build(BuildContext context) {
@@ -36,7 +27,7 @@ class DeleteCoverLetterDialog extends StatelessWidget {
       surfaceTintColor: Colors.transparent,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       title: Text(
-        title,
+        AppStrings.deleteTitle,
         style: TextStyle(
           fontSize: 18,
           fontWeight: FontWeight.w800,
@@ -51,13 +42,13 @@ class DeleteCoverLetterDialog extends StatelessWidget {
             TextSpan(
               children: [
                 TextSpan(
-                  text: fileName,
+                  text: name,
                   style: TextStyle(
                     fontWeight: FontWeight.w800,
                     color: colors.danger,
                   ),
                 ),
-                const TextSpan(text: ' ${AppStrings.deleteCoverLetterBody}'),
+                const TextSpan(text: ' ${AppStrings.deleteLicenseBody}'),
               ],
             ),
             style: TextStyle(

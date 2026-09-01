@@ -92,6 +92,7 @@ class DeleteCategoryDialog extends StatelessWidget {
               label: switch (kind) {
                 CategoryKind.company => AppStrings.deleteCategoryWithApplications,
                 CategoryKind.ledger => AppStrings.deleteCategoryWithLedgers,
+                CategoryKind.license => AppStrings.deleteCategoryWithLicenses,
                 CategoryKind.event => AppStrings.deleteCategoryWithItems,
               },
               onPressed: () {

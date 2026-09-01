@@ -4,7 +4,12 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
 class CoverLetterStorage {
-  const CoverLetterStorage();
+  const CoverLetterStorage({this.folderName = coverLettersFolder});
+
+  static const coverLettersFolder = 'cover_letters';
+  static const licenseFilesFolder = 'license_files';
+
+  final String folderName;
 
   Future<String> save({
     required String id,
@@ -12,7 +17,7 @@ class CoverLetterStorage {
     required String fileName,
   }) async {
     final documents = await getApplicationDocumentsDirectory();
-    final folder = Directory(p.join(documents.path, 'cover_letters'));
+    final folder = Directory(p.join(documents.path, folderName));
     if (!folder.existsSync()) {
       await folder.create(recursive: true);
     }

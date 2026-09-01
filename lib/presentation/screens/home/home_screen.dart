@@ -4,10 +4,8 @@ import 'package:job_planner/app_scope.dart';
 import 'package:job_planner/core/constants/app_icons.dart';
 import 'package:job_planner/core/constants/app_strings.dart';
 import 'package:job_planner/core/notifications/todo_reminder_service.dart';
-import 'package:job_planner/core/theme/app_colors.dart';
 import 'package:job_planner/core/theme/app_skin_background.dart';
 import 'package:job_planner/core/utils/fade_in.dart';
-import 'package:job_planner/core/utils/press_bounce.dart';
 import 'package:job_planner/data/datasources/app_backup_service.dart';
 import 'package:job_planner/data/datasources/calendar_preference.dart';
 import 'package:job_planner/data/datasources/day_events_view_preference.dart';
@@ -25,8 +23,9 @@ import 'package:job_planner/presentation/screens/home/widgets/home_long_goal_car
 import 'package:job_planner/presentation/screens/home/widgets/home_monthly_stats_card.dart';
 import 'package:job_planner/presentation/screens/settings/settings_screen.dart';
 import 'package:job_planner/presentation/widgets/app_bar_icon_group.dart';
+import 'package:job_planner/presentation/widgets/app_bar_wordmark.dart';
+import 'package:job_planner/presentation/widgets/overlay_app_bar.dart';
 import 'package:job_planner/presentation/tutorial/tutorial_anchor.dart';
-import 'package:job_planner/presentation/widgets/themed_asset.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -261,57 +260,35 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       child: Scaffold(
       resizeToAvoidBottomInset: false,
       backgroundColor: Colors.transparent,
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        backgroundColor: Colors.transparent,
-        surfaceTintColor: Colors.transparent,
-        titleSpacing: 8,
-        title: PressBounce(
-          onPressed: () {},
-          pressedScale: 0.96,
-          pressedColor: AppColors.of(context).pressed,
-          borderRadius: BorderRadius.circular(999),
-          child: const ThemedAsset(
-            asset: AppIcons.logo,
-            height: 120,
-            semanticLabel: AppStrings.appName,
+      extendBodyBehindAppBar: true,
+      appBar: OverlayAppBar(
+        title: const AppBarWordmark(slot: WordmarkSlot.home),
+        actions: TutorialAnchor(
+          id: TutorialAnchorId.homeTools,
+          child: AppBarIconGroup(
+            actions: [
+              AppBarIconAction(
+                asset: AppIcons.search,
+                label: AppScope.of(context).navPreference.showJobTab
+                    ? AppStrings.homeSearchHint
+                    : AppStrings.homeSearchHintDaily,
+                onPressed: _openSearch,
+              ),
+              AppBarIconAction(
+                asset: _compact ? AppIcons.detailView : AppIcons.quickView,
+                label: _compact
+                    ? AppStrings.detailedView
+                    : AppStrings.compactView,
+                onPressed: _toggleCompact,
+              ),
+              AppBarIconAction(
+                asset: AppIcons.setting,
+                label: AppStrings.settingsTitle,
+                onPressed: _openSettings,
+              ),
+            ],
           ),
         ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 12),
-            child: Center(
-              child: TutorialAnchor(
-                id: TutorialAnchorId.homeTools,
-                child: AppBarIconGroup(
-                actions: [
-                  AppBarIconAction(
-                    asset: AppIcons.search,
-                    label: AppScope.of(context).navPreference.showJobTab
-                        ? AppStrings.homeSearchHint
-                        : AppStrings.homeSearchHintDaily,
-                    onPressed: _openSearch,
-                  ),
-                  AppBarIconAction(
-                    asset: _compact
-                        ? AppIcons.detailView
-                        : AppIcons.quickView,
-                    label: _compact
-                        ? AppStrings.detailedView
-                        : AppStrings.compactView,
-                    onPressed: _toggleCompact,
-                  ),
-                  AppBarIconAction(
-                    asset: AppIcons.setting,
-                    label: AppStrings.settingsTitle,
-                    onPressed: _openSettings,
-                  ),
-                ],
-                ),
-              ),
-            ),
-          ),
-        ],
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
@@ -387,7 +364,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     }
 
     return ReorderableListView(
-      padding: EdgeInsets.fromLTRB(16, 8, 16, bottomGap),
+      padding: EdgeInsets.fromLTRB(
+        16,
+        OverlayAppBar.overlapOf(context) + 8,
+        16,
+        bottomGap,
+      ),
       buildDefaultDragHandles: false,
       header: header,
       proxyDecorator: (child, index, animation) {

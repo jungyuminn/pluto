@@ -21,12 +21,15 @@ import 'package:job_planner/data/datasources/day_events_view_preference.dart';
 import 'package:job_planner/data/datasources/font_preference.dart';
 import 'package:job_planner/data/datasources/home_view_preference.dart';
 import 'package:job_planner/data/datasources/job_view_preference.dart';
+import 'package:job_planner/data/datasources/license_view_preference.dart';
+import 'package:job_planner/data/datasources/license_local_datasource.dart';
 import 'package:job_planner/data/datasources/long_goal_local_datasource.dart';
 import 'package:job_planner/data/datasources/job_application_local_datasource.dart';
 import 'package:job_planner/data/datasources/notification_preference.dart';
 import 'package:job_planner/data/datasources/theme_preference.dart';
 import 'package:job_planner/data/datasources/tutorial_preference.dart';
 import 'package:job_planner/data/datasources/widget_preference.dart';
+import 'package:job_planner/data/datasources/wordmark_preference.dart';
 import 'package:job_planner/data/datasources/nav_preference.dart';
 import 'package:job_planner/data/repositories/calendar_event_memory_repository.dart';
 import 'package:job_planner/data/repositories/calendar_event_repository_impl.dart';
@@ -38,6 +41,8 @@ import 'package:job_planner/data/repositories/event_category_memory_repository.d
 import 'package:job_planner/data/repositories/event_category_repository_impl.dart';
 import 'package:job_planner/data/repositories/job_application_memory_repository.dart';
 import 'package:job_planner/data/repositories/job_application_repository_impl.dart';
+import 'package:job_planner/data/repositories/license_memory_repository.dart';
+import 'package:job_planner/data/repositories/license_repository_impl.dart';
 import 'package:job_planner/domain/entities/event_category.dart';
 import 'package:job_planner/domain/usecases/add_calendar_event.dart';
 import 'package:job_planner/domain/usecases/add_event_category.dart';
@@ -52,6 +57,11 @@ import 'package:job_planner/domain/usecases/get_diaries.dart';
 import 'package:job_planner/domain/usecases/get_ledgers.dart';
 import 'package:job_planner/domain/usecases/get_event_categories.dart';
 import 'package:job_planner/domain/usecases/get_job_applications.dart';
+import 'package:job_planner/domain/usecases/get_licenses.dart';
+import 'package:job_planner/domain/usecases/add_license.dart';
+import 'package:job_planner/domain/usecases/update_license.dart';
+import 'package:job_planner/domain/usecases/delete_license.dart';
+import 'package:job_planner/domain/usecases/reorder_licenses.dart';
 import 'package:job_planner/domain/usecases/reorder_calendar_events.dart';
 import 'package:job_planner/domain/usecases/reorder_job_applications.dart';
 import 'package:job_planner/domain/usecases/reorder_event_categories.dart';
@@ -72,6 +82,11 @@ class JobPlannerApp extends StatelessWidget {
     this.updateJobApplication,
     this.deleteJobApplication,
     this.reorderJobApplications,
+    this.getLicenses,
+    this.addLicense,
+    this.updateLicense,
+    this.deleteLicense,
+    this.reorderLicenses,
     this.getCalendarEvents,
     this.addCalendarEvent,
     this.updateCalendarEvent,
@@ -98,7 +113,13 @@ class JobPlannerApp extends StatelessWidget {
     this.updateLedgerCategory,
     this.deleteLedgerCategory,
     this.reorderLedgerCategories,
+    this.getLicenseCategories,
+    this.addLicenseCategory,
+    this.updateLicenseCategory,
+    this.deleteLicenseCategory,
+    this.reorderLicenseCategories,
     this.jobViewPreference,
+    this.licenseViewPreference,
     this.homeViewPreference,
     this.longGoalStore,
     this.dayEmojiStore,
@@ -109,6 +130,7 @@ class JobPlannerApp extends StatelessWidget {
     this.themePreference,
     this.widgetPreference,
     this.navPreference,
+    this.wordmarkPreference,
     this.backupPreference,
   });
 
@@ -117,6 +139,11 @@ class JobPlannerApp extends StatelessWidget {
   final UpdateJobApplication? updateJobApplication;
   final DeleteJobApplication? deleteJobApplication;
   final ReorderJobApplications? reorderJobApplications;
+  final GetLicenses? getLicenses;
+  final AddLicense? addLicense;
+  final UpdateLicense? updateLicense;
+  final DeleteLicense? deleteLicense;
+  final ReorderLicenses? reorderLicenses;
   final GetCalendarEvents? getCalendarEvents;
   final AddCalendarEvent? addCalendarEvent;
   final UpdateCalendarEvent? updateCalendarEvent;
@@ -143,7 +170,13 @@ class JobPlannerApp extends StatelessWidget {
   final UpdateEventCategory? updateLedgerCategory;
   final DeleteEventCategory? deleteLedgerCategory;
   final ReorderEventCategories? reorderLedgerCategories;
+  final GetEventCategories? getLicenseCategories;
+  final AddEventCategory? addLicenseCategory;
+  final UpdateEventCategory? updateLicenseCategory;
+  final DeleteEventCategory? deleteLicenseCategory;
+  final ReorderEventCategories? reorderLicenseCategories;
   final JobViewPreference? jobViewPreference;
+  final LicenseViewPreference? licenseViewPreference;
   final HomeViewPreference? homeViewPreference;
   final LongGoalLocalDataSource? longGoalStore;
   final DayEmojiStore? dayEmojiStore;
@@ -154,6 +187,7 @@ class JobPlannerApp extends StatelessWidget {
   final ThemePreference? themePreference;
   final WidgetPreference? widgetPreference;
   final NavPreference? navPreference;
+  final WordmarkPreference? wordmarkPreference;
   final BackupPreference? backupPreference;
 
   @override
@@ -178,6 +212,9 @@ class JobPlannerApp extends StatelessWidget {
         EventCategoryMemoryRepository(EventCategory.companyPresets);
     final ledgerCategoryRepository =
         EventCategoryMemoryRepository(EventCategory.ledgerPresets);
+    final licenseCategoryRepository =
+        EventCategoryMemoryRepository(EventCategory.licensePresets);
+    final licenseRepository = LicenseMemoryRepository();
     return AppScope(
       getJobApplications: getApplications,
       addJobApplication: addApplication,
@@ -185,6 +222,11 @@ class JobPlannerApp extends StatelessWidget {
       deleteJobApplication: deleteApplication,
       reorderJobApplications: reorderJobApplications ??
           ReorderJobApplications(JobApplicationMemoryRepository()),
+      getLicenses: getLicenses ?? GetLicenses(licenseRepository),
+      addLicense: addLicense ?? AddLicense(licenseRepository),
+      updateLicense: updateLicense ?? UpdateLicense(licenseRepository),
+      deleteLicense: deleteLicense ?? DeleteLicense(licenseRepository),
+      reorderLicenses: reorderLicenses ?? ReorderLicenses(licenseRepository),
       getCalendarEvents:
           getCalendarEvents ?? GetCalendarEvents(calendarRepository),
       addCalendarEvent:
@@ -231,7 +273,18 @@ class JobPlannerApp extends StatelessWidget {
           DeleteEventCategory(ledgerCategoryRepository),
       reorderLedgerCategories: reorderLedgerCategories ??
           ReorderEventCategories(ledgerCategoryRepository),
+      getLicenseCategories: getLicenseCategories ??
+          GetEventCategories(licenseCategoryRepository),
+      addLicenseCategory:
+          addLicenseCategory ?? AddEventCategory(licenseCategoryRepository),
+      updateLicenseCategory: updateLicenseCategory ??
+          UpdateEventCategory(licenseCategoryRepository),
+      deleteLicenseCategory: deleteLicenseCategory ??
+          DeleteEventCategory(licenseCategoryRepository),
+      reorderLicenseCategories: reorderLicenseCategories ??
+          ReorderEventCategories(licenseCategoryRepository),
       jobViewPreference: jobViewPreference ?? JobViewPreference(),
+      licenseViewPreference: licenseViewPreference ?? LicenseViewPreference(),
       homeViewPreference: homeViewPreference ?? HomeViewPreference(),
       longGoalStore: longGoalStore ?? LongGoalLocalDataSource(),
       dayEmojiStore: dayEmojiStore ?? DayEmojiStore(),
@@ -244,6 +297,7 @@ class JobPlannerApp extends StatelessWidget {
       themePreference: themePreference ?? ThemePreference(),
       widgetPreference: widgetPreference ?? WidgetPreference(),
       navPreference: navPreference ?? NavPreference(),
+      wordmarkPreference: wordmarkPreference ?? WordmarkPreference(),
       backupPreference: backupPreference ?? BackupPreference(),
       child: const _TutorialHost(
         child: _JobPlannerMaterialApp(),
@@ -265,6 +319,11 @@ class _AppBootstrapState extends State<_AppBootstrap> {
   UpdateJobApplication? _updateJobApplication;
   DeleteJobApplication? _deleteJobApplication;
   ReorderJobApplications? _reorderJobApplications;
+  GetLicenses? _getLicenses;
+  AddLicense? _addLicense;
+  UpdateLicense? _updateLicense;
+  DeleteLicense? _deleteLicense;
+  ReorderLicenses? _reorderLicenses;
   GetCalendarEvents? _getCalendarEvents;
   AddCalendarEvent? _addCalendarEvent;
   UpdateCalendarEvent? _updateCalendarEvent;
@@ -291,7 +350,13 @@ class _AppBootstrapState extends State<_AppBootstrap> {
   UpdateEventCategory? _updateLedgerCategory;
   DeleteEventCategory? _deleteLedgerCategory;
   ReorderEventCategories? _reorderLedgerCategories;
+  GetEventCategories? _getLicenseCategories;
+  AddEventCategory? _addLicenseCategory;
+  UpdateEventCategory? _updateLicenseCategory;
+  DeleteEventCategory? _deleteLicenseCategory;
+  ReorderEventCategories? _reorderLicenseCategories;
   JobViewPreference? _jobViewPreference;
+  LicenseViewPreference? _licenseViewPreference;
   HomeViewPreference? _homeViewPreference;
   LongGoalLocalDataSource? _longGoalStore;
   DayEmojiStore? _dayEmojiStore;
@@ -302,6 +367,7 @@ class _AppBootstrapState extends State<_AppBootstrap> {
   ThemePreference? _themePreference;
   WidgetPreference? _widgetPreference;
   NavPreference? _navPreference;
+  WordmarkPreference? _wordmarkPreference;
   BackupPreference? _backupPreference;
   SharedPreferences? _prefs;
 
@@ -318,6 +384,7 @@ class _AppBootstrapState extends State<_AppBootstrap> {
     final diaryDataSource = DiaryLocalDataSource(prefs);
     final ledgerDataSource = LedgerLocalDataSource(prefs);
     final jobDataSource = JobApplicationLocalDataSource(prefs);
+    final licenseDataSource = LicenseLocalDataSource(prefs);
     final notificationPreference = NotificationPreference(prefs: prefs);
     await TodoReminderService.instance.init(
       events: eventDataSource,
@@ -340,6 +407,12 @@ class _AppBootstrapState extends State<_AppBootstrap> {
       presets: EventCategory.ledgerPresets,
       syncHomeWidget: false,
     );
+    final licenseCategoryDataSource = EventCategoryLocalDataSource(
+      prefs,
+      key: EventCategoryLocalDataSource.licenseKey,
+      presets: EventCategory.licensePresets,
+      syncHomeWidget: false,
+    );
     final homeViewPreference = HomeViewPreference(prefs: prefs);
     final longGoalStore = LongGoalLocalDataSource(prefs: prefs);
     final dayEmojiStore = DayEmojiStore(prefs: prefs);
@@ -348,6 +421,7 @@ class _AppBootstrapState extends State<_AppBootstrap> {
     final fontPreference = FontPreference(prefs: prefs);
     final widgetPreference = WidgetPreference(prefs: prefs);
     final navPreference = NavPreference(prefs: prefs);
+    final wordmarkPreference = WordmarkPreference(prefs: prefs);
     await HomeScreenWidgetService.instance.init(
       events: eventDataSource,
       jobs: jobDataSource,
@@ -361,6 +435,7 @@ class _AppBootstrapState extends State<_AppBootstrap> {
     );
 
     final jobRepository = JobApplicationRepositoryImpl(jobDataSource);
+    final licenseRepository = LicenseRepositoryImpl(licenseDataSource);
     final eventRepository = CalendarEventRepositoryImpl(eventDataSource);
     final diaryRepository = DiaryRepositoryImpl(diaryDataSource);
     final ledgerRepository = LedgerRepositoryImpl(ledgerDataSource);
@@ -369,6 +444,8 @@ class _AppBootstrapState extends State<_AppBootstrap> {
         EventCategoryRepositoryImpl(companyCategoryDataSource);
     final ledgerCategoryRepository =
         EventCategoryRepositoryImpl(ledgerCategoryDataSource);
+    final licenseCategoryRepository =
+        EventCategoryRepositoryImpl(licenseCategoryDataSource);
     if (!mounted) return;
     setState(() {
       _getJobApplications = GetJobApplications(jobRepository);
@@ -376,6 +453,11 @@ class _AppBootstrapState extends State<_AppBootstrap> {
       _updateJobApplication = UpdateJobApplication(jobRepository);
       _deleteJobApplication = DeleteJobApplication(jobRepository);
       _reorderJobApplications = ReorderJobApplications(jobRepository);
+      _getLicenses = GetLicenses(licenseRepository);
+      _addLicense = AddLicense(licenseRepository);
+      _updateLicense = UpdateLicense(licenseRepository);
+      _deleteLicense = DeleteLicense(licenseRepository);
+      _reorderLicenses = ReorderLicenses(licenseRepository);
       _getCalendarEvents = GetCalendarEvents(eventRepository);
       _addCalendarEvent = AddCalendarEvent(eventRepository);
       _updateCalendarEvent = UpdateCalendarEvent(eventRepository);
@@ -404,7 +486,14 @@ class _AppBootstrapState extends State<_AppBootstrap> {
       _deleteLedgerCategory = DeleteEventCategory(ledgerCategoryRepository);
       _reorderLedgerCategories =
           ReorderEventCategories(ledgerCategoryRepository);
+      _getLicenseCategories = GetEventCategories(licenseCategoryRepository);
+      _addLicenseCategory = AddEventCategory(licenseCategoryRepository);
+      _updateLicenseCategory = UpdateEventCategory(licenseCategoryRepository);
+      _deleteLicenseCategory = DeleteEventCategory(licenseCategoryRepository);
+      _reorderLicenseCategories =
+          ReorderEventCategories(licenseCategoryRepository);
       _jobViewPreference = JobViewPreference(prefs: prefs);
+      _licenseViewPreference = LicenseViewPreference(prefs: prefs);
       _homeViewPreference = homeViewPreference;
       _longGoalStore = longGoalStore;
       _dayEmojiStore = dayEmojiStore;
@@ -415,6 +504,7 @@ class _AppBootstrapState extends State<_AppBootstrap> {
       _themePreference = themePreference;
       _widgetPreference = widgetPreference;
       _navPreference = navPreference;
+      _wordmarkPreference = wordmarkPreference;
       _backupPreference = backupPreference;
       _prefs = prefs;
     });
@@ -449,6 +539,11 @@ class _AppBootstrapState extends State<_AppBootstrap> {
     final updateApplication = _updateJobApplication;
     final deleteApplication = _deleteJobApplication;
     final reorderApplications = _reorderJobApplications;
+    final getLicenses = _getLicenses;
+    final addLicense = _addLicense;
+    final updateLicense = _updateLicense;
+    final deleteLicense = _deleteLicense;
+    final reorderLicenses = _reorderLicenses;
     final getEvents = _getCalendarEvents;
     final addEvent = _addCalendarEvent;
     final updateEvent = _updateCalendarEvent;
@@ -475,7 +570,13 @@ class _AppBootstrapState extends State<_AppBootstrap> {
     final updateLedgerCategory = _updateLedgerCategory;
     final deleteLedgerCategory = _deleteLedgerCategory;
     final reorderLedgerCategories = _reorderLedgerCategories;
+    final getLicenseCategories = _getLicenseCategories;
+    final addLicenseCategory = _addLicenseCategory;
+    final updateLicenseCategory = _updateLicenseCategory;
+    final deleteLicenseCategory = _deleteLicenseCategory;
+    final reorderLicenseCategories = _reorderLicenseCategories;
     final jobViewPreference = _jobViewPreference;
+    final licenseViewPreference = _licenseViewPreference;
     final homeViewPreference = _homeViewPreference;
     final longGoalStore = _longGoalStore;
     final dayEmojiStore = _dayEmojiStore;
@@ -486,6 +587,7 @@ class _AppBootstrapState extends State<_AppBootstrap> {
     final themePreference = _themePreference;
     final widgetPreference = _widgetPreference;
     final navPreference = _navPreference;
+    final wordmarkPreference = _wordmarkPreference;
     final backupPreference = _backupPreference;
 
     if (getApplications == null ||
@@ -493,6 +595,11 @@ class _AppBootstrapState extends State<_AppBootstrap> {
         updateApplication == null ||
         deleteApplication == null ||
         reorderApplications == null ||
+        getLicenses == null ||
+        addLicense == null ||
+        updateLicense == null ||
+        deleteLicense == null ||
+        reorderLicenses == null ||
         getEvents == null ||
         addEvent == null ||
         updateEvent == null ||
@@ -519,7 +626,13 @@ class _AppBootstrapState extends State<_AppBootstrap> {
         updateLedgerCategory == null ||
         deleteLedgerCategory == null ||
         reorderLedgerCategories == null ||
+        getLicenseCategories == null ||
+        addLicenseCategory == null ||
+        updateLicenseCategory == null ||
+        deleteLicenseCategory == null ||
+        reorderLicenseCategories == null ||
         jobViewPreference == null ||
+        licenseViewPreference == null ||
         homeViewPreference == null ||
         longGoalStore == null ||
         dayEmojiStore == null ||
@@ -530,6 +643,7 @@ class _AppBootstrapState extends State<_AppBootstrap> {
         themePreference == null ||
         widgetPreference == null ||
         navPreference == null ||
+        wordmarkPreference == null ||
         backupPreference == null) {
       return const MaterialApp(
         debugShowCheckedModeBanner: false,
@@ -550,6 +664,11 @@ class _AppBootstrapState extends State<_AppBootstrap> {
       updateJobApplication: updateApplication,
       deleteJobApplication: deleteApplication,
       reorderJobApplications: reorderApplications,
+      getLicenses: getLicenses,
+      addLicense: addLicense,
+      updateLicense: updateLicense,
+      deleteLicense: deleteLicense,
+      reorderLicenses: reorderLicenses,
       getCalendarEvents: getEvents,
       addCalendarEvent: addEvent,
       updateCalendarEvent: updateEvent,
@@ -576,7 +695,13 @@ class _AppBootstrapState extends State<_AppBootstrap> {
       updateLedgerCategory: updateLedgerCategory,
       deleteLedgerCategory: deleteLedgerCategory,
       reorderLedgerCategories: reorderLedgerCategories,
+      getLicenseCategories: getLicenseCategories,
+      addLicenseCategory: addLicenseCategory,
+      updateLicenseCategory: updateLicenseCategory,
+      deleteLicenseCategory: deleteLicenseCategory,
+      reorderLicenseCategories: reorderLicenseCategories,
       jobViewPreference: jobViewPreference,
+      licenseViewPreference: licenseViewPreference,
       homeViewPreference: homeViewPreference,
       longGoalStore: longGoalStore,
       dayEmojiStore: dayEmojiStore,
@@ -587,6 +712,7 @@ class _AppBootstrapState extends State<_AppBootstrap> {
       themePreference: themePreference,
       widgetPreference: widgetPreference,
       navPreference: navPreference,
+      wordmarkPreference: wordmarkPreference,
       backupPreference: backupPreference,
       child: _TutorialHost(
         prefs: _prefs,

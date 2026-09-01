@@ -13,6 +13,7 @@ import 'package:job_planner/data/datasources/backup_preference.dart';
 import 'package:job_planner/data/datasources/calendar_event_local_datasource.dart';
 import 'package:job_planner/data/datasources/custom_theme_storage.dart';
 import 'package:job_planner/data/datasources/day_emoji_store.dart';
+import 'package:job_planner/data/datasources/license_local_datasource.dart';
 import 'package:job_planner/data/datasources/theme_preference.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
@@ -26,11 +27,13 @@ class AppBackupService {
   static final revision = ValueNotifier(0);
 
   static const _jobsKey = 'job_applications';
+  static const _licensesKey = LicenseLocalDataSource.key;
   static const _diariesKey = 'diary_entries';
   static const _eventsKey = 'calendar_events';
   static const _ledgersKey = 'ledger_entries';
   static const _emojisKey = DayEmojiStore.key;
   static const _coverFolder = 'cover_letters';
+  static const _licenseFolder = 'license_files';
   static const _diaryFolder = 'diaries';
   static const _themesFolder = CustomThemeStorage.folderName;
   static const _autoFolder = 'auto_backups';
@@ -175,6 +178,8 @@ class AppBackupService {
     scope.widgetPreference.hydrate();
     scope.navPreference.hydrate();
     scope.jobViewPreference.hydrate();
+    scope.licenseViewPreference.hydrate();
+    scope.wordmarkPreference.hydrate();
     scope.dayEventsViewPreference.hydrate();
     scope.backupPreference.hydrate();
     scope.longGoalStore.reload();
@@ -199,6 +204,11 @@ class AppBackupService {
       ArchiveFile('manifest.json', manifestBytes.length, manifestBytes),
     );
     await _addFolder(archive, Directory(p.join(documents.path, _coverFolder)), _coverFolder);
+    await _addFolder(
+      archive,
+      Directory(p.join(documents.path, _licenseFolder)),
+      _licenseFolder,
+    );
     await _addFolder(archive, Directory(p.join(documents.path, _diaryFolder)), _diaryFolder);
     await _addFolder(
       archive,
@@ -228,9 +238,11 @@ class AppBackupService {
 
     final documents = await getApplicationDocumentsDirectory();
     final coverDir = Directory(p.join(documents.path, _coverFolder));
+    final licenseDir = Directory(p.join(documents.path, _licenseFolder));
     final diaryDir = Directory(p.join(documents.path, _diaryFolder));
     final themesDir = Directory(p.join(documents.path, _themesFolder));
     await coverDir.create(recursive: true);
+    await licenseDir.create(recursive: true);
     await diaryDir.create(recursive: true);
     await themesDir.create(recursive: true);
 
@@ -241,6 +253,8 @@ class AppBackupService {
       Directory? folder;
       if (name.startsWith('$_coverFolder/')) {
         folder = coverDir;
+      } else if (name.startsWith('$_licenseFolder/')) {
+        folder = licenseDir;
       } else if (name.startsWith('$_diaryFolder/')) {
         folder = diaryDir;
       } else if (name.startsWith('$_themesFolder/')) {
@@ -253,7 +267,13 @@ class AppBackupService {
 
     final prefs = await SharedPreferences.getInstance();
     await _applyPrefs(prefs, prefsMap);
-    await _relocatePaths(prefs, coverDir.path, diaryDir.path, themesDir.path);
+    await _relocatePaths(
+      prefs,
+      coverDir.path,
+      licenseDir.path,
+      diaryDir.path,
+      themesDir.path,
+    );
   }
 
   static Map<String, dynamic> _dumpPrefs(SharedPreferences prefs) {
@@ -307,6 +327,7 @@ class AppBackupService {
 
   static bool isStarterOnly(SharedPreferences prefs) {
     if (_hasItems(prefs.getString(_jobsKey))) return false;
+    if (_hasItems(prefs.getString(_licensesKey))) return false;
     if (_hasItems(prefs.getString(_diariesKey))) return false;
     if (_hasItems(prefs.getString(_ledgersKey))) return false;
     if (_hasEmojiItems(prefs.getString(_emojisKey))) return false;
@@ -356,6 +377,7 @@ class AppBackupService {
   static Future<void> _relocatePaths(
     SharedPreferences prefs,
     String coverDir,
+    String licenseDir,
     String diaryDir,
     String themesDir,
   ) async {
@@ -367,6 +389,15 @@ class AppBackupService {
           _rewritePath(item as Map<String, dynamic>, 'coverLetterPath', coverDir),
       ];
       await prefs.setString(_jobsKey, jsonEncode(next));
+    }
+    final licensesRaw = prefs.getString(_licensesKey);
+    if (licensesRaw != null && licensesRaw.isNotEmpty) {
+      final licenses = jsonDecode(licensesRaw) as List<dynamic>;
+      final next = [
+        for (final item in licenses)
+          _rewritePath(item as Map<String, dynamic>, 'filePath', licenseDir),
+      ];
+      await prefs.setString(_licensesKey, jsonEncode(next));
     }
     final diariesRaw = prefs.getString(_diariesKey);
     if (diariesRaw != null && diariesRaw.isNotEmpty) {
@@ -433,6 +464,7 @@ class AppBackupService {
     String documentsPath,
   ) async {
     final coverDir = p.join(documentsPath, _coverFolder);
+    final licenseDir = p.join(documentsPath, _licenseFolder);
     final diaryDir = p.join(documentsPath, _diaryFolder);
     final themesDir = p.join(documentsPath, _themesFolder);
     final jobsRaw = prefs.getString(_jobsKey);
@@ -445,6 +477,18 @@ class AppBackupService {
         if (!file.existsSync()) continue;
         if (p.equals(p.dirname(path), coverDir)) continue;
         await _addFile(archive, file, '$_coverFolder/${p.basename(path)}');
+      }
+    }
+    final licensesRaw = prefs.getString(_licensesKey);
+    if (licensesRaw != null && licensesRaw.isNotEmpty) {
+      final licenses = jsonDecode(licensesRaw) as List<dynamic>;
+      for (final item in licenses) {
+        final path = (item as Map<String, dynamic>)['filePath'] as String?;
+        if (path == null || path.isEmpty) continue;
+        final file = File(path);
+        if (!file.existsSync()) continue;
+        if (p.equals(p.dirname(path), licenseDir)) continue;
+        await _addFile(archive, file, '$_licenseFolder/${p.basename(path)}');
       }
     }
     final diariesRaw = prefs.getString(_diariesKey);

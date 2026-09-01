@@ -15,6 +15,18 @@ class JobOverflowMenuButton extends StatefulWidget {
     required this.onShowRejectedChanged,
     required this.sortByTime,
     required this.onSortByTimeChanged,
+    required this.categoryView,
+    required this.onCategoryViewChanged,
+    required this.showLicense,
+    required this.onShowLicenseChanged,
+    required this.licenseCompact,
+    required this.onLicenseCompactChanged,
+    required this.showExpired,
+    required this.onShowExpiredChanged,
+    required this.licenseSortByTime,
+    required this.onLicenseSortByTimeChanged,
+    required this.licenseCategoryView,
+    required this.onLicenseCategoryViewChanged,
     this.onCategoriesChanged,
   });
 
@@ -24,6 +36,18 @@ class JobOverflowMenuButton extends StatefulWidget {
   final ValueChanged<bool> onShowRejectedChanged;
   final bool sortByTime;
   final ValueChanged<bool> onSortByTimeChanged;
+  final bool categoryView;
+  final ValueChanged<bool> onCategoryViewChanged;
+  final bool showLicense;
+  final ValueChanged<bool> onShowLicenseChanged;
+  final bool licenseCompact;
+  final ValueChanged<bool> onLicenseCompactChanged;
+  final bool showExpired;
+  final ValueChanged<bool> onShowExpiredChanged;
+  final bool licenseSortByTime;
+  final ValueChanged<bool> onLicenseSortByTimeChanged;
+  final bool licenseCategoryView;
+  final ValueChanged<bool> onLicenseCategoryViewChanged;
   final VoidCallback? onCategoriesChanged;
 
   @override
@@ -94,7 +118,7 @@ class _JobOverflowMenuButtonState extends State<JobOverflowMenuButton>
     await showCategoryPickerSheet(
       context,
       selectable: false,
-      kind: CategoryKind.company,
+      kind: widget.showLicense ? CategoryKind.license : CategoryKind.company,
     );
     if (!mounted) return;
     widget.onCategoriesChanged?.call();
@@ -102,21 +126,41 @@ class _JobOverflowMenuButtonState extends State<JobOverflowMenuButton>
 
   Widget _menuPage() {
     return switch (_page) {
-      _MenuPage.visible => JobVisibleItemsMenu(
-        key: const ValueKey('visible'),
-        compact: widget.compact,
-        onCompactChanged: widget.onCompactChanged,
-        showRejected: widget.showRejected,
-        onShowRejectedChanged: widget.onShowRejectedChanged,
-        onBack: () => setState(() => _page = _MenuPage.root),
-      ),
+      _MenuPage.visible => widget.showLicense
+          ? LicenseVisibleItemsMenu(
+              key: const ValueKey('license-visible'),
+              compact: widget.licenseCompact,
+              onCompactChanged: widget.onLicenseCompactChanged,
+              showExpired: widget.showExpired,
+              onShowExpiredChanged: widget.onShowExpiredChanged,
+              onBack: () => setState(() => _page = _MenuPage.root),
+            )
+          : JobVisibleItemsMenu(
+              key: const ValueKey('visible'),
+              compact: widget.compact,
+              onCompactChanged: widget.onCompactChanged,
+              showRejected: widget.showRejected,
+              onShowRejectedChanged: widget.onShowRejectedChanged,
+              onBack: () => setState(() => _page = _MenuPage.root),
+            ),
       _MenuPage.sort => CalendarSortMenu(
-        key: const ValueKey('sort'),
-        sortByTime: widget.sortByTime,
+        key: ValueKey(widget.showLicense ? 'license-sort' : 'sort'),
+        sortByTime: widget.showLicense
+            ? widget.licenseSortByTime
+            : widget.sortByTime,
         showTime: false,
         showTimeOption: false,
-        onSortByTimeChanged: widget.onSortByTimeChanged,
+        onSortByTimeChanged: widget.showLicense
+            ? widget.onLicenseSortByTimeChanged
+            : widget.onSortByTimeChanged,
         onShowTimeChanged: (_) {},
+        showCategoryOption: true,
+        categoryView: widget.showLicense
+            ? widget.licenseCategoryView
+            : widget.categoryView,
+        onCategoryViewChanged: widget.showLicense
+            ? widget.onLicenseCategoryViewChanged
+            : widget.onCategoryViewChanged,
         onBack: () => setState(() => _page = _MenuPage.root),
       ),
       _MenuPage.root => JobOverflowMenu(
@@ -124,6 +168,8 @@ class _JobOverflowMenuButtonState extends State<JobOverflowMenuButton>
         onVisibleItems: () => setState(() => _page = _MenuPage.visible),
         onSortMode: () => setState(() => _page = _MenuPage.sort),
         onEditCategories: _openCategories,
+        showLicense: widget.showLicense,
+        onShowLicenseChanged: widget.onShowLicenseChanged,
       ),
     };
   }

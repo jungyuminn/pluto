@@ -35,7 +35,6 @@ class AppIcons {
   static const maximizeOutlined = 'assets/icons/maximize_outlined.png';
   static const minimizeOutlined = 'assets/icons/minimize_outlined.png';
   static const logo = 'assets/images/logo.png';
-  static const jobLogo = 'assets/images/job_logo.png';
   static const office = 'assets/icons/office.png';
   static const officeOutlined = 'assets/icons/office_outlined.png';
   static const calendarList = 'assets/icons/calendar_list.png';
@@ -46,6 +45,7 @@ class AppIcons {
   static const setting = 'assets/icons/setting.png';
   static const resume = 'assets/icons/resume.png';
   static const resumeOutlined = 'assets/icons/resume_outlined.png';
+  static const folderOutlined = 'assets/icons/folder_outlined.png';
   static const status = 'assets/icons/status.png';
   static const statusOutlined = 'assets/icons/status_outlined.png';
   static const trashCan = 'assets/icons/trash_can.png';

@@ -255,18 +255,24 @@ class JobOverflowMenu extends StatelessWidget {
     required this.onVisibleItems,
     required this.onSortMode,
     required this.onEditCategories,
+    required this.showLicense,
+    required this.onShowLicenseChanged,
   });
 
   final VoidCallback onVisibleItems;
   final VoidCallback onSortMode;
   final VoidCallback onEditCategories;
+  final bool showLicense;
+  final ValueChanged<bool> onShowLicenseChanged;
 
   @override
   Widget build(BuildContext context) {
     return _MenuCard(
       children: [
         _MenuItem(
-          label: AppStrings.jobVisibleItems,
+          label: showLicense
+              ? AppStrings.licenseVisibleItems
+              : AppStrings.jobVisibleItems,
           trailingAsset: AppIcons.calendarList,
           onPressed: onVisibleItems,
         ),
@@ -280,6 +286,11 @@ class JobOverflowMenu extends StatelessWidget {
           label: AppStrings.categoryEditTitle,
           trailingAsset: AppIcons.editOutlined,
           onPressed: onEditCategories,
+        ),
+        _FilterItem(
+          label: AppStrings.licenseMode,
+          checked: showLicense,
+          onChanged: onShowLicenseChanged,
         ),
       ],
     );
@@ -327,6 +338,47 @@ class JobVisibleItemsMenu extends StatelessWidget {
   }
 }
 
+class LicenseVisibleItemsMenu extends StatelessWidget {
+  const LicenseVisibleItemsMenu({
+    super.key,
+    required this.compact,
+    required this.onCompactChanged,
+    required this.showExpired,
+    required this.onShowExpiredChanged,
+    this.onBack,
+  });
+
+  final bool compact;
+  final ValueChanged<bool> onCompactChanged;
+  final bool showExpired;
+  final ValueChanged<bool> onShowExpiredChanged;
+  final VoidCallback? onBack;
+
+  @override
+  Widget build(BuildContext context) {
+    return _MenuCard(
+      children: [
+        if (onBack != null)
+          _MenuItem(
+            label: AppStrings.licenseVisibleItems,
+            leading: Icons.chevron_left_rounded,
+            onPressed: onBack!,
+          ),
+        _FilterItem(
+          label: AppStrings.compactView,
+          checked: compact,
+          onChanged: onCompactChanged,
+        ),
+        _FilterItem(
+          label: AppStrings.licenseShowExpired,
+          checked: showExpired,
+          onChanged: onShowExpiredChanged,
+        ),
+      ],
+    );
+  }
+}
+
 class _MenuCard extends StatelessWidget {
   const _MenuCard({required this.children});
 
@@ -350,6 +402,7 @@ class _MenuCard extends StatelessWidget {
     final label = [
       AppStrings.calendarVisibleItems,
       AppStrings.jobVisibleItems,
+      AppStrings.licenseVisibleItems,
     ].map(widthOf).reduce((a, b) => a > b ? a : b);
     return label + 74;
   }

@@ -346,6 +346,20 @@ class _CategoryPickerSheetState extends State<CategoryPickerSheet>
       }
       return false;
     }
+    if (widget.kind == CategoryKind.license) {
+      final licenses = await scope.getLicenses();
+      for (final license in licenses) {
+        if (_belongsTo(
+          license.categoryId,
+          license.categoryName,
+          ids,
+          names,
+        )) {
+          return true;
+        }
+      }
+      return false;
+    }
     final ledgers = await scope.getLedgers();
     for (final entry in ledgers) {
       if (_belongsTo(entry.categoryId, entry.categoryName, ids, names)) {
@@ -405,6 +419,19 @@ class _CategoryPickerSheetState extends State<CategoryPickerSheet>
           continue;
         }
         await scope.deleteJobApplication(job.id);
+      }
+    } else if (widget.kind == CategoryKind.license) {
+      final licenses = await scope.getLicenses();
+      for (final license in licenses) {
+        if (!_belongsTo(
+          license.categoryId,
+          license.categoryName,
+          ids,
+          names,
+        )) {
+          continue;
+        }
+        await scope.deleteLicense(license.id);
       }
     } else {
       final ledgers = await scope.getLedgers();

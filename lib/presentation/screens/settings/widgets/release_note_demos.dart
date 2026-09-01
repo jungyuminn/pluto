@@ -78,6 +78,10 @@ enum ReleaseDemo {
   diaryCoverOrder,
   appContact,
   dailySearch,
+  license,
+  wordmark,
+  licenseFile,
+  themeBadge,
   feature,
   fix,
 }
@@ -119,6 +123,14 @@ ReleaseDemo releaseDemoFor(String text, {required bool isFix}) {
   if (text.contains('일상 모드') && text.contains('검색')) {
     return ReleaseDemo.dailySearch;
   }
+  if (text.contains('자격증을 모아') || text.contains('간략 보기')) {
+    return ReleaseDemo.license;
+  }
+  if (text.contains('파일을 올릴')) return ReleaseDemo.licenseFile;
+  if (text.contains('화면 제목') || text.contains('이름을 바꿀')) {
+    return ReleaseDemo.wordmark;
+  }
+  if (text.contains('테마색')) return ReleaseDemo.themeBadge;
   if (text.contains('크게 볼') || text.contains('패턴과 사진')) {
     return ReleaseDemo.customTheme;
   }
@@ -284,6 +296,10 @@ class ReleaseDemoView extends StatelessWidget {
       ReleaseDemo.diaryCoverOrder => const _DiaryCoverOrderDemo(),
       ReleaseDemo.appContact => const _AppContactDemo(),
       ReleaseDemo.dailySearch => const _DailySearchDemo(),
+      ReleaseDemo.license => const _LicenseDemo(),
+      ReleaseDemo.wordmark => const _WordmarkDemo(),
+      ReleaseDemo.licenseFile => const _LicenseFileDemo(),
+      ReleaseDemo.themeBadge => const _ThemeBadgeDemo(),
       ReleaseDemo.feature => const _FeatureDemo(),
       ReleaseDemo.fix => const _FixDemo(),
     };
@@ -3581,6 +3597,249 @@ class _DailySearchDemo extends StatelessWidget {
                   height: 22,
                   fontSize: 12,
                   applyCalendarScale: false,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _LicenseDemo extends StatelessWidget {
+  const _LicenseDemo();
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final font = AppFonts.of(context);
+        final open = _gate(t, 0.28, 0.55);
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(20, 22, 20, 16),
+          child: _Card(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        '정보처리기사',
+                        style: TextStyle(
+                          fontFamily: font,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w800,
+                          color: colors.text,
+                        ),
+                      ),
+                    ),
+                    DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: colors.accent.withValues(alpha: 0.16),
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        child: Text(
+                          '88',
+                          style: TextStyle(
+                            fontFamily: font,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w800,
+                            color: colors.accent,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Row(
+                  children: [
+                    Container(
+                      width: 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF00ACC1),
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      '기사',
+                      style: TextStyle(
+                        fontFamily: font,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF00ACC1),
+                      ),
+                    ),
+                  ],
+                ),
+                ClipRect(
+                  child: Align(
+                    alignment: Alignment.topCenter,
+                    heightFactor: open,
+                    child: Opacity(
+                      opacity: open,
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: Text(
+                          '취득일  2024. 3. 5.\n만료일  2029. 3. 5.',
+                          style: TextStyle(
+                            fontFamily: font,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            height: 1.45,
+                            color: colors.secondary,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _WordmarkDemo extends StatelessWidget {
+  const _WordmarkDemo();
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      builder: (context, t) {
+        final custom = _gate(t, 0.38, 0.58) > 0.5;
+        final tap = _pulse(t, 0.22, 0.32, 0.42);
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(20, 48, 20, 20),
+          child: Transform.scale(
+            scale: 1 - tap * 0.04,
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                custom ? '내 플래너' : '잡플래너',
+                style: TextStyle(
+                  fontFamily: AppFonts.jalnan,
+                  fontSize: 22,
+                  color: AppFonts.wordmarkColor,
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _LicenseFileDemo extends StatelessWidget {
+  const _LicenseFileDemo();
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final font = AppFonts.of(context);
+        final show = _gate(t, 0.28, 0.5);
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(20, 40, 20, 20),
+          child: _Card(
+            child: Row(
+              children: [
+                Icon(Icons.attach_file, size: 16, color: colors.hint),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    show > 0.5 ? '정보처리기사.pdf' : '자격증',
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontFamily: font,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: show > 0.5 ? colors.accent : colors.hint,
+                      decoration: show > 0.5
+                          ? TextDecoration.underline
+                          : TextDecoration.none,
+                      decorationColor: colors.accent,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _ThemeBadgeDemo extends StatelessWidget {
+  const _ThemeBadgeDemo();
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final font = AppFonts.of(context);
+        final show = _gate(t, 0.2, 0.42);
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(20, 44, 20, 20),
+          child: Row(
+            children: [
+              Expanded(
+                child: _Card(
+                  child: Row(
+                    children: [
+                      Text(
+                        '네이버',
+                        style: TextStyle(
+                          fontFamily: font,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w800,
+                          color: colors.text,
+                        ),
+                      ),
+                      const Spacer(),
+                      Opacity(
+                        opacity: show,
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            color: colors.accent.withValues(alpha: 0.16),
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            child: Text(
+                              '서류합격',
+                              style: TextStyle(
+                                fontFamily: font,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w800,
+                                color: colors.accent,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],

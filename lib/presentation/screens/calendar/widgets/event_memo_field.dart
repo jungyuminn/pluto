@@ -11,6 +11,7 @@ class EventMemoField extends StatelessWidget {
     this.hintText,
     this.minLines = 1,
     this.maxLines = 4,
+    this.textInputAction = TextInputAction.newline,
   });
 
   final TextEditingController controller;
@@ -18,6 +19,7 @@ class EventMemoField extends StatelessWidget {
   final String? hintText;
   final int minLines;
   final int? maxLines;
+  final TextInputAction textInputAction;
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +29,7 @@ class EventMemoField extends StatelessWidget {
       focusNode: focusNode,
       minLines: minLines,
       maxLines: maxLines,
-      textInputAction: TextInputAction.newline,
+      textInputAction: textInputAction,
       style: TextStyle(
         fontFamily: AppFonts.of(context),
         fontWeight: FontWeight.w700,

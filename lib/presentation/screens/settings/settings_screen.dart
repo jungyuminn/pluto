@@ -50,6 +50,8 @@ import 'package:job_planner/presentation/screens/settings/widgets/settings_secti
 import 'package:job_planner/presentation/tutorial/tutorial_controller.dart';
 import 'package:job_planner/presentation/widgets/app_back_button.dart';
 import 'package:job_planner/presentation/widgets/app_bar_icon_group.dart';
+import 'package:job_planner/presentation/widgets/app_bar_wordmark.dart';
+import 'package:job_planner/presentation/widgets/overlay_app_bar.dart';
 import 'package:job_planner/presentation/widgets/sliding_kind_bar.dart';
 import 'package:job_planner/presentation/widgets/themed_asset.dart';
 import 'package:job_planner/presentation/screens/shell/widgets/pill_bottom_nav.dart';
@@ -1502,53 +1504,38 @@ class _ThemeHomePreviewPage extends StatelessWidget {
     return Scaffold(
       resizeToAvoidBottomInset: false,
       backgroundColor: Colors.transparent,
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        backgroundColor: Colors.transparent,
-        surfaceTintColor: Colors.transparent,
-        titleSpacing: 8,
-        title: PressBounce(
-          onPressed: () {},
-          pressedScale: 0.96,
-          pressedColor: AppColors.of(context).pressed,
-          borderRadius: BorderRadius.circular(999),
-          child: const ThemedAsset(
-            asset: AppIcons.logo,
-            height: 120,
-            semanticLabel: AppStrings.appName,
-          ),
-        ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 12),
-            child: Center(
-              child: AppBarIconGroup(
-                actions: [
-                  AppBarIconAction(
-                    asset: AppIcons.search,
-                    label: AppStrings.homeSearchHint,
-                    onPressed: () {},
-                  ),
-                  AppBarIconAction(
-                    asset: compact ? AppIcons.detailView : AppIcons.quickView,
-                    label: compact
-                        ? AppStrings.detailedView
-                        : AppStrings.compactView,
-                    onPressed: () {},
-                  ),
-                  AppBarIconAction(
-                    asset: AppIcons.setting,
-                    label: AppStrings.settingsTitle,
-                    onPressed: () {},
-                  ),
-                ],
-              ),
+      extendBodyBehindAppBar: true,
+      appBar: OverlayAppBar(
+        title: const AppBarWordmark(slot: WordmarkSlot.home),
+        actions: AppBarIconGroup(
+          actions: [
+            AppBarIconAction(
+              asset: AppIcons.search,
+              label: AppStrings.homeSearchHint,
+              onPressed: () {},
             ),
-          ),
-        ],
+            AppBarIconAction(
+              asset: compact ? AppIcons.detailView : AppIcons.quickView,
+              label: compact
+                  ? AppStrings.detailedView
+                  : AppStrings.compactView,
+              onPressed: () {},
+            ),
+            AppBarIconAction(
+              asset: AppIcons.setting,
+              label: AppStrings.settingsTitle,
+              onPressed: () {},
+            ),
+          ],
+        ),
       ),
       body: ListView(
-        padding: EdgeInsets.fromLTRB(16, 8, 16, bottomGap),
+        padding: EdgeInsets.fromLTRB(
+          16,
+          OverlayAppBar.overlapOf(context) + 8,
+          16,
+          bottomGap,
+        ),
         children: [
           HomeDayCard(
             title: AppStrings.todayTitle,
@@ -1754,51 +1741,48 @@ class _ThemeJobPreviewPage extends StatelessWidget {
     return Scaffold(
       resizeToAvoidBottomInset: false,
       backgroundColor: Colors.transparent,
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        backgroundColor: Colors.transparent,
-        surfaceTintColor: Colors.transparent,
-        titleSpacing: 8,
-        title: PressBounce(
-          onPressed: () {},
-          pressedScale: 0.96,
-          pressedColor: AppColors.of(context).pressed,
-          borderRadius: BorderRadius.circular(999),
-          child: const ThemedAsset(
-            asset: AppIcons.jobLogo,
-            height: 120,
-            semanticLabel: AppStrings.jobScreenTitle,
-          ),
-        ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 12),
-            child: Center(
-              child: AppBarIconGroup(
-                actions: [
-                  AppBarIconAction(
-                    asset: AppIcons.search,
-                    label: AppStrings.searchHint,
-                    onPressed: () {},
-                  ),
-                ],
-                trailing: [
-                  JobOverflowMenuButton(
-                    compact: compact,
-                    onCompactChanged: (_) {},
-                    showRejected: true,
-                    onShowRejectedChanged: (_) {},
-                    sortByTime: false,
-                    onSortByTimeChanged: (_) {},
-                  ),
-                ],
-              ),
+      extendBodyBehindAppBar: true,
+      appBar: OverlayAppBar(
+        title: const AppBarWordmark(slot: WordmarkSlot.job),
+        actions: AppBarIconGroup(
+          actions: [
+            AppBarIconAction(
+              asset: AppIcons.search,
+              label: AppStrings.searchHint,
+              onPressed: () {},
             ),
-          ),
-        ],
+          ],
+          trailing: [
+            JobOverflowMenuButton(
+              compact: compact,
+              onCompactChanged: (_) {},
+              showRejected: true,
+              onShowRejectedChanged: (_) {},
+              sortByTime: false,
+              onSortByTimeChanged: (_) {},
+              categoryView: false,
+              onCategoryViewChanged: (_) {},
+              showLicense: false,
+              onShowLicenseChanged: (_) {},
+              licenseCompact: false,
+              onLicenseCompactChanged: (_) {},
+              showExpired: true,
+              onShowExpiredChanged: (_) {},
+              licenseSortByTime: false,
+              onLicenseSortByTimeChanged: (_) {},
+              licenseCategoryView: false,
+              onLicenseCategoryViewChanged: (_) {},
+            ),
+          ],
+        ),
       ),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
+        padding: EdgeInsets.fromLTRB(
+          20,
+          OverlayAppBar.overlapOf(context),
+          20,
+          100,
+        ),
         children: [
           CompanyCard(application: jobs[0], compact: compact),
           SizedBox(height: compact ? 8 : 12),

@@ -10,6 +10,7 @@ import 'package:job_planner/core/theme/app_colors.dart';
 import 'package:job_planner/core/theme/app_skin_background.dart';
 import 'package:job_planner/core/utils/press_bounce.dart';
 import 'package:job_planner/core/utils/swipe_to_delete.dart';
+import 'package:job_planner/data/datasources/day_emoji_store.dart';
 import 'package:job_planner/domain/entities/calendar_event.dart';
 import 'package:job_planner/domain/entities/event_category.dart';
 import 'package:job_planner/domain/entities/job_application.dart';
@@ -168,7 +169,10 @@ class _DayEventsDialogState extends State<DayEventsDialog> {
     _compact = scope.dayEventsViewPreference.categoryView;
     _sortByTime = scope.dayEventsViewPreference.sortByTime;
     _showTime = scope.dayEventsViewPreference.showTime;
-    final sticker = scope.dayEmojiStore.on(widget.date);
+    final sticker = scope.dayEmojiStore.on(
+      widget.date,
+      layer: DayStickerLayer.event,
+    );
     _emoji = DayStickers.isAsset(sticker) ? sticker : null;
     _items = _itemsForView;
     _loadCategories();
@@ -363,10 +367,14 @@ class _DayEventsDialogState extends State<DayEventsDialog> {
     await AppScope.of(context).dayEmojiStore.set(
       widget.date,
       picked.isEmpty ? null : picked,
+      layer: DayStickerLayer.event,
     );
     if (!mounted) return;
     setState(() {
-      final next = AppScope.of(context).dayEmojiStore.on(widget.date);
+      final next = AppScope.of(context).dayEmojiStore.on(
+        widget.date,
+        layer: DayStickerLayer.event,
+      );
       _emoji = DayStickers.isAsset(next) ? next : null;
       _emojiPop = _emoji != null;
       _animateEmojiSlot = true;

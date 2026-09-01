@@ -7,17 +7,20 @@ class ReorderJobApplications {
   final JobApplicationRepository _repository;
 
   Future<void> call(List<JobApplication> ordered) async {
+    if (ordered.isEmpty) return;
     final orders = {
       for (var i = 0; i < ordered.length; i++) ordered[i].id: i,
     };
-    if (orders.isEmpty) return;
     final current = await _repository.getAll();
-    await _repository.replaceAll([
+    final rest = [
       for (final application in current)
-        if (orders.containsKey(application.id))
-          application.copyWith(sortOrder: orders[application.id])
-        else
-          application,
+        if (!orders.containsKey(application.id)) application,
+    ];
+    await _repository.replaceAll([
+      for (var i = 0; i < ordered.length; i++)
+        ordered[i].copyWith(sortOrder: i),
+      for (var i = 0; i < rest.length; i++)
+        rest[i].copyWith(sortOrder: ordered.length + i),
     ]);
   }
 }

@@ -328,7 +328,16 @@ class AppBackupService {
     if (raw == null || raw.isEmpty || raw == '{}') return false;
     try {
       final items = jsonDecode(raw);
-      return items is Map && items.isNotEmpty;
+      if (items is! Map || items.isEmpty) return false;
+      for (final value in items.values) {
+        if (value is String && value.trim().isNotEmpty) return true;
+        if (value is Map) {
+          for (final item in value.values) {
+            if (item is String && item.trim().isNotEmpty) return true;
+          }
+        }
+      }
+      return false;
     } catch (_) {
       return true;
     }

@@ -17,6 +17,18 @@ class ReleaseNote {
 abstract final class ReleaseNotes {
   static const all = [
     ReleaseNote(
+      version: '1.0.31',
+      items: [
+        '할 일·가계부·일기 스티커를 모드마다 따로 붙여요',
+        '그림에서 펜을 고르면 질감 메뉴가 펼쳐져요',
+        '그림 화면이 부드럽게 열려요',
+        '하단 탭을 밀어 화면을 옮길 수 있어요',
+      ],
+      fixes: [
+        '지원서 순서를 바꿔도 손이 떼면 돌아가지 않아요',
+      ],
+    ),
+    ReleaseNote(
       version: '1.0.30',
       items: [
         '일기 쓸 때 일기장 디자인을 고를 수 있어요',

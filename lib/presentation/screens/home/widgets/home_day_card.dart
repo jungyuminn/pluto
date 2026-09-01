@@ -7,6 +7,7 @@ import 'package:job_planner/core/constants/app_strings.dart';
 import 'package:job_planner/core/theme/app_colors.dart';
 import 'package:job_planner/core/utils/press_bounce.dart';
 import 'package:job_planner/core/utils/swipe_to_delete.dart';
+import 'package:job_planner/data/datasources/day_emoji_store.dart';
 import 'package:job_planner/domain/entities/calendar_event.dart';
 import 'package:job_planner/domain/entities/event_category.dart';
 import 'package:job_planner/domain/entities/job_application.dart';
@@ -545,13 +546,17 @@ class _HomeDayCardState extends State<HomeDayCard> {
 
   Future<void> _pickEmoji(DateTime date) async {
     final store = AppScope.of(context).dayEmojiStore;
-    final current = store.on(date);
+    final current = store.on(date, layer: DayStickerLayer.event);
     final picked = await showDayEmojiSheet(
       context,
       selected: DayStickers.isAsset(current) ? current : null,
     );
     if (picked == null || !mounted) return;
-    await store.set(date, picked.isEmpty ? null : picked);
+    await store.set(
+      date,
+      picked.isEmpty ? null : picked,
+      layer: DayStickerLayer.event,
+    );
   }
 
   @override
@@ -607,7 +612,9 @@ class _HomeDayCardState extends State<HomeDayCard> {
     return ListenableBuilder(
       listenable: AppScope.of(context).dayEmojiStore,
       builder: (context, _) {
-        final sticker = AppScope.of(context).dayEmojiStore.on(date);
+        final sticker = AppScope.of(
+          context,
+        ).dayEmojiStore.on(date, layer: DayStickerLayer.event);
         final emoji = DayStickers.isAsset(sticker) ? sticker : null;
         return Row(
           crossAxisAlignment: CrossAxisAlignment.center,

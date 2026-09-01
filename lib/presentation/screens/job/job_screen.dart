@@ -154,19 +154,12 @@ class _JobScreenState extends State<JobScreen>
 
   Future<void> _onReordered(List<JobApplication> ordered) async {
     if (_sortByDate) return;
-    final orders = {
-      for (var i = 0; i < ordered.length; i++) ordered[i].id: i,
-    };
-    setState(() {
-      _items = [
-        for (final item in _items)
-          if (orders.containsKey(item.id))
-            item.copyWith(sortOrder: orders[item.id])
-          else
-            item,
-      ];
-    });
-    await AppScope.of(context).reorderJobApplications(ordered);
+    final next = [
+      for (var i = 0; i < ordered.length; i++)
+        ordered[i].copyWith(sortOrder: i),
+    ];
+    setState(() => _items = next);
+    await AppScope.of(context).reorderJobApplications(next);
   }
 
   Future<void> _explainDateSortLock() {

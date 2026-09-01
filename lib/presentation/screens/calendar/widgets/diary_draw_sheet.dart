@@ -35,10 +35,10 @@ class _DiaryDrawRoute<T> extends PageRouteBuilder<T> {
     required this.mediaQuery,
     required WidgetBuilder builder,
   }) : super(
-          opaque: true,
+          opaque: false,
           fullscreenDialog: false,
-          transitionDuration: Duration.zero,
-          reverseTransitionDuration: Duration.zero,
+          transitionDuration: const Duration(milliseconds: 320),
+          reverseTransitionDuration: const Duration(milliseconds: 260),
           pageBuilder: (context, animation, secondaryAnimation) {
             return MediaQuery(
               data: mediaQuery,
@@ -46,7 +46,16 @@ class _DiaryDrawRoute<T> extends PageRouteBuilder<T> {
             );
           },
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            return child;
+            final reverse = animation.status == AnimationStatus.reverse;
+            final t = (reverse ? Curves.easeInCubic : Curves.easeOutCubic)
+                .transform(animation.value);
+            return Opacity(
+              opacity: t,
+              child: Transform.translate(
+                offset: Offset(0, 18 * (1 - t)),
+                child: child,
+              ),
+            );
           },
         );
 
@@ -873,26 +882,35 @@ class _DiaryDrawSheetState extends State<DiaryDrawSheet> {
                           ),
                       ],
                     ),
-                    if (_tool == _DrawTool.pen)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 10),
-                        child: Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          alignment: WrapAlignment.start,
-                          crossAxisAlignment: WrapCrossAlignment.center,
-                          children: [
-                            for (final kind in _PenKind.values)
-                              _ToolChip(
-                                label: kind.label,
-                                selected: _penKind == kind,
-                                emphasis: true,
-                                onPressed: () =>
-                                    setState(() => _penKind = kind),
-                              ),
-                          ],
-                        ),
+                    ClipRect(
+                      child: AnimatedSize(
+                        duration: const Duration(milliseconds: 220),
+                        curve: Curves.easeOutCubic,
+                        alignment: Alignment.topLeft,
+                        child: _tool == _DrawTool.pen
+                            ? Padding(
+                                padding: const EdgeInsets.only(top: 10),
+                                child: Wrap(
+                                  spacing: 8,
+                                  runSpacing: 8,
+                                  alignment: WrapAlignment.start,
+                                  crossAxisAlignment:
+                                      WrapCrossAlignment.center,
+                                  children: [
+                                    for (final kind in _PenKind.values)
+                                      _ToolChip(
+                                        label: kind.label,
+                                        selected: _penKind == kind,
+                                        emphasis: true,
+                                        onPressed: () =>
+                                            setState(() => _penKind = kind),
+                                      ),
+                                  ],
+                                ),
+                              )
+                            : const SizedBox.shrink(),
                       ),
+                    ),
                     const SizedBox(height: 10),
                     Wrap(
                       spacing: 8,

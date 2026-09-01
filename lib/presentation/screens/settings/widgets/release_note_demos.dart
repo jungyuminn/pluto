@@ -69,12 +69,24 @@ enum ReleaseDemo {
   holiday,
   homeCalendar,
   jobTracker,
+  stickerByMode,
+  penKinds,
+  drawOpen,
+  navSlide,
+  jobReorder,
+  diaryCover,
+  diaryCoverOrder,
+  appContact,
+  dailySearch,
   feature,
   fix,
 }
 
 ReleaseDemo releaseDemoFor(String text, {required bool isFix}) {
   if (isFix) {
+    if (text.contains('지원서 순서') || text.contains('손이 떼면')) {
+      return ReleaseDemo.jobReorder;
+    }
     if (text.contains('알림')) return ReleaseDemo.notification;
     if (text.contains('숨긴 할 일')) return ReleaseDemo.monthWidget;
     if (text.contains('캘린더가 깨지') || text.contains('아이콘이 한 번')) {
@@ -90,6 +102,22 @@ ReleaseDemo releaseDemoFor(String text, {required bool isFix}) {
       return ReleaseDemo.compactWidget;
     }
     return ReleaseDemo.fix;
+  }
+  if (text.contains('모드마다') || text.contains('따로 붙여')) {
+    return ReleaseDemo.stickerByMode;
+  }
+  if (text.contains('질감') || text.contains('펜을 고르면')) {
+    return ReleaseDemo.penKinds;
+  }
+  if (text.contains('그림 화면')) return ReleaseDemo.drawOpen;
+  if (text.contains('밀어 화면') || text.contains('탭을 밀어')) {
+    return ReleaseDemo.navSlide;
+  }
+  if (text.contains('일기장 디자인')) return ReleaseDemo.diaryCover;
+  if (text.contains('일기장 순서')) return ReleaseDemo.diaryCoverOrder;
+  if (text.contains('앱 문의')) return ReleaseDemo.appContact;
+  if (text.contains('일상 모드') && text.contains('검색')) {
+    return ReleaseDemo.dailySearch;
   }
   if (text.contains('크게 볼') || text.contains('패턴과 사진')) {
     return ReleaseDemo.customTheme;
@@ -247,6 +275,15 @@ class ReleaseDemoView extends StatelessWidget {
       ReleaseDemo.homeCards => const _HomeCardsDemo(),
       ReleaseDemo.holiday => const _HolidayDemo(),
       ReleaseDemo.jobTracker => const _JobDemo(),
+      ReleaseDemo.stickerByMode => const _StickerByModeDemo(),
+      ReleaseDemo.penKinds => const _PenKindsDemo(),
+      ReleaseDemo.drawOpen => const _DrawOpenDemo(),
+      ReleaseDemo.navSlide => const _NavSlideDemo(),
+      ReleaseDemo.jobReorder => const _JobReorderDemo(),
+      ReleaseDemo.diaryCover => const _DiaryCoverDemo(),
+      ReleaseDemo.diaryCoverOrder => const _DiaryCoverOrderDemo(),
+      ReleaseDemo.appContact => const _AppContactDemo(),
+      ReleaseDemo.dailySearch => const _DailySearchDemo(),
       ReleaseDemo.feature => const _FeatureDemo(),
       ReleaseDemo.fix => const _FixDemo(),
     };
@@ -2676,6 +2713,877 @@ class _JobDemo extends StatelessWidget {
                 ),
               ],
             ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _StickerByModeDemo extends StatelessWidget {
+  const _StickerByModeDemo();
+
+  static const _modes = ['할 일', '가계부', '일기'];
+  static const _stickers = [
+    'assets/stickers/company_cat/07_fighting.png',
+    'assets/stickers/daily_dog/12_snack.png',
+    'assets/stickers/daily_rabbit/05_good_morning.png',
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 3200,
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final font = AppFonts.of(context);
+        final mode = t < 0.34 ? 0 : (t < 0.67 ? 1 : 2);
+        final tap = _pulse(t, 0.08, 0.18, 0.28) +
+            _pulse(t, 0.38, 0.48, 0.58) +
+            _pulse(t, 0.72, 0.82, 0.92);
+        return Stack(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
+              child: Column(
+                children: [
+                  Expanded(
+                    child: _Card(
+                      child: Column(
+                        children: [
+                          Text(
+                            '2',
+                            style: TextStyle(
+                              fontFamily: font,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w800,
+                              color: colors.text,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Expanded(
+                            child: AnimatedSwitcher(
+                              duration: const Duration(milliseconds: 220),
+                              child: Image.asset(
+                                _stickers[mode],
+                                key: ValueKey(mode),
+                                fit: BoxFit.contain,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      for (var i = 0; i < 3; i++)
+                        Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 3),
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 200),
+                              padding: const EdgeInsets.symmetric(vertical: 6),
+                              decoration: BoxDecoration(
+                                color: mode == i
+                                    ? colors.accent
+                                    : colors.card,
+                                borderRadius: BorderRadius.circular(999),
+                              ),
+                              child: Text(
+                                _modes[i],
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontFamily: font,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w800,
+                                  color: mode == i
+                                      ? Colors.white
+                                      : colors.muted,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            if (tap > 0)
+              Positioned.fill(
+                child: Align(
+                  alignment: Alignment((mode - 1) * 0.72, 0.78),
+                  child: _Finger(pressed: tap.clamp(0.0, 1.0)),
+                ),
+              ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _PenKindsDemo extends StatelessWidget {
+  const _PenKindsDemo();
+
+  static const _kinds = ['브러시', '크레용', '연필'];
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 3000,
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final font = AppFonts.of(context);
+        final pen = t < 0.52;
+        final kinds = Curves.easeOutCubic.transform(
+          pen ? _gate(t, 0.04, 0.16) : 1 - _gate(t, 0.52, 0.66),
+        );
+        final tap = _pulse(t, 0.44, 0.54, 0.72);
+        return Stack(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(18, 18, 18, 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      _toolChip(
+                        context,
+                        icon: pen ? AppIcons.pen : AppIcons.penOutlined,
+                        selected: pen,
+                        label: '펜',
+                      ),
+                      const SizedBox(width: 8),
+                      _toolChip(
+                        context,
+                        icon: pen
+                            ? AppIcons.paintBrushOutlined
+                            : AppIcons.paintBrush,
+                        selected: !pen,
+                        label: '채우기',
+                      ),
+                    ],
+                  ),
+                  ClipRect(
+                    child: Align(
+                      alignment: Alignment.topLeft,
+                      heightFactor: kinds,
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: Wrap(
+                          spacing: 6,
+                          children: [
+                            for (var i = 0; i < _kinds.length; i++)
+                              DecoratedBox(
+                                decoration: BoxDecoration(
+                                  color: i == 0 && pen
+                                      ? colors.selected
+                                      : colors.card,
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 7,
+                                  ),
+                                  child: Text(
+                                    _kinds[i],
+                                    style: TextStyle(
+                                      fontFamily: font,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w800,
+                                      color: colors.text,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (tap > 0)
+              const Positioned(left: 92, top: 22, child: _Finger(pressed: 1)),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _toolChip(
+    BuildContext context, {
+    required String icon,
+    required bool selected,
+    required String label,
+  }) {
+    final colors = AppColors.of(context);
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: selected ? colors.selected : colors.card,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(8, 8, 10, 8),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ThemedAsset(asset: icon, width: 18, height: 18),
+            const SizedBox(width: 4),
+            Text(
+              label,
+              style: TextStyle(
+                fontFamily: AppFonts.of(context),
+                fontSize: 12,
+                fontWeight: FontWeight.w800,
+                color: colors.text,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _DrawOpenDemo extends StatelessWidget {
+  const _DrawOpenDemo();
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 3000,
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final font = AppFonts.of(context);
+        final open = Curves.easeOutCubic.transform(_gate(t, 0.28, 0.52));
+        final tap = _pulse(t, 0.12, 0.24, 0.4);
+        return Stack(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(22, 22, 22, 16),
+              child: _Card(
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        AppStrings.diaryPhotoHint,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontFamily: font,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: colors.muted,
+                        ),
+                      ),
+                    ),
+                    DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: colors.accent.withValues(alpha: 0.14),
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
+                        child: Text(
+                          AppStrings.diaryPhotoDraw,
+                          style: TextStyle(
+                            fontFamily: font,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w800,
+                            color: colors.accent,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            if (tap > 0)
+              const Positioned(right: 42, top: 40, child: _Finger(pressed: 1)),
+            Opacity(
+              opacity: open,
+              child: Transform.translate(
+                offset: Offset(0, (1 - open) * 28),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
+                  child: _Card(
+                    padding: EdgeInsets.zero,
+                    child: SizedBox(
+                      height: 148,
+                      child: Stack(
+                        children: [
+                          const Positioned.fill(
+                            child: ColoredBox(color: Color(0xFFFFFFFF)),
+                          ),
+                          CustomPaint(
+                            painter: _StrokePainter(
+                              progress: _gate(t, 0.55, 0.88),
+                              color: colors.accent,
+                            ),
+                            child: const SizedBox.expand(),
+                          ),
+                          Positioned(
+                            left: 12,
+                            top: 10,
+                            child: Text(
+                              AppStrings.diaryDrawTitle,
+                              style: TextStyle(
+                                fontFamily: font,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w800,
+                                color: colors.text,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _NavSlideDemo extends StatelessWidget {
+  const _NavSlideDemo();
+
+  static const _cell = 56.0;
+  static const _indicator = 42.0;
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 3000,
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final slide = Curves.easeInOutCubic.transform(_gate(t, 0.16, 0.72));
+        final index = slide < 0.5 ? 0 : 1;
+        final finger = _pulse(t, 0.1, 0.2, 0.82);
+        final minLeft = (_cell - _indicator) / 2;
+        final left = minLeft + slide * _cell;
+        return Stack(
+          children: [
+            Center(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: colors.navBar,
+                  borderRadius: BorderRadius.circular(999),
+                  boxShadow: [
+                    BoxShadow(
+                      color: colors.shadow,
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: SizedBox(
+                  width: _cell * 3,
+                  height: 48,
+                  child: Stack(
+                    children: [
+                      Positioned(
+                        left: left,
+                        top: 4,
+                        width: _indicator,
+                        height: 40,
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            color: colors.pressed,
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                        ),
+                      ),
+                      Row(
+                        children: [
+                          for (final asset in [
+                            index == 0 ? AppIcons.home : AppIcons.homeOutlined,
+                            index == 1
+                                ? AppIcons.calendar
+                                : AppIcons.calendarOutlined,
+                            AppIcons.resumeOutlined,
+                          ])
+                            SizedBox(
+                              width: _cell,
+                              child: Center(
+                                child: ThemedAsset(
+                                  asset: asset,
+                                  width: 20,
+                                  height: 20,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            if (finger > 0)
+              Positioned.fill(
+                child: Align(
+                  alignment: Alignment(-0.42 + slide * 0.42, 0),
+                  child: _Finger(pressed: finger),
+                ),
+              ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _JobReorderDemo extends StatelessWidget {
+  const _JobReorderDemo();
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 3000,
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final font = AppFonts.of(context);
+        final move = Curves.easeInOutCubic.transform(_gate(t, 0.18, 0.55));
+        final hold = _pulse(t, 0.08, 0.18, 0.62);
+        return Stack(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(22, 20, 22, 16),
+              child: Stack(
+                children: [
+                  Transform.translate(
+                    offset: Offset(0, -move * 46),
+                    child: _jobCard(font, colors, '카카오', const Color(0xFFF59E0B)),
+                  ),
+                  Transform.translate(
+                    offset: Offset(0, 52 + move * 46),
+                    child: Opacity(
+                      opacity: 0.55 + move * 0.45,
+                      child: _jobCard(
+                        font,
+                        colors,
+                        '네이버',
+                        const Color(0xFF22C55E),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (hold > 0)
+              Positioned(
+                left: 36,
+                top: 28 + move * 46,
+                child: _Finger(pressed: hold),
+              ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _jobCard(String? font, AppColors colors, String name, Color color) {
+    return _Card(
+      child: Row(
+        children: [
+          Container(
+            width: 10,
+            height: 10,
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            name,
+            style: TextStyle(
+              fontFamily: font,
+              fontSize: 14,
+              fontWeight: FontWeight.w800,
+              color: colors.text,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DiaryCoverDemo extends StatelessWidget {
+  const _DiaryCoverDemo();
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 3200,
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final font = AppFonts.of(context);
+        final sheet = Curves.easeOutCubic.transform(_gate(t, 0.22, 0.4));
+        final lined = t >= 0.55;
+        final tapChip = _pulse(t, 0.1, 0.2, 0.34);
+        final tapCover = _pulse(t, 0.46, 0.56, 0.7);
+        final paper = lined ? const Color(0xFFF7F4EA) : colors.card;
+        return Stack(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(22, 16, 22, 12),
+              child: Column(
+                children: [
+                  Expanded(
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: paper,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: colors.border),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(12, 10, 12, 8),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '오늘의 제목',
+                              style: TextStyle(
+                                fontFamily: font,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w800,
+                                color: colors.text,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            for (var i = 0; i < 2; i++)
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 8),
+                                child: ColoredBox(
+                                  color: lined
+                                      ? const Color(0xFFD6D1C4)
+                                      : colors.border,
+                                  child: const SizedBox(
+                                    height: 1,
+                                    width: double.infinity,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: colors.card,
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(8, 5, 10, 5),
+                        child: Text(
+                          lined
+                              ? AppStrings.diaryCoverLined
+                              : AppStrings.diaryCoverBasic,
+                          style: TextStyle(
+                            fontFamily: font,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w800,
+                            color: colors.accent,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (sheet > 0)
+              Opacity(
+                opacity: sheet * (lined ? 0.0 : 1.0) +
+                    (lined ? (1 - _gate(t, 0.55, 0.68)) * sheet : 0),
+                child: Align(
+                  alignment: Alignment.bottomCenter,
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                    child: _Card(
+                      child: Row(
+                        children: [
+                          _miniCover(
+                            colors.card,
+                            AppStrings.diaryCoverBasic,
+                            selected: !lined,
+                          ),
+                          const SizedBox(width: 8),
+                          _miniCover(
+                            const Color(0xFFF7F4EA),
+                            AppStrings.diaryCoverLined,
+                            selected: lined,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            if (tapChip > 0)
+              const Positioned(left: 36, top: 126, child: _Finger(pressed: 1)),
+            if (tapCover > 0)
+              const Positioned(left: 118, top: 108, child: _Finger(pressed: 1)),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _miniCover(Color paper, String name, {required bool selected}) {
+    return Expanded(
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: paper,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: selected ? const Color(0xFF3B82F6) : const Color(0x22000000),
+            width: selected ? 2 : 1,
+          ),
+        ),
+        child: SizedBox(
+          height: 44,
+          child: Center(
+            child: Text(
+              name,
+              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _DiaryCoverOrderDemo extends StatelessWidget {
+  const _DiaryCoverOrderDemo();
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      builder: (context, t) {
+        final swap = Curves.easeInOutCubic.transform(_gate(t, 0.28, 0.58));
+        final hold = _pulse(t, 0.12, 0.22, 0.58);
+        return Stack(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 36, 20, 20),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Transform.translate(
+                      offset: Offset(swap * 96, 0),
+                      child: _coverTile(const Color(0xFFF7F4EA), '줄노트'),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Transform.translate(
+                      offset: Offset(-swap * 96, 0),
+                      child: _coverTile(const Color(0xFFE8F4EE), '민트'),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (hold > 0)
+              Positioned(
+                left: 36 + swap * 96,
+                top: 52,
+                child: _Finger(pressed: hold),
+              ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _coverTile(Color paper, String name) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: paper,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0x22000000)),
+      ),
+      child: SizedBox(
+        height: 72,
+        child: Center(
+          child: Text(
+            name,
+            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _AppContactDemo extends StatelessWidget {
+  const _AppContactDemo();
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final font = AppFonts.of(context);
+        final mail = Curves.easeOutCubic.transform(_gate(t, 0.28, 0.52));
+        final tap = _pulse(t, 0.12, 0.24, 0.4);
+        return Stack(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 28, 20, 16),
+              child: _Card(
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.mail_outline_rounded,
+                      color: colors.accent,
+                      size: 22,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      AppStrings.appContact,
+                      style: TextStyle(
+                        fontFamily: font,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w800,
+                        color: colors.text,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            if (tap > 0)
+              const Positioned(left: 36, top: 44, child: _Finger(pressed: 1)),
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: Transform.translate(
+                offset: Offset(0, (1 - mail) * 64),
+                child: Opacity(
+                  opacity: mail,
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
+                    child: _Card(
+                      child: Text(
+                        AppStrings.appContactEmail,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontFamily: font,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: colors.accent,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _DailySearchDemo extends StatelessWidget {
+  const _DailySearchDemo();
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final font = AppFonts.of(context);
+        const query = '면접';
+        final typed = (query.length * _gate(t, 0.16, 0.48)).round();
+        final show = _gate(t, 0.52, 0.7);
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(18, 18, 18, 12),
+          child: Column(
+            children: [
+              _Card(
+                child: Row(
+                  children: [
+                    ThemedAsset(asset: AppIcons.search, width: 18, height: 18),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        typed == 0
+                            ? AppStrings.calendarSearchHintDaily
+                            : query.substring(0, typed),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontFamily: font,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: typed == 0 ? colors.hint : colors.text,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 8),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: colors.card,
+                    borderRadius: BorderRadius.circular(999),
+                    border: Border.all(color: colors.border),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 5,
+                    ),
+                    child: Text(
+                      AppStrings.calendarModeRange,
+                      style: TextStyle(
+                        fontFamily: font,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                        color: colors.muted,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Opacity(
+                opacity: show,
+                child: CalendarEventLabel(
+                  title: '면접 준비',
+                  color: const Color(0xFF3B82F6),
+                  height: 22,
+                  fontSize: 12,
+                  applyCalendarScale: false,
+                ),
+              ),
+            ],
           ),
         );
       },

@@ -3,6 +3,21 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+enum DayStickerLayer {
+  event,
+  ledger,
+  diary;
+
+  static DayStickerLayer current({
+    required bool showDiary,
+    required bool showLedger,
+  }) {
+    if (showLedger) return ledger;
+    if (showDiary) return diary;
+    return event;
+  }
+}
+
 class DayEmojiStore extends ChangeNotifier {
   DayEmojiStore({SharedPreferences? prefs}) : _prefs = prefs {
     _load();
@@ -12,11 +27,16 @@ class DayEmojiStore extends ChangeNotifier {
   static const packOrderKey = 'sticker_pack_order';
 
   final SharedPreferences? _prefs;
-  var _emojis = <String, String>{};
+  final _layers = {
+    for (final layer in DayStickerLayer.values) layer: <String, String>{},
+  };
   var _packOrder = <String>[];
 
-  String? on(DateTime date) {
-    final value = _emojis[stampOf(date)]?.trim();
+  String? on(
+    DateTime date, {
+    DayStickerLayer layer = DayStickerLayer.event,
+  }) {
+    final value = _layers[layer]?[stampOf(date)]?.trim();
     if (value == null || value.isEmpty) return null;
     return value;
   }
@@ -30,15 +50,21 @@ class DayEmojiStore extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> set(DateTime date, String? emoji) async {
+  Future<void> set(
+    DateTime date,
+    String? emoji, {
+    DayStickerLayer layer = DayStickerLayer.event,
+  }) async {
     final stamp = stampOf(date);
     final next = emoji?.trim() ?? '';
+    final current = Map<String, String>.of(_layers[layer] ?? {});
     if (next.isEmpty) {
-      if (!_emojis.containsKey(stamp)) return;
-      _emojis = {for (final entry in _emojis.entries) if (entry.key != stamp) entry.key: entry.value};
+      if (!current.containsKey(stamp)) return;
+      current.remove(stamp);
     } else {
-      _emojis = {..._emojis, stamp: next};
+      current[stamp] = next;
     }
+    _layers[layer] = current;
     await _persist();
     notifyListeners();
   }
@@ -55,31 +81,57 @@ class DayEmojiStore extends ChangeNotifier {
   }
 
   void _load() {
+    for (final layer in DayStickerLayer.values) {
+      _layers[layer] = {};
+    }
+    var migrated = false;
     final raw = _prefs?.getString(key);
-    if (raw == null || raw.isEmpty) {
-      _emojis = {};
-    } else {
+    if (raw != null && raw.isNotEmpty) {
       try {
         final decoded = jsonDecode(raw);
-        if (decoded is! Map) {
-          _emojis = {};
-        } else {
-          _emojis = {
-            for (final entry in decoded.entries)
-              if (entry.key is String &&
-                  entry.value is String &&
-                  (entry.value as String).trim().isNotEmpty)
-                entry.key as String: entry.value as String,
-          };
+        if (decoded is Map) {
+          if (_looksLayered(decoded)) {
+            for (final layer in DayStickerLayer.values) {
+              _layers[layer] = _stampMap(decoded[layer.name]);
+            }
+          } else {
+            final stamps = _stampMap(decoded);
+            for (final layer in DayStickerLayer.values) {
+              _layers[layer] = Map<String, String>.of(stamps);
+            }
+            migrated = stamps.isNotEmpty;
+          }
         }
-      } catch (_) {
-        _emojis = {};
-      }
+      } catch (_) {}
     }
     _packOrder = _prefs?.getStringList(packOrderKey) ?? const [];
+    if (migrated) _persist();
   }
 
   Future<void> _persist() async {
-    await _prefs?.setString(key, jsonEncode(_emojis));
+    await _prefs?.setString(
+      key,
+      jsonEncode({
+        for (final layer in DayStickerLayer.values) layer.name: _layers[layer],
+      }),
+    );
+  }
+
+  static bool _looksLayered(Map decoded) {
+    for (final layer in DayStickerLayer.values) {
+      if (decoded[layer.name] is Map) return true;
+    }
+    return false;
+  }
+
+  static Map<String, String> _stampMap(Object? value) {
+    if (value is! Map) return {};
+    return {
+      for (final entry in value.entries)
+        if (entry.key is String &&
+            entry.value is String &&
+            (entry.value as String).trim().isNotEmpty)
+          entry.key as String: entry.value as String,
+    };
   }
 }

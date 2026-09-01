@@ -7,11 +7,15 @@ class SlidingNavIndicator extends StatelessWidget {
     required this.index,
     required this.itemCount,
     this.itemExtent,
+    this.left,
+    this.dragging = false,
   });
 
   final int index;
   final int itemCount;
   final double? itemExtent;
+  final double? left;
+  final bool dragging;
 
   static const width = 60.0;
   static const height = 40.0;
@@ -23,15 +27,15 @@ class SlidingNavIndicator extends StatelessWidget {
       child: LayoutBuilder(
         builder: (context, constraints) {
           final cellWidth = itemExtent ?? constraints.maxWidth / itemCount;
-          final left = cellWidth * index + (cellWidth - width) / 2;
+          final snapped = cellWidth * index + (cellWidth - width) / 2;
           final top = (constraints.maxHeight - height) / 2;
 
           return Stack(
             children: [
               AnimatedPositioned(
-                duration: duration,
+                duration: dragging ? Duration.zero : duration,
                 curve: Curves.easeOutCubic,
-                left: left,
+                left: left ?? snapped,
                 top: top,
                 width: width,
                 height: height,

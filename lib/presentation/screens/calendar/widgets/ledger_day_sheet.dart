@@ -9,6 +9,7 @@ import 'package:job_planner/core/theme/app_colors.dart';
 import 'package:job_planner/core/theme/app_skin_background.dart';
 import 'package:job_planner/core/utils/press_bounce.dart';
 import 'package:job_planner/core/utils/swipe_to_delete.dart';
+import 'package:job_planner/data/datasources/day_emoji_store.dart';
 import 'package:job_planner/domain/entities/event_category.dart';
 import 'package:job_planner/domain/entities/ledger_entry.dart';
 import 'package:job_planner/domain/ledger_salary_repeat.dart';
@@ -170,7 +171,10 @@ class _LedgerDaySheetState extends State<LedgerDaySheet>
     _compact = scope.dayEventsViewPreference.categoryView;
     _kindColorView = scope.dayEventsViewPreference.ledgerKindColor;
     _showKind = scope.dayEventsViewPreference.showLedgerKind;
-    final sticker = scope.dayEmojiStore.on(widget.date);
+    final sticker = scope.dayEmojiStore.on(
+      widget.date,
+      layer: DayStickerLayer.ledger,
+    );
     _emoji = DayStickers.isAsset(sticker) ? sticker : null;
     _entries.sort(_compare);
     _items = _itemsForView;
@@ -373,12 +377,17 @@ class _LedgerDaySheetState extends State<LedgerDaySheet>
   Future<void> _pickEmoji() async {
     final picked = await showDayEmojiSheet(context, selected: _emoji);
     if (picked == null || !mounted) return;
-    await AppScope.of(
-      context,
-    ).dayEmojiStore.set(widget.date, picked.isEmpty ? null : picked);
+    await AppScope.of(context).dayEmojiStore.set(
+      widget.date,
+      picked.isEmpty ? null : picked,
+      layer: DayStickerLayer.ledger,
+    );
     if (!mounted) return;
     setState(() {
-      final next = AppScope.of(context).dayEmojiStore.on(widget.date);
+      final next = AppScope.of(context).dayEmojiStore.on(
+        widget.date,
+        layer: DayStickerLayer.ledger,
+      );
       _emoji = DayStickers.isAsset(next) ? next : null;
       _emojiPop = _emoji != null;
       _animateEmojiSlot = true;

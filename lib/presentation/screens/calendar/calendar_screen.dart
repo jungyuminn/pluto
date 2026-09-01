@@ -6,6 +6,7 @@ import 'package:job_planner/core/theme/app_skin_background.dart';
 import 'package:job_planner/core/utils/korean_search.dart';
 import 'package:job_planner/core/utils/plain_text_editing_controller.dart';
 import 'package:job_planner/data/datasources/app_backup_service.dart';
+import 'package:job_planner/data/datasources/day_emoji_store.dart';
 import 'package:job_planner/data/datasources/job_view_preference.dart';
 import 'package:job_planner/domain/entities/calendar_event.dart';
 import 'package:job_planner/domain/entities/diary_entry.dart';
@@ -59,6 +60,12 @@ class _CalendarScreenState extends State<CalendarScreen>
   var _rangeDragging = false;
   var _showDiary = false;
   var _showLedger = false;
+
+  DayStickerLayer get _stickerLayer => DayStickerLayer.current(
+    showDiary: _showDiary,
+    showLedger: _showLedger,
+  );
+
   var _zoom = CalendarZoomLevel.days;
   var _zoomEpoch = 0;
   var _hits = <_SearchHit>[];
@@ -727,7 +734,11 @@ class _CalendarScreenState extends State<CalendarScreen>
                                                       eventsOf: _eventsOn,
                                                       diariesOf: _diariesOn,
                                                       ledgersOf: _ledgersOn,
-                                                      emojisOf: emojis.on,
+                                                      emojisOf: (date) =>
+                                                          emojis.on(
+                                                            date,
+                                                            layer: _stickerLayer,
+                                                          ),
                                                       showDiary: _showDiary,
                                                       showLedger: _showLedger,
                                                       showLedgerTitle:

@@ -17,6 +17,15 @@ class ReleaseNote {
 abstract final class ReleaseNotes {
   static const all = [
     ReleaseNote(
+      version: '1.0.29',
+      items: [
+        '아이폰 작은 위젯이 앱 테마를 따라가요',
+      ],
+      fixes: [
+        '일기 그림 화면이 뒤틀리던 문제를 고쳤어요',
+      ],
+    ),
+    ReleaseNote(
       version: '1.0.28',
       items: [
         '일상 모드를 켜면 하단 지원서 메뉴가 숨겨져요',

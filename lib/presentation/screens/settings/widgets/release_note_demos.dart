@@ -83,6 +83,12 @@ ReleaseDemo releaseDemoFor(String text, {required bool isFix}) {
     if (text.contains('흐릿') || text.contains('위젯 글씨')) {
       return ReleaseDemo.compactWidget;
     }
+    if (text.contains('일기 그림') || text.contains('뒤틀')) {
+      return ReleaseDemo.diaryDraw;
+    }
+    if (text.contains('앱 테마를 따라')) {
+      return ReleaseDemo.compactWidget;
+    }
     return ReleaseDemo.fix;
   }
   if (text.contains('크게 볼') || text.contains('패턴과 사진')) {

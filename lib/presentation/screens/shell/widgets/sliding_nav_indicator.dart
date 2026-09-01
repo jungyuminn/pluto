@@ -6,10 +6,12 @@ class SlidingNavIndicator extends StatelessWidget {
     super.key,
     required this.index,
     required this.itemCount,
+    this.itemExtent,
   });
 
   final int index;
   final int itemCount;
+  final double? itemExtent;
 
   static const width = 60.0;
   static const height = 40.0;
@@ -20,7 +22,7 @@ class SlidingNavIndicator extends StatelessWidget {
     return IgnorePointer(
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final cellWidth = constraints.maxWidth / itemCount;
+          final cellWidth = itemExtent ?? constraints.maxWidth / itemCount;
           final left = cellWidth * index + (cellWidth - width) / 2;
           final top = (constraints.maxHeight - height) / 2;
 

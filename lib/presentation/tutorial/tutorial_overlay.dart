@@ -268,7 +268,7 @@ class _TutorialOverlayState extends State<TutorialOverlay>
       isFirst: _displayedFirst,
       isLast: _displayedLast,
       index: _displayedIndex,
-      total: TutorialController.steps.length,
+      total: tutorial?.stepCount ?? TutorialController.steps.length,
       onNext: canAct ? tutorial.next : () {},
       onPrev: canAct ? tutorial.previous : () {},
       onSkip: canAct ? tutorial.skip : () {},

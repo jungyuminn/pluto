@@ -17,6 +17,13 @@ class ReleaseNote {
 abstract final class ReleaseNotes {
   static const all = [
     ReleaseNote(
+      version: '1.0.28',
+      items: [
+        '일상 모드를 켜면 하단 지원서 메뉴가 숨겨져요',
+        '위젯 폰트 크기를 따로 조절할 수 있어요',
+      ],
+    ),
+    ReleaseNote(
       version: '1.0.27',
       items: [
         '설정에서 위젯이 앱 테마·폰트를 따라갈지 고를 수 있어요',

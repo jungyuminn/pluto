@@ -371,7 +371,8 @@ class _CalendarScreenState extends State<CalendarScreen>
           );
         }
       }
-      if (calendarPrefs.showCompanies) {
+      if (calendarPrefs.showCompanies &&
+          AppScope.of(context).navPreference.showJobTab) {
         final showRejected =
             AppScope.of(context).jobViewPreference.showRejected;
         for (final application in _applications) {
@@ -426,7 +427,10 @@ class _CalendarScreenState extends State<CalendarScreen>
     final events = calendarEventsOn(
       date: date,
       events: calendarPrefs.showTodos ? _events : const [],
-      applications: calendarPrefs.showCompanies ? _applications : const [],
+      applications: (calendarPrefs.showCompanies &&
+              AppScope.of(context).navPreference.showJobTab)
+          ? _applications
+          : const [],
       companyCategories: _companyCategories,
       includeRejected: AppScope.of(context).jobViewPreference.showRejected,
     );
@@ -558,14 +562,17 @@ class _CalendarScreenState extends State<CalendarScreen>
               children: [
                 Expanded(
                   child: ListenableBuilder(
-                    listenable: AppScope.of(context).calendarPreference,
+                    listenable: Listenable.merge([
+                      AppScope.of(context).calendarPreference,
+                      AppScope.of(context).navPreference,
+                    ]),
                     builder: (context, _) {
-                      final startMonday = AppScope.of(
-                        context,
-                      ).calendarPreference.startMonday;
-                      final showLunar = AppScope.of(
-                        context,
-                      ).calendarPreference.showLunar;
+                      final calendarPrefs =
+                          AppScope.of(context).calendarPreference;
+                      final showJobItems =
+                          AppScope.of(context).navPreference.showJobTab;
+                      final startMonday = calendarPrefs.startMonday;
+                      final showLunar = calendarPrefs.showLunar;
                       final viewPrefs =
                           AppScope.of(context).dayEventsViewPreference;
                       return Column(
@@ -582,12 +589,9 @@ class _CalendarScreenState extends State<CalendarScreen>
                                   hideCurrentYear: true,
                                 ),
                                 onTitlePressed: _onTitlePressed,
-                                showTodos: AppScope.of(context)
-                                    .calendarPreference
-                                    .showTodos,
-                                showCompanies: AppScope.of(context)
-                                    .calendarPreference
-                                    .showCompanies,
+                                showTodos: calendarPrefs.showTodos,
+                                showCompanies: calendarPrefs.showCompanies,
+                                showJobFilter: showJobItems,
                                 showDiary: _showDiary,
                                 showLedger: _showLedger,
                                 searchOpen: searchOpen,

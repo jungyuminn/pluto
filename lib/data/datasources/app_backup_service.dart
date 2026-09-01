@@ -173,6 +173,7 @@ class AppBackupService {
     scope.notificationPreference.hydrate();
     scope.homeViewPreference.hydrate();
     scope.widgetPreference.hydrate();
+    scope.navPreference.hydrate();
     scope.jobViewPreference.hydrate();
     scope.dayEventsViewPreference.hydrate();
     scope.backupPreference.hydrate();

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:job_planner/app_scope.dart';
 import 'package:job_planner/data/datasources/calendar_event_local_datasource.dart';
+import 'package:job_planner/data/datasources/nav_preference.dart';
 import 'package:job_planner/presentation/screens/calendar/calendar_screen.dart';
 import 'package:job_planner/presentation/screens/home/home_screen.dart';
 import 'package:job_planner/presentation/screens/job/job_screen.dart';
@@ -20,6 +21,8 @@ class ShellScreen extends StatefulWidget {
 class _ShellScreenState extends State<ShellScreen>
     with SingleTickerProviderStateMixin {
   static const _tabDuration = Duration(milliseconds: 340);
+  static const _calendarTab = 1;
+  static const _jobTab = 2;
 
   Widget _tabAt(int index) {
     switch (index) {
@@ -40,6 +43,7 @@ class _ShellScreenState extends State<ShellScreen>
   late Animation<double> _incomingOpacity;
   late Animation<double> _outgoingOpacity;
   TutorialController? _tutorial;
+  NavPreference? _nav;
   var _autoStarted = false;
 
   @override
@@ -69,6 +73,13 @@ class _ShellScreenState extends State<ShellScreen>
       _tutorial = next;
       _tutorial?.addListener(_onTutorial);
     }
+    final nav = AppScope.of(context).navPreference;
+    if (!identical(nav, _nav)) {
+      _nav?.removeListener(_onNav);
+      _nav = nav;
+      _nav!.addListener(_onNav);
+      _leaveJobTabIfHidden();
+    }
     if (_autoStarted || next == null) return;
     _autoStarted = true;
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -79,8 +90,20 @@ class _ShellScreenState extends State<ShellScreen>
   @override
   void dispose() {
     _tutorial?.removeListener(_onTutorial);
+    _nav?.removeListener(_onNav);
     _controller.dispose();
     super.dispose();
+  }
+
+  void _onNav() {
+    _leaveJobTabIfHidden();
+    if (mounted) setState(() {});
+  }
+
+  void _leaveJobTabIfHidden() {
+    if (_nav?.dailyMode == true && _index == _jobTab) {
+      _onTabChanged(_calendarTab);
+    }
   }
 
   void _onTutorial() {
@@ -109,6 +132,9 @@ class _ShellScreenState extends State<ShellScreen>
   }
 
   void _onTabChanged(int index) {
+    if (_nav?.dailyMode == true && index == _jobTab) {
+      index = _calendarTab;
+    }
     if (index == _index) return;
     final fromLeft = index < _index;
     final dx = fromLeft ? -0.18 : 0.18;
@@ -163,6 +189,7 @@ class _ShellScreenState extends State<ShellScreen>
             alignment: Alignment.bottomCenter,
             child: PillBottomNav(
               currentIndex: _index,
+              showJob: _nav?.showJobTab ?? true,
               onChanged: _onTabChanged,
             ),
           ),

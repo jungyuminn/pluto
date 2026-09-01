@@ -369,6 +369,7 @@ struct CompactGlanceEntry: TimelineEntry {
   let text: Int
   let items: [CompactGlanceItem]
   let more: Int
+  let fontScale: Double
 }
 
 struct CompactGlanceProvider: TimelineProvider {
@@ -389,7 +390,8 @@ struct CompactGlanceProvider: TimelineProvider {
         CompactGlanceItem(title: "자소서", color: 0xFFA78BFA),
         CompactGlanceItem(title: "면접 준비", color: 0xFF60A5FA),
       ],
-      more: 0
+      more: 0,
+      fontScale: 1
     )
   }
 
@@ -421,7 +423,8 @@ struct CompactGlanceProvider: TimelineProvider {
       accent: intValue(data, "\(prefix)_accent"),
       text: intValue(data, "widget_text"),
       items: items,
-      more: intValue(data, "\(prefix)_more")
+      more: intValue(data, "\(prefix)_more"),
+      fontScale: min(max(doubleValue(data, "widget_font_scale", 1), 0.7), 1.3)
     )
   }
 }
@@ -430,19 +433,20 @@ struct CompactGlanceView: View {
   var entry: CompactGlanceEntry
 
   var body: some View {
+    let scale = entry.fontScale
     VStack(alignment: .leading, spacing: 8) {
       HStack(alignment: .firstTextBaseline, spacing: 4) {
         Text(entry.title)
-          .font(.system(size: 15, weight: .bold))
+          .font(.system(size: 15 * scale, weight: .bold))
           .foregroundStyle(entry.text == 0 ? Color.primary : categoryColor(entry.text))
         Text(entry.dateLabel)
-          .font(.system(size: 12, weight: .regular))
+          .font(.system(size: 12 * scale, weight: .regular))
           .foregroundStyle(entry.text == 0 ? Color.primary : categoryColor(entry.text))
           .lineLimit(1)
       }
       if entry.items.isEmpty {
         Text(entry.empty)
-          .font(.system(size: 13, weight: .regular))
+          .font(.system(size: 13 * scale, weight: .regular))
           .foregroundStyle(.secondary)
       } else {
         VStack(alignment: .leading, spacing: 5) {
@@ -452,14 +456,14 @@ struct CompactGlanceView: View {
                 .fill(categoryColor(item.color))
                 .frame(width: 7, height: 7)
               Text(item.title)
-                .font(.system(size: 13, weight: .regular))
+                .font(.system(size: 13 * scale, weight: .regular))
                 .foregroundStyle(entry.text == 0 ? Color.primary : categoryColor(entry.text))
                 .lineLimit(1)
             }
           }
           if entry.more > 0 {
             Text("외 \(entry.more)개")
-              .font(.system(size: 11, weight: .regular))
+              .font(.system(size: 11 * scale, weight: .regular))
               .foregroundStyle(.secondary)
           }
         }
@@ -657,6 +661,14 @@ private func intValue(_ defaults: UserDefaults, _ key: String) -> Int {
   if let number = raw as? NSNumber { return number.intValue }
   if let text = raw as? String { return Int(text) ?? 0 }
   return 0
+}
+
+private func doubleValue(_ defaults: UserDefaults, _ key: String, _ fallback: Double) -> Double {
+  let raw = defaults.object(forKey: key)
+  if let number = raw as? Double { return number }
+  if let number = raw as? NSNumber { return number.doubleValue }
+  if let text = raw as? String { return Double(text) ?? fallback }
+  return fallback
 }
 
 private func nextMidnight() -> Date {

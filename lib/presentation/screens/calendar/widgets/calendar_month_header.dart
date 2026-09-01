@@ -24,6 +24,7 @@ class CalendarMonthHeader extends StatelessWidget {
     this.onTitlePressed,
     this.showTodos = true,
     this.showCompanies = true,
+    this.showJobFilter = true,
     this.showDiary = false,
     this.showLedger = false,
     this.onShowTodosChanged,
@@ -44,6 +45,7 @@ class CalendarMonthHeader extends StatelessWidget {
   final VoidCallback? onTitlePressed;
   final bool showTodos;
   final bool showCompanies;
+  final bool showJobFilter;
   final bool showDiary;
   final bool showLedger;
   final ValueChanged<bool>? onShowTodosChanged;
@@ -108,6 +110,7 @@ class CalendarMonthHeader extends StatelessWidget {
                 CalendarMonthMenuButton(
                   showTodos: showTodos,
                   showCompanies: showCompanies,
+                  showJobFilter: showJobFilter,
                   showDiary: showDiary,
                   showLedger: showLedger,
                   onShowTodosChanged: onShowTodosChanged,
@@ -231,6 +234,7 @@ class CalendarMonthMenuButton extends StatefulWidget {
     super.key,
     required this.showTodos,
     required this.showCompanies,
+    this.showJobFilter = true,
     required this.showDiary,
     this.onShowTodosChanged,
     this.onShowCompaniesChanged,
@@ -243,6 +247,7 @@ class CalendarMonthMenuButton extends StatefulWidget {
 
   final bool showTodos;
   final bool showCompanies;
+  final bool showJobFilter;
   final bool showDiary;
   final bool showLedger;
   final ValueChanged<bool>? onShowTodosChanged;
@@ -333,6 +338,7 @@ class _CalendarMonthMenuButtonState extends State<CalendarMonthMenuButton>
         key: const ValueKey('filter'),
         showTodos: widget.showTodos,
         showCompanies: widget.showCompanies,
+        showJobFilter: widget.showJobFilter,
         onShowTodosChanged: (value) {
           widget.onShowTodosChanged?.call(value);
           if (mounted) setState(() {});

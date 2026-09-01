@@ -216,6 +216,10 @@ class HomeScreenWidgetService {
       final isDark = _widgetIsDark;
       final skin = _widgetSkin;
       await HomeWidget.saveWidgetData<bool>('is_dark', isDark);
+      await HomeWidget.saveWidgetData<double>(
+        'widget_font_scale',
+        _widgetFontScale,
+      );
       if (Platform.isAndroid) {
         if (_followTheme) {
           await _renderSkinBackground(
@@ -971,7 +975,7 @@ class HomeScreenWidgetService {
       data: MediaQueryData(
         size: size,
         devicePixelRatio: pixelRatio,
-        textScaler: TextScaler.noScaling,
+        textScaler: TextScaler.linear(_widgetFontScale),
       ),
       child: Directionality(
         textDirection: TextDirection.ltr,
@@ -984,10 +988,10 @@ class HomeScreenWidgetService {
           ),
           child: FontScope(
             typeface: typeface,
-            todoScale: _font?.todoScale ?? 1,
-            labelScale: _font?.labelScale ?? 1,
-            calendarScale: _font?.calendarScale ?? 1,
-            calendarLabelScale: _font?.calendarLabelScale ?? 1,
+            todoScale: 1,
+            labelScale: 1,
+            calendarScale: 1,
+            calendarLabelScale: 1,
             child: TickerMode(
               enabled: false,
               child: child,
@@ -1001,6 +1005,8 @@ class HomeScreenWidgetService {
   bool get _followTheme => _widget?.followTheme ?? true;
 
   bool get _followFont => _widget?.followFont ?? true;
+
+  double get _widgetFontScale => _widget?.fontScale ?? 1;
 
   bool get _widgetIsDark => _theme?.isDark ?? false;
 

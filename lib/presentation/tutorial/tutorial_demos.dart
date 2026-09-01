@@ -1,11 +1,13 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:job_planner/app_scope.dart';
 import 'package:job_planner/core/constants/app_fonts.dart';
 import 'package:job_planner/core/constants/app_icons.dart';
 import 'package:job_planner/core/constants/app_strings.dart';
 import 'package:job_planner/core/theme/app_colors.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/calendar_event_label.dart';
+import 'package:job_planner/presentation/screens/shell/widgets/pill_bottom_nav.dart';
 import 'package:job_planner/presentation/tutorial/tutorial_controller.dart';
 import 'package:job_planner/presentation/widgets/themed_asset.dart';
 
@@ -16,15 +18,16 @@ class TutorialDemoView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final daily = AppScope.maybeOf(context)?.navPreference.dailyMode ?? false;
     return switch (demo) {
       TutorialDemo.none => const SizedBox.shrink(),
-      TutorialDemo.navTabs => const _NavDemo(),
+      TutorialDemo.navTabs => _NavDemo(dailyMode: daily),
       TutorialDemo.calendarTitle => const _TitleDemo(),
       TutorialDemo.calendarTap => const _TapDemo(),
       TutorialDemo.calendarRange => const _RangeDemo(),
       TutorialDemo.todoComplete => const _CompleteDemo(),
       TutorialDemo.todoMove => const _MoveDemo(),
-      TutorialDemo.calendarMenu => const _MenuDemo(),
+      TutorialDemo.calendarMenu => _MenuDemo(dailyMode: daily),
       TutorialDemo.homeSearch => const _SearchDemo(),
       TutorialDemo.homeSettings => const _SettingsDemo(),
       TutorialDemo.homeReorder => const _ReorderDemo(),
@@ -101,67 +104,36 @@ double _pulse(double t, double a, double b, double c) {
 }
 
 class _NavDemo extends StatelessWidget {
-  const _NavDemo();
+  const _NavDemo({this.dailyMode = false});
 
-  static const _tabWidth = 56.0;
+  final bool dailyMode;
 
   @override
   Widget build(BuildContext context) {
-    final colors = AppColors.of(context);
-    final font = AppFonts.of(context);
-    const labels = ['홈', '캘린더', '지원서'];
     return _DemoLoop(
       builder: (context, t) {
         final tap = _pulse(t, 0.28, 0.4, 0.86);
         final selected = t < 0.42 ? 1 : 0;
+        final showJob = dailyMode ? t < 0.50 : true;
+        final n = showJob ? 3 : 2;
         return Center(
           child: Stack(
             alignment: Alignment.center,
             children: [
-              DecoratedBox(
-                decoration: BoxDecoration(
-                  color: colors.card,
-                  borderRadius: BorderRadius.circular(999),
-                  border: Border.all(color: colors.border),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(4),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      for (var i = 0; i < 3; i++)
-                        AnimatedContainer(
-                          duration: const Duration(milliseconds: 220),
-                          curve: Curves.easeOutCubic,
-                          width: _tabWidth,
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                          decoration: BoxDecoration(
-                            color: selected == i
-                                ? colors.accent
-                                : Colors.transparent,
-                            borderRadius: BorderRadius.circular(999),
-                          ),
-                          child: Text(
-                            labels[i],
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontFamily: font,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w800,
-                              color: selected == i
-                                  ? Colors.white
-                                  : colors.muted,
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
+              PillBottomNav(
+                currentIndex: selected,
+                showJob: showJob,
+                tutorial: false,
+                embedded: true,
+                onChanged: (_) {},
               ),
               if (tap > 0)
                 Positioned.fill(
                   child: Align(
-                    alignment: Alignment((selected - 1) * 2 / 3, 0),
+                    alignment: Alignment(
+                      (selected - (n - 1) / 2) * (2 / n),
+                      0,
+                    ),
                     child: _Finger(pressed: tap),
                   ),
                 ),
@@ -702,7 +674,9 @@ class _SettingsDemo extends StatelessWidget {
 }
 
 class _MenuDemo extends StatelessWidget {
-  const _MenuDemo();
+  const _MenuDemo({this.dailyMode = false});
+
+  final bool dailyMode;
 
   @override
   Widget build(BuildContext context) {
@@ -802,7 +776,7 @@ class _MenuDemo extends StatelessWidget {
                                 isJob: true,
                               ),
                             },
-                            jobOpacity: companyOn,
+                            jobOpacity: dailyMode ? 0 : companyOn,
                           ),
                         ),
                         if (open > 0)
@@ -847,12 +821,13 @@ class _MenuDemo extends StatelessWidget {
                                                   trailing:
                                                       const _MiniSwitch(on: 1),
                                                 ),
-                                                _MenuLine(
-                                                  label: '지원서 보기',
-                                                  trailing: _MiniSwitch(
-                                                    on: companyOn,
+                                                if (!dailyMode)
+                                                  _MenuLine(
+                                                    label: '지원서 보기',
+                                                    trailing: _MiniSwitch(
+                                                      on: companyOn,
+                                                    ),
                                                   ),
-                                                ),
                                               ],
                                             )
                                           : Column(

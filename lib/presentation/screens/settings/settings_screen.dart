@@ -86,6 +86,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
   var _typeface = AppTypeface.pretendard;
   var _followWidgetTheme = true;
   var _followWidgetFont = true;
+  var _widgetFontScale = 1.0;
+  var _widgetFontSliderOpen = false;
+  var _dailyMode = false;
   var _todoSize = FontSizeLevel.medium;
   var _calendarSize = FontSizeLevel.medium;
   var _calendarLabelSize = FontSizeLevel.medium;
@@ -121,6 +124,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _typeface = scope.fontPreference.typeface;
     _followWidgetTheme = scope.widgetPreference.followTheme;
     _followWidgetFont = scope.widgetPreference.followFont;
+    _widgetFontScale = scope.widgetPreference.fontScale;
+    _dailyMode = scope.navPreference.dailyMode;
     _todoSize = scope.fontPreference.todoSize;
     _calendarSize = scope.fontPreference.calendarSize;
     _calendarLabelSize = scope.fontPreference.calendarLabelSize;
@@ -151,6 +156,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
       _typeface = scope.fontPreference.typeface;
       _followWidgetTheme = scope.widgetPreference.followTheme;
       _followWidgetFont = scope.widgetPreference.followFont;
+      _widgetFontScale = scope.widgetPreference.fontScale;
+      _dailyMode = scope.navPreference.dailyMode;
       _todoSize = scope.fontPreference.todoSize;
       _calendarSize = scope.fontPreference.calendarSize;
       _calendarLabelSize = scope.fontPreference.calendarLabelSize;
@@ -359,6 +366,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _setFollowWidgetFont(bool value) async {
     setState(() => _followWidgetFont = value);
     await AppScope.of(context).widgetPreference.setFollowFont(value);
+  }
+
+  Future<void> _setWidgetFontScale(double value) async {
+    setState(() => _widgetFontScale = value);
+    await AppScope.of(context).widgetPreference.setFontScale(value);
+  }
+
+  Future<void> _setDailyMode(bool value) async {
+    setState(() => _dailyMode = value);
+    await AppScope.of(context).navPreference.setDailyMode(value);
   }
 
   Future<void> _setShowLeftover(bool value) async {
@@ -801,6 +818,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           const SizedBox(height: 24),
           _SectionLabel(
+            AppStrings.settingsNavSection,
+            onHelp: () =>
+                showSettingsSectionHelp(context, SettingsHelpSection.nav),
+          ),
+          _SettingsCard(
+            children: [
+              _SettingsSwitchTile(
+                label: AppStrings.dailyMode,
+                value: _dailyMode,
+                onChanged: _setDailyMode,
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          _SectionLabel(
             AppStrings.settingsTodoSection,
             onHelp: () =>
                 showSettingsSectionHelp(context, SettingsHelpSection.todo),
@@ -962,6 +994,29 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 label: AppStrings.widgetFollowFont,
                 value: _followWidgetFont,
                 onChanged: _setFollowWidgetFont,
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _SettingsTile(
+                    label: AppStrings.widgetFontSize,
+                    chevron: true,
+                    expanded: _widgetFontSliderOpen,
+                    onPressed: () => setState(
+                      () => _widgetFontSliderOpen = !_widgetFontSliderOpen,
+                    ),
+                  ),
+                  _ExpandBelow(
+                    open: _widgetFontSliderOpen,
+                    child: Padding(
+                      padding: const EdgeInsets.only(bottom: 10),
+                      child: _SettingsSliderTile(
+                        value: _widgetFontScale,
+                        onChanged: _setWidgetFontScale,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -4255,6 +4310,73 @@ class _SectionLabel extends StatelessWidget {
   }
 }
 
+class _ExpandBelow extends StatefulWidget {
+  const _ExpandBelow({required this.open, required this.child});
+
+  final bool open;
+  final Widget child;
+
+  @override
+  State<_ExpandBelow> createState() => _ExpandBelowState();
+}
+
+class _ExpandBelowState extends State<_ExpandBelow>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final CurvedAnimation _fade;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 280),
+      reverseDuration: const Duration(milliseconds: 240),
+      value: widget.open ? 1 : 0,
+    );
+    _fade = CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeOutCubic,
+      reverseCurve: Curves.easeInCubic,
+    );
+  }
+
+  @override
+  void didUpdateWidget(covariant _ExpandBelow oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.open == widget.open) return;
+    if (widget.open) {
+      _controller.forward();
+    } else {
+      _controller.reverse();
+    }
+  }
+
+  @override
+  void dispose() {
+    _fade.dispose();
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRect(
+      child: SizeTransition(
+        sizeFactor: _fade,
+        axisAlignment: -1,
+        child: FadeTransition(
+          opacity: _fade,
+          child: IgnorePointer(
+            ignoring: !widget.open,
+            child: widget.child,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _SettingsCard extends StatelessWidget {
   const _SettingsCard({required this.children});
 
@@ -4592,6 +4714,7 @@ class _SettingsTile extends StatelessWidget {
     this.checked = false,
     this.value,
     this.chevron = false,
+    this.expanded,
     this.labelFontFamily,
     this.previewLabelFont = false,
   });
@@ -4600,6 +4723,7 @@ class _SettingsTile extends StatelessWidget {
   final bool checked;
   final String? value;
   final bool chevron;
+  final bool? expanded;
   final String? labelFontFamily;
   final bool previewLabelFont;
   final VoidCallback onPressed;
@@ -4670,10 +4794,15 @@ class _SettingsTile extends StatelessWidget {
               if (checked)
                 Icon(Icons.check_rounded, size: 22, color: colors.text),
               if (chevron)
-                Icon(
-                  Icons.chevron_right_rounded,
-                  size: 22,
-                  color: colors.muted,
+                AnimatedRotation(
+                  turns: expanded == true ? 0.25 : 0,
+                  duration: const Duration(milliseconds: 280),
+                  curve: Curves.easeOutCubic,
+                  child: Icon(
+                    Icons.chevron_right_rounded,
+                    size: 22,
+                    color: colors.muted,
+                  ),
                 ),
             ],
           ),

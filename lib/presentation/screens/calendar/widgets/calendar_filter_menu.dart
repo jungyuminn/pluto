@@ -74,6 +74,7 @@ class CalendarFilterMenu extends StatelessWidget {
     required this.showCompanies,
     required this.onShowTodosChanged,
     required this.onShowCompaniesChanged,
+    this.showJobFilter = true,
     this.ledgerMode = false,
     this.showLedgerTitle = true,
     this.showLedgerAmount = false,
@@ -88,6 +89,7 @@ class CalendarFilterMenu extends StatelessWidget {
 
   final bool showTodos;
   final bool showCompanies;
+  final bool showJobFilter;
   final ValueChanged<bool> onShowTodosChanged;
   final ValueChanged<bool> onShowCompaniesChanged;
   final bool ledgerMode;
@@ -152,11 +154,12 @@ class CalendarFilterMenu extends StatelessWidget {
                         checked: showTodos,
                         onChanged: onShowTodosChanged,
                       ),
-                      _FilterItem(
-                        label: AppStrings.calendarShowCompanies,
-                        checked: showCompanies,
-                        onChanged: onShowCompaniesChanged,
-                      ),
+                      if (showJobFilter)
+                        _FilterItem(
+                          label: AppStrings.calendarShowCompanies,
+                          checked: showCompanies,
+                          onChanged: onShowCompaniesChanged,
+                        ),
                     ],
             ),
           ),

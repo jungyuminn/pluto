@@ -185,9 +185,63 @@ class TutorialController extends ChangeNotifier {
   bool get active => _active;
   int get index => _index;
   bool get isFirst => _index <= 0;
-  bool get isLast => _index >= steps.length - 1;
-  TutorialStep get step => steps[_index];
+  bool get isLast => _index >= visibleSteps.length - 1;
+  TutorialStep get step => visibleSteps[_index];
+  int get stepCount => visibleSteps.length;
   bool get shouldAutoStart => _preference.shouldAutoStart;
+
+  var _hideJobTab = false;
+  bool get hideJobTab => _hideJobTab;
+
+  List<TutorialStep> get visibleSteps {
+    if (!_hideJobTab) return steps;
+    return [
+      for (final step in steps)
+        if (!_isJobOnly(step))
+          TutorialStep(
+            tab: step.tab == 2 ? 1 : step.tab,
+            badge: step.badge,
+            anchor: step.anchor,
+            title: step.title,
+            body: _dailyBody(step),
+            demo: step.demo,
+          ),
+    ];
+  }
+
+  static String _dailyBody(TutorialStep step) {
+    if (step.body == AppStrings.tutorialWelcomeBody) {
+      return AppStrings.tutorialWelcomeBodyDaily;
+    }
+    if (step.body == AppStrings.tutorialNavBarBody) {
+      return AppStrings.tutorialNavBarBodyDaily;
+    }
+    if (step.body == AppStrings.tutorialNavCalendarBody) {
+      return AppStrings.tutorialNavCalendarBodyDaily;
+    }
+    if (step.body == AppStrings.tutorialCalendarMenuBody) {
+      return AppStrings.tutorialCalendarMenuBodyDaily;
+    }
+    if (step.body == AppStrings.tutorialHomeSearchBody) {
+      return AppStrings.tutorialHomeSearchBodyDaily;
+    }
+    return step.body;
+  }
+
+  static bool _isJobOnly(TutorialStep step) {
+    return step.anchor == TutorialAnchorId.navJob ||
+        step.anchor == TutorialAnchorId.jobTools ||
+        step.anchor == TutorialAnchorId.jobAdd;
+  }
+
+  void setHideJobTab(bool value) {
+    if (_hideJobTab == value) return;
+    _hideJobTab = value;
+    if (_index >= visibleSteps.length) {
+      _index = (visibleSteps.length - 1).clamp(0, visibleSteps.length);
+    }
+    notifyListeners();
+  }
 
   static TutorialController of(BuildContext context) {
     final scope = context.dependOnInheritedWidgetOfExactType<TutorialScope>();

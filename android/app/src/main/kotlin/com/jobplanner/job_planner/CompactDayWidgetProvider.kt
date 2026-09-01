@@ -54,6 +54,7 @@ abstract class CompactDayWidgetProvider : HomeWidgetProvider() {
         val empty = stringOf(widgetData, "${kind}_empty", defaultEmpty)
         val count = intOf(widgetData, "${kind}_count", 0)
         val more = intOf(widgetData, "${kind}_more", 0)
+        val scale = floatOf(widgetData, "widget_font_scale", 1f).coerceIn(0.7f, 1.3f)
         val density = context.resources.displayMetrics.density
         val contentWidth = contentWidthPx(context, appWidgetManager, widgetId)
         val regular = WidgetLabel.typeface(stringOf(widgetData, "widget_font_regular", ""))
@@ -75,7 +76,7 @@ abstract class CompactDayWidgetProvider : HomeWidgetProvider() {
             val titleBitmap = WidgetLabel.draw(
                 title,
                 bold,
-                15f,
+                15f * scale,
                 textColor,
                 density,
                 contentWidth,
@@ -86,7 +87,7 @@ abstract class CompactDayWidgetProvider : HomeWidgetProvider() {
                 WidgetLabel.draw(
                     date,
                     regular,
-                    12f,
+                    12f * scale,
                     textColor,
                     density,
                     max(1, contentWidth - titleBitmap.width - titleGap),
@@ -94,7 +95,7 @@ abstract class CompactDayWidgetProvider : HomeWidgetProvider() {
             )
             setLabel(
                 R.id.widget_empty,
-                WidgetLabel.draw(empty, regular, 13f, mutedColor, density, contentWidth),
+                WidgetLabel.draw(empty, regular, 13f * scale, mutedColor, density, contentWidth),
             )
             setViewVisibility(R.id.widget_empty, if (count == 0) View.VISIBLE else View.GONE)
 
@@ -118,7 +119,7 @@ abstract class CompactDayWidgetProvider : HomeWidgetProvider() {
                     WidgetLabel.draw(
                         itemTitle,
                         regular,
-                        13f,
+                        13f * scale,
                         textColor,
                         density,
                         max(1, contentWidth - itemInset),
@@ -134,7 +135,7 @@ abstract class CompactDayWidgetProvider : HomeWidgetProvider() {
                     WidgetLabel.draw(
                         "외 ${more}개",
                         regular,
-                        11f,
+                        11f * scale,
                         mutedColor,
                         density,
                         contentWidth,
@@ -196,6 +197,22 @@ abstract class CompactDayWidgetProvider : HomeWidgetProvider() {
         setImageViewBitmap(id, bitmap)
         setInt(id, "setMaxWidth", bitmap.width)
         setInt(id, "setMaxHeight", bitmap.height)
+    }
+
+    private fun floatOf(prefs: SharedPreferences, key: String, fallback: Float): Float {
+        val value = prefs.all[key] ?: return fallback
+        if (value is Long && prefs.getBoolean("home_widget.double.$key", false)) {
+            val decoded = java.lang.Double.longBitsToDouble(value)
+            if (decoded.isFinite()) return decoded.toFloat()
+        }
+        return when (value) {
+            is Float -> value
+            is Double -> value.toFloat()
+            is Int -> value.toFloat()
+            is Long -> value.toFloat()
+            is String -> value.toFloatOrNull() ?: fallback
+            else -> fallback
+        }
     }
 
     private fun intOf(prefs: SharedPreferences, key: String, fallback: Int): Int {

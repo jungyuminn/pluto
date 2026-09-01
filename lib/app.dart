@@ -27,6 +27,7 @@ import 'package:job_planner/data/datasources/notification_preference.dart';
 import 'package:job_planner/data/datasources/theme_preference.dart';
 import 'package:job_planner/data/datasources/tutorial_preference.dart';
 import 'package:job_planner/data/datasources/widget_preference.dart';
+import 'package:job_planner/data/datasources/nav_preference.dart';
 import 'package:job_planner/data/repositories/calendar_event_memory_repository.dart';
 import 'package:job_planner/data/repositories/calendar_event_repository_impl.dart';
 import 'package:job_planner/data/repositories/diary_memory_repository.dart';
@@ -107,6 +108,7 @@ class JobPlannerApp extends StatelessWidget {
     this.notificationPreference,
     this.themePreference,
     this.widgetPreference,
+    this.navPreference,
     this.backupPreference,
   });
 
@@ -151,6 +153,7 @@ class JobPlannerApp extends StatelessWidget {
   final NotificationPreference? notificationPreference;
   final ThemePreference? themePreference;
   final WidgetPreference? widgetPreference;
+  final NavPreference? navPreference;
   final BackupPreference? backupPreference;
 
   @override
@@ -240,6 +243,7 @@ class JobPlannerApp extends StatelessWidget {
           notificationPreference ?? NotificationPreference(),
       themePreference: themePreference ?? ThemePreference(),
       widgetPreference: widgetPreference ?? WidgetPreference(),
+      navPreference: navPreference ?? NavPreference(),
       backupPreference: backupPreference ?? BackupPreference(),
       child: const _TutorialHost(
         child: _JobPlannerMaterialApp(),
@@ -297,6 +301,7 @@ class _AppBootstrapState extends State<_AppBootstrap> {
   NotificationPreference? _notificationPreference;
   ThemePreference? _themePreference;
   WidgetPreference? _widgetPreference;
+  NavPreference? _navPreference;
   BackupPreference? _backupPreference;
   SharedPreferences? _prefs;
 
@@ -342,6 +347,7 @@ class _AppBootstrapState extends State<_AppBootstrap> {
     final calendarPreference = CalendarPreference(prefs: prefs);
     final fontPreference = FontPreference(prefs: prefs);
     final widgetPreference = WidgetPreference(prefs: prefs);
+    final navPreference = NavPreference(prefs: prefs);
     await HomeScreenWidgetService.instance.init(
       events: eventDataSource,
       jobs: jobDataSource,
@@ -408,6 +414,7 @@ class _AppBootstrapState extends State<_AppBootstrap> {
       _notificationPreference = notificationPreference;
       _themePreference = themePreference;
       _widgetPreference = widgetPreference;
+      _navPreference = navPreference;
       _backupPreference = backupPreference;
       _prefs = prefs;
     });
@@ -478,6 +485,7 @@ class _AppBootstrapState extends State<_AppBootstrap> {
     final notificationPreference = _notificationPreference;
     final themePreference = _themePreference;
     final widgetPreference = _widgetPreference;
+    final navPreference = _navPreference;
     final backupPreference = _backupPreference;
 
     if (getApplications == null ||
@@ -521,6 +529,7 @@ class _AppBootstrapState extends State<_AppBootstrap> {
         notificationPreference == null ||
         themePreference == null ||
         widgetPreference == null ||
+        navPreference == null ||
         backupPreference == null) {
       return const MaterialApp(
         debugShowCheckedModeBanner: false,
@@ -577,6 +586,7 @@ class _AppBootstrapState extends State<_AppBootstrap> {
       notificationPreference: notificationPreference,
       themePreference: themePreference,
       widgetPreference: widgetPreference,
+      navPreference: navPreference,
       backupPreference: backupPreference,
       child: _TutorialHost(
         prefs: _prefs,
@@ -600,9 +610,26 @@ class _TutorialHostState extends State<_TutorialHost> {
   late final TutorialController _controller = TutorialController(
     TutorialPreference(prefs: widget.prefs),
   );
+  NavPreference? _nav;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final nav = AppScope.of(context).navPreference;
+    if (identical(nav, _nav)) return;
+    _nav?.removeListener(_syncNav);
+    _nav = nav;
+    _nav!.addListener(_syncNav);
+    _controller.setHideJobTab(nav.dailyMode);
+  }
+
+  void _syncNav() {
+    _controller.setHideJobTab(_nav?.dailyMode ?? false);
+  }
 
   @override
   void dispose() {
+    _nav?.removeListener(_syncNav);
     _controller.dispose();
     super.dispose();
   }

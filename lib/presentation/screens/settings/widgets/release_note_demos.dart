@@ -143,6 +143,10 @@ ReleaseDemo releaseDemoFor(String text, {required bool isFix}) {
   if (text.contains('업데이트 내용') || text.contains('릴리즈 노트')) {
     return ReleaseDemo.releaseNotes;
   }
+  if (text.contains('일상 모드') || text.contains('지원서 메뉴')) {
+    return ReleaseDemo.tabTransition;
+  }
+  if (text.contains('위젯 폰트')) return ReleaseDemo.fontSize;
   if (text.contains('테마·폰트') || text.contains('따라갈지')) {
     return ReleaseDemo.compactWidget;
   }

@@ -22,7 +22,7 @@ class AppStrings {
   static const importIosOnlyTitle = '아이폰에서 가져올 수 있어요';
   static const importIosOnlyBody = 'iOS 캘린더 가져오기는 아이폰에서 사용할 수 있어요';
   static const importPermissionTitle = '캘린더 권한이 필요해요';
-  static const importPermissionBody = '폰 캘린더에 있는 일정을 할 일로 가져오려면 권한이 필요해요';
+  static const importPermissionBody = '기본 캘린더에 있는 일정을 할 일로 가져오려면 권한이 필요해요';
   static const importPermissionSettings = '설정으로 이동';
   static const importCalendarsTitle = '가져올 캘린더';
   static const importCalendarsBody = '선택한 캘린더의 일정을 할 일로 가져와요';
@@ -96,12 +96,18 @@ class AppStrings {
   static const tutorialWelcomeTitle = '잡플래너에 오신 걸 환영해요';
   static const tutorialWelcomeBody =
       '할 일, 캘린더, 지원서를 한곳에서 관리해요. 화면을 따라가며 어디를 누르면 되는지 알려줄게요';
+  static const tutorialWelcomeBodyDaily =
+      '할 일과 캘린더를 한곳에서 관리해요. 화면을 따라가며 어디를 누르면 되는지 알려줄게요';
   static const tutorialNavBarTitle = '아래 탭으로 이동';
   static const tutorialNavBarBody =
       '왼쪽이 홈, 가운데가 캘린더, 오른쪽이 지원서에요. 하단 버튼을 눌러 화면을 이동해요';
+  static const tutorialNavBarBodyDaily =
+      '왼쪽이 홈, 오른쪽이 캘린더에요. 하단 버튼을 눌러 화면을 이동해요';
   static const tutorialNavCalendarTitle = '캘린더 화면';
   static const tutorialNavCalendarBody =
       '지금 있는 화면이 캘린더예요. 할 일과 지원서 일정이 날짜에 라벨로 보여요';
+  static const tutorialNavCalendarBodyDaily =
+      '지금 있는 화면이 캘린더예요. 할 일이 날짜에 라벨로 보여요';
   static const tutorialCalendarTitleTitle = '달·연도 고르기';
   static const tutorialCalendarTitleBody =
       '월 이름을 누르면 달을 고르고, 한 번 더 누르면 연도를 고를 수 있어요';
@@ -120,6 +126,8 @@ class AppStrings {
   static const tutorialCalendarMenuTitle = '표시 바꾸기';
   static const tutorialCalendarMenuBody =
       '오른쪽 ··· 을 누르면 메뉴가 열려요. 할 일·지원서만 보거나 일기·가계부로 바꿀 수 있어요. 바꾼 뒤 날짜를 누르면 그날 기록을 보거나 추가해요';
+  static const tutorialCalendarMenuBodyDaily =
+      '오른쪽 ··· 을 누르면 메뉴가 열려요. 할 일만 보거나 일기·가계부로 바꿀 수 있어요. 바꾼 뒤 날짜를 누르면 그날 기록을 보거나 추가해요';
   static const tutorialNavHomeTitle = '홈 화면';
   static const tutorialNavHomeBody =
       '오늘·내일 할 일, 챌린지, 지난주·지난달 요약이 모여 있어요';
@@ -128,6 +136,8 @@ class AppStrings {
   static const tutorialHomeSearchTitle = '전체 일정 찾기';
   static const tutorialHomeSearchBody =
       '돋보기를 누르면 할 일과 지원서를 한곳에서 찾아요. 기간을 정하거나 할 일·지원서만 볼 수 있어요';
+  static const tutorialHomeSearchBodyDaily =
+      '돋보기를 누르면 할 일을 한곳에서 찾아요. 기간을 정하거나 할 일만 볼 수 있어요';
   static const tutorialHomeSettingsTitle = '설정에서 바꾸기';
   static const tutorialHomeSettingsBody =
       '설정을 누르면 테마, 글꼴, 알림 등 여러 항목을 설정할 수 있어요';
@@ -198,6 +208,10 @@ class AppStrings {
   static const homeShowWeeklyStats = '지난주 요약';
   static const settingsTodoSection = '할 일 설정';
   static const settingsAppearanceSection = '화면 모드';
+  static const settingsNavSection = '하단 메뉴 설정';
+  static const dailyMode = '일상 모드';
+  static const settingsNavHelp =
+      '일상 용도로 캘린더를 사용할 때 켜요. 홈, 캘린더 메뉴만 남겨요';
   static const settingsThemeSection = '테마 설정';
   static const themeKind = '테마 종류';
   static const themeGroupPattern = '패턴';
@@ -245,8 +259,9 @@ class AppStrings {
   static const settingsWidgetSection = '위젯 설정';
   static const widgetFollowTheme = '테마 동기화';
   static const widgetFollowFont = '폰트 동기화';
+  static const widgetFontSize = '위젯 폰트 크기';
   static const settingsWidgetHelp =
-      '위젯이 앱의 테마나 폰트를 따라가요.';
+      '위젯이 앱의 테마나 폰트를 따라가게 하거나, 위젯만 글자 크기를 바꿀 수 있어요.';
   static const fontFamily = '폰트 종류';
   static const fontTodoSize = '할 일·지원서 크기';
   static const fontCalendarSize = '캘린더 크기';

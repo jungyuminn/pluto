@@ -5,17 +5,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:job_planner/core/constants/app_fonts.dart';
-import 'package:job_planner/core/constants/app_strings.dart';
-import 'package:job_planner/core/home_widget/compact_day_card.dart';
-import 'package:job_planner/core/home_widget/month_calendar_card.dart';
-import 'package:job_planner/core/home_widget/today_widget_card.dart';
-import 'package:job_planner/core/home_widget/week_timetable_card.dart';
-import 'package:job_planner/core/theme/app_colors.dart';
-import 'package:job_planner/core/theme/app_theme.dart';
-import 'package:job_planner/data/datasources/font_preference.dart';
-import 'package:job_planner/domain/entities/calendar_event.dart';
-import 'package:job_planner/presentation/screens/calendar/calendar_day_events.dart';
+import 'package:pluto/core/constants/app_fonts.dart';
+import 'package:pluto/core/constants/app_strings.dart';
+import 'package:pluto/core/home_widget/compact_day_card.dart';
+import 'package:pluto/core/home_widget/month_calendar_card.dart';
+import 'package:pluto/core/home_widget/today_widget_card.dart';
+import 'package:pluto/core/home_widget/week_timetable_card.dart';
+import 'package:pluto/core/theme/app_colors.dart';
+import 'package:pluto/core/theme/app_theme.dart';
+import 'package:pluto/data/datasources/font_preference.dart';
+import 'package:pluto/domain/entities/calendar_event.dart';
+import 'package:pluto/presentation/screens/calendar/calendar_day_events.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

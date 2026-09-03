@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:job_planner/core/theme/app_colors.dart';
-import 'package:job_planner/presentation/screens/add_company/widgets/apply_status_menu_item.dart';
+import 'package:pluto/core/theme/app_colors.dart';
+import 'package:pluto/presentation/screens/add_company/widgets/apply_status_menu_item.dart';
 
 class ApplyStatusDropdown extends StatelessWidget {
   const ApplyStatusDropdown({

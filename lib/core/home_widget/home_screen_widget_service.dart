@@ -5,30 +5,30 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:home_widget/home_widget.dart';
-import 'package:job_planner/core/constants/app_fonts.dart';
-import 'package:job_planner/core/constants/app_icons.dart';
-import 'package:job_planner/core/constants/app_strings.dart';
-import 'package:job_planner/core/home_widget/compact_day_card.dart';
-import 'package:job_planner/core/home_widget/month_calendar_card.dart';
-import 'package:job_planner/core/home_widget/today_widget_card.dart';
-import 'package:job_planner/core/home_widget/week_timetable_card.dart';
-import 'package:job_planner/core/theme/app_colors.dart';
-import 'package:job_planner/core/theme/app_skin_background.dart';
-import 'package:job_planner/core/theme/app_theme.dart';
-import 'package:job_planner/data/datasources/calendar_event_local_datasource.dart';
-import 'package:job_planner/data/datasources/calendar_preference.dart';
-import 'package:job_planner/data/datasources/day_events_view_preference.dart';
-import 'package:job_planner/data/datasources/event_category_local_datasource.dart';
-import 'package:job_planner/data/datasources/font_preference.dart';
-import 'package:job_planner/data/datasources/home_view_preference.dart';
-import 'package:job_planner/data/datasources/job_application_local_datasource.dart';
-import 'package:job_planner/data/datasources/nav_preference.dart';
-import 'package:job_planner/data/datasources/theme_preference.dart';
-import 'package:job_planner/data/datasources/widget_preference.dart';
-import 'package:job_planner/domain/entities/calendar_event.dart';
-import 'package:job_planner/domain/entities/event_category.dart';
-import 'package:job_planner/domain/entities/job_application.dart';
-import 'package:job_planner/presentation/screens/calendar/calendar_day_events.dart';
+import 'package:pluto/core/constants/app_fonts.dart';
+import 'package:pluto/core/constants/app_icons.dart';
+import 'package:pluto/core/constants/app_strings.dart';
+import 'package:pluto/core/home_widget/compact_day_card.dart';
+import 'package:pluto/core/home_widget/month_calendar_card.dart';
+import 'package:pluto/core/home_widget/today_widget_card.dart';
+import 'package:pluto/core/home_widget/week_timetable_card.dart';
+import 'package:pluto/core/theme/app_colors.dart';
+import 'package:pluto/core/theme/app_skin_background.dart';
+import 'package:pluto/core/theme/app_theme.dart';
+import 'package:pluto/data/datasources/calendar_event_local_datasource.dart';
+import 'package:pluto/data/datasources/calendar_preference.dart';
+import 'package:pluto/data/datasources/day_events_view_preference.dart';
+import 'package:pluto/data/datasources/event_category_local_datasource.dart';
+import 'package:pluto/data/datasources/font_preference.dart';
+import 'package:pluto/data/datasources/home_view_preference.dart';
+import 'package:pluto/data/datasources/job_application_local_datasource.dart';
+import 'package:pluto/data/datasources/nav_preference.dart';
+import 'package:pluto/data/datasources/theme_preference.dart';
+import 'package:pluto/data/datasources/widget_preference.dart';
+import 'package:pluto/domain/entities/calendar_event.dart';
+import 'package:pluto/domain/entities/event_category.dart';
+import 'package:pluto/domain/entities/job_application.dart';
+import 'package:pluto/presentation/screens/calendar/calendar_day_events.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -55,7 +55,7 @@ class HomeScreenWidgetService {
   ];
   static const completeHost = 'complete';
   static const refreshHost = 'refresh';
-  static const appGroupId = 'group.com.jobplanner.jobPlanner';
+  static const appGroupId = 'group.com.pluto.planner';
   static const skinBackgroundKey = 'widget_skin_bg';
   static const skinBackgroundSize = Size(412, 300);
   static const _iosSmallSize = Size(170, 170);
@@ -1091,7 +1091,7 @@ extension on _WidgetKind {
       };
 
   String get qualifiedAndroidName =>
-      'com.jobplanner.job_planner.$androidName';
+      'com.pluto.app.$androidName';
 
   String get iOSName => switch (this) {
         _WidgetKind.today => 'TodayWidget',

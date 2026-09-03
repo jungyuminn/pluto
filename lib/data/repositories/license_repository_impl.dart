@@ -1,7 +1,7 @@
-import 'package:job_planner/data/datasources/cover_letter_storage.dart';
-import 'package:job_planner/data/datasources/license_local_datasource.dart';
-import 'package:job_planner/domain/entities/license.dart';
-import 'package:job_planner/domain/repositories/license_repository.dart';
+import 'package:pluto/data/datasources/cover_letter_storage.dart';
+import 'package:pluto/data/datasources/license_local_datasource.dart';
+import 'package:pluto/domain/entities/license.dart';
+import 'package:pluto/domain/repositories/license_repository.dart';
 
 class LicenseRepositoryImpl implements LicenseRepository {
   const LicenseRepositoryImpl(

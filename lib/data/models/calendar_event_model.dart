@@ -1,4 +1,4 @@
-import 'package:job_planner/domain/entities/calendar_event.dart';
+import 'package:pluto/domain/entities/calendar_event.dart';
 
 class CalendarEventModel {
   CalendarEventModel._();

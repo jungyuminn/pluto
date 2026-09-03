@@ -1,4 +1,4 @@
-name: job_planner
+name: pluto
 description: "할 일과 일정을 한곳에서 보는 앱 플루토"
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.

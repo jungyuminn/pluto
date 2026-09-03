@@ -2,16 +2,16 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:job_planner/app_scope.dart';
-import 'package:job_planner/core/constants/app_fonts.dart';
-import 'package:job_planner/core/constants/app_strings.dart';
-import 'package:job_planner/core/theme/app_colors.dart';
-import 'package:job_planner/core/utils/press_bounce.dart';
-import 'package:job_planner/data/datasources/app_backup_service.dart';
-import 'package:job_planner/domain/entities/event_category.dart';
-import 'package:job_planner/presentation/screens/calendar/widgets/add_category_sheet.dart';
-import 'package:job_planner/presentation/screens/calendar/widgets/delete_category_dialog.dart';
-import 'package:job_planner/presentation/screens/calendar/widgets/delete_event_dialog.dart';
+import 'package:pluto/app_scope.dart';
+import 'package:pluto/core/constants/app_fonts.dart';
+import 'package:pluto/core/constants/app_strings.dart';
+import 'package:pluto/core/theme/app_colors.dart';
+import 'package:pluto/core/utils/press_bounce.dart';
+import 'package:pluto/data/datasources/app_backup_service.dart';
+import 'package:pluto/domain/entities/event_category.dart';
+import 'package:pluto/presentation/screens/calendar/widgets/add_category_sheet.dart';
+import 'package:pluto/presentation/screens/calendar/widgets/delete_category_dialog.dart';
+import 'package:pluto/presentation/screens/calendar/widgets/delete_event_dialog.dart';
 
 Future<EventCategory?> showCategoryPickerSheet(
   BuildContext context, {

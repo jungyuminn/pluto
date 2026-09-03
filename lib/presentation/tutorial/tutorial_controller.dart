@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:job_planner/core/constants/app_strings.dart';
-import 'package:job_planner/data/datasources/tutorial_preference.dart';
-import 'package:job_planner/presentation/tutorial/tutorial_anchor.dart';
+import 'package:pluto/core/constants/app_strings.dart';
+import 'package:pluto/data/datasources/tutorial_preference.dart';
+import 'package:pluto/presentation/tutorial/tutorial_anchor.dart';
 
 class TutorialStep {
   const TutorialStep({

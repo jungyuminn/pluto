@@ -1,4 +1,4 @@
-import 'package:job_planner/domain/repositories/event_category_repository.dart';
+import 'package:pluto/domain/repositories/event_category_repository.dart';
 
 class DeleteEventCategory {
   const DeleteEventCategory(this._repository);

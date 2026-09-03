@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:job_planner/data/datasources/device_calendar_mapper.dart';
-import 'package:job_planner/domain/entities/calendar_event.dart';
-import 'package:job_planner/domain/entities/event_category.dart';
+import 'package:pluto/data/datasources/device_calendar_mapper.dart';
+import 'package:pluto/domain/entities/calendar_event.dart';
+import 'package:pluto/domain/entities/event_category.dart';
 
 void main() {
   final category = EventCategory.presets.first;

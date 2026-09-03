@@ -1,6 +1,6 @@
 import 'package:flutter/services.dart';
-import 'package:job_planner/core/calendar/calendar_years.dart';
-import 'package:job_planner/data/datasources/device_calendar_mapper.dart';
+import 'package:pluto/core/calendar/calendar_years.dart';
+import 'package:pluto/data/datasources/device_calendar_mapper.dart';
 
 enum DeviceCalendarPermission {
   granted,

@@ -5,7 +5,7 @@ import UniformTypeIdentifiers
 
 final class ICloudBackupPlugin: NSObject, UIDocumentPickerDelegate {
   static let channelName = "job_planner/icloud_backup"
-  static let containerId = "iCloud.com.jobplanner.jobPlanner"
+  static let containerId = "iCloud.com.pluto.planner"
   static let backupPrefixes = ["플루토_백업_", "잡플래너_백업_"]
 
   private let queue = DispatchQueue(label: "job_planner.icloud_backup")

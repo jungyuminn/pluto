@@ -1,16 +1,16 @@
 import 'dart:convert';
 
-import 'package:job_planner/data/datasources/calendar_event_local_datasource.dart';
-import 'package:job_planner/data/datasources/day_emoji_store.dart';
-import 'package:job_planner/data/datasources/diary_local_datasource.dart';
-import 'package:job_planner/data/datasources/event_category_local_datasource.dart';
-import 'package:job_planner/data/datasources/job_application_local_datasource.dart';
-import 'package:job_planner/data/datasources/ledger_local_datasource.dart';
-import 'package:job_planner/data/datasources/license_local_datasource.dart';
-import 'package:job_planner/data/datasources/long_goal_local_datasource.dart';
-import 'package:job_planner/data/datasources/theme_preference.dart';
-import 'package:job_planner/data/datasources/wordmark_preference.dart';
-import 'package:job_planner/domain/entities/event_category.dart';
+import 'package:pluto/data/datasources/calendar_event_local_datasource.dart';
+import 'package:pluto/data/datasources/day_emoji_store.dart';
+import 'package:pluto/data/datasources/diary_local_datasource.dart';
+import 'package:pluto/data/datasources/event_category_local_datasource.dart';
+import 'package:pluto/data/datasources/job_application_local_datasource.dart';
+import 'package:pluto/data/datasources/ledger_local_datasource.dart';
+import 'package:pluto/data/datasources/license_local_datasource.dart';
+import 'package:pluto/data/datasources/long_goal_local_datasource.dart';
+import 'package:pluto/data/datasources/theme_preference.dart';
+import 'package:pluto/data/datasources/wordmark_preference.dart';
+import 'package:pluto/domain/entities/event_category.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class CloudSyncSnapshot {

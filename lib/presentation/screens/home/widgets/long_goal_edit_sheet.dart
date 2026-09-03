@@ -2,23 +2,23 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:job_planner/app_scope.dart';
-import 'package:job_planner/core/constants/app_fonts.dart';
-import 'package:job_planner/core/constants/app_icons.dart';
-import 'package:job_planner/core/constants/app_strings.dart';
-import 'package:job_planner/core/theme/app_colors.dart';
-import 'package:job_planner/core/utils/plain_text_editing_controller.dart';
-import 'package:job_planner/core/utils/press_bounce.dart';
-import 'package:job_planner/domain/entities/event_category.dart';
-import 'package:job_planner/domain/entities/long_goal.dart';
-import 'package:job_planner/presentation/screens/add_company/widgets/missing_fields_dialog.dart';
-import 'package:job_planner/presentation/screens/add_company/widgets/save_company_button.dart';
-import 'package:job_planner/presentation/screens/calendar/widgets/category_picker_sheet.dart';
-import 'package:job_planner/presentation/screens/calendar/widgets/delete_event_dialog.dart';
-import 'package:job_planner/presentation/screens/calendar/widgets/event_action_icon.dart';
-import 'package:job_planner/presentation/screens/calendar/widgets/event_category_chip.dart';
-import 'package:job_planner/presentation/screens/calendar/widgets/event_memo_field.dart';
-import 'package:job_planner/presentation/widgets/sliding_kind_bar.dart';
+import 'package:pluto/app_scope.dart';
+import 'package:pluto/core/constants/app_fonts.dart';
+import 'package:pluto/core/constants/app_icons.dart';
+import 'package:pluto/core/constants/app_strings.dart';
+import 'package:pluto/core/theme/app_colors.dart';
+import 'package:pluto/core/utils/plain_text_editing_controller.dart';
+import 'package:pluto/core/utils/press_bounce.dart';
+import 'package:pluto/domain/entities/event_category.dart';
+import 'package:pluto/domain/entities/long_goal.dart';
+import 'package:pluto/presentation/screens/add_company/widgets/missing_fields_dialog.dart';
+import 'package:pluto/presentation/screens/add_company/widgets/save_company_button.dart';
+import 'package:pluto/presentation/screens/calendar/widgets/category_picker_sheet.dart';
+import 'package:pluto/presentation/screens/calendar/widgets/delete_event_dialog.dart';
+import 'package:pluto/presentation/screens/calendar/widgets/event_action_icon.dart';
+import 'package:pluto/presentation/screens/calendar/widgets/event_category_chip.dart';
+import 'package:pluto/presentation/screens/calendar/widgets/event_memo_field.dart';
+import 'package:pluto/presentation/widgets/sliding_kind_bar.dart';
 
 Future<bool> showLongGoalEditSheet(
   BuildContext context, {

@@ -8,9 +8,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
-import 'package:job_planner/core/constants/oauth_config.dart';
-import 'package:job_planner/data/datasources/kakao_web_auth.dart';
-import 'package:job_planner/firebase_options.dart';
+import 'package:pluto/core/constants/oauth_config.dart';
+import 'package:pluto/data/datasources/kakao_web_auth.dart';
+import 'package:pluto/firebase_options.dart';
 import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart' as kakao;
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 

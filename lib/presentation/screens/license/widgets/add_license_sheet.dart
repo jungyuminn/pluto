@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:job_planner/domain/entities/license.dart';
-import 'package:job_planner/presentation/screens/license/widgets/add_license_form.dart';
+import 'package:pluto/domain/entities/license.dart';
+import 'package:pluto/presentation/screens/license/widgets/add_license_form.dart';
 
 Future<bool> showAddLicenseSheet(
   BuildContext context, {

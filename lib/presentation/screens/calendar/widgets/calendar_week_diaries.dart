@@ -1,14 +1,14 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:job_planner/core/calendar/month_grid.dart';
-import 'package:job_planner/core/constants/app_strings.dart';
-import 'package:job_planner/core/layout/pc_layout.dart';
-import 'package:job_planner/core/utils/local_file.dart';
-import 'package:job_planner/domain/entities/diary_entry.dart';
-import 'package:job_planner/presentation/screens/calendar/widgets/calendar_day_cell.dart';
-import 'package:job_planner/presentation/screens/calendar/widgets/calendar_event_label.dart';
-import 'package:job_planner/presentation/widgets/local_file_image.dart';
+import 'package:pluto/core/calendar/month_grid.dart';
+import 'package:pluto/core/constants/app_strings.dart';
+import 'package:pluto/core/layout/pc_layout.dart';
+import 'package:pluto/core/utils/local_file.dart';
+import 'package:pluto/domain/entities/diary_entry.dart';
+import 'package:pluto/presentation/screens/calendar/widgets/calendar_day_cell.dart';
+import 'package:pluto/presentation/screens/calendar/widgets/calendar_event_label.dart';
+import 'package:pluto/presentation/widgets/local_file_image.dart';
 
 class CalendarWeekDiaries extends StatefulWidget {
   const CalendarWeekDiaries({

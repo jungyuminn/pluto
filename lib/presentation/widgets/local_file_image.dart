@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:job_planner/data/datasources/synced_file_store.dart';
+import 'package:pluto/data/datasources/synced_file_store.dart';
 
 class LocalFileImage extends StatelessWidget {
   const LocalFileImage(

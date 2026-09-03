@@ -1,7 +1,7 @@
-import 'package:job_planner/core/calendar/calendar_years.dart';
-import 'package:job_planner/core/calendar/korean_holidays.dart';
-import 'package:job_planner/domain/entities/calendar_event.dart';
-import 'package:job_planner/domain/entities/event_category.dart';
+import 'package:pluto/core/calendar/calendar_years.dart';
+import 'package:pluto/core/calendar/korean_holidays.dart';
+import 'package:pluto/domain/entities/calendar_event.dart';
+import 'package:pluto/domain/entities/event_category.dart';
 
 class DeviceCalendarInfo {
   const DeviceCalendarInfo({

@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:job_planner/app_scope.dart';
-import 'package:job_planner/core/constants/app_fonts.dart';
-import 'package:job_planner/core/constants/app_strings.dart';
-import 'package:job_planner/core/theme/app_colors.dart';
-import 'package:job_planner/core/utils/plain_text_editing_controller.dart';
-import 'package:job_planner/core/utils/press_bounce.dart';
-import 'package:job_planner/data/datasources/long_goal_local_datasource.dart';
-import 'package:job_planner/domain/entities/long_goal.dart';
-import 'package:job_planner/presentation/screens/add_company/widgets/save_company_button.dart';
-import 'package:job_planner/presentation/screens/home/widgets/long_goal_edit_sheet.dart';
+import 'package:pluto/app_scope.dart';
+import 'package:pluto/core/constants/app_fonts.dart';
+import 'package:pluto/core/constants/app_strings.dart';
+import 'package:pluto/core/theme/app_colors.dart';
+import 'package:pluto/core/utils/plain_text_editing_controller.dart';
+import 'package:pluto/core/utils/press_bounce.dart';
+import 'package:pluto/data/datasources/long_goal_local_datasource.dart';
+import 'package:pluto/domain/entities/long_goal.dart';
+import 'package:pluto/presentation/screens/add_company/widgets/save_company_button.dart';
+import 'package:pluto/presentation/screens/home/widgets/long_goal_edit_sheet.dart';
 
 Future<bool> showLongGoalLogSheet(
   BuildContext context, {

@@ -1,4 +1,4 @@
-import 'package:job_planner/domain/entities/job_application.dart';
+import 'package:pluto/domain/entities/job_application.dart';
 
 abstract class JobApplicationRepository {
   Future<List<JobApplication>> getAll();

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:job_planner/core/constants/app_fonts.dart';
-import 'package:job_planner/core/theme/app_colors.dart';
+import 'package:pluto/core/constants/app_fonts.dart';
+import 'package:pluto/core/theme/app_colors.dart';
 
 class ApplyStatusChip extends StatelessWidget {
   const ApplyStatusChip({super.key, required this.label});

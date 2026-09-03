@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:job_planner/domain/entities/job_application.dart';
-import 'package:job_planner/presentation/screens/add_company/widgets/add_company_form.dart';
+import 'package:pluto/domain/entities/job_application.dart';
+import 'package:pluto/presentation/screens/add_company/widgets/add_company_form.dart';
 
 Future<bool> showAddCompanySheet(
   BuildContext context, {

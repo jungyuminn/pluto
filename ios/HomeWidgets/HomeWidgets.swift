@@ -2,7 +2,7 @@ import SwiftUI
 import WidgetKit
 
 enum WidgetGroup {
-  static let id = "group.com.jobplanner.jobPlanner"
+  static let id = "group.com.pluto.planner"
   static var defaults: UserDefaults { UserDefaults(suiteName: id) ?? .standard }
 }
 

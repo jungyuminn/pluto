@@ -4,11 +4,11 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:home_widget/home_widget.dart';
-import 'package:job_planner/app.dart';
-import 'package:job_planner/core/constants/oauth_config.dart';
-import 'package:job_planner/core/home_widget/home_screen_widget_service.dart';
-import 'package:job_planner/data/datasources/kakao_web_auth.dart';
-import 'package:job_planner/firebase_options.dart';
+import 'package:pluto/app.dart';
+import 'package:pluto/core/constants/oauth_config.dart';
+import 'package:pluto/core/home_widget/home_screen_widget_service.dart';
+import 'package:pluto/data/datasources/kakao_web_auth.dart';
+import 'package:pluto/firebase_options.dart';
 import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart';
 
 Future<void> main() async {

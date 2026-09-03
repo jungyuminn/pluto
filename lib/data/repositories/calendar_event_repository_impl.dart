@@ -1,6 +1,6 @@
-import 'package:job_planner/data/datasources/calendar_event_local_datasource.dart';
-import 'package:job_planner/domain/entities/calendar_event.dart';
-import 'package:job_planner/domain/repositories/calendar_event_repository.dart';
+import 'package:pluto/data/datasources/calendar_event_local_datasource.dart';
+import 'package:pluto/domain/entities/calendar_event.dart';
+import 'package:pluto/domain/repositories/calendar_event_repository.dart';
 
 class CalendarEventRepositoryImpl implements CalendarEventRepository {
   const CalendarEventRepositoryImpl(this._localDataSource);

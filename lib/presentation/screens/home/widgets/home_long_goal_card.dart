@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:job_planner/app_scope.dart';
-import 'package:job_planner/core/constants/app_fonts.dart';
-import 'package:job_planner/core/constants/app_strings.dart';
-import 'package:job_planner/core/layout/pc_layout.dart';
-import 'package:job_planner/core/theme/app_colors.dart';
-import 'package:job_planner/core/utils/press_bounce.dart';
-import 'package:job_planner/core/utils/swipe_to_delete.dart';
-import 'package:job_planner/domain/entities/event_category.dart';
-import 'package:job_planner/domain/entities/long_goal.dart';
-import 'package:job_planner/presentation/screens/calendar/widgets/add_event_button.dart';
-import 'package:job_planner/presentation/screens/calendar/widgets/day_event_label.dart';
-import 'package:job_planner/presentation/screens/calendar/widgets/delete_event_dialog.dart';
-import 'package:job_planner/presentation/screens/home/widgets/long_goal_edit_sheet.dart';
-import 'package:job_planner/presentation/screens/home/widgets/long_goal_log_sheet.dart';
+import 'package:pluto/app_scope.dart';
+import 'package:pluto/core/constants/app_fonts.dart';
+import 'package:pluto/core/constants/app_strings.dart';
+import 'package:pluto/core/layout/pc_layout.dart';
+import 'package:pluto/core/theme/app_colors.dart';
+import 'package:pluto/core/utils/press_bounce.dart';
+import 'package:pluto/core/utils/swipe_to_delete.dart';
+import 'package:pluto/domain/entities/event_category.dart';
+import 'package:pluto/domain/entities/long_goal.dart';
+import 'package:pluto/presentation/screens/calendar/widgets/add_event_button.dart';
+import 'package:pluto/presentation/screens/calendar/widgets/day_event_label.dart';
+import 'package:pluto/presentation/screens/calendar/widgets/delete_event_dialog.dart';
+import 'package:pluto/presentation/screens/home/widgets/long_goal_edit_sheet.dart';
+import 'package:pluto/presentation/screens/home/widgets/long_goal_log_sheet.dart';
 
 class HomeLongGoalCard extends StatefulWidget {
   const HomeLongGoalCard({

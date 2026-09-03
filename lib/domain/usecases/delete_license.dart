@@ -1,4 +1,4 @@
-import 'package:job_planner/domain/repositories/license_repository.dart';
+import 'package:pluto/domain/repositories/license_repository.dart';
 
 class DeleteLicense {
   const DeleteLicense(this._repository);

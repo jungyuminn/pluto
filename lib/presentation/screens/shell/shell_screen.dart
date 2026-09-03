@@ -1,16 +1,16 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:job_planner/app_scope.dart';
-import 'package:job_planner/data/datasources/calendar_event_local_datasource.dart';
-import 'package:job_planner/data/datasources/nav_preference.dart';
-import 'package:job_planner/presentation/screens/calendar/calendar_screen.dart';
-import 'package:job_planner/presentation/screens/home/home_screen.dart';
-import 'package:job_planner/presentation/screens/job/job_screen.dart';
-import 'package:job_planner/presentation/screens/stats/stats_screen.dart';
-import 'package:job_planner/presentation/screens/shell/widgets/pill_bottom_nav.dart';
-import 'package:job_planner/presentation/tutorial/tutorial_controller.dart';
-import 'package:job_planner/presentation/tutorial/tutorial_overlay.dart';
+import 'package:pluto/app_scope.dart';
+import 'package:pluto/data/datasources/calendar_event_local_datasource.dart';
+import 'package:pluto/data/datasources/nav_preference.dart';
+import 'package:pluto/presentation/screens/calendar/calendar_screen.dart';
+import 'package:pluto/presentation/screens/home/home_screen.dart';
+import 'package:pluto/presentation/screens/job/job_screen.dart';
+import 'package:pluto/presentation/screens/stats/stats_screen.dart';
+import 'package:pluto/presentation/screens/shell/widgets/pill_bottom_nav.dart';
+import 'package:pluto/presentation/tutorial/tutorial_controller.dart';
+import 'package:pluto/presentation/tutorial/tutorial_overlay.dart';
 
 class ShellScreen extends StatefulWidget {
   const ShellScreen({super.key});

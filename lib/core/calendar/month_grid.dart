@@ -1,4 +1,4 @@
-import 'package:job_planner/core/calendar/korean_holidays.dart';
+import 'package:pluto/core/calendar/korean_holidays.dart';
 
 class CalendarDay {
   const CalendarDay({

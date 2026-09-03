@@ -1,10 +1,10 @@
-import 'package:job_planner/domain/entities/apply_status.dart';
-import 'package:job_planner/domain/entities/calendar_event.dart';
-import 'package:job_planner/domain/entities/diary_entry.dart';
-import 'package:job_planner/domain/entities/job_application.dart';
-import 'package:job_planner/domain/entities/ledger_entry.dart';
-import 'package:job_planner/domain/ledger_month_stats.dart';
-import 'package:job_planner/domain/ledger_salary_repeat.dart';
+import 'package:pluto/domain/entities/apply_status.dart';
+import 'package:pluto/domain/entities/calendar_event.dart';
+import 'package:pluto/domain/entities/diary_entry.dart';
+import 'package:pluto/domain/entities/job_application.dart';
+import 'package:pluto/domain/entities/ledger_entry.dart';
+import 'package:pluto/domain/ledger_month_stats.dart';
+import 'package:pluto/domain/ledger_salary_repeat.dart';
 
 class MonthlyCategoryStat {
   const MonthlyCategoryStat({

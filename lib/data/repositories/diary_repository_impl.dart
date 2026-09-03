@@ -1,6 +1,6 @@
-import 'package:job_planner/data/datasources/diary_local_datasource.dart';
-import 'package:job_planner/domain/entities/diary_entry.dart';
-import 'package:job_planner/domain/repositories/diary_repository.dart';
+import 'package:pluto/data/datasources/diary_local_datasource.dart';
+import 'package:pluto/domain/entities/diary_entry.dart';
+import 'package:pluto/domain/repositories/diary_repository.dart';
 
 class DiaryRepositoryImpl implements DiaryRepository {
   const DiaryRepositoryImpl(this._localDataSource);

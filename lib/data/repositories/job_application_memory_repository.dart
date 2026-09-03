@@ -1,5 +1,5 @@
-import 'package:job_planner/domain/entities/job_application.dart';
-import 'package:job_planner/domain/repositories/job_application_repository.dart';
+import 'package:pluto/domain/entities/job_application.dart';
+import 'package:pluto/domain/repositories/job_application_repository.dart';
 
 class JobApplicationMemoryRepository implements JobApplicationRepository {
   JobApplicationMemoryRepository([List<JobApplication>? seed])

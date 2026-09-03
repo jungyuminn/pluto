@@ -1,11 +1,11 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:job_planner/core/constants/app_strings.dart';
-import 'package:job_planner/core/theme/app_colors.dart';
-import 'package:job_planner/core/utils/press_bounce.dart';
-import 'package:job_planner/data/datasources/app_auth_service.dart';
-import 'package:job_planner/presentation/screens/settings/widgets/backup_dialogs.dart';
-import 'package:job_planner/presentation/screens/settings/widgets/dots_loading_dialog.dart';
+import 'package:pluto/core/constants/app_strings.dart';
+import 'package:pluto/core/theme/app_colors.dart';
+import 'package:pluto/core/utils/press_bounce.dart';
+import 'package:pluto/data/datasources/app_auth_service.dart';
+import 'package:pluto/presentation/screens/settings/widgets/backup_dialogs.dart';
+import 'package:pluto/presentation/screens/settings/widgets/dots_loading_dialog.dart';
 
 String _shortError(Object error) {
   if (error is FirebaseAuthException) return error.code;

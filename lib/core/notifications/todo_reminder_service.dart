@@ -3,12 +3,12 @@ import 'dart:ui' show Color;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:job_planner/core/constants/app_strings.dart';
-import 'package:job_planner/data/datasources/calendar_event_local_datasource.dart';
-import 'package:job_planner/data/datasources/job_application_local_datasource.dart';
-import 'package:job_planner/data/datasources/notification_preference.dart';
-import 'package:job_planner/domain/entities/calendar_event.dart';
-import 'package:job_planner/presentation/screens/calendar/calendar_day_events.dart';
+import 'package:pluto/core/constants/app_strings.dart';
+import 'package:pluto/data/datasources/calendar_event_local_datasource.dart';
+import 'package:pluto/data/datasources/job_application_local_datasource.dart';
+import 'package:pluto/data/datasources/notification_preference.dart';
+import 'package:pluto/domain/entities/calendar_event.dart';
+import 'package:pluto/presentation/screens/calendar/calendar_day_events.dart';
 import 'package:timezone/data/latest.dart' as tzdata;
 import 'package:timezone/timezone.dart' as tz;
 

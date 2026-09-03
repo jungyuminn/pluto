@@ -1,8 +1,8 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:job_planner/core/constants/app_strings.dart';
-import 'package:job_planner/data/datasources/custom_theme_storage.dart';
+import 'package:pluto/core/constants/app_strings.dart';
+import 'package:pluto/data/datasources/custom_theme_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 enum AppSkin {

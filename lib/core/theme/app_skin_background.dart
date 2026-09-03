@@ -1,13 +1,13 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:job_planner/app_scope.dart';
-import 'package:job_planner/core/constants/app_icons.dart';
-import 'package:job_planner/core/layout/pc_layout.dart';
-import 'package:job_planner/core/theme/app_colors.dart';
-import 'package:job_planner/core/utils/local_file.dart';
-import 'package:job_planner/data/datasources/theme_preference.dart';
-import 'package:job_planner/presentation/widgets/local_file_image.dart';
+import 'package:pluto/app_scope.dart';
+import 'package:pluto/core/constants/app_icons.dart';
+import 'package:pluto/core/layout/pc_layout.dart';
+import 'package:pluto/core/theme/app_colors.dart';
+import 'package:pluto/core/utils/local_file.dart';
+import 'package:pluto/data/datasources/theme_preference.dart';
+import 'package:pluto/presentation/widgets/local_file_image.dart';
 
 class AppSkinAssets {
   AppSkinAssets._();

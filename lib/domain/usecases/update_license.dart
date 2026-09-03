@@ -1,5 +1,5 @@
-import 'package:job_planner/domain/entities/license.dart';
-import 'package:job_planner/domain/repositories/license_repository.dart';
+import 'package:pluto/domain/entities/license.dart';
+import 'package:pluto/domain/repositories/license_repository.dart';
 
 class UpdateLicense {
   const UpdateLicense(this._repository);

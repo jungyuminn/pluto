@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:job_planner/data/models/license_model.dart';
-import 'package:job_planner/domain/entities/license.dart';
+import 'package:pluto/data/models/license_model.dart';
+import 'package:pluto/domain/entities/license.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class LicenseLocalDataSource {

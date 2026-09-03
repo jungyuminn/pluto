@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:job_planner/domain/entities/apply_status.dart';
+import 'package:pluto/domain/entities/apply_status.dart';
 
 class ApplyStatusColors {
   ApplyStatusColors._();

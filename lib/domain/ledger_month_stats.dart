@@ -1,5 +1,5 @@
-import 'package:job_planner/domain/entities/ledger_entry.dart';
-import 'package:job_planner/domain/ledger_salary_repeat.dart';
+import 'package:pluto/domain/entities/ledger_entry.dart';
+import 'package:pluto/domain/ledger_salary_repeat.dart';
 
 class LedgerDayHighlight {
   const LedgerDayHighlight({

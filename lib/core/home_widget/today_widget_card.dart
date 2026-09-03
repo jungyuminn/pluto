@@ -2,11 +2,11 @@ import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
-import 'package:job_planner/core/constants/app_fonts.dart';
-import 'package:job_planner/core/constants/app_strings.dart';
-import 'package:job_planner/core/theme/app_colors.dart';
-import 'package:job_planner/domain/entities/calendar_event.dart';
-import 'package:job_planner/domain/entities/event_category.dart';
+import 'package:pluto/core/constants/app_fonts.dart';
+import 'package:pluto/core/constants/app_strings.dart';
+import 'package:pluto/core/theme/app_colors.dart';
+import 'package:pluto/domain/entities/calendar_event.dart';
+import 'package:pluto/domain/entities/event_category.dart';
 
 class TodayWidgetSnapshot {
   const TodayWidgetSnapshot({

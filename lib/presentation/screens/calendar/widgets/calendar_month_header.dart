@@ -1,20 +1,20 @@
 import 'package:flutter/material.dart';
-import 'package:job_planner/app_scope.dart';
-import 'package:job_planner/core/constants/app_fonts.dart';
-import 'package:job_planner/core/constants/app_icons.dart';
-import 'package:job_planner/core/constants/app_strings.dart';
-import 'package:job_planner/core/theme/app_colors.dart';
-import 'package:job_planner/core/utils/press_bounce.dart';
-import 'package:job_planner/domain/entities/ledger_entry.dart';
-import 'package:job_planner/domain/entities/event_category.dart';
-import 'package:job_planner/domain/ledger_month_stats.dart';
-import 'package:job_planner/presentation/screens/calendar/widgets/calendar_filter_menu.dart';
-import 'package:job_planner/presentation/screens/calendar/widgets/category_picker_sheet.dart';
-import 'package:job_planner/presentation/screens/calendar/widgets/ledger_kind_stats.dart';
-import 'package:job_planner/presentation/tutorial/tutorial_anchor.dart';
-import 'package:job_planner/presentation/widgets/app_bar_icon_group.dart';
-import 'package:job_planner/presentation/widgets/app_calendar/calendar_zoom_picker.dart';
-import 'package:job_planner/presentation/widgets/themed_asset.dart';
+import 'package:pluto/app_scope.dart';
+import 'package:pluto/core/constants/app_fonts.dart';
+import 'package:pluto/core/constants/app_icons.dart';
+import 'package:pluto/core/constants/app_strings.dart';
+import 'package:pluto/core/theme/app_colors.dart';
+import 'package:pluto/core/utils/press_bounce.dart';
+import 'package:pluto/domain/entities/ledger_entry.dart';
+import 'package:pluto/domain/entities/event_category.dart';
+import 'package:pluto/domain/ledger_month_stats.dart';
+import 'package:pluto/presentation/screens/calendar/widgets/calendar_filter_menu.dart';
+import 'package:pluto/presentation/screens/calendar/widgets/category_picker_sheet.dart';
+import 'package:pluto/presentation/screens/calendar/widgets/ledger_kind_stats.dart';
+import 'package:pluto/presentation/tutorial/tutorial_anchor.dart';
+import 'package:pluto/presentation/widgets/app_bar_icon_group.dart';
+import 'package:pluto/presentation/widgets/app_calendar/calendar_zoom_picker.dart';
+import 'package:pluto/presentation/widgets/themed_asset.dart';
 
 class CalendarMonthHeader extends StatelessWidget {
   const CalendarMonthHeader({

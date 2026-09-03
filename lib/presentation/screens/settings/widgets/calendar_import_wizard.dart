@@ -2,20 +2,20 @@ import 'dart:async';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:job_planner/app_scope.dart';
-import 'package:job_planner/core/calendar/calendar_years.dart';
-import 'package:job_planner/core/constants/app_icons.dart';
-import 'package:job_planner/core/constants/app_strings.dart';
-import 'package:job_planner/core/theme/app_colors.dart';
-import 'package:job_planner/core/utils/press_bounce.dart';
-import 'package:job_planner/data/datasources/device_calendar_import.dart';
-import 'package:job_planner/data/datasources/device_calendar_mapper.dart';
-import 'package:job_planner/domain/entities/calendar_event.dart';
-import 'package:job_planner/domain/entities/event_category.dart';
-import 'package:job_planner/presentation/screens/calendar/widgets/add_category_sheet.dart';
-import 'package:job_planner/presentation/screens/settings/widgets/backup_dialogs.dart';
-import 'package:job_planner/presentation/widgets/app_calendar/app_calendar.dart';
-import 'package:job_planner/presentation/widgets/themed_asset.dart';
+import 'package:pluto/app_scope.dart';
+import 'package:pluto/core/calendar/calendar_years.dart';
+import 'package:pluto/core/constants/app_icons.dart';
+import 'package:pluto/core/constants/app_strings.dart';
+import 'package:pluto/core/theme/app_colors.dart';
+import 'package:pluto/core/utils/press_bounce.dart';
+import 'package:pluto/data/datasources/device_calendar_import.dart';
+import 'package:pluto/data/datasources/device_calendar_mapper.dart';
+import 'package:pluto/domain/entities/calendar_event.dart';
+import 'package:pluto/domain/entities/event_category.dart';
+import 'package:pluto/presentation/screens/calendar/widgets/add_category_sheet.dart';
+import 'package:pluto/presentation/screens/settings/widgets/backup_dialogs.dart';
+import 'package:pluto/presentation/widgets/app_calendar/app_calendar.dart';
+import 'package:pluto/presentation/widgets/themed_asset.dart';
 
 class CalendarImportWizardResult {
   const CalendarImportWizardResult({

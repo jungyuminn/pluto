@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:job_planner/domain/entities/calendar_event.dart';
-import 'package:job_planner/domain/entities/ledger_salary.dart';
+import 'package:pluto/domain/entities/calendar_event.dart';
+import 'package:pluto/domain/entities/ledger_salary.dart';
 
 enum LedgerKind { expense, consumption, hourly, salary }
 

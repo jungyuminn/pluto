@@ -2,13 +2,13 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:job_planner/core/constants/app_fonts.dart';
-import 'package:job_planner/core/constants/app_strings.dart';
-import 'package:job_planner/core/theme/app_colors.dart';
-import 'package:job_planner/core/utils/press_bounce.dart';
-import 'package:job_planner/presentation/tutorial/tutorial_anchor.dart';
-import 'package:job_planner/presentation/tutorial/tutorial_controller.dart';
-import 'package:job_planner/presentation/tutorial/tutorial_demos.dart';
+import 'package:pluto/core/constants/app_fonts.dart';
+import 'package:pluto/core/constants/app_strings.dart';
+import 'package:pluto/core/theme/app_colors.dart';
+import 'package:pluto/core/utils/press_bounce.dart';
+import 'package:pluto/presentation/tutorial/tutorial_anchor.dart';
+import 'package:pluto/presentation/tutorial/tutorial_controller.dart';
+import 'package:pluto/presentation/tutorial/tutorial_demos.dart';
 
 class TutorialOverlay extends StatefulWidget {
   const TutorialOverlay({super.key});

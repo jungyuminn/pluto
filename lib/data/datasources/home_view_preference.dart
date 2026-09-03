@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:job_planner/core/home_widget/home_screen_widget_service.dart';
+import 'package:pluto/core/home_widget/home_screen_widget_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class HomeViewPreference {

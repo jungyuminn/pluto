@@ -1,8 +1,8 @@
 import 'dart:js_interop';
 import 'dart:typed_data';
 
-import 'package:job_planner/data/datasources/cloud_sync_files.dart';
-import 'package:job_planner/data/datasources/synced_file_store.dart';
+import 'package:pluto/data/datasources/cloud_sync_files.dart';
+import 'package:pluto/data/datasources/synced_file_store.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:web/web.dart' as web;
 

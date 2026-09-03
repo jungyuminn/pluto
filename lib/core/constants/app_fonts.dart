@@ -1,5 +1,5 @@
 import 'package:flutter/widgets.dart';
-import 'package:job_planner/data/datasources/font_preference.dart';
+import 'package:pluto/data/datasources/font_preference.dart';
 
 class FontScope extends InheritedWidget {
   const FontScope({

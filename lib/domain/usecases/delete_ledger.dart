@@ -1,4 +1,4 @@
-import 'package:job_planner/domain/repositories/ledger_repository.dart';
+import 'package:pluto/domain/repositories/ledger_repository.dart';
 
 class DeleteLedger {
   const DeleteLedger(this._repository);

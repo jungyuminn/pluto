@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:job_planner/core/calendar/repeat_dates.dart';
+import 'package:pluto/core/calendar/repeat_dates.dart';
 
 void main() {
   test('매월은 같은 날짜로 반복한다', () {

@@ -53,7 +53,7 @@
             android:name="flutterEmbedding"
             android:value="2" />
         <meta-data
-            android:name="com.jobplanner.job_planner.notification_icon"
+            android:name="com.pluto.app.notification_icon"
             android:resource="@drawable/ic_stat_notification" />
         <receiver android:exported="false" android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver" />
         <receiver android:exported="false" android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationBootReceiver">
@@ -152,7 +152,7 @@
             android:name=".WidgetMidnightReceiver"
             android:exported="true">
             <intent-filter>
-                <action android:name="com.jobplanner.job_planner.WIDGET_MIDNIGHT" />
+                <action android:name="com.pluto.app.WIDGET_MIDNIGHT" />
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
                 <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
                 <action android:name="android.intent.action.TIMEZONE_CHANGED" />

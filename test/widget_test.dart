@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:job_planner/app.dart';
-import 'package:job_planner/core/constants/app_strings.dart';
-import 'package:job_planner/data/repositories/job_application_memory_repository.dart';
-import 'package:job_planner/domain/usecases/add_job_application.dart';
-import 'package:job_planner/domain/usecases/delete_job_application.dart';
-import 'package:job_planner/domain/usecases/get_job_applications.dart';
-import 'package:job_planner/domain/usecases/reorder_job_applications.dart';
-import 'package:job_planner/domain/usecases/update_job_application.dart';
-import 'package:job_planner/presentation/screens/add_company/widgets/save_company_button.dart';
-import 'package:job_planner/presentation/screens/shell/widgets/pill_bottom_nav.dart';
-import 'package:job_planner/presentation/screens/shell/widgets/pill_nav_item.dart';
+import 'package:pluto/app.dart';
+import 'package:pluto/core/constants/app_strings.dart';
+import 'package:pluto/data/repositories/job_application_memory_repository.dart';
+import 'package:pluto/domain/usecases/add_job_application.dart';
+import 'package:pluto/domain/usecases/delete_job_application.dart';
+import 'package:pluto/domain/usecases/get_job_applications.dart';
+import 'package:pluto/domain/usecases/reorder_job_applications.dart';
+import 'package:pluto/domain/usecases/update_job_application.dart';
+import 'package:pluto/presentation/screens/add_company/widgets/save_company_button.dart';
+import 'package:pluto/presentation/screens/shell/widgets/pill_bottom_nav.dart';
+import 'package:pluto/presentation/screens/shell/widgets/pill_nav_item.dart';
 
 JobPlannerApp _app() {
   final repository = JobApplicationMemoryRepository();

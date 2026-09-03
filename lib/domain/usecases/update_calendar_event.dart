@@ -1,5 +1,5 @@
-import 'package:job_planner/domain/entities/calendar_event.dart';
-import 'package:job_planner/domain/repositories/calendar_event_repository.dart';
+import 'package:pluto/domain/entities/calendar_event.dart';
+import 'package:pluto/domain/repositories/calendar_event_repository.dart';
 
 class UpdateCalendarEvent {
   const UpdateCalendarEvent(this._repository);

@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:job_planner/core/constants/app_fonts.dart';
-import 'package:job_planner/core/constants/app_strings.dart';
-import 'package:job_planner/core/layout/pc_layout.dart';
-import 'package:job_planner/core/theme/app_colors.dart';
-import 'package:job_planner/core/utils/press_bounce.dart';
-import 'package:job_planner/data/datasources/diary_photo_storage.dart';
-import 'package:job_planner/presentation/screens/calendar/widgets/diary_draw_sheet.dart';
-import 'package:job_planner/presentation/widgets/local_file_image.dart';
+import 'package:pluto/core/constants/app_fonts.dart';
+import 'package:pluto/core/constants/app_strings.dart';
+import 'package:pluto/core/layout/pc_layout.dart';
+import 'package:pluto/core/theme/app_colors.dart';
+import 'package:pluto/core/utils/press_bounce.dart';
+import 'package:pluto/data/datasources/diary_photo_storage.dart';
+import 'package:pluto/presentation/screens/calendar/widgets/diary_draw_sheet.dart';
+import 'package:pluto/presentation/widgets/local_file_image.dart';
 
 class DiaryPhotoField extends StatefulWidget {
   const DiaryPhotoField({

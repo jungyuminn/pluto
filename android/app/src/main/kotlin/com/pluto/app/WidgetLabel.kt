@@ -1,4 +1,4 @@
-package com.jobplanner.job_planner
+package com.pluto.app
 
 import android.graphics.Bitmap
 import android.graphics.Canvas

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:job_planner/app_scope.dart';
-import 'package:job_planner/core/constants/app_strings.dart';
-import 'package:job_planner/core/theme/app_colors.dart';
-import 'package:job_planner/core/utils/fade_in.dart';
-import 'package:job_planner/core/utils/press_bounce.dart';
+import 'package:pluto/app_scope.dart';
+import 'package:pluto/core/constants/app_strings.dart';
+import 'package:pluto/core/theme/app_colors.dart';
+import 'package:pluto/core/utils/fade_in.dart';
+import 'package:pluto/core/utils/press_bounce.dart';
 
 Future<String?> showDayEmojiSheet(
   BuildContext context, {

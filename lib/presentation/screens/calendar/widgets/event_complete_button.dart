@@ -1,7 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:job_planner/core/utils/press_bounce.dart';
+import 'package:pluto/core/utils/press_bounce.dart';
 
 class EventCompleteButton extends StatefulWidget {
   const EventCompleteButton({

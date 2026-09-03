@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:job_planner/domain/entities/calendar_event.dart';
-import 'package:job_planner/domain/entities/diary_cover.dart';
+import 'package:pluto/domain/entities/calendar_event.dart';
+import 'package:pluto/domain/entities/diary_cover.dart';
 
 class DiaryEntry {
   const DiaryEntry({

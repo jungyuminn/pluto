@@ -1,9 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:job_planner/core/theme/app_colors.dart';
-import 'package:job_planner/core/theme/app_skin_background.dart';
-import 'package:job_planner/data/datasources/font_preference.dart';
-import 'package:job_planner/data/datasources/theme_preference.dart';
+import 'package:pluto/core/theme/app_colors.dart';
+import 'package:pluto/core/theme/app_skin_background.dart';
+import 'package:pluto/data/datasources/font_preference.dart';
+import 'package:pluto/data/datasources/theme_preference.dart';
 
 class AppTheme {
   AppTheme._();

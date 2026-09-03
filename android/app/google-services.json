@@ -48,6 +48,50 @@
           ]
         }
       }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:246357426149:android:c40995124a80e6e921b90c",
+        "android_client_info": {
+          "package_name": "com.pluto.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "246357426149-9nnhcpi79e5s8hvt5nequmth8hf0ik2k.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.pluto.app",
+            "certificate_hash": "38d0a10a2b4286ba896b6d2a039c03e963c110d8"
+          }
+        },
+        {
+          "client_id": "246357426149-hfck4ic0e2f0krfkot5hvb3vtm36ko58.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB1mEWVGm55H-lZMyEQa3EgaeZMbqpauSU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "246357426149-hfck4ic0e2f0krfkot5hvb3vtm36ko58.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "246357426149-qgncqtch4l3r1pflbrcnri22mo16737j.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.jobplanner.jobPlanner"
+              }
+            }
+          ]
+        }
+      }
     }
   ],
   "configuration_version": "1"

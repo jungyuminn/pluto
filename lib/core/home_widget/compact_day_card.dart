@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:job_planner/core/constants/app_fonts.dart';
-import 'package:job_planner/core/constants/app_strings.dart';
-import 'package:job_planner/core/theme/app_colors.dart';
-import 'package:job_planner/domain/entities/calendar_event.dart';
+import 'package:pluto/core/constants/app_fonts.dart';
+import 'package:pluto/core/constants/app_strings.dart';
+import 'package:pluto/core/theme/app_colors.dart';
+import 'package:pluto/domain/entities/calendar_event.dart';
 
 class CompactDayCard extends StatelessWidget {
   const CompactDayCard({
@@ -20,9 +20,9 @@ class CompactDayCard extends StatelessWidget {
   static const iOSTodayName = 'CompactTodayWidget';
   static const iOSTomorrowName = 'CompactTomorrowWidget';
   static const qualifiedTodayName =
-      'com.jobplanner.job_planner.$androidTodayName';
+      'com.pluto.app.$androidTodayName';
   static const qualifiedTomorrowName =
-      'com.jobplanner.job_planner.$androidTomorrowName';
+      'com.pluto.app.$androidTomorrowName';
 
   final String title;
   final String dateLabel;

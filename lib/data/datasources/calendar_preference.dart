@@ -1,8 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
-import 'package:job_planner/core/home_widget/home_screen_widget_service.dart';
-import 'package:job_planner/domain/entities/diary_cover.dart';
+import 'package:pluto/core/home_widget/home_screen_widget_service.dart';
+import 'package:pluto/domain/entities/diary_cover.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class CalendarPreference extends ChangeNotifier {

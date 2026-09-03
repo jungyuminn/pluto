@@ -1,4 +1,4 @@
-package com.jobplanner.job_planner
+package com.pluto.app
 
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine

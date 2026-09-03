@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:job_planner/domain/entities/event_category.dart';
-import 'package:job_planner/domain/entities/ledger_entry.dart';
-import 'package:job_planner/presentation/screens/calendar/widgets/ledger_form.dart';
+import 'package:pluto/domain/entities/event_category.dart';
+import 'package:pluto/domain/entities/ledger_entry.dart';
+import 'package:pluto/presentation/screens/calendar/widgets/ledger_form.dart';
 
 Future<bool> showLedgerSheet(
   BuildContext context, {

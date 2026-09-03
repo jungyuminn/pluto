@@ -1,13 +1,13 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:job_planner/core/constants/app_fonts.dart';
-import 'package:job_planner/core/constants/app_icons.dart';
-import 'package:job_planner/core/constants/app_strings.dart';
-import 'package:job_planner/core/theme/app_colors.dart';
-import 'package:job_planner/core/utils/press_bounce.dart';
-import 'package:job_planner/presentation/screens/add_company/widgets/save_company_button.dart';
-import 'package:job_planner/presentation/widgets/flat_snap_picker.dart';
+import 'package:pluto/core/constants/app_fonts.dart';
+import 'package:pluto/core/constants/app_icons.dart';
+import 'package:pluto/core/constants/app_strings.dart';
+import 'package:pluto/core/theme/app_colors.dart';
+import 'package:pluto/core/utils/press_bounce.dart';
+import 'package:pluto/presentation/screens/add_company/widgets/save_company_button.dart';
+import 'package:pluto/presentation/widgets/flat_snap_picker.dart';
 
 class EventTimePickResult {
   const EventTimePickResult({this.startMinutes, this.endMinutes});

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:job_planner/app_scope.dart';
-import 'package:job_planner/core/theme/app_colors.dart';
-import 'package:job_planner/data/datasources/theme_preference.dart';
+import 'package:pluto/app_scope.dart';
+import 'package:pluto/core/theme/app_colors.dart';
+import 'package:pluto/data/datasources/theme_preference.dart';
 
 class ThemedAsset extends StatelessWidget {
   const ThemedAsset({

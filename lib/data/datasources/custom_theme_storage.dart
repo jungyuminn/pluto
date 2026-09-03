@@ -1,4 +1,4 @@
-import 'package:job_planner/data/datasources/synced_file_store.dart';
+import 'package:pluto/data/datasources/synced_file_store.dart';
 import 'package:path/path.dart' as p;
 
 class CustomThemeStorage {

@@ -1,14 +1,14 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:job_planner/core/calendar/month_grid.dart';
-import 'package:job_planner/core/constants/app_fonts.dart';
-import 'package:job_planner/core/constants/app_strings.dart';
-import 'package:job_planner/core/theme/app_colors.dart';
-import 'package:job_planner/data/datasources/font_preference.dart';
-import 'package:job_planner/domain/entities/calendar_event.dart';
-import 'package:job_planner/presentation/screens/calendar/widgets/calendar_day_cell.dart';
-import 'package:job_planner/presentation/screens/calendar/widgets/calendar_week_events.dart';
+import 'package:pluto/core/calendar/month_grid.dart';
+import 'package:pluto/core/constants/app_fonts.dart';
+import 'package:pluto/core/constants/app_strings.dart';
+import 'package:pluto/core/theme/app_colors.dart';
+import 'package:pluto/data/datasources/font_preference.dart';
+import 'package:pluto/domain/entities/calendar_event.dart';
+import 'package:pluto/presentation/screens/calendar/widgets/calendar_day_cell.dart';
+import 'package:pluto/presentation/screens/calendar/widgets/calendar_week_events.dart';
 
 class MonthCalendarCard extends StatelessWidget {
   const MonthCalendarCard({
@@ -24,7 +24,7 @@ class MonthCalendarCard extends StatelessWidget {
   static const androidName = 'MonthCalendarWidgetProvider';
   static const iOSName = 'MonthCalendarWidget';
   static const qualifiedAndroidName =
-      'com.jobplanner.job_planner.$androidName';
+      'com.pluto.app.$androidName';
 
   static const _sunday = Color(0xFFEF4444);
   static const _saturday = Color(0xFF60A5FA);

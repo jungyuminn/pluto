@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:job_planner/domain/entities/diary_entry.dart';
-import 'package:job_planner/presentation/screens/calendar/widgets/diary_form.dart';
+import 'package:pluto/domain/entities/diary_entry.dart';
+import 'package:pluto/presentation/screens/calendar/widgets/diary_form.dart';
 
 Future<bool> showDiarySheet(
   BuildContext context, {

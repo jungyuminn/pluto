@@ -2,20 +2,20 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:job_planner/core/constants/app_fonts.dart';
-import 'package:job_planner/core/constants/app_icons.dart';
-import 'package:job_planner/core/constants/app_strings.dart';
-import 'package:job_planner/core/constants/oauth_config.dart';
-import 'package:job_planner/core/theme/app_colors.dart';
-import 'package:job_planner/core/theme/app_skin_background.dart';
-import 'package:job_planner/core/utils/fade_in.dart';
-import 'package:job_planner/core/utils/press_bounce.dart';
-import 'package:job_planner/data/datasources/app_auth_service.dart';
-import 'package:job_planner/presentation/screens/settings/widgets/account_sheet.dart';
-import 'package:job_planner/presentation/screens/settings/widgets/backup_dialogs.dart';
-import 'package:job_planner/presentation/screens/settings/widgets/cloud_sync_dialogs.dart';
-import 'package:job_planner/presentation/screens/settings/widgets/dots_loading_dialog.dart';
-import 'package:job_planner/presentation/screens/shell/shell_screen.dart';
+import 'package:pluto/core/constants/app_fonts.dart';
+import 'package:pluto/core/constants/app_icons.dart';
+import 'package:pluto/core/constants/app_strings.dart';
+import 'package:pluto/core/constants/oauth_config.dart';
+import 'package:pluto/core/theme/app_colors.dart';
+import 'package:pluto/core/theme/app_skin_background.dart';
+import 'package:pluto/core/utils/fade_in.dart';
+import 'package:pluto/core/utils/press_bounce.dart';
+import 'package:pluto/data/datasources/app_auth_service.dart';
+import 'package:pluto/presentation/screens/settings/widgets/account_sheet.dart';
+import 'package:pluto/presentation/screens/settings/widgets/backup_dialogs.dart';
+import 'package:pluto/presentation/screens/settings/widgets/cloud_sync_dialogs.dart';
+import 'package:pluto/presentation/screens/settings/widgets/dots_loading_dialog.dart';
+import 'package:pluto/presentation/screens/shell/shell_screen.dart';
 
 Future<void> openLoginPage(BuildContext context) async {
   await showModalBottomSheet<void>(

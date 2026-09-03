@@ -1,12 +1,12 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:job_planner/core/home_widget/home_screen_widget_service.dart';
-import 'package:job_planner/core/constants/app_strings.dart';
-import 'package:job_planner/core/notifications/todo_reminder_service.dart';
-import 'package:job_planner/data/models/calendar_event_model.dart';
-import 'package:job_planner/domain/entities/calendar_event.dart';
-import 'package:job_planner/domain/entities/event_category.dart';
+import 'package:pluto/core/home_widget/home_screen_widget_service.dart';
+import 'package:pluto/core/constants/app_strings.dart';
+import 'package:pluto/core/notifications/todo_reminder_service.dart';
+import 'package:pluto/data/models/calendar_event_model.dart';
+import 'package:pluto/domain/entities/calendar_event.dart';
+import 'package:pluto/domain/entities/event_category.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class CalendarEventLocalDataSource {

@@ -89,11 +89,11 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "com.jobplanner" "\0"
+            VALUE "CompanyName", "com.pluto" "\0"
             VALUE "FileDescription", "Pluto" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
             VALUE "InternalName", "job_planner" "\0"
-            VALUE "LegalCopyright", "Copyright (C) 2026 com.jobplanner. All rights reserved." "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2026 com.pluto. All rights reserved." "\0"
             VALUE "OriginalFilename", "job_planner.exe" "\0"
             VALUE "ProductName", "Pluto" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"

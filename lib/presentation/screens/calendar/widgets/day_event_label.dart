@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:job_planner/core/constants/app_fonts.dart';
-import 'package:job_planner/core/constants/app_icons.dart';
-import 'package:job_planner/core/theme/app_colors.dart';
-import 'package:job_planner/core/utils/animated_accent.dart';
-import 'package:job_planner/core/utils/press_bounce.dart';
-import 'package:job_planner/presentation/screens/calendar/widgets/event_complete_button.dart';
+import 'package:pluto/core/constants/app_fonts.dart';
+import 'package:pluto/core/constants/app_icons.dart';
+import 'package:pluto/core/theme/app_colors.dart';
+import 'package:pluto/core/utils/animated_accent.dart';
+import 'package:pluto/core/utils/press_bounce.dart';
+import 'package:pluto/presentation/screens/calendar/widgets/event_complete_button.dart';
 
 class DayEventLabel extends StatefulWidget {
   const DayEventLabel({

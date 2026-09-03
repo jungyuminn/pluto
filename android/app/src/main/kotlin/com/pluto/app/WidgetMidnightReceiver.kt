@@ -1,4 +1,4 @@
-package com.jobplanner.job_planner
+package com.pluto.app
 
 import android.app.AlarmManager
 import android.app.PendingIntent
@@ -23,7 +23,7 @@ class WidgetMidnightReceiver : BroadcastReceiver() {
 
 object WidgetMidnightScheduler {
     private const val REQUEST = 71001
-    const val ACTION = "com.jobplanner.job_planner.WIDGET_MIDNIGHT"
+    const val ACTION = "com.pluto.app.WIDGET_MIDNIGHT"
 
     fun schedule(context: Context) {
         val alarm = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager

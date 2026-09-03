@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:job_planner/domain/entities/application_round.dart';
-import 'package:job_planner/domain/entities/job_application.dart';
-import 'package:job_planner/presentation/screens/add_company/widgets/add_round_chip_button.dart';
-import 'package:job_planner/presentation/screens/add_company/widgets/round_chip_button.dart';
+import 'package:pluto/domain/entities/application_round.dart';
+import 'package:pluto/domain/entities/job_application.dart';
+import 'package:pluto/presentation/screens/add_company/widgets/add_round_chip_button.dart';
+import 'package:pluto/presentation/screens/add_company/widgets/round_chip_button.dart';
 
 class RoundChipRow extends StatefulWidget {
   const RoundChipRow({

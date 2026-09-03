@@ -1,7 +1,7 @@
-import 'package:job_planner/core/constants/app_strings.dart';
-import 'package:job_planner/domain/entities/calendar_event.dart';
-import 'package:job_planner/domain/entities/event_category.dart';
-import 'package:job_planner/domain/entities/job_application.dart';
+import 'package:pluto/core/constants/app_strings.dart';
+import 'package:pluto/domain/entities/calendar_event.dart';
+import 'package:pluto/domain/entities/event_category.dart';
+import 'package:pluto/domain/entities/job_application.dart';
 
 int jobCategoryColor(
   JobApplication application, [

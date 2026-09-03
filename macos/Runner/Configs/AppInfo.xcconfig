@@ -8,7 +8,7 @@
 PRODUCT_NAME = job_planner
 
 // The application's bundle identifier
-PRODUCT_BUNDLE_IDENTIFIER = com.jobplanner.jobPlanner
+PRODUCT_BUNDLE_IDENTIFIER = com.pluto.planner
 
 // The copyright displayed in application information
-PRODUCT_COPYRIGHT = Copyright © 2026 com.jobplanner. All rights reserved.
+PRODUCT_COPYRIGHT = Copyright © 2026 com.pluto. All rights reserved.

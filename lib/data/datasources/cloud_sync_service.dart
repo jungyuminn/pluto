@@ -5,12 +5,12 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
-import 'package:job_planner/app_scope.dart';
-import 'package:job_planner/data/datasources/app_auth_service.dart';
-import 'package:job_planner/data/datasources/app_backup_service.dart';
-import 'package:job_planner/data/datasources/calendar_event_local_datasource.dart';
-import 'package:job_planner/data/datasources/cloud_sync_files.dart';
-import 'package:job_planner/data/datasources/cloud_sync_snapshot.dart';
+import 'package:pluto/app_scope.dart';
+import 'package:pluto/data/datasources/app_auth_service.dart';
+import 'package:pluto/data/datasources/app_backup_service.dart';
+import 'package:pluto/data/datasources/calendar_event_local_datasource.dart';
+import 'package:pluto/data/datasources/cloud_sync_files.dart';
+import 'package:pluto/data/datasources/cloud_sync_snapshot.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 enum CloudOverlapChoice { merge, accountOnly }

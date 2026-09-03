@@ -1,4 +1,4 @@
-import 'package:job_planner/domain/entities/ledger_salary.dart';
+import 'package:pluto/domain/entities/ledger_salary.dart';
 
 class LedgerSalaryResult {
   const LedgerSalaryResult({

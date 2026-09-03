@@ -1,4 +1,4 @@
-import 'package:job_planner/domain/entities/event_category.dart';
+import 'package:pluto/domain/entities/event_category.dart';
 
 abstract class EventCategoryRepository {
   Future<List<EventCategory>> getAll();

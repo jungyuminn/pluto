@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:job_planner/core/calendar/month_grid.dart';
-import 'package:job_planner/core/constants/app_fonts.dart';
-import 'package:job_planner/core/theme/app_colors.dart';
-import 'package:job_planner/domain/entities/calendar_event.dart';
-import 'package:job_planner/domain/entities/diary_entry.dart';
-import 'package:job_planner/domain/entities/ledger_entry.dart';
-import 'package:job_planner/presentation/screens/calendar/widgets/calendar_day_cell.dart';
-import 'package:job_planner/presentation/screens/calendar/widgets/calendar_week_diaries.dart';
-import 'package:job_planner/presentation/screens/calendar/widgets/calendar_week_events.dart';
+import 'package:pluto/core/calendar/month_grid.dart';
+import 'package:pluto/core/constants/app_fonts.dart';
+import 'package:pluto/core/theme/app_colors.dart';
+import 'package:pluto/domain/entities/calendar_event.dart';
+import 'package:pluto/domain/entities/diary_entry.dart';
+import 'package:pluto/domain/entities/ledger_entry.dart';
+import 'package:pluto/presentation/screens/calendar/widgets/calendar_day_cell.dart';
+import 'package:pluto/presentation/screens/calendar/widgets/calendar_week_diaries.dart';
+import 'package:pluto/presentation/screens/calendar/widgets/calendar_week_events.dart';
 
 class CalendarDayDropTarget {
   CalendarDayDropTarget._();

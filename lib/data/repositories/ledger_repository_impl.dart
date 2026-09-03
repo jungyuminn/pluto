@@ -1,6 +1,6 @@
-import 'package:job_planner/data/datasources/ledger_local_datasource.dart';
-import 'package:job_planner/domain/entities/ledger_entry.dart';
-import 'package:job_planner/domain/repositories/ledger_repository.dart';
+import 'package:pluto/data/datasources/ledger_local_datasource.dart';
+import 'package:pluto/domain/entities/ledger_entry.dart';
+import 'package:pluto/domain/repositories/ledger_repository.dart';
 
 class LedgerRepositoryImpl implements LedgerRepository {
   const LedgerRepositoryImpl(this._localDataSource);

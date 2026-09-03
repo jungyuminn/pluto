@@ -1,6 +1,6 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:job_planner/core/theme/app_colors.dart';
+import 'package:pluto/core/theme/app_colors.dart';
 
 /// 누를 때 살짝 들어갔다가, 손을 떼면 바운스되며 돌아오는 효과.
 ///

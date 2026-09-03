@@ -1,4 +1,4 @@
-import 'package:job_planner/domain/entities/calendar_event.dart';
+import 'package:pluto/domain/entities/calendar_event.dart';
 
 abstract class CalendarEventRepository {
   Future<List<CalendarEvent>> getAll();

@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:job_planner/data/models/ledger_entry_model.dart';
-import 'package:job_planner/domain/entities/ledger_entry.dart';
-import 'package:job_planner/domain/entities/ledger_salary.dart';
+import 'package:pluto/data/models/ledger_entry_model.dart';
+import 'package:pluto/domain/entities/ledger_entry.dart';
+import 'package:pluto/domain/entities/ledger_salary.dart';
 
 void main() {
   test('옛 월급+시급 내역은 시급으로 옮긴다', () {

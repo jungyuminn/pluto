@@ -1,4 +1,4 @@
-import 'package:job_planner/domain/entities/long_goal.dart';
+import 'package:pluto/domain/entities/long_goal.dart';
 
 class AppIcons {
   AppIcons._();

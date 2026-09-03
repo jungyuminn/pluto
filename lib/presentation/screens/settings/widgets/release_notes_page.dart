@@ -2,13 +2,13 @@ import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
-import 'package:job_planner/core/constants/app_fonts.dart';
-import 'package:job_planner/core/constants/app_strings.dart';
-import 'package:job_planner/core/constants/release_notes.dart';
-import 'package:job_planner/core/layout/pc_layout.dart';
-import 'package:job_planner/core/theme/app_colors.dart';
-import 'package:job_planner/core/utils/press_bounce.dart';
-import 'package:job_planner/presentation/screens/settings/widgets/release_note_demos.dart';
+import 'package:pluto/core/constants/app_fonts.dart';
+import 'package:pluto/core/constants/app_strings.dart';
+import 'package:pluto/core/constants/release_notes.dart';
+import 'package:pluto/core/layout/pc_layout.dart';
+import 'package:pluto/core/theme/app_colors.dart';
+import 'package:pluto/core/utils/press_bounce.dart';
+import 'package:pluto/presentation/screens/settings/widgets/release_note_demos.dart';
 
 class ReleaseNotesPage extends StatelessWidget {
   const ReleaseNotesPage({super.key});

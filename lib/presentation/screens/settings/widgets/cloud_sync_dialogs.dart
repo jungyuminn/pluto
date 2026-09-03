@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:job_planner/core/constants/app_strings.dart';
-import 'package:job_planner/core/theme/app_colors.dart';
-import 'package:job_planner/core/utils/press_bounce.dart';
-import 'package:job_planner/data/datasources/cloud_sync_service.dart';
+import 'package:pluto/core/constants/app_strings.dart';
+import 'package:pluto/core/theme/app_colors.dart';
+import 'package:pluto/core/utils/press_bounce.dart';
+import 'package:pluto/data/datasources/cloud_sync_service.dart';
 
 Future<void> bindCloudAccount(BuildContext context) {
   return CloudSyncService.instance.reconcileAfterLogin(context);

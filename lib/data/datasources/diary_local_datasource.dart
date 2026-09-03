@@ -1,7 +1,7 @@
 import 'dart:convert';
 
-import 'package:job_planner/data/models/diary_entry_model.dart';
-import 'package:job_planner/domain/entities/diary_entry.dart';
+import 'package:pluto/data/models/diary_entry_model.dart';
+import 'package:pluto/domain/entities/diary_entry.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class DiaryLocalDataSource {

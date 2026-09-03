@@ -1,16 +1,16 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:job_planner/app_scope.dart';
-import 'package:job_planner/core/constants/app_fonts.dart';
-import 'package:job_planner/core/constants/app_icons.dart';
-import 'package:job_planner/core/constants/app_strings.dart';
-import 'package:job_planner/core/theme/app_colors.dart';
-import 'package:job_planner/presentation/screens/calendar/widgets/calendar_event_label.dart';
-import 'package:job_planner/presentation/screens/stats/widgets/planet_fill.dart';
-import 'package:job_planner/presentation/screens/shell/widgets/pill_bottom_nav.dart';
-import 'package:job_planner/presentation/tutorial/tutorial_controller.dart';
-import 'package:job_planner/presentation/widgets/themed_asset.dart';
+import 'package:pluto/app_scope.dart';
+import 'package:pluto/core/constants/app_fonts.dart';
+import 'package:pluto/core/constants/app_icons.dart';
+import 'package:pluto/core/constants/app_strings.dart';
+import 'package:pluto/core/theme/app_colors.dart';
+import 'package:pluto/presentation/screens/calendar/widgets/calendar_event_label.dart';
+import 'package:pluto/presentation/screens/stats/widgets/planet_fill.dart';
+import 'package:pluto/presentation/screens/shell/widgets/pill_bottom_nav.dart';
+import 'package:pluto/presentation/tutorial/tutorial_controller.dart';
+import 'package:pluto/presentation/widgets/themed_asset.dart';
 
 class TutorialDemoView extends StatelessWidget {
   const TutorialDemoView({super.key, required this.demo});

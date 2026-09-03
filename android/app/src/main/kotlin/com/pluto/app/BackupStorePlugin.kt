@@ -1,4 +1,4 @@
-package com.jobplanner.job_planner
+package com.pluto.app
 
 import android.app.Activity
 import android.content.ContentUris

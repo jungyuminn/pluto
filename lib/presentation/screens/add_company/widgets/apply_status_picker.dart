@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:job_planner/core/constants/app_icons.dart';
-import 'package:job_planner/core/constants/app_strings.dart';
-import 'package:job_planner/presentation/screens/add_company/widgets/apply_status_dropdown.dart';
-import 'package:job_planner/presentation/screens/calendar/widgets/event_action_icon.dart';
+import 'package:pluto/core/constants/app_icons.dart';
+import 'package:pluto/core/constants/app_strings.dart';
+import 'package:pluto/presentation/screens/add_company/widgets/apply_status_dropdown.dart';
+import 'package:pluto/presentation/screens/calendar/widgets/event_action_icon.dart';
 
 class ApplyStatusPicker extends StatefulWidget {
   const ApplyStatusPicker({

@@ -1,4 +1,4 @@
-import 'package:job_planner/domain/entities/license.dart';
+import 'package:pluto/domain/entities/license.dart';
 
 abstract class LicenseRepository {
   Future<List<License>> getAll();

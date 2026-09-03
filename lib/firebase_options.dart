@@ -58,19 +58,19 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyB1mEWVGm55H-lZMyEQa3EgaeZMbqpauSU',
-    appId: '1:246357426149:android:a4efcc68aebaa99921b90c',
+    appId: '1:246357426149:android:c40995124a80e6e921b90c',
     messagingSenderId: '246357426149',
     projectId: 'jopb-65c0f',
     storageBucket: 'jopb-65c0f.firebasestorage.app',
   );
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyDnqaE-TxqPS2-ERmdR2dCAB8Ygm3mnc5c',
-    appId: '1:246357426149:ios:54bcebff76ebf9e621b90c',
+    appId: '1:246357426149:ios:64dad4198384c02721b90c',
     messagingSenderId: '246357426149',
     projectId: 'jopb-65c0f',
     storageBucket: 'jopb-65c0f.firebasestorage.app',
-    androidClientId: '246357426149-ktt86683fge7ecnij2drmdt0c6pa2kek.apps.googleusercontent.com',
-    iosClientId: '246357426149-qgncqtch4l3r1pflbrcnri22mo16737j.apps.googleusercontent.com',
-    iosBundleId: 'com.jobplanner.jobPlanner',
+    androidClientId: '246357426149-9nnhcpi79e5s8hvt5nequmth8hf0ik2k.apps.googleusercontent.com',
+    iosClientId: '246357426149-mkntlck5khfil9iao7i5h4bb6m44vcli.apps.googleusercontent.com',
+    iosBundleId: 'com.pluto.planner',
   );
 }

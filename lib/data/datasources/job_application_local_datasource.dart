@@ -1,10 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:job_planner/core/home_widget/home_screen_widget_service.dart';
-import 'package:job_planner/core/notifications/todo_reminder_service.dart';
-import 'package:job_planner/data/models/job_application_model.dart';
-import 'package:job_planner/domain/entities/job_application.dart';
+import 'package:pluto/core/home_widget/home_screen_widget_service.dart';
+import 'package:pluto/core/notifications/todo_reminder_service.dart';
+import 'package:pluto/data/models/job_application_model.dart';
+import 'package:pluto/domain/entities/job_application.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class JobApplicationLocalDataSource {

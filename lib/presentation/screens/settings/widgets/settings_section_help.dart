@@ -3,19 +3,19 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:job_planner/core/constants/app_fonts.dart';
-import 'package:job_planner/core/constants/app_icons.dart';
-import 'package:job_planner/core/constants/app_strings.dart';
-import 'package:job_planner/core/constants/release_notes.dart';
-import 'package:job_planner/core/theme/app_colors.dart';
-import 'package:job_planner/core/theme/app_skin_background.dart';
-import 'package:job_planner/core/theme/app_theme.dart';
-import 'package:job_planner/core/utils/press_bounce.dart';
-import 'package:job_planner/data/datasources/font_preference.dart';
-import 'package:job_planner/data/datasources/theme_preference.dart';
-import 'package:job_planner/presentation/screens/calendar/widgets/calendar_event_label.dart';
-import 'package:job_planner/presentation/screens/calendar/widgets/day_event_label.dart';
-import 'package:job_planner/presentation/screens/shell/widgets/pill_bottom_nav.dart';
+import 'package:pluto/core/constants/app_fonts.dart';
+import 'package:pluto/core/constants/app_icons.dart';
+import 'package:pluto/core/constants/app_strings.dart';
+import 'package:pluto/core/constants/release_notes.dart';
+import 'package:pluto/core/theme/app_colors.dart';
+import 'package:pluto/core/theme/app_skin_background.dart';
+import 'package:pluto/core/theme/app_theme.dart';
+import 'package:pluto/core/utils/press_bounce.dart';
+import 'package:pluto/data/datasources/font_preference.dart';
+import 'package:pluto/data/datasources/theme_preference.dart';
+import 'package:pluto/presentation/screens/calendar/widgets/calendar_event_label.dart';
+import 'package:pluto/presentation/screens/calendar/widgets/day_event_label.dart';
+import 'package:pluto/presentation/screens/shell/widgets/pill_bottom_nav.dart';
 
 enum SettingsHelpSection {
   homeLayout,

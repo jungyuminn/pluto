@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:job_planner/app_scope.dart';
-import 'package:job_planner/core/constants/app_fonts.dart';
-import 'package:job_planner/core/constants/app_strings.dart';
-import 'package:job_planner/core/layout/pc_layout.dart';
-import 'package:job_planner/core/theme/app_colors.dart';
-import 'package:job_planner/core/utils/press_bounce.dart';
-import 'package:job_planner/domain/entities/calendar_event.dart';
-import 'package:job_planner/presentation/screens/calendar/calendar_day_events.dart';
-import 'package:job_planner/presentation/screens/calendar/widgets/add_event_sheet.dart';
-import 'package:job_planner/presentation/screens/calendar/widgets/delete_event_dialog.dart';
-import 'package:job_planner/presentation/screens/calendar/widgets/delete_repeat_event_dialog.dart';
-import 'package:job_planner/presentation/screens/home/widgets/leftover_todo_card.dart';
+import 'package:pluto/app_scope.dart';
+import 'package:pluto/core/constants/app_fonts.dart';
+import 'package:pluto/core/constants/app_strings.dart';
+import 'package:pluto/core/layout/pc_layout.dart';
+import 'package:pluto/core/theme/app_colors.dart';
+import 'package:pluto/core/utils/press_bounce.dart';
+import 'package:pluto/domain/entities/calendar_event.dart';
+import 'package:pluto/presentation/screens/calendar/calendar_day_events.dart';
+import 'package:pluto/presentation/screens/calendar/widgets/add_event_sheet.dart';
+import 'package:pluto/presentation/screens/calendar/widgets/delete_event_dialog.dart';
+import 'package:pluto/presentation/screens/calendar/widgets/delete_repeat_event_dialog.dart';
+import 'package:pluto/presentation/screens/home/widgets/leftover_todo_card.dart';
 
 class LeftoverTodosScreen extends StatefulWidget {
   const LeftoverTodosScreen({super.key});

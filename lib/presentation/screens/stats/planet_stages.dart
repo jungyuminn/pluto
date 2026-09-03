@@ -1,5 +1,5 @@
-import 'package:job_planner/core/constants/app_strings.dart';
-import 'package:job_planner/domain/entities/calendar_event.dart';
+import 'package:pluto/core/constants/app_strings.dart';
+import 'package:pluto/domain/entities/calendar_event.dart';
 
 class PlanetStage {
   const PlanetStage({

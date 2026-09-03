@@ -1,6 +1,6 @@
-import 'package:job_planner/domain/entities/calendar_event.dart';
-import 'package:job_planner/domain/entities/diary_cover.dart';
-import 'package:job_planner/domain/entities/diary_entry.dart';
+import 'package:pluto/domain/entities/calendar_event.dart';
+import 'package:pluto/domain/entities/diary_cover.dart';
+import 'package:pluto/domain/entities/diary_entry.dart';
 
 class DiaryEntryModel {
   DiaryEntryModel._();

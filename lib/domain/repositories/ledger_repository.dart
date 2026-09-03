@@ -1,4 +1,4 @@
-import 'package:job_planner/domain/entities/ledger_entry.dart';
+import 'package:pluto/domain/entities/ledger_entry.dart';
 
 abstract class LedgerRepository {
   Future<List<LedgerEntry>> getAll();

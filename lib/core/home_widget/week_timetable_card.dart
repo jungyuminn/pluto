@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:job_planner/core/constants/app_fonts.dart';
-import 'package:job_planner/core/constants/app_strings.dart';
-import 'package:job_planner/core/theme/app_colors.dart';
-import 'package:job_planner/domain/entities/calendar_event.dart';
-import 'package:job_planner/presentation/screens/calendar/calendar_day_events.dart';
-import 'package:job_planner/presentation/screens/calendar/widgets/calendar_event_label.dart';
+import 'package:pluto/core/constants/app_fonts.dart';
+import 'package:pluto/core/constants/app_strings.dart';
+import 'package:pluto/core/theme/app_colors.dart';
+import 'package:pluto/domain/entities/calendar_event.dart';
+import 'package:pluto/presentation/screens/calendar/calendar_day_events.dart';
+import 'package:pluto/presentation/screens/calendar/widgets/calendar_event_label.dart';
 
 class WeekTimetableCard extends StatelessWidget {
   const WeekTimetableCard({
@@ -20,7 +20,7 @@ class WeekTimetableCard extends StatelessWidget {
   static const emptyKey = 'week_timetable_empty';
   static const androidName = 'WeekTimetableWidgetProvider';
   static const qualifiedAndroidName =
-      'com.jobplanner.job_planner.WeekTimetableWidgetProvider';
+      'com.pluto.app.WeekTimetableWidgetProvider';
   static const iOSName = 'WeekTimetableWidget';
 
   static const headerHeight = 52.0;

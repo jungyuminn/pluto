@@ -1,7 +1,7 @@
-import 'package:job_planner/data/datasources/cover_letter_storage.dart';
-import 'package:job_planner/data/datasources/job_application_local_datasource.dart';
-import 'package:job_planner/domain/entities/job_application.dart';
-import 'package:job_planner/domain/repositories/job_application_repository.dart';
+import 'package:pluto/data/datasources/cover_letter_storage.dart';
+import 'package:pluto/data/datasources/job_application_local_datasource.dart';
+import 'package:pluto/domain/entities/job_application.dart';
+import 'package:pluto/domain/repositories/job_application_repository.dart';
 
 class JobApplicationRepositoryImpl implements JobApplicationRepository {
   const JobApplicationRepositoryImpl(

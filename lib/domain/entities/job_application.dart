@@ -1,5 +1,5 @@
-import 'package:job_planner/domain/entities/application_round.dart';
-import 'package:job_planner/domain/entities/apply_status.dart';
+import 'package:pluto/domain/entities/application_round.dart';
+import 'package:pluto/domain/entities/apply_status.dart';
 
 class JobApplication {
   JobApplication({

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:job_planner/core/theme/app_colors.dart';
-import 'package:job_planner/core/utils/press_bounce.dart';
-import 'package:job_planner/presentation/widgets/themed_asset.dart';
+import 'package:pluto/core/theme/app_colors.dart';
+import 'package:pluto/core/utils/press_bounce.dart';
+import 'package:pluto/presentation/widgets/themed_asset.dart';
 
 class AppBarIconAction {
   const AppBarIconAction({

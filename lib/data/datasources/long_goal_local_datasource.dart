@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:job_planner/domain/entities/long_goal.dart';
+import 'package:pluto/domain/entities/long_goal.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class LongGoalLocalDataSource {

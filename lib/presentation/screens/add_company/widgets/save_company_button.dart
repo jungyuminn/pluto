@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:job_planner/core/constants/app_icons.dart';
-import 'package:job_planner/core/utils/press_bounce.dart';
+import 'package:pluto/core/constants/app_icons.dart';
+import 'package:pluto/core/utils/press_bounce.dart';
 
 class SaveCompanyButton extends StatelessWidget {
   const SaveCompanyButton({

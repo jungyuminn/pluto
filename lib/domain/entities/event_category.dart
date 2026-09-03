@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:job_planner/domain/entities/calendar_event.dart';
+import 'package:pluto/domain/entities/calendar_event.dart';
 
 enum CategoryKind { event, company, ledger, license }
 

@@ -89,12 +89,22 @@ enum ReleaseDemo {
   diaryPhotoSave,
   diaryStickerRemove,
   icloudRestore,
+  jobMode,
+  jobExpand,
+  jobFaded,
+  wordmarkAccount,
+  pastelTint,
+  planetCollection,
+  homeHideJobs,
   feature,
   fix,
 }
 
 ReleaseDemo releaseDemoFor(String text, {required bool isFix}) {
   if (isFix) {
+    if (text.contains('홈 카드에 지원서') || text.contains('취준 모드를 끄면')) {
+      return ReleaseDemo.homeHideJobs;
+    }
     if (text.contains('잘리지') || text.contains('그림 창')) {
       return ReleaseDemo.diaryDraw;
     }
@@ -149,6 +159,23 @@ ReleaseDemo releaseDemoFor(String text, {required bool isFix}) {
     return ReleaseDemo.searchGroupBy;
   }
   if (text.contains('알약으로')) return ReleaseDemo.searchRangePill;
+  if (text.contains('취준 모드를 켜야')) return ReleaseDemo.jobMode;
+  if (text.contains('아래로 펼쳐') || text.contains('할 일처럼 간략히')) {
+    return ReleaseDemo.jobExpand;
+  }
+  if (text.contains('자격증도 같은')) return ReleaseDemo.license;
+  if (text.contains('탈락한 지원서') || text.contains('만료된 자격증')) {
+    return ReleaseDemo.jobFaded;
+  }
+  if (text.contains('계정마다') || text.contains('로고가 계정')) {
+    return ReleaseDemo.wordmarkAccount;
+  }
+  if (text.contains('더 연해') || text.contains('카테고리 색 배경')) {
+    return ReleaseDemo.pastelTint;
+  }
+  if (text.contains('모은 행성') || text.contains('해마다')) {
+    return ReleaseDemo.planetCollection;
+  }
   if (text.contains('자격증을 모아') || text.contains('간략 보기')) {
     return ReleaseDemo.license;
   }
@@ -346,6 +373,13 @@ class ReleaseDemoView extends StatelessWidget {
       ReleaseDemo.diaryPhotoSave => const _DiaryPhotoSaveDemo(),
       ReleaseDemo.diaryStickerRemove => const _DiaryStickerRemoveDemo(),
       ReleaseDemo.icloudRestore => const _IcloudRestoreDemo(),
+      ReleaseDemo.jobMode => const _JobModeDemo(),
+      ReleaseDemo.jobExpand => const _JobExpandDemo(),
+      ReleaseDemo.jobFaded => const _JobFadedDemo(),
+      ReleaseDemo.wordmarkAccount => const _WordmarkAccountDemo(),
+      ReleaseDemo.pastelTint => const _PastelTintDemo(),
+      ReleaseDemo.planetCollection => const _PlanetCollectionDemo(),
+      ReleaseDemo.homeHideJobs => const _HomeHideJobsDemo(),
       ReleaseDemo.feature => const _FeatureDemo(),
       ReleaseDemo.fix => const _FixDemo(),
     };
@@ -3659,100 +3693,37 @@ class _LicenseDemo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _Loop(
+      ms: 3400,
       builder: (context, t) {
         final colors = AppColors.of(context);
         final font = AppFonts.of(context);
-        final open = _gate(t, 0.28, 0.55);
-        return Padding(
-          padding: const EdgeInsets.fromLTRB(20, 22, 20, 16),
-          child: _Card(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        '정보처리기사',
-                        style: TextStyle(
-                          fontFamily: font,
-                          fontSize: 15,
-                          fontWeight: FontWeight.w800,
-                          color: colors.text,
-                        ),
-                      ),
-                    ),
-                    DecoratedBox(
-                      decoration: BoxDecoration(
-                        color: colors.accent.withValues(alpha: 0.16),
-                        borderRadius: BorderRadius.circular(999),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        child: Text(
-                          '88',
-                          style: TextStyle(
-                            fontFamily: font,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w800,
-                            color: colors.accent,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                Row(
-                  children: [
-                    Container(
-                      width: 8,
-                      height: 8,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF00ACC1),
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      '기사',
-                      style: TextStyle(
-                        fontFamily: font,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFF00ACC1),
-                      ),
-                    ),
-                  ],
-                ),
-                ClipRect(
-                  child: Align(
-                    alignment: Alignment.topCenter,
-                    heightFactor: open,
-                    child: Opacity(
-                      opacity: open,
-                      child: Padding(
-                        padding: const EdgeInsets.only(top: 8),
-                        child: Text(
-                          '취득일  2024. 3. 5.\n만료일  2029. 3. 5.',
-                          style: TextStyle(
-                            fontFamily: font,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            height: 1.45,
-                            color: colors.secondary,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+        final tap = _pulse(t, 0.12, 0.22, 0.36);
+        final open = Curves.easeOutCubic.transform(
+          t < 0.78 ? _gate(t, 0.22, 0.48) : 1 - _gate(t, 0.78, 0.94),
+        );
+        const accent = Color(0xFF00ACC1);
+        return Stack(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(18, 22, 18, 12),
+              child: _eventLabel(
+                colors: colors,
+                font: font,
+                title: '정보처리기사',
+                subtitle: '기사',
+                accent: accent,
+                badge: '88',
+                open: open,
+                details: const ['취득일    2024. 3. 5.', '만료일    2029. 3. 5.'],
+              ),
             ),
-          ),
+            if (tap > 0)
+              Positioned(
+                left: 52,
+                top: 40,
+                child: _Finger(pressed: tap),
+              ),
+          ],
         );
       },
     );
@@ -4469,6 +4440,736 @@ class _IcloudRestoreDemo extends StatelessWidget {
       },
     );
   }
+}
+
+class _JobModeDemo extends StatelessWidget {
+  const _JobModeDemo();
+
+  static const _icon = 20.0;
+  static const _cell = 48.0;
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 3600,
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final font = AppFonts.of(context);
+        final on = Curves.easeOutCubic.transform(_gate(t, 0.28, 0.52));
+        final tap = _pulse(t, 0.14, 0.24, 0.4);
+        return Stack(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(18, 14, 18, 12),
+              child: Column(
+                children: [
+                  Expanded(
+                    child: Center(
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: colors.navBar,
+                          borderRadius: BorderRadius.circular(999),
+                          boxShadow: [
+                            BoxShadow(
+                              color: colors.shadow,
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: SizedBox(
+                          height: 46,
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              _navIcon(AppIcons.home, colors),
+                              _navIcon(AppIcons.calendarOutlined, colors),
+                              ClipRect(
+                                child: Align(
+                                  alignment: Alignment.centerLeft,
+                                  widthFactor: on,
+                                  child: Opacity(
+                                    opacity: on,
+                                    child: SizedBox(
+                                      width: _cell,
+                                      child: Center(
+                                        child: ThemedAsset(
+                                          asset: AppIcons.resume,
+                                          width: _icon,
+                                          height: _icon,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              _navIcon(AppIcons.planetOutlined, colors),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: colors.card,
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(12, 8, 10, 8),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              AppStrings.jobMode,
+                              style: TextStyle(
+                                fontFamily: font,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: colors.text,
+                              ),
+                            ),
+                          ),
+                          _FakeSwitch(on: on),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (tap > 0)
+              Positioned(
+                right: 28,
+                bottom: 18,
+                child: _Finger(pressed: tap),
+              ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _navIcon(String asset, AppColors colors) {
+    return SizedBox(
+      width: _cell,
+      child: Center(
+        child: ThemedAsset(asset: asset, width: _icon, height: _icon),
+      ),
+    );
+  }
+}
+
+class _FakeSwitch extends StatelessWidget {
+  const _FakeSwitch({required this.on});
+
+  final double on;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    return SizedBox(
+      width: 42,
+      height: 24,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: Color.lerp(colors.border, colors.accent, on),
+          borderRadius: BorderRadius.circular(999),
+        ),
+        child: Align(
+          alignment: Alignment(-0.7 + on * 1.4, 0),
+          child: Container(
+            width: 18,
+            height: 18,
+            margin: const EdgeInsets.symmetric(horizontal: 3),
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _JobExpandDemo extends StatelessWidget {
+  const _JobExpandDemo();
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 3600,
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final font = AppFonts.of(context);
+        final tap = _pulse(t, 0.12, 0.22, 0.36);
+        final open = Curves.easeOutCubic.transform(
+          t < 0.78 ? _gate(t, 0.22, 0.48) : 1 - _gate(t, 0.78, 0.94),
+        );
+        const accent = Color(0xFF5B8DEF);
+        return Stack(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(18, 22, 18, 12),
+              child: _eventLabel(
+                colors: colors,
+                font: font,
+                title: '네이버',
+                subtitle: '개발 · 서버',
+                accent: accent,
+                badge: '면접',
+                open: open,
+                details: const ['9. 12.    서류', '9. 20.    면접'],
+              ),
+            ),
+            if (tap > 0)
+              Positioned(
+                left: 52,
+                top: 40,
+                child: _Finger(pressed: tap),
+              ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _JobFadedDemo extends StatelessWidget {
+  const _JobFadedDemo();
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 3200,
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final font = AppFonts.of(context);
+        final fade = Curves.easeOutCubic.transform(_gate(t, 0.28, 0.55));
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(18, 16, 18, 10),
+          child: Column(
+            children: [
+              _eventLabel(
+                colors: colors,
+                font: font,
+                title: '카카오',
+                subtitle: '개발 · 클라이언트',
+                accent: const Color(0xFFF59E0B),
+                badge: '서류',
+                open: 0,
+              ),
+              const SizedBox(height: 8),
+              Opacity(
+                opacity: 1 - fade * 0.58,
+                child: _eventLabel(
+                  colors: colors,
+                  font: font,
+                  title: '라인',
+                  subtitle: '개발 · 서버',
+                  accent: const Color(0xFF22C55E),
+                  badge: fade > 0.5 ? '탈락' : '면접',
+                  open: 0,
+                  showBar: fade < 0.5,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _WordmarkAccountDemo extends StatelessWidget {
+  const _WordmarkAccountDemo();
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 3600,
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final font = AppFonts.of(context);
+        final custom = _gate(t, 0.28, 0.46) > 0.5;
+        final tap = _pulse(t, 0.14, 0.24, 0.38);
+        final cloud = Curves.easeOutCubic.transform(_gate(t, 0.5, 0.68));
+        return Stack(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(22, 36, 22, 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Transform.scale(
+                    alignment: Alignment.centerLeft,
+                    scale: 1 - tap * 0.04,
+                    child: Text(
+                      custom ? '내 플래너' : '잡플래너',
+                      style: TextStyle(
+                        fontFamily: AppFonts.jalnan,
+                        fontSize: 22,
+                        color: AppFonts.wordmarkColor,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  Opacity(
+                    opacity: cloud,
+                    child: Transform.translate(
+                      offset: Offset(0, (1 - cloud) * 8),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.cloud_done_rounded,
+                            size: 16,
+                            color: colors.accent,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            '카카오 계정에 저장됨',
+                            style: TextStyle(
+                              fontFamily: font,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: colors.accent,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (tap > 0)
+              Positioned(
+                left: 48,
+                top: 42,
+                child: _Finger(pressed: tap),
+              ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _PastelTintDemo extends StatelessWidget {
+  const _PastelTintDemo();
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 3000,
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final font = AppFonts.of(context);
+        final wash = Curves.easeInOutCubic.transform(
+          t < 0.5 ? _gate(t, 0.12, 0.42) : 1 - _gate(t, 0.62, 0.9),
+        );
+        final amount = 0.28 - wash * 0.14;
+        const accent = Color(0xFF5B8DEF);
+        final bg = Color.lerp(colors.card, accent, amount)!;
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(22, 40, 22, 20),
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: bg,
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+              child: Row(
+                children: [
+                  Container(
+                    width: 4,
+                    height: 28,
+                    decoration: BoxDecoration(
+                      color: accent,
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          '자기소개서 다듬기',
+                          style: TextStyle(
+                            fontFamily: font,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: colors.text,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '취준  ·  14:00',
+                          style: TextStyle(
+                            fontFamily: font,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: colors.hint,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _PlanetCollectionDemo extends StatelessWidget {
+  const _PlanetCollectionDemo();
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 3600,
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final font = AppFonts.of(context);
+        final page = Curves.easeInOutCubic.transform(_gate(t, 0.28, 0.62));
+        final swipe = _pulse(t, 0.18, 0.3, 0.7);
+        final year = page > 0.5 ? '2025' : '2026';
+        return Stack(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
+              child: Column(
+                children: [
+                  Text(
+                    year,
+                    style: TextStyle(
+                      fontFamily: font,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                      color: colors.text,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Expanded(
+                    child: ClipRect(
+                      child: Stack(
+                        children: [
+                          Transform.translate(
+                            offset: Offset(-page * 220, 0),
+                            child: _planetRow(
+                              const [
+                                Color(0xFF7DD3FC),
+                                Color(0xFFF9A8D4),
+                                Color(0xFFFCD34D),
+                                Color(0xFFC4B5FD),
+                              ],
+                            ),
+                          ),
+                          Transform.translate(
+                            offset: Offset((1 - page) * 220, 0),
+                            child: _planetRow(
+                              const [
+                                Color(0xFF86EFAC),
+                                Color(0xFFFDBA74),
+                                Color(0xFF93C5FD),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (swipe > 0)
+              Positioned.fill(
+                child: Align(
+                  alignment: Alignment(0.35 - page * 0.8, 0.2),
+                  child: _Finger(pressed: swipe),
+                ),
+              ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _planetRow(List<Color> fills) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        for (final fill in fills)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [fill.withValues(alpha: 0.35), fill],
+                  center: const Alignment(-0.3, -0.3),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: fill.withValues(alpha: 0.35),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class _HomeHideJobsDemo extends StatelessWidget {
+  const _HomeHideJobsDemo();
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 3400,
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final font = AppFonts.of(context);
+        final hide = Curves.easeOutCubic.transform(_gate(t, 0.32, 0.58));
+        final tap = _pulse(t, 0.16, 0.26, 0.42);
+        return Stack(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 10, 16, 8),
+              child: Column(
+                children: [
+                  Expanded(
+                    child: _Card(
+                      padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '오늘',
+                            style: TextStyle(
+                              fontFamily: font,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w800,
+                              color: colors.accentBright,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          _eventLabel(
+                            colors: colors,
+                            font: font,
+                            title: '자기소개서 다듬기',
+                            subtitle: '취준',
+                            accent: const Color(0xFF5B8DEF),
+                            badge: '',
+                            open: 0,
+                            compact: true,
+                          ),
+                          ClipRect(
+                            child: Align(
+                              alignment: Alignment.topCenter,
+                              heightFactor: 1 - hide,
+                              child: Opacity(
+                                opacity: 1 - hide,
+                                child: Padding(
+                                  padding: const EdgeInsets.only(top: 6),
+                                  child: _eventLabel(
+                                    colors: colors,
+                                    font: font,
+                                    title: '네이버',
+                                    subtitle: '개발 · 면접',
+                                    accent: const Color(0xFF22C55E),
+                                    badge: '면접',
+                                    open: 0,
+                                    compact: true,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          AppStrings.jobMode,
+                          style: TextStyle(
+                            fontFamily: font,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: colors.text,
+                          ),
+                        ),
+                      ),
+                      _FakeSwitch(on: 1 - hide),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            if (tap > 0)
+              Positioned(
+                right: 22,
+                bottom: 10,
+                child: _Finger(pressed: tap),
+              ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+Widget _eventLabel({
+  required AppColors colors,
+  required String? font,
+  required String title,
+  required String subtitle,
+  required Color accent,
+  required String badge,
+  required double open,
+  List<String> details = const [],
+  bool showBar = true,
+  bool compact = false,
+}) {
+  return DecoratedBox(
+    decoration: BoxDecoration(
+      color: Color.lerp(colors.card, accent, 0.14),
+      borderRadius: BorderRadius.circular(8),
+    ),
+    child: ClipRRect(
+      borderRadius: BorderRadius.circular(8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            height: compact ? 40 : 48,
+            child: Row(
+              children: [
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 180),
+                  width: showBar ? 4 : 0,
+                  color: accent,
+                ),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(8, 6, 6, 6),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontFamily: font,
+                            fontSize: compact ? 11 : 12,
+                            fontWeight: FontWeight.w600,
+                            height: 1.15,
+                            color: colors.text,
+                          ),
+                        ),
+                        if (subtitle.isNotEmpty) ...[
+                          const SizedBox(height: 3),
+                          Text(
+                            subtitle,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontFamily: font,
+                              fontSize: compact ? 9 : 10,
+                              fontWeight: FontWeight.w600,
+                              height: 1.15,
+                              color: colors.hint,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
+                if (badge.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: accent.withValues(alpha: 0.18),
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 7,
+                          vertical: 4,
+                        ),
+                        child: Text(
+                          badge,
+                          style: TextStyle(
+                            fontFamily: font,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w800,
+                            color: accent,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          if (details.isNotEmpty)
+            ClipRect(
+              child: Align(
+                alignment: Alignment.topCenter,
+                heightFactor: open,
+                child: Opacity(
+                  opacity: open,
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(14, 0, 12, 8),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        for (final line in details)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 3),
+                            child: Text(
+                              line,
+                              style: TextStyle(
+                                fontFamily: font,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w500,
+                                color: colors.text,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    ),
+  );
 }
 
 class _FeatureDemo extends StatelessWidget {

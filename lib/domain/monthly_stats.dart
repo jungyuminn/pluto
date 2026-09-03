@@ -378,7 +378,7 @@ class MonthlyStats {
         if (roundDate == null || !_inRange(roundDate, date, date)) continue;
         items.add(
           MonthlyBusyDayItem(
-            title: _jobRoundLabel(application.companyName, i + 1, round.name),
+            title: _jobRoundLabel(application.companyName, round.name),
             color:
                 application.categoryColor ?? CalendarEvent.defaultCategoryColor,
             kind: MonthlyBusyDayKind.job,
@@ -441,13 +441,9 @@ class MonthlyStats {
     return items;
   }
 
-  static String _jobRoundLabel(
-    String companyName,
-    int number,
-    String roundName,
-  ) {
+  static String _jobRoundLabel(String companyName, String roundName) {
     final name = roundName.trim();
-    if (name.isEmpty) return '$companyName-$number차';
-    return '$companyName-$number차($name)';
+    if (name.isEmpty) return companyName;
+    return '$companyName($name)';
   }
 }

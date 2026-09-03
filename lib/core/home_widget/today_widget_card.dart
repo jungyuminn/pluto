@@ -431,12 +431,11 @@ class _WidgetEventLabel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
-    final background = colors.tint(event.color, 0.22);
+    final background = colors.tint(event.color, 0.14);
     return DecoratedBox(
       decoration: BoxDecoration(
         color: background,
         borderRadius: BorderRadius.circular(8),
-        border: event.isJob ? Border.all(color: event.color, width: 1.5) : null,
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(8),

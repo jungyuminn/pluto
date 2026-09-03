@@ -297,7 +297,7 @@ class _CompleteDemo extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(16, 28, 16, 16),
               child: DecoratedBox(
                 decoration: BoxDecoration(
-                  color: colors.tint(accent, done > 0.5 ? 0.12 : 0.22),
+                  color: colors.tint(accent, done > 0.5 ? 0.11 : 0.14),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: SizedBox(

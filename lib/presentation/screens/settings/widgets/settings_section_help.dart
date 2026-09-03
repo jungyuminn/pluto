@@ -4251,7 +4251,7 @@ class _FakeTodo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
-    final background = colors.tint(color, 0.22);
+    final background = colors.tint(color, 0.14);
     return ClipRRect(
       borderRadius: BorderRadius.circular(8),
       child: ColoredBox(

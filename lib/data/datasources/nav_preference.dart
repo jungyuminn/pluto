@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
+import 'package:job_planner/core/home_widget/home_screen_widget_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class NavPreference extends ChangeNotifier {
@@ -48,6 +51,7 @@ class NavPreference extends ChangeNotifier {
     notifyListeners();
     await _prefs?.setBool(_jobModeKey, value);
     await _prefs?.remove(_dailyModeKey);
+    unawaited(HomeScreenWidgetService.instance.sync());
   }
 
   Future<void> setShowStatsTab(bool value) async {

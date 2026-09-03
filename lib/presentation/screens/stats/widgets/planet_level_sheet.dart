@@ -204,7 +204,6 @@ class _StageRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
     final font = AppFonts.of(context);
-    final last = stage.level == PlanetStage.maxLevel;
     return PressBounce(
       onPressed: onPressed,
       pressedScale: 0.98,
@@ -236,19 +235,17 @@ class _StageRow extends StatelessWidget {
             const SizedBox(width: 8),
             Expanded(
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    last
-                        ? AppStrings.statsLevelMax
-                        : AppStrings.statsLevel(stage.level),
+                    AppStrings.statsPlanetStage(stage.level),
                     style: TextStyle(
                       fontFamily: font,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w800,
-                      height: 1.1,
-                      color: _planetDeep,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      height: 1,
+                      color: colors.muted,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -322,7 +319,6 @@ class _PlanetPreviewDialogState extends State<_PlanetPreviewDialog>
     final colors = AppColors.of(context);
     final font = AppFonts.of(context);
     final stage = widget.stage;
-    final last = stage.level == PlanetStage.maxLevel;
     return Dialog(
       backgroundColor: Colors.transparent,
       elevation: 0,
@@ -361,14 +357,12 @@ class _PlanetPreviewDialogState extends State<_PlanetPreviewDialog>
               ),
               const SizedBox(height: 8),
               Text(
-                last
-                    ? AppStrings.statsLevelMax
-                    : AppStrings.statsLevel(stage.level),
+                AppStrings.statsPlanetStage(stage.level),
                 style: TextStyle(
                   fontFamily: font,
                   fontSize: 13,
-                  fontWeight: FontWeight.w800,
-                  color: _planetDeep,
+                  fontWeight: FontWeight.w700,
+                  color: colors.muted,
                 ),
               ),
               const SizedBox(height: 4),

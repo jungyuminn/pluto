@@ -405,7 +405,7 @@ class _AddEventFormState extends State<AddEventForm>
       curve: Curves.easeOutCubic,
       width: double.infinity,
       decoration: BoxDecoration(
-        color: AppColors.of(context).tint(_accent),
+        color: AppColors.of(context).tint(_accent, 0.14),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         boxShadow: const [
           BoxShadow(

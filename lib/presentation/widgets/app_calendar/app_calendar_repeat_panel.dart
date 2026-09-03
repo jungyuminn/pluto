@@ -70,7 +70,7 @@ class AppCalendarRepeatPanel extends StatelessWidget {
       monthWeek: monthWeek,
       monthWeekday: monthWeekday,
     );
-    final highlight = AppColors.of(context).tint(accent, 0.22);
+    final highlight = AppColors.of(context).tint(accent, 0.14);
 
     return DecoratedBox(
       decoration: BoxDecoration(

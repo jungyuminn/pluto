@@ -23,18 +23,55 @@ Future<DateTime?> showCollectedPlanetSheet(
   );
 }
 
-class _CollectedPlanetSheet extends StatelessWidget {
+class _CollectedPlanetSheet extends StatefulWidget {
   const _CollectedPlanetSheet({required this.collected});
 
   final List<CollectedPlanet> collected;
+
+  @override
+  State<_CollectedPlanetSheet> createState() => _CollectedPlanetSheetState();
+}
+
+class _CollectedPlanetSheetState extends State<_CollectedPlanetSheet> {
+  static const _minTile = 96.0;
+  static const _gap = 12.0;
+  static const _runGap = 8.0;
+
+  late final List<int> _years;
+  late final Map<int, List<CollectedPlanet>> _byYear;
+  late final PageController _pager;
+  late final int _nowYear;
+  late int _page;
+
+  @override
+  void initState() {
+    super.initState();
+    _nowYear = DateTime.now().year;
+    _byYear = {};
+    var oldest = _nowYear;
+    for (final planet in widget.collected) {
+      final year = planet.month.year;
+      _byYear.putIfAbsent(year, () => []).add(planet);
+      if (year < oldest) oldest = year;
+    }
+    _years = [for (var year = oldest; year <= _nowYear; year++) year];
+    _page = _years.length - 1;
+    _pager = PageController(initialPage: _page);
+  }
+
+  @override
+  void dispose() {
+    _pager.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
     final font = AppFonts.of(context);
     final bottom = MediaQuery.paddingOf(context).bottom;
-    final maxHeight = MediaQuery.sizeOf(context).height * 0.78;
-    final nowYear = DateTime.now().year;
+    final maxHeight = MediaQuery.sizeOf(context).height * 0.64;
+    final collected = widget.collected;
     return Stack(
       children: [
         Positioned.fill(
@@ -57,6 +94,7 @@ class _CollectedPlanetSheet extends StatelessWidget {
               child: Padding(
                 padding: EdgeInsets.fromLTRB(20, 10, 20, 8 + bottom),
                 child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Center(
@@ -90,41 +128,112 @@ class _CollectedPlanetSheet extends StatelessWidget {
                         color: colors.muted,
                       ),
                     ),
-                    const SizedBox(height: 16),
-                    Expanded(
-                      child: collected.isEmpty
-                          ? const SizedBox.shrink()
-                          : LayoutBuilder(
-                              builder: (context, constraints) {
-                                const minTile = 96.0;
-                                const gap = 12.0;
-                                final width = constraints.maxWidth;
-                                final columns = ((width + gap) /
-                                        (minTile + gap))
-                                    .floor()
-                                    .clamp(1, 99);
-                                final tileW =
-                                    (width - gap * (columns - 1)) / columns;
-                                return SingleChildScrollView(
-                                  padding: const EdgeInsets.only(bottom: 8),
-                                  child: Wrap(
-                                    spacing: gap,
-                                    runSpacing: 8,
-                                    children: [
-                                      for (final planet in collected)
-                                        _CollectedPlanetTile(
-                                          planet: planet,
-                                          width: tileW,
-                                          nowYear: nowYear,
-                                          font: font,
-                                          colors: colors,
+                    if (collected.isNotEmpty) ...[
+                      const SizedBox(height: 16),
+                      Flexible(
+                        fit: FlexFit.loose,
+                        child: LayoutBuilder(
+                          builder: (context, constraints) {
+                            final width = constraints.maxWidth;
+                            final columns = ((width + _gap) / (_minTile + _gap))
+                                .floor()
+                                .clamp(1, 99);
+                            final tileW =
+                                (width - _gap * (columns - 1)) / columns;
+                            final currentCount =
+                                _byYear[_nowYear]?.length ?? 0;
+                            final rows = ((currentCount < 1 ? 1 : currentCount) /
+                                    columns)
+                                .ceil()
+                                .clamp(1, 99);
+                            final gridH = rows * tileW +
+                                (rows - 1) * _runGap +
+                                8;
+                            final dotsH = _years.length > 1 ? 16.0 : 0.0;
+                            final height = gridH.clamp(
+                              0.0,
+                              (constraints.maxHeight - dotsH).clamp(0.0, double.infinity),
+                            );
+                            return Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                SizedBox(
+                                  height: height,
+                                  child: PageView.builder(
+                                controller: _pager,
+                                itemCount: _years.length,
+                                onPageChanged: (index) {
+                                  HapticFeedback.selectionClick();
+                                  setState(() => _page = index);
+                                },
+                                itemBuilder: (context, index) {
+                                  final pageYear = _years[index];
+                                  final planets = _byYear[pageYear] ?? const [];
+                                  if (planets.isEmpty) {
+                                    return Center(
+                                      child: Text(
+                                        AppStrings.statsCollectedYearEmpty,
+                                        style: TextStyle(
+                                          fontFamily: font,
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w600,
+                                          color: colors.muted,
                                         ),
+                                      ),
+                                    );
+                                  }
+                                  return ListView(
+                                    padding: const EdgeInsets.only(bottom: 8),
+                                    children: [
+                                      Wrap(
+                                        spacing: _gap,
+                                        runSpacing: _runGap,
+                                        children: [
+                                          for (final planet in planets)
+                                            _CollectedPlanetTile(
+                                              planet: planet,
+                                              width: tileW,
+                                              nowYear: _nowYear,
+                                              font: font,
+                                              colors: colors,
+                                            ),
+                                        ],
+                                      ),
+                                    ],
+                                  );
+                                },
+                                  ),
+                                ),
+                                if (_years.length > 1) ...[
+                                  const SizedBox(height: 10),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      for (var i = 0; i < _years.length; i++) ...[
+                                        if (i > 0) const SizedBox(width: 6),
+                                        DecoratedBox(
+                                          decoration: BoxDecoration(
+                                            shape: BoxShape.circle,
+                                            color: i == _page
+                                                ? colors.accentBright
+                                                : colors.muted.withValues(
+                                                    alpha: 0.45,
+                                                  ),
+                                          ),
+                                          child: const SizedBox.square(
+                                            dimension: 6,
+                                          ),
+                                        ),
+                                      ],
                                     ],
                                   ),
-                                );
-                              },
-                            ),
-                    ),
+                                ],
+                              ],
+                            );
+                          },
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -167,56 +276,62 @@ class _CollectedPlanetTile extends StatelessWidget {
       borderRadius: BorderRadius.circular(18),
       child: SizedBox(
         width: width,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 6),
-              child: PlanetFill(
-                key: ValueKey(planet.month),
-                level: planet.isMax ? PlanetStage.maxLevel : planet.level,
-                wave: 0.1,
-                phase: (planet.month.year * 12 + planet.month.month) * 0.17 % 1,
-                outline: colors.icon,
-                empty: colors.card,
-              ),
-            ),
-            Transform.translate(
-              offset: const Offset(0, -6),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontFamily: font,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      height: 1,
-                      color: colors.muted,
+        height: width,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: colors.groupedBackground,
+            borderRadius: BorderRadius.circular(18),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(8, 4, 8, 8),
+            child: Column(
+              children: [
+                Expanded(
+                  child: Center(
+                    child: PlanetFill(
+                      key: ValueKey(planet.month),
+                      level:
+                          planet.isMax ? PlanetStage.maxLevel : planet.level,
+                      wave: 0.1,
+                      phase: (planet.month.year * 12 + planet.month.month) *
+                          0.17 %
+                          1,
+                      outline: colors.icon,
+                      empty: colors.groupedBackground,
+                      pokeable: false,
                     ),
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    planet.name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontFamily: font,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w800,
-                      height: 1,
-                      color: colors.text,
-                    ),
+                ),
+                Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontFamily: font,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    height: 1,
+                    color: colors.muted,
                   ),
-                ],
-              ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  planet.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontFamily: font,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w800,
+                    height: 1,
+                    color: colors.text,
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );

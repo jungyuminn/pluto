@@ -17,6 +17,21 @@ class ReleaseNote {
 abstract final class ReleaseNotes {
   static const all = [
     ReleaseNote(
+      version: '1.3.0',
+      items: [
+        '취준 모드를 켜야 지원서·자격증이 나와요',
+        '지원서가 할 일처럼 간략히 보이고, 자세히 보면 아래로 펼쳐져요',
+        '자격증도 같은 방식으로 보여요',
+        '탈락한 지원서와 만료된 자격증이 연하게 보여요',
+        '화면 위 로고가 계정마다 저장돼요',
+        '카테고리 색 배경이 더 연해졌어요',
+        '통계에서 모은 행성을 해마다 모아 볼 수 있어요',
+      ],
+      fixes: [
+        '취준 모드를 끄면 홈 카드에 지원서가 나오지 않아요',
+      ],
+    ),
+    ReleaseNote(
       version: '1.2.0',
       items: [
         '같은 계정으로 PC에서도 볼 수 있어요',

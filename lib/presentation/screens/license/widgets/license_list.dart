@@ -62,7 +62,7 @@ class _LicenseListState extends State<LicenseList>
 
   static const _slotAnim = Duration(milliseconds: 280);
 
-  double get _gap => widget.compact ? 8 : 12;
+  double get _gap => widget.compact ? 10 : 12;
 
   @override
   void initState() {
@@ -136,7 +136,8 @@ class _LicenseListState extends State<LicenseList>
   }
 
   double _heightOf(License license) {
-    return _heights[license.id] ?? (widget.compact ? 64 : 88);
+    return _heights[license.id] ??
+        (widget.compact ? LicenseCard.compactHeight : 88);
   }
 
   double _blockHeight(License license) => _heightOf(license) + _gap;

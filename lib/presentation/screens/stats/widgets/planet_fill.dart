@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class PlanetFill extends StatefulWidget {
   const PlanetFill({
@@ -11,6 +12,7 @@ class PlanetFill extends StatefulWidget {
     required this.outline,
     required this.empty,
     this.phase = 0,
+    this.pokeable = true,
   });
 
   final int level;
@@ -18,48 +20,74 @@ class PlanetFill extends StatefulWidget {
   final Color outline;
   final Color empty;
   final double phase;
+  final bool pokeable;
 
   @override
   State<PlanetFill> createState() => _PlanetFillState();
 }
 
 class _PlanetFillState extends State<PlanetFill>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _idle;
+    with TickerProviderStateMixin {
+  AnimationController? _idle;
+  AnimationController? _poke;
+
+  AnimationController get _idleAnim => _idle ??= AnimationController(
+        vsync: this,
+        duration: const Duration(seconds: 5),
+      )..repeat();
+
+  AnimationController get _pokeAnim {
+    const want = Duration(milliseconds: 780);
+    _poke ??= AnimationController(vsync: this, duration: want);
+    if (_poke!.duration != want) _poke!.duration = want;
+    return _poke!;
+  }
 
   @override
   void initState() {
     super.initState();
-    _idle = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 5),
-    )..repeat();
+    _idleAnim;
+    _pokeAnim;
   }
 
   @override
   void dispose() {
-    _idle.dispose();
+    _idle?.dispose();
+    _poke?.dispose();
     super.dispose();
+  }
+
+  void _onTap() {
+    if (!widget.pokeable) return;
+    HapticFeedback.lightImpact();
+    _pokeAnim.forward(from: 0);
   }
 
   @override
   Widget build(BuildContext context) {
-    return AspectRatio(
+    final planet = AspectRatio(
       aspectRatio: 1,
       child: AnimatedBuilder(
-        animation: _idle,
+        animation: Listenable.merge([_idleAnim, _pokeAnim]),
         builder: (context, _) {
           return CustomPaint(
             painter: _PlanetPainter(
               level: widget.level.clamp(1, 10),
               wave: widget.wave,
-              time: (_idle.value + widget.phase) % 1,
+              time: (_idleAnim.value + widget.phase) % 1,
+              poke: _pokeAnim.value,
               outline: widget.outline,
               empty: widget.empty,
             ),
           );
         },
       ),
+    );
+    if (!widget.pokeable) return planet;
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: _onTap,
+      child: planet,
     );
   }
 }
@@ -225,6 +253,7 @@ class _PlanetPainter extends CustomPainter {
     required this.level,
     required this.wave,
     required this.time,
+    required this.poke,
     required this.outline,
     required this.empty,
   });
@@ -232,6 +261,7 @@ class _PlanetPainter extends CustomPainter {
   final int level;
   final double wave;
   final double time;
+  final double poke;
   final Color outline;
   final Color empty;
 
@@ -244,12 +274,30 @@ class _PlanetPainter extends CustomPainter {
     final s = size.shortestSide;
     final center = Offset(size.width / 2, size.height / 2);
     final clock = (time + level * 0.17) % 1;
-    final blink = _blink(look.kind, clock);
+    final pokeT = poke.clamp(0.0, 1.0);
+    final pulse = math.sin(pokeT * math.pi);
+    final kind = _pokedFace(look.kind, pokeT);
+    final blink = () {
+      if (kind == _Face.sleep || kind == _Face.happy) return 1.0;
+      final idle = _blink(look.kind, clock);
+      if (pokeT <= 0) return idle;
+      return idle.clamp(0.45 + pulse * 0.55, 1.0);
+    }();
     final breathe = 1 + math.sin((wave + clock) * math.pi * 2) * 0.008;
     final radius = s * 0.30 * breathe;
+    final squash = _squash(pokeT);
+    final hop = radius * _hop(pokeT);
+
+    canvas.save();
+    canvas.translate(center.dx, center.dy - hop + radius * 0.35);
+    canvas.rotate(_tilt(pokeT));
+    canvas.scale(1 + squash * 0.16, 1 - squash * 0.14);
+    canvas.translate(-center.dx, -(center.dy + radius * 0.35));
 
     if (look.haze) _drawAtmosphere(canvas, center, radius, look);
-    if (look.sunset) _drawSun(canvas, center, radius);
+    if (look.sunset) {
+      _drawSun(canvas, center, radius * (1 + pulse * 0.12));
+    }
     if (look.ring) {
       _drawRing(canvas, center, radius, look, behind: true, thin: false);
     }
@@ -259,7 +307,7 @@ class _PlanetPainter extends CustomPainter {
     _drawBody(canvas, center, radius, look);
     if (look.clouds) _drawClouds(canvas, center, radius, look);
     if (look.gleam) _drawGleam(canvas, center, radius, look);
-    _drawFace(canvas, center, radius, look, blink);
+    _drawFace(canvas, center, radius, look, blink, kind: kind, poke: pokeT);
     if (look.ring) {
       _drawRing(canvas, center, radius, look, behind: false, thin: false);
     }
@@ -273,11 +321,62 @@ class _PlanetPainter extends CustomPainter {
         radius,
         look,
         _blink(_Face.round, clock),
+        hop: pulse * radius * 0.18,
       );
     }
-    if (look.sparkle || look.gleam) {
-      _drawSparkles(canvas, center, radius, look);
+    if (look.sparkle || look.gleam || pokeT > 0 && level >= 7) {
+      _drawSparkles(canvas, center, radius, look, burst: pulse);
     }
+    _drawPokeFx(canvas, center, radius, look, pokeT);
+    canvas.restore();
+  }
+
+  _Face _pokedFace(_Face kind, double t) {
+    if (t <= 0) return kind;
+    return switch (level) {
+      2 when t > 0.42 => _Face.round,
+      4 when t > 0.18 && t < 0.82 => _Face.shy,
+      10 => _Face.happy,
+      _ => kind,
+    };
+  }
+
+  double _squash(double t) {
+    if (t <= 0 || t >= 1) return 0;
+    final raw = () {
+      if (t < 0.2) return Curves.easeOut.transform(t / 0.2);
+      if (t < 0.52) {
+        final u = (t - 0.2) / 0.32;
+        return ui.lerpDouble(1, -0.55, Curves.easeOut.transform(u))!;
+      }
+      final u = (t - 0.52) / 0.48;
+      return ui.lerpDouble(-0.55, 0, Curves.easeOutCubic.transform(u))!;
+    }();
+    return raw * (level == 1 ? 1.4 : 1);
+  }
+
+  double _hop(double t) {
+    if (t <= 0.18 || t >= 1) return 0;
+    final u = (t - 0.18) / 0.82;
+    final height = switch (level) {
+      1 => 0.02,
+      2 => 0.07,
+      4 => 0.06,
+      10 => 0.16,
+      _ => 0.14,
+    };
+    return math.sin(u * math.pi) * height;
+  }
+
+  double _tilt(double t) {
+    final pulse = math.sin(t * math.pi);
+    return switch (level) {
+      1 => pulse * 0.12,
+      4 => pulse * 0.16,
+      8 => math.sin(t * math.pi * 2) * 0.08,
+      9 => pulse * -0.08,
+      _ => pulse * 0.03,
+    };
   }
 
   double _blink(_Face kind, double clock) {
@@ -519,36 +618,50 @@ class _PlanetPainter extends CustomPainter {
     Offset center,
     double radius,
     _Look look,
-    double blink,
-  ) {
+    double blink, {
+    required _Face kind,
+    required double poke,
+  }) {
+    final pulse = math.sin(poke * math.pi);
+    final glance = switch (level) {
+      4 => pulse * radius * 0.08,
+      9 => pulse * -radius * 0.04,
+      _ => 0.0,
+    };
     final eyeY = center.dy - radius * 0.05;
     final eyeDx = radius * 0.27;
     final eyeR = radius * 0.09;
-    if (look.blush) {
-      final paint = Paint()..color = _blush.withValues(alpha: 0.42);
+    final blushOn = look.blush || (poke > 0 && level == 4);
+    if (blushOn) {
+      final paint = Paint()
+        ..color = _blush.withValues(alpha: 0.42 + pulse * 0.28);
       for (final side in [-1.0, 1.0]) {
         canvas.drawOval(
           Rect.fromCenter(
             center: Offset(
-              center.dx + side * radius * 0.44,
+              center.dx + side * radius * 0.44 + glance,
               center.dy + radius * 0.18,
             ),
-            width: radius * 0.24,
-            height: radius * 0.13,
+            width: radius * (0.24 + pulse * 0.06),
+            height: radius * (0.13 + pulse * 0.04),
           ),
           paint,
         );
       }
     }
     if (look.brows) {
+      final lift = pulse * eyeR * 0.35;
       for (final side in [-1.0, 1.0]) {
         final brow = Path()
-          ..moveTo(center.dx + side * (eyeDx - eyeR), eyeY - eyeR * 1.55)
+          ..moveTo(
+            center.dx + side * (eyeDx - eyeR) + glance,
+            eyeY - eyeR * 1.55 - lift,
+          )
           ..quadraticBezierTo(
-            center.dx + side * eyeDx,
-            eyeY - eyeR * 2.05,
-            center.dx + side * (eyeDx + eyeR),
-            eyeY - eyeR * 1.4,
+            center.dx + side * eyeDx + glance,
+            eyeY - eyeR * 2.05 - lift,
+            center.dx + side * (eyeDx + eyeR) + glance,
+            eyeY - eyeR * 1.4 - lift,
           );
         canvas.drawPath(
           brow,
@@ -561,10 +674,17 @@ class _PlanetPainter extends CustomPainter {
       }
     }
     for (final side in [-1.0, 1.0]) {
-      final eye = Offset(center.dx + side * eyeDx, eyeY);
-      switch (look.kind) {
+      final eye = Offset(center.dx + side * eyeDx + glance, eyeY);
+      switch (kind) {
         case _Face.sleep:
-          _arcEye(canvas, eye, eyeR, look.face, down: true);
+          _arcEye(
+            canvas,
+            eye.translate(0, pulse * eyeR * 0.18),
+            eyeR,
+            look.face,
+            down: true,
+            heavy: pulse,
+          );
         case _Face.happy:
           _arcEye(canvas, eye, eyeR, look.face, down: false);
         case _Face.yawn:
@@ -575,36 +695,53 @@ class _PlanetPainter extends CustomPainter {
       }
     }
     final mouthY = center.dy + radius * 0.2;
-    if (look.kind == _Face.yawn) {
+    if (kind == _Face.yawn) {
       canvas.drawOval(
         Rect.fromCenter(
           center: Offset(center.dx, mouthY + radius * 0.02),
-          width: radius * 0.15,
-          height: radius * 0.17,
+          width: radius * (0.15 + pulse * 0.06),
+          height: radius * (0.17 + pulse * 0.12),
         ),
         Paint()..color = look.face.withValues(alpha: 0.55),
       );
       return;
     }
-    if (look.kind == _Face.sleep) {
+    if (kind == _Face.sleep) {
       canvas.drawLine(
-        Offset(center.dx - radius * 0.06, mouthY),
-        Offset(center.dx + radius * 0.06, mouthY),
+        Offset(center.dx - radius * 0.06, mouthY + pulse * radius * 0.02),
+        Offset(center.dx + radius * 0.06, mouthY + pulse * radius * 0.02),
         Paint()
           ..color = look.face.withValues(alpha: 0.4)
           ..strokeCap = StrokeCap.round
           ..strokeWidth = math.max(1.6, radius * 0.04),
       );
+      if (pulse > 0.15) {
+        final bubble = Offset(
+          center.dx + radius * 0.2,
+          mouthY - radius * 0.06 - pulse * radius * 0.04,
+        );
+        canvas.drawCircle(
+          bubble,
+          radius * 0.04 * pulse,
+          Paint()..color = Colors.white.withValues(alpha: 0.72 * pulse),
+        );
+        canvas.drawCircle(
+          bubble.translate(radius * 0.08, -radius * 0.1),
+          radius * 0.07 * pulse,
+          Paint()..color = Colors.white.withValues(alpha: 0.5 * pulse),
+        );
+      }
       return;
     }
-    final wide = look.kind == _Face.smile || look.kind == _Face.happy;
-    final mouthW = radius * (wide ? 0.28 : 0.16);
+    final wide =
+        kind == _Face.smile || kind == _Face.happy || (poke > 0.2 && level >= 6);
+    final mouthW = radius * ((wide ? 0.28 : 0.16) + pulse * 0.05);
     final mouth = Path()
-      ..moveTo(center.dx - mouthW, mouthY)
+      ..moveTo(center.dx - mouthW + glance * 0.4, mouthY)
       ..quadraticBezierTo(
-        center.dx,
-        mouthY + radius * (wide ? 0.16 : 0.08),
-        center.dx + mouthW,
+        center.dx + glance * 0.4,
+        mouthY + radius * ((wide ? 0.16 : 0.08) + pulse * 0.05),
+        center.dx + mouthW + glance * 0.4,
         mouthY,
       );
     canvas.drawPath(
@@ -623,14 +760,16 @@ class _PlanetPainter extends CustomPainter {
     double r,
     Color color, {
     required bool down,
+    double heavy = 0,
   }) {
+    final dip = down ? r * (0.65 + heavy * 0.35) : -r * 0.92;
     final path = Path()
-      ..moveTo(eye.dx - r * 1.1, eye.dy + (down ? 0 : r * 0.12))
+      ..moveTo(eye.dx - r * 1.1, eye.dy + (down ? heavy * r * 0.12 : r * 0.12))
       ..quadraticBezierTo(
         eye.dx,
-        eye.dy + (down ? r * 0.65 : -r * 0.92),
+        eye.dy + dip,
         eye.dx + r * 1.1,
-        eye.dy + (down ? 0 : r * 0.12),
+        eye.dy + (down ? heavy * r * 0.12 : r * 0.12),
       );
     canvas.drawPath(
       path,
@@ -687,7 +826,7 @@ class _PlanetPainter extends CustomPainter {
   }) {
     canvas.save();
     canvas.translate(center.dx, center.dy);
-    canvas.rotate(thin ? -0.2 : -0.34);
+    canvas.rotate((thin ? -0.2 : -0.34) + math.sin(poke * math.pi * 2) * 0.12);
     final oval = Rect.fromCenter(
       center: Offset.zero,
       width: radius * (thin ? 2.55 : 2.32),
@@ -712,9 +851,13 @@ class _PlanetPainter extends CustomPainter {
     Offset center,
     double radius,
     _Look look,
-    double blink,
-  ) {
-    final moon = Offset(center.dx + radius * 1.2, center.dy - radius * 0.82);
+    double blink, {
+    double hop = 0,
+  }) {
+    final moon = Offset(
+      center.dx + radius * 1.2,
+      center.dy - radius * 0.82 - hop,
+    );
     final r = radius * 0.2;
     canvas.drawCircle(
       moon,
@@ -783,8 +926,9 @@ class _PlanetPainter extends CustomPainter {
     Canvas canvas,
     Offset center,
     double radius,
-    _Look look,
-  ) {
+    _Look look, {
+    double burst = 0,
+  }) {
     final spots = <(Offset, double, double)>[
       (center.translate(-radius * 1.08, -radius * 0.62), 0.08, 0.0),
       (center.translate(radius * 0.96, radius * 0.7), 0.06, 0.33),
@@ -794,6 +938,9 @@ class _PlanetPainter extends CustomPainter {
       if (look.gleam) (center.translate(radius * 1.18, radius * 0.36), 0.07, 0.78),
       if (look.gleam) (center.translate(-radius * 0.2, -radius * 1.18), 0.1, 0.22),
       if (look.moon) (center.translate(radius * 1.42, -radius * 1.08), 0.08, 0.55),
+      if (burst > 0.2) (center.translate(radius * 0.2, -radius * 1.28), 0.09, 0.18),
+      if (burst > 0.2) (center.translate(-radius * 1.28, -radius * 0.2), 0.07, 0.4),
+      if (burst > 0.2) (center.translate(radius * 1.24, 0), 0.08, 0.62),
     ];
     for (final spot in spots) {
       final twinkle =
@@ -801,7 +948,7 @@ class _PlanetPainter extends CustomPainter {
       _drawStar(
         canvas,
         spot.$1,
-        radius * spot.$2 * twinkle,
+        radius * spot.$2 * twinkle * (1 + burst * 0.55),
         look.gold
             ? const Color(0xFFFFE082)
             : look.gleam
@@ -831,11 +978,204 @@ class _PlanetPainter extends CustomPainter {
     canvas.drawPath(path, Paint()..color = color.withValues(alpha: 1));
   }
 
+  void _drawPokeFx(
+    Canvas canvas,
+    Offset center,
+    double radius,
+    _Look look,
+    double t,
+  ) {
+    if (t <= 0 || t >= 1) return;
+    final pulse = math.sin(t * math.pi);
+    final rise = t * radius * 0.9;
+    switch (level) {
+      case 1:
+        _drawZ(
+          canvas,
+          center.translate(-radius * 0.55, -radius * 0.85 - rise * 0.55),
+          radius * 0.16,
+          look.face.withValues(alpha: 0.45 * pulse),
+          -0.2,
+        );
+        _drawZ(
+          canvas,
+          center.translate(-radius * 0.22, -radius * 1.15 - rise * 0.8),
+          radius * 0.22,
+          look.face.withValues(alpha: 0.38 * pulse),
+          0.15,
+        );
+        _drawZ(
+          canvas,
+          center.translate(radius * 0.18, -radius * 1.42 - rise),
+          radius * 0.28,
+          look.face.withValues(alpha: 0.28 * pulse),
+          -0.08,
+        );
+      case 2:
+        _drawPuff(
+          canvas,
+          center.translate(radius * 0.18, -radius * 0.08 - rise * 0.35),
+          radius * 0.16 * pulse,
+        );
+        _drawPuff(
+          canvas,
+          center.translate(-radius * 0.12, -radius * 0.22 - rise * 0.5),
+          radius * 0.12 * pulse,
+        );
+        _drawDrop(
+          canvas,
+          center.translate(radius * 0.58, -radius * 0.12 + rise * 0.15),
+          radius * 0.08 * pulse,
+          look.face.withValues(alpha: 0.35 * pulse),
+        );
+        _drawStar(
+          canvas,
+          center.translate(-radius * 0.78, -radius * 0.72 - rise * 0.15),
+          radius * 0.08 * pulse,
+          look.top,
+        );
+      case 3:
+        _drawStar(
+          canvas,
+          center.translate(radius * 0.78, -radius * 0.9 - rise * 0.2),
+          radius * 0.1 * pulse,
+          look.top,
+        );
+        _drawStar(
+          canvas,
+          center.translate(-radius * 0.86, -radius * 0.55),
+          radius * 0.07 * pulse,
+          look.mid,
+        );
+      case 4:
+        _drawHeart(
+          canvas,
+          center.translate(radius * 0.72, -radius * 0.82 - rise * 0.25),
+          radius * 0.1 * pulse,
+          _blush.withValues(alpha: 0.7 * pulse),
+        );
+      case 5:
+        _drawStar(
+          canvas,
+          center.translate(-radius * 0.92, -radius * 0.4),
+          radius * 0.09 * pulse,
+          const Color(0xFFFFB08A),
+        );
+        _drawStar(
+          canvas,
+          center.translate(radius * 0.88, radius * 0.2),
+          radius * 0.07 * pulse,
+          const Color(0xFFFF8A6A),
+        );
+      case 6:
+        _drawPuff(
+          canvas,
+          center.translate(-radius * 1.05, -radius * 0.15 - rise * 0.15),
+          radius * 0.22 * pulse,
+        );
+        _drawPuff(
+          canvas,
+          center.translate(radius * 1.02, radius * 0.18 - rise * 0.1),
+          radius * 0.18 * pulse,
+        );
+      case 10:
+        final u = Curves.easeInOut.transform(t);
+        final from = center.translate(-radius * 1.05, -radius * 0.72);
+        final to = center.translate(radius * 1.08, radius * 0.42);
+        final star = Offset.lerp(from, to, u)!;
+        final tail = Offset.lerp(from, to, (u - 0.18).clamp(0.0, 1.0))!;
+        canvas.drawLine(
+          tail,
+          star,
+          Paint()
+            ..color = const Color(0xFFFFF8E8).withValues(alpha: 0.85 * pulse)
+            ..strokeCap = StrokeCap.round
+            ..strokeWidth = math.max(1.8, radius * 0.055),
+        );
+        _drawStar(
+          canvas,
+          star,
+          radius * (0.11 + pulse * 0.04),
+          const Color(0xFFFFF8E8),
+        );
+        _drawStar(
+          canvas,
+          center.translate(radius * 0.72, -radius * 0.88),
+          radius * 0.07 * pulse,
+          const Color(0xFFFFE082),
+        );
+      default:
+        break;
+    }
+  }
+
+  void _drawZ(
+    Canvas canvas,
+    Offset at,
+    double size,
+    Color color,
+    double rot,
+  ) {
+    canvas.save();
+    canvas.translate(at.dx, at.dy);
+    canvas.rotate(rot);
+    final p = Paint()
+      ..color = color
+      ..strokeWidth = math.max(1.6, size * 0.18)
+      ..strokeCap = StrokeCap.round
+      ..style = PaintingStyle.stroke;
+    canvas.drawLine(Offset(-size * 0.42, -size * 0.4), Offset(size * 0.42, -size * 0.4), p);
+    canvas.drawLine(Offset(size * 0.42, -size * 0.4), Offset(-size * 0.42, size * 0.4), p);
+    canvas.drawLine(Offset(-size * 0.42, size * 0.4), Offset(size * 0.42, size * 0.4), p);
+    canvas.restore();
+  }
+
+  void _drawHeart(Canvas canvas, Offset c, double r, Color color) {
+    if (r <= 0.4) return;
+    final path = Path()
+      ..moveTo(c.dx, c.dy + r * 0.72)
+      ..cubicTo(
+        c.dx - r * 1.35,
+        c.dy - r * 0.08,
+        c.dx - r * 0.48,
+        c.dy - r * 1.12,
+        c.dx,
+        c.dy - r * 0.32,
+      )
+      ..cubicTo(
+        c.dx + r * 0.48,
+        c.dy - r * 1.12,
+        c.dx + r * 1.35,
+        c.dy - r * 0.08,
+        c.dx,
+        c.dy + r * 0.72,
+      );
+    canvas.drawPath(path, Paint()..color = color);
+  }
+
+  void _drawPuff(Canvas canvas, Offset c, double r) {
+    if (r <= 0.4) return;
+    final paint = Paint()..color = Colors.white.withValues(alpha: 0.72);
+    canvas.drawCircle(c, r, paint);
+    canvas.drawCircle(c.translate(-r * 0.55, r * 0.12), r * 0.7, paint);
+    canvas.drawCircle(c.translate(r * 0.5, r * 0.18), r * 0.62, paint);
+  }
+
+  void _drawDrop(Canvas canvas, Offset c, double r, Color color) {
+    if (r <= 0.4) return;
+    final path = Path()
+      ..moveTo(c.dx, c.dy - r)
+      ..quadraticBezierTo(c.dx + r, c.dy, c.dx, c.dy + r * 0.9)
+      ..quadraticBezierTo(c.dx - r, c.dy, c.dx, c.dy - r);
+    canvas.drawPath(path, Paint()..color = color);
+  }
+
   @override
   bool shouldRepaint(covariant _PlanetPainter oldDelegate) {
     return oldDelegate.level != level ||
         oldDelegate.wave != wave ||
         oldDelegate.time != time ||
+        oldDelegate.poke != poke ||
         oldDelegate.outline != outline ||
         oldDelegate.empty != empty;
   }

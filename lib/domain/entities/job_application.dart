@@ -102,6 +102,17 @@ class JobApplication {
     return nearest.difference(today).inDays;
   }
 
+  /// 날짜가 있는 일정이 하나 이상이고, 그 날짜가 모두 지났으면 true.
+  bool get allSchedulesPast {
+    var hasDate = false;
+    for (final round in rounds) {
+      if (round.date == null) continue;
+      hasDate = true;
+      if (!round.isPast()) return false;
+    }
+    return hasDate;
+  }
+
   static int compareDateOrder(JobApplication a, JobApplication b) {
     final aDate = a.nearestUpcomingRoundDate();
     final bDate = b.nearestUpcomingRoundDate();

@@ -1936,7 +1936,7 @@ class _ThemeJobPreviewPage extends StatelessWidget {
         ),
         children: [
           CompanyCard(application: jobs[0], compact: compact),
-          SizedBox(height: compact ? 8 : 12),
+          SizedBox(height: compact ? 10 : 12),
           CompanyCard(application: jobs[1], compact: compact),
           const SizedBox(height: 12),
           const AddCompanyButton(),

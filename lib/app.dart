@@ -435,6 +435,7 @@ class _AppBootstrapState extends State<_AppBootstrap> {
       dayEventsView: dayEventsViewPreference,
       font: fontPreference,
       calendar: calendarPreference,
+      nav: navPreference,
       widget: widgetPreference,
     );
 

@@ -479,9 +479,9 @@ class AppStrings {
   static const colApplyStatus = '지원상태';
   static const colPosition = '분야';
   static const positionHint = '분야를 입력하세요';
-  static String roundLabel(int number) => '$number차';
   static const roundStageNameHint = '전형을 입력하세요';
   static const roundDateHint = '날짜를 입력하세요';
+  static const roundChipLabel = '일정';
   static const roundNoteHint = '추가정보를 입력하세요';
   static const emptyValue = '—';
   static const colCoverLetter = '자기소개서';
@@ -539,8 +539,6 @@ class AppStrings {
   static const statsPlanetFilling = '할 일을 끝낼수록 행성이 채워져요';
   static const statsPlanetFull = '이번 달, 플루토가 됐어요';
   static String statsPlanetLeft(int count) => '$count개 남았어요';
-  static String statsLevel(int level) => 'Lv.$level';
-  static const statsLevelMax = 'MAX';
   static const statsRank1 = '잠든 행성';
   static const statsRank2 = '깨어난 행성';
   static const statsRank3 = '새벽 행성';
@@ -556,12 +554,14 @@ class AppStrings {
   static const statsCollectedTitle = '내가 모은 행성';
   static const statsCollectedBody = '플루토와 함께한 여정을 확인할 수 있어요';
   static const statsCollectedEmpty = '할 일을 완료한 달의 행성이 모여요';
+  static const statsCollectedYearEmpty = '이 해에 모은 행성이 없어요';
   static String statsCollectedMonth(DateTime month, {required int nowYear}) {
     if (month.year == nowYear) return '${month.month}$monthSuffix';
     return '${month.year}$yearSuffix ${month.month}$monthSuffix';
   }
   static const statsLevelStart = '시작';
   static String statsLevelNeed(int count) => '할 일 $count개';
+  static String statsPlanetStage(int stage) => '$stage단계';
   static String statsNextPlanetTodos(int count) => '다음 행성까지 할 일 $count개';
   static const statsCategoriesUsed = '사용한 카테고리';
   static const statsLeftShort = '남은 일';

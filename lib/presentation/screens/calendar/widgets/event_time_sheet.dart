@@ -114,7 +114,7 @@ class _EventTimeSheetState extends State<EventTimeSheet> {
       padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
       child: DecoratedBox(
         decoration: BoxDecoration(
-          color: colors.tint(widget.color),
+          color: colors.tint(widget.color, 0.14),
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         ),
         child: Padding(

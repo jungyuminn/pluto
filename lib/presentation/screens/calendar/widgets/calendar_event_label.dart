@@ -35,7 +35,7 @@ class CalendarEventLabel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
-    final radius = isJob ? 6.0 : 3.0;
+    const radius = 3.0;
     final scale = applyCalendarScale
         ? AppFonts.calendarLabelScaleOf(context)
         : 1.0;
@@ -46,7 +46,7 @@ class CalendarEventLabel extends StatelessWidget {
     return AnimatedAccent(
       color: color,
       builder: (context, accent) {
-        final background = colors.tint(accent, isJob ? 0.12 : 0.22);
+        final background = colors.tint(accent, 0.14);
         final style = TextStyle(
           fontFamily: AppFonts.of(context),
           fontSize: baseFont * scale,
@@ -62,7 +62,6 @@ class CalendarEventLabel extends StatelessWidget {
             decoration: BoxDecoration(
               color: background,
               borderRadius: BorderRadius.circular(radius),
-              border: isJob ? Border.all(color: accent, width: 1) : null,
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(radius),
@@ -77,7 +76,7 @@ class CalendarEventLabel extends StatelessWidget {
                   ),
                   Expanded(
                     child: Padding(
-                      padding: EdgeInsets.symmetric(horizontal: isJob ? 4 : 3),
+                      padding: const EdgeInsets.symmetric(horizontal: 3),
                       child: AnimatedSwitcher(
                         duration: const Duration(milliseconds: 280),
                         switchInCurve: Curves.easeOutCubic,

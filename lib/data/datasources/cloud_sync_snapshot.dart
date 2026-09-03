@@ -9,6 +9,7 @@ import 'package:job_planner/data/datasources/ledger_local_datasource.dart';
 import 'package:job_planner/data/datasources/license_local_datasource.dart';
 import 'package:job_planner/data/datasources/long_goal_local_datasource.dart';
 import 'package:job_planner/data/datasources/theme_preference.dart';
+import 'package:job_planner/data/datasources/wordmark_preference.dart';
 import 'package:job_planner/domain/entities/event_category.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -39,6 +40,9 @@ class CloudSyncSnapshot {
   static const skinKey = 'app_skin';
   static const mondayKey = 'calendar_start_monday';
   static const diaryCoverOrderKey = 'diary_cover_order';
+  static const wordmarkHomeKey = WordmarkPreference.homeKey;
+  static const wordmarkJobKey = WordmarkPreference.jobKey;
+  static const wordmarkLicenseKey = WordmarkPreference.licenseKey;
 
   static const contentKeys = [
     eventsKey,
@@ -56,6 +60,9 @@ class CloudSyncSnapshot {
     licenseCategoriesKey,
     themesKey,
     customThemeIdKey,
+    wordmarkHomeKey,
+    wordmarkJobKey,
+    wordmarkLicenseKey,
   ];
 
   static const syncedKeys = [
@@ -205,6 +212,9 @@ class CloudSyncSnapshot {
     if ((_stringOf(dump, customThemeIdKey) ?? '').isNotEmpty) return false;
     if ((_listOf(dump, stickerOrderKey) ?? const []).isNotEmpty) return false;
     if ((_listOf(dump, diaryCoverOrderKey) ?? const []).isNotEmpty) return false;
+    if ((_stringOf(dump, wordmarkHomeKey) ?? '').isNotEmpty) return false;
+    if ((_stringOf(dump, wordmarkJobKey) ?? '').isNotEmpty) return false;
+    if ((_stringOf(dump, wordmarkLicenseKey) ?? '').isNotEmpty) return false;
     return true;
   }
 

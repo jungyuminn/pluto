@@ -38,7 +38,7 @@ List<CalendarEvent> jobEventsOn(
       items.add(
         CalendarEvent(
           id: 'job:${application.id}:$i',
-          title: _label(application.companyName, i + 1, round.name),
+          title: _label(application.companyName, round.name),
           date: day,
           memo: application.position.trim(),
           categoryId: application.categoryId,
@@ -220,8 +220,8 @@ List<CalendarEvent> leftoverTodosBefore(
   return CalendarEvent.withRangesFirst(leftover, all: events);
 }
 
-String _label(String companyName, int number, String roundName) {
+String _label(String companyName, String roundName) {
   final name = roundName.trim();
-  if (name.isEmpty) return '$companyName-${number}차';
-  return '$companyName-${number}차($name)';
+  if (name.isEmpty) return companyName;
+  return '$companyName($name)';
 }

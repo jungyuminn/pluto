@@ -18,6 +18,7 @@ import 'package:job_planner/presentation/screens/calendar/widgets/add_event_butt
 import 'package:job_planner/presentation/screens/calendar/widgets/add_event_sheet.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/day_emoji_sheet.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/day_event_label.dart';
+import 'package:job_planner/presentation/screens/calendar/widgets/day_sticker_image.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/delete_event_dialog.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/delete_repeat_event_dialog.dart';
 import 'package:job_planner/presentation/widgets/app_bar_pill.dart';
@@ -65,6 +66,10 @@ class _HomeDayCardState extends State<HomeDayCard> {
   final _reveals = <String, double>{};
   final _liveIds = <String>{};
   String? _draggingId;
+  DayEmojiStore? _emojiStore;
+  String? _emoji;
+  var _emojiPop = false;
+  var _animateEmojiSlot = false;
 
   static const _eventExtent = 62.0;
   static const _headerExtent = 24.0;
@@ -230,8 +235,32 @@ class _HomeDayCardState extends State<HomeDayCard> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final store = AppScope.of(context).dayEmojiStore;
+    if (identical(store, _emojiStore)) return;
+    _emojiStore?.removeListener(_onEmojiStore);
+    _emojiStore = store;
+    store.addListener(_onEmojiStore);
+    _applyEmoji(_readSticker(), animate: false);
+  }
+
+  @override
+  void dispose() {
+    _emojiStore?.removeListener(_onEmojiStore);
+    super.dispose();
+  }
+
+  @override
   void didUpdateWidget(HomeDayCard oldWidget) {
     super.didUpdateWidget(oldWidget);
+    final oldDate = oldWidget.date;
+    final date = widget.date;
+    if (oldDate?.year != date?.year ||
+        oldDate?.month != date?.month ||
+        oldDate?.day != date?.day) {
+      _applyEmoji(_readSticker(), animate: false);
+    }
     if (_draggingId != null) return;
     _events = List.of(widget.events);
     _syncItems(_itemsForView);
@@ -560,6 +589,32 @@ class _HomeDayCardState extends State<HomeDayCard> {
     );
   }
 
+  String? _readSticker() {
+    final date = widget.date;
+    if (date == null) return null;
+    final value = AppScope.of(context).dayEmojiStore.on(
+      date,
+      layer: DayStickerLayer.event,
+    );
+    return DayStickers.isAsset(value) ? value : null;
+  }
+
+  void _onEmojiStore() => _applyEmoji(_readSticker(), animate: true);
+
+  void _applyEmoji(String? next, {required bool animate}) {
+    if (next == _emoji) return;
+    setState(() {
+      _emoji = next;
+      _emojiPop = animate && next != null;
+      _animateEmojiSlot = animate;
+    });
+    if (next != null || !animate) return;
+    Future<void>.delayed(DayStickerImage.popDuration, () {
+      if (!mounted || _emoji != null) return;
+      setState(() => _animateEmojiSlot = false);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
@@ -611,30 +666,33 @@ class _HomeDayCardState extends State<HomeDayCard> {
       );
     }
 
-    return ListenableBuilder(
-      listenable: AppScope.of(context).dayEmojiStore,
-      builder: (context, _) {
-        final sticker = AppScope.of(
-          context,
-        ).dayEmojiStore.on(date, layer: DayStickerLayer.event);
-        final emoji = DayStickers.isAsset(sticker) ? sticker : null;
-        return Row(
+    return Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            if (emoji != null) ...[
-              Padding(
-                padding: const EdgeInsets.only(right: 10),
-                child: SizedBox(
-                  width: 48,
-                  height: 48,
-                  child: Image.asset(
-                    emoji,
-                    fit: BoxFit.contain,
-                    filterQuality: FilterQuality.medium,
-                  ),
+            if (_emoji != null || _animateEmojiSlot)
+              ClipRect(
+                child: AnimatedContainer(
+                  duration: _animateEmojiSlot
+                      ? DayStickerImage.popDuration
+                      : Duration.zero,
+                  curve: Curves.easeOutCubic,
+                  width: _emoji == null ? 0 : 58,
+                  height: _emoji == null ? 0 : 48,
+                  alignment: Alignment.centerLeft,
+                  child: _emoji == null
+                      ? null
+                      : Padding(
+                          padding: const EdgeInsets.only(right: 10),
+                          child: DayStickerImage(
+                            key: ValueKey(_emoji),
+                            asset: _emoji!,
+                            width: 48,
+                            height: 48,
+                            pop: _emojiPop,
+                          ),
+                        ),
                 ),
               ),
-            ],
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -654,8 +712,6 @@ class _HomeDayCardState extends State<HomeDayCard> {
             ),
           ],
         );
-      },
-    );
   }
 
   Widget _titleText(BuildContext context, AppColors colors) {

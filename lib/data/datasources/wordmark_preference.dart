@@ -4,15 +4,15 @@ import 'package:shared_preferences/shared_preferences.dart';
 enum WordmarkSlot { home, job, license }
 
 class WordmarkPreference extends ChangeNotifier {
+  static const homeKey = 'wordmark_home';
+  static const jobKey = 'wordmark_job';
+  static const licenseKey = 'wordmark_license';
+
   WordmarkPreference({SharedPreferences? prefs})
       : _prefs = prefs,
-        _home = _read(prefs, _homeKey),
-        _job = _read(prefs, _jobKey),
-        _license = _read(prefs, _licenseKey);
-
-  static const _homeKey = 'wordmark_home';
-  static const _jobKey = 'wordmark_job';
-  static const _licenseKey = 'wordmark_license';
+        _home = _read(prefs, homeKey),
+        _job = _read(prefs, jobKey),
+        _license = _read(prefs, licenseKey);
 
   final SharedPreferences? _prefs;
   String? _home;
@@ -34,15 +34,15 @@ class WordmarkPreference extends ChangeNotifier {
       case WordmarkSlot.home:
         if (_home == next) return;
         _home = next;
-        await _write(_homeKey, next);
+        await _write(homeKey, next);
       case WordmarkSlot.job:
         if (_job == next) return;
         _job = next;
-        await _write(_jobKey, next);
+        await _write(jobKey, next);
       case WordmarkSlot.license:
         if (_license == next) return;
         _license = next;
-        await _write(_licenseKey, next);
+        await _write(licenseKey, next);
     }
     notifyListeners();
   }
@@ -50,9 +50,9 @@ class WordmarkPreference extends ChangeNotifier {
   void hydrate() {
     final prefs = _prefs;
     if (prefs == null) return;
-    _home = _read(prefs, _homeKey);
-    _job = _read(prefs, _jobKey);
-    _license = _read(prefs, _licenseKey);
+    _home = _read(prefs, homeKey);
+    _job = _read(prefs, jobKey);
+    _license = _read(prefs, licenseKey);
     notifyListeners();
   }
 

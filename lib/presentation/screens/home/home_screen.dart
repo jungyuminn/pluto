@@ -11,8 +11,10 @@ import 'package:job_planner/data/datasources/app_backup_service.dart';
 import 'package:job_planner/data/datasources/calendar_preference.dart';
 import 'package:job_planner/data/datasources/day_events_view_preference.dart';
 import 'package:job_planner/data/datasources/home_view_preference.dart';
+import 'package:job_planner/data/datasources/nav_preference.dart';
 import 'package:job_planner/domain/entities/calendar_event.dart';
 import 'package:job_planner/domain/entities/event_category.dart';
+import 'package:job_planner/domain/entities/job_application.dart';
 import 'package:job_planner/domain/entities/long_goal.dart';
 import 'package:job_planner/presentation/screens/calendar/calendar_day_events.dart';
 import 'package:job_planner/presentation/screens/home/all_events_screen.dart';
@@ -52,6 +54,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   var _compact = false;
   var _startMonday = false;
   CalendarPreference? _calendarPrefs;
+  NavPreference? _navPrefs;
   String? _weekLabel;
   String? _monthLabel;
 
@@ -85,6 +88,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       _calendarPrefs = calendarPrefs;
       _calendarPrefs!.addListener(_onCalendarPrefs);
     }
+    final navPrefs = AppScope.of(context).navPreference;
+    if (_navPrefs != navPrefs) {
+      _navPrefs?.removeListener(_onNavPrefs);
+      _navPrefs = navPrefs;
+      _navPrefs!.addListener(_onNavPrefs);
+    }
     if (_initialized) return;
     _initialized = true;
     _compact = AppScope.of(context).homeViewPreference.isCompact;
@@ -96,6 +105,11 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     final startMonday = _calendarPrefs?.startMonday ?? false;
     if (!mounted || _startMonday == startMonday) return;
     _startMonday = startMonday;
+    _reload();
+  }
+
+  void _onNavPrefs() {
+    if (!mounted) return;
     _reload();
   }
 
@@ -129,6 +143,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   void dispose() {
     AppBackupService.revision.removeListener(_onBackupRestored);
     _calendarPrefs?.removeListener(_onCalendarPrefs);
+    _navPrefs?.removeListener(_onNavPrefs);
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -136,10 +151,14 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   Future<void> _reload() async {
     final scope = AppScope.of(context);
     final events = await scope.getCalendarEvents();
-    final applications = await scope.getJobApplications();
+    final showJobs = scope.navPreference.showJobTab;
+    final applications = showJobs
+        ? await scope.getJobApplications()
+        : const <JobApplication>[];
     final categories = await scope.getEventCategories();
-    final companyCategories =
-        await scope.fetchCategories(CategoryKind.company);
+    final companyCategories = showJobs
+        ? await scope.fetchCategories(CategoryKind.company)
+        : const <EventCategory>[];
     final homePrefs = scope.homeViewPreference;
     if (!mounted) return;
     final weekEnd = _weekEnd;

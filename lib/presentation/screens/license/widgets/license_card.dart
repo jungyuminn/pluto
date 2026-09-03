@@ -3,8 +3,8 @@ import 'package:job_planner/core/constants/app_fonts.dart';
 import 'package:job_planner/core/constants/app_strings.dart';
 import 'package:job_planner/core/theme/app_colors.dart';
 import 'package:job_planner/core/utils/open_local_file.dart';
-import 'package:job_planner/core/utils/press_bounce.dart';
 import 'package:job_planner/domain/entities/license.dart';
+import 'package:job_planner/presentation/screens/calendar/widgets/day_event_label.dart';
 
 class LicenseCard extends StatefulWidget {
   const LicenseCard({
@@ -15,6 +15,8 @@ class LicenseCard extends StatefulWidget {
     this.compact = false,
   });
 
+  static const compactHeight = 56.0;
+
   final License license;
   final VoidCallback? onPressed;
   final VoidCallback? onLongPressed;
@@ -24,244 +26,176 @@ class LicenseCard extends StatefulWidget {
   State<LicenseCard> createState() => _LicenseCardState();
 }
 
-class _LicenseCardState extends State<LicenseCard> {
+class _LicenseCardState extends State<LicenseCard>
+    with SingleTickerProviderStateMixin {
   var _skipCardTap = false;
+  late final AnimationController _expand;
+  late final CurvedAnimation _expandFade;
 
   License get license => widget.license;
+
+  bool get _hasDetails {
+    return license.issuer.trim().isNotEmpty ||
+        license.acquiredAt != null ||
+        license.expiresAt != null ||
+        license.number.trim().isNotEmpty ||
+        license.memo.trim().isNotEmpty ||
+        (license.fileName?.trim() ?? '').isNotEmpty;
+  }
 
   String _dateLabel(DateTime date) {
     return '${date.year}. ${date.month}. ${date.day}.';
   }
 
+  Color get _categoryColor {
+    return license.categoryColor != null
+        ? Color(license.categoryColor!)
+        : AppColors.of(context).accent;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _expand = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 280),
+      reverseDuration: const Duration(milliseconds: 220),
+      value: widget.compact ? 0 : 1,
+    );
+    _expandFade = CurvedAnimation(
+      parent: _expand,
+      curve: Curves.easeOutCubic,
+      reverseCurve: Curves.easeInCubic,
+    );
+  }
+
+  @override
+  void didUpdateWidget(LicenseCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.compact == widget.compact) return;
+    if (widget.compact) {
+      _expand.reverse();
+    } else {
+      _expand.forward();
+    }
+  }
+
+  @override
+  void dispose() {
+    _expandFade.dispose();
+    _expand.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
-    final colors = AppColors.of(context);
-    final font = AppFonts.of(context);
-    final scale = AppFonts.todoScaleOf(context);
+    final accent = _categoryColor;
     final expired = license.isExpired();
-    final issuer = license.issuer.trim();
-    final grade = license.grade.trim();
-    final number = license.number.trim();
-    final memo = license.memo.trim();
-    final fileName = license.fileName?.trim() ?? '';
-    final acquired = license.acquiredAt;
-    final expires = license.expiresAt;
-    final compact = widget.compact;
-    final accent = license.categoryColor != null
-        ? Color(license.categoryColor!)
-        : colors.accent;
-    final hasTable = !compact &&
-        (issuer.isNotEmpty ||
-            acquired != null ||
-            expires != null ||
-            number.isNotEmpty ||
-            memo.isNotEmpty ||
-            fileName.isNotEmpty);
-
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: colors.shadow,
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: PressBounce(
-        onPressed: () {
-          if (_skipCardTap) {
-            _skipCardTap = false;
-            return;
-          }
-          widget.onPressed?.call();
-        },
-        onLongPressed: widget.onLongPressed,
-        color: expired ? colors.pressed : colors.card,
-        pressedColor: colors.border,
-        borderRadius: BorderRadius.circular(16),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 280),
-          curve: Curves.easeOutCubic,
-          width: double.infinity,
-          padding: EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: compact ? 10 : 16,
-          ),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: colors.border),
-          ),
-          child: Opacity(
-            opacity: expired ? 0.48 : 1,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(child: _title(font, scale, accent)),
-                    if (grade.isNotEmpty) ...[
-                      const SizedBox(width: 8),
-                      _pill(grade, colors.accent, font, scale),
-                    ],
-                    if (!compact && expired) ...[
-                      const SizedBox(width: 8),
-                      _pill(
-                        AppStrings.licenseExpired,
-                        colors.danger,
-                        font,
-                        scale,
-                      ),
-                    ],
-                  ],
-                ),
-                if (hasTable)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 12),
-                    child: Table(
-                      columnWidths: const {
-                        0: IntrinsicColumnWidth(),
-                        1: FlexColumnWidth(),
-                      },
-                      defaultVerticalAlignment: TableCellVerticalAlignment.top,
-                      children: [
-                        if (acquired != null)
-                          _row(
-                            AppStrings.licenseAcquired,
-                            _dateLabel(acquired),
-                            colors,
-                            font,
-                            scale,
-                          ),
-                        if (expires != null)
-                          _row(
-                            AppStrings.licenseExpires,
-                            _dateLabel(expires),
-                            colors,
-                            font,
-                            scale,
-                            valueColor: expired ? colors.danger : null,
-                          ),
-                        if (issuer.isNotEmpty)
-                          _row(
-                            AppStrings.licenseIssuerHint,
-                            issuer,
-                            colors,
-                            font,
-                            scale,
-                          ),
-                        if (number.isNotEmpty)
-                          _row(
-                            AppStrings.licenseNumberHint,
-                            number,
-                            colors,
-                            font,
-                            scale,
-                          ),
-                        if (memo.isNotEmpty)
-                          _row(
-                            AppStrings.memoAction,
-                            memo,
-                            colors,
-                            font,
-                            scale,
-                            valueColor: colors.muted,
-                            valueWeight: FontWeight.w600,
-                          ),
-                        if (fileName.isNotEmpty)
-                          _fileRow(fileName, colors, font, scale),
-                      ],
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _title(
-    String? font,
-    double scale,
-    Color accent,
-  ) {
     final category = license.categoryName.trim();
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          license.name,
-          style: TextStyle(
-            fontFamily: font,
-            fontSize: 18 * scale,
-            fontWeight: FontWeight.w700,
-          ),
+    final grade = license.grade.trim();
+    return DayEventLabel(
+      title: license.name,
+      categoryName: category,
+      color: accent,
+      showCategory: license.hasCategory && category.isNotEmpty,
+      trailing: grade.isEmpty ? null : _badge(grade),
+      disabled: expired,
+      showAccent: !expired,
+      height: LicenseCard.compactHeight,
+      onPressed: () {
+        if (_skipCardTap) {
+          _skipCardTap = false;
+          return;
+        }
+        widget.onPressed?.call();
+      },
+      onLongPressed: widget.onLongPressed,
+      footer: !_hasDetails
+          ? null
+          : SizeTransition(
+              sizeFactor: _expandFade,
+              alignment: Alignment.topCenter,
+              child: FadeTransition(
+                opacity: _expandFade,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(14, 0, 12, 10),
+                  child: Table(
+                    columnWidths: const {
+                      0: IntrinsicColumnWidth(),
+                      1: FlexColumnWidth(),
+                    },
+                    defaultVerticalAlignment: TableCellVerticalAlignment.top,
+                    children: [
+                      if (license.acquiredAt != null)
+                        _row(
+                          AppStrings.licenseAcquired,
+                          _dateLabel(license.acquiredAt!),
+                        ),
+                      if (license.expiresAt != null)
+                        _row(
+                          AppStrings.licenseExpires,
+                          _dateLabel(license.expiresAt!),
+                          valueColor: expired
+                              ? AppColors.of(context).danger
+                              : null,
+                        ),
+                      if (license.issuer.trim().isNotEmpty)
+                        _row(
+                          AppStrings.licenseIssuerHint,
+                          license.issuer.trim(),
+                        ),
+                      if (license.number.trim().isNotEmpty)
+                        _row(
+                          AppStrings.licenseNumberHint,
+                          license.number.trim(),
+                        ),
+                      if (license.memo.trim().isNotEmpty)
+                        _row(
+                          AppStrings.memoAction,
+                          license.memo.trim(),
+                          valueColor: AppColors.of(context).muted,
+                        ),
+                      if ((license.fileName?.trim() ?? '').isNotEmpty)
+                        _fileRow(),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+    );
+  }
+
+  Widget _badge(String text) {
+    final color = _categoryColor;
+    final scale = AppFonts.labelScaleOf(context);
+    return Padding(
+      padding: const EdgeInsets.only(right: 8),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.18),
+          borderRadius: BorderRadius.circular(999),
         ),
-        if (license.hasCategory && category.isNotEmpty)
-          Padding(
-            padding: const EdgeInsets.only(top: 5),
-            child: Row(
-              children: [
-                Container(
-                  width: 8,
-                  height: 8,
-                  decoration: BoxDecoration(
-                    color: accent,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-                const SizedBox(width: 6),
-                Flexible(
-                  child: Text(
-                    category,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontFamily: font,
-                      fontSize: 13 * scale,
-                      fontWeight: FontWeight.w700,
-                      color: accent,
-                    ),
-                  ),
-                ),
-              ],
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+          child: Text(
+            text,
+            maxLines: 1,
+            style: TextStyle(
+              fontFamily: AppFonts.of(context),
+              fontSize: 11 * scale,
+              fontWeight: FontWeight.w800,
+              height: 1,
+              letterSpacing: -0.2,
+              color: color,
             ),
           ),
-      ],
-    );
-  }
-
-  Widget _pill(String text, Color color, String? font, double scale) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.16),
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Text(
-        text,
-        style: TextStyle(
-          fontFamily: font,
-          fontSize: 12 * scale,
-          fontWeight: FontWeight.w800,
-          color: color,
         ),
       ),
     );
   }
 
-  TableRow _row(
-    String label,
-    String value,
-    AppColors colors,
-    String? font,
-    double scale, {
-    Color? valueColor,
-    FontWeight valueWeight = FontWeight.w600,
-  }) {
+  TableRow _row(String label, String value, {Color? valueColor}) {
+    final colors = AppColors.of(context);
     return TableRow(
       children: [
         Padding(
@@ -269,9 +203,9 @@ class _LicenseCardState extends State<LicenseCard> {
           child: Text(
             label,
             style: TextStyle(
-              fontFamily: font,
+              fontFamily: AppFonts.of(context),
               color: colors.secondary,
-              fontSize: 13 * scale,
+              fontSize: 13,
             ),
           ),
         ),
@@ -280,9 +214,9 @@ class _LicenseCardState extends State<LicenseCard> {
           child: Text(
             value,
             style: TextStyle(
-              fontFamily: font,
-              fontSize: 13 * scale,
-              fontWeight: valueWeight,
+              fontFamily: AppFonts.of(context),
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
               color: valueColor ?? colors.text,
             ),
           ),
@@ -291,16 +225,11 @@ class _LicenseCardState extends State<LicenseCard> {
     );
   }
 
-  TableRow _fileRow(
-    String fileName,
-    AppColors colors,
-    String? font,
-    double scale,
-  ) {
+  TableRow _fileRow() {
+    final fileName = license.fileName?.trim() ?? '';
     final path = license.filePath?.trim() ?? '';
     final canOpen = path.isNotEmpty;
-    final theme = colors.accent;
-
+    final accent = _categoryColor;
     return TableRow(
       children: [
         Padding(
@@ -308,9 +237,9 @@ class _LicenseCardState extends State<LicenseCard> {
           child: Text(
             AppStrings.attachLicenseFile,
             style: TextStyle(
-              fontFamily: font,
-              color: colors.secondary,
-              fontSize: 13 * scale,
+              fontFamily: AppFonts.of(context),
+              color: AppColors.of(context).secondary,
+              fontSize: 13,
             ),
           ),
         ),
@@ -327,12 +256,12 @@ class _LicenseCardState extends State<LicenseCard> {
                 fileName,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
-                  fontFamily: font,
-                  fontSize: 13 * scale,
-                  fontWeight: FontWeight.w600,
-                  color: theme,
+                  fontFamily: AppFonts.of(context),
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  color: accent,
                   decoration: TextDecoration.underline,
-                  decorationColor: theme,
+                  decorationColor: accent,
                 ),
               ),
             ),

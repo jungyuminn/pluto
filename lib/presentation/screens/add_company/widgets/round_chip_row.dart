@@ -260,7 +260,6 @@ class _RoundChipRowState extends State<RoundChipRow>
     final emerging = _emergeIndex == index;
     final dragging = _draggingIndex == index;
     Widget chip = RoundChipButton(
-      number: index + 1,
       round: _shown[index],
       accent: widget.accent,
       onChanged: exiting
@@ -328,7 +327,6 @@ class _RoundChipRowState extends State<RoundChipRow>
               ),
               child: IgnorePointer(
                 child: RoundChipButton(
-                  number: index + 1,
                   round: _shown[index],
                   accent: widget.accent,
                   onChanged: (_) {},

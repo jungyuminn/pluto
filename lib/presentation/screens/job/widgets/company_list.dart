@@ -8,7 +8,6 @@ import 'package:job_planner/core/theme/app_colors.dart';
 import 'package:job_planner/core/utils/swipe_to_delete.dart';
 import 'package:job_planner/domain/entities/event_category.dart';
 import 'package:job_planner/domain/entities/job_application.dart';
-import 'package:job_planner/presentation/screens/add_company/widgets/missing_fields_dialog.dart';
 import 'package:job_planner/presentation/screens/job/widgets/add_company_button.dart';
 import 'package:job_planner/presentation/screens/job/widgets/company_card.dart';
 import 'package:job_planner/presentation/tutorial/tutorial_anchor.dart';
@@ -51,6 +50,7 @@ class _CompanyListState extends State<CompanyList>
     with SingleTickerProviderStateMixin {
   final _scroll = ScrollController();
   final _listBoxKey = GlobalKey();
+  final _rejectedBoxKey = GlobalKey();
   final _heights = <String, double>{};
   late final _items = List.of(widget.applications);
   late final AnimationController _rejectedReveal;
@@ -61,7 +61,7 @@ class _CompanyListState extends State<CompanyList>
 
   static const _slotAnim = Duration(milliseconds: 280);
 
-  double get _gap => widget.compact ? 8 : 12;
+  double get _gap => widget.compact ? 10 : 12;
 
   @override
   void initState() {
@@ -129,7 +129,8 @@ class _CompanyListState extends State<CompanyList>
   }
 
   double _heightOf(JobApplication application) {
-    return _heights[application.id] ?? (widget.compact ? 64 : 88);
+    return _heights[application.id] ??
+        (widget.compact ? CompanyCard.compactHeight : 88);
   }
 
   double _blockHeight(JobApplication application) {
@@ -220,37 +221,41 @@ class _CompanyListState extends State<CompanyList>
   }
 
   void _onDragStarted(JobApplication application) {
+    final group = application.isRejected ? _rejectedItems : _activeItems;
     setState(() {
       _draggingId = application.id;
-      _dragY = _topAmong(_activeItems, application.id);
+      _dragY = _topAmong(group, application.id);
       _grabOffset = null;
     });
   }
 
   void _onDragUpdate(Offset global) {
     final dragged = _draggedItem;
-    if (dragged == null || dragged.isRejected) return;
-    final box = _listBoxKey.currentContext?.findRenderObject() as RenderBox?;
+    if (dragged == null) return;
+    final rejected = dragged.isRejected;
+    final group = rejected ? _rejectedItems : _activeItems;
+    final boxKey = rejected ? _rejectedBoxKey : _listBoxKey;
+    final box = boxKey.currentContext?.findRenderObject() as RenderBox?;
     if (box == null || !box.hasSize) return;
 
     final localY = box.globalToLocal(global).dy;
     _grabOffset ??= localY - _dragY;
     final height = _heightOf(dragged);
-    final maxTop = math.max(0.0, _sectionHeight(_activeItems) - height);
+    final maxTop = math.max(0.0, _sectionHeight(group) - height);
     final nextY = (localY - _grabOffset!).clamp(0.0, maxTop);
 
     final active = _activeItems;
-    final rejected = _rejectedItems;
-    final from = active.indexWhere((item) => item.id == dragged.id);
-    final to = _activeIndexAt(nextY + height / 2, dragged);
+    final rejectedItems = _rejectedItems;
+    final from = group.indexWhere((item) => item.id == dragged.id);
+    final to = _indexAt(group, nextY + height / 2, dragged);
     var moved = false;
     if (from >= 0 && to != from) {
-      final next = [...active];
+      final next = [...group];
       final item = next.removeAt(from);
       next.insert(to.clamp(0, next.length), item);
       _items
         ..clear()
-        ..addAll([...next, ...rejected]);
+        ..addAll(rejected ? [...active, ...next] : [...next, ...rejectedItems]);
       moved = true;
     }
 
@@ -276,15 +281,14 @@ class _CompanyListState extends State<CompanyList>
     return null;
   }
 
-  int _activeIndexAt(double y, JobApplication dragged) {
-    final active = _activeItems;
-    if (active.isEmpty) return 0;
-    final from = active.indexWhere((item) => item.id == dragged.id);
+  int _indexAt(List<JobApplication> items, double y, JobApplication dragged) {
+    if (items.isEmpty) return 0;
+    final from = items.indexWhere((item) => item.id == dragged.id);
     var closest = 0;
     var best = double.infinity;
     var acc = 0.0;
-    for (var i = 0; i < active.length; i++) {
-      final height = _blockHeight(active[i]);
+    for (var i = 0; i < items.length; i++) {
+      final height = _blockHeight(items[i]);
       final dist = (y - (acc + height / 2)).abs();
       if (dist < best) {
         best = dist;
@@ -293,22 +297,13 @@ class _CompanyListState extends State<CompanyList>
       acc += height;
     }
     if (from >= 0 && closest != from) {
-      final top = _topAmong(active, dragged.id);
+      final top = _topAmong(items, dragged.id);
       final extent = _blockHeight(dragged);
       if (y >= top - extent * 0.18 && y < top + extent * 1.18) {
         return from;
       }
     }
     return closest;
-  }
-
-  Future<void> _explainRejectedLock() {
-    HapticFeedback.lightImpact();
-    return showMissingFieldsDialog(
-      context,
-      title: AppStrings.timeSortLockTitle,
-      body: AppStrings.rejectedReorderLockBody,
-    );
   }
 
   @override
@@ -362,6 +357,7 @@ class _CompanyListState extends State<CompanyList>
                 ignoring: !widget.showRejected,
                 child: _stack(
                   items: rejected,
+                  boxKey: _rejectedBoxKey,
                   clip: false,
                 ),
               ),
@@ -461,16 +457,13 @@ class _CompanyListState extends State<CompanyList>
   }
 
   Widget _tile(JobApplication application) {
-    final rejected = application.isRejected;
-    final canDrag = widget.canReorder && !rejected;
+    final canDrag = widget.canReorder;
     final card = SwipeToDelete(
       onSwipeLeft: () => widget.onDelete(application),
       child: CompanyCard(
         application: application,
         onPressed: () => widget.onOpen(application),
-        onLongPressed: rejected
-            ? _explainRejectedLock
-            : (canDrag ? null : widget.onReorderLocked),
+        onLongPressed: canDrag ? null : widget.onReorderLocked,
         compact: widget.compact,
       ),
     );

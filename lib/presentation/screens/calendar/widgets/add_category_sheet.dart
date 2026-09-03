@@ -170,7 +170,7 @@ class _AddCategorySheetState extends State<AddCategorySheet> {
         duration: const Duration(milliseconds: 280),
         curve: Curves.easeOutCubic,
         decoration: BoxDecoration(
-          color: colors.tint(accent),
+          color: colors.tint(accent, 0.14),
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         ),
         child: Padding(

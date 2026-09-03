@@ -453,7 +453,7 @@ class _PlanetHero extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
-    final level = play.isMax ? 10 : play.level;
+    final level = play.isMax ? PlanetStage.maxLevel : play.level;
     return SizedBox(
       height: 248,
       child: Stack(
@@ -466,7 +466,10 @@ class _PlanetHero extends StatelessWidget {
             height: 240,
             child: Center(
               child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 240, maxHeight: 240),
+                constraints: const BoxConstraints(
+                  maxWidth: 240,
+                  maxHeight: 240,
+                ),
                 child: TutorialAnchor(
                   id: TutorialAnchorId.statsPlanet,
                   child: AnimatedSwitcher(
@@ -480,7 +483,9 @@ class _PlanetHero extends StatelessWidget {
                       );
                     },
                     child: PlanetFill(
-                      key: ValueKey('${play.month.year}-${play.month.month}-$level'),
+                      key: ValueKey(
+                        '${play.month.year}-${play.month.month}-$level',
+                      ),
                       level: level,
                       wave: wave.value,
                       outline: colors.icon,
@@ -534,60 +539,36 @@ class _RankBadge extends StatelessWidget {
       pressedColor: colors.pressed,
       borderRadius: BorderRadius.circular(999),
       child: DecoratedBox(
-      decoration: BoxDecoration(
-        color: colors.card,
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: colors.border),
-        boxShadow: [
-          BoxShadow(
-            color: colors.shadow,
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(14, 8, 16, 8),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            AnimatedSwitcher(
-              duration: const Duration(milliseconds: 280),
-              layoutBuilder: (current, _) => current ?? const SizedBox.shrink(),
-              child: Text(
-                play.isMax
-                    ? AppStrings.statsLevelMax
-                    : AppStrings.statsLevel(play.level),
-                key: ValueKey(play.isMax ? 'max' : play.level),
-                style: TextStyle(
-                  fontFamily: font,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w800,
-                  height: 1,
-                  color: const Color(0xFFE3898A),
-                ),
-              ),
-            ),
-            const SizedBox(width: 8),
-            AnimatedSwitcher(
-              duration: const Duration(milliseconds: 280),
-              layoutBuilder: (current, _) => current ?? const SizedBox.shrink(),
-              child: Text(
-                play.rank,
-                key: ValueKey(play.rank),
-                style: TextStyle(
-                  fontFamily: font,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                  height: 1,
-                  color: colors.text,
-                ),
-              ),
+        decoration: BoxDecoration(
+          color: colors.card,
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(color: colors.border),
+          boxShadow: [
+            BoxShadow(
+              color: colors.shadow,
+              blurRadius: 8,
+              offset: const Offset(0, 2),
             ),
           ],
         ),
-      ),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 280),
+            layoutBuilder: (current, _) => current ?? const SizedBox.shrink(),
+            child: Text(
+              play.rank,
+              key: ValueKey(play.rank),
+              style: TextStyle(
+                fontFamily: font,
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                height: 1,
+                color: colors.text,
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -607,6 +588,7 @@ class _LevelBlock extends StatelessWidget {
     final colors = AppColors.of(context);
     final font = AppFonts.of(context);
     final remain = play.hasTodos && !play.isMax ? play.need - play.exp : null;
+    final level = play.isMax ? PlanetStage.maxLevel : play.level;
     final label = !play.hasTodos
         ? AppStrings.statsPlanetEmpty
         : play.isMax
@@ -641,20 +623,41 @@ class _LevelBlock extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              AnimatedSwitcher(
-                duration: const Duration(milliseconds: 280),
-                layoutBuilder: (current, _) =>
-                    current ?? const SizedBox.shrink(),
-                child: Text(
-                  label,
-                  key: ValueKey(label),
-                  style: TextStyle(
-                    fontFamily: font,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: colors.muted,
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.baseline,
+                textBaseline: TextBaseline.alphabetic,
+                children: [
+                  Expanded(
+                    child: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 280),
+                      layoutBuilder: (current, _) =>
+                          current ?? const SizedBox.shrink(),
+                      child: Text(
+                        label,
+                        key: ValueKey(label),
+                        style: TextStyle(
+                          fontFamily: font,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: colors.muted,
+                        ),
+                      ),
+                    ),
                   ),
-                ),
+                  if (!play.isMax) ...[
+                    const SizedBox(width: 8),
+                    Text(
+                      AppStrings.statsPlanetStage(level),
+                      style: TextStyle(
+                        fontFamily: font,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        height: 1,
+                        color: colors.muted,
+                      ),
+                    ),
+                  ],
+                ],
               ),
               const SizedBox(height: 4),
               _ExpBar(
@@ -662,9 +665,11 @@ class _LevelBlock extends StatelessWidget {
                     ? (play.isMax ? 1 : play.exp / play.need)
                     : 0,
                 progress: progress,
+                currentLevel: level,
                 nextLevel: play.isMax
                     ? PlanetStage.maxLevel
                     : (play.level + 1).clamp(2, PlanetStage.maxLevel),
+                isMax: play.isMax,
               ),
             ],
           ),
@@ -674,16 +679,60 @@ class _LevelBlock extends StatelessWidget {
   }
 }
 
-class _ExpBar extends StatelessWidget {
+class _ExpBar extends StatefulWidget {
   const _ExpBar({
     required this.value,
     required this.progress,
+    required this.currentLevel,
     required this.nextLevel,
+    required this.isMax,
   });
 
   final double value;
   final double progress;
+  final int currentLevel;
   final int nextLevel;
+  final bool isMax;
+
+  @override
+  State<_ExpBar> createState() => _ExpBarState();
+}
+
+class _ExpBarState extends State<_ExpBar>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _shine;
+
+  @override
+  void initState() {
+    super.initState();
+    _shine = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1400),
+    );
+    if (widget.isMax) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted || !widget.isMax) return;
+        _shine.forward(from: 0);
+      });
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant _ExpBar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isMax && !oldWidget.isMax) {
+      _shine.forward(from: 0);
+    } else if (!widget.isMax && oldWidget.isMax) {
+      _shine.stop();
+      _shine.value = 0;
+    }
+  }
+
+  @override
+  void dispose() {
+    _shine.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -691,10 +740,12 @@ class _ExpBar extends StatelessWidget {
     return TweenAnimationBuilder<double>(
       duration: const Duration(milliseconds: 820),
       curve: Curves.easeOutCubic,
-      tween: Tween(end: value.clamp(0.0, 1.0)),
+      tween: Tween(end: widget.value.clamp(0.0, 1.0)),
       builder: (context, bar, _) {
         const planet = 40.0;
         const track = 16.0;
+        const inset = planet * 0.42;
+        final maxed = widget.isMax;
         return SizedBox(
           height: 28,
           child: Stack(
@@ -702,8 +753,8 @@ class _ExpBar extends StatelessWidget {
             children: [
               Positioned(
                 top: 6,
-                left: 0,
-                right: planet * 0.42,
+                left: maxed ? 0 : inset,
+                right: inset,
                 height: track,
                 child: Stack(
                   alignment: Alignment.center,
@@ -718,16 +769,68 @@ class _ExpBar extends StatelessWidget {
                           child: FractionallySizedBox(
                             alignment: Alignment.centerLeft,
                             widthFactor: bar,
-                            child: const DecoratedBox(
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: [
-                                    Color(0xFFD9898A),
-                                    Color(0xFFF3C3A0),
-                                    Color(0xFFFFE7C2),
-                                  ],
+                            child: Stack(
+                              fit: StackFit.expand,
+                              children: [
+                                DecoratedBox(
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: widget.isMax
+                                          ? const [
+                                              Color(0xFFD9898A),
+                                              Color(0xFFFFD36A),
+                                              Color(0xFFFFF6DE),
+                                            ]
+                                          : const [
+                                              Color(0xFFD9898A),
+                                              Color(0xFFF3C3A0),
+                                              Color(0xFFFFE7C2),
+                                            ],
+                                    ),
+                                  ),
                                 ),
-                              ),
+                                if (widget.isMax)
+                                  AnimatedBuilder(
+                                    animation: _shine,
+                                    builder: (context, _) {
+                                      if (_shine.value <= 0 ||
+                                          _shine.isCompleted) {
+                                        return const SizedBox.shrink();
+                                      }
+                                      return LayoutBuilder(
+                                        builder: (context, constraints) {
+                                          final width = constraints.maxWidth;
+                                          final x = _shine.value *
+                                                  (width + 56) -
+                                              28;
+                                          return Transform.translate(
+                                            offset: Offset(x, 0),
+                                            child: SizedBox(
+                                              width: 40,
+                                              child: DecoratedBox(
+                                                decoration: BoxDecoration(
+                                                  gradient: LinearGradient(
+                                                    colors: [
+                                                      Colors.white.withValues(
+                                                        alpha: 0,
+                                                      ),
+                                                      Colors.white.withValues(
+                                                        alpha: 0.78,
+                                                      ),
+                                                      Colors.white.withValues(
+                                                        alpha: 0,
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                      );
+                                    },
+                                  ),
+                              ],
                             ),
                           ),
                         ),
@@ -740,7 +843,7 @@ class _ExpBar extends StatelessWidget {
                             child: Align(
                               alignment: Alignment.centerRight,
                               child: _MilestoneDot(
-                                reached: progress >= mark,
+                                reached: widget.progress >= mark,
                               ),
                             ),
                           ),
@@ -750,16 +853,31 @@ class _ExpBar extends StatelessWidget {
                   ],
                 ),
               ),
+              if (!maxed)
+                Positioned(
+                  top: 6 + (track - planet) / 2,
+                  left: 0,
+                  width: planet,
+                  height: planet,
+                  child: PlanetFill(
+                    level: widget.currentLevel,
+                    wave: 0.08,
+                    outline: colors.icon,
+                    empty: colors.card,
+                    pokeable: false,
+                  ),
+                ),
               Positioned(
                 top: 6 + (track - planet) / 2,
                 right: 0,
                 width: planet,
                 height: planet,
                 child: PlanetFill(
-                  level: nextLevel,
+                  level: maxed ? widget.currentLevel : widget.nextLevel,
                   wave: 0.08,
                   outline: colors.icon,
                   empty: colors.card,
+                  pokeable: false,
                 ),
               ),
             ],
@@ -902,6 +1020,7 @@ class _CollectedCard extends StatelessWidget {
                                   phase: _planetPhase(planet.month),
                                   outline: colors.icon,
                                   empty: colors.card,
+                                  pokeable: false,
                                 ),
                               ),
                               Text(
@@ -1062,8 +1181,6 @@ class _RateRing extends StatefulWidget {
 
 class _RateRingState extends State<_RateRing>
     with SingleTickerProviderStateMixin {
-  static const _coral = Color(0xFFD9898A);
-
   late final AnimationController _check;
 
   bool get _complete => widget.value >= 0.999;
@@ -1126,7 +1243,7 @@ class _RateRingState extends State<_RateRing>
                   value: ring,
                   check: check,
                   track: colors.border,
-                  fill: _coral,
+                  fill: colors.accentBright,
                 ),
                 child: Center(
                   child: Opacity(
@@ -1246,7 +1363,6 @@ class _MonthDots extends StatelessWidget {
         _DayDot(
           date: DateTime(play.month.year, play.month.month, day),
           done: play.doneDays.contains(day),
-          today: isCurrent && play.today.day == day,
           future: isCurrent && day > play.today.day,
           onPressed: onDayPressed,
         ),
@@ -1314,14 +1430,12 @@ class _DayDot extends StatelessWidget {
   const _DayDot({
     required this.date,
     required this.done,
-    required this.today,
     required this.future,
     required this.onPressed,
   });
 
   final DateTime date;
   final bool done;
-  final bool today;
   final bool future;
   final void Function(DateTime date, Rect origin) onPressed;
 
@@ -1338,7 +1452,7 @@ class _DayDot extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
     final font = AppFonts.of(context);
-    const coral = Color(0xFFD9898A);
+    final accent = colors.accentBright;
     return PressBounce(
       onPressed: () => onPressed(date, _originOf(context)),
       pressedScale: 0.9,
@@ -1347,8 +1461,7 @@ class _DayDot extends StatelessWidget {
       child: DecoratedBox(
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: done ? coral.withValues(alpha: 0.18) : Colors.transparent,
-          border: today ? Border.all(color: coral, width: 1.4) : null,
+          color: done ? accent.withValues(alpha: 0.18) : Colors.transparent,
         ),
         child: Center(
           child: Text(
@@ -1356,9 +1469,9 @@ class _DayDot extends StatelessWidget {
             style: TextStyle(
               fontFamily: font,
               fontSize: PcLayout.isPc ? 13 : 11,
-              fontWeight: today || done ? FontWeight.w800 : FontWeight.w600,
+              fontWeight: done ? FontWeight.w800 : FontWeight.w600,
               color: done
-                  ? coral
+                  ? accent
                   : future
                       ? colors.muted.withValues(alpha: 0.45)
                       : colors.secondary,
@@ -1382,10 +1495,12 @@ class _MonthArrow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final enabled = onPressed != null;
+    final colors = AppColors.of(context);
     return PressBounce(
       onPressed: onPressed,
       pressedScale: 0.9,
-      pressedColor: Colors.transparent,
+      pressedColor: enabled ? colors.pressed : Colors.transparent,
+      borderRadius: BorderRadius.circular(12),
       child: SizedBox(
         width: 44,
         height: 40,

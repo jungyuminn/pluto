@@ -1038,11 +1038,6 @@ class _BlossomDecorations extends StatelessWidget {
             : constraints.biggest.shortestSide;
         final paddingBottom = MediaQuery.paddingOf(context).bottom;
         final petalBottom = liftForNav ? 66 + paddingBottom : height * 0.04;
-        final safe = _LogoSafe(
-          screenWidth: width,
-          paddingTop: MediaQuery.paddingOf(context).top,
-          enabled: !simple,
-        );
         final petal90 = dark
             ? AppSkinAssets.petal90Dark
             : AppSkinAssets.petal90Light;
@@ -1107,35 +1102,9 @@ class _BlossomDecorations extends StatelessWidget {
                 Positioned(
                   right: span * 0.04,
                   bottom: petalBottom + span * 0.08,
-                  width: span * (simple ? 0.14 : 0.18),
+                  width: span * 0.18,
                   child: petal(petal90),
                 ),
-              if (!simple) ...[
-                safe.topLeft(
-                  left: span * 0.22,
-                  top: span * 0.04,
-                  width: span * 0.14,
-                  child: petal(petal270),
-                ),
-                Positioned(
-                  top: height * 0.28,
-                  right: span * 0.08,
-                  width: span * 0.16,
-                  child: petal(petal270),
-                ),
-                safe.topLeft(
-                  left: width * 0.5 - span * 0.1,
-                  top: height * 0.38,
-                  width: span * 0.2,
-                  child: petal(petal180),
-                ),
-                safe.topLeft(
-                  left: width * 0.58,
-                  top: height * 0.52,
-                  width: span * 0.14,
-                  child: petal(petal90),
-                ),
-              ],
             ],
           ),
         );
@@ -1167,11 +1136,6 @@ class _CloverDecorations extends StatelessWidget {
             : constraints.biggest.shortestSide;
         final paddingBottom = MediaQuery.paddingOf(context).bottom;
         final cloverBottomLift = liftForNav ? 66 + paddingBottom : height * 0.04;
-        final safe = _LogoSafe(
-          screenWidth: width,
-          paddingTop: MediaQuery.paddingOf(context).top,
-          enabled: !simple,
-        );
         final decoration = dark
             ? AppSkinAssets.cloverDecorationDark
             : AppSkinAssets.cloverDecorationLight;
@@ -1234,35 +1198,9 @@ class _CloverDecorations extends StatelessWidget {
                 Positioned(
                   right: span * 0.04,
                   bottom: cloverBottomLift + span * 0.08,
-                  width: span * (simple ? 0.14 : 0.18),
+                  width: span * 0.18,
                   child: clover(angle: -math.pi / 10),
                 ),
-              if (!simple) ...[
-                safe.topLeft(
-                  left: span * 0.22,
-                  top: span * 0.04,
-                  width: span * 0.14,
-                  child: clover(angle: math.pi / 6),
-                ),
-                Positioned(
-                  top: height * 0.28,
-                  right: span * 0.08,
-                  width: span * 0.16,
-                  child: clover(angle: -math.pi / 12),
-                ),
-                safe.topLeft(
-                  left: width * 0.5 - span * 0.1,
-                  top: height * 0.38,
-                  width: span * 0.2,
-                  child: clover(),
-                ),
-                safe.topLeft(
-                  left: width * 0.58,
-                  top: height * 0.52,
-                  width: span * 0.14,
-                  child: clover(angle: math.pi / 9),
-                ),
-              ],
             ],
           ),
         );

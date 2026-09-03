@@ -9,31 +9,27 @@ import 'package:job_planner/presentation/screens/add_company/widgets/round_edito
 class RoundChipButton extends StatelessWidget {
   const RoundChipButton({
     super.key,
-    required this.number,
     required this.round,
     required this.accent,
     required this.onChanged,
   });
 
-  final int number;
   final ApplicationRound round;
   final Color accent;
   final ValueChanged<ApplicationRound> onChanged;
 
   static const height = 78.0;
 
-  String get _roundName => AppStrings.roundLabel(number);
-
   String get _label {
     final date = round.date;
-    if (date == null) return _roundName;
-    return '$_roundName(${date.month}.${date.day})';
+    if (date == null) return AppStrings.roundChipLabel;
+    return '${date.month}. ${date.day}.';
   }
 
   Future<void> _open(BuildContext context) async {
     final result = await showRoundEditor(
       context,
-      title: _roundName,
+      title: AppStrings.roundChipLabel,
       initial: round,
       accent: accent,
     );
@@ -83,7 +79,7 @@ class RoundChipButton extends StatelessWidget {
                         fontSize: 13,
                         fontWeight: FontWeight.w800,
                         height: 1.1,
-                        letterSpacing: round.date == null ? 0 : -0.3,
+                        letterSpacing: 0,
                         color: filled ? accent : colors.muted,
                       ),
                     ),

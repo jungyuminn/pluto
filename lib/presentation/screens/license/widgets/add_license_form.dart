@@ -269,7 +269,7 @@ class _AddLicenseFormState extends State<AddLicenseForm>
       curve: Curves.easeOutCubic,
       width: double.infinity,
       decoration: BoxDecoration(
-        color: colors.tint(accent),
+        color: colors.tint(accent, 0.14),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         boxShadow: const [
           BoxShadow(

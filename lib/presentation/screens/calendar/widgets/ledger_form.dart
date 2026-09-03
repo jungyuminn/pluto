@@ -485,7 +485,7 @@ class _LedgerFormState extends State<LedgerForm> with TickerProviderStateMixin {
       curve: Curves.easeInOutCubic,
       width: double.infinity,
       decoration: BoxDecoration(
-        color: colors.tint(_accent),
+        color: colors.tint(_accent, 0.14),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         boxShadow: const [
           BoxShadow(

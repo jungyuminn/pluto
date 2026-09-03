@@ -80,7 +80,8 @@ class _AppCalendarSheetState extends State<AppCalendarSheet> {
   static const _pickerBodyHeight = 352.0;
 
   Color get _accent => widget.color;
-  Color _sheetOf(BuildContext context) => AppColors.of(context).tint(_accent);
+  Color _sheetOf(BuildContext context) =>
+      AppColors.of(context).tint(_accent, 0.14);
 
   late final DateTime _baseMonth;
   late final PageController _pages;

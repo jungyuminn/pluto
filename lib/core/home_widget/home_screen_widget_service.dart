@@ -22,6 +22,7 @@ import 'package:job_planner/data/datasources/event_category_local_datasource.dar
 import 'package:job_planner/data/datasources/font_preference.dart';
 import 'package:job_planner/data/datasources/home_view_preference.dart';
 import 'package:job_planner/data/datasources/job_application_local_datasource.dart';
+import 'package:job_planner/data/datasources/nav_preference.dart';
 import 'package:job_planner/data/datasources/theme_preference.dart';
 import 'package:job_planner/data/datasources/widget_preference.dart';
 import 'package:job_planner/domain/entities/calendar_event.dart';
@@ -69,6 +70,7 @@ class HomeScreenWidgetService {
   DayEventsViewPreference? _dayEventsView;
   FontPreference? _font;
   CalendarPreference? _calendar;
+  NavPreference? _nav;
   WidgetPreference? _widget;
   var _syncing = false;
   var _queued = false;
@@ -82,6 +84,7 @@ class HomeScreenWidgetService {
     required DayEventsViewPreference dayEventsView,
     FontPreference? font,
     CalendarPreference? calendar,
+    NavPreference? nav,
     WidgetPreference? widget,
   }) async {
     _events = events;
@@ -92,6 +95,7 @@ class HomeScreenWidgetService {
     _dayEventsView = dayEventsView;
     _font = font;
     _calendar = calendar;
+    _nav = nav;
     _widget = widget;
     await _ensureAppGroup();
   }
@@ -129,6 +133,7 @@ class HomeScreenWidgetService {
       dayEventsView: DayEventsViewPreference(prefs: prefs),
       font: FontPreference(prefs: prefs),
       calendar: CalendarPreference(prefs: prefs),
+      nav: NavPreference(prefs: prefs),
       widget: WidgetPreference(prefs: prefs),
     );
   }
@@ -207,7 +212,10 @@ class HomeScreenWidgetService {
       final today = DateTime(now.year, now.month, now.day);
       final tomorrow = today.add(const Duration(days: 1));
       final allEvents = events.fetchAll();
-      final applications = jobs.fetchAll();
+      final applications = (_nav?.showJobTab ?? false) &&
+              (_calendar?.showCompanies ?? true)
+          ? jobs.fetchAll()
+          : const <JobApplication>[];
       final categoryList = categories.fetchAll();
       final liveRatio =
           PlatformDispatcher.instance.implicitView?.devicePixelRatio ?? 0;

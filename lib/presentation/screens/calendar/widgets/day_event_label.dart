@@ -21,12 +21,16 @@ class DayEventLabel extends StatefulWidget {
     this.onCompletePressed,
     this.showCategory = true,
     this.memo = '',
+    this.overline,
+    this.overlineColor,
     this.timeText,
     this.trailingText,
+    this.trailing,
     this.titleWeight = FontWeight.w600,
     this.disabled = false,
     this.showAccent = true,
     this.height = 52,
+    this.footer,
   });
 
   final String title;
@@ -41,12 +45,16 @@ class DayEventLabel extends StatefulWidget {
   final VoidCallback? onCompletePressed;
   final bool showCategory;
   final String memo;
+  final String? overline;
+  final Color? overlineColor;
   final String? timeText;
   final String? trailingText;
+  final Widget? trailing;
   final FontWeight titleWeight;
   final bool disabled;
   final bool showAccent;
   final double height;
+  final Widget? footer;
 
   @override
   State<DayEventLabel> createState() => _DayEventLabelState();
@@ -72,6 +80,7 @@ class _DayEventLabelState extends State<DayEventLabel> {
     final target = widget.disabled ? colors.muted : widget.color;
     final scale = AppFonts.labelScaleOf(context);
     final typeScale = widget.height / _baseHeight;
+    final hasOverline = widget.overline != null && widget.overline!.trim().isNotEmpty;
     final height = widget.height * scale;
     final memoText = widget.memo.trim().replaceAll(RegExp(r'\s+'), ' ');
     final hasMemo = memoText.isNotEmpty;
@@ -80,7 +89,7 @@ class _DayEventLabelState extends State<DayEventLabel> {
       color: target,
       builder: (context, accent) {
         final background =
-            colors.tint(accent, widget.disabled ? 0.14 : 0.22);
+            colors.tint(accent, widget.disabled ? 0.11 : 0.14);
         return AnimatedOpacity(
       duration: const Duration(milliseconds: 420),
       curve: Curves.easeOutCubic,
@@ -103,16 +112,42 @@ class _DayEventLabelState extends State<DayEventLabel> {
       color: background,
       pressedColor: Color.lerp(background, Colors.black, 0.08)!,
       borderRadius: BorderRadius.circular(8),
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(8),
-          border: widget.isJob
-              ? Border.all(color: accent, width: 1.5)
-              : null,
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(8),
-          child: SizedBox(
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: Stack(
+          children: [
+            Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (hasOverline)
+              Padding(
+                padding: EdgeInsets.fromLTRB(
+                  (widget.showAccent && !_completed && !widget.isJob)
+                      ? 14
+                      : 10,
+                  8,
+                  10,
+                  0,
+                ),
+                child: Transform.translate(
+                  offset: const Offset(0, 6),
+                  child: Text(
+                  widget.overline!.trim(),
+                  maxLines: 1,
+                  softWrap: false,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontFamily: AppFonts.of(context),
+                    fontSize: 16 * scale * typeScale,
+                    fontWeight: FontWeight.w800,
+                    height: 1.1,
+                    color: widget.overlineColor ?? accent,
+                  ),
+                ),
+                ),
+              ),
+            SizedBox(
             height: height,
             width: double.infinity,
             child: Row(
@@ -125,8 +160,6 @@ class _DayEventLabelState extends State<DayEventLabel> {
                           !widget.isJob)
                       ? 4
                       : 0,
-                  height: height,
-                  child: ColoredBox(color: accent),
                 ),
                 Expanded(
                   child: Padding(
@@ -223,7 +256,9 @@ class _DayEventLabelState extends State<DayEventLabel> {
                     ),
                   ),
                 ),
-                if (widget.trailingText != null)
+                if (widget.trailing != null)
+                  widget.trailing!
+                else if (widget.trailingText != null)
                   Padding(
                     padding: const EdgeInsets.only(right: 10),
                     child: Text(
@@ -304,8 +339,27 @@ class _DayEventLabelState extends State<DayEventLabel> {
               ],
             ),
           ),
+            if (widget.footer != null) widget.footer!,
+          ],
         ),
-      ),
+            Positioned(
+              left: 0,
+              top: 0,
+              bottom: 0,
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 240),
+                curve: Curves.easeOutCubic,
+                width: (widget.showAccent &&
+                        !_completed &&
+                        !widget.isJob)
+                    ? 4
+                    : 0,
+                color: accent,
+              ),
+            ),
+          ],
+        ),
+        ),
       ),
         );
       },

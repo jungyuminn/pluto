@@ -74,8 +74,8 @@ assets/       아이콘, 테마 이미지, 글꼴
 [Flutter](https://docs.flutter.dev/get-started/install)가 설치되어 있어야 합니다.
 
 ```bash
-git clone https://github.com/jungyuminn/job_planner.git
-cd job_planner
+git clone https://github.com/jungyuminn/pluto.git
+cd pluto
 flutter pub get
 ```
 

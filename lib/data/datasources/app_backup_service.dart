@@ -38,6 +38,7 @@ class AppBackupService {
   static const _themesFolder = CustomThemeStorage.folderName;
   static const _autoFolder = 'auto_backups';
   static const keepAutoCount = 3;
+  static const filePrefix = '플루토_백업_';
   static const _downloadChannel = MethodChannel('job_planner/backup_store');
   static const _icloudChannel = MethodChannel('job_planner/icloud_backup');
 
@@ -45,7 +46,7 @@ class AppBackupService {
     final stamp = now ?? DateTime.now();
     final month = stamp.month.toString().padLeft(2, '0');
     final day = stamp.day.toString().padLeft(2, '0');
-    return '잡플래너_백업_${stamp.year}$month$day.zip';
+    return '$filePrefix${stamp.year}$month$day.zip';
   }
 
   static Future<bool> backup() async {
@@ -189,7 +190,7 @@ class AppBackupService {
       'fileName': fileName(),
       'bytes': bytes,
       'keep': keepAutoCount,
-      'prefix': '잡플래너_백업_',
+      'prefix': filePrefix,
     });
   }
 
@@ -224,7 +225,7 @@ class AppBackupService {
       });
       await _downloadChannel.invokeMethod<void>('pruneDownloads', {
         'keep': keepAutoCount,
-        'prefix': '잡플래너_백업_',
+        'prefix': filePrefix,
       });
     } catch (error, stack) {
       debugPrint('Download backup failed: $error\n$stack');

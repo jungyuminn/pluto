@@ -33,6 +33,9 @@ enum TutorialDemo {
   homeSearch,
   homeSettings,
   homeReorder,
+  statsPlanetFill,
+  statsCollection,
+  statsDays,
   jobSwipe,
 }
 
@@ -155,6 +158,30 @@ class TutorialController extends ChangeNotifier {
       body: AppStrings.tutorialNavStatsBody,
     ),
     TutorialStep(
+      tab: 2,
+      badge: AppStrings.tutorialBadgeStats,
+      anchor: TutorialAnchorId.statsPlanet,
+      title: AppStrings.tutorialStatsPlanetTitle,
+      body: AppStrings.tutorialStatsPlanetBody,
+      demo: TutorialDemo.statsPlanetFill,
+    ),
+    TutorialStep(
+      tab: 2,
+      badge: AppStrings.tutorialBadgeStats,
+      anchor: TutorialAnchorId.statsCollected,
+      title: AppStrings.tutorialStatsGuideTitle,
+      body: AppStrings.tutorialStatsGuideBody,
+      demo: TutorialDemo.statsCollection,
+    ),
+    TutorialStep(
+      tab: 2,
+      badge: AppStrings.tutorialBadgeStats,
+      anchor: TutorialAnchorId.statsCalendar,
+      title: AppStrings.tutorialStatsDaysTitle,
+      body: AppStrings.tutorialStatsDaysBody,
+      demo: TutorialDemo.statsDays,
+    ),
+    TutorialStep(
       tab: 3,
       badge: AppStrings.tutorialBadgeJob,
       anchor: TutorialAnchorId.navJob,
@@ -269,7 +296,9 @@ class TutorialController extends ChangeNotifier {
   }
 
   static bool _isStatsOnly(TutorialStep step) {
-    return step.anchor == TutorialAnchorId.statsPlanet;
+    return step.anchor == TutorialAnchorId.statsPlanet ||
+        step.anchor == TutorialAnchorId.statsCollected ||
+        step.anchor == TutorialAnchorId.statsCalendar;
   }
 
   void _clampIndex() {

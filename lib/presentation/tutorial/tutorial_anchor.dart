@@ -7,6 +7,8 @@ enum TutorialAnchorId {
   navStats,
   navJob,
   statsPlanet,
+  statsCollected,
+  statsCalendar,
   calendarTitle,
   calendarMenu,
   calendarGrid,

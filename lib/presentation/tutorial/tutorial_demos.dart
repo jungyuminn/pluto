@@ -7,6 +7,7 @@ import 'package:job_planner/core/constants/app_icons.dart';
 import 'package:job_planner/core/constants/app_strings.dart';
 import 'package:job_planner/core/theme/app_colors.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/calendar_event_label.dart';
+import 'package:job_planner/presentation/screens/stats/widgets/planet_fill.dart';
 import 'package:job_planner/presentation/screens/shell/widgets/pill_bottom_nav.dart';
 import 'package:job_planner/presentation/tutorial/tutorial_controller.dart';
 import 'package:job_planner/presentation/widgets/themed_asset.dart';
@@ -33,6 +34,9 @@ class TutorialDemoView extends StatelessWidget {
       TutorialDemo.homeSearch => _SearchDemo(jobMode: jobOn),
       TutorialDemo.homeSettings => const _SettingsDemo(),
       TutorialDemo.homeReorder => const _ReorderDemo(),
+      TutorialDemo.statsPlanetFill => const _PlanetFillDemo(),
+      TutorialDemo.statsCollection => const _PlanetCollectionDemo(),
+      TutorialDemo.statsDays => const _StatsDaysDemo(),
       TutorialDemo.jobSwipe => const _SwipeDemo(),
     };
   }
@@ -567,7 +571,7 @@ class _SearchDemo extends StatelessWidget {
                     Opacity(
                       opacity: jobs,
                       child: CalendarEventLabel(
-                        title: '잡플래너',
+                        title: '플루토',
                         color: const Color(0xFF8B5CF6),
                         isJob: true,
                         height: 18,
@@ -627,20 +631,21 @@ class _SettingsDemo extends StatelessWidget {
   const _SettingsDemo();
 
   static const _items = [
+    AppStrings.settingsHomeLayoutSection,
     AppStrings.settingsThemeSection,
-    AppStrings.settingsFontSection,
     AppStrings.settingsNotificationSection,
+    AppStrings.settingsNavSection,
   ];
 
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
     return _DemoLoop(
-      height: 140,
-      duration: const Duration(milliseconds: 3000),
+      height: 168,
+      duration: const Duration(milliseconds: 3600),
       builder: (context, t) {
-        final selected = (t * 2.99).floor().clamp(0, 2);
-        final local = (t * 3) % 1;
+        final selected = (t * 3.99).floor().clamp(0, 3);
+        final local = (t * 4) % 1;
         final press = _pulse(local, 0.18, 0.32, 0.78);
         return Stack(
           children: [
@@ -675,7 +680,7 @@ class _SettingsDemo extends StatelessWidget {
             if (press > 0)
               Positioned(
                 right: 28,
-                top: 28 + selected * 28.0,
+                top: 22 + selected * 32.0,
                 child: _Finger(pressed: press),
               ),
           ],
@@ -783,7 +788,7 @@ class _MenuDemo extends StatelessWidget {
                               ),
                               4: _LabelAppear(
                                 progress: 1,
-                                title: '잡플래너',
+                                title: '플루토',
                                 color: Color(0xFF8B5CF6),
                                 isJob: true,
                               ),
@@ -1025,6 +1030,250 @@ class _ReorderDemo extends StatelessWidget {
   }
 }
 
+class _PlanetFillDemo extends StatelessWidget {
+  const _PlanetFillDemo();
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    final font = AppFonts.of(context);
+    const names = [
+      AppStrings.statsRank1,
+      AppStrings.statsRank2,
+      AppStrings.statsRank3,
+      AppStrings.statsRank4,
+      AppStrings.statsRank5,
+      AppStrings.statsRank6,
+      AppStrings.statsRank7,
+      AppStrings.statsRank8,
+      AppStrings.statsRank9,
+      AppStrings.statsRank10,
+    ];
+    return _DemoLoop(
+      height: 148,
+      duration: const Duration(milliseconds: 14000),
+      builder: (context, t) {
+        final level = 1 + (t * 9.999).floor().clamp(0, 9);
+        return Column(
+          children: [
+            const SizedBox(height: 8),
+            SizedBox(
+              width: 92,
+              height: 92,
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 640),
+                switchInCurve: Curves.easeInOutCubic,
+                switchOutCurve: Curves.easeInOutCubic,
+                layoutBuilder: (current, previous) {
+                  return Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      ...previous,
+                      if (current != null) current,
+                    ],
+                  );
+                },
+                transitionBuilder: (child, animation) {
+                  return FadeTransition(
+                    opacity: animation,
+                    child: ScaleTransition(
+                      scale: Tween<double>(begin: 0.88, end: 1).animate(
+                        CurvedAnimation(
+                          parent: animation,
+                          curve: Curves.easeOutCubic,
+                        ),
+                      ),
+                      child: child,
+                    ),
+                  );
+                },
+                child: PlanetFill(
+                  key: ValueKey(level),
+                  level: level,
+                  wave: 0.16,
+                  outline: colors.icon,
+                  empty: colors.card,
+                  pokeable: false,
+                ),
+              ),
+            ),
+            const SizedBox(height: 6),
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 420),
+              child: Text(
+                names[level - 1],
+                key: ValueKey(level),
+                style: TextStyle(
+                  fontFamily: font,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w800,
+                  color: colors.text,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _PlanetCollectionDemo extends StatelessWidget {
+  const _PlanetCollectionDemo();
+
+  static const _levels = [3, 5, 8, 10];
+  static const _months = ['3월', '5월', '8월', '12월'];
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    final font = AppFonts.of(context);
+    return _DemoLoop(
+      height: 140,
+      duration: const Duration(milliseconds: 3200),
+      builder: (context, t) {
+        final tap = _pulse(t, 0.22, 0.34, 0.78);
+        final selected = t >= 0.34 && t < 0.78 ? 2 : -1;
+        return Stack(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    AppStrings.statsCollectedTitle,
+                    style: TextStyle(
+                      fontFamily: font,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                      color: colors.text,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Expanded(
+                    child: Row(
+                      children: [
+                        for (var i = 0; i < _levels.length; i++) ...[
+                          if (i > 0) const SizedBox(width: 8),
+                          Expanded(
+                            child: DecoratedBox(
+                              decoration: BoxDecoration(
+                                color: selected == i
+                                    ? colors.accent.withValues(alpha: 0.12)
+                                    : Colors.transparent,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Column(
+                                children: [
+                                  SizedBox(
+                                    height: 56,
+                                    child: PlanetFill(
+                                      level: _levels[i],
+                                      wave: 0.12,
+                                      outline: colors.icon,
+                                      empty: colors.card,
+                                      pokeable: false,
+                                    ),
+                                  ),
+                                  Text(
+                                    _months[i],
+                                    style: TextStyle(
+                                      fontFamily: font,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w700,
+                                      color: colors.muted,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (tap > 0)
+              Positioned(
+                left: 168,
+                top: 58,
+                child: _Finger(pressed: tap),
+              ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _StatsDaysDemo extends StatelessWidget {
+  const _StatsDaysDemo();
+
+  static const _filled = {1, 4, 7, 8, 11, 15, 17};
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    return _DemoLoop(
+      height: 128,
+      duration: const Duration(milliseconds: 2800),
+      builder: (context, t) {
+        final tap = _pulse(t, 0.2, 0.32, 0.82);
+        final picked = t >= 0.32 && t < 0.82 ? 8 : -1;
+        return Stack(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(28, 18, 28, 14),
+              child: Column(
+                children: [
+                  for (var row = 0; row < 3; row++) ...[
+                    if (row > 0) const SizedBox(height: 6),
+                    Expanded(
+                      child: Row(
+                        children: [
+                          for (var col = 0; col < 7; col++) ...[
+                            if (col > 0) const SizedBox(width: 6),
+                            Expanded(
+                              child: DecoratedBox(
+                                decoration: BoxDecoration(
+                                  color: () {
+                                    final i = row * 7 + col;
+                                    if (i == picked) return colors.accent;
+                                    if (_filled.contains(i)) {
+                                      return colors.accent.withValues(
+                                        alpha: 0.35,
+                                      );
+                                    }
+                                    return colors.border.withValues(alpha: 0.7);
+                                  }(),
+                                  borderRadius: BorderRadius.circular(5),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            if (tap > 0)
+              Positioned(
+                left: 148,
+                top: 52,
+                child: _Finger(pressed: tap),
+              ),
+          ],
+        );
+      },
+    );
+  }
+}
+
 class _SwipeDemo extends StatelessWidget {
   const _SwipeDemo();
 
@@ -1067,7 +1316,7 @@ class _SwipeDemo extends StatelessWidget {
                       Transform.translate(
                         offset: Offset(-72 * swipe, 0),
                         child: const _MiniCard(
-                          title: '잡플래너',
+                          title: '플루토',
                           top: 0,
                           full: true,
                         ),

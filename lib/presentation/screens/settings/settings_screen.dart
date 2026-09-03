@@ -531,9 +531,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final uri = Uri(
       scheme: 'mailto',
       path: AppStrings.appContactEmail,
-      queryParameters: {
-        'subject': AppStrings.appContactSubject,
-      },
+      query: 'subject=${Uri.encodeComponent(AppStrings.appContactSubject)}',
     );
     try {
       final launched = await launchUrl(uri);

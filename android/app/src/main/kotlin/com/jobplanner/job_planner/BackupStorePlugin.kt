@@ -18,6 +18,12 @@ class BackupStorePlugin(
     companion object {
         const val channelName = "job_planner/backup_store"
         private const val mimeType = "application/zip"
+        private val backupPrefixes = listOf("플루토_백업_", "잡플래너_백업_")
+
+        private fun isBackupZip(name: String): Boolean {
+            return backupPrefixes.any { name.startsWith(it) } &&
+                name.endsWith(".zip", ignoreCase = true)
+        }
 
         fun register(activity: Activity, engine: FlutterEngine): BackupStorePlugin {
             val plugin = BackupStorePlugin(activity)
@@ -45,7 +51,7 @@ class BackupStorePlugin(
             }
             "pruneDownloads" -> {
                 val keep = call.argument<Int>("keep") ?: 3
-                val prefix = call.argument<String>("prefix") ?: "잡플래너_백업_"
+                val prefix = call.argument<String>("prefix") ?: "플루토_백업_"
                 try {
                     pruneDownloads(prefix, keep)
                     result.success(null)
@@ -90,21 +96,23 @@ class BackupStorePlugin(
 
     private fun pruneDownloads(prefix: String, keep: Int) {
         if (keep < 1) return
+        val prefixes = linkedSetOf(prefix, *backupPrefixes.toTypedArray())
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             val resolver = activity.contentResolver
             val items = mutableListOf<Pair<Long, Uri>>()
+            val like = prefixes.joinToString(" OR ") { "${MediaStore.Downloads.DISPLAY_NAME} LIKE ?" }
             resolver.query(
                 MediaStore.Downloads.EXTERNAL_CONTENT_URI,
                 arrayOf(MediaStore.Downloads._ID, MediaStore.Downloads.DISPLAY_NAME, MediaStore.Downloads.DATE_ADDED),
-                "${MediaStore.Downloads.DISPLAY_NAME} LIKE ?",
-                arrayOf("$prefix%"),
+                like,
+                prefixes.map { "$it%" }.toTypedArray(),
                 "${MediaStore.Downloads.DATE_ADDED} DESC",
             )?.use { cursor ->
                 val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Downloads._ID)
                 val nameColumn = cursor.getColumnIndexOrThrow(MediaStore.Downloads.DISPLAY_NAME)
                 while (cursor.moveToNext()) {
                     val name = cursor.getString(nameColumn) ?: continue
-                    if (!name.startsWith(prefix) || !name.endsWith(".zip", ignoreCase = true)) continue
+                    if (!isBackupZip(name)) continue
                     val id = cursor.getLong(idColumn)
                     items += id to ContentUris.withAppendedId(
                         MediaStore.Downloads.EXTERNAL_CONTENT_URI,
@@ -123,7 +131,7 @@ class BackupStorePlugin(
         val folder = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
         if (!folder.exists()) return
         val files = folder.listFiles()
-            ?.filter { it.isFile && it.name.startsWith(prefix) && it.name.endsWith(".zip", ignoreCase = true) }
+            ?.filter { it.isFile && isBackupZip(it.name) }
             ?.sortedByDescending { it.lastModified() }
             ?: return
         files.drop(keep).forEach { it.delete() }

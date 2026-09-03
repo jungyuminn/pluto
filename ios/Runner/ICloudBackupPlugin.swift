@@ -6,6 +6,7 @@ import UniformTypeIdentifiers
 final class ICloudBackupPlugin: NSObject, UIDocumentPickerDelegate {
   static let channelName = "job_planner/icloud_backup"
   static let containerId = "iCloud.com.jobplanner.jobPlanner"
+  static let backupPrefixes = ["플루토_백업_", "잡플래너_백업_"]
 
   private let queue = DispatchQueue(label: "job_planner.icloud_backup")
   private var pickResult: FlutterResult?
@@ -36,7 +37,7 @@ final class ICloudBackupPlugin: NSObject, UIDocumentPickerDelegate {
         return
       }
       let keep = arguments["keep"] as? Int ?? 3
-      let prefix = arguments["prefix"] as? String ?? "잡플래너_백업_"
+      let prefix = arguments["prefix"] as? String ?? "플루토_백업_"
       queue.async {
         do {
           try self.save(fileName: fileName, bytes: bytes, keep: keep, prefix: prefix)
@@ -118,7 +119,7 @@ final class ICloudBackupPlugin: NSObject, UIDocumentPickerDelegate {
     var items: [[String: Any]] = []
     for url in urls {
       let name = url.lastPathComponent
-      guard name.hasPrefix("잡플래너_백업_"), name.lowercased().hasSuffix(".zip") else { continue }
+      guard isBackupZip(name) else { continue }
       let values = try url.resourceValues(forKeys: [
         .isRegularFileKey,
         .contentModificationDateKey,
@@ -163,7 +164,7 @@ final class ICloudBackupPlugin: NSObject, UIDocumentPickerDelegate {
           guard let name = item.value(forAttribute: NSMetadataItemFSNameKey) as? String else {
             continue
           }
-          guard name.hasPrefix("잡플래너_백업_") else { continue }
+          guard isBackupZip(name) else { continue }
           let date = item.value(forAttribute: NSMetadataItemFSContentChangeDateKey) as? Date
             ?? Date()
           items.append([
@@ -217,7 +218,13 @@ final class ICloudBackupPlugin: NSObject, UIDocumentPickerDelegate {
     return data
   }
 
+  private func isBackupZip(_ name: String) -> Bool {
+    guard name.lowercased().hasSuffix(".zip") else { return false }
+    return Self.backupPrefixes.contains { name.hasPrefix($0) }
+  }
+
   private func prune(in documents: URL, prefix: String, keep: Int) throws {
+    _ = prefix
     if keep < 1 { return }
     let urls = try FileManager.default.contentsOfDirectory(
       at: documents,
@@ -226,7 +233,7 @@ final class ICloudBackupPlugin: NSObject, UIDocumentPickerDelegate {
     )
     let backups = urls.filter {
       let name = $0.lastPathComponent
-      return name.hasPrefix(prefix) && name.lowercased().hasSuffix(".zip")
+      return isBackupZip(name)
     }
     .sorted { left, right in
       let leftDate = (try? left.resourceValues(forKeys: [.contentModificationDateKey])
@@ -308,7 +315,7 @@ final class ICloudBackupPlugin: NSObject, UIDocumentPickerDelegate {
       if accessed { url.stopAccessingSecurityScopedResource() }
     }
     let name = url.lastPathComponent
-    guard name.hasPrefix("잡플래너_백업_"), name.lowercased().hasSuffix(".zip") else {
+    guard isBackupZip(name) else {
       throw ICloudBackupError.notInCloud
     }
     guard try isInCloudFolder(url) else {

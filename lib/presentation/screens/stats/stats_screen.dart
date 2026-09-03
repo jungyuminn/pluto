@@ -310,14 +310,20 @@ class _StatsScreenState extends State<StatsScreen>
                               const SizedBox(height: 12),
                               _LevelBlock(play: play, progress: progress),
                               const SizedBox(height: 16),
-                              _CollectedCard(
-                                collected: collected,
-                                onSelectMonth: _setMonth,
+                              TutorialAnchor(
+                                id: TutorialAnchorId.statsCollected,
+                                child: _CollectedCard(
+                                  collected: collected,
+                                  onSelectMonth: _setMonth,
+                                ),
                               ),
                               const SizedBox(height: 16),
-                              _StatCard(
-                                play: play,
-                                onDayPressed: _openDayEvents,
+                              TutorialAnchor(
+                                id: TutorialAnchorId.statsCalendar,
+                                child: _StatCard(
+                                  play: play,
+                                  onDayPressed: _openDayEvents,
+                                ),
                               ),
                             ],
                           ),

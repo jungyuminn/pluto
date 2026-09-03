@@ -1,11 +1,11 @@
 {
-    "name": "job_planner",
-    "short_name": "job_planner",
+    "name": "플루토",
+    "short_name": "플루토",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#FFFFFF",
     "theme_color": "#FFFFFF",
-    "description": "취준생을 위한 취업 과정 관리 앱 잡플래너",
+    "description": "할 일과 일정을 한곳에서 보는 앱 플루토",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

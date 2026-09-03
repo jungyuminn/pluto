@@ -471,7 +471,7 @@ class _BackupPreview extends StatelessWidget {
     _FakeBackupScene(
             icon: Icons.ios_share_rounded,
             title: AppStrings.backupSavedTitle,
-            body: '잡플래너_백업.zip',
+            body: '플루토_백업.zip',
           ),
     _FakeBackupScene(
             icon: Icons.download_rounded,

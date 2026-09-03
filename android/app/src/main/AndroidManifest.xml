@@ -10,7 +10,7 @@
         android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         android:maxSdkVersion="28"/>
     <application
-        android:label="잡플래너"
+        android:label="플루토"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

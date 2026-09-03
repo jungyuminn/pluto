@@ -14,8 +14,10 @@ class GoogleDriveBackupFile {
 class GoogleDriveBackupClient {
   GoogleDriveBackupClient._();
 
-  static const folderName = '잡플래너 백업';
-  static const filePrefix = '잡플래너_백업_';
+  static const folderName = '플루토 백업';
+  static const legacyFolderName = '잡플래너 백업';
+  static const filePrefix = '플루토_백업_';
+  static const legacyFilePrefix = '잡플래너_백업_';
   static const _keepCount = 3;
   static const _scopes = [drive.DriveApi.driveFileScope];
 
@@ -56,8 +58,7 @@ class GoogleDriveBackupClient {
       );
       final items = <GoogleDriveBackupFile>[
         for (final file in result.files ?? const <drive.File>[])
-          if ((file.name ?? '').startsWith(filePrefix) &&
-              (file.name ?? '').toLowerCase().endsWith('.zip'))
+          if (_isBackupName(file.name ?? ''))
             GoogleDriveBackupFile(
               fileName: file.name!,
               date: _dateOf(file),
@@ -174,14 +175,33 @@ class GoogleDriveBackupClient {
     );
   }
 
-  static Future<String> _ensureFolder(drive.DriveApi api) async {
+  static bool _isBackupName(String name) {
+    return (name.startsWith(filePrefix) || name.startsWith(legacyFilePrefix)) &&
+        name.toLowerCase().endsWith('.zip');
+  }
+
+  static Future<String?> _folderId(drive.DriveApi api, String name) async {
+    final escaped = name.replaceAll("'", r"\'");
     final existing = await api.files.list(
-      q: "name = '$folderName' and mimeType = 'application/vnd.google-apps.folder' and trashed = false",
+      q: "name = '$escaped' and mimeType = 'application/vnd.google-apps.folder' and trashed = false",
       $fields: 'files(id)',
       pageSize: 1,
     );
     final id = existing.files?.firstOrNull?.id;
-    if (id != null && id.isNotEmpty) return id;
+    if (id == null || id.isEmpty) return null;
+    return id;
+  }
+
+  static Future<String> _ensureFolder(drive.DriveApi api) async {
+    final current = await _folderId(api, folderName);
+    if (current != null) return current;
+    final legacy = await _folderId(api, legacyFolderName);
+    if (legacy != null) {
+      try {
+        await api.files.update(drive.File()..name = folderName, legacy);
+      } catch (_) {}
+      return legacy;
+    }
     final created = await api.files.create(
       drive.File()
         ..name = folderName
@@ -216,7 +236,7 @@ class GoogleDriveBackupClient {
     );
     final files = [
       for (final file in result.files ?? const <drive.File>[])
-        if ((file.name ?? '').startsWith(filePrefix)) file,
+        if (_isBackupName(file.name ?? '')) file,
     ];
     for (final file in files.skip(_keepCount)) {
       final id = file.id;

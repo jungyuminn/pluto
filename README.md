@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="assets/images/pluto_app_icon_outlined.png" width="112" alt="잡플래너 아이콘">
+  <img src="assets/images/pluto_app_icon_outlined.png" width="112" alt="플루토 아이콘">
 </p>
 
-<h1 align="center">잡플래너</h1>
+<h1 align="center">플루토</h1>
 
 <p align="center">
   취업 준비의 할 일, 기업 일정, 일기, 언젠가를 한곳에서 보는 Flutter 앱입니다.<br>
@@ -19,7 +19,7 @@
 
 ## 왜 만들었나요
 
-취준은 할 일과 면접 일정이 섞이고, 기업마다 전형이 다릅니다. 잡플래너는 달력 위에 그걸 올려 두고, 홈에서 오늘·내일·남은 일을 바로 보게 하려는 앱입니다.
+취준은 할 일과 면접 일정이 섞이고, 기업마다 전형이 다릅니다. 플루토는 달력 위에 그걸 올려 두고, 홈에서 오늘·내일·남은 일을 바로 보게 하려는 앱입니다.
 
 데이터는 계정 로그인 없이 **이 폰(또는 이 맥)에만** 남습니다. 백업 파일로 옮기거나 복구할 수 있습니다.
 

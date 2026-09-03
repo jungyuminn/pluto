@@ -1,7 +1,7 @@
 class AppStrings {
   AppStrings._();
 
-  static const appName = '잡플래너';
+  static const appName = '플루토';
   static const jobGreeting = '오늘도 한 걸음 더';
   static const jobSubtitle = '취업 과정을 한곳에서 관리하세요';
   static const compactView = '간략히 보기';
@@ -22,7 +22,7 @@ class AppStrings {
   static const importIosOnlyTitle = '아이폰에서 가져올 수 있어요';
   static const importIosOnlyBody = 'iOS 캘린더 가져오기는 아이폰에서 사용할 수 있어요';
   static const importPermissionTitle = '캘린더 권한이 필요해요';
-  static const importPermissionBody = '기본 캘린더에 있는 일정을 잡플래너로 가져오려면 권한이 필요해요';
+  static const importPermissionBody = '기본 캘린더에 있는 일정을 플루토로 가져오려면 권한이 필요해요';
   static const importPermissionSettings = '설정으로 이동';
   static const importCalendarsTitle = '가져올 캘린더';
   static const importCalendarsBody = '선택한 캘린더의 일정을 할 일로 가져와요';
@@ -77,13 +77,13 @@ class AppStrings {
   static const restoreConfirmBody = '지금 있는 데이터가 백업 파일로 바뀌어요';
   static const restorePickOther = '다른 파일 고르기';
   static const restoreNotIcloudBody =
-      '잡플래너 아이클라우드 폴더에 있는 백업만 고를 수 있어요';
+      '플루토 아이클라우드 폴더에 있는 백업만 고를 수 있어요';
   static const restoreLatest = '가장 최근';
   static const restoreAction = '복구하기';
   static const restoreDoneTitle = '복구했어요';
   static const restoreDoneBody = '앱에 데이터가 바로 반영돼요';
   static const restoreFailedTitle = '복구하지 못했어요';
-  static const restoreFailedBody = '잡플래너 백업 파일이 맞는지 확인해 주세요';
+  static const restoreFailedBody = '플루토 백업 파일이 맞는지 확인해 주세요';
   static const autoBackupSetting = '자동저장 주기';
   static const autoBackupDaily = '매일';
   static const autoBackupEvery3Days = '3일마다';
@@ -92,8 +92,8 @@ class AppStrings {
   static String autoBackupHint(String label) => '앱을 켜면 $label 자동으로 저장해요';
   static const appTutorial = '앱 둘러보기';
   static const appContact = '앱 문의하기';
-  static const appContactEmail = 'jobplanner.info@gmail.com';
-  static const appContactSubject = '잡플래너 문의';
+  static const appContactEmail = 'pluto.app.help@gmail.com';
+  static const appContactSubject = '플루토 문의';
   static const appContactCopied = '메일 주소를 복사했어요';
   static const tutorialSkip = '건너뛰기';
   static const tutorialPrev = '이전';
@@ -106,10 +106,19 @@ class AppStrings {
   static const tutorialBadgeHome = '홈';
   static const tutorialBadgeJob = '지원서';
   static const tutorialBadgeStats = '통계';
-  static const tutorialNavStatsTitle = '이번 달 행성';
+  static const tutorialNavStatsTitle = '통계 화면';
   static const tutorialNavStatsBody =
-      '할 일을 끝낼 때마다 이번 달 행성이 조금씩 색칠돼요';
-  static const tutorialWelcomeTitle = '잡플래너에 오신 걸 환영해요';
+      '이번 달에 끝낸 할 일로 행성이 성장해요. 상단의 날짜를 누르면 지난달도 볼 수 있어요';
+  static const tutorialStatsPlanetTitle = '행성이 성장해요';
+  static const tutorialStatsPlanetBody =
+      '할 일을 끝낼 때마다 경험치가 쌓여요. 단계가 오르면 행성이 바뀌고, 50개를 끝내면 플루토가 돼요';
+  static const tutorialStatsGuideTitle = '행성 도감';
+  static const tutorialStatsGuideBody =
+      '행성 아래 이름을 누르면 단계를 볼 수 있어요. 내가 모은 행성을 누르면 달마다 모은 행성을 볼 수 있어요';
+  static const tutorialStatsDaysTitle = '활동한 날';
+  static const tutorialStatsDaysBody =
+      '아래 달력에서 할 일을 끝낸 날이 표시돼요. 날짜를 누르면 그날 할 일을 열 수 있어요';
+  static const tutorialWelcomeTitle = '플루토에 오신 걸 환영해요';
   static const tutorialWelcomeBody =
       '할 일, 캘린더, 지원서를 한곳에서 관리해요. 화면을 따라가며 어디를 누르면 되는지 알려줄게요';
   static const tutorialWelcomeBodyDaily =
@@ -150,9 +159,9 @@ class AppStrings {
       '오른쪽 ··· 을 누르면 메뉴가 열려요. 할 일만 보거나 일기·가계부로 바꿀 수 있어요. 바꾼 뒤 날짜를 누르면 그날 기록을 보거나 추가해요';
   static const tutorialNavHomeTitle = '홈 화면';
   static const tutorialNavHomeBody =
-      '오늘·내일 할 일, 챌린지, 지난주·지난달 요약이 모여 있어요';
+      '기본으로 오늘·내일 할 일이 보여요. 끝나지 않은 할 일이 있으면 위에 미완료 카드도 생겨요';
   static const tutorialHomeToolsTitle = '위쪽 버튼';
-  static const tutorialHomeToolsBody = '검색, 카테고리별 보기, 설정 버튼이에요';
+  static const tutorialHomeToolsBody = '돋보기, 간략히 보기, 설정 버튼이에요';
   static const tutorialHomeSearchTitle = '전체 일정 찾기';
   static const tutorialHomeSearchBody =
       '돋보기를 누르면 할 일과 지원서를 한곳에서 찾아요. 기간을 정하거나 할 일·지원서만 볼 수 있어요';
@@ -160,14 +169,16 @@ class AppStrings {
       '돋보기를 누르면 할 일을 한곳에서 찾아요. 기간을 정하거나 할 일만 볼 수 있어요';
   static const tutorialHomeSettingsTitle = '설정에서 바꾸기';
   static const tutorialHomeSettingsBody =
-      '설정을 누르면 테마, 글꼴, 알림 등 여러 항목을 설정할 수 있어요';
+      '테마·글꼴·알림뿐 아니라 홈에 보여줄 카드, 취준 모드, 백업까지 설정에서 바꿀 수 있어요';
   static const tutorialHomeListTitle = '할 일 카드';
   static const tutorialHomeListBody =
-      '오늘·내일·챌린지 카드예요. 눌러 열거나, 길게 눌러 순서를 바꿀 수 있어요';
+      '오늘·내일 카드예요. 눌러 열고, 길게 눌러 순서를 바꿀 수 있어요';
   static const tutorialNavJobTitle = '지원서 화면';
-  static const tutorialNavJobBody = '지원서가 모여 있어요';
+  static const tutorialNavJobBody =
+      '지원 중인 회사가 카드로 모여 있어요. 카드를 눌러 전형과 자기소개서를 관리해요';
   static const tutorialJobToolsTitle = '위쪽 버튼';
-  static const tutorialJobToolsBody = '검색과 오른쪽 메뉴예요';
+  static const tutorialJobToolsBody =
+      '돋보기와 오른쪽 메뉴예요. 메뉴에서 자격증으로 바꿀 수 있어요';
   static const tutorialJobAddTitle = '지원서 추가';
   static const tutorialJobAddBody =
       '아래 + 로 지원서를 넣고, 카드를 밀어 순서를 바꾸고, 왼쪽으로 밀면 지울 수 있어요';
@@ -380,7 +391,7 @@ class AppStrings {
   static const settingsBackupHelp =
       '앱의 모든 데이터를 최근 3개까지 저장해요. 앱을 지운 뒤에도 복구할 수 있어요';
   static const settingsCalendarSyncHelp =
-      '기본 캘린더에 있는 일정을 잡플래너의 캘린더로 가져와요. 가져올 기간을 고르고, 카테고리는 하나에 몰아넣거나 할 일마다 고를 수 있어요.';
+      '기본 캘린더에 있는 일정을 플루토의 캘린더로 가져와요. 가져올 기간을 고르고, 카테고리는 하나에 몰아넣거나 할 일마다 고를 수 있어요.';
   static const settingsAppHelp =
       '릴리즈 노트에서 업데이트 내역을 읽고, 앱 사용법을 보거나, 문의 메일을 보내거나, 로그인·탈퇴할 수 있어요';
   static const settingsCalendarHelp = '캘린더의 첫 요일과 음력 날짜를 표시할 수 있어요';

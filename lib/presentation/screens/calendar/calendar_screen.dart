@@ -970,6 +970,7 @@ class _WebCalendarArrowState extends State<_WebCalendarArrow>
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     return AnimatedBuilder(
       animation: _pop,
       builder: (context, child) {
@@ -986,14 +987,15 @@ class _WebCalendarArrowState extends State<_WebCalendarArrow>
         );
       },
       child: Material(
-        color: Colors.white,
+        color: colors.card,
         elevation: 4,
-        shadowColor: const Color(0x40000000),
+        shadowColor: colors.shadow,
         shape: const CircleBorder(),
         child: PressBounce(
           onPressed: widget.onPressed,
           pressedScale: 0.92,
-          color: Colors.white,
+          color: colors.card,
+          pressedColor: colors.pressed,
           borderRadius: BorderRadius.circular(999),
           child: SizedBox(
             width: 48,
@@ -1003,7 +1005,7 @@ class _WebCalendarArrowState extends State<_WebCalendarArrow>
                   ? Icons.chevron_left_rounded
                   : Icons.chevron_right_rounded,
               size: 28,
-              color: const Color(0xFF222222),
+              color: colors.icon,
             ),
           ),
         ),

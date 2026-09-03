@@ -2,7 +2,9 @@ import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:job_planner/core/constants/app_fonts.dart';
+import 'package:job_planner/core/constants/app_icons.dart';
 import 'package:job_planner/core/constants/app_strings.dart';
 import 'package:job_planner/core/constants/release_notes.dart';
 import 'package:job_planner/core/theme/app_colors.dart';
@@ -612,22 +614,26 @@ class _AppPreview extends StatelessWidget {
   Widget build(BuildContext context) {
     return _HelpSelectDemo(
       labels: const [
+        AppStrings.releaseNotesTitle,
         AppStrings.appTutorial,
         AppStrings.appContact,
-        AppStrings.releaseNotesTitle,
+        AppStrings.accountLogin,
       ],
-      values: ['', '', ReleaseNotes.latestVersion],
+      values: [ReleaseNotes.latestVersion, '', '', ''],
       chevron: true,
-      sceneHeight: 228,
+      chevrons: const [true, true, true, true],
+      sceneHeight: 276,
       scene: (context, selected) {
         return _HelpSceneFill(
           child: _helpKeyedSwitch(
             switchKey: selected,
             child: selected == 0
-                ? const _FakeTutorialPeek()
+                ? const _ReleaseNotesHelpDemo()
                 : selected == 1
-                    ? const _ContactHelpDemo()
-                    : const _ReleaseNotesHelpDemo(),
+                    ? const _FakeTutorialPeek()
+                    : selected == 2
+                        ? const _ContactHelpDemo()
+                        : const _AccountHelpDemo(),
           ),
         );
       },
@@ -688,6 +694,146 @@ class _ContactHelpDemo extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _AccountHelpDemo extends StatelessWidget {
+  const _AccountHelpDemo();
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    final font = AppFonts.of(context);
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: colors.card,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: colors.shadow,
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+        border: Border.all(color: colors.border.withValues(alpha: 0.7)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 18, 16, 18),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.person_outline_rounded,
+              size: 28,
+              color: colors.accentBright,
+            ),
+            const SizedBox(height: 10),
+            Text(
+              AppStrings.accountLogin,
+              style: TextStyle(
+                fontFamily: font,
+                fontSize: 15,
+                fontWeight: FontWeight.w800,
+                color: colors.text,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              AppStrings.accountLoginBody,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontFamily: font,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                height: 1.4,
+                color: colors.muted,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              AppStrings.accountLoginPcHint,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontFamily: font,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                height: 1.4,
+                color: colors.muted,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _HelpBrandCircle(
+                  asset: AppIcons.kakaoLogo,
+                  background: const Color(0xFFFEE500),
+                ),
+                const SizedBox(width: 10),
+                _HelpBrandCircle(
+                  asset: AppIcons.googleLogo,
+                  background: Colors.white,
+                  border: colors.border,
+                ),
+                const SizedBox(width: 10),
+                _HelpBrandCircle(
+                  asset: AppIcons.appleLogo,
+                  background: const Color(0xFF111111),
+                  tint: Colors.white,
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _HelpBrandCircle extends StatelessWidget {
+  const _HelpBrandCircle({
+    required this.asset,
+    required this.background,
+    this.border,
+    this.tint,
+  });
+
+  final String asset;
+  final Color background;
+  final Color? border;
+  final Color? tint;
+
+  @override
+  Widget build(BuildContext context) {
+    final tintColor = tint;
+    final image = asset.endsWith('.svg')
+        ? SvgPicture.asset(
+            asset,
+            width: 12,
+            height: 12,
+            colorFilter: tintColor == null
+                ? null
+                : ColorFilter.mode(tintColor, BlendMode.srcIn),
+          )
+        : Image.asset(
+            asset,
+            width: 12,
+            height: 12,
+            color: tint,
+            colorBlendMode: BlendMode.srcIn,
+          );
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: background,
+        shape: BoxShape.circle,
+        border: border == null ? null : Border.all(color: border!),
+      ),
+      child: SizedBox(
+        width: 22,
+        height: 22,
+        child: Center(child: image),
       ),
     );
   }
@@ -1794,6 +1940,7 @@ class _HelpSelectDemo extends StatefulWidget {
     this.sceneHeight = 188,
     this.showCaption = true,
     this.chevron = false,
+    this.chevrons,
     this.values,
     this.themeOf,
   });
@@ -1803,6 +1950,7 @@ class _HelpSelectDemo extends StatefulWidget {
   final double sceneHeight;
   final bool showCaption;
   final bool chevron;
+  final List<bool>? chevrons;
   final List<String>? values;
   final ThemeData Function(int selected)? themeOf;
 
@@ -1919,7 +2067,7 @@ class _HelpSelectDemoState extends State<_HelpSelectDemo>
                             label: labels[i],
                             selected: selected == i,
                             height: _rowHeight,
-                            chevron: widget.chevron,
+                            chevron: widget.chevrons?[i] ?? widget.chevron,
                             value: widget.values == null
                                 ? null
                                 : widget.values![i],

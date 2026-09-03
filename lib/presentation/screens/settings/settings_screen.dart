@@ -26,6 +26,7 @@ import 'package:job_planner/domain/entities/event_category.dart';
 import 'package:job_planner/domain/entities/job_application.dart';
 import 'package:job_planner/presentation/screens/add_company/widgets/missing_fields_dialog.dart';
 import 'package:job_planner/presentation/screens/add_company/widgets/save_company_button.dart';
+import 'package:job_planner/data/datasources/app_auth_service.dart';
 import 'package:job_planner/data/datasources/app_backup_service.dart';
 import 'package:job_planner/data/datasources/backup_preference.dart';
 import 'package:job_planner/data/datasources/device_calendar_import.dart';
@@ -42,9 +43,11 @@ import 'package:job_planner/presentation/screens/home/widgets/home_day_card.dart
 import 'package:job_planner/presentation/screens/job/widgets/add_company_button.dart';
 import 'package:job_planner/presentation/screens/job/widgets/company_card.dart';
 import 'package:job_planner/presentation/screens/job/widgets/job_overflow_menu_button.dart';
+import 'package:job_planner/presentation/screens/settings/widgets/account_sheet.dart';
 import 'package:job_planner/presentation/screens/settings/widgets/backup_dialogs.dart';
 import 'package:job_planner/presentation/screens/settings/widgets/calendar_import_dialogs.dart';
 import 'package:job_planner/presentation/screens/settings/widgets/calendar_import_wizard.dart';
+import 'package:job_planner/presentation/screens/settings/widgets/login_page.dart';
 import 'package:job_planner/presentation/screens/settings/widgets/release_notes_page.dart';
 import 'package:job_planner/presentation/screens/settings/widgets/settings_section_help.dart';
 import 'package:job_planner/presentation/tutorial/tutorial_controller.dart';
@@ -1093,6 +1096,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _SettingsCard(
             children: [
               _SettingsTile(
+                label: AppStrings.releaseNotesTitle,
+                value: ReleaseNotes.latestVersion,
+                chevron: true,
+                onPressed: _openReleaseNotes,
+              ),
+              _SettingsTile(
                 label: AppStrings.appTutorial,
                 chevron: true,
                 onPressed: _openAppTutorial,
@@ -1102,11 +1111,54 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 chevron: true,
                 onPressed: _openAppContact,
               ),
-              _SettingsTile(
-                label: AppStrings.releaseNotesTitle,
-                value: ReleaseNotes.latestVersion,
-                chevron: true,
-                onPressed: _openReleaseNotes,
+              StreamBuilder(
+                stream: AppAuthService.instance.authState,
+                initialData: AppAuthService.instance.user,
+                builder: (context, snapshot) {
+                  final user = snapshot.data;
+                  if (user == null) {
+                    return _SettingsTile(
+                      label: AppStrings.accountLogin,
+                      chevron: true,
+                      onPressed: () => openLoginPage(context),
+                    );
+                  }
+                  return Column(
+                    children: [
+                      _SettingsTile(
+                        label: AppStrings.accountLogout,
+                        value: AppAuthService.accountHandle(user),
+                        chevron: true,
+                        onPressed: () => runAccountAction(
+                          context,
+                          AppAuthService.instance.signOut,
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(left: 20),
+                        child: Divider(
+                          height: 1,
+                          thickness: 0.5,
+                          color: AppColors.of(context).border,
+                        ),
+                      ),
+                      _SettingsTile(
+                        label: AppStrings.accountDelete,
+                        chevron: true,
+                        danger: true,
+                        onPressed: () async {
+                          final confirmed =
+                              await showAccountDeleteConfirmDialog(context);
+                          if (!confirmed || !context.mounted) return;
+                          await runAccountAction(
+                            context,
+                            AppAuthService.instance.deleteAccount,
+                          );
+                        },
+                      ),
+                    ],
+                  );
+                },
               ),
             ],
           ),
@@ -4788,6 +4840,7 @@ class _SettingsTile extends StatelessWidget {
     this.expanded,
     this.labelFontFamily,
     this.previewLabelFont = false,
+    this.danger = false,
   });
 
   final String label;
@@ -4797,6 +4850,7 @@ class _SettingsTile extends StatelessWidget {
   final bool? expanded;
   final String? labelFontFamily;
   final bool previewLabelFont;
+  final bool danger;
   final VoidCallback onPressed;
   final VoidCallback? onLongPressed;
 
@@ -4827,7 +4881,7 @@ class _SettingsTile extends StatelessWidget {
                         : AppFonts.of(context),
                     fontSize: 16,
                     fontWeight: FontWeight.w400,
-                    color: colors.text,
+                    color: danger ? colors.danger : colors.text,
                   ),
                 ),
                 )
@@ -4842,7 +4896,7 @@ class _SettingsTile extends StatelessWidget {
                         : AppFonts.of(context),
                     fontSize: 16,
                     fontWeight: FontWeight.w400,
-                    color: colors.text,
+                    color: danger ? colors.danger : colors.text,
                   ),
                 ),
                 const SizedBox(width: 12),

@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "246357426149",
+    "project_id": "jopb-65c0f",
+    "storage_bucket": "jopb-65c0f.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:246357426149:android:a4efcc68aebaa99921b90c",
+        "android_client_info": {
+          "package_name": "com.jobplanner.job_planner"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "246357426149-ktt86683fge7ecnij2drmdt0c6pa2kek.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.jobplanner.job_planner",
+            "certificate_hash": "38d0a10a2b4286ba896b6d2a039c03e963c110d8"
+          }
+        },
+        {
+          "client_id": "246357426149-hfck4ic0e2f0krfkot5hvb3vtm36ko58.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB1mEWVGm55H-lZMyEQa3EgaeZMbqpauSU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "246357426149-hfck4ic0e2f0krfkot5hvb3vtm36ko58.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "246357426149-qgncqtch4l3r1pflbrcnri22mo16737j.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.jobplanner.jobPlanner"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

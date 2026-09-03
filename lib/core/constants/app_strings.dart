@@ -167,6 +167,30 @@ class AppStrings {
   static const starterTodoReorder = '꾹 눌러서 위치를 바꿀 수 있어요';
   static const starterTodoMove = '밖으로 빼서 날짜를 옮길 수 있어요';
   static const releaseNotesTitle = '릴리즈 노트';
+  static const accountTitle = '로그인하기';
+  static const accountLogin = '로그인하기';
+  static const accountLogout = '로그아웃하기';
+  static const accountDelete = '탈퇴하기';
+  static const accountDeleteTitle = '계정을 삭제할까요?';
+  static const accountDeleteBody =
+      '로그인 계정만 사라지고, 이 폰에 저장된 할 일은 그대로 남아요';
+  static const accountDeleteFailedTitle = '탈퇴하지 못했어요';
+  static const accountSignedIn = '로그인됨';
+  static const accountLoginBody =
+      '언제 어디서든 다른 기기와 연동할 수 있어요';
+  static const accountLoginPcHint = 'PC에서도 사용할 수 있어요';
+  static const accountLoginWebUrl = 'jobplanner.app';
+  static const accountLoginSocialHint = '소셜 계정으로 로그인';
+  static const accountKakaoShort = '카카오톡';
+  static const accountGoogleShort = 'Google';
+  static const accountAppleShort = 'Apple';
+  static const accountFailedTitle = '로그인하지 못했어요';
+  static const accountFailedBody = '잠시 후 다시 시도해 주세요';
+  static const accountKakaoKeyBody = '카카오 로그인은 아직 준비 중이에요';
+  static const accountKakaoOidcBody = '카카오 계정 연결이 아직 끝나지 않았어요';
+  static const accountKakaoMisconfiguredBody =
+      '카카오 디벨로퍼스에서 네이티브 앱 키의 패키지명과 키 해시를 확인해 주세요';
+  static const accountUnavailableBody = '지금은 로그인을 사용할 수 없어요';
   static const releaseNotesFeatures = '새로운 기능';
   static const releaseNotesFixes = '버그 수정';
   static const releaseNotesPreview = '이렇게 바뀌었어요';
@@ -316,7 +340,7 @@ class AppStrings {
   static const settingsCalendarSyncHelp =
       '기본 캘린더에 있는 일정을 잡플래너의 캘린더로 가져와요. 가져올 기간을 고르고, 카테고리는 하나에 몰아넣거나 할 일마다 고를 수 있어요.';
   static const settingsAppHelp =
-      '앱 사용법을 보거나, 문의 메일을 보내거나, 릴리즈 노트에서 업데이트 내역을 읽을 수 있어요';
+      '릴리즈 노트에서 업데이트 내역을 읽고, 앱 사용법을 보거나, 문의 메일을 보내거나, 로그인·탈퇴할 수 있어요';
   static const settingsCalendarHelp = '캘린더의 첫 요일과 음력 날짜를 표시할 수 있어요';
   static const settingsCalendarHelpWithFontSize =
       '캘린더의 첫 요일과 음력 날짜, 할 일·지원서·날짜·라벨의 글자 크기를 바꿀 수 있어요';

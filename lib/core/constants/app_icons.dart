@@ -35,6 +35,8 @@ class AppIcons {
   static const maximizeOutlined = 'assets/icons/maximize_outlined.png';
   static const minimizeOutlined = 'assets/icons/minimize_outlined.png';
   static const logo = 'assets/images/logo.png';
+  static const notebook = 'assets/images/notebook.png';
+  static const tablet = 'assets/images/tablet.png';
   static const office = 'assets/icons/office.png';
   static const officeOutlined = 'assets/icons/office_outlined.png';
   static const calendarList = 'assets/icons/calendar_list.png';
@@ -51,6 +53,9 @@ class AppIcons {
   static const trashCan = 'assets/icons/trash_can.png';
   static const editOutlined = 'assets/icons/edit_outlined.png';
   static const emoji = 'assets/icons/emoji.png';
+  static const googleLogo = 'assets/icons/google_logo.png';
+  static const kakaoLogo = 'assets/icons/kakao_logo.png';
+  static const appleLogo = 'assets/icons/apple_logo.svg';
   static const diary = 'assets/icons/diary.png';
   static const diaryOutlined = 'assets/icons/diary_outlined.png';
   static const longGoalMeasure = 'assets/icons/value.png';

@@ -70,6 +70,7 @@ class _CalendarScreenState extends State<CalendarScreen>
   var _zoomEpoch = 0;
   var _hits = <_SearchHit>[];
   var _hitIndex = 0;
+  var _pausedInBackground = false;
   DateTime? _searchDay;
   String? _searchHitKey;
   JobViewPreference? _jobView;
@@ -148,7 +149,12 @@ class _CalendarScreenState extends State<CalendarScreen>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state != AppLifecycleState.resumed) return;
+    if (state == AppLifecycleState.paused) {
+      _pausedInBackground = true;
+      return;
+    }
+    if (state != AppLifecycleState.resumed || !_pausedInBackground) return;
+    _pausedInBackground = false;
     if (!_pages.hasClients) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;

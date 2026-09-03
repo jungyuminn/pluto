@@ -65,8 +65,12 @@ class AppStrings {
   static const backupSavedTitle = '백업했어요';
   static const backupSavedBody =
       '최근 3개까지 앱과 다운로드에 남겨 둬요. 앱을 지워도 다운로드 파일로 복구할 수 있어요';
+  static const backupSavedBodyIos =
+      '아이클라우드에 올려 두었어요. 같은 애플 아이디로 폰을 바꿔도 복구할 수 있어요';
   static const backupFailedTitle = '백업하지 못했어요';
   static const backupFailedBody = '잠시 후 다시 시도해 주세요';
+  static const backupIcloudUnavailableBody =
+      '아이클라우드에 로그인되어 있는지 확인해 주세요';
   static const restoreConfirmTitle = '데이터를 복구할까요?';
   static const restoreConfirmBody = '지금 있는 데이터가 백업 파일로 바뀌어요';
   static const restorePickOther = '다른 파일 고르기';
@@ -265,7 +269,7 @@ class AppStrings {
   static const widgetFollowFont = '폰트 동기화';
   static const widgetFontSize = '위젯 폰트 크기';
   static const settingsWidgetHelp =
-      '위젯이 앱의 테마나 폰트를 따라가게 하거나, 위젯만 글자 크기를 바꿀 수 있어요.';
+      '위젯이 앱의 테마나 폰트를 따라가게 하거나, 위젯의 글자 크기를 바꿀 수 있어요.';
   static const fontFamily = '폰트 종류';
   static const fontTodoSize = '할 일·지원서 크기';
   static const fontCalendarSize = '캘린더 크기';
@@ -302,7 +306,7 @@ class AppStrings {
       '홈 화면에 보여줄 카드를 고르고, 홈에서 카드를 길게 눌러 순서를 바꿀 수 있어요';
   static const settingsTodoHelp = '할 일을 시간 순으로 정렬하거나, 라벨에 시간을 표시할 수 있어요';
   static const settingsNotificationHelp =
-      '시간이 있는 할 일은 미리 알려주고, 매일 정해진 시간에 오늘 일정과 끝내지 않은 할 일을 알려줘요. 그날 할 일이 없으면 보내지 않아요';
+      '시간이 있는 할 일은 미리 알려주고, 매일 정해진 시간에 오늘 일정과 끝내지 않은 할 일을 알려줘요';
   static const settingsAppearanceHelp = '화면을 밝은 테마나 어두운 테마로 바꿀 수 있어요';
   static const settingsThemeHelp = '앱의 배경 분위기와 아이콘·버튼 색을 바꿀 수 있어요';
   static const settingsBackupHelp =
@@ -335,7 +339,7 @@ class AppStrings {
   static const leftoverReminderChannelName = '미완료 할 일';
   static const leftoverReminderChannelDescription = '그날 끝내지 않은 할 일을 알려줘요';
   static String todoReminderHint(String leadLabel) =>
-      '시간이 설정된 할 일이 $leadLabel에 알림으로 와요';
+      '시간이 설정된 할 일을 $leadLabel에 알려줘요';
   static String todoReminderBody(int leadMinutes) => leadMinutes % 60 == 0
       ? '${leadMinutes ~/ 60}시간 후 시작해요'
       : '$leadMinutes분 후 시작해요';
@@ -348,13 +352,13 @@ class AppStrings {
   }
 
   static String summaryReminderHint(int minutes) =>
-      '매일 ${summaryTimeLabel(minutes)}에 오늘 일정을 알려줘요.';
+      '매일 ${summaryTimeLabel(minutes)}에 오늘 일정을 알려줘요';
   static String summaryNotificationTitle(int count) =>
-      count == 0 ? '오늘의 일정' : '오늘의 일정 $count개';
+      count == 0 ? '오늘의 일정' : '오늘의 일정이 $count개 있어요';
   static const summaryNotificationEmpty = '오늘 일정이 없어요';
   static String leftoverReminderHint(int minutes) =>
-      '매일 ${summaryTimeLabel(minutes)}에 끝내지 않은 할 일을 알려줘요. 없으면 보내지 않아요';
-  static String leftoverNotificationTitle(int count) => '미완료 할 일 $count개';
+      '매일 ${summaryTimeLabel(minutes)}에 완료되지 않은 할 일을 알려줘요';
+  static String leftoverNotificationTitle(int count) => '완료되지 않은 할일이 $count개 있어요';
   static const tomorrowNotificationEmpty = '내일 일정이 없어요';
   static const todayTomorrowNotificationEmpty = '오늘과 내일 일정이 없어요';
   static const weekNotificationEmpty = '이번 주 일정이 없어요';

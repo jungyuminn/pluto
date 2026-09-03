@@ -185,7 +185,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
       await showBackupMessageDialog(
         context,
         title: AppStrings.backupSavedTitle,
-        body: AppStrings.backupSavedBody,
+        body: !kIsWeb && Platform.isIOS
+            ? AppStrings.backupSavedBodyIos
+            : AppStrings.backupSavedBody,
+      );
+    } on PlatformException catch (error) {
+      if (!mounted) return;
+      final iCloud = error.code == 'signed_out' || error.code == 'unavailable';
+      await showBackupMessageDialog(
+        context,
+        title: AppStrings.backupFailedTitle,
+        body: iCloud
+            ? AppStrings.backupIcloudUnavailableBody
+            : AppStrings.backupFailedBody,
       );
     } catch (_) {
       if (!mounted) return;
@@ -199,24 +211,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> _restore() async {
     final prefs = await SharedPreferences.getInstance();
-    final files = AppBackupService.isStarterOnly(prefs)
-        ? <File>[]
-        : await AppBackupService.listLocalBackups();
+    var items = await AppBackupService.listRestoreItems();
+    if (AppBackupService.isStarterOnly(prefs)) {
+      items = items.where((item) => item.file == null).toList();
+    }
     if (!mounted) return;
     try {
-      if (files.isEmpty) {
+      if (items.isEmpty) {
         final confirmed = await showRestoreConfirmDialog(context);
         if (!confirmed || !mounted) return;
         final picked = await AppBackupService.restoreFromPicker();
         if (!picked || !mounted) return;
       } else {
-        final choice = await showRestoreSourceDialog(context, files);
+        final choice = await showRestoreSourceDialog(context, items);
         if (choice == null || !mounted) return;
         if (choice.pickOther) {
           final picked = await AppBackupService.restoreFromPicker();
           if (!picked || !mounted) return;
         } else {
-          await AppBackupService.restoreFromFile(choice.file!);
+          await AppBackupService.restoreFromItem(choice.item!);
         }
       }
       if (!mounted) return;

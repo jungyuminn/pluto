@@ -39,6 +39,7 @@ class AppBackupService {
   static const _autoFolder = 'auto_backups';
   static const _keepAutoCount = 3;
   static const _downloadChannel = MethodChannel('job_planner/backup_store');
+  static const _icloudChannel = MethodChannel('job_planner/icloud_backup');
 
   static String fileName([DateTime? now]) {
     final stamp = now ?? DateTime.now();
@@ -50,17 +51,7 @@ class AppBackupService {
   static Future<bool> backup() async {
     final bytes = await saveLocal();
     if (!kIsWeb && Platform.isIOS) {
-      try {
-        await FilePicker.saveFile(
-          fileName: fileName(),
-          bytes: bytes,
-          mimeType: 'application/zip',
-          type: FileType.custom,
-          allowedExtensions: const ['zip'],
-        );
-      } catch (error, stack) {
-        debugPrint('Export backup failed: $error\n$stack');
-      }
+      await _copyToICloud(bytes);
     }
     return true;
   }
@@ -70,7 +61,14 @@ class AppBackupService {
     try {
       final prefs = await SharedPreferences.getInstance();
       if (isStarterOnly(prefs)) return;
-      await saveLocal();
+      final bytes = await saveLocal();
+      if (!kIsWeb && Platform.isIOS) {
+        try {
+          await _copyToICloud(bytes);
+        } catch (error, stack) {
+          debugPrint('iCloud auto backup failed: $error\n$stack');
+        }
+      }
       await preference.markBackedUp();
     } catch (error, stack) {
       debugPrint('Auto backup failed: $error\n$stack');
@@ -101,8 +99,27 @@ class AppBackupService {
     return files;
   }
 
-  static String backupLabel(File file) {
-    final date = _backupDate(file);
+  static Future<List<BackupListItem>> listRestoreItems() async {
+    final items = <String, BackupListItem>{};
+    if (!kIsWeb && Platform.isIOS) {
+      try {
+        for (final cloud in await _listICloudBackups()) {
+          items[cloud.fileName] = cloud;
+        }
+      } catch (error, stack) {
+        debugPrint('List iCloud backups failed: $error\n$stack');
+      }
+    }
+    for (final file in await listLocalBackups()) {
+      items.putIfAbsent(p.basename(file.path), () => BackupListItem.local(file));
+    }
+    return items.values.toList()
+      ..sort((a, b) => b.date.compareTo(a.date));
+  }
+
+  static String backupLabel(File file) => labelForDate(_backupDate(file));
+
+  static String labelForDate(DateTime date) {
     final weekday = AppStrings.weekdays[date.weekday % 7];
     return '${date.year}. ${date.month}. ${date.day}. ($weekday)';
   }
@@ -126,6 +143,15 @@ class AppBackupService {
     await decode(bytes);
   }
 
+  static Future<void> restoreFromItem(BackupListItem item) async {
+    if (item.file != null) {
+      await restoreFromFile(item.file!);
+      return;
+    }
+    final bytes = await _readICloudBackup(item.fileName);
+    await decode(bytes);
+  }
+
   static Future<Directory> _autoBackupDirectory() async {
     final documents = await getApplicationDocumentsDirectory();
     return Directory(p.join(documents.path, _autoFolder));
@@ -140,6 +166,36 @@ class AppBackupService {
         await file.delete();
       } catch (_) {}
     }
+  }
+
+  static Future<void> _copyToICloud(Uint8List bytes) async {
+    await _icloudChannel.invokeMethod<void>('save', {
+      'fileName': fileName(),
+      'bytes': bytes,
+      'keep': _keepAutoCount,
+      'prefix': '잡플래너_백업_',
+    });
+  }
+
+  static Future<List<BackupListItem>> _listICloudBackups() async {
+    final raw = await _icloudChannel.invokeMethod<List<dynamic>>('list') ?? [];
+    return [
+      for (final item in raw)
+        if (item is Map)
+          BackupListItem.cloud(
+            fileName: '${item['fileName']}',
+            date: DateTime.fromMillisecondsSinceEpoch(
+              (item['modified'] as num?)?.toInt() ?? 0,
+            ),
+          ),
+    ];
+  }
+
+  static Future<Uint8List> _readICloudBackup(String name) async {
+    final bytes = await _icloudChannel.invokeMethod('read', {'fileName': name});
+    if (bytes is Uint8List) return bytes;
+    if (bytes is List<int>) return Uint8List.fromList(bytes);
+    throw const FormatException('missing iCloud backup');
   }
 
   static Future<void> _copyToDownloads(Uint8List bytes) async {
@@ -534,4 +590,33 @@ class AppBackupService {
     final bytes = await file.readAsBytes();
     archive.addFile(ArchiveFile(zipName, bytes.length, bytes));
   }
+}
+
+class BackupListItem {
+  BackupListItem._({
+    required this.fileName,
+    required this.date,
+    this.file,
+  });
+
+  factory BackupListItem.local(File file) {
+    return BackupListItem._(
+      fileName: p.basename(file.path),
+      date: AppBackupService._backupDate(file),
+      file: file,
+    );
+  }
+
+  factory BackupListItem.cloud({
+    required String fileName,
+    required DateTime date,
+  }) {
+    return BackupListItem._(fileName: fileName, date: date);
+  }
+
+  final String fileName;
+  final DateTime date;
+  final File? file;
+
+  String get label => AppBackupService.labelForDate(date);
 }

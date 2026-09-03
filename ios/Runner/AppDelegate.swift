@@ -7,6 +7,7 @@ import flutter_local_notifications
 @main
 @objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
   private var deviceCalendarPlugin: DeviceCalendarPlugin?
+  private var iCloudBackupPlugin: ICloudBackupPlugin?
 
   override func application(
     _ application: UIApplication,
@@ -23,6 +24,7 @@ import flutter_local_notifications
     }
     GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
     deviceCalendarPlugin = DeviceCalendarPlugin.register(with: engineBridge.pluginRegistry)
+    iCloudBackupPlugin = ICloudBackupPlugin.register(with: engineBridge.pluginRegistry)
   }
 
   override func userNotificationCenter(

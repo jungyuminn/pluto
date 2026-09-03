@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:job_planner/core/constants/app_strings.dart';
 import 'package:job_planner/core/theme/app_colors.dart';
@@ -174,27 +172,27 @@ class RestoreConfirmDialog extends StatelessWidget {
 }
 
 class RestoreChoice {
-  const RestoreChoice.file(this.file) : pickOther = false;
-  const RestoreChoice.other() : file = null, pickOther = true;
+  const RestoreChoice.item(this.item) : pickOther = false;
+  const RestoreChoice.other() : item = null, pickOther = true;
 
-  final File? file;
+  final BackupListItem? item;
   final bool pickOther;
 }
 
 Future<RestoreChoice?> showRestoreSourceDialog(
   BuildContext context,
-  List<File> files,
+  List<BackupListItem> items,
 ) {
   return showDialog<RestoreChoice>(
     context: context,
-    builder: (context) => RestoreSourceDialog(files: files),
+    builder: (context) => RestoreSourceDialog(items: items),
   );
 }
 
 class RestoreSourceDialog extends StatefulWidget {
-  const RestoreSourceDialog({super.key, required this.files});
+  const RestoreSourceDialog({super.key, required this.items});
 
-  final List<File> files;
+  final List<BackupListItem> items;
 
   @override
   State<RestoreSourceDialog> createState() => _RestoreSourceDialogState();
@@ -231,10 +229,10 @@ class _RestoreSourceDialogState extends State<RestoreSourceDialog> {
             ),
           ),
           const SizedBox(height: 16),
-          for (var i = 0; i < widget.files.length; i++) ...[
+          for (var i = 0; i < widget.items.length; i++) ...[
             if (i > 0) const SizedBox(height: 6),
             _BackupChoiceTile(
-              label: AppBackupService.backupLabel(widget.files[i]),
+              label: widget.items[i].label,
               latest: i == 0,
               selected: _selected == i,
               onPressed: () => setState(() => _selected = i),
@@ -287,7 +285,7 @@ class _RestoreSourceDialogState extends State<RestoreSourceDialog> {
               Expanded(
                 child: PressBounce(
                   onPressed: () => Navigator.of(context).pop(
-                    RestoreChoice.file(widget.files[_selected]),
+                    RestoreChoice.item(widget.items[_selected]),
                   ),
                   color: colors.accentBright,
                   pressedColor:

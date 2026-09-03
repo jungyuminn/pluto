@@ -9,12 +9,14 @@ class PillNavItem extends StatelessWidget {
     required this.onTap,
     required this.filledAsset,
     required this.outlinedAsset,
+    this.forceTint = false,
   });
 
   final bool selected;
   final VoidCallback onTap;
   final String filledAsset;
   final String outlinedAsset;
+  final bool forceTint;
 
   static const _iconSize = 24.0;
 
@@ -28,6 +30,7 @@ class PillNavItem extends StatelessWidget {
           asset: selected ? filledAsset : outlinedAsset,
           width: _iconSize,
           height: _iconSize,
+          forceTint: forceTint,
         ),
       ),
     );

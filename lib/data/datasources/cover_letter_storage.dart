@@ -1,7 +1,5 @@
-import 'dart:io';
-
+import 'package:job_planner/data/datasources/synced_file_store.dart';
 import 'package:path/path.dart' as p;
-import 'package:path_provider/path_provider.dart';
 
 class CoverLetterStorage {
   const CoverLetterStorage({this.folderName = coverLettersFolder});
@@ -15,15 +13,11 @@ class CoverLetterStorage {
     required String id,
     required String sourcePath,
     required String fileName,
-  }) async {
-    final documents = await getApplicationDocumentsDirectory();
-    final folder = Directory(p.join(documents.path, folderName));
-    if (!folder.existsSync()) {
-      await folder.create(recursive: true);
-    }
-
-    final destination = p.join(folder.path, '${id}_${p.basename(fileName)}');
-    await File(sourcePath).copy(destination);
-    return destination;
+  }) {
+    return SyncedFileStore.instance.import(
+      folder: folderName,
+      name: '${id}_${p.basename(fileName)}',
+      sourcePath: sourcePath,
+    );
   }
 }

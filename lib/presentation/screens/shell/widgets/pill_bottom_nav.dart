@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:job_planner/app_scope.dart';
+import 'package:job_planner/core/layout/pc_layout.dart';
 import 'package:job_planner/core/theme/app_colors.dart';
 import 'package:job_planner/core/theme/app_skin_background.dart';
 import 'package:job_planner/presentation/screens/shell/widgets/pill_nav_item.dart';
@@ -12,6 +13,7 @@ class PillBottomNav extends StatefulWidget {
     super.key,
     required this.currentIndex,
     required this.onChanged,
+    this.showStats = true,
     this.showJob = true,
     this.tutorial = true,
     this.embedded = false,
@@ -19,6 +21,7 @@ class PillBottomNav extends StatefulWidget {
 
   final int currentIndex;
   final ValueChanged<int> onChanged;
+  final bool showStats;
   final bool showJob;
   final bool tutorial;
   final bool embedded;
@@ -36,34 +39,92 @@ class _PillBottomNavState extends State<PillBottomNav> {
   var _dragging = false;
   double? _dragLeft;
 
-  int get _count => widget.showJob ? 3 : 2;
-
-  int get _index => widget.currentIndex.clamp(0, _count - 1);
-
-  double _indicatorLeft(int index) {
-    const indicator = SlidingNavIndicator.width;
+  double _slotStart(int logical, double jobT) {
     const cell = PillBottomNav.itemWidth;
-    return cell * index + (cell - indicator) / 2;
+    switch (logical) {
+      case 0:
+        return 0;
+      case 1:
+        return cell;
+      case 3:
+        return cell * 2;
+      default:
+        return cell * 2 + cell * jobT;
+    }
   }
 
-  void _select(int index) {
-    if (index < 0 || index >= _count) return;
-    if (index == widget.currentIndex) return;
+  double _slotWidth(int logical, double statsT, double jobT) {
+    const cell = PillBottomNav.itemWidth;
+    switch (logical) {
+      case 0:
+      case 1:
+        return cell;
+      case 3:
+        return cell * jobT;
+      default:
+        return cell * statsT;
+    }
+  }
+
+  double _indicatorLeftFor(int logical, double statsT, double jobT) {
+    const indicator = SlidingNavIndicator.width;
+    var target = logical;
+    if (logical == 3 && jobT < 0.5) target = 1;
+    if (logical == 2 && statsT < 0.5) {
+      target = jobT >= 0.5 ? 3 : 1;
+    }
+    final width = _slotWidth(target, statsT, jobT);
+    return _slotStart(target, jobT) + (width - indicator) / 2;
+  }
+
+  int _lastLogical({required bool statsHit, required bool jobHit}) {
+    if (statsHit) return 2;
+    if (jobHit) return 3;
+    return 1;
+  }
+
+  int _logicalAt(
+    double dx, {
+    required bool statsHit,
+    required bool jobHit,
+    required double jobT,
+  }) {
+    const cell = PillBottomNav.itemWidth;
+    if (dx < cell) return 0;
+    if (dx < cell * 2) return 1;
+    final jobEnd = cell * 2 + cell * jobT;
+    if (jobHit && dx < jobEnd) return 3;
+    if (statsHit) return 2;
+    if (jobHit) return 3;
+    return 1;
+  }
+
+  void _select(int logical) {
+    if (logical == widget.currentIndex) return;
     HapticFeedback.selectionClick();
-    widget.onChanged(index);
+    widget.onChanged(logical);
   }
 
-  void _moveTo(double dx, double width, {required bool jobHit}) {
-    if (width <= 0) return;
+  void _moveTo(
+    double dx,
+    double statsT,
+    double jobT, {
+    required bool statsHit,
+    required bool jobHit,
+  }) {
     const indicator = SlidingNavIndicator.width;
-    const cell = PillBottomNav.itemWidth;
-    final maxIndex = jobHit ? _count - 1 : 1;
-    final minLeft = (cell - indicator) / 2;
-    final maxLeft = cell * maxIndex + minLeft;
+    final last = _lastLogical(statsHit: statsHit, jobHit: jobHit);
+    final minLeft = _indicatorLeftFor(0, statsT, jobT);
+    final maxLeft = _indicatorLeftFor(last, statsT, jobT);
     final left = (dx - indicator / 2).clamp(minLeft, maxLeft);
-    final index = (dx / cell).floor().clamp(0, maxIndex);
+    final logical = _logicalAt(
+      dx,
+      statsHit: statsHit,
+      jobHit: jobHit,
+      jobT: jobT,
+    );
     setState(() => _dragLeft = left);
-    _select(index);
+    _select(logical);
   }
 
   void _endDrag() {
@@ -88,117 +149,169 @@ class _PillBottomNavState extends State<PillBottomNav> {
         final items = AppSkinAssets.navIcons(theme.skin);
         Widget nav = Padding(
           padding: EdgeInsets.only(
-            bottom: widget.embedded ? 0 : 4 + bottomInset,
+            bottom: widget.embedded
+                ? 0
+                : 4 + (PcLayout.isPc ? PcLayout.navLift : 0) + bottomInset,
           ),
           child: TweenAnimationBuilder<double>(
             duration: PillBottomNav.animDuration,
             curve: PillBottomNav.animCurve,
-            tween: Tween(end: widget.showJob ? 1.0 : 0.0),
-            builder: (context, t, child) {
-              final jobHit = t > 0.55;
-              final barWidth =
-                  PillBottomNav.itemWidth * 2 + PillBottomNav.itemWidth * t;
-              return Material(
-                color: colors.navBar,
-                elevation: widget.embedded ? 0 : 8,
-                shadowColor: colors.shadow,
-                shape: const StadiumBorder(),
-                clipBehavior: Clip.antiAlias,
-                child: SizedBox(
-                  width: barWidth,
-                  height: PillBottomNav.barHeight,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    child: GestureDetector(
-                      behavior: HitTestBehavior.translucent,
-                      onHorizontalDragStart: (details) {
-                        setState(() {
-                          _dragging = true;
-                          _dragLeft = _indicatorLeft(_index);
-                        });
-                        _moveTo(
-                          details.localPosition.dx,
-                          barWidth,
-                          jobHit: jobHit,
-                        );
-                      },
-                      onHorizontalDragUpdate: (details) {
-                        _moveTo(
-                          details.localPosition.dx,
-                          barWidth,
-                          jobHit: jobHit,
-                        );
-                      },
-                      onHorizontalDragEnd: (_) => _endDrag(),
-                      onHorizontalDragCancel: _endDrag,
-                      child: Stack(
-                        children: [
-                          Positioned.fill(
-                            child: SlidingNavIndicator(
-                              index: _index,
-                              itemCount: widget.showJob ? 3 : 2,
-                              itemExtent: PillBottomNav.itemWidth,
-                              left: _dragging ? _dragLeft : null,
-                              dragging: _dragging,
-                            ),
-                          ),
-                          Row(
+            tween: Tween(end: widget.showStats ? 1.0 : 0.0),
+            builder: (context, statsT, child) {
+              return TweenAnimationBuilder<double>(
+                duration: PillBottomNav.animDuration,
+                curve: PillBottomNav.animCurve,
+                tween: Tween(end: widget.showJob ? 1.0 : 0.0),
+                builder: (context, jobT, child) {
+                  final statsHit = statsT > 0.55;
+                  final jobHit = jobT > 0.55;
+                  final barWidth = PillBottomNav.itemWidth * (2 + statsT + jobT);
+                  final collapsing =
+                      (statsT > 0 && statsT < 1) || (jobT > 0 && jobT < 1);
+                  final indicatorLeft = _dragging
+                      ? _dragLeft
+                      : _indicatorLeftFor(widget.currentIndex, statsT, jobT);
+                  return Material(
+                    color: colors.navBar,
+                    elevation: widget.embedded ? 0 : 8,
+                    shadowColor: colors.shadow,
+                    shape: const StadiumBorder(),
+                    clipBehavior: Clip.antiAlias,
+                    child: SizedBox(
+                      width: barWidth,
+                      height: PillBottomNav.barHeight,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: GestureDetector(
+                          behavior: HitTestBehavior.translucent,
+                          onHorizontalDragStart: (details) {
+                            setState(() {
+                              _dragging = true;
+                              _dragLeft = _indicatorLeftFor(
+                                widget.currentIndex,
+                                statsT,
+                                jobT,
+                              );
+                            });
+                            _moveTo(
+                              details.localPosition.dx,
+                              statsT,
+                              jobT,
+                              statsHit: statsHit,
+                              jobHit: jobHit,
+                            );
+                          },
+                          onHorizontalDragUpdate: (details) {
+                            _moveTo(
+                              details.localPosition.dx,
+                              statsT,
+                              jobT,
+                              statsHit: statsHit,
+                              jobHit: jobHit,
+                            );
+                          },
+                          onHorizontalDragEnd: (_) => _endDrag(),
+                          onHorizontalDragCancel: _endDrag,
+                          child: Stack(
                             children: [
-                              SizedBox(
-                                width: PillBottomNav.itemWidth,
-                                child: _maybeAnchor(
-                                  TutorialAnchorId.navHome,
-                                  PillNavItem(
-                                    selected: widget.currentIndex == 0,
-                                    onTap: () => widget.onChanged(0),
-                                    filledAsset: items[0].filled,
-                                    outlinedAsset: items[0].outlined,
-                                  ),
+                              Positioned.fill(
+                                child: SlidingNavIndicator(
+                                  index: widget.currentIndex,
+                                  itemCount: 4,
+                                  itemExtent: PillBottomNav.itemWidth,
+                                  left: indicatorLeft,
+                                  dragging: _dragging || collapsing,
                                 ),
                               ),
-                              SizedBox(
-                                width: PillBottomNav.itemWidth,
-                                child: _maybeAnchor(
-                                  TutorialAnchorId.navCalendar,
-                                  PillNavItem(
-                                    selected: widget.currentIndex == 1,
-                                    onTap: () => widget.onChanged(1),
-                                    filledAsset: items[1].filled,
-                                    outlinedAsset: items[1].outlined,
-                                  ),
-                                ),
-                              ),
-                              ClipRect(
-                                child: Align(
-                                  alignment: Alignment.centerLeft,
-                                  widthFactor: t,
-                                  child: SizedBox(
+                              Row(
+                                children: [
+                                  SizedBox(
                                     width: PillBottomNav.itemWidth,
-                                    child: IgnorePointer(
-                                      ignoring: !jobHit,
-                                      child: Opacity(
-                                        opacity: t,
-                                        child: _maybeAnchor(
-                                          TutorialAnchorId.navJob,
-                                          PillNavItem(
-                                            selected: widget.currentIndex == 2,
-                                            onTap: () => widget.onChanged(2),
-                                            filledAsset: items[2].filled,
-                                            outlinedAsset: items[2].outlined,
+                                    child: _maybeAnchor(
+                                      TutorialAnchorId.navHome,
+                                      PillNavItem(
+                                        selected: widget.currentIndex == 0,
+                                        onTap: () => widget.onChanged(0),
+                                        filledAsset: items[0].filled,
+                                        outlinedAsset: items[0].outlined,
+                                      ),
+                                    ),
+                                  ),
+                                  SizedBox(
+                                    width: PillBottomNav.itemWidth,
+                                    child: _maybeAnchor(
+                                      TutorialAnchorId.navCalendar,
+                                      PillNavItem(
+                                        selected: widget.currentIndex == 1,
+                                        onTap: () => widget.onChanged(1),
+                                        filledAsset: items[1].filled,
+                                        outlinedAsset: items[1].outlined,
+                                      ),
+                                    ),
+                                  ),
+                                  ClipRect(
+                                    child: Align(
+                                      alignment: Alignment.centerLeft,
+                                      widthFactor: jobT,
+                                      child: SizedBox(
+                                        width: PillBottomNav.itemWidth,
+                                        child: IgnorePointer(
+                                          ignoring: !jobHit,
+                                          child: Opacity(
+                                            opacity: jobT,
+                                            child: _maybeAnchor(
+                                              TutorialAnchorId.navJob,
+                                              PillNavItem(
+                                                selected:
+                                                    widget.currentIndex == 3,
+                                                onTap: () =>
+                                                    widget.onChanged(3),
+                                                filledAsset: items[3].filled,
+                                                outlinedAsset:
+                                                    items[3].outlined,
+                                              ),
+                                            ),
                                           ),
                                         ),
                                       ),
                                     ),
                                   ),
-                                ),
+                                  ClipRect(
+                                    child: Align(
+                                      alignment: Alignment.centerLeft,
+                                      widthFactor: statsT,
+                                      child: SizedBox(
+                                        width: PillBottomNav.itemWidth,
+                                        child: IgnorePointer(
+                                          ignoring: !statsHit,
+                                          child: Opacity(
+                                            opacity: statsT,
+                                            child: _maybeAnchor(
+                                              TutorialAnchorId.navStats,
+                                              PillNavItem(
+                                                selected:
+                                                    widget.currentIndex == 2,
+                                                onTap: () =>
+                                                    widget.onChanged(2),
+                                                filledAsset: items[2].filled,
+                                                outlinedAsset:
+                                                    items[2].outlined,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ],
                           ),
-                        ],
+                        ),
                       ),
                     ),
-                  ),
-                ),
+                  );
+                },
               );
             },
           ),

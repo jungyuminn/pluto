@@ -4,13 +4,16 @@ import 'dart:math' as math;
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:job_planner/core/constants/app_fonts.dart';
 import 'package:job_planner/core/constants/app_icons.dart';
 import 'package:job_planner/core/constants/app_strings.dart';
+import 'package:job_planner/core/layout/pc_layout.dart';
 import 'package:job_planner/core/theme/app_colors.dart';
 import 'package:job_planner/core/utils/press_bounce.dart';
+import 'package:job_planner/data/datasources/synced_file_store.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
@@ -88,9 +91,16 @@ class DiaryPhotoSlot {
   static const formPad = 20.0;
   static const imagePad = EdgeInsets.fromLTRB(8, 8, 8, 14);
 
+  static double outerWidthOf(BuildContext context) {
+    final available =
+        (MediaQuery.sizeOf(context).width - formPad * 2).clamp(1.0, 4096.0);
+    if (!PcLayout.isPc) return available;
+    return math.min(available, PcLayout.homeCardWidth);
+  }
+
   static double aspectOf(BuildContext context) {
-    final outer = MediaQuery.sizeOf(context).width - formPad * 2;
-    final innerW = (outer - imagePad.horizontal).clamp(1.0, 4096.0);
+    final innerW =
+        (outerWidthOf(context) - imagePad.horizontal).clamp(1.0, 4096.0);
     final innerH = height - imagePad.vertical;
     return innerW / innerH;
   }
@@ -196,9 +206,8 @@ class _DiaryDrawSheetState extends State<DiaryDrawSheet> {
   Future<void> _loadBackground() async {
     final path = widget.backgroundPath;
     if (path == null || path.isEmpty) return;
-    final file = File(path);
-    if (!file.existsSync()) return;
-    final bytes = await file.readAsBytes();
+    final bytes = await SyncedFileStore.instance.read(path);
+    if (bytes == null || bytes.isEmpty) return;
     final codec = await ui.instantiateImageCodec(bytes);
     final frame = await codec.getNextFrame();
     if (!mounted) {
@@ -300,6 +309,11 @@ class _DiaryDrawSheetState extends State<DiaryDrawSheet> {
     setState(() => _tick++);
   }
 
+  bool _dragPans(PointerEvent event) {
+    return event.kind == ui.PointerDeviceKind.mouse ||
+        event.kind == ui.PointerDeviceKind.trackpad;
+  }
+
   void _onPointerDown(PointerDownEvent event) {
     _pointers[event.pointer] = event.localPosition;
     if (_pointers.length >= 2) {
@@ -355,6 +369,15 @@ class _DiaryDrawSheetState extends State<DiaryDrawSheet> {
     if (_zoomPointer == event.pointer && _zoomTap != null) {
       _zoomDrag += event.localDelta.distance;
       if (_zoomDrag > 12) _zoomMoved = true;
+      if (_zoomMoved &&
+          _dragPans(event) &&
+          _zoom > _minZoom + 0.01) {
+        _setTransform(
+          Matrix4.translationValues(event.delta.dx, event.delta.dy, 0)
+              .multiplied(_tx.value),
+        );
+      }
+      setState(() {});
       return;
     }
     if (_pointer != event.pointer || _strokes.isEmpty || !_drawing) return;
@@ -557,6 +580,16 @@ class _DiaryDrawSheetState extends State<DiaryDrawSheet> {
         if (mounted) setState(() => _saving = false);
         return;
       }
+      final png = bytes.buffer.asUint8List();
+      if (kIsWeb) {
+        final token = await SyncedFileStore.instance.holdPicked(
+          name: 'drawing.png',
+          bytes: png,
+        );
+        if (!mounted) return;
+        Navigator.of(context).pop(DiaryDrawResult.image(token, 'drawing.png'));
+        return;
+      }
       final folder = await getTemporaryDirectory();
       final file = File(
         p.join(
@@ -564,7 +597,7 @@ class _DiaryDrawSheetState extends State<DiaryDrawSheet> {
           'diary_draw_${DateTime.now().microsecondsSinceEpoch}.png',
         ),
       );
-      await file.writeAsBytes(bytes.buffer.asUint8List());
+      await file.writeAsBytes(png);
       if (!mounted) return;
       Navigator.of(context).pop(DiaryDrawResult.image(file.path, 'drawing.png'));
     } catch (_) {
@@ -685,7 +718,15 @@ class _DiaryDrawSheetState extends State<DiaryDrawSheet> {
                               child: Stack(
                                 fit: StackFit.expand,
                                 children: [
-                                  Listener(
+                                  MouseRegion(
+                                    cursor: !_zoomTool
+                                        ? MouseCursor.defer
+                                        : _zoomMoved
+                                            ? SystemMouseCursors.grabbing
+                                            : _tool == _DrawTool.zoomOut
+                                                ? SystemMouseCursors.zoomOut
+                                                : SystemMouseCursors.zoomIn,
+                                    child: Listener(
                                     key: _viewerKey,
                                     behavior: HitTestBehavior.opaque,
                                     onPointerDown: _onPointerDown,
@@ -720,6 +761,7 @@ class _DiaryDrawSheetState extends State<DiaryDrawSheet> {
                                           ),
                                         ),
                                       ),
+                                    ),
                                     ),
                                   ),
                                   if (_erasing && _eraserCursor != null)
@@ -780,7 +822,11 @@ class _DiaryDrawSheetState extends State<DiaryDrawSheet> {
                                                   vertical: 8,
                                                 ),
                                                 child: Text(
-                                                  AppStrings.diaryDrawZoomPanHint,
+                                                  PcLayout.isPc
+                                                      ? AppStrings
+                                                          .diaryDrawZoomPanHintPc
+                                                      : AppStrings
+                                                          .diaryDrawZoomPanHint,
                                                   textAlign: TextAlign.center,
                                                   style: TextStyle(
                                                     fontFamily: font,
@@ -819,7 +865,8 @@ class _DiaryDrawSheetState extends State<DiaryDrawSheet> {
               ),
             ),
             const SizedBox(height: 12),
-            Column(
+            PcLayout.constrainWidth(
+              Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Wrap(
@@ -934,6 +981,7 @@ class _DiaryDrawSheetState extends State<DiaryDrawSheet> {
                     ),
                   ],
                 ),
+            ),
           ],
         ),
       ),

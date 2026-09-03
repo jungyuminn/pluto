@@ -3,6 +3,27 @@ import 'package:job_planner/core/constants/app_strings.dart';
 import 'package:job_planner/core/theme/app_colors.dart';
 import 'package:job_planner/core/utils/press_bounce.dart';
 import 'package:job_planner/data/datasources/app_backup_service.dart';
+import 'package:job_planner/presentation/screens/settings/widgets/dots_loading_dialog.dart';
+
+Future<T> showBackupLoading<T>(
+  BuildContext context,
+  Future<T> Function() task,
+) async {
+  showDialog<void>(
+    context: context,
+    barrierDismissible: false,
+    useRootNavigator: true,
+    barrierColor: const Color(0x4D000000),
+    builder: (context) => const DotsLoadingDialog(),
+  );
+  try {
+    return await task();
+  } finally {
+    if (context.mounted) {
+      Navigator.of(context, rootNavigator: true).pop();
+    }
+  }
+}
 
 Future<void> showBackupMessageDialog(
   BuildContext context, {
@@ -78,16 +99,21 @@ class BackupMessageDialog extends StatelessWidget {
   }
 }
 
-Future<bool> showRestoreConfirmDialog(BuildContext context) async {
+Future<bool> showRestoreConfirmDialog(
+  BuildContext context, {
+  bool cloudWarning = false,
+}) async {
   final confirmed = await showDialog<bool>(
     context: context,
-    builder: (context) => const RestoreConfirmDialog(),
+    builder: (context) => RestoreConfirmDialog(cloudWarning: cloudWarning),
   );
   return confirmed == true;
 }
 
 class RestoreConfirmDialog extends StatelessWidget {
-  const RestoreConfirmDialog({super.key});
+  const RestoreConfirmDialog({super.key, this.cloudWarning = false});
+
+  final bool cloudWarning;
 
   @override
   Widget build(BuildContext context) {
@@ -116,6 +142,17 @@ class RestoreConfirmDialog extends StatelessWidget {
               color: colors.secondary,
             ),
           ),
+          if (cloudWarning) ...[
+            const SizedBox(height: 8),
+            Text(
+              AppStrings.restoreConfirmCloudBody,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: colors.muted,
+              ),
+            ),
+          ],
           const SizedBox(height: 20),
           Row(
             children: [
@@ -183,12 +220,14 @@ Future<RestoreChoice?> showRestoreSourceDialog(
   BuildContext context,
   List<BackupListItem> items, {
   bool pickOther = true,
+  bool cloudWarning = false,
 }) {
   return showDialog<RestoreChoice>(
     context: context,
     builder: (context) => RestoreSourceDialog(
       items: items,
       pickOther: pickOther,
+      cloudWarning: cloudWarning,
     ),
   );
 }
@@ -198,10 +237,12 @@ class RestoreSourceDialog extends StatefulWidget {
     super.key,
     required this.items,
     this.pickOther = true,
+    this.cloudWarning = false,
   });
 
   final List<BackupListItem> items;
   final bool pickOther;
+  final bool cloudWarning;
 
   @override
   State<RestoreSourceDialog> createState() => _RestoreSourceDialogState();
@@ -237,6 +278,17 @@ class _RestoreSourceDialogState extends State<RestoreSourceDialog> {
               color: colors.secondary,
             ),
           ),
+          if (widget.cloudWarning) ...[
+            const SizedBox(height: 8),
+            Text(
+              AppStrings.restoreConfirmCloudBody,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: colors.muted,
+              ),
+            ),
+          ],
           const SizedBox(height: 16),
           for (var i = 0; i < widget.items.length; i++) ...[
             if (i > 0) const SizedBox(height: 6),

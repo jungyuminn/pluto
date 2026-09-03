@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:job_planner/core/calendar/lunar_date.dart';
 import 'package:job_planner/core/calendar/month_grid.dart';
 import 'package:job_planner/core/constants/app_fonts.dart';
+import 'package:job_planner/core/layout/pc_layout.dart';
 import 'package:job_planner/core/theme/app_colors.dart';
 import 'package:job_planner/core/utils/press_bounce.dart';
 
@@ -42,7 +43,8 @@ class CalendarDayCell extends StatelessWidget {
 
   static double holidayHeightFor(double scale) => holidayHeight * scale;
 
-  static double labelHeightFor(double scale) => labelHeight * scale;
+  static double labelHeightFor(double scale) =>
+      (PcLayout.isPc ? 22.0 : labelHeight) * scale;
 
   static double lunarHeightFor(double scale) => lunarHeight * scale;
 

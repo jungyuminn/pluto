@@ -18,17 +18,19 @@ class TutorialDemoView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final daily = AppScope.maybeOf(context)?.navPreference.dailyMode ?? false;
+    final jobOn = AppScope.maybeOf(context)?.navPreference.jobMode ?? false;
+    final statsOn =
+        AppScope.maybeOf(context)?.navPreference.showStatsTab ?? true;
     return switch (demo) {
       TutorialDemo.none => const SizedBox.shrink(),
-      TutorialDemo.navTabs => _NavDemo(dailyMode: daily),
+      TutorialDemo.navTabs => _NavDemo(jobMode: jobOn, showStats: statsOn),
       TutorialDemo.calendarTitle => const _TitleDemo(),
       TutorialDemo.calendarTap => const _TapDemo(),
       TutorialDemo.calendarRange => const _RangeDemo(),
       TutorialDemo.todoComplete => const _CompleteDemo(),
       TutorialDemo.todoMove => const _MoveDemo(),
-      TutorialDemo.calendarMenu => _MenuDemo(dailyMode: daily),
-      TutorialDemo.homeSearch => _SearchDemo(dailyMode: daily),
+      TutorialDemo.calendarMenu => _MenuDemo(jobMode: jobOn),
+      TutorialDemo.homeSearch => _SearchDemo(jobMode: jobOn),
       TutorialDemo.homeSettings => const _SettingsDemo(),
       TutorialDemo.homeReorder => const _ReorderDemo(),
       TutorialDemo.jobSwipe => const _SwipeDemo(),
@@ -104,9 +106,10 @@ double _pulse(double t, double a, double b, double c) {
 }
 
 class _NavDemo extends StatelessWidget {
-  const _NavDemo({this.dailyMode = false});
+  const _NavDemo({this.jobMode = false, this.showStats = true});
 
-  final bool dailyMode;
+  final bool jobMode;
+  final bool showStats;
 
   @override
   Widget build(BuildContext context) {
@@ -114,14 +117,15 @@ class _NavDemo extends StatelessWidget {
       builder: (context, t) {
         final tap = _pulse(t, 0.28, 0.4, 0.86);
         final selected = t < 0.42 ? 1 : 0;
-        final showJob = dailyMode ? t < 0.50 : true;
-        final n = showJob ? 3 : 2;
+        final showJob = jobMode;
+        final n = 2 + (showStats ? 1 : 0) + (showJob ? 1 : 0);
         return Center(
           child: Stack(
             alignment: Alignment.center,
             children: [
               PillBottomNav(
                 currentIndex: selected,
+                showStats: showStats,
                 showJob: showJob,
                 tutorial: false,
                 embedded: true,
@@ -465,9 +469,9 @@ class _MoveDemo extends StatelessWidget {
 }
 
 class _SearchDemo extends StatelessWidget {
-  const _SearchDemo({this.dailyMode = false});
+  const _SearchDemo({this.jobMode = false});
 
-  final bool dailyMode;
+  final bool jobMode;
 
   @override
   Widget build(BuildContext context) {
@@ -478,8 +482,8 @@ class _SearchDemo extends StatelessWidget {
       duration: const Duration(milliseconds: 3000),
       builder: (context, t) {
         final press = _pulse(t, 0.28, 0.40, 0.88);
-        final onlyTodos = !dailyMode && t >= 0.40 && t < 0.88;
-        final jobs = dailyMode
+        final onlyTodos = jobMode && t >= 0.40 && t < 0.88;
+        final jobs = !jobMode
             ? 0.0
             : onlyTodos
                 ? 1 - Curves.easeOutCubic.transform(_gate(t, 0.40, 0.56))
@@ -512,9 +516,9 @@ class _SearchDemo extends StatelessWidget {
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
-                              dailyMode
-                                  ? AppStrings.allEventsSearchHintDaily
-                                  : AppStrings.allEventsSearchHint,
+                              jobMode
+                                  ? AppStrings.allEventsSearchHint
+                                  : AppStrings.allEventsSearchHintDaily,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
@@ -536,7 +540,7 @@ class _SearchDemo extends StatelessWidget {
                         label: AppStrings.calendarModeRange,
                         selected: false,
                       ),
-                      if (!dailyMode) ...[
+                      if (jobMode) ...[
                         const SizedBox(width: 6),
                         _FilterPill(
                           label: AppStrings.monthlyStatsTodoSection,
@@ -682,9 +686,9 @@ class _SettingsDemo extends StatelessWidget {
 }
 
 class _MenuDemo extends StatelessWidget {
-  const _MenuDemo({this.dailyMode = false});
+  const _MenuDemo({this.jobMode = false});
 
-  final bool dailyMode;
+  final bool jobMode;
 
   @override
   Widget build(BuildContext context) {
@@ -784,7 +788,7 @@ class _MenuDemo extends StatelessWidget {
                                 isJob: true,
                               ),
                             },
-                            jobOpacity: dailyMode ? 0 : companyOn,
+                            jobOpacity: jobMode ? companyOn : 0,
                           ),
                         ),
                         if (open > 0)
@@ -829,7 +833,7 @@ class _MenuDemo extends StatelessWidget {
                                                   trailing:
                                                       const _MiniSwitch(on: 1),
                                                 ),
-                                                if (!dailyMode)
+                                                if (jobMode)
                                                   _MenuLine(
                                                     label: '지원서 보기',
                                                     trailing: _MiniSwitch(

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:job_planner/app_scope.dart';
 import 'package:job_planner/core/constants/app_strings.dart';
+import 'package:job_planner/core/layout/pc_layout.dart';
 import 'package:job_planner/core/theme/app_colors.dart';
 import 'package:job_planner/core/theme/app_skin_background.dart';
 import 'package:job_planner/core/utils/korean_search.dart';
@@ -570,7 +571,9 @@ class _CalendarScreenState extends State<CalendarScreen>
 
   @override
   Widget build(BuildContext context) {
-    final bottomGap = 72 + MediaQuery.paddingOf(context).bottom;
+    final bottomGap = 72 +
+        (PcLayout.isPc ? PcLayout.navLift : 0) +
+        MediaQuery.paddingOf(context).bottom;
 
     return AppSkinBackground(
       child: Scaffold(

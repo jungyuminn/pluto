@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:job_planner/app_scope.dart';
 import 'package:job_planner/core/constants/app_icons.dart';
 import 'package:job_planner/core/constants/app_strings.dart';
+import 'package:job_planner/core/layout/pc_layout.dart';
 import 'package:job_planner/core/theme/app_colors.dart';
 import 'package:job_planner/core/theme/app_skin_background.dart';
 import 'package:job_planner/core/utils/press_bounce.dart';
@@ -51,10 +52,8 @@ Future<void> showLedgerDaySheet(
         );
       } else {
         final size = MediaQuery.sizeOf(context);
-        const dialogWidth = 260.0;
-        final dialogHeight = (size.height * 0.56)
-            .clamp(420.0, 530.0)
-            .toDouble();
+        final dialogWidth = PcLayout.dayDialogWidthOf();
+        final dialogHeight = PcLayout.dayDialogHeightOf(size.height);
         final beginScale =
             ((source.width / dialogWidth + source.height / dialogHeight) / 2)
                 .clamp(0.12, 0.38);
@@ -138,10 +137,12 @@ class _LedgerDaySheetState extends State<LedgerDaySheet>
   var _statsNet = 0;
   var _statsShowSalary = false;
 
-  static const _eventExtent = 62.0;
   static const _headerExtent = 24.0;
   static const _headerGap = 6.0;
   static const _slotAnim = Duration(milliseconds: 240);
+
+  double get _eventExtent => PcLayout.dayLabelExtentOf();
+  double get _labelHeight => PcLayout.dayLabelHeightOf();
 
   @override
   void initState() {
@@ -643,9 +644,7 @@ class _LedgerDaySheetState extends State<LedgerDaySheet>
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
-    final height = (MediaQuery.sizeOf(context).height * 0.56)
-        .clamp(420.0, 530.0)
-        .toDouble();
+    final height = PcLayout.dayDialogHeightOf(MediaQuery.sizeOf(context).height);
 
     return MediaQuery.removeViewInsets(
       context: context,
@@ -666,7 +665,7 @@ class _LedgerDaySheetState extends State<LedgerDaySheet>
               child: SizedBox(
                 key: _dialogKey,
                 height: height,
-                width: 260,
+                width: PcLayout.dayDialogWidthOf(),
                 child: AppSkinBackground(
                   color: colors.card,
                   liftForNav: false,
@@ -885,6 +884,7 @@ class _LedgerDaySheetState extends State<LedgerDaySheet>
       trailingText: '${entry.signedLabel}원',
       isRepeat: LedgerSalaryRepeat.isRepeating(entry),
       showAccent: false,
+      height: _labelHeight,
       onPressed: () => _open(entry),
     );
     final body = Padding(
@@ -932,6 +932,7 @@ class _LedgerDaySheetState extends State<LedgerDaySheet>
                     trailingText: '${entry.signedLabel}원',
                     isRepeat: LedgerSalaryRepeat.isRepeating(entry),
                     showAccent: false,
+                    height: _labelHeight,
                   ),
                 ),
               ),
@@ -944,7 +945,10 @@ class _LedgerDaySheetState extends State<LedgerDaySheet>
                 color: AppColors.of(context).pressed,
                 borderRadius: const BorderRadius.all(Radius.circular(8)),
               ),
-              child: const SizedBox(height: 52, width: double.infinity),
+              child: SizedBox(
+                height: _labelHeight,
+                width: double.infinity,
+              ),
             ),
           ),
           child: body,

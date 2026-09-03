@@ -17,6 +17,20 @@ class ReleaseNote {
 abstract final class ReleaseNotes {
   static const all = [
     ReleaseNote(
+      version: '1.2.0',
+      items: [
+        '같은 계정으로 PC에서도 볼 수 있어요',
+        '로그인하면 할 일·일기·사진이 모여요',
+        '통계 탭에서 이번 달 행성을 볼 수 있어요',
+        'PC에서 커서를 올리면 눌림 효과가 나와요',
+        '그림에서 드래그하면 화면을 옮길 수 있어요',
+      ],
+      fixes: [
+        '일기 여러 개를 지울 때 화면이 뒤틀리지 않아요',
+        'PC에서 일기 사진과 그림 창이 잘리지 않아요',
+      ],
+    ),
+    ReleaseNote(
       version: '1.1.1',
       items: [
         '아이폰 백업이 아이클라우드에 저장돼요',

@@ -149,20 +149,27 @@ class TutorialController extends ChangeNotifier {
     ),
     TutorialStep(
       tab: 2,
+      badge: AppStrings.tutorialBadgeStats,
+      anchor: TutorialAnchorId.statsPlanet,
+      title: AppStrings.tutorialNavStatsTitle,
+      body: AppStrings.tutorialNavStatsBody,
+    ),
+    TutorialStep(
+      tab: 3,
       badge: AppStrings.tutorialBadgeJob,
       anchor: TutorialAnchorId.navJob,
       title: AppStrings.tutorialNavJobTitle,
       body: AppStrings.tutorialNavJobBody,
     ),
     TutorialStep(
-      tab: 2,
+      tab: 3,
       badge: AppStrings.tutorialBadgeJob,
       anchor: TutorialAnchorId.jobTools,
       title: AppStrings.tutorialJobToolsTitle,
       body: AppStrings.tutorialJobToolsBody,
     ),
     TutorialStep(
-      tab: 2,
+      tab: 3,
       badge: AppStrings.tutorialBadgeJob,
       anchor: TutorialAnchorId.jobAdd,
       title: AppStrings.tutorialJobAddTitle,
@@ -193,20 +200,47 @@ class TutorialController extends ChangeNotifier {
   var _hideJobTab = false;
   bool get hideJobTab => _hideJobTab;
 
+  var _hideStatsTab = false;
+  bool get hideStatsTab => _hideStatsTab;
+
   List<TutorialStep> get visibleSteps {
-    if (!_hideJobTab) return steps;
+    if (!_hideJobTab && !_hideStatsTab) return steps;
     return [
       for (final step in steps)
-        if (!_isJobOnly(step))
+        if (!_shouldSkip(step))
           TutorialStep(
-            tab: step.tab == 2 ? 1 : step.tab,
+            tab: _remapTab(step.tab),
             badge: step.badge,
             anchor: step.anchor,
             title: step.title,
-            body: _dailyBody(step),
+            body: _adaptedBody(step),
             demo: step.demo,
           ),
     ];
+  }
+
+  bool _shouldSkip(TutorialStep step) {
+    if (_hideJobTab && _isJobOnly(step)) return true;
+    if (_hideStatsTab && _isStatsOnly(step)) return true;
+    return false;
+  }
+
+  int _remapTab(int tab) {
+    if (_hideStatsTab && tab == 2) return 1;
+    return tab;
+  }
+
+  String _adaptedBody(TutorialStep step) {
+    if (step.body == AppStrings.tutorialNavBarBody) {
+      if (_hideStatsTab && _hideJobTab) {
+        return AppStrings.tutorialNavBarBodyNoStatsDaily;
+      }
+      if (_hideStatsTab) return AppStrings.tutorialNavBarBodyNoStats;
+      if (_hideJobTab) return AppStrings.tutorialNavBarBodyDaily;
+      return step.body;
+    }
+    if (_hideJobTab) return _dailyBody(step);
+    return step.body;
   }
 
   static String _dailyBody(TutorialStep step) {
@@ -234,12 +268,27 @@ class TutorialController extends ChangeNotifier {
         step.anchor == TutorialAnchorId.jobAdd;
   }
 
-  void setHideJobTab(bool value) {
-    if (_hideJobTab == value) return;
-    _hideJobTab = value;
+  static bool _isStatsOnly(TutorialStep step) {
+    return step.anchor == TutorialAnchorId.statsPlanet;
+  }
+
+  void _clampIndex() {
     if (_index >= visibleSteps.length) {
       _index = (visibleSteps.length - 1).clamp(0, visibleSteps.length);
     }
+  }
+
+  void setHideJobTab(bool value) {
+    if (_hideJobTab == value) return;
+    _hideJobTab = value;
+    _clampIndex();
+    notifyListeners();
+  }
+
+  void setHideStatsTab(bool value) {
+    if (_hideStatsTab == value) return;
+    _hideStatsTab = value;
+    _clampIndex();
     notifyListeners();
   }
 

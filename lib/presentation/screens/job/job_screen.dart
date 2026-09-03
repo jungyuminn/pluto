@@ -4,6 +4,7 @@ import 'package:job_planner/app_scope.dart';
 import 'package:job_planner/core/constants/app_fonts.dart';
 import 'package:job_planner/core/constants/app_icons.dart';
 import 'package:job_planner/core/constants/app_strings.dart';
+import 'package:job_planner/core/layout/pc_layout.dart';
 import 'package:job_planner/core/theme/app_colors.dart';
 import 'package:job_planner/core/theme/app_skin_background.dart';
 import 'package:job_planner/core/utils/fade_in.dart';
@@ -393,7 +394,8 @@ class _JobScreenState extends State<JobScreen>
         body: _loading
             ? const Center(child: CircularProgressIndicator())
             : FadeIn(
-                child: Column(
+                child: PcLayout.constrainWidth(
+                  Column(
                   children: [
                     ClipRect(
                       child: SizeTransition(
@@ -502,6 +504,7 @@ class _JobScreenState extends State<JobScreen>
                       ),
                     ),
                   ],
+                ),
                 ),
               ),
       ),

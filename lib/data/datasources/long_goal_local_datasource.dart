@@ -8,8 +8,8 @@ class LongGoalLocalDataSource {
     _load();
   }
 
-  static const _goalsKey = 'long_goals';
-  static const _logsKey = 'long_goal_logs';
+  static const goalsKey = 'long_goals';
+  static const logsKey = 'long_goal_logs';
 
   final SharedPreferences? _prefs;
   var _goals = <LongGoal>[];
@@ -109,7 +109,7 @@ class LongGoalLocalDataSource {
   void _load() {
     final prefs = _prefs;
     if (prefs == null) return;
-    final goalsRaw = prefs.getString(_goalsKey);
+    final goalsRaw = prefs.getString(goalsKey);
     if (goalsRaw != null && goalsRaw.isNotEmpty) {
       final decoded = jsonDecode(goalsRaw) as List<dynamic>;
       _goals = [
@@ -124,7 +124,7 @@ class LongGoalLocalDataSource {
         _persistGoals();
       }
     }
-    final logsRaw = prefs.getString(_logsKey);
+    final logsRaw = prefs.getString(logsKey);
     if (logsRaw != null && logsRaw.isNotEmpty) {
       final decoded = jsonDecode(logsRaw) as List<dynamic>;
       _logs = [
@@ -136,14 +136,14 @@ class LongGoalLocalDataSource {
 
   Future<void> _persistGoals() async {
     await _prefs?.setString(
-      _goalsKey,
+      LongGoalLocalDataSource.goalsKey,
       jsonEncode(_goals.map((goal) => goal.toJson()).toList()),
     );
   }
 
   Future<void> _persistLogs() async {
     await _prefs?.setString(
-      _logsKey,
+      LongGoalLocalDataSource.logsKey,
       jsonEncode(_logs.map((log) => log.toJson()).toList()),
     );
   }

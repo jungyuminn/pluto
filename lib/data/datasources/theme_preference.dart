@@ -220,6 +220,27 @@ class ThemePreference extends ChangeNotifier {
   }
 
   static const starterIdPrefix = 'starter_theme_';
+  static const starterNames = [
+    AppStrings.starterThemeReorder,
+    AppStrings.starterThemeSwipe,
+  ];
+  static const starterAccents = [defaultAccent, 0xFFF48FB1];
+
+  static bool isUnmodifiedStarter(Map<String, dynamic> item) {
+    final id = item['id'] as String? ?? '';
+    if (!id.startsWith(starterIdPrefix)) return false;
+    final index = int.tryParse(id.substring(starterIdPrefix.length));
+    if (index == null || index < 0 || index >= starterNames.length) {
+      return false;
+    }
+    if ((item['name'] as String? ?? '') != starterNames[index]) return false;
+    if ((item['kind'] as String? ?? 'pattern') != 'pattern') return false;
+    if ((item['accent'] as num?)?.toInt() != starterAccents[index]) return false;
+    if ((item['photoPath'] as String? ?? '').isNotEmpty) return false;
+    if ((item['decorationPath'] as String? ?? '').isNotEmpty) return false;
+    if ((item['bottomPath'] as String? ?? '').isNotEmpty) return false;
+    return true;
+  }
 
   Future<void> seedStartersIfNeeded() async {
     final prefs = _prefs;
@@ -229,20 +250,23 @@ class ThemePreference extends ChangeNotifier {
     await _persistThemes();
   }
 
+  Future<void> resetToStarters() async {
+    _customThemes = _starterThemes();
+    _customId = null;
+    await _prefs?.remove(_customIdKey);
+    notifyListeners();
+    await _persistThemes();
+  }
+
   static List<UserTheme> _starterThemes() {
-    return const [
-      UserTheme(
-        id: '${starterIdPrefix}0',
-        name: AppStrings.starterThemeReorder,
-        kind: UserThemeKind.pattern,
-        accent: defaultAccent,
-      ),
-      UserTheme(
-        id: '${starterIdPrefix}1',
-        name: AppStrings.starterThemeSwipe,
-        kind: UserThemeKind.pattern,
-        accent: 0xFFF48FB1,
-      ),
+    return [
+      for (var i = 0; i < starterNames.length; i++)
+        UserTheme(
+          id: '$starterIdPrefix$i',
+          name: starterNames[i],
+          kind: UserThemeKind.pattern,
+          accent: starterAccents[i],
+        ),
     ];
   }
 

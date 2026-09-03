@@ -381,6 +381,7 @@ class _CalendarMonthGridState extends State<CalendarMonthGrid>
           child: LayoutBuilder(
             builder: (context, constraints) {
               final minWeekHeight = constraints.maxHeight / weekCount;
+              final cellWidth = constraints.maxWidth / 7;
               final calendarScale = AppFonts.calendarScaleOf(context);
               final labelScale = AppFonts.calendarLabelScaleOf(context);
               final allowRange =
@@ -438,6 +439,7 @@ class _CalendarMonthGridState extends State<CalendarMonthGrid>
                       calendarScale: calendarScale,
                       labelScale: labelScale,
                       showLunar: _showLunar,
+                      cellWidth: cellWidth,
                     );
                     final ledgerHeight = CalendarWeekEvents.heightFor(
                       days: weekDays,
@@ -547,6 +549,7 @@ class _CalendarMonthGridState extends State<CalendarMonthGrid>
                                                   showLunar: _showLunar,
                                                   searchHitKey:
                                                       widget.searchHitKey,
+                                                  cellWidth: cellWidth,
                                                 ),
                                               ),
                                             ),

@@ -35,8 +35,13 @@ class AppIcons {
   static const maximizeOutlined = 'assets/icons/maximize_outlined.png';
   static const minimizeOutlined = 'assets/icons/minimize_outlined.png';
   static const logo = 'assets/images/logo.png';
+  static const plutoLogo = 'assets/images/pluto_logo.png';
   static const notebook = 'assets/images/notebook.png';
   static const tablet = 'assets/images/tablet.png';
+  static const statistics = 'assets/icons/statistics.png';
+  static const statisticsOutlined = 'assets/icons/statistics_outlined.png';
+  static const planet = 'assets/icons/planet.png';
+  static const planetOutlined = 'assets/icons/planet_outlined.png';
   static const office = 'assets/icons/office.png';
   static const officeOutlined = 'assets/icons/office_outlined.png';
   static const calendarList = 'assets/icons/calendar_list.png';

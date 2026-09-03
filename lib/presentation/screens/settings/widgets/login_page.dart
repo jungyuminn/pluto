@@ -5,14 +5,20 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:job_planner/core/constants/app_fonts.dart';
 import 'package:job_planner/core/constants/app_icons.dart';
 import 'package:job_planner/core/constants/app_strings.dart';
+import 'package:job_planner/core/constants/oauth_config.dart';
 import 'package:job_planner/core/theme/app_colors.dart';
+import 'package:job_planner/core/theme/app_skin_background.dart';
 import 'package:job_planner/core/utils/fade_in.dart';
 import 'package:job_planner/core/utils/press_bounce.dart';
 import 'package:job_planner/data/datasources/app_auth_service.dart';
 import 'package:job_planner/presentation/screens/settings/widgets/account_sheet.dart';
+import 'package:job_planner/presentation/screens/settings/widgets/backup_dialogs.dart';
+import 'package:job_planner/presentation/screens/settings/widgets/cloud_sync_dialogs.dart';
+import 'package:job_planner/presentation/screens/settings/widgets/dots_loading_dialog.dart';
+import 'package:job_planner/presentation/screens/shell/shell_screen.dart';
 
-Future<void> openLoginPage(BuildContext context) {
-  return showModalBottomSheet<void>(
+Future<void> openLoginPage(BuildContext context) async {
+  await showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
     isDismissible: true,
@@ -24,6 +30,135 @@ Future<void> openLoginPage(BuildContext context) {
     elevation: 0,
     builder: (context) => const LoginSheet(),
   );
+  if (!context.mounted) return;
+  if (AppAuthService.instance.user == null) return;
+  try {
+    await bindCloudAccount(context);
+  } on AppAuthException catch (error) {
+    if (!context.mounted || error.code == 'canceled') return;
+    await showBackupMessageDialog(
+      context,
+      title: AppStrings.accountFailedTitle,
+      body: error.detail == null || error.detail!.isEmpty
+          ? AppStrings.accountSyncFailedBody
+          : '${AppStrings.accountSyncFailedBody}\n(${error.detail})',
+    );
+  }
+}
+
+class WebAuthGate extends StatefulWidget {
+  const WebAuthGate({super.key});
+
+  @override
+  State<WebAuthGate> createState() => _WebAuthGateState();
+}
+
+class _WebAuthGateState extends State<WebAuthGate> {
+  late final _auth = AppAuthService.instance.authState;
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder(
+      stream: _auth,
+      initialData: AppAuthService.instance.user,
+      builder: (context, snapshot) {
+        if (snapshot.data == null) return const WebLoginScreen();
+        return const _WebBoundShell();
+      },
+    );
+  }
+}
+
+class WebLoginScreen extends StatefulWidget {
+  const WebLoginScreen({super.key});
+
+  @override
+  State<WebLoginScreen> createState() => _WebLoginScreenState();
+}
+
+class _WebLoginScreenState extends State<WebLoginScreen> {
+  var _busy = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return AppSkinBackground(
+      liftForNav: false,
+      child: SafeArea(
+        child: _WebLoginIntro(
+          busy: _busy,
+          onGoogle: () => _run(AppAuthService.instance.signInWithGoogle),
+          onApple: () => _run(AppAuthService.instance.signInWithApple),
+          onKakao: () => _run(AppAuthService.instance.signInWithKakao),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _run(Future<void> Function() action) async {
+    if (_busy) return;
+    setState(() => _busy = true);
+    try {
+      await runAccountAction(context, action);
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+}
+
+class _WebBoundShell extends StatefulWidget {
+  const _WebBoundShell();
+
+  @override
+  State<_WebBoundShell> createState() => _WebBoundShellState();
+}
+
+class _WebBoundShellState extends State<_WebBoundShell> {
+  var _ready = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      unawaited(_bind());
+    });
+  }
+
+  Future<void> _bind() async {
+    if (!mounted) return;
+    try {
+      await ensureCloudBound(context);
+      if (mounted) setState(() => _ready = true);
+    } on AppAuthException catch (error) {
+      if (!mounted) return;
+      if (error.code != 'canceled') {
+        await showBackupMessageDialog(
+          context,
+          title: AppStrings.accountFailedTitle,
+          body: error.detail == null || error.detail!.isEmpty
+              ? AppStrings.accountSyncFailedBody
+              : '${AppStrings.accountSyncFailedBody}\n(${error.detail})',
+        );
+      }
+      if (mounted) await AppAuthService.instance.signOut();
+    } catch (_) {
+      if (!mounted) return;
+      await showBackupMessageDialog(
+        context,
+        title: AppStrings.accountFailedTitle,
+        body: AppStrings.accountSyncFailedBody,
+      );
+      if (mounted) await AppAuthService.instance.signOut();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_ready) return const ShellScreen();
+    return const AppSkinBackground(
+      liftForNav: false,
+      child: Center(child: DotsLoadingDialog()),
+    );
+  }
 }
 
 class LoginSheet extends StatefulWidget {
@@ -39,7 +174,6 @@ class _LoginSheetState extends State<LoginSheet> {
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
-    final font = AppFonts.of(context);
     final bottom = MediaQuery.paddingOf(context).bottom;
     final maxHeight = MediaQuery.sizeOf(context).height * 0.88;
     final previewWidth =
@@ -74,81 +208,260 @@ class _LoginSheetState extends State<LoginSheet> {
                     ),
                   ),
                   const SizedBox(height: 18),
-                  _appear(0, _DeviceCarousel(width: previewWidth)),
-                  const SizedBox(height: 28),
-                  _appear(
-                    1,
-                    Text(
-                      AppStrings.accountLoginBody,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontFamily: font,
-                        fontSize: 15,
-                        fontWeight: FontWeight.w500,
-                        height: 1.45,
-                        color: colors.text,
-                      ),
-                    ),
+                  _LoginIntro(
+                    previewWidth: previewWidth,
+                    busy: _busy,
+                    onGoogle: () => _run(AppAuthService.instance.signInWithGoogle),
+                    onApple: () => _run(AppAuthService.instance.signInWithApple),
+                    onKakao: () => _run(AppAuthService.instance.signInWithKakao),
                   ),
-                  const SizedBox(height: 6),
-                  _appear(
-                    2,
-                    Text(
-                      AppStrings.accountLoginPcHint,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontFamily: font,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        height: 1.4,
-                        color: colors.muted,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 40),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      _appear(
-                        3,
-                        _ProviderButton(
-                          asset: AppIcons.kakaoLogo,
-                          background: const Color(0xFFFEE500),
-                          onPressed: () =>
-                              _run(AppAuthService.instance.signInWithKakao),
-                        ),
-                      ),
-                      const SizedBox(width: 44),
-                      _appear(
-                        4,
-                        _ProviderButton(
-                          asset: AppIcons.googleLogo,
-                          background: Colors.white,
-                          border: colors.border,
-                          onPressed: () =>
-                              _run(AppAuthService.instance.signInWithGoogle),
-                        ),
-                      ),
-                      const SizedBox(width: 44),
-                      _appear(
-                        5,
-                        _ProviderButton(
-                          asset: AppIcons.appleLogo,
-                          background: const Color(0xFF111111),
-                          tint: Colors.white,
-                          onPressed: () =>
-                              _run(AppAuthService.instance.signInWithApple),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
                 ],
               ),
             ),
           ),
         ),
       ),
+    );
+  }
+
+  Future<void> _run(Future<void> Function() action) async {
+    if (_busy) return;
+    setState(() => _busy = true);
+    try {
+      final signedIn = await runAccountAction(context, action);
+      if (signedIn && mounted) Navigator.of(context).pop();
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+}
+
+class _WebLoginIntro extends StatelessWidget {
+  const _WebLoginIntro({
+    required this.busy,
+    required this.onGoogle,
+    required this.onApple,
+    required this.onKakao,
+  });
+
+  final bool busy;
+  final VoidCallback onGoogle;
+  final VoidCallback onApple;
+  final VoidCallback onKakao;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    final font = AppFonts.of(context);
+    final showKakao = OauthConfig.kakaoEnabled;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 32, 24, 56),
+      child: Column(
+        children: [
+          const Spacer(flex: 2),
+          FadeIn(
+            delay: const Duration(milliseconds: 40),
+            duration: const Duration(milliseconds: 460),
+            offset: const Offset(0, 14),
+            child: Image.asset(
+              AppIcons.plutoLogo,
+              width: 176,
+              height: 176,
+              filterQuality: FilterQuality.high,
+            ),
+          ),
+          const SizedBox(height: 28),
+          FadeIn(
+            delay: const Duration(milliseconds: 110),
+            duration: const Duration(milliseconds: 460),
+            offset: const Offset(0, 14),
+            child: Text(
+              AppStrings.webLoginBrand,
+              style: TextStyle(
+                fontFamily: AppFonts.jalnan,
+                fontSize: 46,
+                height: 1.1,
+                letterSpacing: 1.4,
+                color: colors.text,
+                decoration: TextDecoration.none,
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          FadeIn(
+            delay: const Duration(milliseconds: 180),
+            duration: const Duration(milliseconds: 460),
+            offset: const Offset(0, 14),
+            child: Text(
+              AppStrings.webLoginTagline,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontFamily: font,
+                fontSize: 22,
+                fontWeight: FontWeight.w600,
+                height: 1.45,
+                color: colors.text,
+                decoration: TextDecoration.none,
+              ),
+            ),
+          ),
+          const Spacer(flex: 3),
+          IgnorePointer(
+            ignoring: busy,
+            child: FadeIn(
+              delay: const Duration(milliseconds: 320),
+              duration: const Duration(milliseconds: 460),
+              offset: const Offset(0, 14),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (showKakao) ...[
+                    _ProviderButton(
+                      asset: AppIcons.kakaoLogo,
+                      background: const Color(0xFFFEE500),
+                      size: 64,
+                      onPressed: onKakao,
+                    ),
+                    const SizedBox(width: 44),
+                  ],
+                  _ProviderButton(
+                    asset: AppIcons.googleLogo,
+                    background: Colors.white,
+                    border: colors.border,
+                    size: 64,
+                    onPressed: onGoogle,
+                  ),
+                  const SizedBox(width: 44),
+                  _ProviderButton(
+                    asset: AppIcons.appleLogo,
+                    background: const Color(0xFF111111),
+                    tint: Colors.white,
+                    size: 64,
+                    onPressed: onApple,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 50),
+          FadeIn(
+            delay: const Duration(milliseconds: 380),
+            duration: const Duration(milliseconds: 460),
+            offset: const Offset(0, 14),
+            child: Text(
+              AppStrings.webLoginPcLabel,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontFamily: font,
+                fontSize: 14,
+                fontWeight: FontWeight.w400,
+                color: colors.muted,
+                decoration: TextDecoration.none,
+              ),
+            ),
+          ),
+          const Spacer(flex: 2),
+        ],
+      ),
+    );
+  }
+}
+
+class _LoginIntro extends StatelessWidget {
+  const _LoginIntro({
+    required this.previewWidth,
+    required this.busy,
+    required this.onGoogle,
+    required this.onApple,
+    required this.onKakao,
+  });
+
+  final double previewWidth;
+  final bool busy;
+  final VoidCallback onGoogle;
+  final VoidCallback onApple;
+  final VoidCallback onKakao;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    final font = AppFonts.of(context);
+    final showKakao = OauthConfig.kakaoEnabled;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _appear(0, _DeviceCarousel(width: previewWidth)),
+        const SizedBox(height: 28),
+        _appear(
+          1,
+          Text(
+            AppStrings.accountLoginBody,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontFamily: font,
+              fontSize: 15,
+              fontWeight: FontWeight.w500,
+              height: 1.45,
+              color: colors.text,
+            ),
+          ),
+        ),
+        const SizedBox(height: 6),
+        _appear(
+          2,
+          Text(
+            AppStrings.accountLoginPcHint,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontFamily: font,
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              height: 1.4,
+              color: colors.muted,
+            ),
+          ),
+        ),
+        const SizedBox(height: 40),
+        IgnorePointer(
+          ignoring: busy,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (showKakao) ...[
+                _appear(
+                  3,
+                  _ProviderButton(
+                    asset: AppIcons.kakaoLogo,
+                    background: const Color(0xFFFEE500),
+                    onPressed: onKakao,
+                  ),
+                ),
+                const SizedBox(width: 44),
+              ],
+              _appear(
+                showKakao ? 4 : 3,
+                _ProviderButton(
+                  asset: AppIcons.googleLogo,
+                  background: Colors.white,
+                  border: colors.border,
+                  onPressed: onGoogle,
+                ),
+              ),
+              const SizedBox(width: 44),
+              _appear(
+                showKakao ? 5 : 4,
+                _ProviderButton(
+                  asset: AppIcons.appleLogo,
+                  background: const Color(0xFF111111),
+                  tint: Colors.white,
+                  onPressed: onApple,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 24),
+      ],
     );
   }
 
@@ -159,20 +472,6 @@ class _LoginSheetState extends State<LoginSheet> {
       offset: const Offset(0, 14),
       child: child,
     );
-  }
-
-  Future<void> _run(Future<void> Function() action) async {
-    if (_busy) return;
-    setState(() => _busy = true);
-    try {
-      await runAccountAction(
-        context,
-        action,
-        popSheetOnSuccess: true,
-      );
-    } finally {
-      if (mounted) setState(() => _busy = false);
-    }
   }
 }
 
@@ -327,30 +626,33 @@ class _ProviderButton extends StatelessWidget {
     required this.onPressed,
     this.border,
     this.tint,
+    this.size = 56,
   });
 
   final String asset;
   final Color background;
   final Color? border;
   final Color? tint;
+  final double size;
   final VoidCallback onPressed;
 
   @override
   Widget build(BuildContext context) {
     final tintColor = tint;
+    final iconSize = size * 30 / 56;
     final image = asset.endsWith('.svg')
         ? SvgPicture.asset(
             asset,
-            width: 30,
-            height: 30,
+            width: iconSize,
+            height: iconSize,
             colorFilter: tintColor == null
                 ? null
                 : ColorFilter.mode(tintColor, BlendMode.srcIn),
           )
         : Image.asset(
             asset,
-            width: 30,
-            height: 30,
+            width: iconSize,
+            height: iconSize,
             color: tint,
             colorBlendMode: BlendMode.srcIn,
             filterQuality: FilterQuality.high,
@@ -361,8 +663,8 @@ class _ProviderButton extends StatelessWidget {
       pressedColor: Color.lerp(background, Colors.black, 0.08)!,
       borderRadius: BorderRadius.circular(999),
       child: SizedBox(
-        width: 56,
-        height: 56,
+        width: size,
+        height: size,
         child: DecoratedBox(
           decoration: BoxDecoration(
             shape: BoxShape.circle,

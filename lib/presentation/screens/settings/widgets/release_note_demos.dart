@@ -95,6 +95,9 @@ enum ReleaseDemo {
 
 ReleaseDemo releaseDemoFor(String text, {required bool isFix}) {
   if (isFix) {
+    if (text.contains('잘리지') || text.contains('그림 창')) {
+      return ReleaseDemo.diaryDraw;
+    }
     if (text.contains('일기 사진')) return ReleaseDemo.diaryPhotoSave;
     if (text.contains('일기 스티커')) return ReleaseDemo.diaryStickerRemove;
     if (text.contains('복구할 파일') || text.contains('아이클라우드에서 복구')) {
@@ -110,6 +113,9 @@ ReleaseDemo releaseDemoFor(String text, {required bool isFix}) {
     }
     if (text.contains('흐릿') || text.contains('위젯 글씨')) {
       return ReleaseDemo.compactWidget;
+    }
+    if (text.contains('여러 개를 지울') || text.contains('일기를 지울')) {
+      return ReleaseDemo.diaryDelete;
     }
     if (text.contains('일기 그림') || text.contains('뒤틀')) {
       return ReleaseDemo.diaryDraw;
@@ -210,6 +216,19 @@ ReleaseDemo releaseDemoFor(String text, {required bool isFix}) {
   if (text.contains('백업하고 복구')) return ReleaseDemo.backup;
   if (text.contains('자동저장 주기')) return ReleaseDemo.autoSave;
   if (text.contains('홈에서 카드를 길게')) return ReleaseDemo.homeReorder;
+  if (text.contains('커서를 올리면') || text.contains('눌림 효과')) {
+    return ReleaseDemo.homeBounce;
+  }
+  if (text.contains('그림에서 드래그')) return ReleaseDemo.diaryDraw;
+  if (text.contains('같은 계정') || text.contains('PC에서도')) {
+    return ReleaseDemo.settings;
+  }
+  if (text.contains('통계 탭') || text.contains('행성')) {
+    return ReleaseDemo.summary;
+  }
+  if (text.contains('로그인하면') || text.contains('사진이 모여')) {
+    return ReleaseDemo.backup;
+  }
   if (text.contains('바운스')) return ReleaseDemo.homeBounce;
   if (text.contains('업데이트 내용') || text.contains('릴리즈 노트')) {
     return ReleaseDemo.releaseNotes;

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:job_planner/app_scope.dart';
 import 'package:job_planner/core/constants/app_fonts.dart';
 import 'package:job_planner/core/constants/app_strings.dart';
+import 'package:job_planner/core/layout/pc_layout.dart';
 import 'package:job_planner/core/theme/app_colors.dart';
 import 'package:job_planner/core/utils/plain_text_editing_controller.dart';
 import 'package:job_planner/core/utils/press_bounce.dart';
@@ -144,7 +145,7 @@ class _WordmarkEditDialogState extends State<_WordmarkEditDialog> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       contentPadding: const EdgeInsets.fromLTRB(24, 28, 24, 20),
       content: SizedBox(
-        width: double.maxFinite,
+        width: PcLayout.isPc ? PcLayout.homeCardWidth : double.maxFinite,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,

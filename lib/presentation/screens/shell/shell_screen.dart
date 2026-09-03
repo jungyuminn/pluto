@@ -7,6 +7,7 @@ import 'package:job_planner/data/datasources/nav_preference.dart';
 import 'package:job_planner/presentation/screens/calendar/calendar_screen.dart';
 import 'package:job_planner/presentation/screens/home/home_screen.dart';
 import 'package:job_planner/presentation/screens/job/job_screen.dart';
+import 'package:job_planner/presentation/screens/stats/stats_screen.dart';
 import 'package:job_planner/presentation/screens/shell/widgets/pill_bottom_nav.dart';
 import 'package:job_planner/presentation/tutorial/tutorial_controller.dart';
 import 'package:job_planner/presentation/tutorial/tutorial_overlay.dart';
@@ -22,7 +23,8 @@ class _ShellScreenState extends State<ShellScreen>
     with SingleTickerProviderStateMixin {
   static const _tabDuration = Duration(milliseconds: 340);
   static const _calendarTab = 1;
-  static const _jobTab = 2;
+  static const _statsTab = 2;
+  static const _jobTab = 3;
 
   Widget _tabAt(int index) {
     switch (index) {
@@ -30,6 +32,8 @@ class _ShellScreenState extends State<ShellScreen>
         return HomeScreen(visible: _index == 0);
       case 1:
         return CalendarScreen(visible: _index == 1);
+      case _statsTab:
+        return StatsScreen(visible: _index == _statsTab);
       default:
         return const JobScreen();
     }
@@ -78,7 +82,7 @@ class _ShellScreenState extends State<ShellScreen>
       _nav?.removeListener(_onNav);
       _nav = nav;
       _nav!.addListener(_onNav);
-      _leaveJobTabIfHidden();
+      _leaveHiddenTabs();
     }
     if (_autoStarted || next == null) return;
     _autoStarted = true;
@@ -96,12 +100,16 @@ class _ShellScreenState extends State<ShellScreen>
   }
 
   void _onNav() {
-    _leaveJobTabIfHidden();
+    _leaveHiddenTabs();
     if (mounted) setState(() {});
   }
 
-  void _leaveJobTabIfHidden() {
-    if (_nav?.dailyMode == true && _index == _jobTab) {
+  void _leaveHiddenTabs() {
+    if (_nav?.showJobTab != true && _index == _jobTab) {
+      _onTabChanged(_calendarTab);
+      return;
+    }
+    if (_nav?.showStatsTab != true && _index == _statsTab) {
       _onTabChanged(_calendarTab);
     }
   }
@@ -132,7 +140,10 @@ class _ShellScreenState extends State<ShellScreen>
   }
 
   void _onTabChanged(int index) {
-    if (_nav?.dailyMode == true && index == _jobTab) {
+    if (_nav?.showJobTab != true && index == _jobTab) {
+      index = _calendarTab;
+    }
+    if (_nav?.showStatsTab != true && index == _statsTab) {
       index = _calendarTab;
     }
     if (index == _index) return;
@@ -175,7 +186,7 @@ class _ShellScreenState extends State<ShellScreen>
       resizeToAvoidBottomInset: false,
       body: Stack(
         children: [
-          for (var i = 0; i < 3; i++)
+          for (var i = 0; i < 4; i++)
             _TabSlot(
               key: ValueKey(i),
               visible: i == _index ||
@@ -189,7 +200,8 @@ class _ShellScreenState extends State<ShellScreen>
             alignment: Alignment.bottomCenter,
             child: PillBottomNav(
               currentIndex: _index,
-              showJob: _nav?.showJobTab ?? true,
+              showStats: _nav?.showStatsTab ?? true,
+              showJob: _nav?.showJobTab ?? false,
               onChanged: _onTabChanged,
             ),
           ),

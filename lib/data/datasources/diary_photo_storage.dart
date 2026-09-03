@@ -1,10 +1,8 @@
-import 'dart:io';
-
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:job_planner/data/datasources/synced_file_store.dart';
 import 'package:path/path.dart' as p;
-import 'package:path_provider/path_provider.dart';
 
 class DiaryPhotoStorage {
   const DiaryPhotoStorage();
@@ -12,43 +10,39 @@ class DiaryPhotoStorage {
   static const _iosPicker = MethodChannel('job_planner/image_picker');
 
   Future<({String path, String name})?> pick() async {
-    if (!kIsWeb && Platform.isIOS) {
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
       final path = await _iosPicker.invokeMethod<String>('pick');
       if (path == null || path.isEmpty) return null;
       return (path: path, name: p.basename(path));
     }
-    final file = await FilePicker.pickFile(type: FileType.image);
-    final path = file?.path;
-    if (file == null || path == null) return null;
-    return (path: path, name: file.name);
+    return SyncedFileStore.pick(type: FileType.image);
   }
 
   Future<String> save({
     required String id,
     required String sourcePath,
     required String fileName,
-  }) async {
-    final documents = await getApplicationDocumentsDirectory();
-    final folder = Directory(p.join(documents.path, 'diaries'));
-    if (!folder.existsSync()) {
-      await folder.create(recursive: true);
-    }
-
-    final safeName = p.basename(fileName);
-    final destination = p.join(folder.path, '${id}_$safeName');
-    final source = File(sourcePath);
-    try {
-      await source.copy(destination);
-    } catch (_) {
-      final bytes = await source.readAsBytes();
-      await File(destination).writeAsBytes(bytes, flush: true);
-    }
-    return destination;
+  }) {
+    return SyncedFileStore.instance.import(
+      folder: 'diaries',
+      name: '${id}_${_safeFileName(fileName)}',
+      sourcePath: sourcePath,
+    );
   }
 
-  Future<void> delete(String? path) async {
-    if (path == null || path.isEmpty) return;
-    final file = File(path);
-    if (file.existsSync()) await file.delete();
+  Future<void> delete(String? path) {
+    return SyncedFileStore.instance.deletePath(path);
+  }
+
+  static String _safeFileName(String fileName) {
+    final base = p.basename(fileName);
+    final dot = base.lastIndexOf('.');
+    final stem = dot > 0 ? base.substring(0, dot) : base;
+    final ext = dot > 0 ? base.substring(dot).toLowerCase() : '.jpg';
+    final safe = stem.replaceAll(RegExp(r'[^A-Za-z0-9._-]+'), '_');
+    final name = safe.replaceAll(RegExp(r'^_+|_+$'), '');
+    const allowed = {'.png', '.jpg', '.jpeg', '.gif', '.webp'};
+    final suffix = allowed.contains(ext) ? ext : '.jpg';
+    return '${name.isEmpty ? 'photo' : name}$suffix';
   }
 }

@@ -1,12 +1,14 @@
-import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:job_planner/core/calendar/month_grid.dart';
 import 'package:job_planner/core/constants/app_strings.dart';
+import 'package:job_planner/core/layout/pc_layout.dart';
+import 'package:job_planner/core/utils/local_file.dart';
 import 'package:job_planner/domain/entities/diary_entry.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/calendar_day_cell.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/calendar_event_label.dart';
+import 'package:job_planner/presentation/widgets/local_file_image.dart';
 
 class CalendarWeekDiaries extends StatefulWidget {
   const CalendarWeekDiaries({
@@ -17,6 +19,7 @@ class CalendarWeekDiaries extends StatefulWidget {
     this.labelScale = 1,
     this.showLunar = false,
     this.searchHitKey,
+    this.cellWidth = 0,
   });
 
   final List<CalendarDay> days;
@@ -25,17 +28,21 @@ class CalendarWeekDiaries extends StatefulWidget {
   final double labelScale;
   final bool showLunar;
   final String? searchHitKey;
+  final double cellWidth;
 
   static const photoHeight = 42.0;
   static const maxPhotoSpan = 4;
   static const fadeDuration = Duration(milliseconds: 240);
+  static const _phoneCellWidth = 52.0;
 
-  static double photoHeightFor(double scale) => photoHeight * scale;
+  static double photoHeightFor(double scale, {double cellWidth = 0}) {
+    final base = photoHeight * scale;
+    if (!PcLayout.isPc || cellWidth <= 0) return base;
+    return (base * (cellWidth / _phoneCellWidth)).clamp(base, 160.0 * scale);
+  }
 
   static bool showsPhoto(DiaryEntry diary) {
-    final path = diary.photoPath;
-    if (path == null || path.isEmpty) return false;
-    return File(path).existsSync();
+    return localFileExists(diary.photoPath);
   }
 
   static double heightFor({
@@ -45,6 +52,7 @@ class CalendarWeekDiaries extends StatefulWidget {
     double calendarScale = 1,
     double labelScale = 1,
     bool showLunar = false,
+    double cellWidth = 0,
   }) {
     final tiles = _tilesFor(
       days: days,
@@ -52,6 +60,7 @@ class CalendarWeekDiaries extends StatefulWidget {
       calendarScale: calendarScale,
       labelScale: labelScale,
       showLunar: showLunar,
+      cellWidth: cellWidth,
     );
     var content = 0.0;
     for (final day in days) {
@@ -88,6 +97,7 @@ class _CalendarWeekDiariesState extends State<CalendarWeekDiaries> {
       calendarScale: widget.calendarScale,
       labelScale: widget.labelScale,
       showLunar: widget.showLunar,
+      cellWidth: widget.cellWidth,
     );
   }
 
@@ -100,6 +110,7 @@ class _CalendarWeekDiariesState extends State<CalendarWeekDiaries> {
       calendarScale: widget.calendarScale,
       labelScale: widget.labelScale,
       showLunar: widget.showLunar,
+      cellWidth: widget.cellWidth,
     );
     final sameWeek = widget.days.first.date == oldWidget.days.first.date &&
         widget.days.last.date == oldWidget.days.last.date &&
@@ -143,7 +154,10 @@ class _CalendarWeekDiariesState extends State<CalendarWeekDiaries> {
   @override
   Widget build(BuildContext context) {
     if (_tiles.isEmpty && _exiting.isEmpty) return const SizedBox.expand();
-    final photoH = CalendarWeekDiaries.photoHeightFor(widget.calendarScale);
+    final photoH = CalendarWeekDiaries.photoHeightFor(
+      widget.calendarScale,
+      cellWidth: widget.cellWidth,
+    );
     final labelH = CalendarDayCell.labelHeightFor(widget.labelScale);
 
     return IgnorePointer(
@@ -152,23 +166,6 @@ class _CalendarWeekDiariesState extends State<CalendarWeekDiaries> {
           final cellWidth = constraints.maxWidth / 7;
           return Stack(
             children: [
-              for (final tile in _exiting)
-                _positioned(
-                  tile: tile,
-                  cellWidth: cellWidth,
-                  child: _FadingDiary(
-                    key: ValueKey('out-${tile.id}'),
-                    tile: tile,
-                    cellWidth: cellWidth,
-                    photoH: photoH,
-                    labelH: labelH,
-                    visible: false,
-                    searching: widget.searchHitKey != null,
-                    matched: widget.searchHitKey != null &&
-                        (tile.diary.groupId ?? tile.diary.id) ==
-                            widget.searchHitKey,
-                  ),
-                ),
               for (final tile in _tiles)
                 _positioned(
                   tile: tile,
@@ -181,6 +178,23 @@ class _CalendarWeekDiariesState extends State<CalendarWeekDiaries> {
                     labelH: labelH,
                     visible: true,
                     appear: _appearing.contains(tile.id),
+                    searching: widget.searchHitKey != null,
+                    matched: widget.searchHitKey != null &&
+                        (tile.diary.groupId ?? tile.diary.id) ==
+                            widget.searchHitKey,
+                  ),
+                ),
+              for (final tile in _exiting)
+                _positioned(
+                  tile: tile,
+                  cellWidth: cellWidth,
+                  child: _FadingDiary(
+                    key: ValueKey('out-${tile.id}'),
+                    tile: tile,
+                    cellWidth: cellWidth,
+                    photoH: photoH,
+                    labelH: labelH,
+                    visible: false,
                     searching: widget.searchHitKey != null,
                     matched: widget.searchHitKey != null &&
                         (tile.diary.groupId ?? tile.diary.id) ==
@@ -217,6 +231,7 @@ List<_DiaryTile> _tilesFor({
   required double calendarScale,
   required double labelScale,
   required bool showLunar,
+  double cellWidth = 0,
 }) {
   bool sameGroup(DiaryEntry diary, DiaryEntry other) {
     if (diary.groupId != null) return diary.groupId == other.groupId;
@@ -350,7 +365,10 @@ List<_DiaryTile> _tilesFor({
   }
 
   final labelH = CalendarDayCell.labelHeightFor(labelScale);
-  final photoH = CalendarWeekDiaries.photoHeightFor(calendarScale);
+  final photoH = CalendarWeekDiaries.photoHeightFor(
+    calendarScale,
+    cellWidth: cellWidth,
+  );
   final occupied = List.generate(7, (_) => <_OccupiedRange>[]);
   final tiles = <_DiaryTile>[];
 
@@ -490,8 +508,6 @@ class _FadingDiary extends StatefulWidget {
 class _FadingDiaryState extends State<_FadingDiary> {
   late var _opacity =
       widget.visible && !widget.appear ? 1.0 : widget.visible ? 0.0 : 1.0;
-  late var _scale =
-      widget.visible && !widget.appear ? 1.0 : widget.visible ? 0.88 : 1.0;
 
   @override
   void initState() {
@@ -499,10 +515,7 @@ class _FadingDiaryState extends State<_FadingDiary> {
     if (widget.appear || !widget.visible) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
-        setState(() {
-          _opacity = widget.visible ? 1 : 0;
-          _scale = widget.visible ? 1 : 0.88;
-        });
+        setState(() => _opacity = widget.visible ? 1 : 0);
       });
     }
   }
@@ -511,10 +524,8 @@ class _FadingDiaryState extends State<_FadingDiary> {
   void didUpdateWidget(_FadingDiary oldWidget) {
     super.didUpdateWidget(oldWidget);
     final nextOpacity = widget.visible ? 1.0 : 0.0;
-    final nextScale = widget.visible ? 1.0 : 0.88;
-    if (_opacity == nextOpacity && _scale == nextScale) return;
+    if (_opacity == nextOpacity) return;
     _opacity = nextOpacity;
-    _scale = nextScale;
   }
 
   @override
@@ -535,16 +546,11 @@ class _FadingDiaryState extends State<_FadingDiary> {
     final photoStart = tile.photoStart;
     final photoEnd = tile.photoEnd;
 
-    return AnimatedScale(
+    return AnimatedOpacity(
       duration: CalendarWeekDiaries.fadeDuration,
       curve: widget.visible ? Curves.easeOutCubic : Curves.easeInCubic,
-      scale: _scale,
-      alignment: Alignment.topCenter,
-      child: AnimatedOpacity(
-        duration: CalendarWeekDiaries.fadeDuration,
-        curve: widget.visible ? Curves.easeOutCubic : Curves.easeInCubic,
-        opacity: faded,
-        child: photoStart == null || photoEnd == null
+      opacity: faded,
+      child: photoStart == null || photoEnd == null
             ? label
             : Stack(
                 children: [
@@ -566,8 +572,8 @@ class _FadingDiaryState extends State<_FadingDiary> {
                     height: widget.photoH,
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(6),
-                      child: Image.file(
-                        File(diary.photoPath!),
+                      child: LocalFileImage(
+                        diary.photoPath!,
                         fit: BoxFit.cover,
                         width: double.infinity,
                         height: double.infinity,
@@ -579,7 +585,6 @@ class _FadingDiaryState extends State<_FadingDiary> {
                   ),
                 ],
               ),
-      ),
     );
   }
 }

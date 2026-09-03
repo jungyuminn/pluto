@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:job_planner/app_scope.dart';
 import 'package:job_planner/core/constants/app_icons.dart';
 import 'package:job_planner/core/constants/app_strings.dart';
+import 'package:job_planner/core/layout/pc_layout.dart';
 import 'package:job_planner/core/notifications/todo_reminder_service.dart';
 import 'package:job_planner/core/theme/app_skin_background.dart';
 import 'package:job_planner/core/utils/fade_in.dart';
@@ -251,7 +252,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    final bottomGap = 88 + MediaQuery.paddingOf(context).bottom;
+    final bottomGap = 88 +
+        (PcLayout.isPc ? PcLayout.navLift : 0) +
+        MediaQuery.paddingOf(context).bottom;
     final leftover = _leftoverEvents;
     final sortPrefs = AppScope.of(context).dayEventsViewPreference;
     final homePrefs = AppScope.of(context).homeViewPreference;
@@ -363,7 +366,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       );
     }
 
-    return ReorderableListView(
+    final list = ReorderableListView(
       padding: EdgeInsets.fromLTRB(
         16,
         OverlayAppBar.overlapOf(context) + 8,
@@ -412,6 +415,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           ),
       ],
     );
+    if (!PcLayout.isPc) return list;
+    return PcLayout.constrainWidth(list);
   }
 
   bool _showsCard(

@@ -7,12 +7,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 class LedgerLocalDataSource {
   LedgerLocalDataSource(this._prefs);
 
-  static const _key = 'ledger_entries';
+  static const key = 'ledger_entries';
 
   final SharedPreferences _prefs;
 
   List<LedgerEntry> fetchAll() {
-    final raw = _prefs.getString(_key);
+    final raw = _prefs.getString(key);
     if (raw == null || raw.isEmpty) return [];
 
     final decoded = jsonDecode(raw) as List<dynamic>;
@@ -25,6 +25,6 @@ class LedgerLocalDataSource {
     final payload = jsonEncode(
       entries.map(LedgerEntryModel.toJson).toList(),
     );
-    await _prefs.setString(_key, payload);
+    await _prefs.setString(key, payload);
   }
 }

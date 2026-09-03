@@ -1,11 +1,13 @@
-import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:job_planner/app_scope.dart';
 import 'package:job_planner/core/constants/app_icons.dart';
+import 'package:job_planner/core/layout/pc_layout.dart';
 import 'package:job_planner/core/theme/app_colors.dart';
+import 'package:job_planner/core/utils/local_file.dart';
 import 'package:job_planner/data/datasources/theme_preference.dart';
+import 'package:job_planner/presentation/widgets/local_file_image.dart';
 
 class AppSkinAssets {
   AppSkinAssets._();
@@ -530,6 +532,7 @@ class AppSkinAssets {
         return const [
           (filled: AppIcons.home, outlined: AppIcons.homeOutlined),
           (filled: AppIcons.calendar, outlined: AppIcons.calendarOutlined),
+          (filled: AppIcons.planet, outlined: AppIcons.planetOutlined),
           (filled: AppIcons.office, outlined: AppIcons.officeOutlined),
         ];
     }
@@ -596,23 +599,24 @@ class AppSkinBackground extends StatelessWidget {
             color ?? colors.background,
           )
         : custom.fillColorFor(dark);
+    final sparse = simple || PcLayout.isPc;
     final Widget? decorations = custom == null
         ? switch (skin) {
       AppSkin.classic => null,
       AppSkin.blossom => _BlossomDecorations(
           liftForNav: liftForNav,
           scaleByWidth: scaleByWidth,
-          simple: simple,
+          simple: sparse,
         ),
       AppSkin.clover => _CloverDecorations(
           liftForNav: liftForNav,
           scaleByWidth: scaleByWidth,
-          simple: simple,
+          simple: sparse,
         ),
       AppSkin.fluffyBear => _FluffyMascotDecorations(
           liftForNav: liftForNav,
           scaleByWidth: scaleByWidth,
-          simple: simple,
+          simple: sparse,
           faceLight: AppSkinAssets.fluffyBearFaceLight,
           faceDark: AppSkinAssets.fluffyBearFaceDark,
           bottomLight: AppSkinAssets.fluffyBearBottomLight,
@@ -625,7 +629,7 @@ class AppSkinBackground extends StatelessWidget {
       AppSkin.fluffyRabbit => _FluffyMascotDecorations(
           liftForNav: liftForNav,
           scaleByWidth: scaleByWidth,
-          simple: simple,
+          simple: sparse,
           faceLight: AppSkinAssets.fluffyRabbitFaceLight,
           faceDark: AppSkinAssets.fluffyRabbitFaceDark,
           bottomLight: AppSkinAssets.fluffyRabbitBottomLight,
@@ -638,7 +642,7 @@ class AppSkinBackground extends StatelessWidget {
       AppSkin.pinkHeart => _FluffyMascotDecorations(
           liftForNav: liftForNav,
           scaleByWidth: scaleByWidth,
-          simple: simple,
+          simple: sparse,
           faceLight: AppSkinAssets.pinkHeartFaceLight,
           faceDark: AppSkinAssets.pinkHeartFaceDark,
           bottomLight: AppSkinAssets.pinkHeartBottomLight,
@@ -651,67 +655,67 @@ class AppSkinBackground extends StatelessWidget {
       AppSkin.summerBeach => _SummerBeachDecorations(
           liftForNav: liftForNav,
           scaleByWidth: scaleByWidth,
-          simple: simple,
+          simple: sparse,
         ),
       AppSkin.snowyWinter => _SnowyWinterDecorations(
           liftForNav: liftForNav,
           scaleByWidth: scaleByWidth,
-          simple: simple,
+          simple: sparse,
         ),
       AppSkin.squishyBear => _SquishyBearDecorations(
           liftForNav: liftForNav,
           scaleByWidth: scaleByWidth,
-          simple: simple,
+          simple: sparse,
         ),
       AppSkin.strawberryMilk => _StrawberryMilkDecorations(
           liftForNav: liftForNav,
           scaleByWidth: scaleByWidth,
-          simple: simple,
+          simple: sparse,
         ),
       AppSkin.lovelyBear => _LovelyBearDecorations(
           liftForNav: liftForNav,
           scaleByWidth: scaleByWidth,
-          simple: simple,
+          simple: sparse,
         ),
       AppSkin.rainyDay => _RainyDayDecorations(
           liftForNav: liftForNav,
           scaleByWidth: scaleByWidth,
-          simple: simple,
+          simple: sparse,
         ),
       AppSkin.concertDay => _ConcertDayDecorations(
           liftForNav: liftForNav,
           scaleByWidth: scaleByWidth,
-          simple: simple,
+          simple: sparse,
         ),
       AppSkin.fluffyCloud => _FluffyCloudDecorations(
           liftForNav: liftForNav,
           scaleByWidth: scaleByWidth,
-          simple: simple,
+          simple: sparse,
         ),
       AppSkin.catVillage => _CatVillageDecorations(
           liftForNav: liftForNav,
           scaleByWidth: scaleByWidth,
-          simple: simple,
+          simple: sparse,
         ),
       AppSkin.hamsterBakery => _HamsterBakeryDecorations(
           liftForNav: liftForNav,
           scaleByWidth: scaleByWidth,
-          simple: simple,
+          simple: sparse,
         ),
       AppSkin.otterBathhouse => _OtterBathhouseDecorations(
           liftForNav: liftForNav,
           scaleByWidth: scaleByWidth,
-          simple: simple,
+          simple: sparse,
         ),
       AppSkin.rabbitFlowerMarket => _RabbitFlowerMarketDecorations(
           liftForNav: liftForNav,
           scaleByWidth: scaleByWidth,
-          simple: simple,
+          simple: sparse,
         ),
       AppSkin.bearPancakeCafe => _BearPancakeCafeDecorations(
           liftForNav: liftForNav,
           scaleByWidth: scaleByWidth,
-          simple: simple,
+          simple: sparse,
         ),
     }
         : custom.kind == UserThemeKind.photo
@@ -725,7 +729,7 @@ class AppSkinBackground extends StatelessWidget {
                 bottomPath: custom.bottomPath,
                 liftForNav: liftForNav,
                 scaleByWidth: scaleByWidth,
-                simple: simple,
+                simple: sparse,
               );
     return Stack(
       fit: StackFit.expand,
@@ -773,14 +777,13 @@ class _CustomPhotoDecorations extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final file = File(path);
-    if (path.isEmpty || !file.existsSync()) return const SizedBox.expand();
+    if (!localFileExists(path)) return const SizedBox.expand();
     final amount = wash.clamp(0.0, 1.0);
     return Stack(
       fit: StackFit.expand,
       children: [
-        Image.file(
-          file,
+        LocalFileImage(
+          path,
           fit: BoxFit.cover,
           alignment: Alignment.center,
           filterQuality: FilterQuality.medium,
@@ -827,12 +830,11 @@ class _CustomPatternDecorations extends StatelessWidget {
         );
 
         Widget motif({double angle = 0}) {
-          final file = File(decorationPath);
-          if (decorationPath.isEmpty || !file.existsSync()) {
+          if (!localFileExists(decorationPath)) {
             return const SizedBox.shrink();
           }
-          Widget child = Image.file(
-            file,
+          Widget child = LocalFileImage(
+            decorationPath,
             fit: BoxFit.contain,
             filterQuality: FilterQuality.medium,
             errorBuilder: (_, _, _) => const SizedBox.shrink(),
@@ -878,18 +880,20 @@ class _CustomPatternDecorations extends StatelessWidget {
                   width: span * (simple ? 0.14 : 0.2),
                   child: motif(angle: math.pi / 5),
                 ),
-                Positioned(
-                  right: span * 0.04,
-                  bottom: motifBottom + span * 0.08,
-                  width: span * (simple ? 0.13 : 0.16),
-                  child: motif(angle: -math.pi / 10),
-                ),
-                Positioned(
-                  top: height * (simple ? 0.32 : 0.38),
-                  right: span * (simple ? 0.1 : 0.08),
-                  width: span * (simple ? 0.12 : 0.15),
-                  child: motif(angle: math.pi / 9),
-                ),
+                if (!simple) ...[
+                  Positioned(
+                    right: span * 0.04,
+                    bottom: motifBottom + span * 0.08,
+                    width: span * (simple ? 0.13 : 0.16),
+                    child: motif(angle: -math.pi / 10),
+                  ),
+                  Positioned(
+                    top: height * (simple ? 0.32 : 0.38),
+                    right: span * (simple ? 0.1 : 0.08),
+                    width: span * (simple ? 0.12 : 0.15),
+                    child: motif(angle: math.pi / 9),
+                  ),
+                ],
               ],
             ],
           ),
@@ -935,13 +939,12 @@ abstract final class _SkinGround {
     required double bandHeight,
     double assetRatio = 887 / 1774,
   }) {
-    final file = File(path);
-    if (!file.existsSync()) return const SizedBox.expand();
+    if (!localFileExists(path)) return const SizedBox.expand();
     return _fade(
       bandHeight: bandHeight,
       natural: width * assetRatio,
-      child: Image.file(
-        file,
+      child: LocalFileImage(
+        path,
         fit: BoxFit.cover,
         alignment: Alignment.bottomCenter,
         filterQuality: FilterQuality.medium,
@@ -1100,12 +1103,13 @@ class _BlossomDecorations extends StatelessWidget {
                 width: span * (simple ? 0.16 : 0.22),
                 child: petal(petal270),
               ),
-              Positioned(
-                right: span * 0.04,
-                bottom: petalBottom + span * 0.08,
-                width: span * (simple ? 0.14 : 0.18),
-                child: petal(petal90),
-              ),
+              if (!simple)
+                Positioned(
+                  right: span * 0.04,
+                  bottom: petalBottom + span * 0.08,
+                  width: span * (simple ? 0.14 : 0.18),
+                  child: petal(petal90),
+                ),
               if (!simple) ...[
                 safe.topLeft(
                   left: span * 0.22,
@@ -1226,12 +1230,13 @@ class _CloverDecorations extends StatelessWidget {
                 width: span * (simple ? 0.16 : 0.22),
                 child: clover(angle: math.pi / 5),
               ),
-              Positioned(
-                right: span * 0.04,
-                bottom: cloverBottomLift + span * 0.08,
-                width: span * (simple ? 0.14 : 0.18),
-                child: clover(angle: -math.pi / 10),
-              ),
+              if (!simple)
+                Positioned(
+                  right: span * 0.04,
+                  bottom: cloverBottomLift + span * 0.08,
+                  width: span * (simple ? 0.14 : 0.18),
+                  child: clover(angle: -math.pi / 10),
+                ),
               if (!simple) ...[
                 safe.topLeft(
                   left: span * 0.22,
@@ -1500,7 +1505,6 @@ class _SummerBeachDecorations extends StatelessWidget {
                 width: span * 0.28,
                 child: sticker(duck),
               ),
-              if (!simple)
               Positioned(
                 top: span * 0.03,
                 right: span * 0.03,

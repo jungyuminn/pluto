@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:job_planner/app_scope.dart';
 import 'package:job_planner/core/constants/app_fonts.dart';
 import 'package:job_planner/core/constants/app_strings.dart';
+import 'package:job_planner/core/layout/pc_layout.dart';
 import 'package:job_planner/core/theme/app_colors.dart';
 import 'package:job_planner/core/utils/fade_in.dart';
 import 'package:job_planner/core/utils/press_bounce.dart';
@@ -86,7 +87,8 @@ class _MonthlyStatsScreenState extends State<MonthlyStatsScreen> {
 
     return Scaffold(
       backgroundColor: colors.background,
-      body: Column(
+      body: PcLayout.constrainWidth(
+        Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Padding(
@@ -150,6 +152,7 @@ class _MonthlyStatsScreenState extends State<MonthlyStatsScreen> {
               ),
             ),
         ],
+      ),
       ),
     );
   }

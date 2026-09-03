@@ -6,10 +6,14 @@ class OverlayAppBar extends StatelessWidget implements PreferredSizeWidget {
     super.key,
     required this.title,
     required this.actions,
+    this.leading,
+    this.centerTitle = false,
   });
 
   final Widget title;
   final Widget actions;
+  final Widget? leading;
+  final bool centerTitle;
 
   static const extraTop = 6.0;
 
@@ -48,21 +52,43 @@ class OverlayAppBar extends StatelessWidget implements PreferredSizeWidget {
           bottom: false,
           child: Padding(
             padding: const EdgeInsets.only(left: 8, right: 12, top: extraTop),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: title,
+            child: centerTitle
+                ? Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      title,
+                      if (leading != null)
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: Transform.translate(
+                            offset: const Offset(0, -3),
+                            child: leading,
+                          ),
+                        ),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: Transform.translate(
+                          offset: const Offset(0, -3),
+                          child: actions,
+                        ),
+                      ),
+                    ],
+                  )
+                : Row(
+                    children: [
+                      Expanded(
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: title,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Transform.translate(
+                        offset: const Offset(0, -3),
+                        child: actions,
+                      ),
+                    ],
                   ),
-                ),
-                const SizedBox(width: 8),
-                Transform.translate(
-                  offset: const Offset(0, -3),
-                  child: actions,
-                ),
-              ],
-            ),
           ),
         ),
       ],

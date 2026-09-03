@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:job_planner/core/theme/app_colors.dart';
 
@@ -5,6 +6,8 @@ import 'package:job_planner/core/theme/app_colors.dart';
 ///
 /// 손가락이 닿는 즉시 줄어들고, 아주 짧은 탭이어도 눌림이 끝난 뒤에
 /// 튕겨 돌아온다. 스크롤이 이기면 탭은 취소된다.
+///
+/// PC에서는 마우스·펜이 올라간 동안에도 같은 눌림 연출을 유지한다.
 class PressBounce extends StatefulWidget {
   const PressBounce({
     super.key,
@@ -18,6 +21,7 @@ class PressBounce extends StatefulWidget {
     this.expand = false,
     this.alignment,
     this.passthrough = false,
+    this.hover = true,
   });
 
   final Widget child;
@@ -33,6 +37,9 @@ class PressBounce extends StatefulWidget {
   /// 자식이 탭을 처리하도록 두고, 눌림 연출만 보여 준다.
   final bool passthrough;
 
+  /// false면 마우스 호버 연출을 끄고, 누르기·길게 누르기는 그대로 둔다.
+  final bool hover;
+
   @override
   State<PressBounce> createState() => _PressBounceState();
 }
@@ -40,6 +47,9 @@ class PressBounce extends StatefulWidget {
 class _PressBounceState extends State<PressBounce>
     with SingleTickerProviderStateMixin {
   static final _pending = <int, List<_PressBounceState>>{};
+  static final _hovering = <_PressBounceState>{};
+  static final _hoverActive = <_PressBounceState>{};
+  static var _hoverResolveScheduled = false;
 
   late final AnimationController _controller;
   late final Animation<double> _scale;
@@ -72,6 +82,9 @@ class _PressBounceState extends State<PressBounce>
       _pending[pointer]?.remove(this);
       if (_pending[pointer]?.isEmpty ?? false) _pending.remove(pointer);
     }
+    _hovering.remove(this);
+    _hoverActive.remove(this);
+    _scheduleHoverResolve();
     _controller.dispose();
     super.dispose();
   }
@@ -154,19 +167,81 @@ class _PressBounceState extends State<PressBounce>
     _pressSeq++;
     _downPos = null;
     _clearPointer(event.pointer);
+    if (_hovering.contains(this)) return;
     _setPressed(false, immediate: true);
   }
 
   void _onPointerUp(PointerUpEvent event) {
     _downPos = null;
     _clearPointer(event.pointer);
+    if (_hoverActive.contains(this)) {
+      _setPressed(true);
+      return;
+    }
     _setPressed(false);
+  }
+
+  static bool _isHoverPointer(PointerDeviceKind kind) {
+    return kind == PointerDeviceKind.mouse ||
+        kind == PointerDeviceKind.trackpad ||
+        kind == PointerDeviceKind.stylus ||
+        kind == PointerDeviceKind.invertedStylus;
+  }
+
+  void _onHoverEnter(PointerEnterEvent event) {
+    if (!_isHoverPointer(event.kind)) return;
+    _hovering.add(this);
+    _scheduleHoverResolve();
+  }
+
+  void _onHoverExit(PointerExitEvent event) {
+    if (!_isHoverPointer(event.kind)) return;
+    _hovering.remove(this);
+    _scheduleHoverResolve();
+  }
+
+  static void _scheduleHoverResolve() {
+    if (_hoverResolveScheduled) return;
+    _hoverResolveScheduled = true;
+    Future.microtask(() {
+      _hoverResolveScheduled = false;
+      _resolveHover();
+    });
+  }
+
+  static void _resolveHover() {
+    _PressBounceState? leaf;
+    var leafDepth = -1;
+    for (final state in _hovering) {
+      if (!state.mounted) continue;
+      final depth = state._depth;
+      if (depth > leafDepth) {
+        leaf = state;
+        leafDepth = depth;
+      }
+    }
+
+    for (final state in List<_PressBounceState>.of(_hoverActive)) {
+      if (state == leaf) continue;
+      _hoverActive.remove(state);
+      if (state.mounted && state._pointer == null) {
+        state._setPressed(false);
+      }
+    }
+
+    if (leaf == null || _hoverActive.contains(leaf)) return;
+    _hoverActive.add(leaf);
+    leaf._setPressed(true);
   }
 
   void _onPointerCancel(PointerCancelEvent event) {
     _pressSeq++;
     _downPos = null;
     _clearPointer(event.pointer);
+    if (_hoverActive.contains(this)) {
+      _setPressed(true);
+      return;
+    }
     _setPressed(false, immediate: true);
   }
 
@@ -210,7 +285,7 @@ class _PressBounceState extends State<PressBounce>
         child: widget.child,
       ),
     );
-    return Listener(
+    Widget result = Listener(
       behavior: widget.passthrough
           ? HitTestBehavior.translucent
           : HitTestBehavior.opaque,
@@ -229,9 +304,17 @@ class _PressBounceState extends State<PressBounce>
                       _pressSeq++;
                       _setPressed(false, immediate: true);
                       widget.onLongPressed!();
+                      if (_hoverActive.contains(this)) _setPressed(true);
                     },
               child: scaled,
             ),
+    );
+    if (!canPress || !widget.hover) return result;
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: _onHoverEnter,
+      onExit: _onHoverExit,
+      child: result,
     );
   }
 }

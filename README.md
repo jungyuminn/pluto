@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/images/app_icon.png" width="112" alt="잡플래너 아이콘">
+  <img src="assets/images/pluto_app_icon_outlined.png" width="112" alt="잡플래너 아이콘">
 </p>
 
 <h1 align="center">잡플래너</h1>
@@ -11,7 +11,7 @@
 
 <p align="center">
   <img alt="Flutter" src="https://img.shields.io/badge/Flutter-3-02569B?logo=flutter&logoColor=white">
-  <img alt="version" src="https://img.shields.io/badge/version-1.1.1-5B8DEF">
+  <img alt="version" src="https://img.shields.io/badge/version-1.2.0-5B8DEF">
   <img alt="platform" src="https://img.shields.io/badge/Android%20%7C%20iOS-local%20first-34C759">
 </p>
 

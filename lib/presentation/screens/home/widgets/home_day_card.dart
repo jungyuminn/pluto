@@ -4,6 +4,7 @@ import 'package:job_planner/app_scope.dart';
 import 'package:job_planner/core/constants/app_fonts.dart';
 import 'package:job_planner/core/constants/app_icons.dart';
 import 'package:job_planner/core/constants/app_strings.dart';
+import 'package:job_planner/core/layout/pc_layout.dart';
 import 'package:job_planner/core/theme/app_colors.dart';
 import 'package:job_planner/core/utils/press_bounce.dart';
 import 'package:job_planner/core/utils/swipe_to_delete.dart';
@@ -575,6 +576,7 @@ class _HomeDayCardState extends State<HomeDayCard> {
       ),
       child: PressBounce(
         passthrough: true,
+        hover: !PcLayout.isPc,
         color: colors.card,
         pressedColor: Color.lerp(colors.card, Colors.black, 0.08)!,
         borderRadius: BorderRadius.circular(24),

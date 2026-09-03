@@ -54,3 +54,8 @@ agent-transcripts/
 .cursorignore
 .cursorindexingignore
 /store/
+
+# Firebase Functions
+functions/node_modules/
+
+*.apk

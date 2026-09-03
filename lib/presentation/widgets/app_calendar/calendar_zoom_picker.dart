@@ -201,12 +201,14 @@ class CalendarMonthZoomView extends StatefulWidget {
     required this.accent,
     required this.onFocusedChanged,
     required this.onMonthPressed,
+    this.isMonthEnabled,
   });
 
   final DateTime focused;
   final Color accent;
   final ValueChanged<DateTime> onFocusedChanged;
   final ValueChanged<DateTime> onMonthPressed;
+  final bool Function(DateTime month)? isMonthEnabled;
 
   @override
   State<CalendarMonthZoomView> createState() => _CalendarMonthZoomViewState();
@@ -264,8 +266,12 @@ class _CalendarMonthZoomViewState extends State<CalendarMonthZoomView> {
                     year == widget.focused.year &&
                     month == widget.focused.month,
                 current: year == now.year && month == now.month,
-                enabled: true,
-                onPressed: () => widget.onMonthPressed(DateTime(year, month)),
+                enabled: widget.isMonthEnabled?.call(DateTime(year, month)) ??
+                    true,
+                onPressed: (widget.isMonthEnabled?.call(DateTime(year, month)) ??
+                        true)
+                    ? () => widget.onMonthPressed(DateTime(year, month))
+                    : null,
               ),
           ],
         );
@@ -281,12 +287,14 @@ class CalendarYearZoomView extends StatefulWidget {
     required this.accent,
     required this.onFocusedChanged,
     required this.onYearPressed,
+    this.isYearEnabled,
   });
 
   final DateTime focused;
   final Color accent;
   final ValueChanged<DateTime> onFocusedChanged;
   final ValueChanged<int> onYearPressed;
+  final bool Function(int year)? isYearEnabled;
 
   @override
   State<CalendarYearZoomView> createState() => _CalendarYearZoomViewState();
@@ -353,10 +361,14 @@ class _CalendarYearZoomViewState extends State<CalendarYearZoomView> {
                 label: '$year${AppStrings.yearSuffix}',
                 selected: year == widget.focused.year,
                 current: year == nowYear,
-                enabled: year >= _minYear && year <= _maxYear,
+                enabled: year >= _minYear &&
+                    year <= _maxYear &&
+                    (widget.isYearEnabled?.call(year) ?? true),
                 outside: year >= decade + 10,
                 wide: true,
-                onPressed: year >= _minYear && year <= _maxYear
+                onPressed: year >= _minYear &&
+                        year <= _maxYear &&
+                        (widget.isYearEnabled?.call(year) ?? true)
                     ? () => widget.onYearPressed(year)
                     : null,
               ),

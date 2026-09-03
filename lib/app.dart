@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:job_planner/app_scope.dart';
@@ -10,6 +11,7 @@ import 'package:job_planner/core/home_widget/home_screen_widget_service.dart';
 import 'package:job_planner/core/notifications/todo_reminder_service.dart';
 import 'package:job_planner/core/theme/app_theme.dart';
 import 'package:job_planner/data/datasources/app_backup_service.dart';
+import 'package:job_planner/data/datasources/cloud_sync_service.dart';
 import 'package:job_planner/data/datasources/backup_preference.dart';
 import 'package:job_planner/data/datasources/calendar_preference.dart';
 import 'package:job_planner/data/datasources/calendar_event_local_datasource.dart';
@@ -71,6 +73,8 @@ import 'package:job_planner/domain/usecases/update_calendar_event.dart';
 import 'package:job_planner/domain/usecases/update_event_category.dart';
 import 'package:job_planner/domain/usecases/update_job_application.dart';
 import 'package:job_planner/presentation/screens/shell/shell_screen.dart';
+import 'package:job_planner/presentation/screens/settings/widgets/cloud_sync_dialogs.dart';
+import 'package:job_planner/presentation/screens/settings/widgets/login_page.dart';
 import 'package:job_planner/presentation/tutorial/tutorial_controller.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -746,11 +750,13 @@ class _TutorialHostState extends State<_TutorialHost> {
     _nav?.removeListener(_syncNav);
     _nav = nav;
     _nav!.addListener(_syncNav);
-    _controller.setHideJobTab(nav.dailyMode);
+    _controller.setHideJobTab(!nav.showJobTab);
+    _controller.setHideStatsTab(!nav.showStatsTab);
   }
 
   void _syncNav() {
-    _controller.setHideJobTab(_nav?.dailyMode ?? false);
+    _controller.setHideJobTab(!(_nav?.showJobTab ?? false));
+    _controller.setHideStatsTab(!(_nav?.showStatsTab ?? true));
   }
 
   @override
@@ -782,6 +788,11 @@ class _JobPlannerMaterialAppState extends State<_JobPlannerMaterialApp>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      CloudSyncService.instance.attach(AppScope.of(context));
+      if (!kIsWeb) unawaited(ensureCloudBound(context));
+    });
   }
 
   @override
@@ -796,6 +807,7 @@ class _JobPlannerMaterialAppState extends State<_JobPlannerMaterialApp>
     unawaited(
       AppBackupService.runAutoIfDue(AppScope.of(context).backupPreference),
     );
+    unawaited(CloudSyncService.instance.onResumed());
   }
 
   @override
@@ -833,7 +845,7 @@ class _JobPlannerMaterialAppState extends State<_JobPlannerMaterialApp>
               child: child ?? const SizedBox.shrink(),
             );
           },
-          home: const ShellScreen(),
+          home: kIsWeb ? const WebAuthGate() : const ShellScreen(),
           localizationsDelegates: const [
             GlobalMaterialLocalizations.delegate,
             GlobalWidgetsLocalizations.delegate,

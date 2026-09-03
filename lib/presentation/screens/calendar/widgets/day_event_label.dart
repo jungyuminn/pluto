@@ -26,6 +26,7 @@ class DayEventLabel extends StatefulWidget {
     this.titleWeight = FontWeight.w600,
     this.disabled = false,
     this.showAccent = true,
+    this.height = 52,
   });
 
   final String title;
@@ -45,6 +46,7 @@ class DayEventLabel extends StatefulWidget {
   final FontWeight titleWeight;
   final bool disabled;
   final bool showAccent;
+  final double height;
 
   @override
   State<DayEventLabel> createState() => _DayEventLabelState();
@@ -54,7 +56,7 @@ class _DayEventLabelState extends State<DayEventLabel> {
   var _skipLabelTap = false;
   late var _completed = widget.completed;
 
-  static const _height = 52.0;
+  static const _baseHeight = 52.0;
 
   @override
   void didUpdateWidget(DayEventLabel oldWidget) {
@@ -69,7 +71,8 @@ class _DayEventLabelState extends State<DayEventLabel> {
     final colors = AppColors.of(context);
     final target = widget.disabled ? colors.muted : widget.color;
     final scale = AppFonts.labelScaleOf(context);
-    final height = _height * scale;
+    final typeScale = widget.height / _baseHeight;
+    final height = widget.height * scale;
     final memoText = widget.memo.trim().replaceAll(RegExp(r'\s+'), ' ');
     final hasMemo = memoText.isNotEmpty;
 
@@ -139,7 +142,7 @@ class _DayEventLabelState extends State<DayEventLabel> {
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
                             fontFamily: AppFonts.of(context),
-                            fontSize: 12 * scale,
+                            fontSize: 12 * scale * typeScale,
                             fontWeight: widget.titleWeight,
                             height: 1.15,
                             color: colors.text,
@@ -161,7 +164,7 @@ class _DayEventLabelState extends State<DayEventLabel> {
                                             text: widget.categoryName,
                                             style: TextStyle(
                                               fontFamily: AppFonts.of(context),
-                                              fontSize: 10 * scale,
+                                              fontSize: 10 * scale * typeScale,
                                               fontWeight: FontWeight.w600,
                                               height: 1.15,
                                               color: colors.hint,
@@ -172,7 +175,7 @@ class _DayEventLabelState extends State<DayEventLabel> {
                                             text: '  ·  ',
                                             style: TextStyle(
                                               fontFamily: AppFonts.of(context),
-                                              fontSize: 10 * scale,
+                                              fontSize: 10 * scale * typeScale,
                                               fontWeight: FontWeight.w600,
                                               height: 1.15,
                                               color: colors.hint,
@@ -183,7 +186,7 @@ class _DayEventLabelState extends State<DayEventLabel> {
                                             text: memoText,
                                             style: TextStyle(
                                               fontFamily: AppFonts.of(context),
-                                              fontSize: 10 * scale,
+                                              fontSize: 10 * scale * typeScale,
                                               fontWeight: FontWeight.w500,
                                               height: 1.15,
                                               color: colors.hint,
@@ -206,7 +209,7 @@ class _DayEventLabelState extends State<DayEventLabel> {
                                   maxLines: 1,
                                   style: TextStyle(
                                     fontFamily: AppFonts.of(context),
-                                    fontSize: 10 * scale,
+                                    fontSize: 10 * scale * typeScale,
                                     fontWeight: FontWeight.w700,
                                     height: 1.15,
                                     color: accent,
@@ -228,7 +231,7 @@ class _DayEventLabelState extends State<DayEventLabel> {
                       maxLines: 1,
                       style: TextStyle(
                         fontFamily: AppFonts.of(context),
-                        fontSize: 14 * scale,
+                        fontSize: 14 * scale * typeScale,
                         fontWeight: widget.titleWeight,
                         height: 1,
                         color: accent,

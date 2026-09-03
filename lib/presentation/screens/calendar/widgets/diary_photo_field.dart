@@ -1,12 +1,12 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:job_planner/core/constants/app_fonts.dart';
 import 'package:job_planner/core/constants/app_strings.dart';
+import 'package:job_planner/core/layout/pc_layout.dart';
 import 'package:job_planner/core/theme/app_colors.dart';
 import 'package:job_planner/core/utils/press_bounce.dart';
 import 'package:job_planner/data/datasources/diary_photo_storage.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/diary_draw_sheet.dart';
+import 'package:job_planner/presentation/widgets/local_file_image.dart';
 
 class DiaryPhotoField extends StatefulWidget {
   const DiaryPhotoField({
@@ -70,16 +70,31 @@ class _DiaryPhotoFieldState extends State<DiaryPhotoField> {
     if (confirmed == true && mounted) widget.onCleared?.call();
   }
 
+  Widget _slot(Widget child) {
+    final slot = SizedBox(
+      height: DiaryPhotoSlot.height,
+      width: double.infinity,
+      child: child,
+    );
+    if (!PcLayout.isPc) return slot;
+    return Center(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: DiaryPhotoSlot.outerWidthOf(context),
+        ),
+        child: slot,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
     final photoPath = widget.path;
     if (photoPath != null && photoPath.isNotEmpty) {
       final drawing = DiaryPhotoSlot.isDrawingPath(photoPath);
-      return SizedBox(
-        height: DiaryPhotoSlot.height,
-        width: double.infinity,
-        child: Stack(
+      return _slot(
+        Stack(
           clipBehavior: Clip.none,
           children: [
             Positioned.fill(
@@ -108,8 +123,8 @@ class _DiaryPhotoFieldState extends State<DiaryPhotoField> {
                       borderRadius: BorderRadius.circular(4),
                       child: ColoredBox(
                         color: colors.card,
-                        child: Image.file(
-                          File(photoPath),
+                        child: LocalFileImage(
+                          photoPath,
                           key: ValueKey(photoPath),
                           fit: BoxFit.contain,
                           width: double.infinity,
@@ -142,10 +157,8 @@ class _DiaryPhotoFieldState extends State<DiaryPhotoField> {
       );
     }
 
-    return SizedBox(
-      height: DiaryPhotoSlot.height,
-      width: double.infinity,
-      child: DecoratedBox(
+    return _slot(
+      DecoratedBox(
         decoration: BoxDecoration(
           color: colors.card,
           borderRadius: BorderRadius.circular(12),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:job_planner/core/constants/app_fonts.dart';
+import 'package:job_planner/core/layout/pc_layout.dart';
 import 'package:job_planner/core/theme/app_colors.dart';
 import 'package:job_planner/core/utils/animated_accent.dart';
 
@@ -38,7 +39,9 @@ class CalendarEventLabel extends StatelessWidget {
     final scale = applyCalendarScale
         ? AppFonts.calendarLabelScaleOf(context)
         : 1.0;
-    final labelHeight = height * scale;
+    final baseHeight = PcLayout.isPc ? 22.0 : height;
+    final baseFont = PcLayout.isPc ? 12.0 : fontSize;
+    final labelHeight = baseHeight * scale;
 
     return AnimatedAccent(
       color: color,
@@ -46,7 +49,7 @@ class CalendarEventLabel extends StatelessWidget {
         final background = colors.tint(accent, isJob ? 0.12 : 0.22);
         final style = TextStyle(
           fontFamily: AppFonts.of(context),
-          fontSize: fontSize * scale,
+          fontSize: baseFont * scale,
           fontWeight: fontWeight,
           height: 1,
           color: accent,

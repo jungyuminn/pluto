@@ -7,7 +7,9 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:http/http.dart' as http;
 import 'package:job_planner/core/constants/oauth_config.dart';
+import 'package:job_planner/data/datasources/kakao_web_auth.dart';
 import 'package:job_planner/firebase_options.dart';
 import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart' as kakao;
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
@@ -29,6 +31,7 @@ class AppAuthService {
 
   var _googleReady = false;
   var _kakaoProfileTried = false;
+  String? _sessionProvider;
 
   bool get isReady => Firebase.apps.isNotEmpty;
 
@@ -46,6 +49,23 @@ class AppAuthService {
   }
 
   User? get user => isReady ? FirebaseAuth.instance.currentUser : null;
+
+  String? get signInProvider => _sessionProvider ?? providerOf(user);
+
+  static String? providerOf(User? user) {
+    if (user == null) return null;
+    final ids = {for (final info in user.providerData) info.providerId};
+    if (ids.length == 1) {
+      if (ids.contains('oidc.kakao')) return 'kakao';
+      if (ids.contains('google.com')) return 'google';
+      if (ids.contains('apple.com')) return 'apple';
+    }
+    if (ids.contains('oidc.kakao')) return 'kakao';
+    if (ids.contains('google.com')) return 'google';
+    if (ids.contains('apple.com')) return 'apple';
+    if (user.uid.startsWith('kakao_')) return 'kakao';
+    return null;
+  }
 
   static String accountHandle(User user) {
     final emails = [
@@ -65,6 +85,16 @@ class AppAuthService {
         .where((value) => value.isNotEmpty);
     if (ids.isNotEmpty) return ids.first;
     return user.uid;
+  }
+
+  static String socialLabel(User user) {
+    final providers = {
+      for (final info in user.providerData) info.providerId,
+    };
+    if (providers.contains('oidc.kakao')) return '카카오';
+    if (providers.contains('google.com')) return '구글';
+    if (providers.contains('apple.com')) return '애플';
+    return '소셜';
   }
 
   static bool isUserCanceled(Object error) {
@@ -109,6 +139,7 @@ class AppAuthService {
     try {
       if (kIsWeb) {
         await FirebaseAuth.instance.signInWithPopup(GoogleAuthProvider());
+        _sessionProvider = 'google';
         return;
       }
       await _ensureGoogle();
@@ -120,6 +151,7 @@ class AppAuthService {
       await FirebaseAuth.instance.signInWithCredential(
         GoogleAuthProvider.credential(idToken: idToken),
       );
+      _sessionProvider = 'google';
     } catch (error) {
       if (isUserCanceled(error)) {
         throw const AppAuthException('canceled');
@@ -133,6 +165,7 @@ class AppAuthService {
     try {
       if (kIsWeb || defaultTargetPlatform != TargetPlatform.iOS) {
         await _signInWithAppleProvider();
+        _sessionProvider = 'apple';
         return;
       }
       final rawNonce = _randomNonce();
@@ -158,6 +191,7 @@ class AppAuthService {
           ),
         ),
       );
+      _sessionProvider = 'apple';
     } catch (error) {
       if (isUserCanceled(error)) {
         throw const AppAuthException('canceled');
@@ -168,8 +202,12 @@ class AppAuthService {
 
   Future<void> signInWithKakao() async {
     _requireReady();
-    if (kIsWeb || !OauthConfig.kakaoEnabled) {
+    if (!OauthConfig.kakaoEnabled) {
       throw const AppAuthException('kakao_key');
+    }
+    if (kIsWeb) {
+      await _signInWithKakaoWeb();
+      return;
     }
     final rawNonce = _randomNonce();
     final nonce = sha256.convert(utf8.encode(rawNonce)).toString();
@@ -218,6 +256,7 @@ class AppAuthService {
         token.accessToken,
         hasNonce ? rawNonce : null,
       );
+      _sessionProvider = 'kakao';
       await _applyKakaoProfile();
     } catch (error) {
       debugPrint('Kakao Firebase auth failed: $error');
@@ -226,6 +265,80 @@ class AppAuthService {
         '${_authErrorCode(error)} aud=$aud nonce=$hasNonce',
       );
     }
+  }
+
+  Future<void> _signInWithKakaoWeb() async {
+    if (!OauthConfig.kakaoWebEnabled) {
+      throw const AppAuthException('kakao_web_key');
+    }
+    KakaoWebTokens tokens;
+    try {
+      tokens = await loginWithKakaoOnWeb(
+        appKey: OauthConfig.kakaoJavaScriptAppKey,
+      );
+    } on KakaoWebLoginException catch (error) {
+      if (error.code == 'canceled') {
+        throw const AppAuthException('canceled');
+      }
+      if (error.code == 'misconfigured') {
+        throw AppAuthException('kakao_web_misconfigured', error.detail);
+      }
+      throw AppAuthException('kakao_oidc', error.detail);
+    } catch (error) {
+      if (isUserCanceled(error)) {
+        throw const AppAuthException('canceled');
+      }
+      throw AppAuthException('kakao_oidc', _authErrorCode(error));
+    }
+    if (tokens.accessToken.isEmpty) {
+      throw const AppAuthException('kakao_oidc', 'access-token-missing');
+    }
+    try {
+      final customToken = await _exchangeKakaoWebToken(tokens.accessToken);
+      await FirebaseAuth.instance.signInWithCustomToken(customToken);
+      _sessionProvider = 'kakao';
+    } catch (error) {
+      if (error is AppAuthException) rethrow;
+      debugPrint('Kakao web Firebase auth failed: $error');
+      throw AppAuthException('kakao_oidc', _authErrorCode(error));
+    }
+  }
+
+  Future<String> _exchangeKakaoWebToken(String accessToken) async {
+    final response = await http.post(
+      Uri.parse(
+        'https://us-central1-jopb-65c0f.cloudfunctions.net/kakaoWebSignIn',
+      ),
+      headers: const {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'data': {'accessToken': accessToken},
+      }),
+    );
+    Map<String, dynamic> payload = const {};
+    try {
+      final decoded = jsonDecode(response.body);
+      if (decoded is Map) {
+        payload = Map<String, dynamic>.from(decoded);
+      }
+    } catch (_) {}
+    if (response.statusCode != 200) {
+      final error = payload['error'];
+      final code = error is Map ? error['status']?.toString() : null;
+      final message = error is Map ? error['message']?.toString() : null;
+      debugPrint(
+        'Kakao web function failed: ${response.statusCode} $code $message',
+      );
+      throw AppAuthException(
+        'kakao_oidc',
+        '${code ?? response.statusCode} ${message ?? ''}'.trim(),
+      );
+    }
+    final result = payload['result'];
+    final customToken = result is Map ? result['token']?.toString() : null;
+    if (customToken == null || customToken.isEmpty) {
+      throw const AppAuthException('kakao_oidc', 'custom-token-missing');
+    }
+    return customToken;
   }
 
   Future<kakao.OAuthToken> _kakaoLogin(String nonce) async {
@@ -319,15 +432,32 @@ class AppAuthService {
 
   Future<void> signOut() async {
     if (!isReady) return;
-    try {
-      await GoogleSignIn.instance.signOut();
-    } catch (_) {}
-    try {
-      if (OauthConfig.kakaoEnabled) {
-        await kakao.UserApi.instance.logout();
-      }
-    } catch (_) {}
+    final providers = {
+      for (final info
+          in FirebaseAuth.instance.currentUser?.providerData ?? const [])
+        info.providerId,
+    };
+    const timeout = Duration(milliseconds: 800);
+    final tasks = <Future<void>>[];
+    if (providers.contains('google.com')) {
+      tasks.add(() async {
+        try {
+          await GoogleSignIn.instance.signOut().timeout(timeout);
+        } catch (_) {}
+      }());
+    }
+    if (providers.contains('oidc.kakao') && OauthConfig.kakaoEnabled) {
+      tasks.add(() async {
+        try {
+          await kakao.UserApi.instance.logout().timeout(timeout);
+        } catch (_) {}
+      }());
+    }
+    if (tasks.isNotEmpty) {
+      await Future.wait(tasks);
+    }
     _kakaoProfileTried = false;
+    _sessionProvider = null;
     await FirebaseAuth.instance.signOut();
   }
 
@@ -368,6 +498,7 @@ class AppAuthService {
       } catch (_) {}
     }
     _kakaoProfileTried = false;
+    _sessionProvider = null;
   }
 
   Future<void> _reauthenticate() async {
@@ -376,7 +507,15 @@ class AppAuthService {
     final providers = user.providerData.map((info) => info.providerId).toSet();
     if (providers.contains('google.com')) {
       await _ensureGoogle();
-      final account = await GoogleSignIn.instance.authenticate();
+      GoogleSignInAccount? account;
+      try {
+        final lightweight =
+            GoogleSignIn.instance.attemptLightweightAuthentication();
+        if (lightweight != null) {
+          account = await lightweight;
+        }
+      } catch (_) {}
+      account ??= await GoogleSignIn.instance.authenticate();
       final idToken = account.authentication.idToken;
       if (idToken == null) throw const AppAuthException('canceled');
       await user.reauthenticateWithCredential(
@@ -389,6 +528,20 @@ class AppAuthService {
       return;
     }
     if (providers.contains('oidc.kakao')) {
+      try {
+        final existing =
+            await kakao.TokenManagerProvider.instance.manager.getToken();
+        final idToken = existing?.idToken;
+        if (idToken != null && idToken.isNotEmpty) {
+          await user.reauthenticateWithCredential(
+            OAuthProvider('oidc.kakao').credential(
+              idToken: idToken,
+              accessToken: existing?.accessToken,
+            ),
+          );
+          return;
+        }
+      } catch (_) {}
       await signInWithKakao();
     }
   }
@@ -407,6 +560,8 @@ class AppAuthService {
   void _requireReady() {
     if (!isReady) throw const AppAuthException('unavailable');
   }
+
+  Future<void> ensureGoogleInitialized() => _ensureGoogle();
 
   Future<void> _ensureGoogle() async {
     if (_googleReady) return;

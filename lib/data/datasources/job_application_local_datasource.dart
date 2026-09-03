@@ -10,12 +10,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 class JobApplicationLocalDataSource {
   JobApplicationLocalDataSource(this._prefs);
 
-  static const _key = 'job_applications';
+  static const key = 'job_applications';
 
   final SharedPreferences _prefs;
 
   List<JobApplication> fetchAll() {
-    final raw = _prefs.getString(_key);
+    final raw = _prefs.getString(key);
     if (raw == null || raw.isEmpty) return [];
 
     final decoded = jsonDecode(raw) as List<dynamic>;
@@ -28,7 +28,7 @@ class JobApplicationLocalDataSource {
     final payload = jsonEncode(
       applications.map(JobApplicationModel.toJson).toList(),
     );
-    await _prefs.setString(_key, payload);
+    await _prefs.setString(key, payload);
     unawaited(_syncSideEffects());
   }
 

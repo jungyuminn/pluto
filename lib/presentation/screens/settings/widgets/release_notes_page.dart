@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:job_planner/core/constants/app_fonts.dart';
 import 'package:job_planner/core/constants/app_strings.dart';
 import 'package:job_planner/core/constants/release_notes.dart';
+import 'package:job_planner/core/layout/pc_layout.dart';
 import 'package:job_planner/core/theme/app_colors.dart';
 import 'package:job_planner/core/utils/press_bounce.dart';
 import 'package:job_planner/presentation/screens/settings/widgets/release_note_demos.dart';
@@ -23,7 +24,8 @@ class ReleaseNotesPage extends StatelessWidget {
         title: AppStrings.releaseNotesTitle,
         onBack: () => Navigator.pop(context),
       ),
-      body: ListView(
+      body: PcLayout.constrainWidth(
+        ListView(
         padding: EdgeInsets.fromLTRB(16, top + 48, 16, 32),
         children: [
           for (final note in ReleaseNotes.all) ...[
@@ -35,6 +37,7 @@ class ReleaseNotesPage extends StatelessWidget {
             const SizedBox(height: 24),
           ],
         ],
+        ),
       ),
     );
   }
@@ -192,7 +195,12 @@ class _ReleaseShowcaseSheet extends StatelessWidget {
         alignment: Alignment.bottomCenter,
         heightFactor: 1,
         child: ConstrainedBox(
-          constraints: BoxConstraints(maxHeight: maxHeight),
+          constraints: BoxConstraints(
+            maxHeight: maxHeight,
+            maxWidth: PcLayout.isPc
+                ? PcLayout.contentMaxWidth
+                : double.infinity,
+          ),
           child: DecoratedBox(
             decoration: BoxDecoration(
               color: colors.card,

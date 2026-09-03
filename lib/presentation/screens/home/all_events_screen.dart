@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:job_planner/app_scope.dart';
 import 'package:job_planner/core/constants/app_fonts.dart';
 import 'package:job_planner/core/constants/app_strings.dart';
+import 'package:job_planner/core/layout/pc_layout.dart';
 import 'package:job_planner/core/theme/app_colors.dart';
 import 'package:job_planner/core/utils/korean_search.dart';
 import 'package:job_planner/core/utils/plain_text_editing_controller.dart';
@@ -548,7 +549,8 @@ class _AllEventsScreenState extends State<AllEventsScreen> {
 
         return Scaffold(
       backgroundColor: colors.background,
-      body: Column(
+      body: PcLayout.constrainWidth(
+        Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           AnimatedPadding(
@@ -766,6 +768,7 @@ class _AllEventsScreenState extends State<AllEventsScreen> {
                   ),
           ),
         ],
+        ),
       ),
     );
       },

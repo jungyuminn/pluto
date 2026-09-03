@@ -10,10 +10,13 @@ import 'package:job_planner/core/constants/app_strings.dart';
 import 'package:job_planner/core/home_widget/home_screen_widget_service.dart';
 import 'package:job_planner/core/notifications/todo_reminder_service.dart';
 import 'package:job_planner/data/datasources/backup_preference.dart';
-import 'package:job_planner/data/datasources/calendar_event_local_datasource.dart';
+import 'package:job_planner/data/datasources/cloud_sync_snapshot.dart';
+import 'package:job_planner/data/datasources/google_drive_backup_client.dart';
 import 'package:job_planner/data/datasources/custom_theme_storage.dart';
-import 'package:job_planner/data/datasources/day_emoji_store.dart';
+import 'package:job_planner/data/datasources/diary_local_datasource.dart';
+import 'package:job_planner/data/datasources/job_application_local_datasource.dart';
 import 'package:job_planner/data/datasources/license_local_datasource.dart';
+import 'package:job_planner/data/datasources/synced_file_store.dart';
 import 'package:job_planner/data/datasources/theme_preference.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
@@ -26,18 +29,15 @@ class AppBackupService {
   static const appId = 'job_planner';
   static final revision = ValueNotifier(0);
 
-  static const _jobsKey = 'job_applications';
+  static const _jobsKey = JobApplicationLocalDataSource.key;
   static const _licensesKey = LicenseLocalDataSource.key;
-  static const _diariesKey = 'diary_entries';
-  static const _eventsKey = 'calendar_events';
-  static const _ledgersKey = 'ledger_entries';
-  static const _emojisKey = DayEmojiStore.key;
+  static const _diariesKey = DiaryLocalDataSource.key;
   static const _coverFolder = 'cover_letters';
   static const _licenseFolder = 'license_files';
   static const _diaryFolder = 'diaries';
   static const _themesFolder = CustomThemeStorage.folderName;
   static const _autoFolder = 'auto_backups';
-  static const _keepAutoCount = 3;
+  static const keepAutoCount = 3;
   static const _downloadChannel = MethodChannel('job_planner/backup_store');
   static const _icloudChannel = MethodChannel('job_planner/icloud_backup');
 
@@ -50,9 +50,7 @@ class AppBackupService {
 
   static Future<bool> backup() async {
     final bytes = await saveLocal();
-    if (!kIsWeb && Platform.isIOS) {
-      await _copyToICloud(bytes);
-    }
+    await _copyToCloud(bytes, interactive: true);
     return true;
   }
 
@@ -62,12 +60,10 @@ class AppBackupService {
       final prefs = await SharedPreferences.getInstance();
       if (isStarterOnly(prefs)) return;
       final bytes = await saveLocal();
-      if (!kIsWeb && Platform.isIOS) {
-        try {
-          await _copyToICloud(bytes);
-        } catch (error, stack) {
-          debugPrint('iCloud auto backup failed: $error\n$stack');
-        }
+      try {
+        await _copyToCloud(bytes, interactive: false);
+      } catch (error, stack) {
+        debugPrint('Cloud auto backup failed: $error\n$stack');
       }
       await preference.markBackedUp();
     } catch (error, stack) {
@@ -105,6 +101,13 @@ class AppBackupService {
       items.sort((a, b) => b.date.compareTo(a.date));
       return items;
     }
+    if (!kIsWeb && Platform.isAndroid) {
+      final items = await GoogleDriveBackupClient.list();
+      return [
+        for (final item in items)
+          BackupListItem.cloud(fileName: item.fileName, date: item.date),
+      ];
+    }
     return [
       for (final file in await listLocalBackups()) BackupListItem.local(file),
     ];
@@ -141,7 +144,9 @@ class AppBackupService {
       await restoreFromFile(item.file!);
       return;
     }
-    final bytes = await _readICloudBackup(item.fileName);
+    final bytes = !kIsWeb && Platform.isAndroid
+        ? await GoogleDriveBackupClient.read(item.fileName)
+        : await _readICloudBackup(item.fileName);
     await decode(bytes);
   }
 
@@ -154,10 +159,28 @@ class AppBackupService {
     if (!folder.existsSync()) return;
     final files = folder.listSync().whereType<File>().toList()
       ..sort((a, b) => b.lastModifiedSync().compareTo(a.lastModifiedSync()));
-    for (final file in files.skip(_keepAutoCount)) {
+    for (final file in files.skip(keepAutoCount)) {
       try {
         await file.delete();
       } catch (_) {}
+    }
+  }
+
+  static Future<void> _copyToCloud(
+    Uint8List bytes, {
+    required bool interactive,
+  }) async {
+    if (kIsWeb) return;
+    if (Platform.isIOS) {
+      await _copyToICloud(bytes);
+      return;
+    }
+    if (Platform.isAndroid) {
+      await GoogleDriveBackupClient.upload(
+        bytes,
+        fileName(),
+        interactive: interactive,
+      );
     }
   }
 
@@ -165,7 +188,7 @@ class AppBackupService {
     await _icloudChannel.invokeMethod<void>('save', {
       'fileName': fileName(),
       'bytes': bytes,
-      'keep': _keepAutoCount,
+      'keep': keepAutoCount,
       'prefix': '잡플래너_백업_',
     });
   }
@@ -200,7 +223,7 @@ class AppBackupService {
         'bytes': bytes,
       });
       await _downloadChannel.invokeMethod<void>('pruneDownloads', {
-        'keep': _keepAutoCount,
+        'keep': keepAutoCount,
         'prefix': '잡플래너_백업_',
       });
     } catch (error, stack) {
@@ -246,8 +269,10 @@ class AppBackupService {
     scope.backupPreference.hydrate();
     scope.longGoalStore.reload();
     scope.dayEmojiStore.reload();
-    await TodoReminderService.instance.sync();
-    await HomeScreenWidgetService.instance.sync();
+    if (!kIsWeb) {
+      await TodoReminderService.instance.sync();
+      await HomeScreenWidgetService.instance.sync();
+    }
     revision.value++;
   }
 
@@ -338,6 +363,32 @@ class AppBackupService {
     );
   }
 
+  static Future<void> relocateSyncedPaths() async {
+    final documents = kIsWeb
+        ? null
+        : await getApplicationDocumentsDirectory();
+    final coverDir = kIsWeb
+        ? '${SyncedFileStore.webRoot}/$_coverFolder'
+        : p.join(documents!.path, _coverFolder);
+    final licenseDir = kIsWeb
+        ? '${SyncedFileStore.webRoot}/$_licenseFolder'
+        : p.join(documents!.path, _licenseFolder);
+    final diaryDir = kIsWeb
+        ? '${SyncedFileStore.webRoot}/$_diaryFolder'
+        : p.join(documents!.path, _diaryFolder);
+    final themesDir = kIsWeb
+        ? '${SyncedFileStore.webRoot}/$_themesFolder'
+        : p.join(documents!.path, _themesFolder);
+    if (!kIsWeb) {
+      await Directory(coverDir).create(recursive: true);
+      await Directory(licenseDir).create(recursive: true);
+      await Directory(diaryDir).create(recursive: true);
+      await Directory(themesDir).create(recursive: true);
+    }
+    final prefs = await SharedPreferences.getInstance();
+    await _relocatePaths(prefs, coverDir, licenseDir, diaryDir, themesDir);
+  }
+
   static Map<String, dynamic> _dumpPrefs(SharedPreferences prefs) {
     final out = <String, dynamic>{};
     for (final key in prefs.getKeys()) {
@@ -388,52 +439,7 @@ class AppBackupService {
   }
 
   static bool isStarterOnly(SharedPreferences prefs) {
-    if (_hasItems(prefs.getString(_jobsKey))) return false;
-    if (_hasItems(prefs.getString(_licensesKey))) return false;
-    if (_hasItems(prefs.getString(_diariesKey))) return false;
-    if (_hasItems(prefs.getString(_ledgersKey))) return false;
-    if (_hasEmojiItems(prefs.getString(_emojisKey))) return false;
-    final raw = prefs.getString(_eventsKey);
-    if (raw == null || raw.isEmpty) return true;
-    try {
-      final items = jsonDecode(raw) as List<dynamic>;
-      if (items.isEmpty) return true;
-      return items.every((item) {
-        final id = (item as Map)['id'] as String? ?? '';
-        return id.startsWith(CalendarEventLocalDataSource.starterIdPrefix);
-      });
-    } catch (_) {
-      return false;
-    }
-  }
-
-  static bool _hasEmojiItems(String? raw) {
-    if (raw == null || raw.isEmpty || raw == '{}') return false;
-    try {
-      final items = jsonDecode(raw);
-      if (items is! Map || items.isEmpty) return false;
-      for (final value in items.values) {
-        if (value is String && value.trim().isNotEmpty) return true;
-        if (value is Map) {
-          for (final item in value.values) {
-            if (item is String && item.trim().isNotEmpty) return true;
-          }
-        }
-      }
-      return false;
-    } catch (_) {
-      return true;
-    }
-  }
-
-  static bool _hasItems(String? raw) {
-    if (raw == null || raw.isEmpty || raw == '[]') return false;
-    try {
-      final items = jsonDecode(raw);
-      return items is List && items.isNotEmpty;
-    } catch (_) {
-      return true;
-    }
+    return CloudSyncSnapshot.isFoundation(prefs);
   }
 
   static Future<void> _relocatePaths(
@@ -504,7 +510,10 @@ class AppBackupService {
   ) {
     final path = json[key] as String?;
     if (path == null || path.isEmpty) return json;
-    json[key] = p.join(folder, p.basename(path));
+    json[key] = p.posix.join(
+      folder.replaceAll('\\', '/'),
+      p.basename(path.replaceAll('\\', '/')),
+    );
     return json;
   }
 

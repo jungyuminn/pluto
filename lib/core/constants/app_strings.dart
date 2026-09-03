@@ -64,13 +64,15 @@ class AppStrings {
   static const restoreData = '데이터 복구하기';
   static const backupSavedTitle = '백업했어요';
   static const backupSavedBody =
-      '다운로드에 저장했어요. 앱을 지워도 백업 파일로 복구할 수 있어요';
+      '구글 드라이브에 저장했어요. 앱을 지워도 백업 파일로 복구할 수 있어요';
   static const backupSavedBodyIos =
       '아이클라우드에 저장했어요. 앱을 지워도 백업 파일로 복구할 수 있어요';
   static const backupFailedTitle = '백업하지 못했어요';
   static const backupFailedBody = '잠시 후 다시 시도해 주세요';
   static const backupIcloudUnavailableBody =
       '아이클라우드에 로그인되어 있는지 확인해 주세요';
+  static const backupDriveUnavailableBody =
+      '구글 계정에 로그인되어 있는지 확인해 주세요';
   static const restoreConfirmTitle = '데이터를 복구할까요?';
   static const restoreConfirmBody = '지금 있는 데이터가 백업 파일로 바뀌어요';
   static const restorePickOther = '다른 파일 고르기';
@@ -79,7 +81,7 @@ class AppStrings {
   static const restoreLatest = '가장 최근';
   static const restoreAction = '복구하기';
   static const restoreDoneTitle = '복구했어요';
-  static const restoreDoneBody = '홈·캘린더·지원서 화면에 바로 반영돼요';
+  static const restoreDoneBody = '앱에 데이터가 바로 반영돼요';
   static const restoreFailedTitle = '복구하지 못했어요';
   static const restoreFailedBody = '잡플래너 백업 파일이 맞는지 확인해 주세요';
   static const autoBackupSetting = '자동저장 주기';
@@ -103,6 +105,10 @@ class AppStrings {
   static const tutorialBadgeCalendar = '캘린더';
   static const tutorialBadgeHome = '홈';
   static const tutorialBadgeJob = '지원서';
+  static const tutorialBadgeStats = '통계';
+  static const tutorialNavStatsTitle = '이번 달 행성';
+  static const tutorialNavStatsBody =
+      '할 일을 끝낼 때마다 이번 달 행성이 조금씩 색칠돼요';
   static const tutorialWelcomeTitle = '잡플래너에 오신 걸 환영해요';
   static const tutorialWelcomeBody =
       '할 일, 캘린더, 지원서를 한곳에서 관리해요. 화면을 따라가며 어디를 누르면 되는지 알려줄게요';
@@ -110,9 +116,13 @@ class AppStrings {
       '할 일과 캘린더를 한곳에서 관리해요. 화면을 따라가며 어디를 누르면 되는지 알려줄게요';
   static const tutorialNavBarTitle = '아래 탭으로 이동';
   static const tutorialNavBarBody =
-      '왼쪽이 홈, 가운데가 캘린더, 오른쪽이 지원서에요. 하단 버튼을 눌러 화면을 이동해요';
+      '왼쪽부터 홈, 캘린더, 통계예요. 취준 모드를 켜면 지원서가 통계 앞에 생겨요';
   static const tutorialNavBarBodyDaily =
-      '왼쪽이 홈, 오른쪽이 캘린더에요. 하단 버튼을 눌러 화면을 이동해요';
+      '왼쪽부터 홈, 캘린더, 통계예요. 하단 버튼을 눌러 화면을 이동해요';
+  static const tutorialNavBarBodyNoStats =
+      '왼쪽부터 홈, 캘린더예요. 취준 모드를 켜면 지원서도 생겨요';
+  static const tutorialNavBarBodyNoStatsDaily =
+      '왼쪽부터 홈, 캘린더예요. 하단 버튼을 눌러 화면을 이동해요';
   static const tutorialNavCalendarTitle = '캘린더 화면';
   static const tutorialNavCalendarBody =
       '지금 있는 화면이 캘린더예요. 할 일과 지원서 일정이 날짜에 라벨로 보여요';
@@ -171,14 +181,36 @@ class AppStrings {
   static const accountLogin = '로그인하기';
   static const accountLogout = '로그아웃하기';
   static const accountDelete = '탈퇴하기';
-  static const accountDeleteTitle = '계정을 삭제할까요?';
-  static const accountDeleteBody =
-      '로그인 계정만 사라지고, 이 폰에 저장된 할 일은 그대로 남아요';
+  static const accountDeleteTitle = '계정을 탈퇴할까요?';
+  static String accountDeleteBody(String provider) =>
+      '해당 $provider 계정이 삭제돼요';
+  static const accountDeleteLocalTitle = '이 기기 내용도 지울까요?';
+  static const accountDeleteLocalBody =
+      '계정에 저장된 내용은 사라져요. 이 기기에 있는 데이터는 남기거나 지울 수 있어요';
+  static const accountDeleteKeepLocal = '이 기기 내용은 남길게요';
+  static const accountDeleteResetLocal = '이 기기 내용도 지울게요';
+  static const accountLogoutDoneTitle = '로그아웃했어요';
+  static String accountLogoutDoneBody(String provider) =>
+      '$provider 계정에서 로그아웃했어요';
+  static const cloudOverlapTitle = '해당 계정에 데이터가 있어요';
+  static const cloudOverlapBody = '이 기기와 해당 계정에 서로 다른 데이터가 있어요';
+  static const cloudOverlapMerge = '기기와 계정 데이터를 합칠게요';
+  static const cloudOverlapAccount = '계정 데이터를 쓸게요';
+  static const cloudSwitchTitle = '해당 계정에 데이터가 없어요';
+  static const cloudSwitchBody =
+      '새로 시작할지, 기기 데이터를 이어서 사용할 지 고를 수 있어요';
+  static const cloudSwitchFresh = '새로 시작할게요';
+  static const cloudSwitchCopy = '이어서 사용할게요';
+  static const restoreConfirmCloudBody =
+      '계정에 연결된 다른 기기 내용도 이 백업 시점으로 바뀌어요';
   static const accountDeleteFailedTitle = '탈퇴하지 못했어요';
   static const accountSignedIn = '로그인됨';
   static const accountLoginBody =
       '언제 어디서든 다른 기기와 연동할 수 있어요';
   static const accountLoginPcHint = 'PC에서도 사용할 수 있어요';
+  static const webLoginBrand = '플루토';
+  static const webLoginTagline = '나의 모든 기록이 모이는 곳';
+  static const webLoginPcLabel = 'PC버전';
   static const accountLoginWebUrl = 'jobplanner.app';
   static const accountLoginSocialHint = '소셜 계정으로 로그인';
   static const accountKakaoShort = '카카오톡';
@@ -187,10 +219,19 @@ class AppStrings {
   static const accountFailedTitle = '로그인하지 못했어요';
   static const accountFailedBody = '잠시 후 다시 시도해 주세요';
   static const accountKakaoKeyBody = '카카오 로그인은 아직 준비 중이에요';
+  static const accountKakaoWebKeyBody =
+      '카카오 디벨로퍼스 앱 키에서 JavaScript 키를 넣어 주세요';
   static const accountKakaoOidcBody = '카카오 계정 연결이 아직 끝나지 않았어요';
   static const accountKakaoMisconfiguredBody =
       '카카오 디벨로퍼스에서 네이티브 앱 키의 패키지명과 키 해시를 확인해 주세요';
+  static const accountKakaoWebMisconfiguredBody =
+      '카카오 디벨로퍼스 Web 플랫폼에 이 사이트 주소(예: http://localhost)를 등록해 주세요';
+  static const accountKakaoWebAudBody =
+      'Firebase 인증 > OpenID Connect(kakao)의 Client ID를 아래 JavaScript 키로 바꿔 주세요';
   static const accountUnavailableBody = '지금은 로그인을 사용할 수 없어요';
+  static const accountSyncFailedBody = '계정 내용을 불러오지 못했어요. 인터넷 연결을 확인해 주세요';
+  static const accountLogoutSyncBody =
+      '계정에 올리는 중이어서 지금은 로그아웃할 수 없어요. 잠시 후 다시 시도해 주세요';
   static const releaseNotesFeatures = '새로운 기능';
   static const releaseNotesFixes = '버그 수정';
   static const releaseNotesPreview = '이렇게 바뀌었어요';
@@ -243,9 +284,10 @@ class AppStrings {
   static const settingsTodoSection = '할 일 설정';
   static const settingsAppearanceSection = '화면 모드';
   static const settingsNavSection = '하단 메뉴 설정';
-  static const dailyMode = '일상 모드';
+  static const jobMode = '취준 모드';
+  static const statsTab = '통계';
   static const settingsNavHelp =
-      '일상 용도로 캘린더를 사용할 때 켜요. 홈, 캘린더 메뉴만 남겨요';
+      '취준 모드로 지원서·자격증 메뉴를 켜거나, 통계 탭을 끌 수 있어요';
   static const settingsThemeSection = '테마 설정';
   static const themeKind = '테마 종류';
   static const themeGroupPattern = '패턴';
@@ -336,7 +378,7 @@ class AppStrings {
   static const settingsAppearanceHelp = '화면을 밝은 테마나 어두운 테마로 바꿀 수 있어요';
   static const settingsThemeHelp = '앱의 배경 분위기와 아이콘·버튼 색을 바꿀 수 있어요';
   static const settingsBackupHelp =
-      '앱의 모든 데이터를 최근 3개까지 저장해요. 앱을 지운 뒤에도 데이터를 복구할 수 있어요';
+      '앱의 모든 데이터를 최근 3개까지 저장해요. 앱을 지운 뒤에도 복구할 수 있어요';
   static const settingsCalendarSyncHelp =
       '기본 캘린더에 있는 일정을 잡플래너의 캘린더로 가져와요. 가져올 기간을 고르고, 카테고리는 하나에 몰아넣거나 할 일마다 고를 수 있어요.';
   static const settingsAppHelp =
@@ -493,6 +535,40 @@ class AppStrings {
   static const monthlyStatsRoundsTail = '가 있었어요';
   static const monthlyStatsAnd = '와';
   static const monthlyStatsEmptyTail = '기록이 없어요';
+  static const statsPlanetEmpty = '할 일을 완료하면 경험치가 쌓여요';
+  static const statsPlanetFilling = '할 일을 끝낼수록 행성이 채워져요';
+  static const statsPlanetFull = '이번 달, 플루토가 됐어요';
+  static String statsPlanetLeft(int count) => '$count개 남았어요';
+  static String statsLevel(int level) => 'Lv.$level';
+  static const statsLevelMax = 'MAX';
+  static const statsRank1 = '잠든 행성';
+  static const statsRank2 = '깨어난 행성';
+  static const statsRank3 = '새벽 행성';
+  static const statsRank4 = '분홍 행성';
+  static const statsRank5 = '노을 행성';
+  static const statsRank6 = '구름 행성';
+  static const statsRank7 = '금빛 행성';
+  static const statsRank8 = '고리 행성';
+  static const statsRank9 = '달';
+  static const statsRank10 = '플루토';
+  static const statsLevelGuideTitle = '행성 도감';
+  static const statsLevelGuideBody = '할 일을 끝낼수록 플루토에 가까워져요';
+  static const statsCollectedTitle = '내가 모은 행성';
+  static const statsCollectedBody = '플루토와 함께한 여정을 확인할 수 있어요';
+  static const statsCollectedEmpty = '할 일을 완료한 달의 행성이 모여요';
+  static String statsCollectedMonth(DateTime month, {required int nowYear}) {
+    if (month.year == nowYear) return '${month.month}$monthSuffix';
+    return '${month.year}$yearSuffix ${month.month}$monthSuffix';
+  }
+  static const statsLevelStart = '시작';
+  static String statsLevelNeed(int count) => '할 일 $count개';
+  static String statsNextPlanetTodos(int count) => '다음 행성까지 할 일 $count개';
+  static const statsCategoriesUsed = '사용한 카테고리';
+  static const statsLeftShort = '남은 일';
+  static const statsMonthTodos = '이번 달 할 일';
+  static const statsActiveDays = '활동한 날';
+  static const statsQuests = '이번 달 퀘스트';
+  static const statsNoQuests = '할 일을 넣으면 퀘스트가 생겨요';
   static const monthlyStatsCompletedLabel = '완료한 할 일';
   static const monthlyStatsIncompleteLabel = '남은 할 일';
   static const monthlyStatsTotalLabel = '전체 할 일';
@@ -650,6 +726,7 @@ class AppStrings {
   static const diaryDrawZoomIn = '확대';
   static const diaryDrawZoomOut = '축소';
   static const diaryDrawZoomPanHint = '두 손가락으로 드래그하면 화면을 옮길 수 있어요';
+  static const diaryDrawZoomPanHintPc = '드래그하면 화면을 옮길 수 있어요';
   static const diaryFallback = '일기';
   static const diaryCoverBasic = '기본';
   static const diaryCoverLined = '줄노트';

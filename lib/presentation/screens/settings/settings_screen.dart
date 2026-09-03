@@ -11,6 +11,7 @@ import 'package:job_planner/app_scope.dart';
 import 'package:job_planner/core/constants/app_fonts.dart';
 import 'package:job_planner/core/constants/app_icons.dart';
 import 'package:job_planner/core/constants/app_strings.dart';
+import 'package:job_planner/core/layout/pc_layout.dart';
 import 'package:job_planner/core/constants/release_notes.dart';
 import 'package:job_planner/core/theme/app_colors.dart';
 import 'package:job_planner/core/theme/app_skin_background.dart';
@@ -18,6 +19,7 @@ import 'package:job_planner/core/theme/app_theme.dart';
 import 'package:job_planner/core/home_widget/home_screen_widget_service.dart';
 import 'package:job_planner/core/notifications/todo_reminder_service.dart';
 import 'package:job_planner/core/utils/plain_text_editing_controller.dart';
+import 'package:job_planner/data/datasources/synced_file_store.dart';
 import 'package:job_planner/core/utils/press_bounce.dart';
 import 'package:job_planner/domain/entities/application_round.dart';
 import 'package:job_planner/domain/entities/apply_status.dart';
@@ -28,6 +30,7 @@ import 'package:job_planner/presentation/screens/add_company/widgets/missing_fie
 import 'package:job_planner/presentation/screens/add_company/widgets/save_company_button.dart';
 import 'package:job_planner/data/datasources/app_auth_service.dart';
 import 'package:job_planner/data/datasources/app_backup_service.dart';
+import 'package:job_planner/data/datasources/cloud_sync_service.dart';
 import 'package:job_planner/data/datasources/backup_preference.dart';
 import 'package:job_planner/data/datasources/device_calendar_import.dart';
 import 'package:job_planner/data/datasources/device_calendar_mapper.dart';
@@ -45,6 +48,7 @@ import 'package:job_planner/presentation/screens/job/widgets/company_card.dart';
 import 'package:job_planner/presentation/screens/job/widgets/job_overflow_menu_button.dart';
 import 'package:job_planner/presentation/screens/settings/widgets/account_sheet.dart';
 import 'package:job_planner/presentation/screens/settings/widgets/backup_dialogs.dart';
+import 'package:job_planner/presentation/screens/settings/widgets/cloud_sync_dialogs.dart';
 import 'package:job_planner/presentation/screens/settings/widgets/calendar_import_dialogs.dart';
 import 'package:job_planner/presentation/screens/settings/widgets/calendar_import_wizard.dart';
 import 'package:job_planner/presentation/screens/settings/widgets/login_page.dart';
@@ -52,6 +56,7 @@ import 'package:job_planner/presentation/screens/settings/widgets/release_notes_
 import 'package:job_planner/presentation/screens/settings/widgets/settings_section_help.dart';
 import 'package:job_planner/presentation/tutorial/tutorial_controller.dart';
 import 'package:job_planner/presentation/widgets/app_back_button.dart';
+import 'package:job_planner/presentation/widgets/local_file_image.dart';
 import 'package:job_planner/presentation/widgets/app_bar_icon_group.dart';
 import 'package:job_planner/presentation/widgets/app_bar_wordmark.dart';
 import 'package:job_planner/presentation/widgets/overlay_app_bar.dart';
@@ -94,7 +99,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   var _followWidgetFont = true;
   var _widgetFontScale = 1.0;
   var _widgetFontSliderOpen = false;
-  var _dailyMode = false;
+  var _jobMode = false;
+  var _showStatsTab = true;
   var _todoSize = FontSizeLevel.medium;
   var _calendarSize = FontSizeLevel.medium;
   var _calendarLabelSize = FontSizeLevel.medium;
@@ -133,7 +139,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _followWidgetTheme = scope.widgetPreference.followTheme;
     _followWidgetFont = scope.widgetPreference.followFont;
     _widgetFontScale = scope.widgetPreference.fontScale;
-    _dailyMode = scope.navPreference.dailyMode;
+    _jobMode = scope.navPreference.jobMode;
+    _showStatsTab = scope.navPreference.showStatsTab;
     _todoSize = scope.fontPreference.todoSize;
     _calendarSize = scope.fontPreference.calendarSize;
     _calendarLabelSize = scope.fontPreference.calendarLabelSize;
@@ -171,7 +178,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
       _followWidgetTheme = scope.widgetPreference.followTheme;
       _followWidgetFont = scope.widgetPreference.followFont;
       _widgetFontScale = scope.widgetPreference.fontScale;
-      _dailyMode = scope.navPreference.dailyMode;
+      _jobMode = scope.navPreference.jobMode;
+      _showStatsTab = scope.navPreference.showStatsTab;
       _todoSize = scope.fontPreference.todoSize;
       _calendarSize = scope.fontPreference.calendarSize;
       _calendarLabelSize = scope.fontPreference.calendarLabelSize;
@@ -181,7 +189,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> _backup() async {
     try {
-      final saved = await AppBackupService.backup();
+      final saved = await showBackupLoading(context, AppBackupService.backup);
       if (!mounted || !saved) return;
       await AppScope.of(context).backupPreference.markBackedUp();
       if (!mounted) return;
@@ -194,12 +202,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
       );
     } on PlatformException catch (error) {
       if (!mounted) return;
-      final iCloud = error.code == 'signed_out' || error.code == 'unavailable';
+      final cloud = error.code == 'signed_out' || error.code == 'unavailable';
       await showBackupMessageDialog(
         context,
         title: AppStrings.backupFailedTitle,
-        body: iCloud
-            ? AppStrings.backupIcloudUnavailableBody
+        body: cloud
+            ? (!kIsWeb && Platform.isIOS
+                ? AppStrings.backupIcloudUnavailableBody
+                : AppStrings.backupDriveUnavailableBody)
             : AppStrings.backupFailedBody,
       );
     } catch (_) {
@@ -215,28 +225,49 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _restore() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      var items = await AppBackupService.listRestoreItems();
+      var items = await showBackupLoading(
+        context,
+        AppBackupService.listRestoreItems,
+      );
       if (AppBackupService.isStarterOnly(prefs)) {
         items = items.where((item) => item.file == null).toList();
       }
       if (!mounted) return;
+      final cloudWarning = AppAuthService.instance.user != null;
       if (items.isEmpty) {
-        final confirmed = await showRestoreConfirmDialog(context);
+        final confirmed = await showRestoreConfirmDialog(
+          context,
+          cloudWarning: cloudWarning,
+        );
         if (!confirmed || !mounted) return;
         final picked = await AppBackupService.restoreFromPicker();
         if (!picked || !mounted) return;
+        await showBackupLoading(
+          context,
+          () => AppBackupService.applyToApp(AppScope.of(context)),
+        );
       } else {
-        final choice = await showRestoreSourceDialog(context, items);
+        final choice = await showRestoreSourceDialog(
+          context,
+          items,
+          cloudWarning: cloudWarning,
+        );
         if (choice == null || !mounted) return;
         if (choice.pickOther) {
           final picked = await AppBackupService.restoreFromPicker();
           if (!picked || !mounted) return;
+          await showBackupLoading(
+            context,
+            () => AppBackupService.applyToApp(AppScope.of(context)),
+          );
         } else {
-          await AppBackupService.restoreFromItem(choice.item!);
+          await showBackupLoading(context, () async {
+            await AppBackupService.restoreFromItem(choice.item!);
+            if (!context.mounted) return;
+            await AppBackupService.applyToApp(AppScope.of(context));
+          });
         }
       }
-      if (!mounted) return;
-      await AppBackupService.applyToApp(AppScope.of(context));
       if (!mounted) return;
       _syncFromScope();
       await showBackupMessageDialog(
@@ -246,12 +277,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
       );
     } on PlatformException catch (error) {
       if (!mounted) return;
-      final iCloud = error.code == 'signed_out' || error.code == 'unavailable';
+      final cloud = error.code == 'signed_out' || error.code == 'unavailable';
       await showBackupMessageDialog(
         context,
         title: AppStrings.restoreFailedTitle,
-        body: iCloud
-            ? AppStrings.backupIcloudUnavailableBody
+        body: cloud
+            ? (!kIsWeb && Platform.isIOS
+                ? AppStrings.backupIcloudUnavailableBody
+                : AppStrings.backupDriveUnavailableBody)
             : error.code == 'not_icloud'
                 ? AppStrings.restoreNotIcloudBody
                 : AppStrings.restoreFailedBody,
@@ -412,9 +445,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
     await AppScope.of(context).widgetPreference.setFontScale(value);
   }
 
-  Future<void> _setDailyMode(bool value) async {
-    setState(() => _dailyMode = value);
-    await AppScope.of(context).navPreference.setDailyMode(value);
+  Future<void> _setJobMode(bool value) async {
+    setState(() => _jobMode = value);
+    await AppScope.of(context).navPreference.setJobMode(value);
+  }
+
+  Future<void> _setShowStatsTab(bool value) async {
+    setState(() => _showStatsTab = value);
+    await AppScope.of(context).navPreference.setShowStatsTab(value);
   }
 
   Future<void> _setShowLeftover(bool value) async {
@@ -747,7 +785,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
         title: AppStrings.settingsTitle,
         onBack: () => Navigator.pop(context),
       ),
-      body: Stack(
+      body: PcLayout.constrainWidth(
+        Stack(
         children: [
           ListView(
         padding: EdgeInsets.fromLTRB(16, top + 56, 16, 32),
@@ -892,9 +931,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _SettingsCard(
             children: [
               _SettingsSwitchTile(
-                label: AppStrings.dailyMode,
-                value: _dailyMode,
-                onChanged: _setDailyMode,
+                label: AppStrings.jobMode,
+                value: _jobMode,
+                onChanged: _setJobMode,
+              ),
+              _SettingsSwitchTile(
+                label: AppStrings.statsTab,
+                value: _showStatsTab,
+                onChanged: _setShowStatsTab,
               ),
             ],
           ),
@@ -918,40 +962,42 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 24),
-          _SectionLabel(
-            AppStrings.settingsNotificationSection,
-            onHelp: () => showSettingsSectionHelp(
-              context,
-              SettingsHelpSection.notification,
+          if (!PcLayout.isPc) ...[
+            const SizedBox(height: 24),
+            _SectionLabel(
+              AppStrings.settingsNotificationSection,
+              onHelp: () => showSettingsSectionHelp(
+                context,
+                SettingsHelpSection.notification,
+              ),
             ),
-          ),
-          _SettingsCard(
-            children: [
-              _SettingsTile(
-                label: AppStrings.todoNotificationSetting,
-                value: _leadLabel(_todoReminderLead),
-                chevron: true,
-                onPressed: _openTodoNotificationSettings,
-              ),
-              _SettingsTile(
-                label: AppStrings.summaryNotificationSetting,
-                value: _summaryEnabled
-                    ? AppStrings.summaryTimeLabel(_summaryHour)
-                    : AppStrings.notifyOff,
-                chevron: true,
-                onPressed: _openSummaryNotificationSettings,
-              ),
-              _SettingsTile(
-                label: AppStrings.leftoverNotificationSetting,
-                value: _leftoverEnabled
-                    ? AppStrings.summaryTimeLabel(_leftoverMinutes)
-                    : AppStrings.notifyOff,
-                chevron: true,
-                onPressed: _openLeftoverNotificationSettings,
-              ),
-            ],
-          ),
+            _SettingsCard(
+              children: [
+                _SettingsTile(
+                  label: AppStrings.todoNotificationSetting,
+                  value: _leadLabel(_todoReminderLead),
+                  chevron: true,
+                  onPressed: _openTodoNotificationSettings,
+                ),
+                _SettingsTile(
+                  label: AppStrings.summaryNotificationSetting,
+                  value: _summaryEnabled
+                      ? AppStrings.summaryTimeLabel(_summaryHour)
+                      : AppStrings.notifyOff,
+                  chevron: true,
+                  onPressed: _openSummaryNotificationSettings,
+                ),
+                _SettingsTile(
+                  label: AppStrings.leftoverNotificationSetting,
+                  value: _leftoverEnabled
+                      ? AppStrings.summaryTimeLabel(_leftoverMinutes)
+                      : AppStrings.notifyOff,
+                  chevron: true,
+                  onPressed: _openLeftoverNotificationSettings,
+                ),
+              ],
+            ),
+          ],
           const SizedBox(height: 24),
           _SectionLabel(
             AppStrings.settingsMonthlyStatsSection,
@@ -996,97 +1042,99 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 24),
-          _SectionLabel(
-            AppStrings.settingsBackupSection,
-            onHelp: () =>
-                showSettingsSectionHelp(context, SettingsHelpSection.backup),
-          ),
-          _SettingsCard(
-            children: [
-              _SettingsTile(
-                label: AppStrings.backupData,
-                chevron: true,
-                onPressed: _backup,
-              ),
-              _SettingsTile(
-                label: AppStrings.restoreData,
-                chevron: true,
-                onPressed: _restore,
-              ),
-              _SettingsTile(
-                label: AppStrings.autoBackupSetting,
-                value: _autoBackupLabel(_autoBackupInterval),
-                chevron: true,
-                onPressed: _openAutoBackupSettings,
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-          _SectionLabel(
-            AppStrings.settingsCalendarSyncSection,
-            onHelp: () => showSettingsSectionHelp(
-              context,
-              SettingsHelpSection.calendarSync,
+          if (!PcLayout.isPc) ...[
+            const SizedBox(height: 24),
+            _SectionLabel(
+              AppStrings.settingsBackupSection,
+              onHelp: () =>
+                  showSettingsSectionHelp(context, SettingsHelpSection.backup),
             ),
-          ),
-          _SettingsCard(
-            children: [
-              _SettingsTile(
-                label: AppStrings.importSamsungCalendar,
-                chevron: true,
-                onPressed: _importSamsungCalendar,
+            _SettingsCard(
+              children: [
+                _SettingsTile(
+                  label: AppStrings.backupData,
+                  chevron: true,
+                  onPressed: _backup,
+                ),
+                _SettingsTile(
+                  label: AppStrings.restoreData,
+                  chevron: true,
+                  onPressed: _restore,
+                ),
+                _SettingsTile(
+                  label: AppStrings.autoBackupSetting,
+                  value: _autoBackupLabel(_autoBackupInterval),
+                  chevron: true,
+                  onPressed: _openAutoBackupSettings,
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+            _SectionLabel(
+              AppStrings.settingsCalendarSyncSection,
+              onHelp: () => showSettingsSectionHelp(
+                context,
+                SettingsHelpSection.calendarSync,
               ),
-              _SettingsTile(
-                label: AppStrings.importIosCalendar,
-                chevron: true,
-                onPressed: _importIosCalendar,
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-          _SectionLabel(
-            AppStrings.settingsWidgetSection,
-            onHelp: () =>
-                showSettingsSectionHelp(context, SettingsHelpSection.widget),
-          ),
-          _SettingsCard(
-            children: [
-              _SettingsSwitchTile(
-                label: AppStrings.widgetFollowTheme,
-                value: _followWidgetTheme,
-                onChanged: _setFollowWidgetTheme,
-              ),
-              _SettingsSwitchTile(
-                label: AppStrings.widgetFollowFont,
-                value: _followWidgetFont,
-                onChanged: _setFollowWidgetFont,
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  _SettingsTile(
-                    label: AppStrings.widgetFontSize,
-                    chevron: true,
-                    expanded: _widgetFontSliderOpen,
-                    onPressed: () => setState(
-                      () => _widgetFontSliderOpen = !_widgetFontSliderOpen,
-                    ),
-                  ),
-                  _ExpandBelow(
-                    open: _widgetFontSliderOpen,
-                    child: Padding(
-                      padding: const EdgeInsets.only(bottom: 10),
-                      child: _SettingsSliderTile(
-                        value: _widgetFontScale,
-                        onChanged: _setWidgetFontScale,
+            ),
+            _SettingsCard(
+              children: [
+                _SettingsTile(
+                  label: AppStrings.importSamsungCalendar,
+                  chevron: true,
+                  onPressed: _importSamsungCalendar,
+                ),
+                _SettingsTile(
+                  label: AppStrings.importIosCalendar,
+                  chevron: true,
+                  onPressed: _importIosCalendar,
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+            _SectionLabel(
+              AppStrings.settingsWidgetSection,
+              onHelp: () =>
+                  showSettingsSectionHelp(context, SettingsHelpSection.widget),
+            ),
+            _SettingsCard(
+              children: [
+                _SettingsSwitchTile(
+                  label: AppStrings.widgetFollowTheme,
+                  value: _followWidgetTheme,
+                  onChanged: _setFollowWidgetTheme,
+                ),
+                _SettingsSwitchTile(
+                  label: AppStrings.widgetFollowFont,
+                  value: _followWidgetFont,
+                  onChanged: _setFollowWidgetFont,
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _SettingsTile(
+                      label: AppStrings.widgetFontSize,
+                      chevron: true,
+                      expanded: _widgetFontSliderOpen,
+                      onPressed: () => setState(
+                        () => _widgetFontSliderOpen = !_widgetFontSliderOpen,
                       ),
                     ),
-                  ),
-                ],
-              ),
-            ],
-          ),
+                    _ExpandBelow(
+                      open: _widgetFontSliderOpen,
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: 10),
+                        child: _SettingsSliderTile(
+                          value: _widgetFontScale,
+                          onChanged: _setWidgetFontScale,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ],
           const SizedBox(height: 24),
           _SectionLabel(
             AppStrings.settingsAppSection,
@@ -1129,10 +1177,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         label: AppStrings.accountLogout,
                         value: AppAuthService.accountHandle(user),
                         chevron: true,
-                        onPressed: () => runAccountAction(
-                          context,
-                          AppAuthService.instance.signOut,
-                        ),
+                        onPressed: () async {
+                          final provider = AppAuthService.socialLabel(user);
+                          final ok = await runAccountAction(
+                            context,
+                            () => CloudSyncService.instance.flushAndSignOut(),
+                          );
+                          if (!ok || !context.mounted) return;
+                          if (kIsWeb) {
+                            Navigator.of(context, rootNavigator: true)
+                                .popUntil((route) => route.isFirst);
+                            return;
+                          }
+                          await showBackupMessageDialog(
+                            context,
+                            title: AppStrings.accountLogoutDoneTitle,
+                            body: AppStrings.accountLogoutDoneBody(provider),
+                          );
+                        },
                       ),
                       Padding(
                         padding: const EdgeInsets.only(left: 20),
@@ -1148,12 +1210,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         danger: true,
                         onPressed: () async {
                           final confirmed =
-                              await showAccountDeleteConfirmDialog(context);
-                          if (!confirmed || !context.mounted) return;
-                          await runAccountAction(
+                              await showAccountDeleteConfirmDialog(
                             context,
-                            AppAuthService.instance.deleteAccount,
+                            provider: AppAuthService.socialLabel(user),
                           );
+                          if (!confirmed || !context.mounted) return;
+                          final ok = await runAccountAction(
+                            context,
+                            () => CloudSyncService.instance
+                                .deleteCloudAndAccount(
+                              scope: AppScope.of(context),
+                            ),
+                          );
+                          if (!ok || !context.mounted) return;
+                          if (kIsWeb) {
+                            Navigator.of(context, rootNavigator: true)
+                                .popUntil((route) => route.isFirst);
+                          }
                         },
                       ),
                     ],
@@ -1183,6 +1256,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
         ],
+        ),
       ),
     );
   }
@@ -2012,6 +2086,11 @@ class _ThemePreviewNav extends StatelessWidget {
       listenable: theme,
       builder: (context, _) {
         final items = AppSkinAssets.navIcons(theme.skin);
+        final previewItems = [
+          items[0],
+          items[1],
+          items.last,
+        ];
         return Center(
           child: DecoratedBox(
             decoration: BoxDecoration(
@@ -2030,7 +2109,7 @@ class _ThemePreviewNav extends StatelessWidget {
               height: 40,
               child: Row(
                 children: [
-                  for (var i = 0; i < items.length; i++)
+                  for (var i = 0; i < previewItems.length; i++)
                     Expanded(
                       child: PressBounce(
                         onPressed: () => onSelected(i),
@@ -2039,8 +2118,8 @@ class _ThemePreviewNav extends StatelessWidget {
                         child: Center(
                           child: ThemedAsset(
                             asset: i == selected
-                                ? items[i].filled
-                                : items[i].outlined,
+                                ? previewItems[i].filled
+                                : previewItems[i].outlined,
                             width: 20,
                             height: 20,
                           ),
@@ -2280,7 +2359,8 @@ class _ThemeSettingsPageState extends State<_ThemeSettingsPage> {
             title: AppStrings.settingsThemeSection,
             onBack: () => Navigator.pop(context),
           ),
-          body: Column(
+          body: PcLayout.constrainWidth(
+            Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               SizedBox(height: top + 56),
@@ -2379,6 +2459,7 @@ class _ThemeSettingsPageState extends State<_ThemeSettingsPage> {
                 ),
               ),
             ],
+          ),
           ),
         );
       },
@@ -2845,26 +2926,24 @@ class _CustomThemeEditorPageState extends State<_CustomThemeEditorPage> {
   }
 
   Future<void> _pickPhoto() async {
-    final file = await FilePicker.pickFile(type: FileType.image);
-    final path = file?.path;
-    if (file == null || path == null) return;
+    final picked = await SyncedFileStore.pick(type: FileType.image);
+    if (picked == null) return;
     setState(() {
-      _photoPath = path;
-      _photoName = file.name;
+      _photoPath = picked.path;
+      _photoName = picked.name;
     });
   }
 
   Future<void> _pick({required bool decoration}) async {
-    final file = await FilePicker.pickFile(type: FileType.image);
-    final path = file?.path;
-    if (file == null || path == null) return;
+    final picked = await SyncedFileStore.pick(type: FileType.image);
+    if (picked == null) return;
     setState(() {
       if (decoration) {
-        _decorationPath = path;
-        _decorationName = file.name;
+        _decorationPath = picked.path;
+        _decorationName = picked.name;
       } else {
-        _bottomPath = path;
-        _bottomName = file.name;
+        _bottomPath = picked.path;
+        _bottomName = picked.name;
       }
     });
   }
@@ -2938,7 +3017,8 @@ class _CustomThemeEditorPageState extends State<_CustomThemeEditorPage> {
             : AppStrings.themeMineEdit,
         onBack: () => Navigator.pop(context),
       ),
-      body: Stack(
+      body: PcLayout.constrainWidth(
+        Stack(
         children: [
           Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -3166,6 +3246,7 @@ class _CustomThemeEditorPageState extends State<_CustomThemeEditorPage> {
             ),
           ),
         ],
+      ),
       ),
     );
   }
@@ -3401,8 +3482,8 @@ class _ThemeImageWell extends StatelessWidget {
             children: [
               ColoredBox(color: colors.groupedBackground),
               if (hasImage)
-                Image.file(
-                  File(imagePath),
+                LocalFileImage(
+                  imagePath,
                   fit: BoxFit.cover,
                   alignment: alignBottom
                       ? Alignment.bottomCenter
@@ -3614,7 +3695,8 @@ class _FontSettingsPageState extends State<_FontSettingsPage> {
             title: AppStrings.settingsFontSection,
             onBack: () => Navigator.pop(context),
           ),
-          body: Column(
+          body: PcLayout.constrainWidth(
+            Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               SizedBox(height: top + 56),
@@ -3689,6 +3771,7 @@ class _FontSettingsPageState extends State<_FontSettingsPage> {
               ),
             ],
           ),
+          ),
         );
       },
     );
@@ -3713,7 +3796,8 @@ class _FontSizeSettingsPage extends StatelessWidget {
             title: AppStrings.settingsCalendarSection,
             onBack: () => Navigator.pop(context),
           ),
-          body: ListView(
+          body: PcLayout.constrainWidth(
+            ListView(
             padding: EdgeInsets.fromLTRB(16, top + 56, 16, 32),
             children: [
               DecoratedBox(
@@ -3808,6 +3892,7 @@ class _FontSizeSettingsPage extends StatelessWidget {
               ),
             ],
           ),
+          ),
         );
       },
     );
@@ -3883,7 +3968,8 @@ class _TodoNotificationSettingsPageState
         title: AppStrings.todoNotificationSetting,
         onBack: () => Navigator.pop(context),
       ),
-      body: Stack(
+      body: PcLayout.constrainWidth(
+        Stack(
         children: [
           ListView(
             padding: EdgeInsets.fromLTRB(16, top + 56, 16, 32),
@@ -3919,6 +4005,7 @@ class _TodoNotificationSettingsPageState
             ),
           ),
         ],
+      ),
       ),
     );
   }
@@ -4004,7 +4091,8 @@ class _SummaryNotificationSettingsPageState
         title: AppStrings.summaryNotificationSetting,
         onBack: () => Navigator.pop(context),
       ),
-      body: Stack(
+      body: PcLayout.constrainWidth(
+        Stack(
         children: [
           ListView(
             padding: EdgeInsets.fromLTRB(16, top + 56, 16, 32),
@@ -4046,6 +4134,7 @@ class _SummaryNotificationSettingsPageState
             ),
           ),
         ],
+      ),
       ),
     );
   }
@@ -4131,7 +4220,8 @@ class _LeftoverNotificationSettingsPageState
         title: AppStrings.leftoverNotificationSetting,
         onBack: () => Navigator.pop(context),
       ),
-      body: Stack(
+      body: PcLayout.constrainWidth(
+        Stack(
         children: [
           ListView(
             padding: EdgeInsets.fromLTRB(16, top + 56, 16, 32),
@@ -4173,6 +4263,7 @@ class _LeftoverNotificationSettingsPageState
             ),
           ),
         ],
+      ),
       ),
     );
   }
@@ -4248,7 +4339,8 @@ class _AutoBackupSettingsPageState extends State<_AutoBackupSettingsPage> {
         title: AppStrings.autoBackupSetting,
         onBack: () => Navigator.pop(context),
       ),
-      body: Stack(
+      body: PcLayout.constrainWidth(
+        Stack(
         children: [
           ListView(
             padding: EdgeInsets.fromLTRB(16, top + 56, 16, 32),
@@ -4284,6 +4376,7 @@ class _AutoBackupSettingsPageState extends State<_AutoBackupSettingsPage> {
             ),
           ),
         ],
+      ),
       ),
     );
   }

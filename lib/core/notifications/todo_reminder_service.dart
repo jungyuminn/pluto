@@ -45,6 +45,7 @@ class TodoReminderService {
     _events = events;
     _jobs = jobs;
     _preference = preference;
+    if (kIsWeb) return;
     try {
       await _configureLocalTimezone();
       var android = const AndroidInitializationSettings('@drawable/ic_stat_notification');
@@ -120,7 +121,7 @@ class TodoReminderService {
   }
 
   Future<void> sync() async {
-    if (!_ready || !_canSchedule) return;
+    if (kIsWeb || !_ready || !_canSchedule) return;
     if (_syncing) {
       _queued = true;
       return;

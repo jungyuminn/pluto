@@ -4,6 +4,7 @@ import 'package:job_planner/core/constants/app_fonts.dart';
 import 'package:job_planner/core/constants/app_strings.dart';
 import 'package:job_planner/core/theme/app_colors.dart';
 import 'package:job_planner/core/utils/press_bounce.dart';
+import 'package:job_planner/data/datasources/synced_file_store.dart';
 import 'package:job_planner/presentation/screens/add_company/widgets/delete_cover_letter_dialog.dart';
 
 class CoverLetterField extends StatelessWidget {
@@ -27,13 +28,12 @@ class CoverLetterField extends StatelessWidget {
   final bool matchTextField;
 
   Future<void> _pick() async {
-    final file = await FilePicker.pickFile(
+    final picked = await SyncedFileStore.pick(
       type: FileType.custom,
       allowedExtensions: allowedExtensions,
     );
-    final path = file?.path;
-    if (file == null || path == null) return;
-    onPicked((path: path, name: file.name));
+    if (picked == null) return;
+    onPicked(picked);
   }
 
   Future<void> _confirmDelete(BuildContext context) async {

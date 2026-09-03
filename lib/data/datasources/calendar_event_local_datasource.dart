@@ -12,13 +12,41 @@ import 'package:shared_preferences/shared_preferences.dart';
 class CalendarEventLocalDataSource {
   CalendarEventLocalDataSource(this._prefs);
 
-  static const _key = 'calendar_events';
+  static const key = 'calendar_events';
   static const starterIdPrefix = 'starter_';
+  static const starterTitles = [
+    AppStrings.starterTodoComplete,
+    AppStrings.starterTodoReorder,
+    AppStrings.starterTodoMove,
+  ];
+
+  static bool isUnmodifiedStarter(Map<String, dynamic> item) {
+    final id = item['id'] as String? ?? '';
+    if (!id.startsWith(starterIdPrefix)) return false;
+    final index = int.tryParse(id.substring(starterIdPrefix.length));
+    if (index == null || index < 0 || index >= starterTitles.length) {
+      return false;
+    }
+    if ((item['title'] as String? ?? '') != starterTitles[index]) return false;
+    if ((item['memo'] as String? ?? '').trim().isNotEmpty) return false;
+    if (item['completed'] == true) return false;
+    if (index < EventCategory.presets.length) {
+      if ((item['categoryId'] as String? ?? '') !=
+          EventCategory.presets[index].id) {
+        return false;
+      }
+    }
+    if (item['someday'] == true) return false;
+    if (item['startMinutes'] != null) return false;
+    if (item['endMinutes'] != null) return false;
+    if ((item['sortOrder'] as num?)?.toInt() != index) return false;
+    return true;
+  }
 
   final SharedPreferences _prefs;
 
   List<CalendarEvent> fetchAll() {
-    final raw = _prefs.getString(_key);
+    final raw = _prefs.getString(key);
     if (raw == null || raw.isEmpty) return [];
 
     final decoded = jsonDecode(raw) as List<dynamic>;
@@ -28,18 +56,18 @@ class CalendarEventLocalDataSource {
   }
 
   Future<void> seedStartersIfNeeded() async {
-    if (_prefs.containsKey(_key)) return;
+    if (_prefs.containsKey(key)) return;
+    await saveAll(_starterTodos());
+  }
+
+  Future<void> resetToStarters() async {
     await saveAll(_starterTodos());
   }
 
   static List<CalendarEvent> _starterTodos([DateTime? now]) {
     final stamp = now ?? DateTime.now();
     final today = DateTime(stamp.year, stamp.month, stamp.day);
-    const titles = [
-      AppStrings.starterTodoComplete,
-      AppStrings.starterTodoReorder,
-      AppStrings.starterTodoMove,
-    ];
+    const titles = starterTitles;
     final categories = EventCategory.presets;
     return [
       for (var i = 0; i < titles.length; i++)
@@ -59,7 +87,7 @@ class CalendarEventLocalDataSource {
     final payload = jsonEncode(
       events.map(CalendarEventModel.toJson).toList(),
     );
-    await _prefs.setString(_key, payload);
+    await _prefs.setString(key, payload);
     unawaited(_syncSideEffects());
   }
 

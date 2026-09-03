@@ -720,8 +720,10 @@ class _CalendarScreenState extends State<CalendarScreen>
                           ),
                           Expanded(
                             child: Stack(
+                              fit: StackFit.expand,
                               children: [
-                                _SearchStableViewport(
+                                Positioned.fill(
+                                  child: _SearchStableViewport(
                                   animation: _searchAnimation,
                                   child: TutorialAnchor(
                                     id: TutorialAnchorId.calendarGrid,
@@ -855,14 +857,29 @@ class _CalendarScreenState extends State<CalendarScreen>
                                     ),
                                   ),
                                 ),
+                                ),
                                 if (PcLayout.isPc) ...[
-                                  _WebCalendarArrow(
-                                    left: true,
-                                    onPressed: () => _stepCalendar(-1),
+                                  Positioned(
+                                    left: 16,
+                                    top: 0,
+                                    bottom: 0,
+                                    child: Center(
+                                      child: _WebCalendarArrow(
+                                        left: true,
+                                        onPressed: () => _stepCalendar(-1),
+                                      ),
+                                    ),
                                   ),
-                                  _WebCalendarArrow(
-                                    left: false,
-                                    onPressed: () => _stepCalendar(1),
+                                  Positioned(
+                                    right: 16,
+                                    top: 0,
+                                    bottom: 0,
+                                    child: Center(
+                                      child: _WebCalendarArrow(
+                                        left: false,
+                                        onPressed: () => _stepCalendar(1),
+                                      ),
+                                    ),
                                   ),
                                 ],
                               ],
@@ -897,24 +914,23 @@ class _WebCalendarArrow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = AppColors.of(context);
-    return Align(
-      alignment: left ? Alignment.centerLeft : Alignment.centerRight,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8),
-        child: PressBounce(
-          onPressed: onPressed,
-          pressedScale: 0.92,
-          color: colors.card.withValues(alpha: 0.86),
-          borderRadius: const BorderRadius.all(Radius.circular(18)),
-          child: SizedBox(
-            width: 36,
-            height: 72,
-            child: Icon(
-              left ? Icons.chevron_left_rounded : Icons.chevron_right_rounded,
-              size: 30,
-              color: colors.text.withValues(alpha: 0.78),
-            ),
+    return Material(
+      color: Colors.white,
+      elevation: 4,
+      shadowColor: const Color(0x40000000),
+      borderRadius: const BorderRadius.all(Radius.circular(18)),
+      child: PressBounce(
+        onPressed: onPressed,
+        pressedScale: 0.92,
+        color: Colors.white,
+        borderRadius: const BorderRadius.all(Radius.circular(18)),
+        child: SizedBox(
+          width: 36,
+          height: 72,
+          child: Icon(
+            left ? Icons.chevron_left_rounded : Icons.chevron_right_rounded,
+            size: 30,
+            color: const Color(0xFF222222),
           ),
         ),
       ),

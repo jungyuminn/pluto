@@ -6,7 +6,6 @@ import 'package:job_planner/core/constants/app_strings.dart';
 import 'package:job_planner/core/theme/app_colors.dart';
 import 'package:job_planner/core/utils/plain_text_editing_controller.dart';
 import 'package:job_planner/core/utils/press_bounce.dart';
-import 'package:job_planner/data/datasources/day_emoji_store.dart';
 import 'package:job_planner/data/datasources/diary_photo_storage.dart';
 import 'package:job_planner/domain/entities/diary_cover.dart';
 import 'package:job_planner/domain/entities/diary_entry.dart';
@@ -15,8 +14,6 @@ import 'package:job_planner/presentation/screens/add_company/widgets/missing_fie
 import 'package:job_planner/presentation/screens/add_company/widgets/save_company_button.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/category_picker_sheet.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/delete_event_dialog.dart';
-import 'package:job_planner/presentation/screens/calendar/widgets/day_emoji_sheet.dart';
-import 'package:job_planner/presentation/screens/calendar/widgets/day_sticker_image.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/diary_cover_sheet.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/diary_cover_style.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/diary_photo_field.dart';
@@ -50,7 +47,6 @@ class _DiaryFormState extends State<DiaryForm> {
   String? _categoryName;
   int? _categoryColor;
   late DiaryCover _cover;
-  String? _emoji;
   var _saving = false;
   Animation<double>? _sheetAnimation;
 
@@ -104,7 +100,6 @@ class _DiaryFormState extends State<DiaryForm> {
       }
       _loadGroup();
       _loadLastDefaults();
-      setState(_readEmoji);
     });
   }
 
@@ -166,7 +161,6 @@ class _DiaryFormState extends State<DiaryForm> {
       _dates = [days.first, days.last];
       _date = days.first;
       _dateMode = AppCalendarMode.range;
-      _readEmoji();
     });
   }
 
@@ -239,29 +233,6 @@ class _DiaryFormState extends State<DiaryForm> {
     });
   }
 
-  void _readEmoji() {
-    if (!mounted) return;
-    final next = AppScope.of(context).dayEmojiStore.on(
-      _date,
-      layer: DayStickerLayer.diary,
-    );
-    _emoji = DayStickers.isAsset(next) ? next : null;
-  }
-
-  Future<void> _pickEmoji() async {
-    _titleFocus.unfocus();
-    _bodyFocus.unfocus();
-    final picked = await showDayEmojiSheet(context, selected: _emoji);
-    if (picked == null || !mounted) return;
-    await AppScope.of(context).dayEmojiStore.set(
-      _date,
-      picked.isEmpty ? null : picked,
-      layer: DayStickerLayer.diary,
-    );
-    if (!mounted) return;
-    setState(_readEmoji);
-  }
-
   Future<void> _pickCover() async {
     _titleFocus.unfocus();
     _bodyFocus.unfocus();
@@ -292,7 +263,6 @@ class _DiaryFormState extends State<DiaryForm> {
           : AppCalendarMode.single;
       _dates = picked.dates;
       _date = picked.date;
-      _readEmoji();
     });
   }
 
@@ -306,7 +276,18 @@ class _DiaryFormState extends State<DiaryForm> {
     }
     if (_saving) return;
     setState(() => _saving = true);
+    try {
+      await _persist(title: title, body: body, days: days);
+    } catch (_) {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
 
+  Future<void> _persist({
+    required String title,
+    required String body,
+    required List<DateTime> days,
+  }) async {
     final scope = AppScope.of(context);
     final initial = widget.initial;
     final previous = await scope.getDiaries();
@@ -447,52 +428,30 @@ class _DiaryFormState extends State<DiaryForm> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (_emoji != null) ...[
-                    Padding(
-                      padding: const EdgeInsets.only(right: 8, top: 2),
-                      child: PressBounce(
-                        onPressed: _pickEmoji,
-                        pressedScale: 0.92,
-                        child: DayStickerImage(
-                          key: ValueKey(_emoji),
-                          asset: _emoji!,
-                          width: 42,
-                          height: 42,
-                        ),
-                      ),
-                    ),
-                  ],
-                  Expanded(
-                    child: TextField(
-                      controller: _title,
-                      focusNode: _titleFocus,
-                      textInputAction: TextInputAction.next,
-                      onSubmitted: (_) => _bodyFocus.requestFocus(),
-                      style: TextStyle(
-                        fontFamily: font,
-                        fontWeight: FontWeight.w800,
-                        fontSize: 20,
-                        height: 1.3,
-                        color: colors.text,
-                      ),
-                      decoration: InputDecoration(
-                        hintText: AppStrings.diaryTitleHint,
-                        hintStyle: TextStyle(
-                          fontFamily: font,
-                          color: colors.hint,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 20,
-                        ),
-                        border: InputBorder.none,
-                        isDense: true,
-                        contentPadding: const EdgeInsets.only(bottom: 8),
-                      ),
-                    ),
+              TextField(
+                controller: _title,
+                focusNode: _titleFocus,
+                textInputAction: TextInputAction.next,
+                onSubmitted: (_) => _bodyFocus.requestFocus(),
+                style: TextStyle(
+                  fontFamily: font,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 20,
+                  height: 1.3,
+                  color: colors.text,
+                ),
+                decoration: InputDecoration(
+                  hintText: AppStrings.diaryTitleHint,
+                  hintStyle: TextStyle(
+                    fontFamily: font,
+                    color: colors.hint,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 20,
                   ),
-                ],
+                  border: InputBorder.none,
+                  isDense: true,
+                  contentPadding: const EdgeInsets.only(bottom: 8),
+                ),
               ),
               ColoredBox(
                 color: rule,
@@ -548,12 +507,6 @@ class _DiaryFormState extends State<DiaryForm> {
                             color: accent,
                             name: DiaryCoverLook.label(_cover),
                             onPressed: _pickCover,
-                          ),
-                          const SizedBox(width: 4),
-                          _DiaryStickerChip(
-                            color: accent,
-                            asset: _emoji,
-                            onPressed: _pickEmoji,
                           ),
                         ],
                       ),
@@ -635,58 +588,6 @@ class _LinedDiaryBody extends StatelessWidget {
           border: InputBorder.none,
           isDense: true,
           contentPadding: const EdgeInsets.only(top: 4),
-        ),
-      ),
-    );
-  }
-}
-
-class _DiaryStickerChip extends StatelessWidget {
-  const _DiaryStickerChip({
-    required this.color,
-    required this.onPressed,
-    this.asset,
-  });
-
-  final Color color;
-  final String? asset;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return PressBounce(
-      onPressed: onPressed,
-      color: AppColors.of(context).card,
-      pressedColor: AppColors.of(context).pressed,
-      borderRadius: BorderRadius.circular(999),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(8, 5, 10, 5),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (asset != null)
-              Image.asset(asset!, width: 20, height: 20)
-            else
-              ColorFiltered(
-                colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
-                child: Image.asset(
-                  AppIcons.emoji,
-                  width: 20,
-                  height: 20,
-                  semanticLabel: AppStrings.emojiAction,
-                ),
-              ),
-            const SizedBox(width: 4),
-            Text(
-              AppStrings.emojiAction,
-              style: TextStyle(
-                fontFamily: AppFonts.of(context),
-                fontSize: 15,
-                fontWeight: FontWeight.w700,
-                color: color,
-              ),
-            ),
-          ],
         ),
       ),
     );

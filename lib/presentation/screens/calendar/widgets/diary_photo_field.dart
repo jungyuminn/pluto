@@ -1,11 +1,11 @@
 import 'dart:io';
 
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:job_planner/core/constants/app_fonts.dart';
 import 'package:job_planner/core/constants/app_strings.dart';
 import 'package:job_planner/core/theme/app_colors.dart';
 import 'package:job_planner/core/utils/press_bounce.dart';
+import 'package:job_planner/data/datasources/diary_photo_storage.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/diary_draw_sheet.dart';
 
 class DiaryPhotoField extends StatefulWidget {
@@ -37,10 +37,9 @@ class _DiaryPhotoFieldState extends State<DiaryPhotoField> {
 
   Future<void> _pick() async {
     setState(() => _actionsOpen = false);
-    final file = await FilePicker.pickFile(type: FileType.image);
-    final pickedPath = file?.path;
-    if (file == null || pickedPath == null) return;
-    widget.onPicked((path: pickedPath, name: file.name));
+    final picked = await const DiaryPhotoStorage().pick();
+    if (!mounted || picked == null) return;
+    widget.onPicked(picked);
   }
 
   Future<void> _draw() async {
@@ -111,6 +110,7 @@ class _DiaryPhotoFieldState extends State<DiaryPhotoField> {
                         color: colors.card,
                         child: Image.file(
                           File(photoPath),
+                          key: ValueKey(photoPath),
                           fit: BoxFit.contain,
                           width: double.infinity,
                           height: double.infinity,

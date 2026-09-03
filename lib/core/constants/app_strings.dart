@@ -64,9 +64,9 @@ class AppStrings {
   static const restoreData = '데이터 복구하기';
   static const backupSavedTitle = '백업했어요';
   static const backupSavedBody =
-      '최근 3개까지 앱과 다운로드에 남겨 둬요. 앱을 지워도 다운로드 파일로 복구할 수 있어요';
+      '다운로드에 저장했어요. 앱을 지워도 백업 파일로 복구할 수 있어요';
   static const backupSavedBodyIos =
-      '아이클라우드에 올려 두었어요. 같은 애플 아이디로 폰을 바꿔도 복구할 수 있어요';
+      '아이클라우드에 저장했어요. 앱을 지워도 백업 파일로 복구할 수 있어요';
   static const backupFailedTitle = '백업하지 못했어요';
   static const backupFailedBody = '잠시 후 다시 시도해 주세요';
   static const backupIcloudUnavailableBody =
@@ -79,7 +79,7 @@ class AppStrings {
   static const restoreLatest = '가장 최근';
   static const restoreAction = '복구하기';
   static const restoreDoneTitle = '복구했어요';
-  static const restoreDoneBody = '홈·캘린더·잡 화면에 바로 반영돼요';
+  static const restoreDoneBody = '홈·캘린더·지원서 화면에 바로 반영돼요';
   static const restoreFailedTitle = '복구하지 못했어요';
   static const restoreFailedBody = '잡플래너 백업 파일이 맞는지 확인해 주세요';
   static const autoBackupSetting = '자동저장 주기';

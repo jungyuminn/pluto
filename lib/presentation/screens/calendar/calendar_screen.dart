@@ -734,11 +734,14 @@ class _CalendarScreenState extends State<CalendarScreen>
                                                       eventsOf: _eventsOn,
                                                       diariesOf: _diariesOn,
                                                       ledgersOf: _ledgersOn,
-                                                      emojisOf: (date) =>
-                                                          emojis.on(
-                                                            date,
-                                                            layer: _stickerLayer,
-                                                          ),
+                                                      emojisOf: _showDiary
+                                                          ? null
+                                                          : (date) =>
+                                                              emojis.on(
+                                                                date,
+                                                                layer:
+                                                                    _stickerLayer,
+                                                              ),
                                                       showDiary: _showDiary,
                                                       showLedger: _showLedger,
                                                       showLedgerTitle:

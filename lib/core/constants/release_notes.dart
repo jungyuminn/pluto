@@ -17,6 +17,20 @@ class ReleaseNote {
 abstract final class ReleaseNotes {
   static const all = [
     ReleaseNote(
+      version: '1.1.1',
+      items: [
+        '아이폰 백업이 아이클라우드에 저장돼요',
+        '홈 돋보기를 열면 바로 전체 목록이 나와요',
+        '검색에서 카테고리별 보기와 날짜별 보기를 바꿀 수 있어요',
+        '기간을 고르면 검색창 아래 알약으로 보여요',
+      ],
+      fixes: [
+        '일기 사진이 저장되지 않던 문제를 고쳤어요',
+        '일기 스티커가 안 지워지던 문제를 고쳤어요',
+        '아이클라우드에서 복구할 파일을 고르기 쉽게 했어요',
+      ],
+    ),
+    ReleaseNote(
       version: '1.1.0',
       items: [
         '지원서에서 자격증을 모아 볼 수 있어요',

@@ -5,6 +5,8 @@ import 'package:job_planner/core/constants/app_icons.dart';
 import 'package:job_planner/core/constants/app_strings.dart';
 import 'package:job_planner/core/theme/app_colors.dart';
 import 'package:job_planner/core/utils/press_bounce.dart';
+import 'package:job_planner/presentation/widgets/app_bar_icon_group.dart';
+import 'package:job_planner/presentation/widgets/themed_asset.dart';
 
 class CalendarOverflowMenu extends StatelessWidget {
   const CalendarOverflowMenu({
@@ -379,6 +381,356 @@ class LicenseVisibleItemsMenu extends StatelessWidget {
   }
 }
 
+class AllEventsOverflowMenu extends StatelessWidget {
+  const AllEventsOverflowMenu({
+    super.key,
+    required this.onPickRange,
+    required this.onVisibleItems,
+    required this.onSortMode,
+  });
+
+  final VoidCallback onPickRange;
+  final VoidCallback onVisibleItems;
+  final VoidCallback onSortMode;
+
+  @override
+  Widget build(BuildContext context) {
+    return _MenuCard(
+      children: [
+        _MenuItem(
+          label: AppStrings.searchVisibleItems,
+          trailingAsset: AppIcons.calendarList,
+          onPressed: onVisibleItems,
+        ),
+        _MenuItem(
+          label: AppStrings.calendarSortMode,
+          trailingAsset: AppIcons.calendarList,
+          trailingQuarterTurns: 1,
+          onPressed: onSortMode,
+        ),
+        _MenuItem(
+          label: AppStrings.searchRangeSetting,
+          trailingAsset: AppIcons.calendarOutlined,
+          onPressed: onPickRange,
+        ),
+      ],
+    );
+  }
+}
+
+class AllEventsVisibleMenu extends StatelessWidget {
+  const AllEventsVisibleMenu({
+    super.key,
+    required this.showTodos,
+    required this.showJobs,
+    required this.onShowTodosChanged,
+    required this.onShowJobsChanged,
+    this.showJobFilter = true,
+    this.onBack,
+  });
+
+  final bool showTodos;
+  final bool showJobs;
+  final ValueChanged<bool> onShowTodosChanged;
+  final ValueChanged<bool> onShowJobsChanged;
+  final bool showJobFilter;
+  final VoidCallback? onBack;
+
+  @override
+  Widget build(BuildContext context) {
+    return _MenuCard(
+      children: [
+        if (onBack != null)
+          _MenuItem(
+            label: AppStrings.searchVisibleItems,
+            leading: Icons.chevron_left_rounded,
+            onPressed: onBack!,
+          ),
+        _FilterItem(
+          label: AppStrings.calendarShowTodos,
+          checked: showTodos,
+          onChanged: onShowTodosChanged,
+        ),
+        if (showJobFilter)
+          _FilterItem(
+            label: AppStrings.calendarShowCompanies,
+            checked: showJobs,
+            onChanged: onShowJobsChanged,
+          ),
+      ],
+    );
+  }
+}
+
+class AllEventsSortMenu extends StatelessWidget {
+  const AllEventsSortMenu({
+    super.key,
+    required this.newestFirst,
+    required this.onNewestFirstChanged,
+    required this.groupByDate,
+    required this.onGroupByDateChanged,
+    this.onBack,
+  });
+
+  final bool newestFirst;
+  final ValueChanged<bool> onNewestFirstChanged;
+  final bool groupByDate;
+  final ValueChanged<bool> onGroupByDateChanged;
+  final VoidCallback? onBack;
+
+  @override
+  Widget build(BuildContext context) {
+    return _MenuCard(
+      children: [
+        if (onBack != null)
+          _MenuItem(
+            label: AppStrings.calendarSortMode,
+            leading: Icons.chevron_left_rounded,
+            onPressed: onBack!,
+          ),
+        _FilterItem(
+          label: AppStrings.categoryView,
+          checked: !groupByDate,
+          onChanged: (value) => onGroupByDateChanged(!value),
+        ),
+        _FilterItem(
+          label: AppStrings.searchDateView,
+          checked: groupByDate,
+          onChanged: (value) => onGroupByDateChanged(value),
+        ),
+        _FilterItem(
+          label: AppStrings.searchSortOldest,
+          checked: !newestFirst,
+          onChanged: (value) => onNewestFirstChanged(!value),
+        ),
+      ],
+    );
+  }
+}
+
+enum _AllEventsMenuPage { root, visible, sort }
+
+class AllEventsFilterMenuButton extends StatefulWidget {
+  const AllEventsFilterMenuButton({
+    super.key,
+    required this.filterTodos,
+    required this.filterJobs,
+    required this.showJobFilter,
+    required this.onFilterTodosChanged,
+    required this.onFilterJobsChanged,
+    required this.newestFirst,
+    required this.onNewestFirstChanged,
+    required this.groupByDate,
+    required this.onGroupByDateChanged,
+    required this.onPickRange,
+  });
+
+  final bool filterTodos;
+  final bool filterJobs;
+  final bool showJobFilter;
+  final ValueChanged<bool> onFilterTodosChanged;
+  final ValueChanged<bool> onFilterJobsChanged;
+  final bool newestFirst;
+  final ValueChanged<bool> onNewestFirstChanged;
+  final bool groupByDate;
+  final ValueChanged<bool> onGroupByDateChanged;
+  final Future<void> Function() onPickRange;
+
+  @override
+  State<AllEventsFilterMenuButton> createState() =>
+      _AllEventsFilterMenuButtonState();
+}
+
+class _AllEventsFilterMenuButtonState extends State<AllEventsFilterMenuButton>
+    with SingleTickerProviderStateMixin {
+  final _link = LayerLink();
+  final _portal = OverlayPortalController();
+  late final AnimationController _animation;
+  late final CurvedAnimation _fade;
+  late final Animation<double> _scale;
+  var _closing = false;
+  var _page = _AllEventsMenuPage.root;
+
+  @override
+  void initState() {
+    super.initState();
+    _animation = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 200),
+      reverseDuration: const Duration(milliseconds: 140),
+    );
+    _fade = CurvedAnimation(
+      parent: _animation,
+      curve: Curves.easeOutCubic,
+      reverseCurve: Curves.easeInCubic,
+    );
+    _scale = Tween<double>(begin: 0.92, end: 1).animate(_fade);
+  }
+
+  @override
+  void dispose() {
+    _fade.dispose();
+    _animation.dispose();
+    super.dispose();
+  }
+
+  Future<void> _toggle() async {
+    if (_portal.isShowing) {
+      await _close();
+    } else {
+      FocusManager.instance.primaryFocus?.unfocus();
+      _portal.show();
+      _page = _AllEventsMenuPage.root;
+      _animation.forward(from: 0);
+      setState(() {});
+    }
+  }
+
+  Future<void> _close() async {
+    if (!_portal.isShowing || _closing) return;
+    _closing = true;
+    await _animation.reverse();
+    if (mounted) {
+      _portal.hide();
+      _page = _AllEventsMenuPage.root;
+      setState(() {});
+    }
+    _closing = false;
+  }
+
+  Future<void> _pickRange() async {
+    await _close();
+    if (!mounted) return;
+    await widget.onPickRange();
+  }
+
+  Widget _menuPage() {
+    return switch (_page) {
+      _AllEventsMenuPage.visible => AllEventsVisibleMenu(
+        key: const ValueKey('visible'),
+        showTodos: widget.filterTodos,
+        showJobs: widget.filterJobs,
+        showJobFilter: widget.showJobFilter,
+        onShowTodosChanged: (value) {
+          widget.onFilterTodosChanged(value);
+          setState(() {});
+        },
+        onShowJobsChanged: (value) {
+          widget.onFilterJobsChanged(value);
+          setState(() {});
+        },
+        onBack: () => setState(() => _page = _AllEventsMenuPage.root),
+      ),
+      _AllEventsMenuPage.sort => AllEventsSortMenu(
+        key: const ValueKey('sort'),
+        newestFirst: widget.newestFirst,
+        onNewestFirstChanged: (value) {
+          widget.onNewestFirstChanged(value);
+          setState(() {});
+        },
+        groupByDate: widget.groupByDate,
+        onGroupByDateChanged: (value) {
+          widget.onGroupByDateChanged(value);
+          setState(() {});
+        },
+        onBack: () => setState(() => _page = _AllEventsMenuPage.root),
+      ),
+      _AllEventsMenuPage.root => AllEventsOverflowMenu(
+        key: const ValueKey('root'),
+        onPickRange: _pickRange,
+        onVisibleItems: () => setState(() => _page = _AllEventsMenuPage.visible),
+        onSortMode: () => setState(() => _page = _AllEventsMenuPage.sort),
+      ),
+    };
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return OverlayPortal(
+      controller: _portal,
+      overlayChildBuilder: (context) {
+        return SizedBox.expand(
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              Positioned.fill(
+                child: GestureDetector(
+                  behavior: HitTestBehavior.translucent,
+                  onTap: _close,
+                ),
+              ),
+              CompositedTransformFollower(
+                link: _link,
+                showWhenUnlinked: false,
+                targetAnchor: Alignment.bottomRight,
+                followerAnchor: Alignment.topRight,
+                offset: const Offset(0, 6),
+                child: UnconstrainedBox(
+                  alignment: Alignment.topRight,
+                  clipBehavior: Clip.none,
+                  child: FadeTransition(
+                    opacity: _fade,
+                    child: ScaleTransition(
+                      alignment: Alignment.topRight,
+                      scale: _scale,
+                      child: AnimatedSize(
+                        duration: const Duration(milliseconds: 260),
+                        curve: Curves.easeOutCubic,
+                        alignment: Alignment.topRight,
+                        child: AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 220),
+                          switchInCurve: Curves.easeOutCubic,
+                          switchOutCurve: Curves.easeInCubic,
+                          layoutBuilder: (current, previous) {
+                            return Stack(
+                              alignment: Alignment.topRight,
+                              clipBehavior: Clip.none,
+                              children: [
+                                ...previous,
+                                if (current != null) current,
+                              ],
+                            );
+                          },
+                          transitionBuilder: (child, animation) {
+                            final submenu = child.key != const ValueKey('root');
+                            return FadeTransition(
+                              opacity: animation,
+                              child: SlideTransition(
+                                position: Tween<Offset>(
+                                  begin: Offset(submenu ? 0.14 : -0.14, 0),
+                                  end: Offset.zero,
+                                ).animate(animation),
+                                child: child,
+                              ),
+                            );
+                          },
+                          child: _menuPage(),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+      child: CompositedTransformTarget(
+        link: _link,
+        child: AppBarIconSlot(
+          selected: _portal.isShowing,
+          onPressed: _toggle,
+          child: ThemedAsset(
+            asset: AppIcons.more,
+            width: 18,
+            height: 18,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _MenuCard extends StatelessWidget {
   const _MenuCard({required this.children});
 
@@ -403,6 +755,7 @@ class _MenuCard extends StatelessWidget {
       AppStrings.calendarVisibleItems,
       AppStrings.jobVisibleItems,
       AppStrings.licenseVisibleItems,
+      AppStrings.searchVisibleItems,
     ].map(widthOf).reduce((a, b) => a > b ? a : b);
     return label + 74;
   }

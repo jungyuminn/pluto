@@ -367,10 +367,10 @@ class AppStrings {
   static const monthNotificationEmpty = '이번 달 일정이 없어요';
   static const companySection = '지원서';
   static const jobScreenTitle = '지원서';
-  static const searchHint = '지원서, 분야, 카테고리 검색';
+  static const searchHint = '지원서, 카테고리, 분야 검색';
   static const licenseScreenTitle = '자격증';
   static const licenseMode = '자격증 전환';
-  static const licenseSearchHint = '자격증, 발급기관, 카테고리 검색';
+  static const licenseSearchHint = '자격증, 카테고리, 발급기관 검색';
   static const addLicense = '+ 자격증을 추가하세요';
   static const licenseNameHint = '자격증 이름을 입력하세요';
   static const licenseIssuerHint = '발급기관';
@@ -452,6 +452,10 @@ class AppStrings {
   static const allEventsEmpty = '할 일이 없어요';
   static const allEventsSearchEmpty = '검색 결과가 없어요';
   static const allEventsDeleteAll = '전체 삭제';
+  static const searchSortOldest = '날짜 오름차순';
+  static const searchDateView = '날짜별 보기';
+  static const searchVisibleItems = '검색에 표시할 항목';
+  static const searchRangeSetting = '기간 설정';
   static String allEventsDeleteBody(int count) => '할 일 $count개가 사라져요';
   static String monthlyStatsCardTitle(int month) => '$month월 통계가 도착했어요';
   static const weeklyStatsCardTitle = '지난주 통계가 도착했어요';

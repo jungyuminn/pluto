@@ -82,12 +82,24 @@ enum ReleaseDemo {
   wordmark,
   licenseFile,
   themeBadge,
+  icloudBackup,
+  searchOpenList,
+  searchGroupBy,
+  searchRangePill,
+  diaryPhotoSave,
+  diaryStickerRemove,
+  icloudRestore,
   feature,
   fix,
 }
 
 ReleaseDemo releaseDemoFor(String text, {required bool isFix}) {
   if (isFix) {
+    if (text.contains('일기 사진')) return ReleaseDemo.diaryPhotoSave;
+    if (text.contains('일기 스티커')) return ReleaseDemo.diaryStickerRemove;
+    if (text.contains('복구할 파일') || text.contains('아이클라우드에서 복구')) {
+      return ReleaseDemo.icloudRestore;
+    }
     if (text.contains('지원서 순서') || text.contains('손이 떼면')) {
       return ReleaseDemo.jobReorder;
     }
@@ -123,6 +135,14 @@ ReleaseDemo releaseDemoFor(String text, {required bool isFix}) {
   if (text.contains('일상 모드') && text.contains('검색')) {
     return ReleaseDemo.dailySearch;
   }
+  if (text.contains('아이클라우드에 저장')) return ReleaseDemo.icloudBackup;
+  if (text.contains('돋보기를 열면') || text.contains('전체 목록이 나와')) {
+    return ReleaseDemo.searchOpenList;
+  }
+  if (text.contains('카테고리별 보기와 날짜별')) {
+    return ReleaseDemo.searchGroupBy;
+  }
+  if (text.contains('알약으로')) return ReleaseDemo.searchRangePill;
   if (text.contains('자격증을 모아') || text.contains('간략 보기')) {
     return ReleaseDemo.license;
   }
@@ -300,6 +320,13 @@ class ReleaseDemoView extends StatelessWidget {
       ReleaseDemo.wordmark => const _WordmarkDemo(),
       ReleaseDemo.licenseFile => const _LicenseFileDemo(),
       ReleaseDemo.themeBadge => const _ThemeBadgeDemo(),
+      ReleaseDemo.icloudBackup => const _IcloudBackupDemo(),
+      ReleaseDemo.searchOpenList => const _SearchOpenListDemo(),
+      ReleaseDemo.searchGroupBy => const _SearchGroupByDemo(),
+      ReleaseDemo.searchRangePill => const _SearchRangePillDemo(),
+      ReleaseDemo.diaryPhotoSave => const _DiaryPhotoSaveDemo(),
+      ReleaseDemo.diaryStickerRemove => const _DiaryStickerRemoveDemo(),
+      ReleaseDemo.icloudRestore => const _IcloudRestoreDemo(),
       ReleaseDemo.feature => const _FeatureDemo(),
       ReleaseDemo.fix => const _FixDemo(),
     };
@@ -3844,6 +3871,581 @@ class _ThemeBadgeDemo extends StatelessWidget {
               ),
             ],
           ),
+        );
+      },
+    );
+  }
+}
+
+class _MiniSearchField extends StatelessWidget {
+  const _MiniSearchField({this.trailing});
+
+  final Widget? trailing;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    return _Card(
+      padding: const EdgeInsets.fromLTRB(10, 8, 8, 8),
+      child: Row(
+        children: [
+          ThemedAsset(asset: AppIcons.search, width: 16, height: 16),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              AppStrings.allEventsSearchHint,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontFamily: AppFonts.of(context),
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: colors.hint,
+              ),
+            ),
+          ),
+          if (trailing != null) ...[const SizedBox(width: 4), trailing!],
+        ],
+      ),
+    );
+  }
+}
+
+class _MiniGroupCard extends StatelessWidget {
+  const _MiniGroupCard({
+    required this.title,
+    required this.subtitle,
+    this.showCount = true,
+  });
+
+  final String title;
+  final String subtitle;
+  final bool showCount;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    final font = AppFonts.of(context);
+    return _Card(
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text.rich(
+            TextSpan(
+              children: [
+                TextSpan(text: title),
+                if (showCount)
+                  TextSpan(
+                    text: ' 2',
+                    style: TextStyle(
+                      color: colors.muted,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+              ],
+            ),
+            style: TextStyle(
+              fontFamily: font,
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: colors.text,
+            ),
+          ),
+          const SizedBox(height: 8),
+          CalendarEventLabel(
+            title: subtitle,
+            color: const Color(0xFF3B82F6),
+            height: 20,
+            fontSize: 11,
+            applyCalendarScale: false,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _IcloudBackupDemo extends StatelessWidget {
+  const _IcloudBackupDemo();
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 3000,
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final font = AppFonts.of(context);
+        final lift = Curves.easeInCubic.transform(_gate(t, 0.16, 0.52));
+        final glow = Curves.easeOutCubic.transform(_gate(t, 0.44, 0.68));
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(28, 16, 28, 12),
+          child: Stack(
+            alignment: Alignment.topCenter,
+            children: [
+              Column(
+                children: [
+                  Icon(
+                    Icons.cloud_rounded,
+                    size: 42,
+                    color: Color.lerp(colors.muted, colors.accent, glow)!,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '아이클라우드',
+                    style: TextStyle(
+                      fontFamily: font,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                      color: Color.lerp(colors.muted, colors.accent, glow)!,
+                    ),
+                  ),
+                ],
+              ),
+              Align(
+                alignment: Alignment.bottomCenter,
+                child: Opacity(
+                  opacity: (1 - lift * 0.9).clamp(0.0, 1.0),
+                  child: Transform.translate(
+                    offset: Offset(0, -lift * 56),
+                    child: _Card(
+                      child: Text(
+                        '잡플래너_백업.zip',
+                        style: TextStyle(
+                          fontFamily: font,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w800,
+                          color: colors.accent,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _SearchOpenListDemo extends StatelessWidget {
+  const _SearchOpenListDemo();
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 2800,
+      builder: (context, t) {
+        final show = Curves.easeOutCubic.transform(_gate(t, 0.08, 0.32));
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(18, 14, 18, 10),
+          child: Column(
+            children: [
+              const _MiniSearchField(),
+              const SizedBox(height: 8),
+              Opacity(
+                opacity: show,
+                child: Transform.translate(
+                  offset: Offset(0, (1 - show) * 10),
+                  child: const _MiniGroupCard(
+                    title: '공부',
+                    subtitle: '자기소개서 제출',
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _SearchGroupByDemo extends StatelessWidget {
+  const _SearchGroupByDemo();
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 3400,
+      builder: (context, t) {
+        final toDate = t < 0.5
+            ? Curves.easeOutCubic.transform(_gate(t, 0.16, 0.38))
+            : 1 - Curves.easeOutCubic.transform(_gate(t, 0.66, 0.88));
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(18, 12, 18, 10),
+          child: Column(
+            children: [
+              _MiniSearchField(
+                trailing: ThemedAsset(
+                  asset: AppIcons.more,
+                  width: 16,
+                  height: 16,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Expanded(
+                child: Stack(
+                  children: [
+                    Opacity(
+                      opacity: (1 - toDate).clamp(0.0, 1.0),
+                      child: Transform.translate(
+                        offset: Offset(0, toDate * 8),
+                        child: const _MiniGroupCard(
+                          title: '공부',
+                          subtitle: '9월 4일',
+                        ),
+                      ),
+                    ),
+                    Opacity(
+                      opacity: toDate.clamp(0.0, 1.0),
+                      child: Transform.translate(
+                        offset: Offset(0, (1 - toDate) * 8),
+                        child: const _MiniGroupCard(
+                          title: '9월 4일',
+                          subtitle: '공부',
+                          showCount: false,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _SearchRangePillDemo extends StatelessWidget {
+  const _SearchRangePillDemo();
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 3000,
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final font = AppFonts.of(context);
+        final pill = Curves.easeOutCubic.transform(_gate(t, 0.28, 0.48));
+        final tap = _pulse(t, 0.12, 0.22, 0.36);
+        return Stack(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(18, 18, 18, 12),
+              child: Column(
+                children: [
+                  _MiniSearchField(
+                    trailing: ThemedAsset(
+                      asset: AppIcons.more,
+                      width: 16,
+                      height: 16,
+                    ),
+                  ),
+                  ClipRect(
+                    child: Align(
+                      alignment: Alignment.topLeft,
+                      heightFactor: pill,
+                      child: Opacity(
+                        opacity: pill,
+                        child: Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: DecoratedBox(
+                              decoration: BoxDecoration(
+                                color: colors.accent.withValues(alpha: 0.16),
+                                borderRadius: BorderRadius.circular(999),
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 5,
+                                ),
+                                child: Text(
+                                  '9. 1. ~ 9. 7.',
+                                  style: TextStyle(
+                                    fontFamily: font,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w800,
+                                    color: colors.accent,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (tap > 0)
+              const Positioned(right: 28, top: 30, child: _Finger(pressed: 1)),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _DiaryPhotoSaveDemo extends StatelessWidget {
+  const _DiaryPhotoSaveDemo();
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 3000,
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final font = AppFonts.of(context);
+        final photo = Curves.easeOutBack.transform(_gate(t, 0.22, 0.48));
+        final check = _gate(t, 0.52, 0.7);
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(22, 16, 22, 12),
+          child: _Card(
+            padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+            child: Row(
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: SizedBox(
+                    width: 56,
+                    height: 56,
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        ColoredBox(color: colors.border),
+                        Opacity(
+                          opacity: photo.clamp(0.0, 1.0),
+                          child: Transform.scale(
+                            scale: 0.72 + photo * 0.28,
+                            child: const DecoratedBox(
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [
+                                    Color(0xFFBFDBFE),
+                                    Color(0xFF93C5FD),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    '오늘 일기',
+                    style: TextStyle(
+                      fontFamily: font,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w800,
+                      color: colors.text,
+                    ),
+                  ),
+                ),
+                Opacity(
+                  opacity: check,
+                  child: Icon(
+                    Icons.check_circle_rounded,
+                    color: const Color(0xFF22C55E),
+                    size: 22,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _DiaryStickerRemoveDemo extends StatelessWidget {
+  const _DiaryStickerRemoveDemo();
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 3000,
+      builder: (context, t) {
+        final gone = Curves.easeInCubic.transform(_gate(t, 0.38, 0.62));
+        final tap = _pulse(t, 0.22, 0.32, 0.46);
+        return Stack(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(36, 22, 36, 16),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: SizedBox(
+                  height: 124,
+                  child: Stack(
+                    children: [
+                      const Positioned.fill(
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [Color(0xFFBFDBFE), Color(0xFF93C5FD)],
+                            ),
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        right: 14,
+                        top: 12,
+                        child: Opacity(
+                          opacity: (1 - gone).clamp(0.0, 1.0),
+                          child: Transform.translate(
+                            offset: Offset(gone * 18, -gone * 28),
+                            child: Transform.rotate(
+                              angle: gone * 0.6,
+                              child: Transform.scale(
+                                scale: 1 - gone * 0.35,
+                                child: const DecoratedBox(
+                                  decoration: BoxDecoration(
+                                    color: Color(0xFFFFF7ED),
+                                    shape: BoxShape.circle,
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Color(0x33000000),
+                                        blurRadius: 6,
+                                        offset: Offset(0, 2),
+                                      ),
+                                    ],
+                                  ),
+                                  child: SizedBox(
+                                    width: 28,
+                                    height: 28,
+                                    child: Center(
+                                      child: Text(
+                                        '⭐',
+                                        style: TextStyle(fontSize: 14),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            if (tap > 0)
+              const Positioned(right: 48, top: 34, child: _Finger(pressed: 1)),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _IcloudRestoreDemo extends StatelessWidget {
+  const _IcloudRestoreDemo();
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 3000,
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final font = AppFonts.of(context);
+        final pick = _gate(t, 0.28, 0.46);
+        final tap = _pulse(t, 0.16, 0.26, 0.4);
+        return Stack(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 22, 20, 14),
+              child: _Card(
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.cloud_rounded,
+                          size: 18,
+                          color: colors.accent,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            '잡플래너_백업.zip',
+                            style: TextStyle(
+                              fontFamily: font,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w800,
+                              color: colors.text,
+                            ),
+                          ),
+                        ),
+                        Opacity(
+                          opacity: pick,
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              color: colors.accent.withValues(alpha: 0.16),
+                              borderRadius: BorderRadius.circular(999),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 3,
+                              ),
+                              child: Text(
+                                AppStrings.restoreLatest,
+                                style: TextStyle(
+                                  fontFamily: font,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w800,
+                                  color: colors.accent,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    Opacity(
+                      opacity: 0.45,
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.cloud_outlined,
+                            size: 18,
+                            color: colors.muted,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            '잡플래너_백업_이전.zip',
+                            style: TextStyle(
+                              fontFamily: font,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: colors.muted,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            if (tap > 0)
+              const Positioned(left: 36, top: 36, child: _Finger(pressed: 1)),
+          ],
         );
       },
     );

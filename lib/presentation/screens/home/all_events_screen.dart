@@ -14,10 +14,12 @@ import 'package:job_planner/domain/entities/job_application.dart';
 import 'package:job_planner/presentation/screens/add_company/widgets/add_company_sheet.dart';
 import 'package:job_planner/presentation/screens/calendar/calendar_day_events.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/add_event_sheet.dart';
+import 'package:job_planner/presentation/screens/calendar/widgets/calendar_filter_menu.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/day_event_label.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/delete_event_dialog.dart';
 import 'package:job_planner/presentation/screens/calendar/widgets/delete_repeat_event_dialog.dart';
 import 'package:job_planner/presentation/widgets/app_back_button.dart';
+import 'package:job_planner/presentation/widgets/app_bar_icon_group.dart';
 import 'package:job_planner/presentation/widgets/app_calendar/app_calendar_sheet.dart';
 
 class HomeAllEventsCard extends StatelessWidget {
@@ -88,9 +90,13 @@ class _AllEventsScreenState extends State<AllEventsScreen> {
   var _applications = <JobApplication>[];
   var _categories = <EventCategory>[];
   var _loading = true;
-  var _typeFilter = _TypeFilter.all;
+  var _filterTodos = true;
+  var _filterJobs = true;
+  var _newestFirst = false;
+  var _groupByDate = false;
   DateTime? _rangeStart;
   DateTime? _rangeEnd;
+  var _rangeChipText = AppStrings.calendarModeRange;
 
   @override
   void initState() {
@@ -124,13 +130,7 @@ class _AllEventsScreenState extends State<AllEventsScreen> {
     setState(() {
       _rawEvents = events;
       _applications = applications;
-      _events = [...jobs, ...todos]..sort((a, b) {
-          if (a.someday != b.someday) return a.someday ? 1 : -1;
-          final byDay = a.day.compareTo(b.day);
-          if (byDay != 0) return byDay;
-          return (a.startMinutes ?? 24 * 60)
-              .compareTo(b.startMinutes ?? 24 * 60);
-        });
+      _events = [...jobs, ...todos];
       _categories = [...companyCategories, ...categories];
       _loading = false;
     });
@@ -198,8 +198,8 @@ class _AllEventsScreenState extends State<AllEventsScreen> {
   bool _matches(CalendarEvent event) {
     final showJobs = AppScope.of(context).navPreference.showJobTab;
     if (event.isJob) {
-      if (!showJobs || _typeFilter == _TypeFilter.todos) return false;
-    } else if (showJobs && _typeFilter == _TypeFilter.jobs) {
+      if (!showJobs || !_filterJobs) return false;
+    } else if (!_filterTodos) {
       return false;
     }
     if (!_inDateRange(event)) return false;
@@ -250,7 +250,7 @@ class _AllEventsScreenState extends State<AllEventsScreen> {
   String get _rangeChipLabel {
     final start = _rangeStart;
     final end = _rangeEnd;
-    if (start == null || end == null) return AppStrings.calendarModeRange;
+    if (start == null || end == null) return _rangeChipText;
     if (start == end) return _rangeDayLabel(start);
     return '${_rangeDayLabel(start)} - ${_rangeDayLabel(end)}';
   }
@@ -282,6 +282,9 @@ class _AllEventsScreenState extends State<AllEventsScreen> {
     setState(() {
       _rangeStart = DateTime(days.first.year, days.first.month, days.first.day);
       _rangeEnd = DateTime(days.last.year, days.last.month, days.last.day);
+      _rangeChipText = _rangeStart == _rangeEnd
+          ? _rangeDayLabel(_rangeStart!)
+          : '${_rangeDayLabel(_rangeStart!)} - ${_rangeDayLabel(_rangeEnd!)}';
     });
   }
 
@@ -292,16 +295,35 @@ class _AllEventsScreenState extends State<AllEventsScreen> {
     });
   }
 
-  void _toggleType(_TypeFilter type) {
-    setState(() {
-      _typeFilter = _typeFilter == type ? _TypeFilter.all : type;
-    });
+  void _setNewestFirst(bool value) {
+    if (_newestFirst == value) return;
+    setState(() => _newestFirst = value);
+  }
+
+  void _setGroupByDate(bool value) {
+    if (_groupByDate == value) return;
+    setState(() => _groupByDate = value);
   }
 
   bool get _hasActiveFilter {
-    return _typeFilter != _TypeFilter.all ||
-        _rangeStart != null ||
+    return _rangeStart != null ||
         KoreanSearch.compact(_search.text).isNotEmpty;
+  }
+
+  int _compareEvents(CalendarEvent a, CalendarEvent b) {
+    if (a.someday != b.someday) return a.someday ? 1 : -1;
+    final byDay = a.day.compareTo(b.day);
+    if (byDay != 0) return _newestFirst ? -byDay : byDay;
+    final byTime = (a.startMinutes ?? 24 * 60)
+        .compareTo(b.startMinutes ?? 24 * 60);
+    return _newestFirst ? -byTime : byTime;
+  }
+
+  List<CalendarEvent> _visibleEvents(List<CalendarEvent> events) {
+    return [
+      for (final event in events)
+        if (_matches(event)) event,
+    ]..sort(_compareEvents);
   }
 
   List<String> _searchTexts(CalendarEvent event) {
@@ -343,11 +365,6 @@ class _AllEventsScreenState extends State<AllEventsScreen> {
       final key = event.categoryId ?? event.categoryName;
       groups.putIfAbsent(key, () => []).add(event);
     }
-    final totals = <String, int>{};
-    for (final event in _events) {
-      final key = event.categoryId ?? event.categoryName;
-      totals[key] = (totals[key] ?? 0) + 1;
-    }
     final used = <String>{};
     final sections = <_Section>[];
     for (final category in _categories) {
@@ -358,9 +375,7 @@ class _AllEventsScreenState extends State<AllEventsScreen> {
         _Section(
           key: category.id,
           name: category.name,
-          color: category.tint,
           events: grouped,
-          total: totals[category.id] ?? grouped.length,
         ),
       );
     }
@@ -374,12 +389,38 @@ class _AllEventsScreenState extends State<AllEventsScreen> {
         _Section(
           key: key,
           name: event.categoryName,
-          color: event.color,
           events: grouped,
-          total: totals[key] ?? grouped.length,
         ),
       );
     }
+    return sections;
+  }
+
+  String _dateKey(CalendarEvent event) {
+    if (event.someday) return 'someday';
+    final day = event.day;
+    return 'd:${day.year}-${day.month}-${day.day}';
+  }
+
+  List<_Section> _dateSections(List<CalendarEvent> events) {
+    final groups = <String, List<CalendarEvent>>{};
+    for (final event in events) {
+      groups.putIfAbsent(_dateKey(event), () => []).add(event);
+    }
+    final sections = [
+      for (final entry in groups.entries)
+        _Section(
+          key: entry.key,
+          name: entry.key == 'someday'
+              ? AppStrings.somedayTitle
+              : _dateLabel(entry.value.first.day),
+          events: entry.value,
+        ),
+    ]..sort((a, b) {
+        if (a.key == 'someday') return 1;
+        if (b.key == 'someday') return -1;
+        return _compareEvents(a.events.first, b.events.first);
+      });
     return sections;
   }
 
@@ -465,7 +506,9 @@ class _AllEventsScreenState extends State<AllEventsScreen> {
     return [
       for (final event in _events)
         if (!event.isJob &&
-            (event.categoryId ?? event.categoryName) == key &&
+            (_groupByDate
+                ? _dateKey(event) == key
+                : (event.categoryId ?? event.categoryName) == key) &&
             _matches(event))
           event,
     ];
@@ -497,7 +540,8 @@ class _AllEventsScreenState extends State<AllEventsScreen> {
       builder: (context, _) {
         final colors = AppColors.of(context);
         final top = MediaQuery.paddingOf(context).top;
-        final sections = _sections(_events);
+        final sections =
+            _groupByDate ? _dateSections(_events) : _sections(_events);
         final anyVisible = _events.any(_matches);
         final showJobFilters =
             AppScope.of(context).navPreference.showJobTab;
@@ -507,8 +551,15 @@ class _AllEventsScreenState extends State<AllEventsScreen> {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Padding(
-            padding: EdgeInsets.fromLTRB(16, top + 8, 16, 8),
+          AnimatedPadding(
+            duration: const Duration(milliseconds: 260),
+            curve: Curves.easeOutCubic,
+            padding: EdgeInsets.fromLTRB(
+              16,
+              top + 8,
+              16,
+              _rangeStart == null ? 12 : 8,
+            ),
             child: Row(
               children: [
                 AppBackButton(onPressed: () => Navigator.pop(context)),
@@ -547,36 +598,42 @@ class _AllEventsScreenState extends State<AllEventsScreen> {
                     ),
                   ),
                 ),
+                const SizedBox(width: 8),
+                AppBarIconGroup(
+                  trailing: [
+                    AllEventsFilterMenuButton(
+                      filterTodos: _filterTodos,
+                      filterJobs: _filterJobs,
+                      showJobFilter: showJobFilters,
+                      onFilterTodosChanged: (value) {
+                        setState(() => _filterTodos = value);
+                      },
+                      onFilterJobsChanged: (value) {
+                        setState(() => _filterJobs = value);
+                      },
+                      newestFirst: _newestFirst,
+                      onNewestFirstChanged: _setNewestFirst,
+                      groupByDate: _groupByDate,
+                      onGroupByDateChanged: _setGroupByDate,
+                      onPickRange: _pickRange,
+                    ),
+                  ],
+                ),
               ],
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
-                  _FilterChip(
-                    label: _rangeChipLabel,
-                    selected: _rangeStart != null,
-                    onPressed: _pickRange,
-                    onClear: _rangeStart == null ? null : _clearRange,
-                  ),
-                  if (showJobFilters) ...[
-                    const SizedBox(width: 8),
-                    _FilterChip(
-                      label: AppStrings.monthlyStatsTodoSection,
-                      selected: _typeFilter == _TypeFilter.todos,
-                      onPressed: () => _toggleType(_TypeFilter.todos),
-                    ),
-                    const SizedBox(width: 8),
-                    _FilterChip(
-                      label: AppStrings.monthlyStatsJobSection,
-                      selected: _typeFilter == _TypeFilter.jobs,
-                      onPressed: () => _toggleType(_TypeFilter.jobs),
-                    ),
-                  ],
-                ],
+          _FilterSlot(
+            visible: _rangeStart != null,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: _FilterChip(
+                  label: _rangeChipLabel,
+                  selected: true,
+                  onPressed: _pickRange,
+                  onClear: _clearRange,
+                ),
               ),
             ),
           ),
@@ -585,138 +642,106 @@ class _AllEventsScreenState extends State<AllEventsScreen> {
                 ? const Center(child: CircularProgressIndicator())
                 : Stack(
                     children: [
-                      ListView.builder(
-                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
-                        itemCount: sections.length,
-                        itemBuilder: (context, index) {
+                      AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 280),
+                        switchInCurve: Curves.easeOutCubic,
+                        switchOutCurve: Curves.easeInCubic,
+                        layoutBuilder: (current, previous) {
+                          return Stack(
+                            fit: StackFit.expand,
+                            children: [
+                              ...previous,
+                              ?current,
+                            ],
+                          );
+                        },
+                        transitionBuilder: (child, animation) {
+                          return FadeTransition(
+                            opacity: animation,
+                            child: SlideTransition(
+                              position: Tween<Offset>(
+                                begin: const Offset(0, 0.03),
+                                end: Offset.zero,
+                              ).animate(animation),
+                              child: child,
+                            ),
+                          );
+                        },
+                        child: ListView.builder(
+                          key: ValueKey(_groupByDate),
+                          padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
+                          itemCount: sections.length,
+                          itemBuilder: (context, index) {
                           final section = sections[index];
+                          final visibleEvents = _visibleEvents(section.events);
                           return _FilterSlot(
-                            visible: section.events.any(_matches),
+                            visible: visibleEvents.isNotEmpty,
                             child: Padding(
-                              padding: EdgeInsets.only(top: index == 0 ? 0 : 18),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                              padding: const EdgeInsets.only(bottom: 12),
+                              child: _SearchCategoryCard(
+                                name: section.name,
+                                count: visibleEvents.length,
+                                showCount: !_groupByDate,
+                                onDeleteAll: visibleEvents.any(
+                                  (event) => !event.isJob,
+                                )
+                                    ? () => _deleteCategory(
+                                          section.key,
+                                          section.name,
+                                        )
+                                    : null,
                                 children: [
-                                  Padding(
-                                    padding: const EdgeInsets.only(bottom: 8),
-                                    child: Row(
-                                      children: [
-                                        Container(
-                                          width: 8,
-                                          height: 8,
-                                          decoration: BoxDecoration(
-                                            color: section.color,
-                                            shape: BoxShape.circle,
-                                          ),
-                                        ),
-                                        const SizedBox(width: 6),
-                                        Expanded(
-                                          child: Text.rich(
-                                            TextSpan(
-                                              children: [
-                                                TextSpan(text: section.name),
-                                                TextSpan(
-                                                  text:
-                                                      ' ${section.events.where(_matches).length}',
-                                                  style: TextStyle(
-                                                    color: colors.muted,
-                                                    fontWeight: FontWeight.w700,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                            style: TextStyle(
-                                              fontFamily: AppFonts.of(context),
-                                              fontSize: 13,
-                                              fontWeight: FontWeight.w600,
-                                              color: colors.text,
-                                            ),
-                                          ),
-                                        ),
-                                        if (section.events.any(
-                                          (event) =>
-                                              !event.isJob && _matches(event),
-                                        ))
-                                          PressBounce(
-                                            onPressed: () => _deleteCategory(
-                                              section.key,
-                                              section.name,
-                                            ),
-                                            pressedColor: colors.pressed,
-                                            borderRadius:
-                                                BorderRadius.circular(8),
-                                            child: Padding(
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                horizontal: 8,
-                                                vertical: 4,
-                                              ),
-                                              child: Text(
-                                                AppStrings.allEventsDeleteAll,
-                                                style: TextStyle(
-                                                  fontFamily:
-                                                      AppFonts.of(context),
-                                                  fontSize: 12,
-                                                  fontWeight: FontWeight.w700,
-                                                  color: colors.danger,
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                      ],
-                                    ),
-                                  ),
-                                  for (final event in section.events)
-                                    _FilterSlot(
-                                      visible: _matches(event),
-                                      child: Padding(
-                                        padding: const EdgeInsets.only(
-                                          bottom: 8,
-                                        ),
-                                        child: event.isJob
-                                            ? DayEventLabel(
+                                  for (final event in visibleEvents)
+                                    Padding(
+                                      padding: const EdgeInsets.only(
+                                        bottom: 10,
+                                      ),
+                                      child: event.isJob
+                                          ? DayEventLabel(
+                                              title: event.title,
+                                              categoryName: _groupByDate
+                                                  ? event.categoryName
+                                                  : _eventDateLabel(event),
+                                              color: event.color,
+                                              completed: event.completed,
+                                              isRepeat: event.isRepeat,
+                                              isRange: event.isRange,
+                                              isJob: true,
+                                              memo: event.memo,
+                                              timeText: event.someday
+                                                  ? null
+                                                  : event.timeLabel,
+                                              onPressed: () => _edit(event),
+                                            )
+                                          : SwipeToDelete(
+                                              onSwipeLeft: () =>
+                                                  _delete(event),
+                                              child: DayEventLabel(
                                                 title: event.title,
-                                                categoryName:
-                                                    _eventDateLabel(event),
+                                                categoryName: _groupByDate
+                                                    ? event.categoryName
+                                                    : _eventDateLabel(event),
                                                 color: event.color,
                                                 completed: event.completed,
                                                 isRepeat: event.isRepeat,
                                                 isRange: event.isRange,
-                                                isJob: true,
                                                 memo: event.memo,
                                                 timeText: event.someday
                                                     ? null
                                                     : event.timeLabel,
-                                                onPressed: () => _edit(event),
-                                              )
-                                            : SwipeToDelete(
-                                                onSwipeLeft: () =>
-                                                    _delete(event),
-                                                child: DayEventLabel(
-                                                  title: event.title,
-                                                  categoryName:
-                                                      _eventDateLabel(event),
-                                                  color: event.color,
-                                                  completed: event.completed,
-                                                  isRepeat: event.isRepeat,
-                                                  isRange: event.isRange,
-                                                  memo: event.memo,
-                                                  timeText: event.someday
-                                                      ? null
-                                                      : event.timeLabel,
-                                                  onPressed: () =>
-                                                      _edit(event),
-                                                  onCompletePressed: () =>
-                                                      _toggleComplete(event),
-                                                ),
+                                                onPressed: () =>
+                                                    _edit(event),
+                                                onCompletePressed: () =>
+                                                    _toggleComplete(event),
                                               ),
-                                      ),
+                                            ),
                                     ),
                                 ],
                               ),
                             ),
                           );
                         },
+                      ),
                       ),
                       IgnorePointer(
                         child: AnimatedOpacity(
@@ -752,19 +777,111 @@ class _Section {
   const _Section({
     required this.key,
     required this.name,
-    required this.color,
     required this.events,
-    required this.total,
   });
 
   final String key;
   final String name;
-  final Color color;
   final List<CalendarEvent> events;
-  final int total;
 }
 
-enum _TypeFilter { all, todos, jobs }
+class _SearchCategoryCard extends StatelessWidget {
+  const _SearchCategoryCard({
+    required this.name,
+    required this.count,
+    required this.children,
+    this.showCount = true,
+    this.onDeleteAll,
+  });
+
+  final String name;
+  final int count;
+  final bool showCount;
+  final List<Widget> children;
+  final VoidCallback? onDeleteAll;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: colors.shadow,
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: PressBounce(
+        passthrough: true,
+        color: colors.card,
+        pressedColor: Color.lerp(colors.card, Colors.black, 0.08)!,
+        borderRadius: BorderRadius.circular(24),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text.rich(
+                      TextSpan(
+                        children: [
+                          TextSpan(text: name),
+                          if (showCount)
+                            TextSpan(
+                              text: ' $count',
+                              style: TextStyle(
+                                color: colors.muted,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                        ],
+                      ),
+                      style: TextStyle(
+                        fontFamily: AppFonts.of(context),
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        height: 1.1,
+                        color: colors.text,
+                      ),
+                    ),
+                  ),
+                  if (onDeleteAll != null)
+                    PressBounce(
+                      onPressed: onDeleteAll,
+                      pressedColor: colors.pressed,
+                      borderRadius: BorderRadius.circular(8),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        child: Text(
+                          AppStrings.allEventsDeleteAll,
+                          style: TextStyle(
+                            fontFamily: AppFonts.of(context),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: colors.danger,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              ...children,
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
 
 class _FilterChip extends StatelessWidget {
   const _FilterChip({
@@ -783,59 +900,107 @@ class _FilterChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
     final fill = selected ? colors.accent : colors.card;
-    final pressed = selected ? colors.accent : colors.pressed;
+    final pressed = selected
+        ? Color.lerp(colors.accent, Colors.black, 0.12)!
+        : colors.pressed;
     final radius = BorderRadius.circular(999);
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        borderRadius: radius,
-        boxShadow: [
-          BoxShadow(
-            color: colors.shadow,
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          PressBounce(
-            onPressed: onPressed,
-            color: fill,
-            pressedColor: pressed,
-            borderRadius: onClear == null
-                ? radius
-                : const BorderRadius.horizontal(left: Radius.circular(999)),
-            child: Padding(
-              padding: EdgeInsets.fromLTRB(14, 8, onClear == null ? 14 : 8, 8),
-              child: Text(
-                label,
-                style: TextStyle(
-                  fontFamily: AppFonts.of(context),
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                  color: selected ? Colors.white : colors.text,
-                ),
-              ),
+    final labelColor = selected ? Colors.white : colors.text;
+    const anim = Duration(milliseconds: 280);
+    const curve = Curves.easeOutCubic;
+    final showClear = onClear != null;
+    return AnimatedSize(
+      duration: anim,
+      curve: curve,
+      alignment: Alignment.centerLeft,
+      child: AnimatedContainer(
+        duration: anim,
+        curve: curve,
+        decoration: BoxDecoration(
+          color: fill,
+          borderRadius: radius,
+          boxShadow: [
+            BoxShadow(
+              color: colors.shadow,
+              blurRadius: 8,
+              offset: const Offset(0, 2),
             ),
-          ),
-          if (onClear != null)
+          ],
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
             PressBounce(
-              onPressed: onClear,
-              color: fill,
+              onPressed: onPressed,
+              color: Colors.transparent,
               pressedColor: pressed,
-              borderRadius:
-                  const BorderRadius.horizontal(right: Radius.circular(999)),
-              child: const Padding(
-                padding: EdgeInsets.fromLTRB(2, 8, 10, 8),
-                child: Icon(
-                  Icons.close_rounded,
-                  size: 16,
-                  color: Colors.white,
+              borderRadius: showClear
+                  ? const BorderRadius.horizontal(left: Radius.circular(999))
+                  : radius,
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(14, 8, showClear ? 10 : 14, 8),
+                child: AnimatedDefaultTextStyle(
+                  duration: anim,
+                  curve: curve,
+                  style: TextStyle(
+                    fontFamily: AppFonts.of(context),
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: labelColor,
+                    height: 1.2,
+                  ),
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    softWrap: false,
+                  ),
                 ),
               ),
             ),
-        ],
+            ClipRect(
+              child: IgnorePointer(
+                ignoring: !showClear,
+                child: AnimatedAlign(
+                  duration: anim,
+                  curve: curve,
+                  alignment: Alignment.centerLeft,
+                  widthFactor: showClear ? 1 : 0,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: SizedBox(
+                          width: 1,
+                          height: 12,
+                          child: ColoredBox(
+                            color: Colors.white.withValues(alpha: 0.35),
+                          ),
+                        ),
+                      ),
+                      PressBounce(
+                        onPressed: onClear,
+                        color: Colors.transparent,
+                        pressedColor: pressed,
+                        borderRadius: const BorderRadius.horizontal(
+                          right: Radius.circular(999),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(8, 8, 12, 8),
+                          child: Icon(
+                            Icons.close_rounded,
+                            size: 16,
+                            color: labelColor,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

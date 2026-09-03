@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:pluto/core/theme/app_colors.dart';
 import 'package:pluto/core/theme/app_skin_background.dart';
 import 'package:pluto/data/datasources/font_preference.dart';
@@ -80,6 +81,7 @@ class AppTheme {
         centerTitle: false,
         surfaceTintColor: Colors.transparent,
         iconTheme: IconThemeData(color: colors.icon),
+        systemOverlayStyle: overlayOf(colors, brightness),
       ),
       iconTheme: IconThemeData(color: colors.icon),
       cupertinoOverrideTheme: CupertinoThemeData(
@@ -93,6 +95,19 @@ class AppTheme {
         selectionHandleColor: colors.accentBright,
       ),
       extensions: [colors],
+    );
+  }
+
+  static SystemUiOverlayStyle overlayOf(AppColors colors, Brightness brightness) {
+    final lightBar = brightness == Brightness.light;
+    return SystemUiOverlayStyle(
+      statusBarColor: colors.background,
+      statusBarBrightness: brightness,
+      statusBarIconBrightness: lightBar ? Brightness.dark : Brightness.light,
+      systemNavigationBarColor: colors.background,
+      systemNavigationBarIconBrightness:
+          lightBar ? Brightness.dark : Brightness.light,
+      systemNavigationBarDividerColor: Colors.transparent,
     );
   }
 }

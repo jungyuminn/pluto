@@ -19,11 +19,14 @@
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#F8FAFC">
+  <meta name="theme-color" content="#F8FAFC" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0B1220" media="(prefers-color-scheme: dark)">
   <meta name="description" content="할 일과 일정을 한곳에서 보는 앱 플루토">
 
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="플루토">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
 
@@ -33,7 +36,13 @@
   <title>플루토</title>
   <link rel="manifest" href="manifest.json">
   <style>
-    html, body { spellcheck: false; }
+    html, body {
+      spellcheck: false;
+      background-color: #F8FAFC;
+    }
+    @media (prefers-color-scheme: dark) {
+      html, body { background-color: #0B1220; }
+    }
     flt-semantics, flt-span, span { spellcheck: false !important; }
   </style>
   <script src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.5/kakao.min.js" crossorigin="anonymous"></script>
@@ -41,7 +50,7 @@
 <body spellcheck="false">
   <script>
     (function () {
-      var key = 'pluto-sw-20260909';
+      var key = 'pluto-sw-20260910-chrome2';
       if (!('serviceWorker' in navigator) || localStorage.getItem(key)) return;
       navigator.serviceWorker.getRegistrations().then(function (regs) {
         return Promise.all(regs.map(function (reg) { return reg.unregister(); }));

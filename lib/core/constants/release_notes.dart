@@ -17,7 +17,17 @@ class ReleaseNote {
 abstract final class ReleaseNotes {
   static const all = [
     ReleaseNote(
-      version: '1.3.1',
+      version: '1.3.2',
+      items: [
+        'PC에서 브라우저 위 바가 화면 배경을 따라가요',
+      ],
+      fixes: [
+        '가계부 날짜 창을 연 채로도 월 통계가 바로 바뀌어요',
+        '짧은 화면에서 날짜 창 높이가 맞춰져요',
+        '좁은 화면에서 달력 화살표가 칸을 가리지 않아요',
+        '폰에서 웹 로그인 화면이 깨지지 않아요',
+      ],
+    ),
       items: [
         'PC 달력을 마우스로 넘기거나 화살표로 옮길 수 있어요',
         'PC 로그인 화면을 보기 쉽게 바꿨어요',

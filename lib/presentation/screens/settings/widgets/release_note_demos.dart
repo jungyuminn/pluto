@@ -104,6 +104,10 @@ enum ReleaseDemo {
 
 ReleaseDemo releaseDemoFor(String text, {required bool isFix}) {
   if (isFix) {
+    if (text.contains('월 통계')) return ReleaseDemo.ledgerMonth;
+    if (text.contains('날짜 창')) return ReleaseDemo.pcLaunch;
+    if (text.contains('화살표')) return ReleaseDemo.pcLaunch;
+    if (text.contains('로그인 화면')) return ReleaseDemo.accountSync;
     if (text.contains('홈 카드에 지원서') || text.contains('취준 모드를 끄면')) {
       return ReleaseDemo.homeHideJobs;
     }
@@ -247,6 +251,9 @@ ReleaseDemo releaseDemoFor(String text, {required bool isFix}) {
   if (text.contains('홈에서 카드를 길게')) return ReleaseDemo.homeReorder;
   if (text.contains('커서를 올리면') || text.contains('눌림 효과')) {
     return ReleaseDemo.homeBounce;
+  }
+  if (text.contains('브라우저') || text.contains('위 바')) {
+    return ReleaseDemo.appearance;
   }
   if (text.contains('달력을 마우스') || text.contains('화살표로 옮길')) {
     return ReleaseDemo.pcLaunch;

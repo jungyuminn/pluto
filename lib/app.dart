@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:pluto/app_scope.dart';
 import 'package:pluto/core/constants/app_fonts.dart';
@@ -10,6 +11,7 @@ import 'package:pluto/core/constants/app_strings.dart';
 import 'package:pluto/core/home_widget/home_screen_widget_service.dart';
 import 'package:pluto/core/notifications/todo_reminder_service.dart';
 import 'package:pluto/core/theme/app_theme.dart';
+import 'package:pluto/core/theme/web_theme_color.dart';
 import 'package:pluto/data/datasources/app_backup_service.dart';
 import 'package:pluto/data/datasources/cloud_sync_service.dart';
 import 'package:pluto/data/datasources/backup_preference.dart';
@@ -652,7 +654,9 @@ class _AppBootstrapState extends State<_AppBootstrap> {
         backupPreference == null) {
       return const MaterialApp(
         debugShowCheckedModeBanner: false,
+        color: Color(0xFFF8FAFC),
         home: Scaffold(
+          backgroundColor: Color(0xFFF8FAFC),
           body: Center(
             child: CupertinoActivityIndicator(
               radius: 14,
@@ -812,38 +816,74 @@ class _JobPlannerMaterialAppState extends State<_JobPlannerMaterialApp>
   }
 
   @override
+  void didChangePlatformBrightness() {
+    setState(() {});
+  }
+
+  @override
   Widget build(BuildContext context) {
     final theme = AppScope.of(context).themePreference;
     final font = AppScope.of(context).fontPreference;
     return ListenableBuilder(
       listenable: Listenable.merge([theme, font]),
       builder: (context, _) {
+        final lightTheme = AppTheme.themed(
+          dark: false,
+          typeface: font.typeface,
+          skin: theme.skin,
+          customAccent: theme.customTheme?.accentColor,
+        );
+        final darkTheme = AppTheme.themed(
+          dark: true,
+          typeface: font.typeface,
+          skin: theme.skin,
+          customAccent: theme.customTheme?.accentColor,
+        );
+        final useDark = theme.mode == ThemeMode.dark ||
+            (theme.mode == ThemeMode.system &&
+                WidgetsBinding.instance.platformDispatcher.platformBrightness ==
+                    Brightness.dark);
+        final chromeColor = (useDark ? darkTheme : lightTheme)
+            .scaffoldBackgroundColor;
         return MaterialApp(
           title: AppStrings.appName,
           debugShowCheckedModeBanner: false,
-          theme: AppTheme.themed(
-            dark: false,
-            typeface: font.typeface,
-            skin: theme.skin,
-            customAccent: theme.customTheme?.accentColor,
-          ),
-          darkTheme: AppTheme.themed(
-            dark: true,
-            typeface: font.typeface,
-            skin: theme.skin,
-            customAccent: theme.customTheme?.accentColor,
-          ),
+          color: chromeColor,
+          theme: lightTheme,
+          darkTheme: darkTheme,
           themeMode: theme.mode,
           locale: const Locale('ko', 'KR'),
           supportedLocales: const [Locale('ko', 'KR')],
           builder: (context, child) {
+            final overlay = Theme.of(context).appBarTheme.systemOverlayStyle;
+            final background = Theme.of(context).scaffoldBackgroundColor;
+            if (overlay != null) {
+              SystemChrome.setSystemUIOverlayStyle(overlay);
+            }
+            if (kIsWeb) {
+              SystemChrome.setApplicationSwitcherDescription(
+                ApplicationSwitcherDescription(
+                  label: AppStrings.appName,
+                  primaryColor: background.toARGB32(),
+                ),
+              );
+              syncWebThemeColor(background);
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                syncWebThemeColor(background);
+              });
+            }
             return FontScope(
               typeface: font.typeface,
               todoScale: font.todoScale,
               labelScale: font.labelScale,
               calendarScale: font.calendarScale,
               calendarLabelScale: font.calendarLabelScale,
-              child: child ?? const SizedBox.shrink(),
+              child: overlay == null
+                  ? (child ?? const SizedBox.shrink())
+                  : AnnotatedRegion<SystemUiOverlayStyle>(
+                      value: overlay,
+                      child: child ?? const SizedBox.shrink(),
+                    ),
             );
           },
           home: kIsWeb ? const WebAuthGate() : const ShellScreen(),

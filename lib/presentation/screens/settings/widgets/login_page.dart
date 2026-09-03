@@ -255,113 +255,142 @@ class _WebLoginIntro extends StatelessWidget {
     final font = AppFonts.of(context);
     final showKakao = OauthConfig.kakaoEnabled;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 32, 24, 56),
-      child: Column(
-        children: [
-          const Spacer(flex: 2),
-          FadeIn(
-            delay: const Duration(milliseconds: 40),
-            duration: const Duration(milliseconds: 460),
-            offset: const Offset(0, 14),
-            child: Image.asset(
-              AppIcons.plutoLogo,
-              width: 176,
-              height: 176,
-              filterQuality: FilterQuality.high,
-            ),
-          ),
-          const SizedBox(height: 28),
-          FadeIn(
-            delay: const Duration(milliseconds: 110),
-            duration: const Duration(milliseconds: 460),
-            offset: const Offset(0, 14),
-            child: Text(
-              AppStrings.webLoginBrand,
-              style: TextStyle(
-                fontFamily: AppFonts.jalnan,
-                fontSize: 46,
-                height: 1.1,
-                letterSpacing: 1.4,
-                color: colors.text,
-                decoration: TextDecoration.none,
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          FadeIn(
-            delay: const Duration(milliseconds: 180),
-            duration: const Duration(milliseconds: 460),
-            offset: const Offset(0, 14),
-            child: Text(
-              AppStrings.webLoginTagline,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontFamily: font,
-                fontSize: 22,
-                fontWeight: FontWeight.w600,
-                height: 1.45,
-                color: colors.text,
-                decoration: TextDecoration.none,
-              ),
-            ),
-          ),
-          const Spacer(flex: 3),
-          IgnorePointer(
-            ignoring: busy,
-            child: FadeIn(
-              delay: const Duration(milliseconds: 320),
-              duration: const Duration(milliseconds: 460),
-              offset: const Offset(0, 14),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  if (showKakao) ...[
-                    _ProviderButton(
-                      asset: AppIcons.kakaoLogo,
-                      background: const Color(0xFFFEE500),
-                      size: 64,
-                      onPressed: onKakao,
+      padding: const EdgeInsets.fromLTRB(24, 20, 24, 56),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          const logoSize = 176.0;
+          final logoTop = constraints.maxHeight * 0.07;
+          return Stack(
+            children: [
+              Positioned(
+                top: logoTop,
+                left: 0,
+                right: 0,
+                child: Center(
+                  child: FadeIn(
+                    delay: const Duration(milliseconds: 40),
+                    duration: const Duration(milliseconds: 460),
+                    offset: const Offset(0, 14),
+                    child: Image.asset(
+                      AppIcons.plutoLogo,
+                      width: logoSize,
+                      height: logoSize,
+                      filterQuality: FilterQuality.high,
                     ),
-                    const SizedBox(width: 44),
+                  ),
+                ),
+              ),
+              Positioned(
+                top: logoTop + logoSize + 56,
+                left: 0,
+                right: 0,
+                child: Column(
+                  children: [
+                    FadeIn(
+                      delay: const Duration(milliseconds: 110),
+                      duration: const Duration(milliseconds: 460),
+                      offset: const Offset(0, 14),
+                      child: Text(
+                        AppStrings.webLoginBrand,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontFamily: AppFonts.jalnan,
+                          fontSize: 46,
+                          height: 1.1,
+                          letterSpacing: 1.4,
+                          color: colors.text,
+                          decoration: TextDecoration.none,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    FadeIn(
+                      delay: const Duration(milliseconds: 180),
+                      duration: const Duration(milliseconds: 460),
+                      offset: const Offset(0, 14),
+                      child: Text(
+                        AppStrings.webLoginTagline,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontFamily: font,
+                          fontSize: 22,
+                          fontWeight: FontWeight.w500,
+                          height: 1.45,
+                          color: colors.text,
+                          decoration: TextDecoration.none,
+                        ),
+                      ),
+                    ),
                   ],
-                  _ProviderButton(
-                    asset: AppIcons.googleLogo,
-                    background: Colors.white,
-                    border: colors.border,
-                    size: 64,
-                    onPressed: onGoogle,
-                  ),
-                  const SizedBox(width: 44),
-                  _ProviderButton(
-                    asset: AppIcons.appleLogo,
-                    background: const Color(0xFF111111),
-                    tint: Colors.white,
-                    size: 64,
-                    onPressed: onApple,
-                  ),
-                ],
+                ),
               ),
-            ),
-          ),
-          const SizedBox(height: 50),
-          FadeIn(
-            delay: const Duration(milliseconds: 380),
-            duration: const Duration(milliseconds: 460),
-            offset: const Offset(0, 14),
-            child: Text(
-              AppStrings.webLoginPcLabel,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontFamily: font,
-                fontSize: 14,
-                fontWeight: FontWeight.w400,
-                color: colors.muted,
-                decoration: TextDecoration.none,
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 140,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IgnorePointer(
+                      ignoring: busy,
+                      child: FadeIn(
+                        delay: const Duration(milliseconds: 320),
+                        duration: const Duration(milliseconds: 460),
+                        offset: const Offset(0, 14),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            if (showKakao) ...[
+                              _ProviderButton(
+                                asset: AppIcons.kakaoLogo,
+                                background: const Color(0xFFFEE500),
+                                size: 64,
+                                onPressed: onKakao,
+                              ),
+                              const SizedBox(width: 44),
+                            ],
+                            _ProviderButton(
+                              asset: AppIcons.googleLogo,
+                              background: Colors.white,
+                              border: colors.border,
+                              size: 64,
+                              onPressed: onGoogle,
+                            ),
+                            const SizedBox(width: 44),
+                            _ProviderButton(
+                              asset: AppIcons.appleLogo,
+                              background: const Color(0xFF111111),
+                              tint: Colors.white,
+                              size: 64,
+                              onPressed: onApple,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 50),
+                    FadeIn(
+                      delay: const Duration(milliseconds: 380),
+                      duration: const Duration(milliseconds: 460),
+                      offset: const Offset(0, 14),
+                      child: Text(
+                        AppStrings.webLoginPcLabel,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontFamily: font,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w400,
+                          color: colors.muted,
+                          decoration: TextDecoration.none,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ),
-          const Spacer(flex: 2),
-        ],
+            ],
+          );
+        },
       ),
     );
   }

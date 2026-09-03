@@ -7,6 +7,7 @@ import 'package:pluto/core/constants/app_fonts.dart';
 import 'package:pluto/core/constants/app_icons.dart';
 import 'package:pluto/core/constants/app_strings.dart';
 import 'package:pluto/core/theme/app_colors.dart';
+import 'package:pluto/core/utils/mouse_drag_scroll.dart';
 import 'package:pluto/core/utils/press_bounce.dart';
 import 'package:pluto/presentation/screens/add_company/widgets/save_company_button.dart';
 import 'package:pluto/presentation/widgets/app_calendar/app_calendar_repeat_panel.dart';
@@ -516,29 +517,33 @@ class _AppCalendarSheetState extends State<AppCalendarSheet> {
                                       ),
                                       const SizedBox(height: 6),
                                       Expanded(
-                                        child: PageView.builder(
+                                        child: MouseDragScroll(
                                           controller: _pages,
-                                          onPageChanged: (page) {
-                                            setState(
-                                              () => _visibleMonth = _monthAt(
-                                                page,
-                                              ),
-                                            );
-                                          },
-                                          itemBuilder: (context, page) {
-                                            return _MonthGridView(
-                                              month: _monthAt(page),
-                                              accent: _accent,
-                                              startMonday: AppScope.of(
-                                                context,
-                                              ).calendarPreference.startMonday,
-                                              isSelected: _isSelected,
-                                              isInRange: _isInRange,
-                                              isRangeStart: _isRangeStart,
-                                              isRangeEnd: _isRangeEnd,
-                                              onDayPressed: _onDayPressed,
-                                            );
-                                          },
+                                          child: PageView.builder(
+                                            controller: _pages,
+                                            onPageChanged: (page) {
+                                              setState(
+                                                () => _visibleMonth = _monthAt(
+                                                  page,
+                                                ),
+                                              );
+                                            },
+                                            itemBuilder: (context, page) {
+                                              return _MonthGridView(
+                                                month: _monthAt(page),
+                                                accent: _accent,
+                                                startMonday:
+                                                    AppScope.of(context)
+                                                        .calendarPreference
+                                                        .startMonday,
+                                                isSelected: _isSelected,
+                                                isInRange: _isInRange,
+                                                isRangeStart: _isRangeStart,
+                                                isRangeEnd: _isRangeEnd,
+                                                onDayPressed: _onDayPressed,
+                                              );
+                                            },
+                                          ),
                                         ),
                                       ),
                                     ],
@@ -678,11 +683,7 @@ class _CircleButton extends StatelessWidget {
 }
 
 class _ModeTabs extends StatefulWidget {
-  const _ModeTabs({
-    required this.mode,
-    required this.onChanged,
-    this.modes,
-  });
+  const _ModeTabs({required this.mode, required this.onChanged, this.modes});
 
   final AppCalendarMode mode;
   final ValueChanged<AppCalendarMode> onChanged;
@@ -813,7 +814,9 @@ class _ModeTabsState extends State<_ModeTabs> {
                   child: DecoratedBox(
                     decoration: BoxDecoration(
                       color: colors.card,
-                      borderRadius: const BorderRadius.all(Radius.circular(999)),
+                      borderRadius: const BorderRadius.all(
+                        Radius.circular(999),
+                      ),
                     ),
                   ),
                 ),

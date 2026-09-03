@@ -17,6 +17,14 @@ class ReleaseNote {
 abstract final class ReleaseNotes {
   static const all = [
     ReleaseNote(
+      version: '1.3.1',
+      items: [
+        'PC 달력을 마우스로 넘기거나 화살표로 옮길 수 있어요',
+        'PC 로그인 화면을 보기 쉽게 바꿨어요',
+        '로그인에서 PC로 여는 주소를 안내해요',
+      ],
+    ),
+    ReleaseNote(
       version: '1.3.0',
       items: [
         '취준 모드를 켜야 지원서·자격증이 나와요',

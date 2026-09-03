@@ -218,11 +218,11 @@ class AppStrings {
   static const accountSignedIn = '로그인됨';
   static const accountLoginBody =
       '언제 어디서든 다른 기기와 연동할 수 있어요';
-  static const accountLoginPcHint = 'PC에서도 사용할 수 있어요';
+  static const accountLoginPcHint = 'PC에서는 pluto.day 로 열 수 있어요';
   static const webLoginBrand = '플루토';
   static const webLoginTagline = '나의 모든 기록이 모이는 곳';
   static const webLoginPcLabel = 'PC버전';
-  static const accountLoginWebUrl = 'jobplanner.app';
+  static const accountLoginWebUrl = 'pluto.day';
   static const accountLoginSocialHint = '소셜 계정으로 로그인';
   static const accountKakaoShort = '카카오톡';
   static const accountGoogleShort = 'Google';
@@ -236,7 +236,7 @@ class AppStrings {
   static const accountKakaoMisconfiguredBody =
       '카카오 디벨로퍼스에서 네이티브 앱 키의 패키지명과 키 해시를 확인해 주세요';
   static const accountKakaoWebMisconfiguredBody =
-      '카카오 디벨로퍼스 Web 플랫폼에 이 사이트 주소(예: http://localhost)를 등록해 주세요';
+      '카카오 디벨로퍼스 Web 플랫폼에 이 사이트 주소(예: https://pluto.day)를 등록해 주세요';
   static const accountKakaoWebAudBody =
       'Firebase 인증 > OpenID Connect(kakao)의 Client ID를 아래 JavaScript 키로 바꿔 주세요';
   static const accountUnavailableBody = '지금은 로그인을 사용할 수 없어요';

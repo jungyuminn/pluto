@@ -5,7 +5,9 @@ import 'package:pluto/core/layout/pc_layout.dart';
 import 'package:pluto/core/theme/app_colors.dart';
 import 'package:pluto/core/theme/app_skin_background.dart';
 import 'package:pluto/core/utils/korean_search.dart';
+import 'package:pluto/core/utils/mouse_drag_scroll.dart';
 import 'package:pluto/core/utils/plain_text_editing_controller.dart';
+import 'package:pluto/core/utils/press_bounce.dart';
 import 'package:pluto/data/datasources/app_backup_service.dart';
 import 'package:pluto/data/datasources/day_emoji_store.dart';
 import 'package:pluto/data/datasources/job_view_preference.dart';
@@ -62,10 +64,8 @@ class _CalendarScreenState extends State<CalendarScreen>
   var _showDiary = false;
   var _showLedger = false;
 
-  DayStickerLayer get _stickerLayer => DayStickerLayer.current(
-    showDiary: _showDiary,
-    showLedger: _showLedger,
-  );
+  DayStickerLayer get _stickerLayer =>
+      DayStickerLayer.current(showDiary: _showDiary, showLedger: _showLedger);
 
   var _zoom = CalendarZoomLevel.days;
   var _zoomEpoch = 0;
@@ -287,6 +287,24 @@ class _CalendarScreenState extends State<CalendarScreen>
     return DateTime(_baseMonth.year, _baseMonth.month + (page - _initialPage));
   }
 
+  void _stepCalendar(int direction) {
+    final next = switch (_zoom) {
+      CalendarZoomLevel.days => DateTime(
+        _visibleMonth.year,
+        _visibleMonth.month + direction,
+      ),
+      CalendarZoomLevel.months => DateTime(
+        _visibleMonth.year + direction,
+        _visibleMonth.month,
+      ),
+      CalendarZoomLevel.years => DateTime(
+        _visibleMonth.year + 10 * direction,
+        _visibleMonth.month,
+      ),
+    };
+    _goToMonth(next);
+  }
+
   Future<void> _reload() async {
     final scope = AppScope.of(context);
     final events = await scope.getCalendarEvents();
@@ -362,54 +380,49 @@ class _CalendarScreenState extends State<CalendarScreen>
 
     if (_showDiary) {
       for (final diary in _diaries) {
-        consider(
-          diary.groupId ?? diary.id,
-          diary.day,
-          [diary.title, diary.body, diary.categoryName],
-        );
+        consider(diary.groupId ?? diary.id, diary.day, [
+          diary.title,
+          diary.body,
+          diary.categoryName,
+        ]);
       }
     } else if (_showLedger) {
       for (final entry in _ledgers) {
-        consider(
-          entry.id,
-          LedgerSalaryRepeat.searchDay(entry),
-          [
-            entry.title,
-            entry.memo,
-            entry.signedLabel,
-            '${entry.amount}',
-            entry.kindLabel,
-            entry.displayCategoryName,
-          ],
-        );
+        consider(entry.id, LedgerSalaryRepeat.searchDay(entry), [
+          entry.title,
+          entry.memo,
+          entry.signedLabel,
+          '${entry.amount}',
+          entry.kindLabel,
+          entry.displayCategoryName,
+        ]);
       }
     } else {
       final calendarPrefs = AppScope.of(context).calendarPreference;
       if (calendarPrefs.showTodos) {
         for (final event in _events) {
           if (event.isJob || event.someday) continue;
-          consider(
-            event.groupId ?? event.id,
-            event.day,
-            [event.title, event.categoryName],
-          );
+          consider(event.groupId ?? event.id, event.day, [
+            event.title,
+            event.categoryName,
+          ]);
         }
       }
       if (calendarPrefs.showCompanies &&
           AppScope.of(context).navPreference.showJobTab) {
-        final showRejected =
-            AppScope.of(context).jobViewPreference.showRejected;
+        final showRejected = AppScope.of(
+          context,
+        ).jobViewPreference.showRejected;
         for (final application in _applications) {
           if (!showRejected && application.isRejected) continue;
           for (var i = 0; i < application.rounds.length; i++) {
             final round = application.rounds[i];
             final date = round.date;
             if (date == null) continue;
-            consider(
-              'job:${application.id}:$i',
-              date,
-              [application.companyName, application.categoryName],
-            );
+            consider('job:${application.id}:$i', date, [
+              application.companyName,
+              application.categoryName,
+            ]);
           }
         }
       }
@@ -419,10 +432,10 @@ class _CalendarScreenState extends State<CalendarScreen>
       for (final entry in latest.entries)
         _SearchHit(key: entry.key, day: entry.value),
     ]..sort((a, b) {
-        final byDay = b.day.compareTo(a.day);
-        if (byDay != 0) return byDay;
-        return a.key.compareTo(b.key);
-      });
+      final byDay = b.day.compareTo(a.day);
+      if (byDay != 0) return byDay;
+      return a.key.compareTo(b.key);
+    });
   }
 
   Future<void> _revealHit(DateTime day) async {
@@ -451,7 +464,8 @@ class _CalendarScreenState extends State<CalendarScreen>
     final events = calendarEventsOn(
       date: date,
       events: calendarPrefs.showTodos ? _events : const [],
-      applications: (calendarPrefs.showCompanies &&
+      applications:
+          (calendarPrefs.showCompanies &&
               AppScope.of(context).navPreference.showJobTab)
           ? _applications
           : const [],
@@ -571,7 +585,8 @@ class _CalendarScreenState extends State<CalendarScreen>
 
   @override
   Widget build(BuildContext context) {
-    final bottomGap = 72 +
+    final bottomGap =
+        72 +
         (PcLayout.isPc ? PcLayout.navLift : 0) +
         MediaQuery.paddingOf(context).bottom;
 
@@ -593,14 +608,17 @@ class _CalendarScreenState extends State<CalendarScreen>
                       AppScope.of(context).navPreference,
                     ]),
                     builder: (context, _) {
-                      final calendarPrefs =
-                          AppScope.of(context).calendarPreference;
-                      final showJobItems =
-                          AppScope.of(context).navPreference.showJobTab;
+                      final calendarPrefs = AppScope.of(
+                        context,
+                      ).calendarPreference;
+                      final showJobItems = AppScope.of(
+                        context,
+                      ).navPreference.showJobTab;
                       final startMonday = calendarPrefs.startMonday;
                       final showLunar = calendarPrefs.showLunar;
-                      final viewPrefs =
-                          AppScope.of(context).dayEventsViewPreference;
+                      final viewPrefs = AppScope.of(
+                        context,
+                      ).dayEventsViewPreference;
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
@@ -623,15 +641,15 @@ class _CalendarScreenState extends State<CalendarScreen>
                                 searchOpen: searchOpen,
                                 onSearchPressed: _toggleSearch,
                                 onShowTodosChanged: (value) async {
-                                  await AppScope.of(context)
-                                      .calendarPreference
-                                      .setShowTodos(value);
+                                  await AppScope.of(
+                                    context,
+                                  ).calendarPreference.setShowTodos(value);
                                   if (_searchOpen.value) _refreshHits();
                                 },
                                 onShowCompaniesChanged: (value) async {
-                                  await AppScope.of(context)
-                                      .calendarPreference
-                                      .setShowCompanies(value);
+                                  await AppScope.of(
+                                    context,
+                                  ).calendarPreference.setShowCompanies(value);
                                   if (_searchOpen.value) _refreshHits();
                                 },
                                 onShowDiaryChanged: (value) {
@@ -686,11 +704,10 @@ class _CalendarScreenState extends State<CalendarScreen>
                                   hintText: _showLedger
                                       ? AppStrings.calendarLedgerSearchHint
                                       : _showDiary
-                                          ? AppStrings.calendarDiarySearchHint
-                                          : showJobItems
-                                              ? AppStrings.calendarSearchHint
-                                              : AppStrings
-                                                  .calendarSearchHintDaily,
+                                      ? AppStrings.calendarDiarySearchHint
+                                      : showJobItems
+                                      ? AppStrings.calendarSearchHint
+                                      : AppStrings.calendarSearchHintDaily,
                                   onChanged: _onSearchChanged,
                                   onSubmitted: () => _searchStep(1),
                                   onPrevious: () => _searchStep(-1),
@@ -702,122 +719,153 @@ class _CalendarScreenState extends State<CalendarScreen>
                             ),
                           ),
                           Expanded(
-                            child: _SearchStableViewport(
-                              animation: _searchAnimation,
-                              child: TutorialAnchor(
-                                id: TutorialAnchorId.calendarGrid,
-                                child: RepaintBoundary(
-                                  child: CalendarZoomTransition(
-                                    key: ValueKey(_zoomEpoch),
-                                    level: _zoom,
-                                    child: switch (_zoom) {
-                                      CalendarZoomLevel.days => Column(
-                                        children: [
-                                          CalendarWeekdayHeader(
-                                            startMonday: startMonday,
-                                          ),
-                                          Expanded(
-                                            child: PageView.builder(
-                                              controller: _pages,
-                                              physics: _rangeDragging
-                                                  ? const NeverScrollableScrollPhysics()
-                                                  : null,
-                                              onPageChanged: (page) {
-                                                setState(() {
-                                                  _visibleMonth =
-                                                      _monthAt(page);
-                                                  _daysMonth = _visibleMonth;
-                                                });
-                                              },
-                                              itemBuilder: (context, page) {
-                                                final emojis =
-                                                    AppScope.of(context)
-                                                        .dayEmojiStore;
-                                                return ListenableBuilder(
-                                                  listenable: emojis,
-                                                  builder: (context, _) {
-                                                    return CalendarMonthGrid(
-                                                      month: _monthAt(page),
-                                                      startMonday: startMonday,
-                                                      showLunar: showLunar,
-                                                      eventsOf: _eventsOn,
-                                                      diariesOf: _diariesOn,
-                                                      ledgersOf: _ledgersOn,
-                                                      emojisOf: _showDiary
-                                                          ? null
-                                                          : (date) =>
-                                                              emojis.on(
-                                                                date,
-                                                                layer:
-                                                                    _stickerLayer,
-                                                              ),
-                                                      showDiary: _showDiary,
-                                                      showLedger: _showLedger,
-                                                      showLedgerTitle:
-                                                          viewPrefs
-                                                              .showLedgerTitle,
-                                                      showLedgerAmount:
-                                                          viewPrefs
-                                                              .showLedgerAmount,
-                                                      ledgerCategoryView:
-                                                          viewPrefs
-                                                              .categoryView,
-                                                      ledgerKindColor:
-                                                          viewPrefs
-                                                              .ledgerKindColor,
-                                                      searchDay: _searchDay,
-                                                      searchHitKey:
-                                                          _searchHitKey,
-                                                      onDayPressed: _openDay,
-                                                      onRangeDragChanged:
-                                                          (dragging) {
-                                                        setState(
-                                                          () => _rangeDragging =
-                                                              dragging,
-                                                        );
-                                                      },
-                                                      onRangeSelected:
-                                                          _showLedger
-                                                              ? null
-                                                              : _openRange,
-                                                    );
-                                                  },
-                                                );
-                                              },
+                            child: Stack(
+                              children: [
+                                _SearchStableViewport(
+                                  animation: _searchAnimation,
+                                  child: TutorialAnchor(
+                                    id: TutorialAnchorId.calendarGrid,
+                                    child: RepaintBoundary(
+                                      child: CalendarZoomTransition(
+                                        key: ValueKey(_zoomEpoch),
+                                        level: _zoom,
+                                        child: switch (_zoom) {
+                                          CalendarZoomLevel.days => MouseDragScroll(
+                                            controller: _pages,
+                                            enabled: !_rangeDragging,
+                                            child: Column(
+                                              children: [
+                                                CalendarWeekdayHeader(
+                                                  startMonday: startMonday,
+                                                ),
+                                                Expanded(
+                                                  child: PageView.builder(
+                                                    controller: _pages,
+                                                    physics: _rangeDragging
+                                                        ? const NeverScrollableScrollPhysics()
+                                                        : null,
+                                                    onPageChanged: (page) {
+                                                      setState(() {
+                                                        _visibleMonth =
+                                                            _monthAt(page);
+                                                        _daysMonth =
+                                                            _visibleMonth;
+                                                      });
+                                                    },
+                                                    itemBuilder: (context, page) {
+                                                      final emojis =
+                                                          AppScope.of(
+                                                            context,
+                                                          ).dayEmojiStore;
+                                                      return ListenableBuilder(
+                                                        listenable: emojis,
+                                                        builder: (context, _) {
+                                                          return CalendarMonthGrid(
+                                                            month: _monthAt(
+                                                              page,
+                                                            ),
+                                                            startMonday:
+                                                                startMonday,
+                                                            showLunar:
+                                                                showLunar,
+                                                            eventsOf: _eventsOn,
+                                                            diariesOf:
+                                                                _diariesOn,
+                                                            ledgersOf:
+                                                                _ledgersOn,
+                                                            emojisOf: _showDiary
+                                                                ? null
+                                                                : (
+                                                                    date,
+                                                                  ) => emojis.on(
+                                                                    date,
+                                                                    layer:
+                                                                        _stickerLayer,
+                                                                  ),
+                                                            showDiary:
+                                                                _showDiary,
+                                                            showLedger:
+                                                                _showLedger,
+                                                            showLedgerTitle:
+                                                                viewPrefs
+                                                                    .showLedgerTitle,
+                                                            showLedgerAmount:
+                                                                viewPrefs
+                                                                    .showLedgerAmount,
+                                                            ledgerCategoryView:
+                                                                viewPrefs
+                                                                    .categoryView,
+                                                            ledgerKindColor:
+                                                                viewPrefs
+                                                                    .ledgerKindColor,
+                                                            searchDay:
+                                                                _searchDay,
+                                                            searchHitKey:
+                                                                _searchHitKey,
+                                                            onDayPressed:
+                                                                _openDay,
+                                                            onRangeDragChanged:
+                                                                (dragging) {
+                                                                  setState(
+                                                                    () => _rangeDragging =
+                                                                        dragging,
+                                                                  );
+                                                                },
+                                                            onRangeSelected:
+                                                                _showLedger
+                                                                ? null
+                                                                : _openRange,
+                                                          );
+                                                        },
+                                                      );
+                                                    },
+                                                  ),
+                                                ),
+                                              ],
                                             ),
                                           ),
-                                        ],
+                                          CalendarZoomLevel.months =>
+                                            CalendarMonthZoomView(
+                                              focused: _visibleMonth,
+                                              accent: AppColors.of(
+                                                context,
+                                              ).accentBright,
+                                              onFocusedChanged: (month) {
+                                                setState(
+                                                  () => _visibleMonth = month,
+                                                );
+                                              },
+                                              onMonthPressed: _pickMonth,
+                                            ),
+                                          CalendarZoomLevel.years =>
+                                            CalendarYearZoomView(
+                                              focused: _visibleMonth,
+                                              accent: AppColors.of(
+                                                context,
+                                              ).accentBright,
+                                              onFocusedChanged: (month) {
+                                                setState(
+                                                  () => _visibleMonth = month,
+                                                );
+                                              },
+                                              onYearPressed: _pickYear,
+                                            ),
+                                        },
                                       ),
-                                      CalendarZoomLevel.months =>
-                                        CalendarMonthZoomView(
-                                          focused: _visibleMonth,
-                                          accent: AppColors.of(
-                                            context,
-                                          ).accentBright,
-                                          onFocusedChanged: (month) {
-                                            setState(
-                                              () => _visibleMonth = month,
-                                            );
-                                          },
-                                          onMonthPressed: _pickMonth,
-                                        ),
-                                      CalendarZoomLevel.years =>
-                                        CalendarYearZoomView(
-                                          focused: _visibleMonth,
-                                          accent: AppColors.of(
-                                            context,
-                                          ).accentBright,
-                                          onFocusedChanged: (month) {
-                                            setState(
-                                              () => _visibleMonth = month,
-                                            );
-                                          },
-                                          onYearPressed: _pickYear,
-                                        ),
-                                    },
+                                    ),
                                   ),
                                 ),
-                              ),
+                                if (PcLayout.isPc) ...[
+                                  _WebCalendarArrow(
+                                    left: true,
+                                    onPressed: () => _stepCalendar(-1),
+                                  ),
+                                  _WebCalendarArrow(
+                                    left: false,
+                                    onPressed: () => _stepCalendar(1),
+                                  ),
+                                ],
+                              ],
                             ),
                           ),
                         ],
@@ -841,11 +889,41 @@ class _SearchHit {
   final DateTime day;
 }
 
+class _WebCalendarArrow extends StatelessWidget {
+  const _WebCalendarArrow({required this.left, required this.onPressed});
+
+  final bool left;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    return Align(
+      alignment: left ? Alignment.centerLeft : Alignment.centerRight,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8),
+        child: PressBounce(
+          onPressed: onPressed,
+          pressedScale: 0.92,
+          color: colors.card.withValues(alpha: 0.86),
+          borderRadius: const BorderRadius.all(Radius.circular(18)),
+          child: SizedBox(
+            width: 36,
+            height: 72,
+            child: Icon(
+              left ? Icons.chevron_left_rounded : Icons.chevron_right_rounded,
+              size: 30,
+              color: colors.text.withValues(alpha: 0.78),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _SearchStableViewport extends StatefulWidget {
-  const _SearchStableViewport({
-    required this.animation,
-    required this.child,
-  });
+  const _SearchStableViewport({required this.animation, required this.child});
 
   final Animation<double> animation;
   final Widget child;

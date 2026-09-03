@@ -248,6 +248,12 @@ ReleaseDemo releaseDemoFor(String text, {required bool isFix}) {
   if (text.contains('커서를 올리면') || text.contains('눌림 효과')) {
     return ReleaseDemo.homeBounce;
   }
+  if (text.contains('달력을 마우스') || text.contains('화살표로 옮길')) {
+    return ReleaseDemo.pcLaunch;
+  }
+  if (text.contains('로그인 화면') || text.contains('PC로 여는 주소')) {
+    return ReleaseDemo.accountSync;
+  }
   if (text.contains('그림에서 드래그') ||
       (text.contains('드래그') && text.contains('그림'))) {
     return ReleaseDemo.diaryDraw;

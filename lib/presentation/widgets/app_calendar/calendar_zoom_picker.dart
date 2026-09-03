@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:pluto/core/calendar/calendar_years.dart';
+import 'package:pluto/core/utils/mouse_drag_scroll.dart';
 import 'package:pluto/core/constants/app_fonts.dart';
 import 'package:pluto/core/constants/app_strings.dart';
 import 'package:pluto/core/theme/app_colors.dart';
@@ -174,17 +175,11 @@ class _CalendarZoomTransitionState extends State<CalendarZoomTransition>
             children: [
               if (_outgoing != null)
                 IgnorePointer(
-                  child: Opacity(
-                    opacity: 1 - outT,
-                    child: _outgoing,
-                  ),
+                  child: Opacity(opacity: 1 - outT, child: _outgoing),
                 ),
               Opacity(
                 opacity: inT,
-                child: Transform.scale(
-                  scale: incomingScale,
-                  child: _incoming,
-                ),
+                child: Transform.scale(scale: incomingScale, child: _incoming),
               ),
             ],
           );
@@ -247,35 +242,40 @@ class _CalendarMonthZoomViewState extends State<CalendarMonthZoomView> {
   @override
   Widget build(BuildContext context) {
     final now = DateTime.now();
-    return PageView.builder(
+    return MouseDragScroll(
       controller: _pages,
-      itemCount: _count,
-      onPageChanged: (page) {
-        final year = _min + page;
-        widget.onFocusedChanged(DateTime(year, widget.focused.month));
-      },
-      itemBuilder: (context, page) {
-        final year = _min + page;
-        return CalendarZoomGrid(
-          accent: widget.accent,
-          cells: [
-            for (var month = 1; month <= 12; month++)
-              CalendarZoomCell(
-                label: '$month${AppStrings.monthSuffix}',
-                selected:
-                    year == widget.focused.year &&
-                    month == widget.focused.month,
-                current: year == now.year && month == now.month,
-                enabled: widget.isMonthEnabled?.call(DateTime(year, month)) ??
-                    true,
-                onPressed: (widget.isMonthEnabled?.call(DateTime(year, month)) ??
-                        true)
-                    ? () => widget.onMonthPressed(DateTime(year, month))
-                    : null,
-              ),
-          ],
-        );
-      },
+      child: PageView.builder(
+        controller: _pages,
+        itemCount: _count,
+        onPageChanged: (page) {
+          final year = _min + page;
+          widget.onFocusedChanged(DateTime(year, widget.focused.month));
+        },
+        itemBuilder: (context, page) {
+          final year = _min + page;
+          return CalendarZoomGrid(
+            accent: widget.accent,
+            cells: [
+              for (var month = 1; month <= 12; month++)
+                CalendarZoomCell(
+                  label: '$month${AppStrings.monthSuffix}',
+                  selected:
+                      year == widget.focused.year &&
+                      month == widget.focused.month,
+                  current: year == now.year && month == now.month,
+                  enabled:
+                      widget.isMonthEnabled?.call(DateTime(year, month)) ??
+                      true,
+                  onPressed:
+                      (widget.isMonthEnabled?.call(DateTime(year, month)) ??
+                          true)
+                      ? () => widget.onMonthPressed(DateTime(year, month))
+                      : null,
+                ),
+            ],
+          );
+        },
+      ),
     );
   }
 }
@@ -337,44 +337,50 @@ class _CalendarYearZoomViewState extends State<CalendarYearZoomView> {
 
   @override
   Widget build(BuildContext context) {
-    return PageView.builder(
+    return MouseDragScroll(
       controller: _pages,
-      itemCount: _count,
-      onPageChanged: (page) {
-        final decade = _firstDecade + page * 10;
-        final offset =
-            widget.focused.year - CalendarZoom.decadeStart(widget.focused.year);
-        final year = (decade + offset).clamp(_minYear, _maxYear);
-        widget.onFocusedChanged(DateTime(year, widget.focused.month));
-      },
-      itemBuilder: (context, page) {
-        final decade = _firstDecade + page * 10;
-        final nowYear = DateTime.now().year;
-        return CalendarZoomGrid(
-          accent: widget.accent,
-          cells: [
-            for (final year in List<int>.generate(
-              12,
-              (index) => decade + index,
-            ))
-              CalendarZoomCell(
-                label: '$year${AppStrings.yearSuffix}',
-                selected: year == widget.focused.year,
-                current: year == nowYear,
-                enabled: year >= _minYear &&
-                    year <= _maxYear &&
-                    (widget.isYearEnabled?.call(year) ?? true),
-                outside: year >= decade + 10,
-                wide: true,
-                onPressed: year >= _minYear &&
-                        year <= _maxYear &&
-                        (widget.isYearEnabled?.call(year) ?? true)
-                    ? () => widget.onYearPressed(year)
-                    : null,
-              ),
-          ],
-        );
-      },
+      child: PageView.builder(
+        controller: _pages,
+        itemCount: _count,
+        onPageChanged: (page) {
+          final decade = _firstDecade + page * 10;
+          final offset =
+              widget.focused.year -
+              CalendarZoom.decadeStart(widget.focused.year);
+          final year = (decade + offset).clamp(_minYear, _maxYear);
+          widget.onFocusedChanged(DateTime(year, widget.focused.month));
+        },
+        itemBuilder: (context, page) {
+          final decade = _firstDecade + page * 10;
+          final nowYear = DateTime.now().year;
+          return CalendarZoomGrid(
+            accent: widget.accent,
+            cells: [
+              for (final year in List<int>.generate(
+                12,
+                (index) => decade + index,
+              ))
+                CalendarZoomCell(
+                  label: '$year${AppStrings.yearSuffix}',
+                  selected: year == widget.focused.year,
+                  current: year == nowYear,
+                  enabled:
+                      year >= _minYear &&
+                      year <= _maxYear &&
+                      (widget.isYearEnabled?.call(year) ?? true),
+                  outside: year >= decade + 10,
+                  wide: true,
+                  onPressed:
+                      year >= _minYear &&
+                          year <= _maxYear &&
+                          (widget.isYearEnabled?.call(year) ?? true)
+                      ? () => widget.onYearPressed(year)
+                      : null,
+                ),
+            ],
+          );
+        },
+      ),
     );
   }
 }

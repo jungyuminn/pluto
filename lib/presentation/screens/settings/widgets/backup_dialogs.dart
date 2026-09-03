@@ -181,18 +181,27 @@ class RestoreChoice {
 
 Future<RestoreChoice?> showRestoreSourceDialog(
   BuildContext context,
-  List<BackupListItem> items,
-) {
+  List<BackupListItem> items, {
+  bool pickOther = true,
+}) {
   return showDialog<RestoreChoice>(
     context: context,
-    builder: (context) => RestoreSourceDialog(items: items),
+    builder: (context) => RestoreSourceDialog(
+      items: items,
+      pickOther: pickOther,
+    ),
   );
 }
 
 class RestoreSourceDialog extends StatefulWidget {
-  const RestoreSourceDialog({super.key, required this.items});
+  const RestoreSourceDialog({
+    super.key,
+    required this.items,
+    this.pickOther = true,
+  });
 
   final List<BackupListItem> items;
+  final bool pickOther;
 
   @override
   State<RestoreSourceDialog> createState() => _RestoreSourceDialogState();
@@ -238,25 +247,27 @@ class _RestoreSourceDialogState extends State<RestoreSourceDialog> {
               onPressed: () => setState(() => _selected = i),
             ),
           ],
-          const SizedBox(height: 8),
-          PressBounce(
-            onPressed: () {
-              Navigator.of(context).pop(const RestoreChoice.other());
-            },
-            pressedColor: Colors.transparent,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              child: Text(
-                AppStrings.restorePickOther,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                  color: colors.accentBright,
+          if (widget.pickOther) ...[
+            const SizedBox(height: 8),
+            PressBounce(
+              onPressed: () {
+                Navigator.of(context).pop(const RestoreChoice.other());
+              },
+              pressedColor: Colors.transparent,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Text(
+                  AppStrings.restorePickOther,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: colors.accentBright,
+                  ),
                 ),
               ),
             ),
-          ),
+          ],
           const SizedBox(height: 12),
           Row(
             children: [

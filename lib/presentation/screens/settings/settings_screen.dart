@@ -210,13 +210,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _restore() async {
-    final prefs = await SharedPreferences.getInstance();
-    var items = await AppBackupService.listRestoreItems();
-    if (AppBackupService.isStarterOnly(prefs)) {
-      items = items.where((item) => item.file == null).toList();
-    }
-    if (!mounted) return;
     try {
+      final prefs = await SharedPreferences.getInstance();
+      var items = await AppBackupService.listRestoreItems();
+      if (AppBackupService.isStarterOnly(prefs)) {
+        items = items.where((item) => item.file == null).toList();
+      }
+      if (!mounted) return;
       if (items.isEmpty) {
         final confirmed = await showRestoreConfirmDialog(context);
         if (!confirmed || !mounted) return;
@@ -240,6 +240,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
         context,
         title: AppStrings.restoreDoneTitle,
         body: AppStrings.restoreDoneBody,
+      );
+    } on PlatformException catch (error) {
+      if (!mounted) return;
+      final iCloud = error.code == 'signed_out' || error.code == 'unavailable';
+      await showBackupMessageDialog(
+        context,
+        title: AppStrings.restoreFailedTitle,
+        body: iCloud
+            ? AppStrings.backupIcloudUnavailableBody
+            : error.code == 'not_icloud'
+                ? AppStrings.restoreNotIcloudBody
+                : AppStrings.restoreFailedBody,
       );
     } catch (_) {
       if (!mounted) return;

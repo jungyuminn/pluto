@@ -100,21 +100,14 @@ class AppBackupService {
   }
 
   static Future<List<BackupListItem>> listRestoreItems() async {
-    final items = <String, BackupListItem>{};
     if (!kIsWeb && Platform.isIOS) {
-      try {
-        for (final cloud in await _listICloudBackups()) {
-          items[cloud.fileName] = cloud;
-        }
-      } catch (error, stack) {
-        debugPrint('List iCloud backups failed: $error\n$stack');
-      }
+      final items = await _listICloudBackups();
+      items.sort((a, b) => b.date.compareTo(a.date));
+      return items;
     }
-    for (final file in await listLocalBackups()) {
-      items.putIfAbsent(p.basename(file.path), () => BackupListItem.local(file));
-    }
-    return items.values.toList()
-      ..sort((a, b) => b.date.compareTo(a.date));
+    return [
+      for (final file in await listLocalBackups()) BackupListItem.local(file),
+    ];
   }
 
   static String backupLabel(File file) => labelForDate(_backupDate(file));
@@ -193,9 +186,10 @@ class AppBackupService {
 
   static Future<Uint8List> _readICloudBackup(String name) async {
     final bytes = await _icloudChannel.invokeMethod('read', {'fileName': name});
-    if (bytes is Uint8List) return bytes;
-    if (bytes is List<int>) return Uint8List.fromList(bytes);
-    throw const FormatException('missing iCloud backup');
+    if (bytes == null) {
+      throw const FormatException('missing iCloud backup');
+    }
+    return _channelBytes(bytes);
   }
 
   static Future<void> _copyToDownloads(Uint8List bytes) async {
@@ -215,6 +209,12 @@ class AppBackupService {
   }
 
   static Future<bool> restoreFromPicker() async {
+    if (!kIsWeb && Platform.isIOS) {
+      final bytes = await _icloudChannel.invokeMethod('pick');
+      if (bytes == null) return false;
+      await decode(_channelBytes(bytes));
+      return true;
+    }
     final file = await FilePicker.pickFile(
       type: FileType.custom,
       allowedExtensions: const ['zip'],
@@ -223,6 +223,12 @@ class AppBackupService {
     final bytes = await file.readAsBytes();
     await decode(bytes);
     return true;
+  }
+
+  static Uint8List _channelBytes(Object bytes) {
+    if (bytes is Uint8List) return bytes;
+    if (bytes is List<int>) return Uint8List.fromList(bytes);
+    throw const FormatException('missing iCloud backup');
   }
 
   static Future<void> applyToApp(AppScope scope) async {

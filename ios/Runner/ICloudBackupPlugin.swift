@@ -1,11 +1,14 @@
 import Flutter
 import Foundation
+import UIKit
+import UniformTypeIdentifiers
 
-final class ICloudBackupPlugin: NSObject {
+final class ICloudBackupPlugin: NSObject, UIDocumentPickerDelegate {
   static let channelName = "job_planner/icloud_backup"
   static let containerId = "iCloud.com.jobplanner.jobPlanner"
 
   private let queue = DispatchQueue(label: "job_planner.icloud_backup")
+  private var pickResult: FlutterResult?
 
   static func register(with registry: FlutterPluginRegistry) -> ICloudBackupPlugin {
     let plugin = ICloudBackupPlugin()
@@ -65,6 +68,8 @@ final class ICloudBackupPlugin: NSObject {
           DispatchQueue.main.async { result(self.flutterError(error)) }
         }
       }
+    case "pick":
+      pickBackup(result: result)
     default:
       result(FlutterMethodNotImplemented)
     }
@@ -242,6 +247,114 @@ final class ICloudBackupPlugin: NSObject {
     }
   }
 
+  private func pickBackup(result: @escaping FlutterResult) {
+    if pickResult != nil {
+      result(nil)
+      return
+    }
+    do {
+      let folder = try documentsURL()
+      pickResult = result
+      DispatchQueue.main.async {
+        guard let presenter = Self.presenter() else {
+          self.finishPick(nil)
+          return
+        }
+        let picker = UIDocumentPickerViewController(
+          forOpeningContentTypes: [.zip],
+          asCopy: false
+        )
+        picker.directoryURL = folder
+        picker.allowsMultipleSelection = false
+        picker.delegate = self
+        presenter.present(picker, animated: true)
+      }
+    } catch {
+      result(flutterError(error))
+    }
+  }
+
+  func documentPickerWasCancelled(_ controller: UIDocumentPickerViewController) {
+    finishPick(nil)
+  }
+
+  func documentPicker(
+    _ controller: UIDocumentPickerViewController,
+    didPickDocumentsAt urls: [URL]
+  ) {
+    guard let url = urls.first else {
+      finishPick(nil)
+      return
+    }
+    queue.async {
+      do {
+        let data = try self.readPicked(url)
+        DispatchQueue.main.async {
+          self.finishPick(FlutterStandardTypedData(bytes: data))
+        }
+      } catch {
+        DispatchQueue.main.async {
+          let callback = self.pickResult
+          self.pickResult = nil
+          callback?(self.flutterError(error))
+        }
+      }
+    }
+  }
+
+  private func readPicked(_ url: URL) throws -> Data {
+    let accessed = url.startAccessingSecurityScopedResource()
+    defer {
+      if accessed { url.stopAccessingSecurityScopedResource() }
+    }
+    let name = url.lastPathComponent
+    guard name.hasPrefix("잡플래너_백업_"), name.lowercased().hasSuffix(".zip") else {
+      throw ICloudBackupError.notInCloud
+    }
+    guard try isInCloudFolder(url) else {
+      throw ICloudBackupError.notInCloud
+    }
+    try downloadIfNeeded(url)
+    var coordError: NSError?
+    var data: Data?
+    var readError: Error?
+    NSFileCoordinator().coordinate(readingItemAt: url, options: [], error: &coordError) { coordinated in
+      do {
+        data = try Data(contentsOf: coordinated)
+      } catch {
+        readError = error
+      }
+    }
+    if let coordError { throw coordError }
+    if let readError { throw readError }
+    guard let data else { throw ICloudBackupError.missing }
+    return data
+  }
+
+  private func isInCloudFolder(_ url: URL) throws -> Bool {
+    let folder = try documentsURL().standardizedFileURL.resolvingSymlinksInPath()
+    let picked = url.standardizedFileURL.resolvingSymlinksInPath()
+    return picked.path == folder.path || picked.path.hasPrefix(folder.path + "/")
+  }
+
+  private func finishPick(_ value: Any?) {
+    let callback = pickResult
+    pickResult = nil
+    callback?(value)
+  }
+
+  private static func presenter() -> UIViewController? {
+    let windows = UIApplication.shared.connectedScenes
+      .compactMap { $0 as? UIWindowScene }
+      .flatMap(\.windows)
+    let window = windows.first(where: \.isKeyWindow) ?? windows.first
+    var controller = window?.rootViewController
+    while let presented = controller?.presentedViewController {
+      controller = presented
+    }
+    return controller
+  }
+
   private func documentsURL() throws -> URL {
     guard FileManager.default.ubiquityIdentityToken != nil else {
       throw ICloudBackupError.signedOut
@@ -306,6 +419,7 @@ private enum ICloudBackupError: Error {
   case unavailable
   case missing
   case timeout
+  case notInCloud
 
   var code: String {
     switch self {
@@ -313,6 +427,7 @@ private enum ICloudBackupError: Error {
     case .unavailable: return "unavailable"
     case .missing: return "missing"
     case .timeout: return "timeout"
+    case .notInCloud: return "not_icloud"
     }
   }
 
@@ -322,6 +437,7 @@ private enum ICloudBackupError: Error {
     case .unavailable: return "iCloud container is unavailable"
     case .missing: return "backup file is missing"
     case .timeout: return "iCloud download timed out"
+    case .notInCloud: return "backup is not in the iCloud folder"
     }
   }
 }

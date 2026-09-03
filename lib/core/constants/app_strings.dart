@@ -74,6 +74,8 @@ class AppStrings {
   static const restoreConfirmTitle = '데이터를 복구할까요?';
   static const restoreConfirmBody = '지금 있는 데이터가 백업 파일로 바뀌어요';
   static const restorePickOther = '다른 파일 고르기';
+  static const restoreNotIcloudBody =
+      '잡플래너 아이클라우드 폴더에 있는 백업만 고를 수 있어요';
   static const restoreLatest = '가장 최근';
   static const restoreAction = '복구하기';
   static const restoreDoneTitle = '복구했어요';

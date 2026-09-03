@@ -28,6 +28,8 @@ abstract final class ReleaseNotes {
         '폰에서 웹 로그인 화면이 깨지지 않아요',
       ],
     ),
+    ReleaseNote(
+      version: '1.3.1',
       items: [
         'PC 달력을 마우스로 넘기거나 화살표로 옮길 수 있어요',
         'PC 로그인 화면을 보기 쉽게 바꿨어요',

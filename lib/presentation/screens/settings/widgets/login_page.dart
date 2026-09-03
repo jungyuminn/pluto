@@ -254,154 +254,135 @@ class _WebLoginIntro extends StatelessWidget {
     final colors = AppColors.of(context);
     final font = AppFonts.of(context);
     final showKakao = OauthConfig.kakaoEnabled;
-    return LayoutBuilder(
-      builder: (context, outer) {
-        final compact = outer.maxWidth < 720 || outer.maxHeight < 760;
-        final short = outer.maxHeight < 600;
-        final scale = short
-            ? 0.58
-            : compact
-                ? 0.7
-                : 1.0;
-        final padH = compact ? 20.0 : 24.0;
-        final padTop = compact ? 8.0 : 20.0;
-        final padBottom = compact ? 20.0 : 56.0;
-        return Padding(
-          padding: EdgeInsets.fromLTRB(padH, padTop, padH, padBottom),
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              final height = constraints.maxHeight;
-              final logoSize = 176.0 * scale;
-              final brandSize = 46.0 * scale;
-              final taglineSize = (22.0 * scale).clamp(15.0, 22.0);
-              final buttonSize = compact ? 56.0 : 64.0;
-              final buttonGap = compact ? 28.0 : 44.0;
-              final logoTop = !height.isFinite || short
-                  ? (compact ? 52.0 : 104.0)
-                  : height * (compact ? 0.14 : 0.20);
-              final afterLogo = compact ? 18.0 : 56.0;
-              final afterBrand = compact ? 14.0 : 28.0;
-              final afterButtons = compact ? 20.0 : 50.0;
-              final bottomRest = compact ? 48.0 : 172.0;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 20, 24, 56),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final height = constraints.maxHeight;
+          const logoSize = 176.0;
+          const brandSize = 46.0;
+          const taglineSize = 22.0;
+          const buttonSize = 64.0;
+          const buttonGap = 44.0;
+          final logoTop = !height.isFinite ? 80.0 : height * 0.20;
+          final tooShort = !height.isFinite || height < 640;
 
-              Widget fade(int ms, Widget child) {
-                return FadeIn(
-                  delay: Duration(milliseconds: ms),
-                  duration: const Duration(milliseconds: 460),
-                  offset: const Offset(0, 14),
-                  child: child,
-                );
-              }
+          Widget fade(int ms, Widget child) {
+            return FadeIn(
+              delay: Duration(milliseconds: ms),
+              duration: const Duration(milliseconds: 460),
+              offset: const Offset(0, 14),
+              child: child,
+            );
+          }
 
-              final column = Column(
-                children: [
-                  SizedBox(height: logoTop),
-                  fade(
-                    40,
-                    Center(
-                      child: Image.asset(
-                        AppIcons.plutoLogo,
-                        width: logoSize,
-                        height: logoSize,
-                        filterQuality: FilterQuality.high,
-                      ),
-                    ),
+          final column = Column(
+            children: [
+              SizedBox(height: tooShort ? 48 : logoTop),
+              fade(
+                40,
+                Center(
+                  child: Image.asset(
+                    AppIcons.plutoLogo,
+                    width: logoSize,
+                    height: logoSize,
+                    filterQuality: FilterQuality.high,
                   ),
-                  SizedBox(height: afterLogo),
-                  fade(
-                    110,
-                    Text(
-                      AppStrings.webLoginBrand,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontFamily: AppFonts.jalnan,
-                        fontSize: brandSize,
-                        height: 1.1,
-                        letterSpacing: 1.4,
-                        color: colors.text,
-                        decoration: TextDecoration.none,
-                      ),
-                    ),
+                ),
+              ),
+              const SizedBox(height: 56),
+              fade(
+                110,
+                Text(
+                  AppStrings.webLoginBrand,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontFamily: AppFonts.jalnan,
+                    fontSize: brandSize,
+                    height: 1.1,
+                    letterSpacing: 1.4,
+                    color: colors.text,
+                    decoration: TextDecoration.none,
                   ),
-                  SizedBox(height: afterBrand),
-                  fade(
-                    180,
-                    Text(
-                      AppStrings.webLoginTagline,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontFamily: font,
-                        fontSize: taglineSize,
-                        fontWeight: FontWeight.w500,
-                        height: 1.45,
-                        color: colors.text,
-                        decoration: TextDecoration.none,
-                      ),
-                    ),
+                ),
+              ),
+              const SizedBox(height: 28),
+              fade(
+                180,
+                Text(
+                  AppStrings.webLoginTagline,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontFamily: font,
+                    fontSize: taglineSize,
+                    fontWeight: FontWeight.w500,
+                    height: 1.45,
+                    color: colors.text,
+                    decoration: TextDecoration.none,
                   ),
-                  if (short) const SizedBox(height: 32) else const Spacer(),
-                  IgnorePointer(
-                    ignoring: busy,
-                    child: fade(
-                      320,
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          if (showKakao) ...[
-                            _ProviderButton(
-                              asset: AppIcons.kakaoLogo,
-                              background: const Color(0xFFFEE500),
-                              size: buttonSize,
-                              onPressed: onKakao,
-                            ),
-                            SizedBox(width: buttonGap),
-                          ],
-                          _ProviderButton(
-                            asset: AppIcons.googleLogo,
-                            background: Colors.white,
-                            border: colors.border,
-                            size: buttonSize,
-                            onPressed: onGoogle,
-                          ),
-                          SizedBox(width: buttonGap),
-                          _ProviderButton(
-                            asset: AppIcons.appleLogo,
-                            background: const Color(0xFF111111),
-                            tint: Colors.white,
-                            size: buttonSize,
-                            onPressed: onApple,
-                          ),
-                        ],
+                ),
+              ),
+              if (tooShort) const SizedBox(height: 64) else const Spacer(),
+              IgnorePointer(
+                ignoring: busy,
+                child: fade(
+                  320,
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      if (showKakao) ...[
+                        _ProviderButton(
+                          asset: AppIcons.kakaoLogo,
+                          background: const Color(0xFFFEE500),
+                          size: buttonSize,
+                          onPressed: onKakao,
+                        ),
+                        const SizedBox(width: buttonGap),
+                      ],
+                      _ProviderButton(
+                        asset: AppIcons.googleLogo,
+                        background: Colors.white,
+                        border: colors.border,
+                        size: buttonSize,
+                        onPressed: onGoogle,
                       ),
-                    ),
-                  ),
-                  SizedBox(height: afterButtons),
-                  fade(
-                    380,
-                    Text(
-                      AppStrings.webLoginPcLabel,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontFamily: font,
-                        fontSize: compact ? 13 : 14,
-                        fontWeight: FontWeight.w400,
-                        color: colors.muted,
-                        decoration: TextDecoration.none,
+                      const SizedBox(width: buttonGap),
+                      _ProviderButton(
+                        asset: AppIcons.appleLogo,
+                        background: const Color(0xFF111111),
+                        tint: Colors.white,
+                        size: buttonSize,
+                        onPressed: onApple,
                       ),
-                    ),
+                    ],
                   ),
-                  if (!short) SizedBox(height: bottomRest),
-                ],
-              );
+                ),
+              ),
+              const SizedBox(height: 50),
+              fade(
+                380,
+                Text(
+                  AppStrings.webLoginPcLabel,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontFamily: font,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w400,
+                    color: colors.muted,
+                    decoration: TextDecoration.none,
+                  ),
+                ),
+              ),
+              if (!tooShort) const SizedBox(height: 172),
+            ],
+          );
 
-              if (short) {
-                return SingleChildScrollView(child: column);
-              }
-              return column;
-            },
-          ),
-        );
-      },
+          if (tooShort) {
+            return SingleChildScrollView(child: column);
+          }
+          return column;
+        },
+      ),
     );
   }
 }

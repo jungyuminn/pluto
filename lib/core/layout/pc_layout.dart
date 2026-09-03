@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
@@ -13,14 +15,22 @@ class PcLayout {
   static const pcDayDialogWidth = 360.0;
   static const dayLabelHeight = 52.0;
   static const pcDayLabelHeight = 56.0;
+  static const compactWidth = 720.0;
+
+  static bool showCalendarArrowsOf(double width) =>
+      isPc && width >= compactWidth;
 
   static double dayDialogWidthOf() => isPc ? pcDayDialogWidth : dayDialogWidth;
 
   static double dayDialogHeightOf(double screenHeight) {
     if (isPc) {
-      return (screenHeight * 0.68).clamp(520.0, 640.0).toDouble();
+      final maxH = math.min(640.0, screenHeight * 0.82);
+      final minH = math.min(520.0, screenHeight * 0.62);
+      return (screenHeight * 0.68).clamp(minH, maxH).toDouble();
     }
-    return (screenHeight * 0.56).clamp(420.0, 530.0).toDouble();
+    final maxH = math.min(530.0, screenHeight * 0.82);
+    final minH = math.min(420.0, screenHeight * 0.52);
+    return (screenHeight * 0.56).clamp(minH, maxH).toDouble();
   }
 
   static double dayLabelHeightOf() =>

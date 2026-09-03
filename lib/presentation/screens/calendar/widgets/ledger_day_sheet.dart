@@ -28,6 +28,7 @@ Future<void> showLedgerDaySheet(
   BuildContext context, {
   required DateTime date,
   required List<LedgerEntry> entries,
+  VoidCallback? onLedgersChanged,
   Rect? origin,
 }) {
   CalendarDayDropTarget.reset();
@@ -38,7 +39,11 @@ Future<void> showLedgerDaySheet(
     barrierColor: const Color(0x00000000),
     transitionDuration: const Duration(milliseconds: 150),
     pageBuilder: (context, animation, secondaryAnimation) {
-      return LedgerDaySheet(date: date, initial: entries);
+      return LedgerDaySheet(
+        date: date,
+        initial: entries,
+        onLedgersChanged: onLedgersChanged,
+      );
     },
     transitionBuilder: (context, animation, secondaryAnimation, child) {
       final t = Curves.easeOutCubic.transform(animation.value);
@@ -102,10 +107,16 @@ Future<void> showLedgerDaySheet(
 }
 
 class LedgerDaySheet extends StatefulWidget {
-  const LedgerDaySheet({super.key, required this.date, required this.initial});
+  const LedgerDaySheet({
+    super.key,
+    required this.date,
+    required this.initial,
+    this.onLedgersChanged,
+  });
 
   final DateTime date;
   final List<LedgerEntry> initial;
+  final VoidCallback? onLedgersChanged;
 
   @override
   State<LedgerDaySheet> createState() => _LedgerDaySheetState();
@@ -418,6 +429,7 @@ class _LedgerDaySheetState extends State<LedgerDaySheet>
       initial: initial,
     );
     if (saved && mounted) await _reload(animate: entry == null);
+    if (saved) widget.onLedgersChanged?.call();
   }
 
   Future<bool> _confirmDelete(LedgerEntry entry) async {
@@ -433,6 +445,7 @@ class _LedgerDaySheetState extends State<LedgerDaySheet>
     if (!confirmed || !mounted) return false;
     await AppScope.of(context).deleteLedger(entry.id);
     await _reload();
+    widget.onLedgersChanged?.call();
     return true;
   }
 
@@ -565,6 +578,7 @@ class _LedgerDaySheetState extends State<LedgerDaySheet>
     await AppScope.of(context).saveLedger(
       original.copyWith(date: DateTime(date.year, date.month, date.day)),
     );
+    widget.onLedgersChanged?.call();
   }
 
   int _groupIndexAt(double y, LedgerEntry dragged) {

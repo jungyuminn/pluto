@@ -164,7 +164,7 @@ final class ICloudBackupPlugin: NSObject, UIDocumentPickerDelegate {
           guard let name = item.value(forAttribute: NSMetadataItemFSNameKey) as? String else {
             continue
           }
-          guard isBackupZip(name) else { continue }
+          guard self.isBackupZip(name) else { continue }
           let date = item.value(forAttribute: NSMetadataItemFSContentChangeDateKey) as? Date
             ?? Date()
           items.append([

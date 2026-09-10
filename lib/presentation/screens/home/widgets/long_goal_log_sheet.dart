@@ -4,6 +4,7 @@ import 'package:pluto/app_scope.dart';
 import 'package:pluto/core/constants/app_fonts.dart';
 import 'package:pluto/core/constants/app_strings.dart';
 import 'package:pluto/core/theme/app_colors.dart';
+import 'package:pluto/core/theme/app_theme.dart';
 import 'package:pluto/core/utils/plain_text_editing_controller.dart';
 import 'package:pluto/core/utils/press_bounce.dart';
 import 'package:pluto/data/datasources/long_goal_local_datasource.dart';
@@ -248,7 +249,9 @@ class _LongGoalLogSheetState extends State<LongGoalLogSheet> {
     final progress = _goal.progress(store.logs);
     final broken = _streakBroken;
 
-    return Padding(
+    return AccentSelectionTheme(
+      color: accent,
+      child: Padding(
       padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 280),
@@ -522,6 +525,7 @@ class _LongGoalLogSheetState extends State<LongGoalLogSheet> {
             ),
           ),
         ),
+    ),
     );
   }
 }

@@ -866,8 +866,7 @@ class _DiaryDrawSheetState extends State<DiaryDrawSheet> {
               ),
             ),
             const SizedBox(height: 12),
-            PcLayout.constrainWidth(
-              Column(
+            Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Wrap(
@@ -981,7 +980,6 @@ class _DiaryDrawSheetState extends State<DiaryDrawSheet> {
                       ],
                     ),
                   ],
-                ),
             ),
           ],
         ),

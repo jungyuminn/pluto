@@ -3,6 +3,7 @@ import 'package:pluto/app_scope.dart';
 import 'package:pluto/core/constants/app_icons.dart';
 import 'package:pluto/core/constants/app_strings.dart';
 import 'package:pluto/core/theme/app_colors.dart';
+import 'package:pluto/core/theme/app_theme.dart';
 import 'package:pluto/core/utils/plain_text_editing_controller.dart';
 import 'package:pluto/domain/entities/calendar_event.dart';
 import 'package:pluto/domain/entities/event_category.dart';
@@ -401,7 +402,9 @@ class _AddEventFormState extends State<AddEventForm>
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedContainer(
+    return AccentSelectionTheme(
+      color: _accent,
+      child: AnimatedContainer(
       duration: const Duration(milliseconds: 280),
       curve: Curves.easeOutCubic,
       width: double.infinity,
@@ -512,6 +515,7 @@ class _AddEventFormState extends State<AddEventForm>
             ),
           ],
         ),
+      ),
       ),
     );
   }

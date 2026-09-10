@@ -633,6 +633,16 @@ class _LevelBlock extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.baseline,
                 textBaseline: TextBaseline.alphabetic,
                 children: [
+                  Text(
+                    AppStrings.statsPlanetStage(level),
+                    style: TextStyle(
+                      fontFamily: font,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: colors.muted,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
                   Expanded(
                     child: AnimatedSwitcher(
                       duration: const Duration(milliseconds: 280),
@@ -641,6 +651,7 @@ class _LevelBlock extends StatelessWidget {
                       child: Text(
                         label,
                         key: ValueKey(label),
+                        textAlign: TextAlign.right,
                         style: TextStyle(
                           fontFamily: font,
                           fontSize: 13,
@@ -650,19 +661,6 @@ class _LevelBlock extends StatelessWidget {
                       ),
                     ),
                   ),
-                  if (!play.isMax) ...[
-                    const SizedBox(width: 8),
-                    Text(
-                      AppStrings.statsPlanetStage(level),
-                      style: TextStyle(
-                        fontFamily: font,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        height: 1,
-                        color: colors.muted,
-                      ),
-                    ),
-                  ],
                 ],
               ),
               const SizedBox(height: 4),

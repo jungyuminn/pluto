@@ -17,6 +17,18 @@ class ReleaseNote {
 abstract final class ReleaseNotes {
   static const all = [
     ReleaseNote(
+      version: '1.3.3',
+      items: [
+        '앱 아이콘과 로그인 로고를 새로 바꿨어요',
+        '글자를 쓸 때 커서가 카테고리 색을 따라가요',
+        '통계에서 지금 단계와 다음 행성까지가 함께 보여요',
+        '일기 그림 도구가 PC에서도 넓게 나와요',
+      ],
+      fixes: [
+        '홈 검색에서 흰 카드가 같이 줄지 않아요',
+      ],
+    ),
+    ReleaseNote(
       version: '1.3.2',
       items: [
         'PC에서 브라우저 위 바가 화면 배경을 따라가요',

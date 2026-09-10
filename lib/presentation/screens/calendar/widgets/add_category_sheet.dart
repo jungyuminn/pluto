@@ -3,6 +3,7 @@ import 'package:pluto/app_scope.dart';
 import 'package:pluto/core/constants/app_fonts.dart';
 import 'package:pluto/core/constants/app_strings.dart';
 import 'package:pluto/core/theme/app_colors.dart';
+import 'package:pluto/core/theme/app_theme.dart';
 import 'package:pluto/core/utils/plain_text_editing_controller.dart';
 import 'package:pluto/core/utils/press_bounce.dart';
 import 'package:pluto/domain/entities/event_category.dart';
@@ -164,7 +165,9 @@ class _AddCategorySheetState extends State<AddCategorySheet> {
     final accent = Color(_color);
     final bottom = MediaQuery.paddingOf(context).bottom;
 
-    return Padding(
+    return AccentSelectionTheme(
+      color: accent,
+      child: Padding(
       padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 280),
@@ -275,6 +278,7 @@ class _AddCategorySheetState extends State<AddCategorySheet> {
             ],
           ),
         ),
+      ),
       ),
     );
   }

@@ -808,6 +808,7 @@ class _SearchCategoryCard extends StatelessWidget {
     final colors = AppColors.of(context);
     return DecoratedBox(
       decoration: BoxDecoration(
+        color: colors.card,
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
@@ -817,14 +818,9 @@ class _SearchCategoryCard extends StatelessWidget {
           ),
         ],
       ),
-      child: PressBounce(
-        passthrough: true,
-        color: colors.card,
-        pressedColor: Color.lerp(colors.card, Colors.black, 0.08)!,
-        borderRadius: BorderRadius.circular(24),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
-          child: Column(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+        child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Row(
@@ -881,7 +877,6 @@ class _SearchCategoryCard extends StatelessWidget {
             ],
           ),
         ),
-      ),
     );
   }
 }

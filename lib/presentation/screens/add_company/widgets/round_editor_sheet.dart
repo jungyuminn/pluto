@@ -10,6 +10,7 @@ import 'package:pluto/presentation/screens/add_company/widgets/save_company_butt
 import 'package:pluto/presentation/screens/calendar/widgets/event_action_icon.dart';
 import 'package:pluto/presentation/widgets/themed_asset.dart';
 import 'package:pluto/core/theme/app_colors.dart';
+import 'package:pluto/core/theme/app_theme.dart';
 
 Future<ApplicationRound?> showRoundEditor(
   BuildContext context, {
@@ -123,7 +124,9 @@ class _RoundEditorSheetState extends State<RoundEditorSheet>
     final viewInsets = MediaQuery.viewInsetsOf(context);
     final accent = widget.accent;
 
-    return Padding(
+    return AccentSelectionTheme(
+      color: accent,
+      child: Padding(
       padding: EdgeInsets.only(bottom: viewInsets.bottom),
       child: Material(
         color: colors.tint(accent),
@@ -201,6 +204,7 @@ class _RoundEditorSheetState extends State<RoundEditorSheet>
             ),
           ),
         ),
+      ),
       ),
     );
   }

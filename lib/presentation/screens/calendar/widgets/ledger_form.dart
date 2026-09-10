@@ -4,6 +4,7 @@ import 'package:pluto/core/constants/app_fonts.dart';
 import 'package:pluto/core/constants/app_icons.dart';
 import 'package:pluto/core/constants/app_strings.dart';
 import 'package:pluto/core/theme/app_colors.dart';
+import 'package:pluto/core/theme/app_theme.dart';
 import 'package:pluto/core/utils/plain_text_editing_controller.dart';
 import 'package:pluto/domain/entities/event_category.dart';
 import 'package:pluto/domain/entities/ledger_entry.dart';
@@ -481,7 +482,9 @@ class _LedgerFormState extends State<LedgerForm> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
-    return AnimatedContainer(
+    return AccentSelectionTheme(
+      color: _accent,
+      child: AnimatedContainer(
       duration: const Duration(milliseconds: 420),
       curve: Curves.easeInOutCubic,
       width: double.infinity,
@@ -624,6 +627,7 @@ class _LedgerFormState extends State<LedgerForm> with TickerProviderStateMixin {
             ),
           ),
         ],
+      ),
       ),
     );
   }

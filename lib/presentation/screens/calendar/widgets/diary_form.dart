@@ -4,6 +4,7 @@ import 'package:pluto/core/constants/app_fonts.dart';
 import 'package:pluto/core/constants/app_icons.dart';
 import 'package:pluto/core/constants/app_strings.dart';
 import 'package:pluto/core/theme/app_colors.dart';
+import 'package:pluto/core/theme/app_theme.dart';
 import 'package:pluto/core/utils/plain_text_editing_controller.dart';
 import 'package:pluto/core/utils/press_bounce.dart';
 import 'package:pluto/data/datasources/diary_photo_storage.dart';
@@ -418,7 +419,9 @@ class _DiaryFormState extends State<DiaryForm> {
       Theme.of(context).brightness,
     );
     final rule = look.rule;
-    return SizedBox(
+    return AccentSelectionTheme(
+      color: accent,
+      child: SizedBox(
       width: double.infinity,
       child: DiaryCoverPaper(
         look: look,
@@ -527,6 +530,7 @@ class _DiaryFormState extends State<DiaryForm> {
             ],
           ),
         ),
+      ),
       ),
     );
   }

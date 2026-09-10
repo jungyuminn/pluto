@@ -7,6 +7,7 @@ import 'package:pluto/domain/entities/application_round.dart';
 import 'package:pluto/domain/entities/apply_status.dart';
 import 'package:pluto/domain/entities/job_application.dart';
 import 'package:pluto/core/theme/app_colors.dart';
+import 'package:pluto/core/theme/app_theme.dart';
 import 'package:pluto/domain/entities/event_category.dart';
 import 'package:pluto/presentation/screens/add_company/widgets/apply_status_picker.dart';
 import 'package:pluto/presentation/screens/add_company/widgets/company_name_field.dart';
@@ -291,7 +292,9 @@ class _AddCompanyFormViewState extends State<AddCompanyForm>
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedContainer(
+    return AccentSelectionTheme(
+      color: _accent,
+      child: AnimatedContainer(
       duration: const Duration(milliseconds: 280),
       curve: Curves.easeOutCubic,
       width: double.infinity,
@@ -490,6 +493,7 @@ class _AddCompanyFormViewState extends State<AddCompanyForm>
             ),
           ],
         ),
+      ),
       ),
     );
   }

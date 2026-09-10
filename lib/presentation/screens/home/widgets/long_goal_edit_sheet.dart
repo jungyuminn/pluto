@@ -7,6 +7,7 @@ import 'package:pluto/core/constants/app_fonts.dart';
 import 'package:pluto/core/constants/app_icons.dart';
 import 'package:pluto/core/constants/app_strings.dart';
 import 'package:pluto/core/theme/app_colors.dart';
+import 'package:pluto/core/theme/app_theme.dart';
 import 'package:pluto/core/utils/plain_text_editing_controller.dart';
 import 'package:pluto/core/utils/press_bounce.dart';
 import 'package:pluto/domain/entities/event_category.dart';
@@ -376,7 +377,9 @@ class _LongGoalEditSheetState extends State<LongGoalEditSheet>
       fontSize: 16,
     );
 
-    return Padding(
+    return AccentSelectionTheme(
+      color: accent,
+      child: Padding(
       padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 280),
@@ -603,6 +606,7 @@ class _LongGoalEditSheetState extends State<LongGoalEditSheet>
             ],
           ),
         ),
+      ),
       ),
     );
   }

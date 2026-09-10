@@ -139,7 +139,19 @@ ReleaseDemo releaseDemoFor(String text, {required bool isFix}) {
     if (text.contains('앱 테마를 따라')) {
       return ReleaseDemo.compactWidget;
     }
+    if (text.contains('흰 카드') || text.contains('같이 줄지')) {
+      return ReleaseDemo.searchOpenList;
+    }
     return ReleaseDemo.fix;
+  }
+  if (text.contains('앱 아이콘') || text.contains('로그인 로고')) {
+    return ReleaseDemo.accountSync;
+  }
+  if (text.contains('커서가')) {
+    return ReleaseDemo.themeAccent;
+  }
+  if (text.contains('그림 도구')) {
+    return ReleaseDemo.penKinds;
   }
   if (text.contains('모드마다') || text.contains('따로 붙여')) {
     return ReleaseDemo.stickerByMode;

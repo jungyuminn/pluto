@@ -111,3 +111,34 @@ class AppTheme {
     );
   }
 }
+
+class AccentSelectionTheme extends StatelessWidget {
+  const AccentSelectionTheme({
+    super.key,
+    required this.color,
+    required this.child,
+  });
+
+  final Color color;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Theme(
+      data: theme.copyWith(
+        textSelectionTheme: TextSelectionThemeData(
+          cursorColor: color,
+          selectionColor: color.withValues(alpha: 0.28),
+          selectionHandleColor: color,
+        ),
+        cupertinoOverrideTheme: CupertinoThemeData(
+          brightness: theme.brightness,
+          primaryColor: color,
+          applyThemeToAll: true,
+        ),
+      ),
+      child: child,
+    );
+  }
+}

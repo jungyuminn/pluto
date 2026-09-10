@@ -4,6 +4,7 @@ import 'package:pluto/core/constants/app_icons.dart';
 import 'package:pluto/core/constants/app_strings.dart';
 import 'package:pluto/core/theme/app_colors.dart';
 import 'package:pluto/core/utils/press_bounce.dart';
+import 'package:pluto/presentation/widgets/themed_asset.dart';
 
 class EventDateChip extends StatelessWidget {
   const EventDateChip({
@@ -41,8 +42,8 @@ class EventDateChip extends StatelessWidget {
           children: [
             ColorFiltered(
               colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
-              child: Image.asset(
-                AppIcons.calendar,
+              child: AppAssetImage(
+                asset: AppIcons.calendar,
                 width: iconSize,
                 height: iconSize,
               ),

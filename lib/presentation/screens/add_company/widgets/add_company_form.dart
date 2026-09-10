@@ -18,6 +18,7 @@ import 'package:pluto/presentation/screens/add_company/widgets/save_company_butt
 import 'package:pluto/presentation/screens/calendar/widgets/category_picker_sheet.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/event_action_icon.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/event_category_chip.dart';
+import 'package:pluto/presentation/widgets/themed_asset.dart';
 
 class AddCompanyForm extends StatefulWidget {
   const AddCompanyForm({super.key, this.initial});
@@ -358,8 +359,8 @@ class _AddCompanyFormViewState extends State<AddCompanyForm>
                           color: _accent,
                           selected: _roundsOpen,
                           onPressed: _toggleRounds,
-                          child: Image.asset(
-                            _roundsOpen
+                          child: AppAssetImage(
+                            asset: _roundsOpen
                                 ? AppIcons.calendar
                                 : AppIcons.calendarOutlined,
                             width: 20,

@@ -3,10 +3,10 @@ import 'package:pluto/domain/entities/long_goal.dart';
 class AppIcons {
   AppIcons._();
 
-  static const home = 'assets/icons/home.png';
-  static const homeOutlined = 'assets/icons/home_outlined.png';
-  static const calendar = 'assets/icons/calendar.png';
-  static const calendarOutlined = 'assets/icons/calendar_outlined.png';
+  static const home = 'assets/icons/home.svg';
+  static const homeOutlined = 'assets/icons/home_outlined.svg';
+  static const calendar = 'assets/icons/calendar.svg';
+  static const calendarOutlined = 'assets/icons/calendar_outlined.svg';
   static const cursor = 'assets/icons/cursor.png';
   static const memo = 'assets/icons/memo.png';
   static const memoOutlined = 'assets/icons/memo_outlined.png';
@@ -40,8 +40,8 @@ class AppIcons {
   static const tablet = 'assets/images/tablet.png';
   static const statistics = 'assets/icons/statistics.png';
   static const statisticsOutlined = 'assets/icons/statistics_outlined.png';
-  static const planet = 'assets/icons/planet.png';
-  static const planetOutlined = 'assets/icons/planet_outlined.png';
+  static const planet = 'assets/icons/planet.svg';
+  static const planetOutlined = 'assets/icons/planet_outlined.svg';
   static const office = 'assets/icons/office.png';
   static const officeOutlined = 'assets/icons/office_outlined.png';
   static const calendarList = 'assets/icons/calendar_list.png';

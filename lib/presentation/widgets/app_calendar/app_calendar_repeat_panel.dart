@@ -6,6 +6,7 @@ import 'package:pluto/core/constants/app_strings.dart';
 import 'package:pluto/core/theme/app_colors.dart';
 import 'package:pluto/core/utils/press_bounce.dart';
 import 'package:pluto/presentation/widgets/sliding_kind_bar.dart';
+import 'package:pluto/presentation/widgets/themed_asset.dart';
 
 class AppCalendarRepeatPanel extends StatelessWidget {
   const AppCalendarRepeatPanel({
@@ -264,7 +265,11 @@ class _RepeatRow extends StatelessWidget {
                       colors.icon,
                       BlendMode.srcIn,
                     ),
-                    child: Image.asset(iconAsset!, width: 20, height: 20),
+                    child: AppAssetImage(
+                      asset: iconAsset!,
+                      width: 20,
+                      height: 20,
+                    ),
                   )
                 : Icon(icon, size: 22, color: colors.icon),
           ),

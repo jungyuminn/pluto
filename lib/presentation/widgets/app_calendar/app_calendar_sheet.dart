@@ -12,6 +12,7 @@ import 'package:pluto/core/utils/press_bounce.dart';
 import 'package:pluto/presentation/screens/add_company/widgets/save_company_button.dart';
 import 'package:pluto/presentation/widgets/app_calendar/app_calendar_repeat_panel.dart';
 import 'package:pluto/presentation/widgets/app_calendar/calendar_zoom_picker.dart';
+import 'package:pluto/presentation/widgets/themed_asset.dart';
 
 enum AppCalendarMode { single, range, repeat, multiple }
 
@@ -627,7 +628,11 @@ class _HeaderBar extends StatelessWidget {
               children: [
                 ColorFiltered(
                   colorFilter: ColorFilter.mode(danger, BlendMode.srcIn),
-                  child: Image.asset(AppIcons.calendar, width: 22, height: 22),
+                  child: AppAssetImage(
+                    asset: AppIcons.calendar,
+                    width: 22,
+                    height: 22,
+                  ),
                 ),
                 Positioned(
                   right: -3,

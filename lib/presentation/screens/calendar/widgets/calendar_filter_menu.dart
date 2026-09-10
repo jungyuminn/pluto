@@ -903,8 +903,8 @@ class _MenuItem extends StatelessWidget {
                       AppColors.light.icon,
                       BlendMode.srcIn,
                     ),
-                    child: Image.asset(
-                      trailingAsset!,
+                    child: AppAssetImage(
+                      asset: trailingAsset!,
                       width: 22,
                       height: 22,
                     ),

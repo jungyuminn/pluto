@@ -4,6 +4,7 @@ import 'package:pluto/core/constants/app_strings.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/event_action_icon.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/event_date_chip.dart';
 import 'package:pluto/presentation/widgets/app_calendar/app_calendar.dart';
+import 'package:pluto/presentation/widgets/themed_asset.dart';
 
 class RoundDateField extends StatelessWidget {
   const RoundDateField({
@@ -41,8 +42,8 @@ class RoundDateField extends StatelessWidget {
         text: emptyLabel,
         color: color,
         onPressed: () => _pick(context),
-        child: Image.asset(
-          filledIcon ? AppIcons.calendar : AppIcons.calendarOutlined,
+        child: AppAssetImage(
+          asset: filledIcon ? AppIcons.calendar : AppIcons.calendarOutlined,
           width: 20,
           height: 20,
         ),

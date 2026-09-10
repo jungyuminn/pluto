@@ -1,7 +1,49 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:pluto/app_scope.dart';
 import 'package:pluto/core/theme/app_colors.dart';
 import 'package:pluto/data/datasources/theme_preference.dart';
+
+class AppAssetImage extends StatelessWidget {
+  const AppAssetImage({
+    super.key,
+    required this.asset,
+    this.width,
+    this.height,
+    this.color,
+    this.semanticLabel,
+  });
+
+  final String asset;
+  final double? width;
+  final double? height;
+  final Color? color;
+  final String? semanticLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    if (asset.toLowerCase().endsWith('.svg')) {
+      return SvgPicture.asset(
+        asset,
+        width: width,
+        height: height,
+        semanticsLabel: semanticLabel,
+        colorFilter: color == null
+            ? null
+            : ColorFilter.mode(color!, BlendMode.srcIn),
+      );
+    }
+    return Image.asset(
+      asset,
+      width: width,
+      height: height,
+      semanticLabel: semanticLabel,
+      gaplessPlayback: true,
+      color: color,
+      colorBlendMode: color == null ? null : BlendMode.srcIn,
+    );
+  }
+}
 
 class ThemedAsset extends StatelessWidget {
   const ThemedAsset({
@@ -21,12 +63,11 @@ class ThemedAsset extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final image = Image.asset(
-      asset,
+    final image = AppAssetImage(
+      asset: asset,
       width: width,
       height: height,
       semanticLabel: semanticLabel,
-      gaplessPlayback: true,
     );
     final dark = Theme.of(context).brightness == Brightness.dark;
     final skin =

@@ -9,6 +9,7 @@ import 'package:pluto/core/theme/app_colors.dart';
 import 'package:pluto/core/utils/press_bounce.dart';
 import 'package:pluto/domain/entities/diary_cover.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/diary_cover_style.dart';
+import 'package:pluto/presentation/widgets/themed_asset.dart';
 
 Future<DiaryCover?> showDiaryCoverSheet(
   BuildContext context, {
@@ -298,8 +299,8 @@ class DiaryCoverChip extends StatelessWidget {
           children: [
             ColorFiltered(
               colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
-              child: Image.asset(
-                AppIcons.diary,
+              child: AppAssetImage(
+                asset: AppIcons.diary,
                 width: 20,
                 height: 20,
                 semanticLabel: name,

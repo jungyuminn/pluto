@@ -3,6 +3,7 @@ import 'package:pluto/core/constants/app_icons.dart';
 import 'package:pluto/core/constants/app_strings.dart';
 import 'package:pluto/presentation/screens/add_company/widgets/apply_status_dropdown.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/event_action_icon.dart';
+import 'package:pluto/presentation/widgets/themed_asset.dart';
 
 class ApplyStatusPicker extends StatefulWidget {
   const ApplyStatusPicker({
@@ -128,8 +129,8 @@ class _ApplyStatusPickerState extends State<ApplyStatusPicker>
           color: widget.color,
           selected: _open,
           onPressed: _toggle,
-          child: Image.asset(
-            AppIcons.status,
+          child: AppAssetImage(
+            asset: AppIcons.status,
             width: 20,
             height: 20,
           ),

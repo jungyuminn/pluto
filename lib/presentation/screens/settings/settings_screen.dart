@@ -2293,7 +2293,6 @@ class _ThemeSettingsPageState extends State<_ThemeSettingsPage> {
   final _scroll = ScrollController();
   final _selectedKey = GlobalKey();
   var _scrolledToSelected = false;
-  var _precached = false;
 
   @override
   void initState() {
@@ -2303,15 +2302,6 @@ class _ThemeSettingsPageState extends State<_ThemeSettingsPage> {
       if (!mounted) return;
       await _scrollToSelected();
     });
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (_precached) return;
-    _precached = true;
-    precacheImage(const AssetImage(AppIcons.editOutlined), context);
-    precacheImage(const AssetImage(AppIcons.trashCan), context);
   }
 
   @override
@@ -2844,12 +2834,10 @@ class _ThemeSwipeAction extends StatelessWidget {
       child: Center(
         child: ColorFiltered(
           colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
-          child: Image.asset(
-            asset,
+          child: AppAssetImage(
+            asset: asset,
             width: 22,
             height: 22,
-            cacheWidth: (22 * MediaQuery.devicePixelRatioOf(context)).round(),
-            cacheHeight: (22 * MediaQuery.devicePixelRatioOf(context)).round(),
           ),
         ),
       ),

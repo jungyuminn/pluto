@@ -5,6 +5,7 @@ import 'package:pluto/core/theme/app_colors.dart';
 import 'package:pluto/core/utils/animated_accent.dart';
 import 'package:pluto/core/utils/press_bounce.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/event_complete_button.dart';
+import 'package:pluto/presentation/widgets/themed_asset.dart';
 
 class DayEventLabel extends StatefulWidget {
   const DayEventLabel({
@@ -281,8 +282,8 @@ class _DayEventLabelState extends State<DayEventLabel> {
                         accent,
                         BlendMode.srcIn,
                       ),
-                      child: Image.asset(
-                        AppIcons.officeOutlined,
+                      child: AppAssetImage(
+                        asset: AppIcons.officeOutlined,
                         width: 20,
                         height: 20,
                       ),

@@ -8,6 +8,7 @@ import 'package:pluto/core/theme/app_colors.dart';
 import 'package:pluto/core/utils/press_bounce.dart';
 import 'package:pluto/presentation/screens/add_company/widgets/save_company_button.dart';
 import 'package:pluto/presentation/widgets/flat_snap_picker.dart';
+import 'package:pluto/presentation/widgets/themed_asset.dart';
 
 class EventTimePickResult {
   const EventTimePickResult({this.startMinutes, this.endMinutes});
@@ -165,17 +166,12 @@ class _EventTimeSheetState extends State<EventTimeSheet> {
                             borderRadius: BorderRadius.circular(999),
                             expand: true,
                             child: Center(
-                              child: ColorFiltered(
-                                colorFilter: ColorFilter.mode(
-                                  colors.danger,
-                                  BlendMode.srcIn,
-                                ),
-                                child: Image.asset(
-                                  AppIcons.clockRemove,
-                                  width: SaveCompanyButton.size / 2,
-                                  height: SaveCompanyButton.size / 2,
-                                  semanticLabel: AppStrings.timeClear,
-                                ),
+                              child: AppAssetImage(
+                                asset: AppIcons.clockRemove,
+                                width: SaveCompanyButton.size / 2,
+                                height: SaveCompanyButton.size / 2,
+                                color: colors.danger,
+                                semanticLabel: AppStrings.timeClear,
                               ),
                             ),
                           ),

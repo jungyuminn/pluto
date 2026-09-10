@@ -5,6 +5,7 @@ import 'package:pluto/core/constants/app_strings.dart';
 import 'package:pluto/core/theme/app_colors.dart';
 import 'package:pluto/core/utils/press_bounce.dart';
 import 'package:pluto/domain/entities/calendar_event.dart';
+import 'package:pluto/presentation/widgets/themed_asset.dart';
 
 class EventTimeChip extends StatelessWidget {
   const EventTimeChip({
@@ -45,8 +46,8 @@ class EventTimeChip extends StatelessWidget {
           children: [
             ColorFiltered(
               colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
-              child: Image.asset(
-                AppIcons.clock,
+              child: AppAssetImage(
+                asset: AppIcons.clock,
                 width: 20,
                 height: 20,
                 semanticLabel: AppStrings.timeAction,

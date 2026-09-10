@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:pluto/core/constants/app_icons.dart';
 import 'package:pluto/core/utils/press_bounce.dart';
+import 'package:pluto/presentation/widgets/themed_asset.dart';
 
 class SaveCompanyButton extends StatelessWidget {
   const SaveCompanyButton({
@@ -42,8 +43,8 @@ class SaveCompanyButton extends StatelessWidget {
                 Colors.white,
                 BlendMode.srcIn,
               ),
-              child: Image.asset(
-                AppIcons.cursor,
+              child: AppAssetImage(
+                asset: AppIcons.cursor,
                 width: _iconSize,
                 height: _iconSize,
               ),

@@ -1,0 +1,16 @@
+<svg width="512" height="512" viewBox="0 0 24 24" fill="#000000" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <clipPath id="clock_remove_cut">
+      <path clip-rule="evenodd" d="M0 0H24V24H0ZM17.85 12.55A5.45 5.45 0 1 1 17.85 23.45A5.45 5.45 0 1 1 17.85 12.55Z"/>
+    </clipPath>
+  </defs>
+  <g clip-path="url(#clock_remove_cut)" fill="none" stroke="#000000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="10.9" cy="10.9" r="8.25"/>
+    <path d="M10.9 6.45V10.9L14.7 13.85"/>
+  </g>
+  <circle cx="17.85" cy="17.9" r="4.95" fill="none" stroke="#000000" stroke-width="1.5"/>
+  <g transform="rotate(45 17.85 17.9)">
+    <rect x="17.1" y="15.55" width="1.5" height="4.7" rx="0.75"/>
+    <rect x="15.5" y="17.15" width="4.7" height="1.5" rx="0.75"/>
+  </g>
+</svg>

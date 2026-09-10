@@ -17,6 +17,7 @@ import 'package:pluto/presentation/screens/calendar/widgets/event_category_chip.
 import 'package:pluto/presentation/screens/calendar/widgets/event_memo_field.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/event_title_field.dart';
 import 'package:pluto/presentation/widgets/app_calendar/app_calendar.dart';
+import 'package:pluto/presentation/widgets/themed_asset.dart';
 
 class AddEventForm extends StatefulWidget {
   const AddEventForm({
@@ -490,8 +491,10 @@ class _AddEventFormState extends State<AddEventForm>
                           color: _accent,
                           selected: _memoOpen,
                           onPressed: _toggleMemo,
-                          child: Image.asset(
-                            _memoOpen ? AppIcons.memo : AppIcons.memoOutlined,
+                          child: AppAssetImage(
+                            asset: _memoOpen
+                                ? AppIcons.memo
+                                : AppIcons.memoOutlined,
                             width: 20,
                             height: 20,
                           ),

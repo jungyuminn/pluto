@@ -4,6 +4,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:pluto/core/constants/app_fonts.dart';
 import 'package:pluto/core/constants/app_icons.dart';
@@ -1060,14 +1061,15 @@ class HomeScreenWidgetService {
 
   Future<ui.Image?> _loadOfficeIcon() async {
     try {
-      final data = await rootBundle.load(AppIcons.officeOutlined);
-      final codec = await ui.instantiateImageCodec(
-        data.buffer.asUint8List(),
-        targetWidth: 40,
-        targetHeight: 40,
+      final pictureInfo = await vg.loadPicture(
+        SvgAssetLoader(AppIcons.officeOutlined),
+        null,
       );
-      final frame = await codec.getNextFrame();
-      return frame.image;
+      try {
+        return await pictureInfo.picture.toImage(40, 40);
+      } finally {
+        pictureInfo.picture.dispose();
+      }
     } catch (error) {
       debugPrint('HomeScreenWidgetService office icon failed: $error');
       return null;

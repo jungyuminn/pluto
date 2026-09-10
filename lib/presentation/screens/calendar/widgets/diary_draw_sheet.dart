@@ -16,6 +16,7 @@ import 'package:pluto/core/utils/press_bounce.dart';
 import 'package:pluto/data/datasources/synced_file_store.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
+import 'package:pluto/presentation/widgets/themed_asset.dart';
 
 Future<DiaryDrawResult?> showDiaryDrawSheet(
   BuildContext context, {
@@ -1541,8 +1542,8 @@ class _ToolChip extends StatelessWidget {
                     onPressed == null ? colors.muted : colors.text,
                     BlendMode.srcIn,
                   ),
-                  child: Image.asset(
-                    icon,
+                  child: AppAssetImage(
+                    asset: icon,
                     width: 20,
                     height: 20,
                   ),

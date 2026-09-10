@@ -373,8 +373,8 @@ class _AddCompanyFormViewState extends State<AddCompanyForm>
                           color: _accent,
                           selected: _positionOpen,
                           onPressed: _togglePosition,
-                          child: Image.asset(
-                            _positionOpen
+                          child: AppAssetImage(
+                            asset: _positionOpen
                                 ? AppIcons.memo
                                 : AppIcons.memoOutlined,
                             width: 20,
@@ -387,8 +387,8 @@ class _AddCompanyFormViewState extends State<AddCompanyForm>
                           color: _accent,
                           selected: _coverLetterOpen,
                           onPressed: _toggleCoverLetter,
-                          child: Image.asset(
-                            _coverLetterOpen
+                          child: AppAssetImage(
+                            asset: _coverLetterOpen
                                 ? AppIcons.resume
                                 : AppIcons.resumeOutlined,
                             width: 20,

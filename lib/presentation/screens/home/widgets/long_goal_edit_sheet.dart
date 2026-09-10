@@ -18,6 +18,7 @@ import 'package:pluto/presentation/screens/calendar/widgets/delete_event_dialog.
 import 'package:pluto/presentation/screens/calendar/widgets/event_action_icon.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/event_category_chip.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/event_memo_field.dart';
+import 'package:pluto/presentation/widgets/themed_asset.dart';
 import 'package:pluto/presentation/widgets/sliding_kind_bar.dart';
 
 Future<bool> showLongGoalEditSheet(
@@ -449,8 +450,8 @@ class _LongGoalEditSheetState extends State<LongGoalEditSheet>
                     selected: _kindOpen,
                     size: 14,
                     onPressed: _toggleKind,
-                    child: Image.asset(
-                      AppIcons.longGoalKind(_kind, filled: _kindOpen),
+                    child: AppAssetImage(
+                      asset: AppIcons.longGoalKind(_kind, filled: _kindOpen),
                       width: 14,
                       height: 14,
                     ),
@@ -461,8 +462,10 @@ class _LongGoalEditSheetState extends State<LongGoalEditSheet>
                     color: accent,
                     selected: _memoOpen,
                     onPressed: _toggleMemo,
-                    child: Image.asset(
-                      _memoOpen ? AppIcons.memo : AppIcons.memoOutlined,
+                    child: AppAssetImage(
+                      asset: _memoOpen
+                          ? AppIcons.memo
+                          : AppIcons.memoOutlined,
                       width: 20,
                       height: 20,
                     ),

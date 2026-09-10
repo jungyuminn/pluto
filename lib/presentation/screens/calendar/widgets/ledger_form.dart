@@ -17,6 +17,7 @@ import 'package:pluto/presentation/screens/calendar/widgets/event_category_chip.
 import 'package:pluto/presentation/screens/calendar/widgets/event_date_chip.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/event_time_sheet.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/event_title_field.dart';
+import 'package:pluto/presentation/widgets/themed_asset.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/ledger_salary_fields.dart';
 import 'package:pluto/presentation/widgets/app_calendar/app_calendar.dart';
 import 'package:pluto/presentation/widgets/sliding_kind_bar.dart';
@@ -547,8 +548,10 @@ class _LedgerFormState extends State<LedgerForm> with TickerProviderStateMixin {
                         color: _accent,
                         selected: _kindOpen,
                         onPressed: _toggleKind,
-                        child: Image.asset(
-                          _kindOpen ? AppIcons.wallet : AppIcons.walletOutlined,
+                        child: AppAssetImage(
+                          asset: _kindOpen
+                              ? AppIcons.wallet
+                              : AppIcons.walletOutlined,
                           width: 20,
                           height: 20,
                         ),

@@ -16,6 +16,7 @@ import 'package:pluto/presentation/screens/calendar/widgets/category_picker_shee
 import 'package:pluto/presentation/screens/calendar/widgets/event_action_icon.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/event_category_chip.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/event_memo_field.dart';
+import 'package:pluto/presentation/widgets/themed_asset.dart';
 
 class AddLicenseForm extends StatefulWidget {
   const AddLicenseForm({super.key, this.initial});
@@ -348,8 +349,10 @@ class _AddLicenseFormState extends State<AddLicenseForm>
                           color: accent,
                           selected: _memoOpen,
                           onPressed: _toggleMemo,
-                          child: Image.asset(
-                            _memoOpen ? AppIcons.memo : AppIcons.memoOutlined,
+                          child: AppAssetImage(
+                            asset: _memoOpen
+                                ? AppIcons.memo
+                                : AppIcons.memoOutlined,
                             width: 20,
                             height: 20,
                           ),
@@ -360,8 +363,8 @@ class _AddLicenseFormState extends State<AddLicenseForm>
                           color: accent,
                           selected: _fileOpen,
                           onPressed: _toggleFile,
-                          child: Image.asset(
-                            _fileOpen
+                          child: AppAssetImage(
+                            asset: _fileOpen
                                 ? AppIcons.resume
                                 : AppIcons.resumeOutlined,
                             width: 20,

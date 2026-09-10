@@ -8,6 +8,7 @@ import 'package:pluto/presentation/screens/add_company/widgets/round_name_field.
 import 'package:pluto/presentation/screens/add_company/widgets/round_note_field.dart';
 import 'package:pluto/presentation/screens/add_company/widgets/save_company_button.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/event_action_icon.dart';
+import 'package:pluto/presentation/widgets/themed_asset.dart';
 import 'package:pluto/core/theme/app_colors.dart';
 
 Future<ApplicationRound?> showRoundEditor(
@@ -184,8 +185,10 @@ class _RoundEditorSheetState extends State<RoundEditorSheet>
                       color: accent,
                       selected: _noteOpen,
                       onPressed: _toggleNote,
-                      child: Image.asset(
-                        _noteOpen ? AppIcons.memo : AppIcons.memoOutlined,
+                      child: AppAssetImage(
+                        asset: _noteOpen
+                            ? AppIcons.memo
+                            : AppIcons.memoOutlined,
                         width: 20,
                         height: 20,
                       ),

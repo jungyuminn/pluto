@@ -20,6 +20,7 @@ import 'package:pluto/presentation/screens/calendar/widgets/diary_photo_field.da
 import 'package:pluto/presentation/screens/calendar/widgets/event_category_chip.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/event_date_chip.dart';
 import 'package:pluto/presentation/widgets/app_calendar/app_calendar.dart';
+import 'package:pluto/presentation/widgets/themed_asset.dart';
 
 class DiaryForm extends StatefulWidget {
   const DiaryForm({super.key, required this.date, this.rangeEnd, this.initial});
@@ -624,7 +625,11 @@ class _DeleteDiaryButton extends StatelessWidget {
           child: Center(
             child: ColorFiltered(
               colorFilter: ColorFilter.mode(colors.danger, BlendMode.srcIn),
-              child: Image.asset(AppIcons.trashCan, width: 22, height: 22),
+              child: AppAssetImage(
+                asset: AppIcons.trashCan,
+                width: 22,
+                height: 22,
+              ),
             ),
           ),
         ),

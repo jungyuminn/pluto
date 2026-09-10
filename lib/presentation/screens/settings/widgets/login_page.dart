@@ -259,7 +259,7 @@ class _WebLoginIntro extends StatelessWidget {
       child: LayoutBuilder(
         builder: (context, constraints) {
           final height = constraints.maxHeight;
-          const logoSize = 176.0;
+          const logoSize = 208.0;
           const brandSize = 46.0;
           const taglineSize = 22.0;
           const buttonSize = 64.0;
@@ -282,11 +282,10 @@ class _WebLoginIntro extends StatelessWidget {
               fade(
                 40,
                 Center(
-                  child: Image.asset(
+                  child: SvgPicture.asset(
                     AppIcons.plutoLogo,
                     width: logoSize,
                     height: logoSize,
-                    filterQuality: FilterQuality.high,
                   ),
                 ),
               ),

@@ -17,6 +17,15 @@ class ReleaseNote {
 abstract final class ReleaseNotes {
   static const all = [
     ReleaseNote(
+      version: '1.3.4',
+      items: [
+        '로그인 로고가 더 크고 선명해졌어요',
+      ],
+      fixes: [
+        '브라우저 탭 아이콘이 작게 보이던 점을 고쳤어요',
+      ],
+    ),
+    ReleaseNote(
       version: '1.3.3',
       items: [
         '앱 아이콘과 로그인 로고를 새로 바꿨어요',

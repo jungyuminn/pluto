@@ -219,6 +219,23 @@ class AppStrings {
   static const accountLoginBody =
       '언제 어디서든 다른 기기와 연동할 수 있어요';
   static const accountLoginPcHint = 'PC에서는 pluto.day 로 열 수 있어요';
+  static const featureIntroBanner = '로그인하고 더 많은 기능 보기';
+  static const featureIntroTitle = '로그인하면 쓸 수 있어요';
+  static const featureIntroClose = '닫기';
+  static const featureIntroPcTitle = 'PC 버전';
+  static const featureIntroPcBody = 'PC에서도 플루토를 이용할 수 있어요';
+  static const featureIntroSyncTitle = '계정 동기화';
+  static const featureIntroSyncBody = '데이터를 따로 백업할 필요가 없어요';
+  static const featureIntroAiTitle = 'AI 카테고리';
+  static const featureIntroAiBody = 'AI가 할 일에 따라 카테고리를 자동으로 골라줘요';
+  static const featureIntroAiThinking = '고르는 중';
+  static const featureIntroAiPicked = '운동으로 집어 두었어요';
+  static const featureIntroFriendsTitle = '친구 추가';
+  static const featureIntroFriendsBody = '친구 일정을 미니캘린더로 볼 수 있어요';
+  static const featureIntroFriendRequest = '친구 요청';
+  static const featureIntroFriendDecline = '거절';
+  static const featureIntroFriendAccept = '수락';
+  static const featureIntroFriendDone = '친구가 되었어요';
   static const webLoginBrand = '플루토';
   static const webLoginTagline = '나의 모든 기록이 모이는 곳';
   static const webLoginPcLabel = 'PC버전';

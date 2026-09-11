@@ -524,7 +524,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   void _openAppTutorial() {
     final tutorial = TutorialController.of(context);
     Navigator.of(context).pop();
-    tutorial.start();
+    tutorial.start(fromSettings: true);
   }
 
   Future<void> _openAppContact() async {

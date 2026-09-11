@@ -20,6 +20,7 @@ import 'package:pluto/domain/ledger_month_stats.dart';
 import 'package:pluto/domain/ledger_salary_repeat.dart';
 import 'package:pluto/presentation/screens/calendar/calendar_day_events.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/calendar_month_grid.dart';
+import 'package:pluto/presentation/screens/calendar/widgets/calendar_feature_banner.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/calendar_month_header.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/calendar_search_bar.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/calendar_weekday_header.dart';
@@ -694,6 +695,9 @@ class _CalendarScreenState extends State<CalendarScreen>
                                 },
                               );
                             },
+                          ),
+                          CalendarFeatureIntroBanner(
+                            enabled: _zoom == CalendarZoomLevel.days,
                           ),
                           ClipRect(
                             child: SizeTransition(

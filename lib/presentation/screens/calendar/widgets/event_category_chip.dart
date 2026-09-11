@@ -10,12 +10,16 @@ class EventCategoryChip extends StatelessWidget {
     required this.color,
     required this.onPressed,
     this.selected = true,
+    this.mark,
+    this.caption,
   });
 
   final String name;
   final Color color;
   final VoidCallback onPressed;
   final bool selected;
+  final Widget? mark;
+  final Widget? caption;
 
   @override
   Widget build(BuildContext context) {
@@ -31,31 +35,33 @@ class EventCategoryChip extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Container(
-                width: 12,
-                height: 12,
-                decoration: BoxDecoration(
-                  color: selected ? color : Colors.transparent,
-                  shape: BoxShape.circle,
-                  border: selected
-                      ? null
-                      : Border.all(color: color, width: 1.4),
-                ),
-              ),
+              mark ??
+                  Container(
+                    width: 12,
+                    height: 12,
+                    decoration: BoxDecoration(
+                      color: selected ? color : Colors.transparent,
+                      shape: BoxShape.circle,
+                      border: selected
+                          ? null
+                          : Border.all(color: color, width: 1.4),
+                    ),
+                  ),
               const SizedBox(width: 6),
               ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 110),
-                child: Text(
-                  name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontFamily: AppFonts.of(context),
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    color: color,
-                  ),
-                ),
+                child: caption ??
+                    Text(
+                      name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontFamily: AppFonts.of(context),
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: color,
+                      ),
+                    ),
               ),
             ],
           ),

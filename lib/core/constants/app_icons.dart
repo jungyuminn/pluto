@@ -15,6 +15,10 @@ class AppIcons {
   static const quickView = 'assets/icons/quick_view.svg';
   static const detailView = 'assets/icons/detail_view.svg';
   static const search = 'assets/icons/search.svg';
+  static const stars = 'assets/icons/stars.svg';
+  static const addFriend = 'assets/icons/add_friend.svg';
+  static const monitor = 'assets/icons/monitor.svg';
+  static const link = 'assets/icons/link.svg';
   static const more = 'assets/icons/more.svg';
   static const pen = 'assets/icons/pen.svg';
   static const penOutlined = 'assets/icons/pen_outlined.svg';

@@ -215,6 +215,7 @@ class TutorialController extends ChangeNotifier {
 
   var _active = false;
   var _index = 0;
+  var _fromSettings = false;
 
   bool get active => _active;
   int get index => _index;
@@ -223,6 +224,7 @@ class TutorialController extends ChangeNotifier {
   TutorialStep get step => visibleSteps[_index];
   int get stepCount => visibleSteps.length;
   bool get shouldAutoStart => _preference.shouldAutoStart;
+  bool get showFeatureIntro => _preference.featureIntroVisible;
 
   var _hideJobTab = false;
   bool get hideJobTab => _hideJobTab;
@@ -340,10 +342,19 @@ class TutorialController extends ChangeNotifier {
     }
     if (_preference.shouldAutoStart) {
       await _preference.markSkippedForExistingUser();
+      await _preference.skipFeatureIntro();
+      notifyListeners();
     }
   }
 
-  void start() {
+  Future<void> dismissFeatureIntro() async {
+    if (!_preference.featureIntroVisible) return;
+    await _preference.skipFeatureIntro();
+    notifyListeners();
+  }
+
+  void start({bool fromSettings = false}) {
+    _fromSettings = fromSettings;
     _active = true;
     _index = 0;
     notifyListeners();
@@ -368,10 +379,16 @@ class TutorialController extends ChangeNotifier {
   Future<void> skip() => finish();
 
   Future<void> finish() async {
+    final replay = _fromSettings;
+    _fromSettings = false;
     _active = false;
     _index = 0;
     notifyListeners();
     await _preference.markCompleted();
+    if (replay) return;
+    await Future<void>.delayed(const Duration(milliseconds: 280));
+    await _preference.markFeatureIntroEligible();
+    notifyListeners();
   }
 }
 

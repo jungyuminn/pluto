@@ -6,7 +6,12 @@ import 'package:pluto/core/constants/app_icons.dart';
 import 'package:pluto/core/constants/app_strings.dart';
 import 'package:pluto/core/theme/app_colors.dart';
 import 'package:pluto/domain/entities/ledger_entry.dart';
+import 'package:pluto/presentation/screens/add_company/widgets/save_company_button.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/calendar_event_label.dart';
+import 'package:pluto/presentation/screens/calendar/widgets/event_action_icon.dart';
+import 'package:pluto/presentation/screens/calendar/widgets/event_category_chip.dart';
+import 'package:pluto/presentation/screens/calendar/widgets/event_date_chip.dart';
+import 'package:pluto/presentation/screens/calendar/widgets/event_time_chip.dart';
 import 'package:pluto/presentation/widgets/themed_asset.dart';
 
 enum ReleaseDemo {
@@ -98,6 +103,8 @@ enum ReleaseDemo {
   homeHideJobs,
   pcLaunch,
   accountSync,
+  categoryAi,
+  friendsMiniCal,
   feature,
   fix,
 }
@@ -415,6 +422,8 @@ class ReleaseDemoView extends StatelessWidget {
       ReleaseDemo.homeHideJobs => const _HomeHideJobsDemo(),
       ReleaseDemo.pcLaunch => const _PcLaunchDemo(),
       ReleaseDemo.accountSync => const _AccountSyncDemo(),
+      ReleaseDemo.categoryAi => const _CategoryAiDemo(),
+      ReleaseDemo.friendsMiniCal => const _FriendsMiniCalDemo(),
       ReleaseDemo.feature => const _FeatureDemo(),
       ReleaseDemo.fix => const _FixDemo(),
     };
@@ -422,10 +431,11 @@ class ReleaseDemoView extends StatelessWidget {
 }
 
 class _Loop extends StatefulWidget {
-  const _Loop({required this.builder, this.ms = 2800});
+  const _Loop({required this.builder, this.ms = 2800, this.boxHeight});
 
   final Widget Function(BuildContext context, double t) builder;
   final int ms;
+  final double? boxHeight;
   static const height = 168.0;
 
   @override
@@ -458,7 +468,7 @@ class _LoopState extends State<_Loop> with SingleTickerProviderStateMixin {
       child: ColoredBox(
         color: colors.groupedBackground,
         child: SizedBox(
-          height: _Loop.height,
+          height: widget.boxHeight ?? _Loop.height,
           width: double.infinity,
           child: AnimatedBuilder(
             animation: _loop,
@@ -5197,114 +5207,376 @@ Widget _eventLabel({
 class _PcLaunchDemo extends StatelessWidget {
   const _PcLaunchDemo();
 
+  static const _url = 'pluto.day';
+
   @override
   Widget build(BuildContext context) {
     return _Loop(
-      ms: 3800,
+      ms: 6800,
+      boxHeight: 220,
       builder: (context, t) {
         final colors = AppColors.of(context);
         final font = AppFonts.of(context);
-        final open = Curves.easeOutCubic.transform(_gate(t, 0.16, 0.52));
+        final typed = (_url.length * _gate(t, 0.06, 0.24)).round();
+        final login = Curves.easeOutCubic.transform(_gate(t, 0.26, 0.4));
+        final app = Curves.easeOutCubic.transform(_gate(t, 0.58, 0.74));
+        final tap = _pulse(t, 0.44, 0.52, 0.62);
+        final caretOn = typed < _url.length && (t * 12).floor().isEven;
         return Padding(
-          padding: const EdgeInsets.fromLTRB(18, 16, 18, 12),
-          child: Center(
-            child: FractionallySizedBox(
-              widthFactor: 0.46 + open * 0.54,
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  color: colors.card,
-                  borderRadius: BorderRadius.circular(22 - open * 10),
-                  border: Border.all(color: colors.border),
-                  boxShadow: [
-                    BoxShadow(
-                      color: colors.shadow,
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(10, 8, 10, 6),
-                      child: Row(
-                        children: [
-                          Opacity(
-                            opacity: open,
-                            child: Row(
-                              children: const [
-                                _WindowDot(Color(0xFFFF5F57)),
-                                SizedBox(width: 4),
-                                _WindowDot(Color(0xFFFEBC2E)),
-                                SizedBox(width: 4),
-                                _WindowDot(Color(0xFF28C840)),
-                                SizedBox(width: 8),
-                              ],
+          padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: colors.card,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: colors.border),
+            ),
+            child: Column(
+              children: [
+                ColoredBox(
+                  color: colors.groupedBackground,
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(10, 7, 10, 7),
+                    child: Row(
+                      children: [
+                        const _WindowDot(Color(0xFFFF5F57)),
+                        const SizedBox(width: 4),
+                        const _WindowDot(Color(0xFFFEBC2E)),
+                        const SizedBox(width: 4),
+                        const _WindowDot(Color(0xFF28C840)),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              color: colors.card,
+                              borderRadius: BorderRadius.circular(999),
                             ),
-                          ),
-                          Text(
-                            AppStrings.appName,
-                            style: TextStyle(
-                              fontFamily: AppFonts.jalnan,
-                              fontSize: 13,
-                              color: AppFonts.wordmarkColor,
-                            ),
-                          ),
-                          const Spacer(),
-                          Opacity(
-                            opacity: 1 - open,
-                            child: Icon(
-                              Icons.phone_iphone_rounded,
-                              size: 14,
-                              color: colors.muted,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(10, 0, 10, 10),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: _MiniHomeCard(
-                                title: AppStrings.todayTitle,
-                                color: colors,
-                                font: font,
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
                               ),
-                            ),
-                            ClipRect(
-                              child: Align(
-                                alignment: Alignment.centerLeft,
-                                widthFactor: _gate(open, 0.28, 0.85),
-                                child: Opacity(
-                                  opacity: _gate(open, 0.28, 0.85),
-                                  child: Padding(
-                                    padding: const EdgeInsets.only(left: 8),
-                                    child: SizedBox(
-                                      width: 92,
-                                      child: _MiniHomeCard(
-                                        title: AppStrings.tomorrowTitle,
-                                        color: colors,
-                                        font: font,
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.lock_rounded,
+                                    size: 10,
+                                    color: typed == _url.length
+                                        ? const Color(0xFF16A34A)
+                                        : colors.muted,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Flexible(
+                                    child: Text(
+                                      typed == 0
+                                          ? ''
+                                          : '${_url.substring(0, typed)}${caretOn ? '|' : ''}',
+                                      maxLines: 1,
+                                      overflow: TextOverflow.clip,
+                                      style: TextStyle(
+                                        fontFamily: font,
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w700,
+                                        color: colors.text,
                                       ),
                                     ),
                                   ),
-                                ),
+                                ],
                               ),
                             ),
-                          ],
+                          ),
                         ),
+                      ],
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: ClipRRect(
+                    borderRadius: const BorderRadius.vertical(
+                      bottom: Radius.circular(13),
+                    ),
+                    child: ColoredBox(
+                      color: colors.background,
+                      child: Stack(
+                        children: [
+                          if (login > 0)
+                            Opacity(
+                              opacity: login * (1 - app),
+                              child: _PcLoginPage(
+                                colors: colors,
+                                font: font,
+                              ),
+                            ),
+                          if (app > 0)
+                            Opacity(
+                              opacity: app,
+                              child: _PcAppPage(
+                                colors: colors,
+                                font: font,
+                              ),
+                            ),
+                          if (tap > 0 && app < 0.35)
+                            const Positioned(
+                              left: 0,
+                              right: 0,
+                              top: 92,
+                              child: Center(child: _Finger(pressed: 1)),
+                            ),
+                        ],
                       ),
                     ),
-                  ],
+                  ),
                 ),
-              ),
+              ],
             ),
           ),
         );
       },
+    );
+  }
+}
+
+class _PcLoginPage extends StatelessWidget {
+  const _PcLoginPage({required this.colors, required this.font});
+
+  final AppColors colors;
+  final String? font;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const AppAssetImage(asset: AppIcons.plutoLogo, width: 36, height: 36),
+          const SizedBox(height: 6),
+          Text(
+            AppStrings.webLoginBrand,
+            style: TextStyle(
+              fontFamily: AppFonts.jalnan,
+              fontSize: 16,
+              height: 1.1,
+              letterSpacing: 0.6,
+              color: colors.text,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            AppStrings.webLoginTagline,
+            style: TextStyle(
+              fontFamily: font,
+              fontSize: 9,
+              fontWeight: FontWeight.w500,
+              color: colors.secondary,
+            ),
+          ),
+          const SizedBox(height: 12),
+          const Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _PcProviderDot(
+                asset: AppIcons.kakaoLogo,
+                background: Color(0xFFFEE500),
+              ),
+              SizedBox(width: 14),
+              _PcProviderDot(
+                asset: AppIcons.googleLogo,
+                background: Colors.white,
+                bordered: true,
+              ),
+              SizedBox(width: 14),
+              _PcProviderDot(
+                asset: AppIcons.appleLogo,
+                background: Color(0xFF111111),
+                tint: Colors.white,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PcProviderDot extends StatelessWidget {
+  const _PcProviderDot({
+    required this.asset,
+    required this.background,
+    this.bordered = false,
+    this.tint,
+  });
+
+  final String asset;
+  final Color background;
+  final bool bordered;
+  final Color? tint;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: background,
+        shape: BoxShape.circle,
+        border: bordered
+            ? Border.all(color: AppColors.of(context).border)
+            : null,
+      ),
+      child: SizedBox.square(
+        dimension: 26,
+        child: Center(
+          child: AppAssetImage(
+            asset: asset,
+            width: 14,
+            height: 14,
+            color: tint,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _PcAppPage extends StatelessWidget {
+  const _PcAppPage({required this.colors, required this.font});
+
+  final AppColors colors;
+  final String? font;
+
+  static const _labels = {2: '운동', 8: '회의', 14: '약속', 19: '영화'};
+  static const _labelColors = {
+    2: Color(0xFF3B82F6),
+    8: Color(0xFFA855F7),
+    14: Color(0xFFF97316),
+    19: Color(0xFFEC4899),
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
+      child: Column(
+        children: [
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              '9${AppStrings.monthSuffix}',
+              style: TextStyle(
+                fontFamily: font,
+                fontSize: 13,
+                fontWeight: FontWeight.w800,
+                color: colors.text,
+              ),
+            ),
+          ),
+          const SizedBox(height: 2),
+          Row(
+            children: [
+              for (final day in AppStrings.weekdays)
+                Expanded(
+                  child: Text(
+                    day,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontFamily: font,
+                      fontSize: 8,
+                      fontWeight: FontWeight.w600,
+                      color: colors.muted,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 2),
+          for (var week = 0; week < 4; week++)
+            Expanded(
+              child: Row(
+                children: [
+                  for (var d = 0; d < 7; d++)
+                    Expanded(
+                      child: _PcCalDay(
+                        day: week * 7 + d + 1,
+                        title: _labels[week * 7 + d + 1],
+                        color: _labelColors[week * 7 + d + 1],
+                        font: font,
+                        colors: colors,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          const SizedBox(height: 6),
+          DecoratedBox(
+            decoration: BoxDecoration(
+              color: colors.navBar,
+              borderRadius: BorderRadius.circular(999),
+              border: Border.all(color: colors.border),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ThemedAsset(
+                    asset: AppIcons.homeOutlined,
+                    width: 14,
+                    height: 14,
+                  ),
+                  const SizedBox(width: 18),
+                  ThemedAsset(asset: AppIcons.calendar, width: 14, height: 14),
+                  const SizedBox(width: 18),
+                  ThemedAsset(
+                    asset: AppIcons.planetOutlined,
+                    width: 14,
+                    height: 14,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PcCalDay extends StatelessWidget {
+  const _PcCalDay({
+    required this.day,
+    required this.title,
+    required this.color,
+    required this.font,
+    required this.colors,
+  });
+
+  final int day;
+  final String? title;
+  final Color? color;
+  final String? font;
+  final AppColors colors;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Text(
+          '$day',
+          style: TextStyle(
+            fontFamily: font,
+            fontSize: 7,
+            fontWeight: FontWeight.w700,
+            height: 1,
+            color: colors.secondary,
+          ),
+        ),
+        const SizedBox(height: 1),
+        if (title != null)
+          CalendarEventLabel(
+            title: title!,
+            color: color!,
+            height: 10,
+            fontSize: 6,
+            applyCalendarScale: false,
+          ),
+      ],
     );
   }
 }
@@ -5323,218 +5595,1027 @@ class _WindowDot extends StatelessWidget {
   }
 }
 
-class _MiniHomeCard extends StatelessWidget {
-  const _MiniHomeCard({
-    required this.title,
-    required this.color,
-    required this.font,
-  });
-
-  final String title;
-  final AppColors color;
-  final String? font;
-
-  @override
-  Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: color.groupedBackground,
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: TextStyle(
-                fontFamily: font,
-                fontSize: 11,
-                fontWeight: FontWeight.w800,
-                color: color.text,
-              ),
-            ),
-            const SizedBox(height: 6),
-            DecoratedBox(
-              decoration: BoxDecoration(
-                color: color.accent.withValues(alpha: 0.18),
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: const SizedBox(height: 8, width: 48),
-            ),
-            const SizedBox(height: 4),
-            DecoratedBox(
-              decoration: BoxDecoration(
-                color: color.border,
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: const SizedBox(height: 8, width: 36),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 class _AccountSyncDemo extends StatelessWidget {
   const _AccountSyncDemo();
+
+  static const _kakaoLabels = {3: '면접', 12: '자소서'};
+  static const _kakaoColors = {
+    3: Color(0xFFF59E0B),
+    12: Color(0xFFEAB308),
+  };
+  static const _kakaoSpans = [
+    _SyncSpan(6, 8, '연수', Color(0xFFFB923C)),
+  ];
+  static const _googleLabels = {5: '운동', 16: '일기'};
+  static const _googleColors = {
+    5: Color(0xFF3B82F6),
+    16: Color(0xFF10B981),
+  };
+  static const _googleSpans = [
+    _SyncSpan(8, 10, '휴가', Color(0xFF38BDF8)),
+  ];
+  static const _appleLabels = {8: '여행', 19: '영화'};
+  static const _appleColors = {
+    8: Color(0xFFA855F7),
+    19: Color(0xFFEC4899),
+  };
+  static const _appleSpans = [
+    _SyncSpan(2, 4, '출장', Color(0xFFC084FC)),
+  ];
 
   @override
   Widget build(BuildContext context) {
     return _Loop(
-      ms: 4200,
+      ms: 7800,
+      boxHeight: 220,
       builder: (context, t) {
         final colors = AppColors.of(context);
         final font = AppFonts.of(context);
-        final loggedIn = _gate(t, 0.22, 0.38);
-        final other = _gate(t, 0.58, 0.72);
-        final loginTap = _pulse(t, 0.1, 0.2, 0.34);
-        final switchTap = _pulse(t, 0.5, 0.6, 0.74);
-        final kakao = other < 0.5;
-        final items = kakao ? const ['면접 준비', '자기소개서'] : const ['운동', '일기'];
-        return Stack(
-          children: [
-            if (loggedIn < 1)
-              Align(
-                alignment: Alignment.center,
-                child: Opacity(
-                  opacity: 1 - loggedIn,
-                  child: Transform.translate(
-                    offset: Offset(0, loggedIn * -16),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 36),
-                      child: _Card(
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.login_rounded,
-                              size: 16,
-                              color: colors.accent,
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              AppStrings.accountLogin,
-                              style: TextStyle(
-                                fontFamily: font,
-                                fontSize: 13,
-                                fontWeight: FontWeight.w800,
-                                color: colors.text,
-                              ),
-                            ),
-                          ],
+        final toGoogle = Curves.easeInOutCubic.transform(_gate(t, 0.18, 0.32));
+        final toApple = Curves.easeInOutCubic.transform(_gate(t, 0.48, 0.62));
+        final toStart = Curves.easeInOutCubic.transform(_gate(t, 0.80, 0.94));
+        final page = (toGoogle + toApple - 2 * toStart).clamp(0.0, 2.0);
+        final tapGoogle = _pulse(t, 0.10, 0.20, 0.34);
+        final tapApple = _pulse(t, 0.40, 0.50, 0.64);
+        return LayoutBuilder(
+          builder: (context, box) {
+            final slide = box.maxWidth;
+            return Padding(
+              padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _SyncAccountChip(
+                          asset: AppIcons.kakaoLogo,
+                          label: AppStrings.accountKakaoShort,
+                          selected: page < 0.5,
+                          badge: const Color(0xFFF7E111),
+                          font: font,
+                          colors: colors,
                         ),
                       ),
-                    ),
-                  ),
-                ),
-              ),
-            if (loggedIn > 0)
-              Opacity(
-                opacity: loggedIn,
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
-                  child: Column(
-                    children: [
-                      Row(
-                        children: [
-                          _AccountPill(
-                            label: AppStrings.accountKakaoShort,
-                            selected: kakao,
-                            color: const Color(0xFFF7E111),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: _SyncTapChip(
+                          tap: tapGoogle,
+                          child: _SyncAccountChip(
+                            asset: AppIcons.googleLogo,
+                            label: AppStrings.accountGoogleShort,
+                            selected: page >= 0.5 && page < 1.5,
+                            badge: colors.accent,
                             font: font,
-                            text: colors.text,
+                            colors: colors,
                           ),
-                          const SizedBox(width: 8),
-                          _AccountPill(
-                            label: '구글',
-                            selected: !kakao,
-                            color: colors.accent,
-                            font: font,
-                            text: colors.text,
-                          ),
-                        ],
+                        ),
                       ),
-                      const SizedBox(height: 10),
-                      _Card(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            for (var i = 0; i < items.length; i++) ...[
-                              if (i > 0) const SizedBox(height: 8),
-                              Text(
-                                items[i],
-                                style: TextStyle(
-                                  fontFamily: font,
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w700,
-                                  color: colors.text,
-                                ),
-                              ),
-                            ],
-                          ],
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: _SyncTapChip(
+                          tap: tapApple,
+                          child: _SyncAccountChip(
+                            asset: AppIcons.appleLogo,
+                            label: AppStrings.accountAppleShort,
+                            selected: page >= 1.5,
+                            badge: colors.muted,
+                            font: font,
+                            colors: colors,
+                          ),
                         ),
                       ),
                     ],
                   ),
-                ),
+                  const SizedBox(height: 8),
+                  Expanded(
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(16),
+                      child: Stack(
+                        children: [
+                          for (final i in const [0, 1, 2])
+                            Transform.translate(
+                              offset: Offset(slide * (i - page), 0),
+                              child: _SyncVaultCal(
+                                font: font,
+                                colors: colors,
+                                labels: switch (i) {
+                                  0 => _kakaoLabels,
+                                  1 => _googleLabels,
+                                  _ => _appleLabels,
+                                },
+                                labelColors: switch (i) {
+                                  0 => _kakaoColors,
+                                  1 => _googleColors,
+                                  _ => _appleColors,
+                                },
+                                spans: switch (i) {
+                                  0 => _kakaoSpans,
+                                  1 => _googleSpans,
+                                  _ => _appleSpans,
+                                },
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            if (loginTap > 0 && loggedIn < 0.7)
-              Positioned(
-                left: 0,
-                right: 0,
-                top: 70,
-                child: Center(child: _Finger(pressed: loginTap)),
-              ),
-            if (switchTap > 0 && loggedIn > 0.8)
-              Positioned(
-                left: 168,
-                top: 22,
-                child: _Finger(pressed: switchTap),
-              ),
-          ],
+            );
+          },
         );
       },
     );
   }
 }
 
-class _AccountPill extends StatelessWidget {
-  const _AccountPill({
-    required this.label,
-    required this.selected,
-    required this.color,
-    required this.font,
-    required this.text,
-  });
+class _SyncTapChip extends StatelessWidget {
+  const _SyncTapChip({required this.tap, required this.child});
 
-  final String label;
-  final bool selected;
-  final Color color;
-  final String? font;
-  final Color text;
+  final double tap;
+  final Widget child;
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
+    return Stack(
+      clipBehavior: Clip.none,
+      alignment: Alignment.center,
+      children: [
+        child,
+        if (tap > 0)
+          Positioned(
+            right: 2,
+            bottom: -6,
+            child: _Finger(pressed: tap),
+          ),
+      ],
+    );
+  }
+}
+
+class _SyncAccountChip extends StatelessWidget {
+  const _SyncAccountChip({
+    required this.asset,
+    required this.label,
+    required this.selected,
+    required this.badge,
+    required this.font,
+    required this.colors,
+  });
+
+  final String asset;
+  final String label;
+  final bool selected;
+  final Color badge;
+  final String? font;
+  final AppColors colors;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 220),
+      curve: Curves.easeOutCubic,
       decoration: BoxDecoration(
-        color: selected ? color.withValues(alpha: 0.28) : Colors.transparent,
+        color: selected ? badge.withValues(alpha: 0.22) : colors.card,
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(
-          color: selected ? color : text.withValues(alpha: 0.18),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          AppAssetImage(asset: asset, width: 12, height: 12),
+          const SizedBox(width: 4),
+          Flexible(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontFamily: font,
+                fontSize: 10,
+                fontWeight: FontWeight.w800,
+                color: colors.text,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SyncSpan {
+  const _SyncSpan(this.start, this.end, this.title, this.color);
+
+  final int start;
+  final int end;
+  final String title;
+  final Color color;
+}
+
+class _SyncVaultCal extends StatelessWidget {
+  const _SyncVaultCal({
+    required this.font,
+    required this.colors,
+    required this.labels,
+    required this.labelColors,
+    required this.spans,
+  });
+
+  final String? font;
+  final AppColors colors;
+  final Map<int, String> labels;
+  final Map<int, Color> labelColors;
+  final List<_SyncSpan> spans;
+
+  @override
+  Widget build(BuildContext context) {
+    return ColoredBox(
+      color: colors.card,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(8, 6, 8, 6),
+        child: Column(
+          children: [
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                '9${AppStrings.monthSuffix}',
+                style: TextStyle(
+                  fontFamily: font,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w800,
+                  color: colors.text,
+                ),
+              ),
+            ),
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                for (final day in AppStrings.weekdays)
+                  Expanded(
+                    child: Text(
+                      day,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontFamily: font,
+                        fontSize: 8,
+                        fontWeight: FontWeight.w700,
+                        color: colors.muted,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 2),
+            for (var week = 0; week < 3; week++)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 2),
+                child: _SyncVaultWeek(
+                  weekStart: week * 7 + 1,
+                  font: font,
+                  colors: colors,
+                  labels: labels,
+                  labelColors: labelColors,
+                  spans: spans,
+                ),
+              ),
+          ],
         ),
       ),
+    );
+  }
+}
+
+class _SyncVaultWeek extends StatelessWidget {
+  const _SyncVaultWeek({
+    required this.weekStart,
+    required this.font,
+    required this.colors,
+    required this.labels,
+    required this.labelColors,
+    required this.spans,
+  });
+
+  final int weekStart;
+  final String? font;
+  final AppColors colors;
+  final Map<int, String> labels;
+  final Map<int, Color> labelColors;
+  final List<_SyncSpan> spans;
+
+  @override
+  Widget build(BuildContext context) {
+    final weekEnd = weekStart + 6;
+    return Column(
+      children: [
+        Row(
+          children: [
+            for (var d = 0; d < 7; d++)
+              Expanded(
+                child: Text(
+                  '${weekStart + d}',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontFamily: font,
+                    fontSize: 8,
+                    fontWeight: FontWeight.w700,
+                    color: colors.secondary,
+                  ),
+                ),
+              ),
+          ],
+        ),
+        SizedBox(
+          height: 12,
+          child: Stack(
+            children: [
+              Row(
+                children: [
+                  for (var d = 0; d < 7; d++)
+                    Expanded(
+                      child: labels[weekStart + d] == null
+                          ? const SizedBox.shrink()
+                          : Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 0.5,
+                              ),
+                              child: CalendarEventLabel(
+                                title: labels[weekStart + d]!,
+                                color: labelColors[weekStart + d]!,
+                                height: 11,
+                                fontSize: 7,
+                                applyCalendarScale: false,
+                              ),
+                            ),
+                    ),
+                ],
+              ),
+              for (final span in spans)
+                if (span.start <= weekEnd && span.end >= weekStart)
+                  _SyncRangeBar(
+                    weekStart: weekStart,
+                    start: span.start < weekStart ? weekStart : span.start,
+                    end: span.end > weekEnd ? weekEnd : span.end,
+                    title: span.start >= weekStart ? span.title : '',
+                    color: span.color,
+                    showAccent: span.start >= weekStart,
+                  ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _SyncRangeBar extends StatelessWidget {
+  const _SyncRangeBar({
+    required this.weekStart,
+    required this.start,
+    required this.end,
+    required this.title,
+    required this.color,
+    required this.showAccent,
+  });
+
+  final int weekStart;
+  final int start;
+  final int end;
+  final String title;
+  final Color color;
+  final bool showAccent;
+
+  @override
+  Widget build(BuildContext context) {
+    final startIndex = start - weekStart;
+    final span = end - start + 1;
+    final trail = 6 - (end - weekStart);
+    return Row(
+      children: [
+        if (startIndex > 0) Spacer(flex: startIndex),
+        Expanded(
+          flex: span,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 0.5),
+            child: CalendarEventLabel(
+              title: title,
+              color: color,
+              showAccent: showAccent,
+              height: 11,
+              fontSize: 7,
+              applyCalendarScale: false,
+            ),
+          ),
+        ),
+        if (trail > 0) Spacer(flex: trail),
+      ],
+    );
+  }
+}
+
+class _CategoryAiDemo extends StatelessWidget {
+  const _CategoryAiDemo();
+
+  static const _title = '헬스장가기';
+  static const _study = Color(0xFFA855F7);
+  static const _sport = Color(0xFF3B82F6);
+  static final _date = DateTime(2026, 9, 11);
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 6000,
+      boxHeight: 220,
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final font = AppFonts.of(context);
+        final typed = (_title.length * _gate(t, 0.08, 0.36)).round();
+        final shown = _title.substring(0, typed);
+        final thinking = _gate(t, 0.36, 0.50);
+        final pick = Curves.easeOutCubic.transform(_gate(t, 0.58, 0.74));
+        final caretOn = t < 0.36 && (t * 12).floor().isEven;
+        final color = Color.lerp(_study, _sport, pick)!;
+        final loading = t >= 0.36 && pick < 0.45;
+        final name = pick > 0.45 ? '운동' : '공부';
+        final twinkle = thinking > 0.15 && pick < 0.85
+            ? 0.55 + 0.45 * (0.5 + 0.5 * math.sin(t * 22 * math.pi))
+            : 1.0;
+        void noop() {}
+        return Align(
+          alignment: Alignment.bottomCenter,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: colors.tint(color, 0.14),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(24),
+              ),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x33000000),
+                  blurRadius: 16,
+                  offset: Offset(0, -2),
+                ),
+              ],
+            ),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text.rich(
+                    TextSpan(
+                      children: [
+                        TextSpan(
+                          text: shown.isEmpty
+                              ? AppStrings.eventTitleHint
+                              : shown,
+                          style: TextStyle(
+                            fontFamily: font,
+                            fontSize: 20,
+                            fontWeight: FontWeight.w700,
+                            color: shown.isEmpty ? colors.hint : colors.text,
+                          ),
+                        ),
+                        if (shown.isNotEmpty && caretOn)
+                          TextSpan(
+                            text: '|',
+                            style: TextStyle(
+                              fontFamily: font,
+                              fontSize: 20,
+                              fontWeight: FontWeight.w400,
+                              color: color,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 5),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          physics: const NeverScrollableScrollPhysics(),
+                          child: Row(
+                            children: [
+                              EventCategoryChip(
+                                name: name,
+                                color: color,
+                                onPressed: noop,
+                                caption: loading
+                                    ? _AiDots(t: t, color: color)
+                                    : null,
+                                mark: Opacity(
+                                  opacity: twinkle,
+                                  child: AppAssetImage(
+                                    asset: AppIcons.stars,
+                                    width: 16,
+                                    height: 16,
+                                    color: color,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              EventDateChip(
+                                date: _date,
+                                color: color,
+                                onPressed: noop,
+                              ),
+                              const SizedBox(width: 4),
+                              EventTimeChip(
+                                color: color,
+                                onPressed: noop,
+                              ),
+                              const SizedBox(width: 4),
+                              EventActionIcon(
+                                label: AppStrings.memoAction,
+                                color: color,
+                                onPressed: noop,
+                                child: const AppAssetImage(
+                                  asset: AppIcons.memoOutlined,
+                                  width: 20,
+                                  height: 20,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      SaveCompanyButton(onPressed: noop, color: color),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _AiDots extends StatelessWidget {
+  const _AiDots({required this.t, required this.color});
+
+  final double t;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 16,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          for (var i = 0; i < 3; i++) ...[
+            if (i > 0) const SizedBox(width: 4),
+            Transform.translate(
+              offset: Offset(0, 1.5 - 3 * _bounce(i)),
+              child: Opacity(
+                opacity: 0.35 + 0.65 * _bounce(i),
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: color,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const SizedBox.square(dimension: 5),
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  double _bounce(int index) {
+    final phase = (t * (6000 / 900) - index / 3) % 1;
+    return math.sin(phase * math.pi).clamp(0.0, 1.0);
+  }
+}
+
+class _FriendsMiniCalDemo extends StatelessWidget {
+  const _FriendsMiniCalDemo();
+
+  static const _minji = Color(0xFF60A5FA);
+  static const _junho = Color(0xFF34D399);
+  static const _minjiLabels = {4: '운동', 16: '약속'};
+  static const _minjiColors = {
+    4: Color(0xFF3B82F6),
+    16: Color(0xFFF97316),
+  };
+  static const _minjiSpans = [
+    _SyncSpan(11, 13, '여행', Color(0xFFA855F7)),
+  ];
+  static const _junhoLabels = {7: '회의', 19: '영화'};
+  static const _junhoColors = {
+    7: Color(0xFFA855F7),
+    19: Color(0xFFEC4899),
+  };
+  static const _junhoSpans = [
+    _SyncSpan(2, 4, '출장', Color(0xFF38BDF8)),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 7800,
+      boxHeight: 220,
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final font = AppFonts.of(context);
+        final acceptTap = _pulse(t, 0.10, 0.20, 0.32);
+        final accepted = t >= 0.18;
+        final reveal = Curves.easeOutCubic.transform(_gate(t, 0.26, 0.42));
+        final hide = Curves.easeInCubic.transform(_gate(t, 0.88, 1.0));
+        final requestOpacity = (1 - reveal + hide).clamp(0.0, 1.0);
+        final friendsOpacity = (reveal - hide).clamp(0.0, 1.0);
+        final toMinji = Curves.easeInOutCubic.transform(_gate(t, 0.50, 0.64));
+        final back = Curves.easeInOutCubic.transform(_gate(t, 0.80, 0.88));
+        final page = (toMinji - back).clamp(0.0, 1.0);
+        final tapMinji = _pulse(t, 0.44, 0.54, 0.68);
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: colors.card,
+              borderRadius: BorderRadius.circular(22),
+              boxShadow: [
+                BoxShadow(
+                  color: colors.shadow.withValues(alpha: 0.12),
+                  blurRadius: 18,
+                  offset: const Offset(0, 6),
+                ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(22),
+              child: Stack(
+                children: [
+                  Opacity(
+                    opacity: requestOpacity,
+                    child: _FriendRequestPane(
+                      accepted: accepted,
+                      tap: acceptTap,
+                      font: font,
+                      colors: colors,
+                    ),
+                  ),
+                  Opacity(
+                    opacity: friendsOpacity,
+                    child: _FriendCalPane(
+                      page: page,
+                      tapMinji: tapMinji,
+                      font: font,
+                      colors: colors,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _FriendRequestPane extends StatelessWidget {
+  const _FriendRequestPane({
+    required this.accepted,
+    required this.tap,
+    required this.font,
+    required this.colors,
+  });
+
+  final bool accepted;
+  final double tap;
+  final String? font;
+  final AppColors colors;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        child: Text(
-          label,
+        padding: const EdgeInsets.symmetric(horizontal: 22),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _FriendAvatar(
+              name: '준호',
+              color: _FriendsMiniCalDemo._junho,
+              size: 48,
+              colors: colors,
+            ),
+            const SizedBox(height: 10),
+            Text(
+              '준호',
+              style: TextStyle(
+                fontFamily: font,
+                fontSize: 16,
+                fontWeight: FontWeight.w800,
+                height: 1.1,
+                color: colors.text,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              accepted
+                  ? AppStrings.featureIntroFriendDone
+                  : AppStrings.featureIntroFriendRequest,
+              style: TextStyle(
+                fontFamily: font,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: colors.muted,
+              ),
+            ),
+            const SizedBox(height: 14),
+            Row(
+              children: [
+                Expanded(
+                  child: Opacity(
+                    opacity: accepted ? 0.35 : 1,
+                    child: _FriendActionButton(
+                      label: AppStrings.featureIntroFriendDecline,
+                      fill: colors.selected,
+                      text: colors.secondary,
+                      font: font,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _SyncTapChip(
+                    tap: tap,
+                    child: _FriendActionButton(
+                      label: AppStrings.featureIntroFriendAccept,
+                      fill: colors.accent,
+                      text: Colors.white,
+                      font: font,
+                      icon: accepted ? Icons.check_rounded : null,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _FriendActionButton extends StatelessWidget {
+  const _FriendActionButton({
+    required this.label,
+    required this.fill,
+    required this.text,
+    required this.font,
+    this.icon,
+  });
+
+  final String label;
+  final Color fill;
+  final Color text;
+  final String? font;
+  final IconData? icon;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 220),
+      curve: Curves.easeOutCubic,
+      padding: const EdgeInsets.symmetric(vertical: 9),
+      decoration: BoxDecoration(
+        color: fill,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      alignment: Alignment.center,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          if (icon != null) ...[
+            Icon(icon, size: 15, color: text),
+            const SizedBox(width: 4),
+          ],
+          Flexible(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontFamily: font,
+                fontSize: 13,
+                fontWeight: FontWeight.w800,
+                color: text,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _FriendCalPane extends StatelessWidget {
+  const _FriendCalPane({
+    required this.page,
+    required this.tapMinji,
+    required this.font,
+    required this.colors,
+  });
+
+  final double page;
+  final double tapMinji;
+  final String? font;
+  final AppColors colors;
+
+  static const _people = [
+    (name: '민지', color: _FriendsMiniCalDemo._minji),
+    (name: '준호', color: _FriendsMiniCalDemo._junho),
+    (name: '수아', color: Color(0xFFA855F7)),
+    (name: '현우', color: Color(0xFFF59E0B)),
+    (name: '지윤', color: Color(0xFFFB7185)),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(8, 8, 8, 6),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              for (final person in _people)
+                _SyncTapChip(
+                  tap: person.name == '민지' ? tapMinji : 0,
+                  child: _FriendStory(
+                    name: person.name,
+                    color: person.color,
+                    selected: person.name == '민지'
+                        ? page > 0.5
+                        : person.name == '준호' && page <= 0.5,
+                    font: font,
+                    colors: colors,
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Expanded(
+            child: LayoutBuilder(
+              builder: (context, box) {
+                final slide = box.maxWidth;
+                return ClipRRect(
+                  borderRadius: BorderRadius.circular(14),
+                  child: ColoredBox(
+                    color: colors.groupedBackground,
+                    child: Stack(
+                      children: [
+                        Positioned.fill(
+                          child: Transform.translate(
+                            offset: Offset(slide * -page, 0),
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              alignment: Alignment.topCenter,
+                              child: SizedBox(
+                                width: slide,
+                                child: _SyncVaultCal(
+                                  font: font,
+                                  colors: colors,
+                                  labels: _FriendsMiniCalDemo._junhoLabels,
+                                  labelColors: _FriendsMiniCalDemo._junhoColors,
+                                  spans: _FriendsMiniCalDemo._junhoSpans,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        Positioned.fill(
+                          child: Transform.translate(
+                            offset: Offset(slide * (1 - page), 0),
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              alignment: Alignment.topCenter,
+                              child: SizedBox(
+                                width: slide,
+                                child: _SyncVaultCal(
+                                  font: font,
+                                  colors: colors,
+                                  labels: _FriendsMiniCalDemo._minjiLabels,
+                                  labelColors: _FriendsMiniCalDemo._minjiColors,
+                                  spans: _FriendsMiniCalDemo._minjiSpans,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _FriendStory extends StatelessWidget {
+  const _FriendStory({
+    required this.name,
+    required this.color,
+    required this.selected,
+    required this.font,
+    required this.colors,
+  });
+
+  final String name;
+  final Color color;
+  final bool selected;
+  final String? font;
+  final AppColors colors;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _FriendAvatar(
+          name: name,
+          color: color,
+          size: 22,
+          selected: selected,
+          colors: colors,
+        ),
+        const SizedBox(height: 3),
+        Text(
+          name,
           style: TextStyle(
             fontFamily: font,
-            fontSize: 11,
-            fontWeight: FontWeight.w800,
-            color: text,
+            fontSize: 9,
+            fontWeight: FontWeight.w700,
+            height: 1,
+            color: selected ? colors.text : colors.muted,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _FriendAvatar extends StatelessWidget {
+  const _FriendAvatar({
+    required this.name,
+    required this.color,
+    required this.size,
+    required this.colors,
+    this.selected = false,
+  });
+
+  final String name;
+  final Color color;
+  final double size;
+  final AppColors colors;
+  final bool selected;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 220),
+      curve: Curves.easeOutCubic,
+      padding: const EdgeInsets.all(2),
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(
+          color: selected ? color : Colors.transparent,
+          width: 1.6,
+        ),
+      ),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: colors.tint(color, 0.28),
+          shape: BoxShape.circle,
+        ),
+        child: SizedBox.square(
+          dimension: size,
+          child: Center(
+            child: Text(
+              name.characters.first,
+              style: TextStyle(
+                fontFamily: AppFonts.of(context),
+                fontSize: size * 0.38,
+                fontWeight: FontWeight.w800,
+                height: 1,
+                color: color,
+              ),
+            ),
           ),
         ),
       ),

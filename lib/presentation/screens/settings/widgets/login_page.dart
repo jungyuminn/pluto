@@ -20,6 +20,7 @@ import 'package:pluto/presentation/screens/shell/shell_screen.dart';
 Future<void> openLoginPage(BuildContext context) async {
   await showModalBottomSheet<void>(
     context: context,
+    useRootNavigator: true,
     isScrollControlled: true,
     isDismissible: true,
     useSafeArea: false,

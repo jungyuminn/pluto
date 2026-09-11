@@ -105,6 +105,10 @@ enum ReleaseDemo {
   accountSync,
   categoryAi,
   friendsMiniCal,
+  featureIntro,
+  settingsFollow,
+  loginPaint,
+  featureIntroStay,
   feature,
   fix,
 }
@@ -149,8 +153,12 @@ ReleaseDemo releaseDemoFor(String text, {required bool isFix}) {
     if (text.contains('흰 카드') || text.contains('같이 줄지')) {
       return ReleaseDemo.searchOpenList;
     }
+    if (text.contains('기능 안내')) return ReleaseDemo.featureIntroStay;
     return ReleaseDemo.fix;
   }
+  if (text.contains('더 많은 기능')) return ReleaseDemo.featureIntro;
+  if (text.contains('계정을 따라')) return ReleaseDemo.settingsFollow;
+  if (text.contains('바로 입혀')) return ReleaseDemo.loginPaint;
   if (text.contains('앱 아이콘') || text.contains('로그인 로고')) {
     return ReleaseDemo.accountSync;
   }
@@ -424,6 +432,10 @@ class ReleaseDemoView extends StatelessWidget {
       ReleaseDemo.accountSync => const _AccountSyncDemo(),
       ReleaseDemo.categoryAi => const _CategoryAiDemo(),
       ReleaseDemo.friendsMiniCal => const _FriendsMiniCalDemo(),
+      ReleaseDemo.featureIntro => const _FeatureIntroDemo(),
+      ReleaseDemo.settingsFollow => const _SettingsFollowDemo(),
+      ReleaseDemo.loginPaint => const _LoginPaintDemo(),
+      ReleaseDemo.featureIntroStay => const _FeatureIntroStayDemo(),
       ReleaseDemo.feature => const _FeatureDemo(),
       ReleaseDemo.fix => const _FixDemo(),
     };
@@ -6617,6 +6629,896 @@ class _FriendAvatar extends StatelessWidget {
               ),
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _FeatureIntroDemo extends StatelessWidget {
+  const _FeatureIntroDemo();
+
+  static const _features = [
+    (AppIcons.monitor, AppStrings.featureIntroPcTitle),
+    (AppIcons.link, AppStrings.featureIntroSyncTitle),
+    (AppIcons.stars, AppStrings.featureIntroAiTitle),
+    (AppIcons.addFriend, AppStrings.featureIntroFriendsTitle),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 7200,
+      boxHeight: 220,
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final font = AppFonts.of(context);
+        final pop = Curves.easeOutBack.transform(_gate(t, 0.04, 0.18));
+        final tap = _pulse(t, 0.22, 0.30, 0.40);
+        final sheetUp = t < 0.82
+            ? Curves.easeOutCubic.transform(_gate(t, 0.30, 0.46))
+            : 1 - Curves.easeInCubic.transform(_gate(t, 0.82, 0.96));
+        final selected = t < 0.50
+            ? 0
+            : t < 0.58
+            ? 1
+            : t < 0.66
+            ? 2
+            : 3;
+        return ClipRect(
+          child: Stack(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    '9${AppStrings.monthSuffix}',
+                    style: TextStyle(
+                      fontFamily: font,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                      height: 1,
+                      color: colors.text,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Opacity(
+                    opacity: pop.clamp(0.0, 1.0),
+                    child: Transform.scale(
+                      scale: 0.78 + 0.22 * pop.clamp(0.0, 1.2),
+                      child: _IntroBannerChip(colors: colors, font: font),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Expanded(
+                    child: Opacity(
+                      opacity: (1 - sheetUp * 0.55).clamp(0.2, 1.0),
+                      child: _IntroMiniGrid(colors: colors, font: font),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (tap > 0 && sheetUp < 0.35)
+              const Positioned(
+                left: 36,
+                top: 58,
+                child: _Finger(pressed: 1),
+              ),
+            if (sheetUp > 0)
+              Align(
+                alignment: Alignment.bottomCenter,
+                child: FractionalTranslation(
+                  translation: Offset(0, 1 - sheetUp),
+                  child: _IntroSheetFrame(
+                    colors: colors,
+                    font: font,
+                    selected: selected,
+                    features: _features,
+                  ),
+                ),
+              ),
+          ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _IntroBannerChip extends StatelessWidget {
+  const _IntroBannerChip({required this.colors, required this.font});
+
+  final AppColors colors;
+  final String? font;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: colors.selected,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(12, 10, 10, 10),
+        child: Row(
+          children: [
+            AppAssetImage(asset: AppIcons.plutoLogo, width: 16, height: 16),
+            const SizedBox(width: 6),
+            Expanded(
+              child: Text(
+                AppStrings.featureIntroBanner,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontFamily: font,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  height: 1.1,
+                  color: colors.accentBright,
+                ),
+              ),
+            ),
+            Icon(Icons.close_rounded, size: 12, color: colors.muted),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _IntroMiniGrid extends StatelessWidget {
+  const _IntroMiniGrid({required this.colors, required this.font});
+
+  final AppColors colors;
+  final String? font;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Row(
+          children: [
+            for (final day in AppStrings.weekdays)
+              Expanded(
+                child: Text(
+                  day,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontFamily: font,
+                    fontSize: 8,
+                    fontWeight: FontWeight.w600,
+                    color: colors.muted,
+                  ),
+                ),
+              ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        for (var week = 0; week < 2; week++)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 4),
+            child: Row(
+              children: [
+                for (var d = 1; d <= 7; d++)
+                  Expanded(
+                    child: Text(
+                      '${week * 7 + d}',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontFamily: font,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        color: colors.secondary,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class _IntroSheetFrame extends StatelessWidget {
+  const _IntroSheetFrame({
+    required this.colors,
+    required this.font,
+    required this.selected,
+    required this.features,
+  });
+
+  final AppColors colors;
+  final String? font;
+  final int selected;
+  final List<(String, String)> features;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: colors.card,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        boxShadow: [
+          BoxShadow(
+            color: colors.shadow.withValues(alpha: 0.18),
+            blurRadius: 16,
+            offset: const Offset(0, -4),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(14, 8, 14, 10),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            DecoratedBox(
+              decoration: BoxDecoration(
+                color: colors.muted.withValues(alpha: 0.45),
+                borderRadius: BorderRadius.circular(999),
+              ),
+              child: const SizedBox(width: 32, height: 3),
+            ),
+            const SizedBox(height: 8),
+            for (var i = 0; i < features.length; i++)
+              _IntroFeatureRow(
+                asset: features[i].$1,
+                title: features[i].$2,
+                selected: selected == i,
+                colors: colors,
+                font: font,
+              ),
+            const SizedBox(height: 6),
+            DecoratedBox(
+              decoration: BoxDecoration(
+                color: colors.tint(colors.accent, 0.16),
+                borderRadius: BorderRadius.circular(999),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 7),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    AppAssetImage(
+                      asset: AppIcons.plutoLogo,
+                      width: 16,
+                      height: 16,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      AppStrings.accountLogin,
+                      style: TextStyle(
+                        fontFamily: font,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                        color: colors.accent,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _IntroFeatureRow extends StatelessWidget {
+  const _IntroFeatureRow({
+    required this.asset,
+    required this.title,
+    required this.selected,
+    required this.colors,
+    required this.font,
+  });
+
+  final String asset;
+  final String title;
+  final bool selected;
+  final AppColors colors;
+  final String? font;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 3),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        curve: Curves.easeOutCubic,
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+        decoration: BoxDecoration(
+          color: selected ? colors.selected : Colors.transparent,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            AppAssetImage(
+              asset: asset,
+              width: 16,
+              height: 16,
+              color: colors.muted,
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                title,
+                style: TextStyle(
+                  fontFamily: font,
+                  fontSize: 12,
+                  fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
+                  color: colors.text,
+                ),
+              ),
+            ),
+            Icon(Icons.chevron_right_rounded, size: 18, color: colors.muted),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SettingsFollowDemo extends StatelessWidget {
+  const _SettingsFollowDemo();
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 7000,
+      boxHeight: 220,
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final font = AppFonts.of(context);
+        final phoneWeek = Curves.easeOutCubic.transform(_gate(t, 0.16, 0.28));
+        final pcWeek = Curves.easeOutCubic.transform(_gate(t, 0.36, 0.48));
+        final phoneJob = Curves.easeOutCubic.transform(_gate(t, 0.52, 0.64));
+        final pcJob = Curves.easeOutCubic.transform(_gate(t, 0.70, 0.82));
+        final phoneFont = Curves.easeOutCubic.transform(_gate(t, 0.20, 0.34));
+        final pcFont = Curves.easeOutCubic.transform(_gate(t, 0.40, 0.54));
+        final cloudA = _pulse(t, 0.28, 0.38, 0.50);
+        final cloudB = _pulse(t, 0.62, 0.72, 0.84);
+        final cloud = math.max(cloudA, cloudB);
+        final tapWeek = _pulse(t, 0.12, 0.20, 0.32);
+        final tapJob = _pulse(t, 0.48, 0.56, 0.68);
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(10, 12, 10, 10),
+          child: Row(
+            children: [
+              Expanded(
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    _FollowDevice(
+                      title: '폰',
+                      week: phoneWeek,
+                      job: phoneJob,
+                      titleFont: phoneFont,
+                      colors: colors,
+                      font: font,
+                    ),
+                    if (tapWeek > 0)
+                      const Positioned(
+                        right: 10,
+                        top: 86,
+                        child: _Finger(pressed: 1),
+                      ),
+                    if (tapJob > 0)
+                      const Positioned(
+                        right: 14,
+                        bottom: 16,
+                        child: _Finger(pressed: 1),
+                      ),
+                  ],
+                ),
+              ),
+              SizedBox(
+                width: 28,
+                child: Opacity(
+                  opacity: 0.35 + 0.65 * cloud,
+                  child: Transform.scale(
+                    scale: 0.86 + 0.18 * cloud,
+                    child: AppAssetImage(
+                      asset: AppIcons.link,
+                      width: 16,
+                      height: 16,
+                      color: colors.accent,
+                    ),
+                  ),
+                ),
+              ),
+              Expanded(
+                child: _FollowDevice(
+                  title: 'PC',
+                  week: pcWeek,
+                  job: pcJob,
+                  titleFont: pcFont,
+                  colors: colors,
+                  font: font,
+                  pcChrome: true,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _FollowDevice extends StatelessWidget {
+  const _FollowDevice({
+    required this.title,
+    required this.week,
+    required this.job,
+    required this.titleFont,
+    required this.colors,
+    required this.font,
+    this.pcChrome = false,
+  });
+
+  final String title;
+  final double week;
+  final double job;
+  final double titleFont;
+  final AppColors colors;
+  final String? font;
+  final bool pcChrome;
+
+  @override
+  Widget build(BuildContext context) {
+    const labels = [
+      AppStrings.homeShowToday,
+      AppStrings.homeShowTomorrow,
+      AppStrings.homeShowWeek,
+    ];
+    final on = [1.0, 1.0, week];
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: Color.lerp(colors.card, colors.tint(colors.accent, 0.16), job),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: colors.border),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (pcChrome)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 6),
+                child: Row(
+                  children: const [
+                    _WindowDot(Color(0xFFFF5F57)),
+                    SizedBox(width: 3),
+                    _WindowDot(Color(0xFFFEBC2E)),
+                    SizedBox(width: 3),
+                    _WindowDot(Color(0xFF28C840)),
+                  ],
+                ),
+              ),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontFamily: titleFont > 0.5 ? AppFonts.jalnan : font,
+                fontSize: titleFont > 0.5 ? 13 : 11,
+                fontWeight: FontWeight.w800,
+                height: 1.1,
+                color: colors.text,
+              ),
+            ),
+            const SizedBox(height: 8),
+            for (var i = 0; i < 3; i++)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 5),
+                child: Row(
+                  children: [
+                    Icon(
+                      on[i] > 0.5
+                          ? Icons.check_box_rounded
+                          : Icons.check_box_outline_blank_rounded,
+                      size: 15,
+                      color: Color.lerp(colors.border, colors.accent, on[i]),
+                    ),
+                    const SizedBox(width: 5),
+                    Text(
+                      labels[i],
+                      style: TextStyle(
+                        fontFamily: font,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: colors.text,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            const Spacer(),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    AppStrings.jobMode,
+                    style: TextStyle(
+                      fontFamily: font,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      color: colors.text,
+                    ),
+                  ),
+                ),
+                Transform.scale(scale: 0.78, child: _FakeSwitch(on: job)),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _LoginPaintDemo extends StatelessWidget {
+  const _LoginPaintDemo();
+
+  static const _theme = Color(0xFFEC4899);
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 6400,
+      boxHeight: 220,
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final font = AppFonts.of(context);
+        final login = 1 - Curves.easeInCubic.transform(_gate(t, 0.28, 0.40));
+        final home = Curves.easeOutCubic.transform(_gate(t, 0.36, 0.48));
+        final photo = Curves.easeOutCubic.transform(_gate(t, 0.62, 0.80));
+        final tap = _pulse(t, 0.16, 0.24, 0.36);
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(18, 12, 18, 10),
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: Color.lerp(colors.card, const Color(0xFFFCE7F3), home),
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: colors.border),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(17),
+              child: Stack(
+                children: [
+                  if (login > 0)
+                    Opacity(
+                      opacity: login,
+                      child: _PaintLogin(colors: colors, font: font),
+                    ),
+                  if (home > 0)
+                    Opacity(
+                      opacity: home,
+                      child: Transform.scale(
+                        scale: 0.96 + 0.04 * home,
+                        child: _PaintHome(
+                          colors: colors,
+                          font: font,
+                          photo: photo,
+                        ),
+                      ),
+                    ),
+                  if (tap > 0 && home < 0.2)
+                    const Positioned(
+                      left: 0,
+                      right: 0,
+                      top: 118,
+                      child: Center(child: _Finger(pressed: 1)),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _PaintLogin extends StatelessWidget {
+  const _PaintLogin({required this.colors, required this.font});
+
+  final AppColors colors;
+  final String? font;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const AppAssetImage(asset: AppIcons.plutoLogo, width: 32, height: 32),
+          const SizedBox(height: 6),
+          Text(
+            AppStrings.webLoginBrand,
+            style: TextStyle(
+              fontFamily: AppFonts.jalnan,
+              fontSize: 16,
+              height: 1.1,
+              letterSpacing: 0.5,
+              color: colors.text,
+            ),
+          ),
+          const SizedBox(height: 12),
+          const Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _PcProviderDot(
+                asset: AppIcons.kakaoLogo,
+                background: Color(0xFFFEE500),
+              ),
+              SizedBox(width: 12),
+              _PcProviderDot(
+                asset: AppIcons.googleLogo,
+                background: Colors.white,
+                bordered: true,
+              ),
+              SizedBox(width: 12),
+              _PcProviderDot(
+                asset: AppIcons.appleLogo,
+                background: Color(0xFF111111),
+                tint: Colors.white,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PaintHome extends StatelessWidget {
+  const _PaintHome({
+    required this.colors,
+    required this.font,
+    required this.photo,
+  });
+
+  final AppColors colors;
+  final String? font;
+  final double photo;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            AppStrings.appName,
+            style: TextStyle(
+              fontFamily: AppFonts.jalnan,
+              fontSize: 15,
+              height: 1.1,
+              color: _LoginPaintDemo._theme,
+            ),
+          ),
+          const SizedBox(height: 10),
+          for (final label in [
+            AppStrings.homeShowToday,
+            AppStrings.homeShowTomorrow,
+            AppStrings.homeShowWeek,
+          ])
+            Padding(
+              padding: const EdgeInsets.only(bottom: 6),
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.78),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.check_box_rounded,
+                        size: 14,
+                        color: _LoginPaintDemo._theme,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        label,
+                        style: TextStyle(
+                          fontFamily: font,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: colors.text,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          const Spacer(),
+          SizedBox(
+            height: 36,
+            child: Stack(
+              children: [
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: colors.selected,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const SizedBox.expand(),
+                ),
+                Opacity(
+                  opacity: photo,
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                      gradient: const LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [Color(0xFFF9A8D4), Color(0xFFFB7185)],
+                      ),
+                    ),
+                    child: const SizedBox.expand(),
+                  ),
+                ),
+                if (photo < 0.85)
+                  Center(
+                    child: Opacity(
+                      opacity: (1 - photo).clamp(0.0, 1.0),
+                      child: SizedBox(
+                        width: 12,
+                        height: 12,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 1.6,
+                          color: colors.muted,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _FeatureIntroStayDemo extends StatelessWidget {
+  const _FeatureIntroStayDemo();
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 6200,
+      boxHeight: 220,
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final font = AppFonts.of(context);
+        final login = t < 0.78
+            ? Curves.easeOutCubic.transform(_gate(t, 0.18, 0.34))
+            : 1 - Curves.easeInCubic.transform(_gate(t, 0.78, 0.92));
+        final tapLogin = _pulse(t, 0.10, 0.18, 0.30);
+        final tapClose = _pulse(t, 0.58, 0.66, 0.78);
+        return ClipRect(
+          child: Stack(
+          children: [
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: _IntroSheetFrame(
+                colors: colors,
+                font: font,
+                selected: 1,
+                features: _FeatureIntroDemo._features,
+              ),
+            ),
+            if (tapLogin > 0 && login < 0.25)
+              const Positioned(
+                left: 0,
+                right: 0,
+                bottom: 18,
+                child: Center(child: _Finger(pressed: 1)),
+              ),
+            if (login > 0)
+              Opacity(
+                opacity: login,
+                child: ColoredBox(
+                  color: const Color(0x66000000),
+                  child: Align(
+                    alignment: Alignment.bottomCenter,
+                    child: FractionalTranslation(
+                      translation: Offset(0, 1 - login),
+                      child: _StayLoginSheet(colors: colors, font: font),
+                    ),
+                  ),
+                ),
+              ),
+            if (tapClose > 0 && login > 0.6)
+              const Positioned(
+                right: 28,
+                top: 28,
+                child: _Finger(pressed: 1),
+              ),
+          ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _StayLoginSheet extends StatelessWidget {
+  const _StayLoginSheet({required this.colors, required this.font});
+
+  final AppColors colors;
+  final String? font;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: colors.card,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(22)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              children: [
+                const Spacer(),
+                Icon(Icons.close_rounded, size: 18, color: colors.muted),
+              ],
+            ),
+            const AppAssetImage(
+              asset: AppIcons.plutoLogo,
+              width: 30,
+              height: 30,
+            ),
+            const SizedBox(height: 6),
+            Text(
+              AppStrings.webLoginBrand,
+              style: TextStyle(
+                fontFamily: AppFonts.jalnan,
+                fontSize: 16,
+                height: 1.1,
+                color: colors.text,
+              ),
+            ),
+            const SizedBox(height: 10),
+            const Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _PcProviderDot(
+                  asset: AppIcons.kakaoLogo,
+                  background: Color(0xFFFEE500),
+                ),
+                SizedBox(width: 12),
+                _PcProviderDot(
+                  asset: AppIcons.googleLogo,
+                  background: Colors.white,
+                  bordered: true,
+                ),
+                SizedBox(width: 12),
+                _PcProviderDot(
+                  asset: AppIcons.appleLogo,
+                  background: Color(0xFF111111),
+                  tint: Colors.white,
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+          ],
         ),
       ),
     );

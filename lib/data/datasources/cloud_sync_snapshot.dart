@@ -8,6 +8,13 @@ import 'package:pluto/data/datasources/job_application_local_datasource.dart';
 import 'package:pluto/data/datasources/ledger_local_datasource.dart';
 import 'package:pluto/data/datasources/license_local_datasource.dart';
 import 'package:pluto/data/datasources/long_goal_local_datasource.dart';
+import 'package:pluto/data/datasources/calendar_preference.dart';
+import 'package:pluto/data/datasources/day_events_view_preference.dart';
+import 'package:pluto/data/datasources/font_preference.dart';
+import 'package:pluto/data/datasources/home_view_preference.dart';
+import 'package:pluto/data/datasources/job_view_preference.dart';
+import 'package:pluto/data/datasources/license_view_preference.dart';
+import 'package:pluto/data/datasources/nav_preference.dart';
 import 'package:pluto/data/datasources/theme_preference.dart';
 import 'package:pluto/data/datasources/wordmark_preference.dart';
 import 'package:pluto/domain/entities/event_category.dart';
@@ -65,12 +72,36 @@ class CloudSyncSnapshot {
     wordmarkLicenseKey,
   ];
 
+  static const settingKeys = [
+    darkKey,
+    skinKey,
+    themesKey,
+    customThemeIdKey,
+    mondayKey,
+    diaryCoverOrderKey,
+    ...NavPreference.syncedKeys,
+    ...FontPreference.syncedKeys,
+    ...CalendarPreference.syncedKeys,
+    ...HomeViewPreference.syncedKeys,
+    ...JobViewPreference.syncedKeys,
+    ...LicenseViewPreference.syncedKeys,
+    ...DayEventsViewPreference.syncedKeys,
+  ];
+
   static const syncedKeys = [
     ...contentKeys,
     darkKey,
     skinKey,
-    mondayKey,
-    diaryCoverOrderKey,
+    ...settingKeys,
+  ];
+
+  static const _viewDefaultBools = [
+    NavPreference.defaultBools,
+    CalendarPreference.defaultBools,
+    HomeViewPreference.defaultBools,
+    JobViewPreference.defaultBools,
+    LicenseViewPreference.defaultBools,
+    DayEventsViewPreference.defaultBools,
   ];
 
   static const _listMergeKeys = {
@@ -90,21 +121,44 @@ class CloudSyncSnapshot {
   static Map<String, dynamic> dump(SharedPreferences prefs) {
     final out = <String, dynamic>{};
     for (final key in syncedKeys) {
-      if (!prefs.containsKey(key)) continue;
-      final value = prefs.get(key);
-      if (value is String) {
-        out[key] = {'t': 's', 'v': value};
-      } else if (value is bool) {
-        out[key] = {'t': 'b', 'v': value};
-      } else if (value is int) {
-        out[key] = {'t': 'i', 'v': value};
-      } else if (value is double) {
-        out[key] = {'t': 'd', 'v': value};
-      } else if (value is List) {
-        out[key] = {'t': 'l', 'v': List<String>.from(value)};
+      if (prefs.containsKey(key)) {
+        _putPref(out, key, prefs.get(key));
+        continue;
       }
+      if (contentKeys.contains(key)) continue;
+      _putPref(out, key, _settingFallback(key));
     }
     return out;
+  }
+
+  static void _putPref(Map<String, dynamic> out, String key, Object? value) {
+    if (value is String) {
+      out[key] = {'t': 's', 'v': value};
+    } else if (value is bool) {
+      out[key] = {'t': 'b', 'v': value};
+    } else if (value is int) {
+      out[key] = {'t': 'i', 'v': value};
+    } else if (value is double) {
+      out[key] = {'t': 'd', 'v': value};
+    } else if (value is List) {
+      out[key] = {'t': 'l', 'v': List<String>.from(value)};
+    }
+  }
+
+  static Object? _settingFallback(String key) {
+    if (key == darkKey || key == mondayKey) return false;
+    if (key == skinKey) return 'classic';
+    if (key == diaryCoverOrderKey) return <String>[];
+    if (key == FontPreference.syncedKeys.single) {
+      return FontPreference.defaultFamily;
+    }
+    if (key == HomeViewPreference.cardOrderKey) {
+      return HomeCardKind.defaults.map((kind) => kind.name).join(',');
+    }
+    for (final defaults in _viewDefaultBools) {
+      if (defaults.containsKey(key)) return defaults[key];
+    }
+    return null;
   }
 
   static Map<String, dynamic> decodeDump(String payload) {
@@ -126,9 +180,10 @@ class CloudSyncSnapshot {
 
   static Future<void> apply(
     SharedPreferences prefs,
-    Map<String, dynamic> dump,
-  ) async {
-    for (final key in syncedKeys) {
+    Map<String, dynamic> dump, {
+    Iterable<String>? keys,
+  }) async {
+    for (final key in keys ?? syncedKeys) {
       final payload = dump[key];
       if (payload is! Map) {
         if (contentKeys.contains(key)) await prefs.remove(key);
@@ -207,6 +262,7 @@ class CloudSyncSnapshot {
     }
     if (_boolOf(dump, darkKey) == true) return false;
     if (_boolOf(dump, mondayKey) == true) return false;
+    if (!_viewPrefsAreDefault(dump)) return false;
     final skin = _stringOf(dump, skinKey);
     if (skin != null && skin.isNotEmpty && skin != 'classic') return false;
     if ((_stringOf(dump, customThemeIdKey) ?? '').isNotEmpty) return false;
@@ -279,6 +335,27 @@ class CloudSyncSnapshot {
   }
 
   static String hashOf(Map<String, dynamic> dump) => jsonEncode(dump);
+
+  static bool _viewPrefsAreDefault(Map<String, dynamic> dump) {
+    for (final defaults in _viewDefaultBools) {
+      for (final entry in defaults.entries) {
+        final value = _boolOf(dump, entry.key);
+        if (value != null && value != entry.value) return false;
+      }
+    }
+    final font = _stringOf(dump, FontPreference.syncedKeys.first);
+    if (font != null &&
+        font.isNotEmpty &&
+        font != FontPreference.defaultFamily) {
+      return false;
+    }
+    if (!HomeViewPreference.cardOrderIsDefault(
+      _stringOf(dump, HomeViewPreference.cardOrderKey),
+    )) {
+      return false;
+    }
+    return true;
+  }
 
   static bool? _boolOf(Map<String, dynamic> dump, String key) {
     final payload = dump[key];

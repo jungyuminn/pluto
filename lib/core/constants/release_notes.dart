@@ -17,6 +17,17 @@ class ReleaseNote {
 abstract final class ReleaseNotes {
   static const all = [
     ReleaseNote(
+      version: '1.3.5',
+      items: [
+        '처음 쓰면 로그인하면 더 많은 기능을 알려줘요',
+        '홈 화면·글꼴·취준 모드가 계정을 따라가요',
+        '로그인하면 설정과 테마가 바로 입혀져요',
+      ],
+      fixes: [
+        '로그인 창을 닫아도 기능 안내가 같이 닫히지 않아요',
+      ],
+    ),
+    ReleaseNote(
       version: '1.3.4',
       items: [
         '로그인 로고가 더 크고 선명해졌어요',

@@ -45,6 +45,42 @@ class HomeViewPreference {
   static const _weeklyStatsKey = 'home_show_weekly_stats';
   static const _weeklyStatsSeenKey = 'home_weekly_stats_seen';
   static const _cardOrderKey = 'home_card_order';
+  static const cardOrderKey = _cardOrderKey;
+  static const syncedKeys = [
+    _compactKey,
+    _leftoverKey,
+    _todayKey,
+    _tomorrowKey,
+    _weekKey,
+    _monthKey,
+    _somedayKey,
+    _longGoalKey,
+    _monthlyStatsKey,
+    _weeklyStatsKey,
+    _cardOrderKey,
+  ];
+  static const defaultBools = {
+    _compactKey: false,
+    _leftoverKey: true,
+    _todayKey: true,
+    _tomorrowKey: true,
+    _weekKey: false,
+    _monthKey: false,
+    _somedayKey: false,
+    _longGoalKey: false,
+    _monthlyStatsKey: true,
+    _weeklyStatsKey: false,
+  };
+
+  static bool cardOrderIsDefault(String? raw) {
+    if (raw == null || raw.isEmpty) return true;
+    final parsed = parseCardOrder(raw);
+    if (parsed.length != HomeCardKind.defaults.length) return false;
+    for (var i = 0; i < parsed.length; i++) {
+      if (parsed[i] != HomeCardKind.defaults[i]) return false;
+    }
+    return true;
+  }
 
   final SharedPreferences? _prefs;
   bool _compact;

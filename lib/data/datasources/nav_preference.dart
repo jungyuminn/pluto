@@ -16,6 +16,8 @@ class NavPreference extends ChangeNotifier {
   static const _jobModeKey = 'nav_job_mode';
   static const _dailyModeKey = 'nav_daily_mode';
   static const _statsTabKey = 'nav_stats_tab';
+  static const syncedKeys = [_jobModeKey, _statsTabKey];
+  static const defaultBools = {_jobModeKey: false, _statsTabKey: true};
 
   final SharedPreferences? _prefs;
   bool _jobMode;

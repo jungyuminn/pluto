@@ -216,6 +216,8 @@ class FontPreference extends ChangeNotifier {
   static const maxScale = 1.24;
 
   static const _familyKey = 'font_family';
+  static const syncedKeys = [_familyKey];
+  static const defaultFamily = 'pretendard';
   static const _todoKey = 'font_todo_size';
   static const _calendarKey = 'font_calendar_size';
   static const _calendarLabelKey = 'font_calendar_label_size';

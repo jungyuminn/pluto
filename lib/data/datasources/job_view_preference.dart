@@ -21,6 +21,20 @@ class JobViewPreference extends ChangeNotifier {
   static const _showRejectedKey = 'job_show_rejected';
   static const _categoryViewKey = 'job_category_view';
   static const _showLicenseKey = 'job_show_license';
+  static const syncedKeys = [
+    _compactKey,
+    _sortKey,
+    _showRejectedKey,
+    _categoryViewKey,
+    _showLicenseKey,
+  ];
+  static const defaultBools = {
+    _compactKey: false,
+    _sortKey: false,
+    _showRejectedKey: true,
+    _categoryViewKey: false,
+    _showLicenseKey: false,
+  };
 
   final SharedPreferences? _prefs;
   bool _compact;

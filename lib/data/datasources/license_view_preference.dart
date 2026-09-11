@@ -18,6 +18,18 @@ class LicenseViewPreference extends ChangeNotifier {
   static const _sortKey = 'license_sort_by_date';
   static const _showExpiredKey = 'license_show_expired';
   static const _categoryViewKey = 'license_category_view';
+  static const syncedKeys = [
+    _compactKey,
+    _sortKey,
+    _showExpiredKey,
+    _categoryViewKey,
+  ];
+  static const defaultBools = {
+    _compactKey: false,
+    _sortKey: false,
+    _showExpiredKey: true,
+    _categoryViewKey: false,
+  };
 
   final SharedPreferences? _prefs;
   bool _compact;

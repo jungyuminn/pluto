@@ -11,6 +11,7 @@ import 'package:pluto/core/theme/app_skin_background.dart';
 import 'package:pluto/core/utils/fade_in.dart';
 import 'package:pluto/core/utils/press_bounce.dart';
 import 'package:pluto/data/datasources/app_auth_service.dart';
+import 'package:pluto/data/datasources/cloud_sync_service.dart';
 import 'package:pluto/presentation/screens/settings/widgets/account_sheet.dart';
 import 'package:pluto/presentation/screens/settings/widgets/backup_dialogs.dart';
 import 'package:pluto/presentation/screens/settings/widgets/cloud_sync_dialogs.dart';
@@ -33,6 +34,7 @@ Future<void> openLoginPage(BuildContext context) async {
   );
   if (!context.mounted) return;
   if (AppAuthService.instance.user == null) return;
+  if (CloudSyncService.instance.isBound) return;
   try {
     await bindCloudAccount(context);
   } on AppAuthException catch (error) {
@@ -230,7 +232,13 @@ class _LoginSheetState extends State<LoginSheet> {
     setState(() => _busy = true);
     try {
       final signedIn = await runAccountAction(context, action);
-      if (signedIn && mounted) Navigator.of(context).pop();
+      if (!signedIn || !mounted) return;
+      await bindCloudAccount(
+        context,
+        onSettingsReady: () {
+          if (mounted) Navigator.of(context).pop();
+        },
+      );
     } finally {
       if (mounted) setState(() => _busy = false);
     }

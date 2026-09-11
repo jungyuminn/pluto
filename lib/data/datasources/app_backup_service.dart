@@ -255,6 +255,18 @@ class AppBackupService {
     throw const FormatException('missing iCloud backup');
   }
 
+  static void hydrateSyncedSettings(AppScope scope) {
+    scope.themePreference.hydrate();
+    scope.fontPreference.hydrate();
+    scope.calendarPreference.hydrate();
+    scope.homeViewPreference.hydrate();
+    scope.navPreference.hydrate();
+    scope.jobViewPreference.hydrate();
+    scope.licenseViewPreference.hydrate();
+    scope.dayEventsViewPreference.hydrate();
+    revision.value++;
+  }
+
   static Future<void> applyToApp(AppScope scope) async {
     scope.themePreference.hydrate();
     scope.fontPreference.hydrate();

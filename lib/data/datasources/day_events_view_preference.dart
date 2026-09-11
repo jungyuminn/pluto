@@ -37,6 +37,26 @@ class DayEventsViewPreference {
   static const _ledgerKindKey = 'calendar_show_ledger_kind';
   static const _ledgerMonthStatsKey = 'calendar_show_ledger_month_stats';
   static const _ledgerKindColorKey = 'calendar_ledger_kind_color';
+  static const syncedKeys = [
+    _sortKey,
+    _showTimeKey,
+    _categoryViewKey,
+    _ledgerTitleKey,
+    _ledgerAmountKey,
+    _ledgerKindKey,
+    _ledgerMonthStatsKey,
+    _ledgerKindColorKey,
+  ];
+  static const defaultBools = {
+    _sortKey: false,
+    _showTimeKey: false,
+    _categoryViewKey: false,
+    _ledgerTitleKey: true,
+    _ledgerAmountKey: false,
+    _ledgerKindKey: true,
+    _ledgerMonthStatsKey: true,
+    _ledgerKindColorKey: false,
+  };
 
   final SharedPreferences? _prefs;
   bool _sortByTime;

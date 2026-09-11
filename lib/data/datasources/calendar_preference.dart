@@ -24,6 +24,12 @@ class CalendarPreference extends ChangeNotifier {
   static const _todosKey = 'calendar_show_todos';
   static const _companiesKey = 'calendar_show_companies';
   static const _diaryCoverOrderKey = 'diary_cover_order';
+  static const syncedKeys = [_lunarKey, _todosKey, _companiesKey];
+  static const defaultBools = {
+    _lunarKey: false,
+    _todosKey: true,
+    _companiesKey: true,
+  };
 
   final SharedPreferences? _prefs;
   bool _startMonday;

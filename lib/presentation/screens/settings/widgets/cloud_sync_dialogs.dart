@@ -4,8 +4,14 @@ import 'package:pluto/core/theme/app_colors.dart';
 import 'package:pluto/core/utils/press_bounce.dart';
 import 'package:pluto/data/datasources/cloud_sync_service.dart';
 
-Future<void> bindCloudAccount(BuildContext context) {
-  return CloudSyncService.instance.reconcileAfterLogin(context);
+Future<void> bindCloudAccount(
+  BuildContext context, {
+  VoidCallback? onSettingsReady,
+}) {
+  return CloudSyncService.instance.reconcileAfterLogin(
+    context,
+    onSettingsReady: onSettingsReady,
+  );
 }
 
 Future<void> ensureCloudBound(BuildContext context) {

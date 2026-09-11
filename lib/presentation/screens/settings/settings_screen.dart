@@ -110,6 +110,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Timer? _contactHintTimer;
 
   @override
+  void initState() {
+    super.initState();
+    AppBackupService.revision.addListener(_onRevision);
+  }
+
+  void _onRevision() {
+    if (!_ready || !mounted) return;
+    _syncFromScope();
+  }
+
+  @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (_ready) return;
@@ -149,6 +160,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   void dispose() {
+    AppBackupService.revision.removeListener(_onRevision);
     _contactHintTimer?.cancel();
     super.dispose();
   }

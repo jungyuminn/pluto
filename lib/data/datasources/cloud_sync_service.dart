@@ -41,6 +41,9 @@ class CloudSyncService {
   bool get isReady =>
       Firebase.apps.isNotEmpty && AppAuthService.instance.isReady;
 
+  bool get isBound =>
+      _ready && AppAuthService.instance.user != null;
+
   void attach(AppScope scope) {
     _scope = scope;
     _authSub ??= AppAuthService.instance.authState.listen((user) {
@@ -80,7 +83,10 @@ class CloudSyncService {
     await reconcileAfterLogin(context);
   }
 
-  Future<void> reconcileAfterLogin(BuildContext context) async {
+  Future<void> reconcileAfterLogin(
+    BuildContext context, {
+    VoidCallback? onSettingsReady,
+  }) async {
     final user = AppAuthService.instance.user;
     if (user == null) return;
     final scope = _scopeFor(context);
@@ -106,9 +112,18 @@ class CloudSyncService {
           CloudSyncSnapshot.parkedDumpKey,
           jsonEncode(CloudSyncSnapshot.dump(prefs)),
         );
-        await CloudSyncFiles.parkLocal();
         parkedNow = true;
       }
+      if (remote.hasContent) {
+        await CloudSyncSnapshot.apply(
+          prefs,
+          remote.dump,
+          keys: CloudSyncSnapshot.settingKeys,
+        );
+        AppBackupService.hydrateSyncedSettings(scope);
+      }
+      onSettingsReady?.call();
+      if (parkedNow) await CloudSyncFiles.parkLocal();
       if (remote.hasContent) {
         _lastRemoteFiles = remote.files;
         await _applyDump(
@@ -124,9 +139,12 @@ class CloudSyncService {
       }
       await _bind(prefs, user.uid, provider);
       _ready = true;
-      _uploadedHash = await _hash(prefs);
+      _uploadedHash = remote.hasContent
+          ? await _hash(prefs, remote.dump, remote.files)
+          : await _hash(prefs);
       if (remote.writtenAt > _writtenAt) _writtenAt = remote.writtenAt;
       _startWatch();
+      unawaited(_flushIfDirty());
     } catch (error) {
       debugPrint('Cloud sync login failed: $error');
       if (parkedNow) {
@@ -285,7 +303,7 @@ class CloudSyncService {
   }
 
   void _startWatch() {
-    _watch ??= Timer.periodic(const Duration(seconds: 2), (_) {
+    _watch ??= Timer.periodic(const Duration(milliseconds: 400), (_) {
       unawaited(_flushIfDirty());
     });
     _listenRemote();
@@ -355,7 +373,7 @@ class CloudSyncService {
     if (hash == _uploadedHash) return;
     if (CloudSyncSnapshot.isFoundationDump(dump)) return;
     try {
-      await _upload(user.uid, dump);
+      await _upload(user.uid, dump, waitForFiles: false);
     } catch (error) {
       debugPrint('Cloud sync upload failed: $error');
     }
@@ -506,28 +524,34 @@ class CloudSyncService {
         'files': [for (final file in files) file.toJson()],
         'writtenAt': writtenAt,
       };
-      final fileWork = CloudSyncFiles.upload(
-        uid,
-        files,
-        prune: false,
-      );
-      if (waitForFiles) {
-        try {
-          await fileWork;
-        } catch (error) {
-          debugPrint('Cloud sync file upload failed: $error');
+      final filesUnchanged = CloudSyncFiles.fingerprint(files) ==
+              CloudSyncFiles.fingerprint(_lastRemoteFiles) &&
+          (_lastRemoteFiles.isNotEmpty || files.isEmpty);
+      if (!filesUnchanged) {
+        final fileWork = CloudSyncFiles.upload(
+          uid,
+          files,
+          prune: false,
+        );
+        if (waitForFiles) {
+          try {
+            await fileWork;
+          } catch (error) {
+            debugPrint('Cloud sync file upload failed: $error');
+          }
+        } else {
+          unawaited(fileWork);
         }
-      } else {
-        unawaited(fileWork);
       }
       if (!alive()) return;
       await _writeVault(uid, provider, vault);
       if (!alive()) return;
-      if (pruneFiles && waitForFiles && !kIsWeb) {
+      if (pruneFiles && waitForFiles && !kIsWeb && !filesUnchanged) {
         await CloudSyncFiles.pruneUnused(uid, files);
       }
       if (!alive()) return;
       _writtenAt = writtenAt;
+      _lastRemoteFiles = files;
       _uploadedHash = await _hash(prefs, dump, files);
     } finally {
       if (!gate.isCompleted) gate.complete();

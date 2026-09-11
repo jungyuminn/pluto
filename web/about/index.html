@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>플루토 · 나의 모든 기록이 모이는 곳</title>
+  <meta name="description" content="플루토는 할 일, 일정, 일기, 가계부, 메모를 한곳에서 보는 캘린더입니다. 로그인 없이 기기에서 쓸 수 있고, 로그인하면 여러 기기에서 기록을 맞출 수 있습니다.">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="플루토">
+  <meta property="og:title" content="플루토">
+  <meta property="og:description" content="나의 모든 기록이 모이는 곳">
+  <meta property="og:url" content="https://pluto.day/about">
+  <meta property="og:image" content="https://pluto.day/og.png?v=3">
+  <link rel="icon" type="image/svg+xml" href="../favicon.svg?v=4">
+  <link rel="icon" type="image/png" sizes="64x64" href="../favicon.png?v=4">
+  <style>
+    @font-face {
+      font-family: Jalnan;
+      src: url("../assets/assets/fonts/Jalnan2TTF.ttf") format("truetype");
+      font-display: swap;
+    }
+    @font-face {
+      font-family: Pretendard;
+      src: url("../assets/assets/fonts/Pretendard-Regular.otf") format("opentype");
+      font-weight: 400;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: Pretendard;
+      src: url("../assets/assets/fonts/Pretendard-Medium.otf") format("opentype");
+      font-weight: 500;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: Pretendard;
+      src: url("../assets/assets/fonts/Pretendard-SemiBold.otf") format("opentype");
+      font-weight: 600;
+      font-display: swap;
+    }
+    :root {
+      --bg: #F8FAFC;
+      --text: #0F172A;
+      --muted: #64748B;
+      --line: #E2E8F0;
+      --card: #FFFFFF;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Pretendard, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+      line-height: 1.7;
+    }
+    a { color: inherit; }
+    .wrap {
+      width: min(720px, calc(100% - 48px));
+      margin: 0 auto;
+      padding: 36px 0 80px;
+    }
+    header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 56px;
+    }
+    header .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+    }
+    header img {
+      width: 40px;
+      height: 40px;
+    }
+    header .name {
+      font-family: Jalnan, Pretendard, sans-serif;
+      font-size: 22px;
+      letter-spacing: -0.02em;
+    }
+    h1 {
+      margin: 0 0 12px;
+      font-size: 36px;
+      font-weight: 600;
+      letter-spacing: -0.03em;
+      line-height: 1.25;
+    }
+    .lead {
+      margin: 0 0 28px;
+      color: var(--muted);
+      font-size: 18px;
+    }
+    .purpose {
+      margin: 0 0 40px;
+      font-size: 17px;
+      color: #1E293B;
+    }
+    h2 {
+      margin: 0 0 12px;
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+    ul {
+      margin: 0 0 36px;
+      padding-left: 20px;
+    }
+    li {
+      margin: 0 0 8px;
+      font-size: 16px;
+      color: #1E293B;
+    }
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin: 8px 0 48px;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px 18px;
+      border-radius: 12px;
+      text-decoration: none;
+      font-size: 15px;
+      font-weight: 600;
+    }
+    .btn-main {
+      background: var(--text);
+      color: #fff;
+    }
+    .btn-sub {
+      background: var(--card);
+      border: 1px solid var(--line);
+    }
+    footer {
+      padding-top: 24px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 14px;
+    }
+    footer a { color: var(--text); }
+    @media (max-width: 640px) {
+      .wrap { width: calc(100% - 40px); padding-top: 28px; }
+      h1 { font-size: 30px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <span class="brand">
+        <img src="../favicon.svg" alt="">
+        <span class="name">플루토</span>
+      </span>
+    </header>
+
+    <h1>나의 모든 기록이<br>모이는 곳</h1>
+    <p class="lead">할 일 · 일정 · 일기 · 가계부 · 메모를 한 캘린더에서</p>
+    <p class="purpose">플루토는 하루의 할 일과 일정, 일기와 가계부, 메모를 한곳에서 보고 기록하는 캘린더 앱입니다. 로그인하지 않아도 이 페이지에서 앱이 무엇을 하는지 볼 수 있습니다. 앱을 열려면 아래에서 시작하면 됩니다.</p>
+
+    <h2>할 수 있는 일</h2>
+    <ul>
+      <li>할 일과 일정을 캘린더에 넣고 미리 알림을 받습니다</li>
+      <li>일기, 가계부, 메모, 스티커를 날짜에 붙여 둡니다</li>
+      <li>지원서와 자격증 같은 취준 기록도 같이 둘 수 있습니다</li>
+      <li>구글, 카카오, 애플로 로그인하면 여러 기기에서 기록이 맞춰집니다</li>
+      <li>구글 드라이브나 아이클라우드로 백업하고 복구할 수 있습니다</li>
+    </ul>
+
+    <div class="actions">
+      <a class="btn btn-main" href="/">앱 열기</a>
+      <a class="btn btn-sub" href="/privacy">개인정보처리방침</a>
+      <a class="btn btn-sub" href="/terms">이용약관</a>
+    </div>
+
+    <footer>
+      플루토 · <a href="https://pluto.day/about">pluto.day/about</a> · <a href="mailto:pluto.app.help@gmail.com">pluto.app.help@gmail.com</a>
+    </footer>
+  </div>
+</body>
+</html>

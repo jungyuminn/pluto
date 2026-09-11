@@ -12,6 +12,7 @@ import 'package:pluto/core/home_widget/home_screen_widget_service.dart';
 import 'package:pluto/core/notifications/todo_reminder_service.dart';
 import 'package:pluto/core/theme/app_theme.dart';
 import 'package:pluto/core/theme/web_theme_color.dart';
+import 'package:pluto/data/datasources/app_auth_service.dart';
 import 'package:pluto/data/datasources/app_backup_service.dart';
 import 'package:pluto/data/datasources/cloud_sync_service.dart';
 import 'package:pluto/data/datasources/backup_preference.dart';
@@ -827,31 +828,41 @@ class _JobPlannerMaterialAppState extends State<_JobPlannerMaterialApp>
     return ListenableBuilder(
       listenable: Listenable.merge([theme, font]),
       builder: (context, _) {
-        final lightTheme = AppTheme.themed(
-          dark: false,
-          typeface: font.typeface,
-          skin: theme.skin,
-          customAccent: theme.customTheme?.accentColor,
-        );
-        final darkTheme = AppTheme.themed(
-          dark: true,
-          typeface: font.typeface,
-          skin: theme.skin,
-          customAccent: theme.customTheme?.accentColor,
-        );
-        final useDark = theme.mode == ThemeMode.dark ||
-            (theme.mode == ThemeMode.system &&
-                WidgetsBinding.instance.platformDispatcher.platformBrightness ==
-                    Brightness.dark);
-        final chromeColor = (useDark ? darkTheme : lightTheme)
-            .scaffoldBackgroundColor;
-        return MaterialApp(
-          title: AppStrings.appName,
-          debugShowCheckedModeBanner: false,
-          color: chromeColor,
-          theme: lightTheme,
-          darkTheme: darkTheme,
-          themeMode: theme.mode,
+        return StreamBuilder(
+          stream: AppAuthService.instance.authState,
+          initialData: AppAuthService.instance.user,
+          builder: (context, auth) {
+            final guest = kIsWeb && auth.data == null;
+            final typeface = guest ? AppTypeface.pretendard : font.typeface;
+            final skin = guest ? AppSkin.classic : theme.skin;
+            final accent = guest ? null : theme.customTheme?.accentColor;
+            final lightTheme = AppTheme.themed(
+              dark: false,
+              typeface: typeface,
+              skin: skin,
+              customAccent: accent,
+            );
+            final darkTheme = AppTheme.themed(
+              dark: true,
+              typeface: typeface,
+              skin: skin,
+              customAccent: accent,
+            );
+            final themeMode = guest ? ThemeMode.light : theme.mode;
+            final useDark = themeMode == ThemeMode.dark ||
+                (themeMode == ThemeMode.system &&
+                    WidgetsBinding
+                            .instance.platformDispatcher.platformBrightness ==
+                        Brightness.dark);
+            final chromeColor = (useDark ? darkTheme : lightTheme)
+                .scaffoldBackgroundColor;
+            return MaterialApp(
+              title: AppStrings.appName,
+              debugShowCheckedModeBanner: false,
+              color: chromeColor,
+              theme: lightTheme,
+              darkTheme: darkTheme,
+              themeMode: themeMode,
           locale: const Locale('ko', 'KR'),
           supportedLocales: const [Locale('ko', 'KR')],
           builder: (context, child) {
@@ -873,11 +884,11 @@ class _JobPlannerMaterialAppState extends State<_JobPlannerMaterialApp>
               });
             }
             return FontScope(
-              typeface: font.typeface,
-              todoScale: font.todoScale,
-              labelScale: font.labelScale,
-              calendarScale: font.calendarScale,
-              calendarLabelScale: font.calendarLabelScale,
+              typeface: typeface,
+              todoScale: guest ? 1 : font.todoScale,
+              labelScale: guest ? 1 : font.labelScale,
+              calendarScale: guest ? 1 : font.calendarScale,
+              calendarLabelScale: guest ? 1 : font.calendarLabelScale,
               child: overlay == null
                   ? (child ?? const SizedBox.shrink())
                   : AnnotatedRegion<SystemUiOverlayStyle>(
@@ -892,6 +903,8 @@ class _JobPlannerMaterialAppState extends State<_JobPlannerMaterialApp>
             GlobalWidgetsLocalizations.delegate,
             GlobalCupertinoLocalizations.delegate,
           ],
+            );
+          },
         );
       },
     );

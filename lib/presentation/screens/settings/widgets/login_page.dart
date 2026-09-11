@@ -11,6 +11,7 @@ import 'package:pluto/core/theme/app_skin_background.dart';
 import 'package:pluto/core/utils/fade_in.dart';
 import 'package:pluto/core/utils/press_bounce.dart';
 import 'package:pluto/data/datasources/app_auth_service.dart';
+import 'package:pluto/data/datasources/theme_preference.dart';
 import 'package:pluto/data/datasources/cloud_sync_service.dart';
 import 'package:pluto/presentation/screens/settings/widgets/account_sheet.dart';
 import 'package:pluto/presentation/screens/settings/widgets/backup_dialogs.dart';
@@ -85,6 +86,7 @@ class _WebLoginScreenState extends State<WebLoginScreen> {
   @override
   Widget build(BuildContext context) {
     return AppSkinBackground(
+      skin: AppSkin.classic,
       liftForNav: false,
       child: SafeArea(
         child: _WebLoginIntro(
@@ -267,14 +269,16 @@ class _WebLoginIntro extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(24, 20, 24, 56),
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final height = constraints.maxHeight;
+          const designHeight = 900.0;
           const logoSize = 208.0;
           const brandSize = 46.0;
           const taglineSize = 22.0;
           const buttonSize = 64.0;
           const buttonGap = 44.0;
-          final logoTop = !height.isFinite ? 80.0 : height * 0.20;
-          final tooShort = !height.isFinite || height < 640;
+          final height = constraints.maxHeight;
+          final width = constraints.maxWidth;
+          final canvasHeight =
+              !height.isFinite || height >= designHeight ? height : designHeight;
 
           Widget fade(int ms, Widget child) {
             return FadeIn(
@@ -285,110 +289,121 @@ class _WebLoginIntro extends StatelessWidget {
             );
           }
 
-          final column = Column(
-            children: [
-              SizedBox(height: tooShort ? 48 : logoTop),
-              fade(
-                40,
-                Center(
-                  child: SvgPicture.asset(
-                    AppIcons.plutoLogo,
-                    width: logoSize,
-                    height: logoSize,
+          final login = SizedBox(
+            width: width.isFinite ? width : 720,
+            height: canvasHeight.isFinite ? canvasHeight : designHeight,
+            child: Column(
+              children: [
+                SizedBox(
+                  height: (canvasHeight.isFinite ? canvasHeight : designHeight) *
+                      0.20,
+                ),
+                fade(
+                  40,
+                  Center(
+                    child: SvgPicture.asset(
+                      AppIcons.plutoLogo,
+                      width: logoSize,
+                      height: logoSize,
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 56),
-              fade(
-                110,
-                Text(
-                  AppStrings.webLoginBrand,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontFamily: AppFonts.jalnan,
-                    fontSize: brandSize,
-                    height: 1.1,
-                    letterSpacing: 1.4,
-                    color: colors.text,
-                    decoration: TextDecoration.none,
+                const SizedBox(height: 56),
+                fade(
+                  110,
+                  Text(
+                    AppStrings.webLoginBrand,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontFamily: AppFonts.jalnan,
+                      fontSize: brandSize,
+                      height: 1.1,
+                      letterSpacing: 1.4,
+                      color: colors.text,
+                      decoration: TextDecoration.none,
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 28),
-              fade(
-                180,
-                Text(
-                  AppStrings.webLoginTagline,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontFamily: font,
-                    fontSize: taglineSize,
-                    fontWeight: FontWeight.w500,
-                    height: 1.45,
-                    color: colors.text,
-                    decoration: TextDecoration.none,
+                const SizedBox(height: 28),
+                fade(
+                  180,
+                  Text(
+                    AppStrings.webLoginTagline,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontFamily: font,
+                      fontSize: taglineSize,
+                      fontWeight: FontWeight.w500,
+                      height: 1.45,
+                      color: colors.text,
+                      decoration: TextDecoration.none,
+                    ),
                   ),
                 ),
-              ),
-              if (tooShort) const SizedBox(height: 64) else const Spacer(),
-              IgnorePointer(
-                ignoring: busy,
-                child: fade(
-                  320,
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      if (showKakao) ...[
+                const Spacer(),
+                IgnorePointer(
+                  ignoring: busy,
+                  child: fade(
+                    320,
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        if (showKakao) ...[
+                          _ProviderButton(
+                            asset: AppIcons.kakaoLogo,
+                            background: const Color(0xFFFEE500),
+                            size: buttonSize,
+                            onPressed: onKakao,
+                          ),
+                          const SizedBox(width: buttonGap),
+                        ],
                         _ProviderButton(
-                          asset: AppIcons.kakaoLogo,
-                          background: const Color(0xFFFEE500),
+                          asset: AppIcons.googleLogo,
+                          background: Colors.white,
+                          border: colors.border,
                           size: buttonSize,
-                          onPressed: onKakao,
+                          onPressed: onGoogle,
                         ),
                         const SizedBox(width: buttonGap),
+                        _ProviderButton(
+                          asset: AppIcons.appleLogo,
+                          background: const Color(0xFF111111),
+                          tint: Colors.white,
+                          size: buttonSize,
+                          onPressed: onApple,
+                        ),
                       ],
-                      _ProviderButton(
-                        asset: AppIcons.googleLogo,
-                        background: Colors.white,
-                        border: colors.border,
-                        size: buttonSize,
-                        onPressed: onGoogle,
-                      ),
-                      const SizedBox(width: buttonGap),
-                      _ProviderButton(
-                        asset: AppIcons.appleLogo,
-                        background: const Color(0xFF111111),
-                        tint: Colors.white,
-                        size: buttonSize,
-                        onPressed: onApple,
-                      ),
-                    ],
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 50),
-              fade(
-                380,
-                Text(
-                  AppStrings.webLoginPcLabel,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontFamily: font,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w400,
-                    color: colors.muted,
-                    decoration: TextDecoration.none,
+                const SizedBox(height: 50),
+                fade(
+                  380,
+                  Text(
+                    AppStrings.webLoginPcLabel,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontFamily: font,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w400,
+                      color: colors.muted,
+                      decoration: TextDecoration.none,
+                    ),
                   ),
                 ),
-              ),
-              if (!tooShort) const SizedBox(height: 172),
-            ],
+                const SizedBox(height: 172),
+              ],
+            ),
           );
 
-          if (tooShort) {
-            return SingleChildScrollView(child: column);
+          if (!height.isFinite || height >= designHeight) {
+            return login;
           }
-          return column;
+          return FittedBox(
+            fit: BoxFit.contain,
+            alignment: Alignment.center,
+            child: login,
+          );
         },
       ),
     );

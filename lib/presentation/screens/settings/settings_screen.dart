@@ -989,7 +989,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const SizedBox(height: 24),
-                  _SectionLabel(AppStrings.settingsCategorySection),
+                  _SectionLabel(
+                    AppStrings.settingsCategorySection,
+                    onHelp: () => showSettingsSectionHelp(
+                      context,
+                      SettingsHelpSection.category,
+                    ),
+                  ),
                   _SettingsCard(
                     children: [
                       _SettingsSwitchTile(

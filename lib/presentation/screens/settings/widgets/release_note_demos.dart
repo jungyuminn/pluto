@@ -154,7 +154,11 @@ ReleaseDemo releaseDemoFor(String text, {required bool isFix}) {
       return ReleaseDemo.searchOpenList;
     }
     if (text.contains('기능 안내')) return ReleaseDemo.featureIntroStay;
+    if (text.contains('스티커 팩')) return ReleaseDemo.stickers;
     return ReleaseDemo.fix;
+  }
+  if (text.contains('AI가 카테고리') || text.contains('카테고리를 미리')) {
+    return ReleaseDemo.categoryAi;
   }
   if (text.contains('더 많은 기능')) return ReleaseDemo.featureIntro;
   if (text.contains('계정을 따라')) return ReleaseDemo.settingsFollow;

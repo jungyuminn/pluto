@@ -302,6 +302,8 @@ class AppStrings {
   static const homeShowWeeklyStats = '지난주 요약';
   static const settingsTodoSection = '할 일 설정';
   static const settingsCategorySection = '카테고리 설정';
+  static const settingsCategoryHelp =
+      '제목을 입력하면 AI가 알맞는 카테고리를 선택해요';
   static const settingsAppearanceSection = '화면 모드';
   static const settingsNavSection = '하단 메뉴 설정';
   static const jobMode = '취준 모드';

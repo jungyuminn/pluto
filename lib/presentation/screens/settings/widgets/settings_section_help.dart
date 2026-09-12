@@ -7,6 +7,7 @@ import 'package:pluto/core/constants/app_fonts.dart';
 import 'package:pluto/core/constants/app_icons.dart';
 import 'package:pluto/core/constants/app_strings.dart';
 import 'package:pluto/core/constants/release_notes.dart';
+import 'package:pluto/presentation/screens/settings/widgets/release_note_demos.dart';
 import 'package:pluto/core/theme/app_colors.dart';
 import 'package:pluto/core/theme/app_skin_background.dart';
 import 'package:pluto/core/theme/app_theme.dart';
@@ -31,6 +32,7 @@ enum SettingsHelpSection {
   backup,
   calendarSync,
   app,
+  category,
 }
 
 Future<void> showSettingsSectionHelp(
@@ -93,17 +95,6 @@ class SettingsSectionHelpSheet extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  Text(
-                    AppStrings.settingsHelpPreview,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontFamily: AppFonts.of(context),
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: colors.muted,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
                   Text(
                     section.title,
                     textAlign: TextAlign.center,
@@ -176,6 +167,8 @@ extension on SettingsHelpSection {
         return AppStrings.settingsCalendarSyncSection;
       case SettingsHelpSection.app:
         return AppStrings.settingsAppSection;
+      case SettingsHelpSection.category:
+        return AppStrings.settingsCategorySection;
     }
   }
 
@@ -209,6 +202,8 @@ extension on SettingsHelpSection {
         return AppStrings.settingsCalendarSyncHelp;
       case SettingsHelpSection.app:
         return AppStrings.settingsAppHelp;
+      case SettingsHelpSection.category:
+        return AppStrings.settingsCategoryHelp;
     }
   }
 
@@ -240,6 +235,8 @@ extension on SettingsHelpSection {
         return const _CalendarSyncPreview();
       case SettingsHelpSection.app:
         return const _AppPreview();
+      case SettingsHelpSection.category:
+        return const _CategoryPreview();
     }
   }
 }
@@ -604,6 +601,15 @@ class _FakeBackupScene extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+class _CategoryPreview extends StatelessWidget {
+  const _CategoryPreview();
+
+  @override
+  Widget build(BuildContext context) {
+    return const ReleaseDemoView(demo: ReleaseDemo.categoryAi);
   }
 }
 

@@ -4,6 +4,7 @@ import 'package:pluto/app_scope.dart';
 import 'package:pluto/core/constants/app_strings.dart';
 import 'package:pluto/core/theme/app_colors.dart';
 import 'package:pluto/core/utils/fade_in.dart';
+import 'package:pluto/core/utils/mouse_drag_scroll.dart';
 import 'package:pluto/core/utils/press_bounce.dart';
 
 Future<String?> showDayEmojiSheet(
@@ -128,6 +129,7 @@ class _DayEmojiSheetState extends State<DayEmojiSheet> {
   var _packs = <StickerPack>[];
   var _packIndex = 0;
   var _loading = true;
+  final _packScroll = ScrollController();
 
   static const _columns = 5;
   static const _tabSize = 56.0;
@@ -136,6 +138,12 @@ class _DayEmojiSheetState extends State<DayEmojiSheet> {
   void initState() {
     super.initState();
     _load();
+  }
+
+  @override
+  void dispose() {
+    _packScroll.dispose();
+    super.dispose();
   }
 
   Future<void> _load() async {
@@ -229,8 +237,16 @@ class _DayEmojiSheetState extends State<DayEmojiSheet> {
                             .clamp(0.0, double.infinity);
                         return SizedBox(
                           width: constraints.maxWidth,
-                          child: ReorderableListView.builder(
+                          child: ScrollConfiguration(
+                            behavior: const MouseDragScrollBehavior(),
+                            child: HorizontalWheelScroll(
+                              controller: _packScroll,
+                              child: MouseListDragScroll(
+                                controller: _packScroll,
+                                enabled: pad <= 0.5,
+                                child: ReorderableListView.builder(
                           scrollDirection: Axis.horizontal,
+                          scrollController: _packScroll,
                           primary: false,
                           buildDefaultDragHandles: false,
                           clipBehavior: Clip.hardEdge,
@@ -309,6 +325,9 @@ class _DayEmojiSheetState extends State<DayEmojiSheet> {
                             );
                           },
                         ),
+                              ),
+                            ),
+                          ),
                         );
                       },
                     ),

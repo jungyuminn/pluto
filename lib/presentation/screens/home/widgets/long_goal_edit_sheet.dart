@@ -8,6 +8,7 @@ import 'package:pluto/core/constants/app_icons.dart';
 import 'package:pluto/core/constants/app_strings.dart';
 import 'package:pluto/core/theme/app_colors.dart';
 import 'package:pluto/core/theme/app_theme.dart';
+import 'package:pluto/core/utils/category_history.dart';
 import 'package:pluto/core/utils/plain_text_editing_controller.dart';
 import 'package:pluto/core/utils/press_bounce.dart';
 import 'package:pluto/domain/entities/event_category.dart';
@@ -17,8 +18,9 @@ import 'package:pluto/presentation/screens/add_company/widgets/save_company_butt
 import 'package:pluto/presentation/screens/calendar/widgets/category_picker_sheet.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/delete_event_dialog.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/event_action_icon.dart';
-import 'package:pluto/presentation/screens/calendar/widgets/event_category_chip.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/event_memo_field.dart';
+import 'package:pluto/presentation/widgets/ai_category_chip.dart';
+import 'package:pluto/presentation/widgets/category_suggest_session.dart';
 import 'package:pluto/presentation/widgets/themed_asset.dart';
 import 'package:pluto/presentation/widgets/sliding_kind_bar.dart';
 
@@ -75,6 +77,9 @@ class _LongGoalEditSheetState extends State<LongGoalEditSheet>
   var _kindToggling = false;
   var _hintVisible = false;
   Timer? _hintTimer;
+  CategorySuggestSession? _suggest;
+  var _suggestOn = false;
+  var _suggesting = false;
 
   @override
   void initState() {
@@ -112,6 +117,7 @@ class _LongGoalEditSheetState extends State<LongGoalEditSheet>
       curve: Curves.easeOutCubic,
       reverseCurve: Curves.easeInCubic,
     );
+    _title.addListener(_onTitleChanged);
   }
 
   @override
@@ -125,6 +131,8 @@ class _LongGoalEditSheetState extends State<LongGoalEditSheet>
   @override
   void dispose() {
     _hintTimer?.cancel();
+    _suggest?.dispose();
+    _title.removeListener(_onTitleChanged);
     _kindFade.dispose();
     _kindAnimation.dispose();
     _memoFade.dispose();
@@ -188,14 +196,61 @@ class _LongGoalEditSheetState extends State<LongGoalEditSheet>
         break;
       }
     }
-    selected ??= categories.isNotEmpty
-        ? categories.first
-        : EventCategory.presets[1];
+    final picked = selected ??
+        (categories.isNotEmpty
+            ? categories.first
+            : EventCategory.presets[1]);
 
+    final suggestOn = CategorySuggestSession.isOn(
+      context,
+      editing: widget.initial != null,
+    );
+    final events = await scope.getCalendarEvents();
+    if (!mounted) return;
+    _suggest?.dispose();
+    _suggest = suggestOn
+        ? CategorySuggestSession(
+            categories: categories,
+            records: [
+              for (final goal in scope.longGoalStore.goals)
+                if ((goal.categoryId ?? '').isNotEmpty)
+                  CategoryHistoryRecord(goal.title, goal.categoryId!),
+              for (final event in events)
+                if ((event.categoryId ?? '').isNotEmpty)
+                  CategoryHistoryRecord(event.title, event.categoryId!),
+            ],
+            fallback: picked,
+            onUpdate: _applySuggest,
+          )
+        : null;
+    if (_categoryId == picked.id &&
+        _categoryName == picked.name &&
+        _color == picked.color &&
+        _suggestOn == suggestOn) {
+      if (suggestOn) _suggest?.onTitle(_title.text);
+      return;
+    }
     setState(() {
-      _categoryId = selected!.id;
-      _categoryName = selected.name;
-      _color = selected.color;
+      _suggestOn = suggestOn;
+      _categoryId = picked.id;
+      _categoryName = picked.name;
+      _color = picked.color;
+    });
+    if (suggestOn) _suggest?.onTitle(_title.text);
+  }
+
+  void _onTitleChanged() {
+    _suggest?.onTitle(_title.text);
+  }
+
+  void _applySuggest(EventCategory? category, {required bool loading}) {
+    if (!mounted) return;
+    setState(() {
+      _suggesting = loading;
+      if (category == null) return;
+      _categoryId = category.id;
+      _categoryName = category.name;
+      _color = category.color;
     });
   }
 
@@ -207,7 +262,9 @@ class _LongGoalEditSheetState extends State<LongGoalEditSheet>
       selectedId: _categoryId,
     );
     if (picked == null || !mounted) return;
+    _suggest?.userPicked();
     setState(() {
+      _suggesting = false;
       _categoryId = picked.id;
       _categoryName = picked.name;
       _color = picked.color;
@@ -439,10 +496,12 @@ class _LongGoalEditSheetState extends State<LongGoalEditSheet>
               const SizedBox(height: 8),
               Row(
                 children: [
-                  EventCategoryChip(
+                  AiCategoryChip(
                     name: _categoryName ?? AppStrings.categoryAction,
                     color: _hasCategory ? accent : colors.muted,
                     selected: _hasCategory,
+                    active: _suggestOn,
+                    loading: _suggesting,
                     onPressed: _pickCategory,
                   ),
                   const SizedBox(width: 4),

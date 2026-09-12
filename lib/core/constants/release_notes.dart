@@ -17,6 +17,16 @@ class ReleaseNote {
 abstract final class ReleaseNotes {
   static const all = [
     ReleaseNote(
+      version: '1.3.6',
+      items: [
+        '제목을 치면 AI가 카테고리를 미리 집어 둬요',
+        '카테고리 설정에도 도움말이 생겼어요',
+      ],
+      fixes: [
+        '웹에서 스티커 팩을 좌우로 넘길 수 있어요',
+      ],
+    ),
+    ReleaseNote(
       version: '1.3.5',
       items: [
         '처음 쓰면 로그인하면 더 많은 기능을 알려줘요',

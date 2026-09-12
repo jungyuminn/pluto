@@ -13,10 +13,6 @@ import 'package:pluto/data/datasources/cloud_sync_files.dart';
 import 'package:pluto/data/datasources/cloud_sync_snapshot.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-enum CloudOverlapChoice { merge, accountOnly }
-
-enum CloudSwitchChoice { fresh, copy }
-
 class CloudSyncService {
   CloudSyncService._();
 

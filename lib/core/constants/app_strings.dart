@@ -203,15 +203,6 @@ class AppStrings {
   static const accountLogoutDoneTitle = '로그아웃했어요';
   static String accountLogoutDoneBody(String provider) =>
       '$provider 계정에서 로그아웃했어요';
-  static const cloudOverlapTitle = '해당 계정에 데이터가 있어요';
-  static const cloudOverlapBody = '이 기기와 해당 계정에 서로 다른 데이터가 있어요';
-  static const cloudOverlapMerge = '기기와 계정 데이터를 합칠게요';
-  static const cloudOverlapAccount = '계정 데이터를 쓸게요';
-  static const cloudSwitchTitle = '해당 계정에 데이터가 없어요';
-  static const cloudSwitchBody =
-      '새로 시작할지, 기기 데이터를 이어서 사용할 지 고를 수 있어요';
-  static const cloudSwitchFresh = '새로 시작할게요';
-  static const cloudSwitchCopy = '이어서 사용할게요';
   static const restoreConfirmCloudBody =
       '계정에 연결된 다른 기기 내용도 이 백업 시점으로 바뀌어요';
   static const accountDeleteFailedTitle = '탈퇴하지 못했어요';

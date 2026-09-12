@@ -39,6 +39,16 @@ class _ShellScreenState extends State<ShellScreen>
     }
   }
 
+  static int _visualOrder(int index) {
+    return switch (index) {
+      0 => 0,
+      1 => 1,
+      _jobTab => 2,
+      _statsTab => 3,
+      _ => index,
+    };
+  }
+
   int _index = 1;
   int _previousIndex = 1;
   late final AnimationController _controller;
@@ -147,7 +157,7 @@ class _ShellScreenState extends State<ShellScreen>
       index = _calendarTab;
     }
     if (index == _index) return;
-    final fromLeft = index < _index;
+    final fromLeft = _visualOrder(index) < _visualOrder(_index);
     final dx = fromLeft ? -0.18 : 0.18;
     final curve = CurvedAnimation(
       parent: _controller,

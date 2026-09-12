@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:pluto/app_scope.dart';
 import 'package:pluto/core/constants/app_fonts.dart';
+import 'package:pluto/core/constants/app_icons.dart';
 import 'package:pluto/core/constants/app_strings.dart';
 import 'package:pluto/core/layout/pc_layout.dart';
 import 'package:pluto/core/theme/app_colors.dart';
 import 'package:pluto/core/utils/plain_text_editing_controller.dart';
 import 'package:pluto/core/utils/press_bounce.dart';
 import 'package:pluto/data/datasources/wordmark_preference.dart';
+import 'package:pluto/presentation/widgets/themed_asset.dart';
 
 export 'package:pluto/data/datasources/wordmark_preference.dart'
     show WordmarkSlot;
@@ -48,6 +50,8 @@ class AppBarWordmark extends StatelessWidget {
       listenable: preference,
       builder: (context, _) {
         final label = preference.customOf(slot) ?? _fallback();
+        final showLogo =
+            slot == WordmarkSlot.home && label == AppStrings.appName;
         return PressBounce(
           onPressed: () => _edit(context),
           pressedScale: 0.96,
@@ -83,23 +87,73 @@ class AppBarWordmark extends StatelessWidget {
                   child: SlideTransition(position: offset, child: child),
                 );
               },
-              child: Text(
-                label,
-                key: ValueKey(label),
-                maxLines: 1,
-                softWrap: false,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  fontFamily: AppFonts.jalnan,
-                  fontSize: AppFonts.wordmarkSize,
-                  height: 1.1,
-                  color: AppFonts.wordmarkColor,
-                ),
+              child: Row(
+                key: ValueKey('$showLogo-$label'),
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (showLogo)
+                    const Padding(
+                      padding: EdgeInsets.only(right: 2),
+                      child: _PopLogo(
+                        child: AppAssetImage(
+                          asset: AppIcons.plutoLogoWordmark,
+                          width: 34,
+                          height: 34,
+                        ),
+                      ),
+                    ),
+                  Flexible(
+                    child: Text(
+                      label,
+                      maxLines: 1,
+                      softWrap: false,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontFamily: AppFonts.jalnan,
+                        fontSize: AppFonts.wordmarkSize,
+                        height: 1.1,
+                        color: AppFonts.wordmarkColor,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
         );
       },
+    );
+  }
+}
+
+class _PopLogo extends StatefulWidget {
+  const _PopLogo({required this.child});
+
+  final Widget child;
+
+  @override
+  State<_PopLogo> createState() => _PopLogoState();
+}
+
+class _PopLogoState extends State<_PopLogo> {
+  var _ready = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      setState(() => _ready = true);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedScale(
+      duration: const Duration(milliseconds: 420),
+      curve: Curves.easeOutBack,
+      scale: _ready ? 1 : 0.55,
+      child: widget.child,
     );
   }
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/physics.dart';
 import 'package:pluto/core/theme/app_colors.dart';
 
 /// 누를 때 살짝 들어갔다가, 손을 떼면 바운스되며 돌아오는 효과.
@@ -51,6 +52,12 @@ class _PressBounceState extends State<PressBounce>
   static final _hoverActive = <_PressBounceState>{};
   static var _hoverResolveScheduled = false;
 
+  static const _releaseSpring = SpringDescription(
+    mass: 0.7,
+    stiffness: 420,
+    damping: 28,
+  );
+
   late final AnimationController _controller;
   late final Animation<double> _scale;
   var _pressed = false;
@@ -63,15 +70,13 @@ class _PressBounceState extends State<PressBounce>
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 30),
-      reverseDuration: const Duration(milliseconds: 50),
+      duration: const Duration(milliseconds: 40),
+      lowerBound: -0.4,
+      upperBound: 1,
+      value: 0,
     );
     _scale = Tween<double>(begin: 1, end: widget.pressedScale).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: Curves.easeOut,
-        reverseCurve: Curves.easeOutBack,
-      ),
+      _controller,
     );
   }
 
@@ -103,20 +108,45 @@ class _PressBounceState extends State<PressBounce>
       if (_pressed) return;
       _pressed = true;
       if (mounted) setState(() {});
-      await _controller.forward();
+      await _controller.animateTo(
+        1,
+        duration: const Duration(milliseconds: 40),
+        curve: Curves.easeOutCubic,
+      );
       return;
     }
 
     if (!immediate && _controller.status == AnimationStatus.forward) {
       final seq = _pressSeq;
-      await _controller.forward();
+      await _controller.animateTo(
+        1,
+        duration: const Duration(milliseconds: 40),
+        curve: Curves.easeOutCubic,
+      );
       if (!mounted || seq != _pressSeq) return;
     }
 
-    if (!_pressed && _controller.isDismissed) return;
+    if (!_pressed && !_controller.isAnimating && _controller.value <= 0) {
+      return;
+    }
     _pressed = false;
     if (mounted) setState(() {});
-    _controller.reverse();
+    if (immediate) {
+      await _controller.animateTo(
+        0,
+        duration: const Duration(milliseconds: 70),
+        curve: Curves.easeOutCubic,
+      );
+      return;
+    }
+    _controller.animateWith(
+      SpringSimulation(
+        _releaseSpring,
+        _controller.value,
+        0,
+        _controller.velocity,
+      ),
+    );
   }
 
   void _onPointerDown(PointerDownEvent event) {
@@ -272,7 +302,7 @@ class _PressBounceState extends State<PressBounce>
         );
       },
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 50),
+        duration: const Duration(milliseconds: 80),
         width: widget.expand ? double.infinity : null,
         height: widget.expand ? double.infinity : null,
         alignment: widget.expand

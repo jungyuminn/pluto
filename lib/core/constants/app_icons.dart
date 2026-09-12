@@ -39,6 +39,7 @@ class AppIcons {
   static const maximizeOutlined = 'assets/icons/maximize_outlined.svg';
   static const logo = 'assets/images/logo.png';
   static const plutoLogo = 'assets/images/pluto_logo_1024.svg';
+  static const plutoLogoWordmark = 'assets/images/pluto_logo_wordmark.svg';
   static const notebook = 'assets/images/notebook.png';
   static const tablet = 'assets/images/tablet.png';
   static const planet = 'assets/icons/planet.svg';

@@ -1,7 +1,6 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:pluto/core/utils/press_bounce.dart';
 
 class EventCompleteButton extends StatefulWidget {
   const EventCompleteButton({
@@ -51,8 +50,9 @@ class _EventCompleteButtonState extends State<EventCompleteButton>
 
   @override
   Widget build(BuildContext context) {
-    return PressBounce(
-      onPressed: () {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () {
         if (widget.completed) {
           _burst.value = 0;
         } else {
@@ -60,9 +60,6 @@ class _EventCompleteButtonState extends State<EventCompleteButton>
         }
         widget.onPressed();
       },
-      pressedScale: 0.9,
-      pressedColor: Colors.transparent,
-      borderRadius: BorderRadius.circular(999),
       child: SizedBox(
         width: 28,
         height: 28,
@@ -103,7 +100,7 @@ class _CompletePainter extends CustomPainter {
     final paint = Paint()
       ..color = color
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.0
+      ..strokeWidth = 1.35
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round;
     final checkProgress = progress;
@@ -112,7 +109,7 @@ class _CompletePainter extends CustomPainter {
     if (circleProgress > 0) {
       final rect = Rect.fromCircle(
         center: Offset(size.width / 2, size.height / 2),
-        radius: size.width * 0.36,
+        radius: size.width * 0.30,
       );
       final circle = Path()..addArc(rect, -math.pi / 2, 2 * math.pi);
       final metric = circle.computeMetrics().first;

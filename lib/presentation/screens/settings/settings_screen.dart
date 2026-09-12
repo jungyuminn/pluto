@@ -5052,8 +5052,8 @@ class _SettingsTile extends StatelessWidget {
                   duration: const Duration(milliseconds: 280),
                   curve: Curves.easeOutCubic,
                   child: Icon(
-                    Icons.chevron_right_rounded,
-                    size: 22,
+                    CupertinoIcons.chevron_forward,
+                    size: 16,
                     color: colors.muted,
                   ),
                 ),

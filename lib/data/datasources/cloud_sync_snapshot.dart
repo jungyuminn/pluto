@@ -9,6 +9,7 @@ import 'package:pluto/data/datasources/ledger_local_datasource.dart';
 import 'package:pluto/data/datasources/license_local_datasource.dart';
 import 'package:pluto/data/datasources/long_goal_local_datasource.dart';
 import 'package:pluto/data/datasources/calendar_preference.dart';
+import 'package:pluto/data/datasources/category_suggest_preference.dart';
 import 'package:pluto/data/datasources/day_events_view_preference.dart';
 import 'package:pluto/data/datasources/font_preference.dart';
 import 'package:pluto/data/datasources/home_view_preference.dart';
@@ -86,6 +87,7 @@ class CloudSyncSnapshot {
     ...JobViewPreference.syncedKeys,
     ...LicenseViewPreference.syncedKeys,
     ...DayEventsViewPreference.syncedKeys,
+    ...CategorySuggestPreference.syncedKeys,
   ];
 
   static const syncedKeys = [
@@ -102,6 +104,7 @@ class CloudSyncSnapshot {
     JobViewPreference.defaultBools,
     LicenseViewPreference.defaultBools,
     DayEventsViewPreference.defaultBools,
+    CategorySuggestPreference.defaultBools,
   ];
 
   static const _listMergeKeys = {
@@ -186,7 +189,11 @@ class CloudSyncSnapshot {
     for (final key in keys ?? syncedKeys) {
       final payload = dump[key];
       if (payload is! Map) {
-        if (contentKeys.contains(key)) await prefs.remove(key);
+        if (contentKeys.contains(key)) {
+          await prefs.remove(key);
+        } else if (CategorySuggestPreference.syncedKeys.contains(key)) {
+          await prefs.setBool(key, false);
+        }
         continue;
       }
       final type = payload['t'] as String?;

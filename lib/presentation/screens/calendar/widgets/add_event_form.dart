@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:pluto/app_scope.dart';
 import 'package:pluto/core/constants/app_icons.dart';
 import 'package:pluto/core/constants/app_strings.dart';
+import 'package:pluto/core/utils/category_history.dart';
 import 'package:pluto/core/theme/app_colors.dart';
 import 'package:pluto/core/theme/app_theme.dart';
 import 'package:pluto/core/utils/plain_text_editing_controller.dart';
@@ -14,10 +15,11 @@ import 'package:pluto/presentation/screens/calendar/widgets/event_date_chip.dart
 import 'package:pluto/presentation/screens/calendar/widgets/event_time_chip.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/event_time_sheet.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/event_action_icon.dart';
-import 'package:pluto/presentation/screens/calendar/widgets/event_category_chip.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/event_memo_field.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/event_title_field.dart';
+import 'package:pluto/presentation/widgets/ai_category_chip.dart';
 import 'package:pluto/presentation/widgets/app_calendar/app_calendar.dart';
+import 'package:pluto/presentation/widgets/category_suggest_session.dart';
 import 'package:pluto/presentation/widgets/themed_asset.dart';
 
 class AddEventForm extends StatefulWidget {
@@ -58,6 +60,9 @@ class _AddEventFormState extends State<AddEventForm>
   int? _startMinutes;
   int? _endMinutes;
   Animation<double>? _sheetAnimation;
+  CategorySuggestSession? _suggest;
+  var _suggestOn = false;
+  var _suggesting = false;
 
   bool get _isSomeday =>
       widget.someday || (widget.initial?.someday ?? false);
@@ -96,6 +101,7 @@ class _AddEventFormState extends State<AddEventForm>
     } else {
       _dates = [_date];
     }
+    _title.addListener(_onTitleChanged);
     _memoOpen = initial?.memo.trim().isNotEmpty ?? false;
     _memoAnimation = AnimationController(
       vsync: this,
@@ -135,6 +141,8 @@ class _AddEventFormState extends State<AddEventForm>
     _sheetAnimation?.removeStatusListener(_onSheetOpened);
     _memoFade.dispose();
     _memoAnimation.dispose();
+    _suggest?.dispose();
+    _title.removeListener(_onTitleChanged);
     _titleFocus.dispose();
     _memoFocus.dispose();
     _title.dispose();
@@ -175,15 +183,51 @@ class _AddEventFormState extends State<AddEventForm>
     }
 
     final selected = last!;
+    final suggestOn = CategorySuggestSession.isOn(
+      context,
+      editing: widget.initial != null,
+    );
+    _suggest?.dispose();
+    _suggest = suggestOn
+        ? CategorySuggestSession(
+            categories: categories,
+            records: [
+              for (final event in events)
+                if ((event.categoryId ?? '').isNotEmpty)
+                  CategoryHistoryRecord(event.title, event.categoryId!),
+            ],
+            fallback: selected,
+            onUpdate: _applySuggest,
+          )
+        : null;
     if (_categoryId == selected.id &&
         _categoryName == selected.name &&
-        _categoryColor == selected.color) {
+        _categoryColor == selected.color &&
+        _suggestOn == suggestOn) {
+      if (suggestOn) _suggest?.onTitle(_title.text);
       return;
     }
     setState(() {
+      _suggestOn = suggestOn;
       _categoryId = selected.id;
       _categoryName = selected.name;
       _categoryColor = selected.color;
+    });
+    if (suggestOn) _suggest?.onTitle(_title.text);
+  }
+
+  void _onTitleChanged() {
+    _suggest?.onTitle(_title.text);
+  }
+
+  void _applySuggest(EventCategory? category, {required bool loading}) {
+    if (!mounted) return;
+    setState(() {
+      _suggesting = loading;
+      if (category == null) return;
+      _categoryId = category.id;
+      _categoryName = category.name;
+      _categoryColor = category.color;
     });
   }
 
@@ -247,7 +291,9 @@ class _AddEventFormState extends State<AddEventForm>
       selectedId: _categoryId,
     );
     if (picked == null || !mounted) return;
+    _suggest?.userPicked();
     setState(() {
+      _suggesting = false;
       _categoryId = picked.id;
       _categoryName = picked.name;
       _categoryColor = picked.color;
@@ -457,12 +503,14 @@ class _AddEventFormState extends State<AddEventForm>
                     scrollDirection: Axis.horizontal,
                     child: Row(
                       children: [
-                        EventCategoryChip(
+                        AiCategoryChip(
                           name: _categoryName ?? AppStrings.categoryAction,
                           color: _hasCategory
                               ? _accent
                               : AppColors.of(context).muted,
                           selected: _hasCategory,
+                          active: _suggestOn,
+                          loading: _suggesting,
                           onPressed: _pickCategory,
                         ),
                         if (!_isSomeday) ...[

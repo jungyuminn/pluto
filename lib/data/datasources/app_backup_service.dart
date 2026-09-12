@@ -264,6 +264,7 @@ class AppBackupService {
     scope.jobViewPreference.hydrate();
     scope.licenseViewPreference.hydrate();
     scope.dayEventsViewPreference.hydrate();
+    scope.categorySuggestPreference.hydrate();
     revision.value++;
   }
 
@@ -279,6 +280,7 @@ class AppBackupService {
     scope.licenseViewPreference.hydrate();
     scope.wordmarkPreference.hydrate();
     scope.dayEventsViewPreference.hydrate();
+    scope.categorySuggestPreference.hydrate();
     scope.backupPreference.hydrate();
     scope.longGoalStore.reload();
     scope.dayEmojiStore.reload();

@@ -5,6 +5,7 @@ import 'package:pluto/core/constants/app_icons.dart';
 import 'package:pluto/core/constants/app_strings.dart';
 import 'package:pluto/core/theme/app_colors.dart';
 import 'package:pluto/core/theme/app_theme.dart';
+import 'package:pluto/core/utils/category_history.dart';
 import 'package:pluto/core/utils/plain_text_editing_controller.dart';
 import 'package:pluto/domain/entities/event_category.dart';
 import 'package:pluto/domain/entities/license.dart';
@@ -15,8 +16,9 @@ import 'package:pluto/presentation/screens/add_company/widgets/round_date_field.
 import 'package:pluto/presentation/screens/add_company/widgets/save_company_button.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/category_picker_sheet.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/event_action_icon.dart';
-import 'package:pluto/presentation/screens/calendar/widgets/event_category_chip.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/event_memo_field.dart';
+import 'package:pluto/presentation/widgets/ai_category_chip.dart';
+import 'package:pluto/presentation/widgets/category_suggest_session.dart';
 import 'package:pluto/presentation/widgets/themed_asset.dart';
 
 class AddLicenseForm extends StatefulWidget {
@@ -51,6 +53,9 @@ class _AddLicenseFormState extends State<AddLicenseForm>
   var _fileOpen = true;
   var _fileToggling = false;
   var _saving = false;
+  CategorySuggestSession? _suggest;
+  var _suggestOn = false;
+  var _suggesting = false;
 
   bool get _isEditing => widget.initial != null;
 
@@ -69,6 +74,7 @@ class _AddLicenseFormState extends State<AddLicenseForm>
     super.initState();
     final initial = widget.initial;
     _name = PlainTextEditingController(text: initial?.name ?? '');
+    _name.addListener(_onTitleChanged);
     _issuer = PlainTextEditingController(text: initial?.issuer ?? '');
     _grade = PlainTextEditingController(text: initial?.grade ?? '');
     _number = PlainTextEditingController(text: initial?.number ?? '');
@@ -134,10 +140,45 @@ class _AddLicenseFormState extends State<AddLicenseForm>
     last ??= categories.isNotEmpty
         ? categories.first
         : EventCategory.licensePresets.first;
+    final selected = last;
+    final suggestOn = CategorySuggestSession.isOn(
+      context,
+      editing: widget.initial != null,
+    );
+    _suggest?.dispose();
+    _suggest = suggestOn
+        ? CategorySuggestSession(
+            categories: categories,
+            records: [
+              for (final license in licenses)
+                if (license.hasCategory)
+                  CategoryHistoryRecord(license.name, license.categoryId!),
+            ],
+            fallback: selected,
+            onUpdate: _applySuggest,
+          )
+        : null;
     setState(() {
-      _categoryId = last!.id;
-      _categoryName = last.name;
-      _categoryColor = last.color;
+      _suggestOn = suggestOn;
+      _categoryId = selected.id;
+      _categoryName = selected.name;
+      _categoryColor = selected.color;
+    });
+    if (suggestOn) _suggest?.onTitle(_name.text);
+  }
+
+  void _onTitleChanged() {
+    _suggest?.onTitle(_name.text);
+  }
+
+  void _applySuggest(EventCategory? category, {required bool loading}) {
+    if (!mounted) return;
+    setState(() {
+      _suggesting = loading;
+      if (category == null) return;
+      _categoryId = category.id;
+      _categoryName = category.name;
+      _categoryColor = category.color;
     });
   }
 
@@ -147,6 +188,8 @@ class _AddLicenseFormState extends State<AddLicenseForm>
     _memoAnimation.dispose();
     _fileFade.dispose();
     _fileAnimation.dispose();
+    _suggest?.dispose();
+    _name.removeListener(_onTitleChanged);
     _nameFocus.dispose();
     _name.dispose();
     _issuer.dispose();
@@ -187,7 +230,9 @@ class _AddLicenseFormState extends State<AddLicenseForm>
       kind: CategoryKind.license,
     );
     if (picked == null || !mounted) return;
+    _suggest?.userPicked();
     setState(() {
+      _suggesting = false;
       _categoryId = picked.id;
       _categoryName = picked.name;
       _categoryColor = picked.color;
@@ -322,10 +367,12 @@ class _AddLicenseFormState extends State<AddLicenseForm>
                     scrollDirection: Axis.horizontal,
                     child: Row(
                       children: [
-                        EventCategoryChip(
+                        AiCategoryChip(
                           name: _categoryName ?? AppStrings.categoryAction,
                           color: _hasCategory ? accent : colors.muted,
                           selected: _hasCategory,
+                          active: _suggestOn,
+                          loading: _suggesting,
                           onPressed: _pickCategory,
                         ),
                         const SizedBox(width: 4),

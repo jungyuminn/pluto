@@ -5,6 +5,7 @@ import 'package:pluto/core/constants/app_icons.dart';
 import 'package:pluto/core/constants/app_strings.dart';
 import 'package:pluto/core/theme/app_colors.dart';
 import 'package:pluto/core/theme/app_theme.dart';
+import 'package:pluto/core/utils/category_history.dart';
 import 'package:pluto/core/utils/plain_text_editing_controller.dart';
 import 'package:pluto/core/utils/press_bounce.dart';
 import 'package:pluto/data/datasources/diary_photo_storage.dart';
@@ -18,9 +19,10 @@ import 'package:pluto/presentation/screens/calendar/widgets/delete_event_dialog.
 import 'package:pluto/presentation/screens/calendar/widgets/diary_cover_sheet.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/diary_cover_style.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/diary_photo_field.dart';
-import 'package:pluto/presentation/screens/calendar/widgets/event_category_chip.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/event_date_chip.dart';
+import 'package:pluto/presentation/widgets/ai_category_chip.dart';
 import 'package:pluto/presentation/widgets/app_calendar/app_calendar.dart';
+import 'package:pluto/presentation/widgets/category_suggest_session.dart';
 import 'package:pluto/presentation/widgets/themed_asset.dart';
 
 class DiaryForm extends StatefulWidget {
@@ -51,6 +53,9 @@ class _DiaryFormState extends State<DiaryForm> {
   late DiaryCover _cover;
   var _saving = false;
   Animation<double>? _sheetAnimation;
+  CategorySuggestSession? _suggest;
+  var _suggestOn = false;
+  var _suggesting = false;
 
   bool get _hasCategory =>
       _categoryId != null && (_categoryName?.trim().isNotEmpty ?? false);
@@ -64,6 +69,7 @@ class _DiaryFormState extends State<DiaryForm> {
     super.initState();
     final initial = widget.initial;
     _title = PlainTextEditingController(text: initial?.title ?? '');
+    _title.addListener(_onTitleChanged);
     _body = PlainTextEditingController(text: initial?.body ?? '');
     final date = initial?.date ?? widget.date;
     _date = DateTime(date.year, date.month, date.day);
@@ -114,6 +120,8 @@ class _DiaryFormState extends State<DiaryForm> {
   @override
   void dispose() {
     _sheetAnimation?.removeStatusListener(_onSheetOpened);
+    _suggest?.dispose();
+    _title.removeListener(_onTitleChanged);
     _titleFocus.dispose();
     _bodyFocus.dispose();
     _title.dispose();
@@ -206,17 +214,53 @@ class _DiaryFormState extends State<DiaryForm> {
               : EventCategory.presets.first);
     }
 
+    final suggestOn = CategorySuggestSession.isOn(
+      context,
+      editing: widget.initial != null,
+    );
+    _suggest?.dispose();
+    _suggest = suggestOn
+        ? CategorySuggestSession(
+            categories: categories,
+            records: [
+              for (final diary in diaries)
+                if ((diary.categoryId ?? '').isNotEmpty)
+                  CategoryHistoryRecord(diary.title, diary.categoryId!),
+            ],
+            fallback: selected,
+            onUpdate: _applySuggest,
+          )
+        : null;
     if (_categoryId == selected.id &&
         _categoryName == selected.name &&
         _categoryColor == selected.color &&
-        _cover == cover) {
+        _cover == cover &&
+        _suggestOn == suggestOn) {
+      if (suggestOn) _suggest?.onTitle(_title.text);
       return;
     }
     setState(() {
+      _suggestOn = suggestOn;
       _categoryId = selected.id;
       _categoryName = selected.name;
       _categoryColor = selected.color;
       _cover = cover;
+    });
+    if (suggestOn) _suggest?.onTitle(_title.text);
+  }
+
+  void _onTitleChanged() {
+    _suggest?.onTitle(_title.text);
+  }
+
+  void _applySuggest(EventCategory? category, {required bool loading}) {
+    if (!mounted) return;
+    setState(() {
+      _suggesting = loading;
+      if (category == null) return;
+      _categoryId = category.id;
+      _categoryName = category.name;
+      _categoryColor = category.color;
     });
   }
 
@@ -228,7 +272,9 @@ class _DiaryFormState extends State<DiaryForm> {
       selectedId: _categoryId,
     );
     if (picked == null || !mounted) return;
+    _suggest?.userPicked();
     setState(() {
+      _suggesting = false;
       _categoryId = picked.id;
       _categoryName = picked.name;
       _categoryColor = picked.color;
@@ -493,10 +539,12 @@ class _DiaryFormState extends State<DiaryForm> {
                       scrollDirection: Axis.horizontal,
                       child: Row(
                         children: [
-                          EventCategoryChip(
+                          AiCategoryChip(
                             name: _categoryName ?? AppStrings.categoryAction,
                             color: _hasCategory ? accent : colors.muted,
                             selected: _hasCategory,
+                            active: _suggestOn,
+                            loading: _suggesting,
                             onPressed: _pickCategory,
                           ),
                           const SizedBox(width: 4),

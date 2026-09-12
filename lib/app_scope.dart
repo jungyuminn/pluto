@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:pluto/data/datasources/backup_preference.dart';
 import 'package:pluto/data/datasources/calendar_preference.dart';
+import 'package:pluto/data/datasources/category_suggest_preference.dart';
 import 'package:pluto/data/datasources/day_events_view_preference.dart';
 import 'package:pluto/data/datasources/day_emoji_store.dart';
 import 'package:pluto/data/datasources/font_preference.dart';
@@ -92,6 +93,7 @@ class AppScope extends InheritedWidget {
     required this.dayEmojiStore,
     required this.dayEventsViewPreference,
     required this.calendarPreference,
+    required this.categorySuggestPreference,
     required this.fontPreference,
     required this.notificationPreference,
     required this.themePreference,
@@ -150,6 +152,7 @@ class AppScope extends InheritedWidget {
   final DayEmojiStore dayEmojiStore;
   final DayEventsViewPreference dayEventsViewPreference;
   final CalendarPreference calendarPreference;
+  final CategorySuggestPreference categorySuggestPreference;
   final FontPreference fontPreference;
   final NotificationPreference notificationPreference;
   final ThemePreference themePreference;
@@ -218,6 +221,7 @@ class AppScope extends InheritedWidget {
         dayEmojiStore != oldWidget.dayEmojiStore ||
         dayEventsViewPreference != oldWidget.dayEventsViewPreference ||
         calendarPreference != oldWidget.calendarPreference ||
+        categorySuggestPreference != oldWidget.categorySuggestPreference ||
         fontPreference != oldWidget.fontPreference ||
         notificationPreference != oldWidget.notificationPreference ||
         themePreference != oldWidget.themePreference ||

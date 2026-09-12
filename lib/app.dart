@@ -17,6 +17,7 @@ import 'package:pluto/data/datasources/app_backup_service.dart';
 import 'package:pluto/data/datasources/cloud_sync_service.dart';
 import 'package:pluto/data/datasources/backup_preference.dart';
 import 'package:pluto/data/datasources/calendar_preference.dart';
+import 'package:pluto/data/datasources/category_suggest_preference.dart';
 import 'package:pluto/data/datasources/calendar_event_local_datasource.dart';
 import 'package:pluto/data/datasources/diary_local_datasource.dart';
 import 'package:pluto/data/datasources/ledger_local_datasource.dart';
@@ -132,6 +133,7 @@ class JobPlannerApp extends StatelessWidget {
     this.dayEmojiStore,
     this.dayEventsViewPreference,
     this.calendarPreference,
+    this.categorySuggestPreference,
     this.fontPreference,
     this.notificationPreference,
     this.themePreference,
@@ -189,6 +191,7 @@ class JobPlannerApp extends StatelessWidget {
   final DayEmojiStore? dayEmojiStore;
   final DayEventsViewPreference? dayEventsViewPreference;
   final CalendarPreference? calendarPreference;
+  final CategorySuggestPreference? categorySuggestPreference;
   final FontPreference? fontPreference;
   final NotificationPreference? notificationPreference;
   final ThemePreference? themePreference;
@@ -298,6 +301,8 @@ class JobPlannerApp extends StatelessWidget {
       dayEventsViewPreference:
           dayEventsViewPreference ?? DayEventsViewPreference(),
       calendarPreference: calendarPreference ?? CalendarPreference(),
+      categorySuggestPreference:
+          categorySuggestPreference ?? CategorySuggestPreference(),
       fontPreference: fontPreference ?? FontPreference(),
       notificationPreference:
           notificationPreference ?? NotificationPreference(),
@@ -369,6 +374,7 @@ class _AppBootstrapState extends State<_AppBootstrap> {
   DayEmojiStore? _dayEmojiStore;
   DayEventsViewPreference? _dayEventsViewPreference;
   CalendarPreference? _calendarPreference;
+  CategorySuggestPreference? _categorySuggestPreference;
   FontPreference? _fontPreference;
   NotificationPreference? _notificationPreference;
   ThemePreference? _themePreference;
@@ -425,6 +431,7 @@ class _AppBootstrapState extends State<_AppBootstrap> {
     final dayEmojiStore = DayEmojiStore(prefs: prefs);
     final dayEventsViewPreference = DayEventsViewPreference(prefs: prefs);
     final calendarPreference = CalendarPreference(prefs: prefs);
+    final categorySuggestPreference = CategorySuggestPreference(prefs: prefs);
     final fontPreference = FontPreference(prefs: prefs);
     final widgetPreference = WidgetPreference(prefs: prefs);
     final navPreference = NavPreference(prefs: prefs);
@@ -507,6 +514,7 @@ class _AppBootstrapState extends State<_AppBootstrap> {
       _dayEmojiStore = dayEmojiStore;
       _dayEventsViewPreference = dayEventsViewPreference;
       _calendarPreference = calendarPreference;
+      _categorySuggestPreference = categorySuggestPreference;
       _fontPreference = fontPreference;
       _notificationPreference = notificationPreference;
       _themePreference = themePreference;
@@ -590,6 +598,7 @@ class _AppBootstrapState extends State<_AppBootstrap> {
     final dayEmojiStore = _dayEmojiStore;
     final dayEventsViewPreference = _dayEventsViewPreference;
     final calendarPreference = _calendarPreference;
+    final categorySuggestPreference = _categorySuggestPreference;
     final fontPreference = _fontPreference;
     final notificationPreference = _notificationPreference;
     final themePreference = _themePreference;
@@ -646,6 +655,7 @@ class _AppBootstrapState extends State<_AppBootstrap> {
         dayEmojiStore == null ||
         dayEventsViewPreference == null ||
         calendarPreference == null ||
+        categorySuggestPreference == null ||
         fontPreference == null ||
         notificationPreference == null ||
         themePreference == null ||
@@ -717,6 +727,7 @@ class _AppBootstrapState extends State<_AppBootstrap> {
       dayEmojiStore: dayEmojiStore,
       dayEventsViewPreference: dayEventsViewPreference,
       calendarPreference: calendarPreference,
+      categorySuggestPreference: categorySuggestPreference,
       fontPreference: fontPreference,
       notificationPreference: notificationPreference,
       themePreference: themePreference,

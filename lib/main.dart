@@ -7,6 +7,7 @@ import 'package:home_widget/home_widget.dart';
 import 'package:pluto/app.dart';
 import 'package:pluto/core/constants/oauth_config.dart';
 import 'package:pluto/core/home_widget/home_screen_widget_service.dart';
+import 'package:pluto/data/datasources/app_check_service.dart';
 import 'package:pluto/data/datasources/kakao_web_auth.dart';
 import 'package:pluto/firebase_options.dart';
 import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart';
@@ -18,6 +19,7 @@ Future<void> main() async {
       await Firebase.initializeApp(
         options: DefaultFirebaseOptions.currentPlatform,
       );
+      await AppCheckService.activate();
     }
   } catch (error) {
     debugPrint('Firebase init failed: $error');

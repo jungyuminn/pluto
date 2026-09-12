@@ -5,6 +5,7 @@ import 'package:pluto/core/constants/app_icons.dart';
 import 'package:pluto/core/constants/app_strings.dart';
 import 'package:pluto/core/theme/app_colors.dart';
 import 'package:pluto/core/theme/app_theme.dart';
+import 'package:pluto/core/utils/category_history.dart';
 import 'package:pluto/core/utils/plain_text_editing_controller.dart';
 import 'package:pluto/domain/entities/event_category.dart';
 import 'package:pluto/domain/entities/ledger_entry.dart';
@@ -14,10 +15,11 @@ import 'package:pluto/presentation/screens/add_company/widgets/missing_fields_di
 import 'package:pluto/presentation/screens/add_company/widgets/save_company_button.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/category_picker_sheet.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/event_action_icon.dart';
-import 'package:pluto/presentation/screens/calendar/widgets/event_category_chip.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/event_date_chip.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/event_time_sheet.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/event_title_field.dart';
+import 'package:pluto/presentation/widgets/ai_category_chip.dart';
+import 'package:pluto/presentation/widgets/category_suggest_session.dart';
 import 'package:pluto/presentation/widgets/themed_asset.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/ledger_salary_fields.dart';
 import 'package:pluto/presentation/widgets/app_calendar/app_calendar.dart';
@@ -88,6 +90,9 @@ class _LedgerFormState extends State<LedgerForm> with TickerProviderStateMixin {
   String? _categoryName;
   int? _categoryColor;
   Animation<double>? _sheetAnimation;
+  CategorySuggestSession? _suggest;
+  var _suggestOn = false;
+  var _suggesting = false;
 
   bool get _isHourly => _kind == LedgerKind.hourly;
 
@@ -159,6 +164,7 @@ class _LedgerFormState extends State<LedgerForm> with TickerProviderStateMixin {
     _breakEdited = initial?.salary != null;
     final amountText = _isHourly ? _salary.hourlyWage : (initial?.amount ?? 0);
     _title = PlainTextEditingController(text: initial?.title ?? '');
+    _title.addListener(_onTitleChanged);
     _amount = PlainTextEditingController(
       text: amountText <= 0 ? '' : LedgerEntry.formatWon(amountText),
     );
@@ -216,6 +222,53 @@ class _LedgerFormState extends State<LedgerForm> with TickerProviderStateMixin {
       } else {
         animation.addStatusListener(_onSheetOpened);
       }
+      _prepareSuggest();
+    });
+  }
+
+  Future<void> _prepareSuggest() async {
+    if (!CategorySuggestSession.isOn(
+      context,
+      editing: widget.initial != null,
+    )) {
+      return;
+    }
+    final scope = AppScope.of(context);
+    final entries = await scope.getLedgers();
+    final categories = await scope.fetchCategories(CategoryKind.ledger);
+    if (!mounted) return;
+    final fallback = EventCategory(
+      id: _categoryId ?? EventCategory.ledgerPresets.first.id,
+      name: _categoryName ?? EventCategory.ledgerPresets.first.name,
+      color: _categoryColor ?? EventCategory.ledgerPresets.first.color,
+    );
+    _suggest?.dispose();
+    _suggest = CategorySuggestSession(
+      categories: categories,
+      records: [
+        for (final entry in entries)
+          if ((entry.categoryId ?? '').isNotEmpty)
+            CategoryHistoryRecord(entry.title, entry.categoryId!),
+      ],
+      fallback: fallback,
+      onUpdate: _applySuggest,
+    );
+    setState(() => _suggestOn = true);
+    _suggest?.onTitle(_title.text);
+  }
+
+  void _onTitleChanged() {
+    _suggest?.onTitle(_title.text);
+  }
+
+  void _applySuggest(EventCategory? category, {required bool loading}) {
+    if (!mounted) return;
+    setState(() {
+      _suggesting = loading;
+      if (category == null) return;
+      _categoryId = category.id;
+      _categoryName = category.name;
+      _categoryColor = category.color;
     });
   }
 
@@ -232,6 +285,8 @@ class _LedgerFormState extends State<LedgerForm> with TickerProviderStateMixin {
     _kindAnimation.dispose();
     _salaryFade.dispose();
     _salaryAnimation.dispose();
+    _suggest?.dispose();
+    _title.removeListener(_onTitleChanged);
     _titleFocus.dispose();
     _amountFocus.dispose();
     _title.dispose();
@@ -354,7 +409,9 @@ class _LedgerFormState extends State<LedgerForm> with TickerProviderStateMixin {
       kind: CategoryKind.ledger,
     );
     if (picked == null || !mounted) return;
+    _suggest?.userPicked();
     setState(() {
+      _suggesting = false;
       _categoryId = picked.id;
       _categoryName = picked.name;
       _categoryColor = picked.color;
@@ -536,12 +593,14 @@ class _LedgerFormState extends State<LedgerForm> with TickerProviderStateMixin {
                   scrollDirection: Axis.horizontal,
                   child: Row(
                     children: [
-                      EventCategoryChip(
+                      AiCategoryChip(
                         name: _categoryName ?? AppStrings.categoryAction,
                         color: _hasCategory
                             ? _accent
                             : AppColors.of(context).muted,
                         selected: _hasCategory,
+                        active: _suggestOn,
+                        loading: _suggesting,
                         onPressed: _pickCategory,
                       ),
                       const SizedBox(width: 4),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:pluto/app_scope.dart';
+import 'package:pluto/core/utils/category_history.dart';
 import 'package:pluto/core/constants/app_icons.dart';
 import 'package:pluto/core/constants/app_strings.dart';
 import 'package:pluto/core/utils/plain_text_editing_controller.dart';
@@ -18,7 +19,8 @@ import 'package:pluto/presentation/screens/add_company/widgets/round_chip_row.da
 import 'package:pluto/presentation/screens/add_company/widgets/save_company_button.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/category_picker_sheet.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/event_action_icon.dart';
-import 'package:pluto/presentation/screens/calendar/widgets/event_category_chip.dart';
+import 'package:pluto/presentation/widgets/ai_category_chip.dart';
+import 'package:pluto/presentation/widgets/category_suggest_session.dart';
 import 'package:pluto/presentation/widgets/themed_asset.dart';
 
 class AddCompanyForm extends StatefulWidget {
@@ -58,6 +60,9 @@ class _AddCompanyFormViewState extends State<AddCompanyForm>
   var _coverLetterToggling = false;
   var _saving = false;
   Animation<double>? _sheetAnimation;
+  CategorySuggestSession? _suggest;
+  var _suggestOn = false;
+  var _suggesting = false;
 
   bool get _isEditing => widget.initial != null;
 
@@ -76,6 +81,7 @@ class _AddCompanyFormViewState extends State<AddCompanyForm>
     super.initState();
     final initial = widget.initial;
     _companyName = PlainTextEditingController(text: initial?.companyName ?? '');
+    _companyName.addListener(_onTitleChanged);
     _position = PlainTextEditingController(text: initial?.position ?? '');
     _positionAnimation = AnimationController(
       vsync: this,
@@ -165,16 +171,52 @@ class _AddCompanyFormViewState extends State<AddCompanyForm>
         ? categories.first
         : EventCategory.companyPresets.first;
     final selected = last;
+    final suggestOn = CategorySuggestSession.isOn(
+      context,
+      editing: widget.initial != null,
+    );
+    _suggest?.dispose();
+    _suggest = suggestOn
+        ? CategorySuggestSession(
+            categories: categories,
+            records: [
+              for (final job in jobs)
+                if (job.hasCategory)
+                  CategoryHistoryRecord(job.companyName, job.categoryId!),
+            ],
+            fallback: selected,
+            onUpdate: _applySuggest,
+          )
+        : null;
 
     if (_categoryId == selected.id &&
         _categoryName == selected.name &&
-        _categoryColor == selected.color) {
+        _categoryColor == selected.color &&
+        _suggestOn == suggestOn) {
+      if (suggestOn) _suggest?.onTitle(_companyName.text);
       return;
     }
     setState(() {
+      _suggestOn = suggestOn;
       _categoryId = selected.id;
       _categoryName = selected.name;
       _categoryColor = selected.color;
+    });
+    if (suggestOn) _suggest?.onTitle(_companyName.text);
+  }
+
+  void _onTitleChanged() {
+    _suggest?.onTitle(_companyName.text);
+  }
+
+  void _applySuggest(EventCategory? category, {required bool loading}) {
+    if (!mounted) return;
+    setState(() {
+      _suggesting = loading;
+      if (category == null) return;
+      _categoryId = category.id;
+      _categoryName = category.name;
+      _categoryColor = category.color;
     });
   }
 
@@ -187,6 +229,8 @@ class _AddCompanyFormViewState extends State<AddCompanyForm>
     _roundsAnimation.dispose();
     _coverLetterFade.dispose();
     _coverLetterAnimation.dispose();
+    _suggest?.dispose();
+    _companyName.removeListener(_onTitleChanged);
     _companyNameFocus.dispose();
     _positionFocus.dispose();
     _companyName.dispose();
@@ -238,7 +282,9 @@ class _AddCompanyFormViewState extends State<AddCompanyForm>
       kind: CategoryKind.company,
     );
     if (picked == null || !mounted) return;
+    _suggest?.userPicked();
     setState(() {
+      _suggesting = false;
       _categoryId = picked.id;
       _categoryName = picked.name;
       _categoryColor = picked.color;
@@ -348,12 +394,14 @@ class _AddCompanyFormViewState extends State<AddCompanyForm>
                     scrollDirection: Axis.horizontal,
                     child: Row(
                       children: [
-                        EventCategoryChip(
+                        AiCategoryChip(
                           name: _categoryName ?? AppStrings.categoryAction,
                           color: _hasCategory
                               ? _accent
                               : AppColors.of(context).muted,
                           selected: _hasCategory,
+                          active: _suggestOn,
+                          loading: _suggesting,
                           onPressed: _pickCategory,
                         ),
                         const SizedBox(width: 4),

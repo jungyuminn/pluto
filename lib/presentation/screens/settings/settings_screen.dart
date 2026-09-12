@@ -76,6 +76,7 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   var _sortByTime = false;
   var _showTime = false;
+  var _aiCategory = false;
   var _todoReminderLead = TodoReminderLead.off;
   var _summaryEnabled = true;
   var _summaryHour = NotificationPreference.defaultSummaryMinutes;
@@ -128,6 +129,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final scope = AppScope.of(context);
     _sortByTime = scope.dayEventsViewPreference.sortByTime;
     _showTime = scope.dayEventsViewPreference.showTime;
+    _aiCategory = scope.categorySuggestPreference.enabled;
     _todoReminderLead = scope.notificationPreference.todoReminderLead;
     _summaryEnabled = scope.notificationPreference.summaryEnabled;
     _summaryHour = scope.notificationPreference.summaryMinutes;
@@ -170,6 +172,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     setState(() {
       _sortByTime = scope.dayEventsViewPreference.sortByTime;
       _showTime = scope.dayEventsViewPreference.showTime;
+      _aiCategory = scope.categorySuggestPreference.enabled;
       _todoReminderLead = scope.notificationPreference.todoReminderLead;
       _summaryEnabled = scope.notificationPreference.summaryEnabled;
       _summaryHour = scope.notificationPreference.summaryMinutes;
@@ -440,6 +443,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final next = !_showTime;
     setState(() => _showTime = next);
     await AppScope.of(context).dayEventsViewPreference.setShowTime(next);
+  }
+
+  Future<void> _setAiCategory(bool value) async {
+    setState(() => _aiCategory = value);
+    await AppScope.of(context).categorySuggestPreference.setEnabled(value);
   }
 
   Future<void> _setFollowWidgetTheme(bool value) async {
@@ -971,6 +979,29 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 onPressed: _toggleShowTime,
               ),
             ],
+          ),
+          StreamBuilder(
+            stream: AppAuthService.instance.authState,
+            initialData: AppAuthService.instance.user,
+            builder: (context, snapshot) {
+              if (snapshot.data == null) return const SizedBox.shrink();
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const SizedBox(height: 24),
+                  _SectionLabel(AppStrings.settingsCategorySection),
+                  _SettingsCard(
+                    children: [
+                      _SettingsSwitchTile(
+                        label: AppStrings.featureIntroAiTitle,
+                        value: _aiCategory,
+                        onChanged: _setAiCategory,
+                      ),
+                    ],
+                  ),
+                ],
+              );
+            },
           ),
           if (!PcLayout.isPc) ...[
             const SizedBox(height: 24),

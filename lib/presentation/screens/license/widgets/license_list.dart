@@ -55,12 +55,16 @@ class _LicenseListState extends State<LicenseList>
   late final AnimationController _expiredReveal;
   late final CurvedAnimation _expiredFade;
   final _entering = <String>{};
+  final _headerReveal = <String, double>{};
   var _ready = false;
   String? _draggingId;
   var _dragY = 0.0;
   double? _grabOffset;
 
   static const _slotAnim = Duration(milliseconds: 280);
+  static const _headerLabel = 16.0;
+  static const _headerBottom = 8.0;
+  static const _headerTopGap = 12.0;
 
   double get _gap => widget.compact ? 10 : 12;
 
@@ -92,6 +96,7 @@ class _LicenseListState extends State<LicenseList>
       }
     }
     _sync(widget.licenses);
+    _primeHeaderReveals(oldWidget.categoryView != widget.categoryView);
   }
 
   @override
@@ -125,6 +130,32 @@ class _LicenseListState extends State<LicenseList>
         duration: const Duration(milliseconds: 280),
         curve: Curves.easeOutCubic,
       );
+    });
+  }
+
+  void _primeHeaderReveals(bool viewChanged) {
+    if (!widget.categoryView) {
+      _headerReveal.clear();
+      return;
+    }
+    final keys = {
+      for (final section in _sectionsOf(_activeItems)) section.key,
+    };
+    var appeared = false;
+    for (final key in keys) {
+      if (_headerReveal.containsKey(key)) continue;
+      _headerReveal[key] = viewChanged ? 0 : 1;
+      appeared = viewChanged;
+    }
+    _headerReveal.removeWhere((key, _) => !keys.contains(key));
+    if (!appeared) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !widget.categoryView) return;
+      setState(() {
+        for (final key in keys) {
+          _headerReveal[key] = 1;
+        }
+      });
     });
   }
 
@@ -199,6 +230,7 @@ class _LicenseListState extends State<LicenseList>
       used.add(category.id);
       sections.add(
         _LicenseSection(
+          key: category.id,
           name: category.name,
           color: category.tint,
           items: grouped,
@@ -213,6 +245,7 @@ class _LicenseListState extends State<LicenseList>
       used.add(key);
       sections.add(
         _LicenseSection(
+          key: key,
           name: item.categoryName.trim().isEmpty
               ? AppStrings.categoryAction
               : item.categoryName,
@@ -338,71 +371,26 @@ class _LicenseListState extends State<LicenseList>
   }
 
   Widget _buildList() {
-    if (_items.isEmpty) return const SizedBox.shrink();
-    final active = _activeItems;
-    final expired = _expiredItems;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (active.isNotEmpty)
-          if (widget.categoryView)
-            _grouped(active)
-          else
-            _stack(items: active, boxKey: _listBoxKey, clip: true),
-        if (expired.isNotEmpty)
-          SizeTransition(
-            sizeFactor: _expiredFade,
-            axisAlignment: -1,
-            child: FadeTransition(
-              opacity: _expiredFade,
-              child: IgnorePointer(
-                ignoring: !widget.showExpired,
-                child: _stack(items: expired, clip: false),
-              ),
+        _stack(
+          items: _activeItems,
+          boxKey: _listBoxKey,
+          clip: true,
+          grouped: widget.categoryView,
+        ),
+        SizeTransition(
+          sizeFactor: _expiredFade,
+          axisAlignment: -1,
+          child: FadeTransition(
+            opacity: _expiredFade,
+            child: IgnorePointer(
+              ignoring: !widget.showExpired,
+              child: _stack(items: _expiredItems, clip: false),
             ),
           ),
-      ],
-    );
-  }
-
-  Widget _grouped(List<License> items) {
-    final sections = _sectionsOf(items);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        for (var i = 0; i < sections.length; i++) ...[
-          Padding(
-            padding: EdgeInsets.only(top: i == 0 ? 0 : 12, bottom: 8),
-            child: Row(
-              children: [
-                Container(
-                  width: 8,
-                  height: 8,
-                  decoration: BoxDecoration(
-                    color: sections[i].color,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: Text(
-                    sections[i].name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontFamily: AppFonts.of(context),
-                      fontSize: 13,
-                      fontWeight: FontWeight.w800,
-                      height: 1,
-                      color: AppColors.of(context).text,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          _stack(items: sections[i].items, clip: true),
-        ],
+        ),
       ],
     );
   }
@@ -411,25 +399,114 @@ class _LicenseListState extends State<LicenseList>
     required List<License> items,
     Key? boxKey,
     required bool clip,
+    bool grouped = false,
   }) {
-    final tops = _tops(items);
+    final slots = grouped
+        ? _slotsOf(items)
+        : [for (final item in items) _LicenseSlot.card(item)];
+    final tops = <double>[];
+    var height = 0.0;
+    for (final slot in slots) {
+      tops.add(height);
+      height += _slotHeight(slot);
+    }
+    final animate = _ready;
     return AnimatedSize(
-      duration: _ready ? _slotAnim : Duration.zero,
+      duration: animate ? _slotAnim : Duration.zero,
       curve: Curves.easeOutCubic,
       alignment: Alignment.topCenter,
       child: SizedBox(
         key: boxKey,
-        height: _sectionHeight(items),
+        height: height,
         child: Stack(
           clipBehavior: clip ? Clip.hardEdge : Clip.none,
           children: [
-            for (var i = 0; i < items.length; i++)
-              if (items[i].id != _draggingId) _positioned(items[i], tops[i]),
+            for (var i = 0; i < slots.length; i++)
+              if (slots[i].header != null)
+                _headerAt(
+                  slots[i].header!,
+                  tops[i],
+                  first: slots[i].firstHeader,
+                )
+              else if (slots[i].item?.id != _draggingId)
+                _positioned(slots[i].item!, tops[i]),
             if (_draggingId != null)
-              for (var i = 0; i < items.length; i++)
-                if (items[i].id == _draggingId)
-                  _positioned(items[i], tops[i]),
+              for (var i = 0; i < slots.length; i++)
+                if (slots[i].item?.id == _draggingId)
+                  _positioned(slots[i].item!, tops[i]),
           ],
+        ),
+      ),
+    );
+  }
+
+  List<_LicenseSlot> _slotsOf(List<License> items) {
+    final sections = _sectionsOf(items);
+    return [
+      for (var i = 0; i < sections.length; i++) ...[
+        _LicenseSlot.header(sections[i], firstHeader: i == 0),
+        for (final item in sections[i].items) _LicenseSlot.card(item),
+      ],
+    ];
+  }
+
+  double _slotHeight(_LicenseSlot slot) {
+    final header = slot.header;
+    if (header == null) return _blockHeight(slot.item!);
+    final reveal = _headerReveal[header.key] ?? 1;
+    final gap = slot.firstHeader ? 0.0 : _headerTopGap;
+    return (_headerLabel + _headerBottom + gap) * reveal;
+  }
+
+  Widget _headerAt(_LicenseSection section, double top, {required bool first}) {
+    final reveal = _headerReveal[section.key] ?? 1;
+    final gap = first ? 0.0 : _headerTopGap;
+    return AnimatedPositioned(
+      key: ValueKey('header-${section.key}'),
+      duration: _ready ? _slotAnim : Duration.zero,
+      curve: Curves.easeOutCubic,
+      top: top,
+      left: 0,
+      right: 0,
+      height: (_headerLabel + _headerBottom + gap) * math.max(reveal, 0.0001),
+      child: ClipRect(
+        child: AnimatedOpacity(
+          duration: _ready ? _slotAnim : Duration.zero,
+          curve: Curves.easeOutCubic,
+          opacity: reveal,
+          child: Padding(
+            padding: EdgeInsets.only(top: gap, bottom: _headerBottom),
+            child: SizedBox(
+              height: _headerLabel,
+              child: Row(
+                children: [
+                  Container(
+                    width: 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: section.color,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      section.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontFamily: AppFonts.of(context),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w800,
+                        height: 1,
+                        color: AppColors.of(context).text,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ),
       ),
     );
@@ -507,13 +584,28 @@ class _LicenseListState extends State<LicenseList>
   }
 }
 
+class _LicenseSlot {
+  const _LicenseSlot.card(this.item)
+      : header = null,
+        firstHeader = false;
+
+  const _LicenseSlot.header(this.header, {this.firstHeader = false})
+      : item = null;
+
+  final License? item;
+  final _LicenseSection? header;
+  final bool firstHeader;
+}
+
 class _LicenseSection {
   const _LicenseSection({
+    required this.key,
     required this.name,
     required this.color,
     required this.items,
   });
 
+  final String key;
   final String name;
   final Color color;
   final List<License> items;

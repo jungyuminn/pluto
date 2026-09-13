@@ -11,7 +11,7 @@
 
 <p align="center">
   <img alt="Flutter" src="https://img.shields.io/badge/Flutter-3-02569B?logo=flutter&logoColor=white">
-  <img alt="version" src="https://img.shields.io/badge/version-1.3.6-5B8DEF">
+  <img alt="version" src="https://img.shields.io/badge/version-1.4.0-5B8DEF">
   <img alt="platform" src="https://img.shields.io/badge/Android%20%7C%20iOS%20%7C%20Web-5B8DEF">
 </p>
 

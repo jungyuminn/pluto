@@ -105,6 +105,9 @@ enum ReleaseDemo {
   accountSync,
   categoryAi,
   friendsMiniCal,
+  friendsAdd,
+  pcEnterSave,
+  jobCategorySlide,
   featureIntro,
   settingsFollow,
   loginPaint,
@@ -115,6 +118,7 @@ enum ReleaseDemo {
 
 ReleaseDemo releaseDemoFor(String text, {required bool isFix}) {
   if (isFix) {
+    if (text.contains('친구 추가')) return ReleaseDemo.friendsAdd;
     if (text.contains('월 통계')) return ReleaseDemo.ledgerMonth;
     if (text.contains('날짜 창')) return ReleaseDemo.pcLaunch;
     if (text.contains('화살표')) return ReleaseDemo.pcLaunch;
@@ -156,6 +160,16 @@ ReleaseDemo releaseDemoFor(String text, {required bool isFix}) {
     if (text.contains('기능 안내')) return ReleaseDemo.featureIntroStay;
     if (text.contains('스티커 팩')) return ReleaseDemo.stickers;
     return ReleaseDemo.fix;
+  }
+  if (text.contains('미니캘린더') || text.contains('일정만')) {
+    return ReleaseDemo.friendsMiniCal;
+  }
+  if (text.contains('아이디로 친구') || text.contains('친구를 추가')) {
+    return ReleaseDemo.friendsAdd;
+  }
+  if (text.contains('Enter로')) return ReleaseDemo.pcEnterSave;
+  if (text.contains('카테고리별로') || text.contains('칸이 부드럽게')) {
+    return ReleaseDemo.jobCategorySlide;
   }
   if (text.contains('AI가 카테고리') || text.contains('카테고리를 미리')) {
     return ReleaseDemo.categoryAi;
@@ -436,6 +450,9 @@ class ReleaseDemoView extends StatelessWidget {
       ReleaseDemo.accountSync => const _AccountSyncDemo(),
       ReleaseDemo.categoryAi => const _CategoryAiDemo(),
       ReleaseDemo.friendsMiniCal => const _FriendsMiniCalDemo(),
+      ReleaseDemo.friendsAdd => const _FriendsAddDemo(),
+      ReleaseDemo.pcEnterSave => const _PcEnterSaveDemo(),
+      ReleaseDemo.jobCategorySlide => const _JobCategorySlideDemo(),
       ReleaseDemo.featureIntro => const _FeatureIntroDemo(),
       ReleaseDemo.settingsFollow => const _SettingsFollowDemo(),
       ReleaseDemo.loginPaint => const _LoginPaintDemo(),
@@ -7525,6 +7542,557 @@ class _StayLoginSheet extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _FriendsAddDemo extends StatelessWidget {
+  const _FriendsAddDemo();
+
+  static const _id = 'minji';
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 7200,
+      boxHeight: 220,
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final font = AppFonts.of(context);
+        final typed = (_id.length * _gate(t, 0.08, 0.30)).round();
+        final shown = _id.substring(0, typed);
+        final caretOn = typed < _id.length && (t * 12).floor().isEven;
+        final sendTap = _pulse(t, 0.34, 0.44, 0.56);
+        final press = sendTap * 0.08;
+        final reveal = Curves.easeOutCubic.transform(_gate(t, 0.46, 0.62));
+        final hide = Curves.easeInCubic.transform(_gate(t, 0.88, 1.0));
+        final list = (reveal - hide).clamp(0.0, 1.0);
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+          child: Column(
+            children: [
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  color: colors.card,
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(14, 8, 14, 12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      SizedBox(
+                        height: 28,
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text.rich(
+                            TextSpan(
+                              children: [
+                                TextSpan(
+                                  text: shown.isEmpty
+                                      ? AppStrings.friendsCodeHint
+                                      : shown,
+                                  style: TextStyle(
+                                    fontFamily: font,
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w600,
+                                    color: shown.isEmpty
+                                        ? colors.hint
+                                        : colors.text,
+                                  ),
+                                ),
+                                if (shown.isNotEmpty && caretOn)
+                                  TextSpan(
+                                    text: '|',
+                                    style: TextStyle(
+                                      fontFamily: font,
+                                      fontSize: 15,
+                                      color: colors.accent,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Transform.scale(
+                        scale: 1 - press,
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            color: colors.tint(colors.accent, 0.16 + sendTap * 0.1),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: SizedBox(
+                            height: 34,
+                            child: Center(
+                              child: Text(
+                                AppStrings.friendsSend,
+                                style: TextStyle(
+                                  fontFamily: font,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w800,
+                                  color: colors.accent,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              ClipRect(
+                child: Align(
+                  alignment: Alignment.topCenter,
+                  heightFactor: list,
+                  child: Opacity(
+                    opacity: list,
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 10),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(8, 0, 2, 6),
+                            child: Text(
+                              AppStrings.friendsOutgoing,
+                              style: TextStyle(
+                                fontFamily: font,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                color: colors.text,
+                              ),
+                            ),
+                          ),
+                          DecoratedBox(
+                            decoration: BoxDecoration(
+                              color: colors.card,
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.fromLTRB(12, 8, 10, 8),
+                              child: Row(
+                                children: [
+                                  _FriendAvatar(
+                                    name: '민지',
+                                    color: _FriendsMiniCalDemo._minji,
+                                    size: 28,
+                                    colors: colors,
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          '민지',
+                                          style: TextStyle(
+                                            fontFamily: font,
+                                            fontSize: 13,
+                                            color: colors.text,
+                                          ),
+                                        ),
+                                        Text(
+                                          _id,
+                                          style: TextStyle(
+                                            fontFamily: font,
+                                            fontSize: 11,
+                                            color: colors.muted,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  Text(
+                                    AppStrings.friendsCancel,
+                                    style: TextStyle(
+                                      fontFamily: font,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w700,
+                                      color: colors.muted,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _PcEnterSaveDemo extends StatelessWidget {
+  const _PcEnterSaveDemo();
+
+  static const _title = '헬스장가기';
+  static const _accent = Color(0xFF3B82F6);
+  static final _date = DateTime(2026, 9, 15);
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 6400,
+      boxHeight: 220,
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final font = AppFonts.of(context);
+        final typed = (_title.length * _gate(t, 0.08, 0.36)).round();
+        final shown = _title.substring(0, typed);
+        final caretOn = typed < _title.length && (t * 12).floor().isEven;
+        final enterLit = Curves.easeOutCubic.transform(_gate(t, 0.42, 0.52));
+        final press = _pulse(t, 0.50, 0.58, 0.70);
+        final saved = Curves.easeOutCubic.transform(_gate(t, 0.58, 0.72));
+        void noop() {}
+        return Align(
+          alignment: Alignment.bottomCenter,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: colors.tint(_accent, 0.14),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(24),
+              ),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x33000000),
+                  blurRadius: 16,
+                  offset: Offset(0, -2),
+                ),
+              ],
+            ),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text.rich(
+                    TextSpan(
+                      children: [
+                        TextSpan(
+                          text: shown.isEmpty
+                              ? AppStrings.eventTitleHint
+                              : shown,
+                          style: TextStyle(
+                            fontFamily: font,
+                            fontSize: 20,
+                            fontWeight: FontWeight.w700,
+                            color: shown.isEmpty ? colors.hint : colors.text,
+                          ),
+                        ),
+                        if (shown.isNotEmpty && caretOn)
+                          TextSpan(
+                            text: '|',
+                            style: TextStyle(
+                              fontFamily: font,
+                              fontSize: 20,
+                              fontWeight: FontWeight.w400,
+                              color: _accent,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          physics: const NeverScrollableScrollPhysics(),
+                          child: Row(
+                            children: [
+                              EventCategoryChip(
+                                name: '운동',
+                                color: _accent,
+                                onPressed: noop,
+                              ),
+                              const SizedBox(width: 4),
+                              EventDateChip(
+                                date: _date,
+                                color: _accent,
+                                onPressed: noop,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Opacity(
+                        opacity: enterLit,
+                        child: Transform.translate(
+                          offset: Offset(0, (1 - enterLit) * 8),
+                          child: Padding(
+                            padding: const EdgeInsets.only(right: 8),
+                            child: _EnterKey(
+                              lit: press,
+                              font: font,
+                              colors: colors,
+                            ),
+                          ),
+                        ),
+                      ),
+                      Transform.scale(
+                        scale: 1 - press * 0.12,
+                        child: Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            SaveCompanyButton(onPressed: noop, color: _accent),
+                            if (saved > 0.2)
+                              Opacity(
+                                opacity: saved,
+                                child: const Icon(
+                                  Icons.check_rounded,
+                                  size: 22,
+                                  color: Colors.white,
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _EnterKey extends StatelessWidget {
+  const _EnterKey({
+    required this.lit,
+    required this.font,
+    required this.colors,
+  });
+
+  final double lit;
+  final String? font;
+  final AppColors colors;
+
+  @override
+  Widget build(BuildContext context) {
+    final fill = Color.lerp(colors.card, colors.accent, 0.12 + lit * 0.28)!;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: fill,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: Color.lerp(colors.border, colors.accent, lit)!,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: colors.accent.withValues(alpha: 0.18 * lit),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+        child: Text(
+          'Enter',
+          style: TextStyle(
+            fontFamily: font,
+            fontSize: 11,
+            fontWeight: FontWeight.w800,
+            color: Color.lerp(colors.muted, colors.accent, lit),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _JobCategorySlideDemo extends StatelessWidget {
+  const _JobCategorySlideDemo();
+
+  static const _jobs = [
+    (title: '플루토', subtitle: '개발 · 서버', badge: '서류', color: Color(0xFF5B8DEF)),
+    (title: '플루토', subtitle: '개발 · 클라', badge: '면접', color: Color(0xFFA855F7)),
+    (title: '아틀리에', subtitle: '디자인', badge: '서류', color: Color(0xFFFB7185)),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 6800,
+      boxHeight: 220,
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final font = AppFonts.of(context);
+        final grouped = Curves.easeInOutCubic.transform(
+          t < 0.58 ? _gate(t, 0.22, 0.48) : 1 - _gate(t, 0.78, 0.96),
+        );
+        final tap = _pulse(t, 0.12, 0.22, 0.36);
+        const cardH = 40.0;
+        const gap = 8.0;
+        const headerH = 18.0;
+        const headerGap = 10.0;
+        const top = 38.0;
+        final allYs = [top, top + cardH + gap, top + (cardH + gap) * 2];
+        final groupYs = [
+          top + headerH + 4,
+          top + headerH + 4 + cardH + gap,
+          top + headerH + 4 + (cardH + gap) * 2 + headerH + headerGap,
+        ];
+        final header1Y = top;
+        final header2Y = top + headerH + 4 + (cardH + gap) * 2 + 4;
+        double yOf(int i) => allYs[i] + (groupYs[i] - allYs[i]) * grouped;
+        return Stack(
+          children: [
+            Positioned(
+              left: 16,
+              right: 16,
+              top: 8,
+              child: Row(
+                children: [
+                  _ViewChip(
+                    label: '전체',
+                    selected: grouped < 0.5,
+                    font: font,
+                    colors: colors,
+                  ),
+                  const SizedBox(width: 6),
+                  _SyncTapChip(
+                    tap: tap,
+                    child: _ViewChip(
+                      label: '카테고리별',
+                      selected: grouped >= 0.5,
+                      font: font,
+                      colors: colors,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Positioned(
+              left: 18,
+              top: header1Y,
+              child: Opacity(
+                opacity: grouped,
+                child: _CategoryHeader(
+                  name: '개발',
+                  color: const Color(0xFF5B8DEF),
+                  font: font,
+                ),
+              ),
+            ),
+            Positioned(
+              left: 18,
+              top: header2Y,
+              child: Opacity(
+                opacity: grouped,
+                child: _CategoryHeader(
+                  name: '디자인',
+                  color: const Color(0xFFFB7185),
+                  font: font,
+                ),
+              ),
+            ),
+            for (var i = 0; i < _jobs.length; i++)
+              Positioned(
+                left: 16,
+                right: 16,
+                top: yOf(i),
+                child: _eventLabel(
+                  colors: colors,
+                  font: font,
+                  title: _jobs[i].title,
+                  subtitle: _jobs[i].subtitle,
+                  accent: _jobs[i].color,
+                  badge: _jobs[i].badge,
+                  open: 0,
+                  compact: true,
+                ),
+              ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _ViewChip extends StatelessWidget {
+  const _ViewChip({
+    required this.label,
+    required this.selected,
+    required this.font,
+    required this.colors,
+  });
+
+  final String label;
+  final bool selected;
+  final String? font;
+  final AppColors colors;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 220),
+      curve: Curves.easeOutCubic,
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: selected ? colors.accent.withValues(alpha: 0.16) : colors.card,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontFamily: font,
+          fontSize: 11,
+          fontWeight: FontWeight.w800,
+          color: selected ? colors.accent : colors.muted,
+        ),
+      ),
+    );
+  }
+}
+
+class _CategoryHeader extends StatelessWidget {
+  const _CategoryHeader({
+    required this.name,
+    required this.color,
+    required this.font,
+  });
+
+  final String name;
+  final Color color;
+  final String? font;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        DecoratedBox(
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          child: const SizedBox.square(dimension: 7),
+        ),
+        const SizedBox(width: 6),
+        Text(
+          name,
+          style: TextStyle(
+            fontFamily: font,
+            fontSize: 11,
+            fontWeight: FontWeight.w800,
+            color: color,
+          ),
+        ),
+      ],
     );
   }
 }

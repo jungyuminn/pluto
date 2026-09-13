@@ -99,21 +99,16 @@ class BackupMessageDialog extends StatelessWidget {
   }
 }
 
-Future<bool> showRestoreConfirmDialog(
-  BuildContext context, {
-  bool cloudWarning = false,
-}) async {
+Future<bool> showRestoreConfirmDialog(BuildContext context) async {
   final confirmed = await showDialog<bool>(
     context: context,
-    builder: (context) => RestoreConfirmDialog(cloudWarning: cloudWarning),
+    builder: (context) => const RestoreConfirmDialog(),
   );
   return confirmed == true;
 }
 
 class RestoreConfirmDialog extends StatelessWidget {
-  const RestoreConfirmDialog({super.key, this.cloudWarning = false});
-
-  final bool cloudWarning;
+  const RestoreConfirmDialog({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -137,22 +132,11 @@ class RestoreConfirmDialog extends StatelessWidget {
           Text(
             AppStrings.restoreConfirmBody,
             style: TextStyle(
-              fontSize: 15,
+              fontSize: 14,
               fontWeight: FontWeight.w600,
-              color: colors.secondary,
+              color: colors.muted,
             ),
           ),
-          if (cloudWarning) ...[
-            const SizedBox(height: 8),
-            Text(
-              AppStrings.restoreConfirmCloudBody,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: colors.muted,
-              ),
-            ),
-          ],
           const SizedBox(height: 20),
           Row(
             children: [
@@ -220,14 +204,12 @@ Future<RestoreChoice?> showRestoreSourceDialog(
   BuildContext context,
   List<BackupListItem> items, {
   bool pickOther = true,
-  bool cloudWarning = false,
 }) {
   return showDialog<RestoreChoice>(
     context: context,
     builder: (context) => RestoreSourceDialog(
       items: items,
       pickOther: pickOther,
-      cloudWarning: cloudWarning,
     ),
   );
 }
@@ -237,12 +219,10 @@ class RestoreSourceDialog extends StatefulWidget {
     super.key,
     required this.items,
     this.pickOther = true,
-    this.cloudWarning = false,
   });
 
   final List<BackupListItem> items;
   final bool pickOther;
-  final bool cloudWarning;
 
   @override
   State<RestoreSourceDialog> createState() => _RestoreSourceDialogState();
@@ -273,22 +253,11 @@ class _RestoreSourceDialogState extends State<RestoreSourceDialog> {
           Text(
             AppStrings.restoreConfirmBody,
             style: TextStyle(
-              fontSize: 15,
+              fontSize: 14,
               fontWeight: FontWeight.w600,
-              color: colors.secondary,
+              color: colors.muted,
             ),
           ),
-          if (widget.cloudWarning) ...[
-            const SizedBox(height: 8),
-            Text(
-              AppStrings.restoreConfirmCloudBody,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: colors.muted,
-              ),
-            ),
-          ],
           const SizedBox(height: 16),
           for (var i = 0; i < widget.items.length; i++) ...[
             if (i > 0) const SizedBox(height: 6),

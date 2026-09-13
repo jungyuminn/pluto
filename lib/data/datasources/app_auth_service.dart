@@ -38,7 +38,8 @@ class AppAuthService {
   Stream<User?> get authState {
     if (!isReady) return Stream.value(null);
     return FirebaseAuth.instance.userChanges().asyncMap((user) async {
-      if (user != null &&
+      if (!kIsWeb &&
+          user != null &&
           !_kakaoProfileTried &&
           user.providerData.any((info) => info.providerId == 'oidc.kakao')) {
         await _applyKakaoProfile();
@@ -87,6 +88,7 @@ class AppAuthService {
   }
 
   Future<void> applySocialProfile() async {
+    if (kIsWeb) return;
     final user = this.user;
     if (user == null) return;
     if (user.providerData.any((info) => info.providerId == 'oidc.kakao') ||
@@ -442,6 +444,7 @@ class AppAuthService {
   }
 
   Future<void> _applyKakaoProfile({bool force = false}) async {
+    if (kIsWeb) return;
     if (_kakaoProfileTried && !force) return;
     _kakaoProfileTried = true;
     final firebaseUser = FirebaseAuth.instance.currentUser;

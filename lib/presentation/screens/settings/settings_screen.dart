@@ -248,11 +248,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
         items = items.where((item) => item.file == null).toList();
       }
       if (!mounted) return;
-      final cloudWarning = AppAuthService.instance.user != null;
       if (items.isEmpty) {
         final confirmed = await showRestoreConfirmDialog(
           context,
-          cloudWarning: cloudWarning,
         );
         if (!confirmed || !mounted) return;
         final picked = await AppBackupService.restoreFromPicker();
@@ -265,7 +263,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
         final choice = await showRestoreSourceDialog(
           context,
           items,
-          cloudWarning: cloudWarning,
         );
         if (choice == null || !mounted) return;
         if (choice.pickOther) {

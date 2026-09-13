@@ -72,16 +72,75 @@ service cloud.firestore {
       allow list, write: if false;
     }
 
+    function requestCreateOk() {
+      let data = request.resource.data;
+      return data.fromUid == request.auth.uid &&
+        data.toUid is string &&
+        data.toUid.size() > 0 &&
+        data.toUid != request.auth.uid &&
+        data.status == 'pending' &&
+        data.fromName is string &&
+        data.fromCode is string &&
+        data.toName is string &&
+        data.toCode is string &&
+        data.createdAt is int &&
+        exists(/databases/$(database)/documents/profiles/$(data.toUid));
+    }
+
+    function pendingRequest(requestId, fromId, toId) {
+      return exists(/databases/$(database)/documents/friend_requests/$(requestId)) &&
+        get(/databases/$(database)/documents/friend_requests/$(requestId)).data.status == 'pending' &&
+        get(/databases/$(database)/documents/friend_requests/$(requestId)).data.fromUid == fromId &&
+        get(/databases/$(database)/documents/friend_requests/$(requestId)).data.toUid == toId;
+    }
+
     match /friend_requests/{requestId} {
-      allow read: if signedIn() &&
+      allow get: if signedIn() &&
+        (resource == null ||
+         resource.data.fromUid == request.auth.uid ||
+         resource.data.toUid == request.auth.uid);
+      allow list: if signedIn() &&
         (resource.data.fromUid == request.auth.uid ||
          resource.data.toUid == request.auth.uid);
-      allow write: if false;
+      allow create: if signedIn() && requestCreateOk();
+      allow update: if signedIn() &&
+        request.resource.data.fromUid == resource.data.fromUid &&
+        request.resource.data.toUid == resource.data.toUid &&
+        (
+          (
+            resource.data.status == 'pending' &&
+            request.resource.data.diff(resource.data).affectedKeys()
+              .hasOnly(['status', 'updatedAt']) &&
+            (
+              (resource.data.toUid == request.auth.uid &&
+                (request.resource.data.status == 'accepted' ||
+                 request.resource.data.status == 'declined')) ||
+              (resource.data.fromUid == request.auth.uid &&
+                request.resource.data.status == 'cancelled')
+            )
+          ) ||
+          (
+            resource.data.fromUid == request.auth.uid &&
+            resource.data.status != 'pending' &&
+            requestCreateOk()
+          )
+        );
+      allow delete: if false;
     }
 
     match /friendships/{userId}/friends/{friendId} {
       allow read: if isUser(userId) || isUser(friendId);
-      allow write: if false;
+      allow create: if signedIn() &&
+        userId != friendId &&
+        request.resource.data.requestId is string &&
+        (
+          (isUser(userId) &&
+            pendingRequest(request.resource.data.requestId, friendId, request.auth.uid)) ||
+          (isUser(friendId) &&
+            pendingRequest(request.resource.data.requestId, userId, request.auth.uid))
+        );
+      allow update: if isUser(userId);
+      allow delete: if isUser(userId) || isUser(friendId);
     }
 
     match /shared_calendars/{userId}/events/{eventId} {

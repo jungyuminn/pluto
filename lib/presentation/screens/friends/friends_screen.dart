@@ -58,6 +58,8 @@ class _FriendsScreenState extends State<FriendsScreen> {
   var _hintVisible = false;
   Timer? _hintTimer;
   var _draftOutgoing = <FriendRequestItem>[];
+  final _seenOutgoing = <String>{};
+  final _hiddenRequests = <String>{};
   final _cancelWhenReady = <String>{};
   final _inFlightCodes = <String>{};
 
@@ -72,7 +74,10 @@ class _FriendsScreenState extends State<FriendsScreen> {
   Future<void> _bootstrap() async {
     try {
       await _service.ensureProfile();
-    } catch (_) {}
+    } catch (error) {
+      if (!mounted) return;
+      _toast(_service.messageOf(error));
+    }
   }
 
   @override
@@ -581,9 +586,15 @@ class _FriendsScreenState extends State<FriendsScreen> {
   }
 
   List<FriendRequestItem> _mergedOutgoing(List<FriendRequestItem> remote) {
-    final codes = {for (final item in remote) item.toCode};
+    for (final item in remote) {
+      _seenOutgoing.add(item.toCode);
+      if (item.toUid.isNotEmpty) _seenOutgoing.add(item.toUid);
+    }
     return [
-      ..._draftOutgoing.where((item) => !codes.contains(item.toCode)),
+      ..._draftOutgoing.where((item) {
+        return !_seenOutgoing.contains(item.toCode) &&
+            !_seenOutgoing.contains(item.toUid);
+      }),
       ...remote.where((item) => !_cancelWhenReady.contains(item.toCode)),
     ];
   }

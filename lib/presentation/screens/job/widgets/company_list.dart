@@ -55,11 +55,16 @@ class _CompanyListState extends State<CompanyList>
   late final _items = List.of(widget.applications);
   late final AnimationController _rejectedReveal;
   late final CurvedAnimation _rejectedFade;
+  final _headerReveal = <String, double>{};
+  final _entering = <String>{};
   String? _draggingId;
   var _dragY = 0.0;
   double? _grabOffset;
 
   static const _slotAnim = Duration(milliseconds: 280);
+  static const _headerLabel = 16.0;
+  static const _headerBottom = 8.0;
+  static const _headerTopGap = 12.0;
 
   double get _gap => widget.compact ? 10 : 12;
 
@@ -90,6 +95,7 @@ class _CompanyListState extends State<CompanyList>
       }
     }
     _sync(widget.applications);
+    _primeHeaderReveals(oldWidget.categoryView != widget.categoryView);
   }
 
   @override
@@ -103,9 +109,14 @@ class _CompanyListState extends State<CompanyList>
   void _sync(List<JobApplication> next) {
     if (_draggingId != null) return;
     final oldIds = [for (final item in _items) item.id];
-    final inserted = next.any((item) => !oldIds.contains(item.id));
+    final arriving = [
+      for (final item in next)
+        if (!oldIds.contains(item.id)) item.id,
+    ];
+    final inserted = arriving.isNotEmpty;
     final active = [for (final item in next) if (!item.isRejected) item];
     final rejected = [for (final item in next) if (item.isRejected) item];
+    _entering.addAll(arriving);
     _items
       ..clear()
       ..addAll([...active, ...rejected]);
@@ -118,6 +129,32 @@ class _CompanyListState extends State<CompanyList>
         duration: const Duration(milliseconds: 280),
         curve: Curves.easeOutCubic,
       );
+    });
+  }
+
+  void _primeHeaderReveals(bool viewChanged) {
+    if (!widget.categoryView) {
+      _headerReveal.clear();
+      return;
+    }
+    final keys = {
+      for (final section in _sectionsOf(_activeItems)) section.key,
+    };
+    var appeared = false;
+    for (final key in keys) {
+      if (_headerReveal.containsKey(key)) continue;
+      _headerReveal[key] = viewChanged ? 0 : 1;
+      appeared = viewChanged;
+    }
+    _headerReveal.removeWhere((key, _) => !keys.contains(key));
+    if (!appeared) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !widget.categoryView) return;
+      setState(() {
+        for (final key in keys) {
+          _headerReveal[key] = 1;
+        }
+      });
     });
   }
 
@@ -332,79 +369,30 @@ class _CompanyListState extends State<CompanyList>
   }
 
   Widget _buildList() {
-    if (_items.isEmpty) return const SizedBox.shrink();
-    final active = _activeItems;
-    final rejected = _rejectedItems;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (active.isNotEmpty)
-          if (widget.categoryView)
-            _grouped(active)
-          else
-            _stack(
-              items: active,
-              boxKey: _listBoxKey,
-              clip: true,
-            ),
-        if (rejected.isNotEmpty)
-          SizeTransition(
-            sizeFactor: _rejectedFade,
-            axisAlignment: -1,
-            child: FadeTransition(
-              opacity: _rejectedFade,
-              child: IgnorePointer(
-                ignoring: !widget.showRejected,
-                child: _stack(
-                  items: rejected,
-                  boxKey: _rejectedBoxKey,
-                  clip: false,
-                ),
+        _stack(
+          items: _activeItems,
+          boxKey: _listBoxKey,
+          clip: true,
+          grouped: widget.categoryView,
+        ),
+        SizeTransition(
+          sizeFactor: _rejectedFade,
+          axisAlignment: -1,
+          child: FadeTransition(
+            opacity: _rejectedFade,
+            child: IgnorePointer(
+              ignoring: !widget.showRejected,
+              child: _stack(
+                items: _rejectedItems,
+                boxKey: _rejectedBoxKey,
+                clip: false,
               ),
             ),
           ),
-      ],
-    );
-  }
-
-  Widget _grouped(List<JobApplication> items) {
-    final sections = _sectionsOf(items);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        for (var i = 0; i < sections.length; i++) ...[
-          Padding(
-            padding: EdgeInsets.only(top: i == 0 ? 0 : 12, bottom: 8),
-            child: Row(
-              children: [
-                Container(
-                  width: 8,
-                  height: 8,
-                  decoration: BoxDecoration(
-                    color: sections[i].color,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: Text(
-                    sections[i].name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontFamily: AppFonts.of(context),
-                      fontSize: 13,
-                      fontWeight: FontWeight.w800,
-                      height: 1,
-                      color: AppColors.of(context).text,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          _stack(items: sections[i].items, clip: true),
-        ],
+        ),
       ],
     );
   }
@@ -413,25 +401,114 @@ class _CompanyListState extends State<CompanyList>
     required List<JobApplication> items,
     Key? boxKey,
     required bool clip,
+    bool grouped = false,
   }) {
-    final tops = _tops(items);
+    final slots = grouped
+        ? _slotsOf(items)
+        : [for (final item in items) _JobSlot.card(item)];
+    final tops = <double>[];
+    var height = 0.0;
+    for (final slot in slots) {
+      tops.add(height);
+      height += _slotHeight(slot);
+    }
+    final animate = _allMeasured;
     return AnimatedSize(
-      duration: _allMeasured ? _slotAnim : Duration.zero,
+      duration: animate ? _slotAnim : Duration.zero,
       curve: Curves.easeOutCubic,
       alignment: Alignment.topCenter,
       child: SizedBox(
         key: boxKey,
-        height: _sectionHeight(items),
+        height: height,
         child: Stack(
           clipBehavior: clip ? Clip.hardEdge : Clip.none,
           children: [
-            for (var i = 0; i < items.length; i++)
-              if (items[i].id != _draggingId) _positioned(items[i], tops[i]),
+            for (var i = 0; i < slots.length; i++)
+              if (slots[i].header != null)
+                _headerAt(
+                  slots[i].header!,
+                  tops[i],
+                  first: slots[i].firstHeader,
+                )
+              else if (slots[i].item?.id != _draggingId)
+                _positioned(slots[i].item!, tops[i]),
             if (_draggingId != null)
-              for (var i = 0; i < items.length; i++)
-                if (items[i].id == _draggingId)
-                  _positioned(items[i], tops[i]),
+              for (var i = 0; i < slots.length; i++)
+                if (slots[i].item?.id == _draggingId)
+                  _positioned(slots[i].item!, tops[i]),
           ],
+        ),
+      ),
+    );
+  }
+
+  List<_JobSlot> _slotsOf(List<JobApplication> items) {
+    final sections = _sectionsOf(items);
+    return [
+      for (var i = 0; i < sections.length; i++) ...[
+        _JobSlot.header(sections[i], firstHeader: i == 0),
+        for (final item in sections[i].items) _JobSlot.card(item),
+      ],
+    ];
+  }
+
+  double _slotHeight(_JobSlot slot) {
+    final header = slot.header;
+    if (header == null) return _blockHeight(slot.item!);
+    final reveal = _headerReveal[header.key] ?? 1;
+    final gap = slot.firstHeader ? 0.0 : _headerTopGap;
+    return (_headerLabel + _headerBottom + gap) * reveal;
+  }
+
+  Widget _headerAt(_JobSection section, double top, {required bool first}) {
+    final reveal = _headerReveal[section.key] ?? 1;
+    final gap = first ? 0.0 : _headerTopGap;
+    return AnimatedPositioned(
+      key: ValueKey('header-${section.key}'),
+      duration: _allMeasured ? _slotAnim : Duration.zero,
+      curve: Curves.easeOutCubic,
+      top: top,
+      left: 0,
+      right: 0,
+      height: (_headerLabel + _headerBottom + gap) * math.max(reveal, 0.0001),
+      child: ClipRect(
+        child: AnimatedOpacity(
+          duration: _allMeasured ? _slotAnim : Duration.zero,
+          curve: Curves.easeOutCubic,
+          opacity: reveal,
+          child: Padding(
+            padding: EdgeInsets.only(top: gap, bottom: _headerBottom),
+            child: SizedBox(
+              height: _headerLabel,
+              child: Row(
+                children: [
+                  Container(
+                    width: 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: section.color,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      section.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontFamily: AppFonts.of(context),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w800,
+                        height: 1,
+                        color: AppColors.of(context).text,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ),
       ),
     );
@@ -467,7 +544,29 @@ class _CompanyListState extends State<CompanyList>
         compact: widget.compact,
       ),
     );
-    if (!canDrag) return card;
+    final entering = _entering.contains(application.id)
+        ? TweenAnimationBuilder<double>(
+            key: ValueKey('enter-${application.id}'),
+            tween: Tween(begin: 0, end: 1),
+            duration: _slotAnim,
+            curve: Curves.easeOutCubic,
+            onEnd: () {
+              if (!mounted) return;
+              setState(() => _entering.remove(application.id));
+            },
+            builder: (context, value, child) {
+              return Opacity(
+                opacity: value,
+                child: Transform.translate(
+                  offset: Offset(0, 16 * (1 - value)),
+                  child: child,
+                ),
+              );
+            },
+            child: card,
+          )
+        : card;
+    if (!canDrag) return entering;
     return LongPressDraggable<String>(
       data: application.id,
       delay: const Duration(milliseconds: 400),
@@ -478,10 +577,22 @@ class _CompanyListState extends State<CompanyList>
       onDragUpdate: (details) => _onDragUpdate(details.globalPosition),
       onDragEnd: (_) => _onDragEnded(),
       feedback: const SizedBox.shrink(),
-      childWhenDragging: card,
-      child: card,
+      childWhenDragging: entering,
+      child: entering,
     );
   }
+}
+
+class _JobSlot {
+  const _JobSlot.card(this.item)
+      : header = null,
+        firstHeader = false;
+
+  const _JobSlot.header(this.header, {this.firstHeader = false}) : item = null;
+
+  final JobApplication? item;
+  final _JobSection? header;
+  final bool firstHeader;
 }
 
 class _JobSection {

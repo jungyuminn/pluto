@@ -406,24 +406,38 @@ exports.updateFriendPhoto = onCall(callable, async (request) => {
   return updateFriendPhoto(uid, request.data?.photoURL);
 });
 
-exports.lookupFriendCode = onCall(callable, async (request) => {
-  const uid = requireUid(request);
+async function lookupFriendFor(uid, rawCode) {
   await rateLimit(uid, "lookup", 20, 60 * 1000);
-  const profile = await lookupByCode(parseCode(request.data?.code));
+  const profile = await lookupByCode(parseCode(rawCode));
   if (profile.uid === uid) {
     throw new HttpsError("invalid-argument", "self");
   }
   return profile;
-});
+}
 
-exports.sendFriendRequest = onCall(callable, async (request) => {
-  const uid = requireUid(request);
+function requestPayload(me, other) {
+  return {
+    fromUid: me.uid,
+    toUid: other.uid,
+    fromName: me.displayName,
+    fromCode: me.friendCode,
+    fromPhotoURL: String(me.photoURL || ""),
+    toName: other.displayName,
+    toCode: other.friendCode,
+    toPhotoURL: String(other.photoURL || ""),
+    status: "pending",
+    createdAt: Date.now(),
+    participants: [me.uid, other.uid],
+  };
+}
+
+async function sendFriendFor(uid, rawCode) {
   await rateLimit(uid, "send", 10, 60 * 1000);
   const me = await ensureProfile(uid);
   if (me.needsCode) {
     throw new HttpsError("failed-precondition", "needs-code");
   }
-  const other = await lookupByCode(parseCode(request.data?.code));
+  const other = await lookupByCode(parseCode(rawCode));
   if (other.uid === uid) {
     throw new HttpsError("invalid-argument", "self");
   }
@@ -443,24 +457,12 @@ exports.sendFriendRequest = onCall(callable, async (request) => {
   if (existing) {
     throw new HttpsError("already-exists", "already-sent");
   }
-  const ref = await db().collection("friend_requests").add({
-    fromUid: uid,
-    toUid: other.uid,
-    fromName: me.displayName,
-    fromCode: me.friendCode,
-    fromPhotoURL: String(me.photoURL || ""),
-    toName: other.displayName,
-    toCode: other.friendCode,
-    toPhotoURL: String(other.photoURL || ""),
-    status: "pending",
-    createdAt: Date.now(),
-  });
-  return {status: "pending", requestId: ref.id};
-});
+  const id = `${uid}_${other.uid}`;
+  await db().collection("friend_requests").doc(id).set(requestPayload(me, other));
+  return {status: "pending", requestId: id};
+}
 
-exports.acceptFriendRequest = onCall(callable, async (request) => {
-  const uid = requireUid(request);
-  const requestId = String(request.data?.requestId || "");
+async function acceptFriendFor(uid, requestId) {
   if (!requestId) {
     throw new HttpsError("invalid-argument", "missing-request");
   }
@@ -481,11 +483,9 @@ exports.acceptFriendRequest = onCall(callable, async (request) => {
   await writeFriendship(me, other);
   await ref.update({status: "accepted", updatedAt: Date.now()});
   return {status: "accepted"};
-});
+}
 
-exports.declineFriendRequest = onCall(callable, async (request) => {
-  const uid = requireUid(request);
-  const requestId = String(request.data?.requestId || "");
+async function declineFriendFor(uid, requestId) {
   const ref = db().collection("friend_requests").doc(requestId);
   const snap = await ref.get();
   if (!snap.exists) {
@@ -497,11 +497,9 @@ exports.declineFriendRequest = onCall(callable, async (request) => {
   }
   await ref.update({status: "declined", updatedAt: Date.now()});
   return {status: "declined"};
-});
+}
 
-exports.cancelFriendRequest = onCall(callable, async (request) => {
-  const uid = requireUid(request);
-  const requestId = String(request.data?.requestId || "");
+async function cancelFriendFor(uid, requestId) {
   const ref = db().collection("friend_requests").doc(requestId);
   const snap = await ref.get();
   if (!snap.exists) {
@@ -513,11 +511,9 @@ exports.cancelFriendRequest = onCall(callable, async (request) => {
   }
   await ref.update({status: "cancelled", updatedAt: Date.now()});
   return {status: "cancelled"};
-});
+}
 
-exports.removeFriend = onCall(callable, async (request) => {
-  const uid = requireUid(request);
-  const otherUid = String(request.data?.uid || "");
+async function removeFriendFor(uid, otherUid) {
   if (!otherUid || otherUid === uid) {
     throw new HttpsError("invalid-argument", "bad-uid");
   }
@@ -530,6 +526,63 @@ exports.removeFriend = onCall(callable, async (request) => {
   );
   await batch.commit();
   return {status: "removed"};
+}
+
+exports.lookupFriendCode = onCall(callable, async (request) => {
+  return lookupFriendFor(requireUid(request), request.data?.code);
+});
+
+exports.sendFriendRequest = onCall(callable, async (request) => {
+  return sendFriendFor(requireUid(request), request.data?.code);
+});
+
+exports.acceptFriendRequest = onCall(callable, async (request) => {
+  return acceptFriendFor(requireUid(request), request.data?.requestId);
+});
+
+exports.declineFriendRequest = onCall(callable, async (request) => {
+  return declineFriendFor(requireUid(request), request.data?.requestId);
+});
+
+exports.cancelFriendRequest = onCall(callable, async (request) => {
+  return cancelFriendFor(requireUid(request), request.data?.requestId);
+});
+
+exports.removeFriend = onCall(callable, async (request) => {
+  return removeFriendFor(requireUid(request), String(request.data?.uid || ""));
+});
+
+exports.friendAction = onCall(callable, async (request) => {
+  const uid = requireUid(request);
+  const action = String(request.data?.action || "");
+  switch (action) {
+    case "ensure":
+      await rateLimit(uid, "ensure", 20, 60 * 1000);
+      return ensureProfile(uid, request.data?.displayName);
+    case "claim":
+      await rateLimit(uid, "claim", 10, 60 * 1000);
+      return claimFriendCode(uid, request.data?.code, request.data?.displayName);
+    case "rename":
+      await rateLimit(uid, "rename", 10, 60 * 1000);
+      return updateFriendDisplayName(uid, request.data?.displayName);
+    case "photo":
+      await rateLimit(uid, "photo", 10, 60 * 1000);
+      return updateFriendPhoto(uid, request.data?.photoURL);
+    case "lookup":
+      return lookupFriendFor(uid, request.data?.code);
+    case "send":
+      return sendFriendFor(uid, request.data?.code);
+    case "accept":
+      return acceptFriendFor(uid, request.data?.requestId);
+    case "decline":
+      return declineFriendFor(uid, request.data?.requestId);
+    case "cancel":
+      return cancelFriendFor(uid, request.data?.requestId);
+    case "remove":
+      return removeFriendFor(uid, String(request.data?.uid || ""));
+    default:
+      throw new HttpsError("invalid-argument", "bad-action");
+  }
 });
 
 exports.deleteFriendData = onCall(callable, async (request) => {

@@ -203,8 +203,6 @@ class AppStrings {
   static const accountLogoutDoneTitle = '로그아웃했어요';
   static String accountLogoutDoneBody(String provider) =>
       '$provider 계정에서 로그아웃했어요';
-  static const restoreConfirmCloudBody =
-      '계정에 연결된 다른 기기 내용도 이 백업 시점으로 바뀌어요';
   static const accountDeleteFailedTitle = '탈퇴하지 못했어요';
   static const accountSignedIn = '로그인됨';
   static const accountLoginBody =
@@ -865,7 +863,7 @@ class AppStrings {
   static const friendsRemoveTitle = '친구를 끊을까요?';
   static const friendsRemoveBody = '상대 일정도 더 이상 보이지 않아요';
   static const friendsNeedLogin = '로그인하면 친구를 추가할 수 있어요';
-  static const friendsNotFound = '그 아이디의 친구가 없어요';
+  static const friendsNotFound = '해당 아이디의 사용자는 없어요';
   static const friendsSelf = '내 아이디예요';
   static const friendsAlready = '이미 친구예요';
   static const friendsAlreadySent = '이미 요청을 보냈어요';

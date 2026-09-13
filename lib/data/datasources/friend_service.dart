@@ -39,6 +39,13 @@ class FriendService {
   var _needsResync = false;
   var _needsStickerResync = false;
   var _pushingName = false;
+  String? _requestStreamUid;
+  StreamController<List<FriendRequestItem>>? _incomingCtrl;
+  StreamController<List<FriendRequestItem>>? _outgoingCtrl;
+  StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _incomingSub;
+  StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _outgoingSub;
+  var _lastIncoming = const <FriendRequestItem>[];
+  var _lastOutgoing = const <FriendRequestItem>[];
 
   bool get _ready =>
       Firebase.apps.isNotEmpty && FirebaseAuth.instance.currentUser != null;
@@ -64,6 +71,7 @@ class FriendService {
     _lastStickerIds = {};
     _needsResync = false;
     _needsStickerResync = false;
+    _disposeRequestStreams();
     profile.value = null;
   }
 
@@ -72,7 +80,11 @@ class FriendService {
     if (!_ready) return;
     await _restoreLocal();
     try {
-      await AppAuthService.instance.applySocialProfile();
+      if (!kIsWeb) {
+        await AppAuthService.instance
+            .applySocialProfile()
+            .timeout(const Duration(seconds: 3));
+      }
       await ensureProfile();
     } catch (error) {
       debugPrint('Friend bootstrap failed: $error');
@@ -90,20 +102,48 @@ class FriendService {
   }
 
   Future<FriendProfile> ensureProfile() async {
-    await AppAuthService.instance.applySocialProfile();
+    if (!kIsWeb) {
+      try {
+        await AppAuthService.instance
+            .applySocialProfile()
+            .timeout(const Duration(seconds: 3));
+      } catch (_) {}
+    }
     final user = FirebaseAuth.instance.currentUser;
     final name = user == null ? null : AppAuthService.socialDisplayName(user);
-    final data = await _call('ensureFriendProfile', {
-      'displayName': ?name,
-    });
-    var next = FriendProfile.fromMap(data);
-    final pending = await _readPendingName();
-    if (pending != null && pending.isNotEmpty) {
-      next = next.copyWith(displayName: pending);
+    try {
+      final data = await _call('ensureFriendProfile', {
+        'displayName': ?name,
+      });
+      var next = FriendProfile.fromMap(data);
+      final pending = await _readPendingName();
+      if (pending != null && pending.isNotEmpty) {
+        next = next.copyWith(displayName: pending);
+      }
+      profile.value = next;
+      await _writeCachedProfile();
+      return next;
+    } catch (error) {
+      final fallback = await _readRemoteProfile();
+      if (fallback != null) {
+        profile.value = fallback;
+        await _writeCachedProfile();
+        return fallback;
+      }
+      rethrow;
     }
-    profile.value = next;
-    await _writeCachedProfile();
-    return next;
+  }
+
+  Future<FriendProfile?> _readRemoteProfile() async {
+    final uid = _uid;
+    if (uid == null) return null;
+    try {
+      final snap = await _db.collection('profiles').doc(uid).get();
+      if (!snap.exists) return null;
+      return FriendProfile.fromMap(snap.data() ?? {}, uid: uid);
+    } catch (_) {
+      return null;
+    }
   }
 
   Future<FriendProfile> setDisplayName(String name) async {
@@ -297,27 +337,88 @@ class FriendService {
   }
 
   Stream<List<FriendRequestItem>> incomingRequests() {
-    final uid = _uid;
-    if (uid == null) return Stream.value(const []);
-    return _db
-        .collection('friend_requests')
-        .where('toUid', isEqualTo: uid)
-        .snapshots()
-        .asyncMap((snap) => _pendingWithPhotos(_pendingOf(snap), outgoing: false));
+    _bindRequestStreams();
+    return _incomingCtrl?.stream ?? Stream.value(const []);
   }
 
   Stream<List<FriendRequestItem>> outgoingRequests() {
-    final uid = _uid;
-    if (uid == null) return Stream.value(const []);
-    return _db
-        .collection('friend_requests')
-        .where('fromUid', isEqualTo: uid)
-        .snapshots()
-        .asyncMap((snap) => _pendingWithPhotos(_pendingOf(snap), outgoing: true));
+    _bindRequestStreams();
+    return _outgoingCtrl?.stream ?? Stream.value(const []);
   }
 
   Stream<int> incomingCount() {
     return incomingRequests().map((items) => items.length);
+  }
+
+  void _disposeRequestStreams() {
+    _incomingSub?.cancel();
+    _outgoingSub?.cancel();
+    _incomingSub = null;
+    _outgoingSub = null;
+    _incomingCtrl?.close();
+    _outgoingCtrl?.close();
+    _incomingCtrl = null;
+    _outgoingCtrl = null;
+    _requestStreamUid = null;
+    _lastIncoming = const [];
+    _lastOutgoing = const [];
+  }
+
+  void _bindRequestStreams() {
+    final uid = _uid;
+    if (uid == null) {
+      _disposeRequestStreams();
+      return;
+    }
+    if (_requestStreamUid == uid &&
+        _incomingCtrl != null &&
+        _outgoingCtrl != null) {
+      return;
+    }
+    _disposeRequestStreams();
+    _requestStreamUid = uid;
+    _incomingCtrl = StreamController<List<FriendRequestItem>>.broadcast(
+      onListen: () => _replayRequests(_incomingCtrl, _lastIncoming),
+    );
+    _outgoingCtrl = StreamController<List<FriendRequestItem>>.broadcast(
+      onListen: () => _replayRequests(_outgoingCtrl, _lastOutgoing),
+    );
+    _incomingSub = _db
+        .collection('friend_requests')
+        .where('toUid', isEqualTo: uid)
+        .snapshots()
+        .listen(
+          (snap) {
+            _lastIncoming = _pendingOf(snap);
+            _incomingCtrl?.add(_lastIncoming);
+          },
+          onError: (Object error) {
+            debugPrint('Friend incoming stream failed: $error');
+          },
+        );
+    _outgoingSub = _db
+        .collection('friend_requests')
+        .where('fromUid', isEqualTo: uid)
+        .snapshots()
+        .listen(
+          (snap) {
+            _lastOutgoing = _pendingOf(snap);
+            _outgoingCtrl?.add(_lastOutgoing);
+          },
+          onError: (Object error) {
+            debugPrint('Friend outgoing stream failed: $error');
+          },
+        );
+  }
+
+  void _replayRequests(
+    StreamController<List<FriendRequestItem>>? controller,
+    List<FriendRequestItem> last,
+  ) {
+    scheduleMicrotask(() {
+      if (controller == null || controller.isClosed) return;
+      controller.add(last);
+    });
   }
 
   Stream<List<FriendProfile>> friends() {
@@ -339,11 +440,120 @@ class FriendService {
   }
 
   Future<FriendProfile?> lookupByCode(String code) async {
-    if (!_ready) {
-      throw const FriendException('login-required');
-    }
     final handle = _normalize(code);
-    if (handle.isEmpty) return null;
+    try {
+      return await _lookupViaStore(handle);
+    } catch (error) {
+      debugPrint('Friend lookup store failed: $error');
+    }
+    try {
+      final data = await _call('lookupFriendCode', {'code': handle});
+      final next = FriendProfile.fromMap(data);
+      if (next.uid.isEmpty || next.friendCode.isEmpty) return null;
+      return next;
+    } on FriendException catch (error) {
+      if (error.code == 'no-user' || error.code == 'not-found') return null;
+      rethrow;
+    }
+  }
+
+  Future<bool> isFriend(String uid) async {
+    final me = _uid;
+    if (me == null || uid.isEmpty) return false;
+    try {
+      final snap = await _db
+          .collection('friendships')
+          .doc(me)
+          .collection('friends')
+          .doc(uid)
+          .get();
+      return snap.exists;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<({String status, String requestId})> sendRequest(String code) async {
+    if (kIsWeb) {
+      return _sendViaStore(code);
+    }
+    try {
+      final result = await _call('sendFriendRequest', {'code': _normalize(code)});
+      return (
+        status: '${result['status'] ?? 'pending'}',
+        requestId: '${result['requestId'] ?? ''}',
+      );
+    } catch (error) {
+      if (error is FriendException && !_retrySend(error)) rethrow;
+      debugPrint('Friend send function failed: $error');
+      return _sendViaStore(code);
+    }
+  }
+
+  bool _retrySend(FriendException error) {
+    return switch (error.code) {
+      'self' ||
+      'already-friends' ||
+      'already-sent' ||
+      'needs-code' ||
+      'no-user' ||
+      'not-found' ||
+      'bad-code' =>
+        false,
+      _ => true,
+    };
+  }
+
+  Future<void> accept(String requestId) async {
+    try {
+      await _call('acceptFriendRequest', {'requestId': requestId});
+    } catch (error) {
+      debugPrint('Friend accept function failed: $error');
+      await _respondViaStore(requestId, accept: true);
+    }
+  }
+
+  Future<void> decline(String requestId) async {
+    try {
+      await _call('declineFriendRequest', {'requestId': requestId});
+    } catch (error) {
+      debugPrint('Friend decline function failed: $error');
+      await _respondViaStore(requestId, accept: false);
+    }
+  }
+
+  Future<void> cancel(String requestId) async {
+    try {
+      await _call('cancelFriendRequest', {'requestId': requestId});
+    } catch (error) {
+      debugPrint('Friend cancel function failed: $error');
+      await _cancelViaStore(requestId);
+    }
+  }
+
+  Future<void> remove(String uid) async {
+    try {
+      await _call('removeFriend', {'uid': uid});
+    } catch (error) {
+      debugPrint('Friend remove function failed: $error');
+      await _removeViaStore(uid);
+    }
+  }
+
+  Future<DocumentSnapshot<Map<String, dynamic>>?> _requestSnap(
+    String id,
+  ) async {
+    try {
+      final snap = await _db.collection('friend_requests').doc(id).get();
+      return snap.exists ? snap : null;
+    } catch (error) {
+      debugPrint('Friend request get failed: $error');
+      return null;
+    }
+  }
+
+  Future<FriendProfile?> _lookupViaStore(String handle) async {
+    if (handle.isEmpty || !_ready) return null;
     final codeSnap = await _db.collection('friend_codes').doc(handle).get();
     final uid = '${codeSnap.data()?['uid'] ?? ''}';
     if (uid.isEmpty) return null;
@@ -354,40 +564,142 @@ class FriendService {
     return next;
   }
 
-  Future<bool> isFriend(String uid) async {
-    final me = _uid;
-    if (me == null || uid.isEmpty) return false;
-    final snap = await _db
-        .collection('friendships')
-        .doc(me)
-        .collection('friends')
-        .doc(uid)
-        .get();
-    return snap.exists;
-  }
-
-  Future<({String status, String requestId})> sendRequest(String code) async {
-    final result = await _call('sendFriendRequest', {'code': _normalize(code)});
-    return (
-      status: '${result['status'] ?? 'pending'}',
-      requestId: '${result['requestId'] ?? ''}',
+  Future<({String status, String requestId})> _sendViaStore(String code) async {
+    final cached = profile.value;
+    final uid = (cached?.uid.isNotEmpty == true ? cached!.uid : _uid) ?? '';
+    if (cached == null || cached.friendCode.isEmpty || uid.isEmpty) {
+      throw const FriendException('needs-code');
+    }
+    final me = FriendProfile(
+      uid: uid,
+      displayName: cached.displayName,
+      friendCode: cached.friendCode,
+      photoURL: cached.photoURL,
     );
+    final other = await _lookupViaStore(_normalize(code));
+    if (other == null) throw const FriendException('no-user');
+    if (other.uid == me.uid) throw const FriendException('self');
+    if (await isFriend(other.uid)) {
+      throw const FriendException('already-friends');
+    }
+    final existing = await _requestSnap('${me.uid}_${other.uid}');
+    if (existing != null &&
+        FriendRequestItem.fromMap(existing.id, existing.data() ?? {}).isPending) {
+      throw const FriendException('already-sent');
+    }
+    final reverse = await _requestSnap('${other.uid}_${me.uid}');
+    if (reverse != null &&
+        FriendRequestItem.fromMap(reverse.id, reverse.data() ?? {}).isPending) {
+      await _writeFriendship(me, other, reverse.id);
+      await reverse.reference.update({
+        'status': 'accepted',
+        'updatedAt': DateTime.now().millisecondsSinceEpoch,
+      });
+      return (status: 'accepted', requestId: reverse.id);
+    }
+    final id = '${me.uid}_${other.uid}';
+    await _db.collection('friend_requests').doc(id).set({
+      'fromUid': me.uid,
+      'toUid': other.uid,
+      'fromName': me.displayName,
+      'fromCode': me.friendCode,
+      'fromPhotoURL': me.photoURL,
+      'toName': other.displayName,
+      'toCode': other.friendCode,
+      'toPhotoURL': other.photoURL,
+      'status': 'pending',
+      'createdAt': DateTime.now().millisecondsSinceEpoch,
+      'participants': [me.uid, other.uid],
+    });
+    return (status: 'pending', requestId: id);
   }
 
-  Future<void> accept(String requestId) {
-    return _call('acceptFriendRequest', {'requestId': requestId});
+  Future<void> _respondViaStore(String requestId, {required bool accept}) async {
+    final me = profile.value;
+    if (me == null) throw const FriendException('login-required');
+    final ref = _db.collection('friend_requests').doc(requestId);
+    final snap = await ref.get();
+    if (!snap.exists) throw const FriendException('not-found');
+    final item = FriendRequestItem.fromMap(snap.id, snap.data() ?? {});
+    if (item.toUid != me.uid || !item.isPending) {
+      throw const FriendException('not-allowed');
+    }
+    if (accept) {
+      final other = FriendProfile(
+        uid: item.fromUid,
+        displayName: item.fromName,
+        friendCode: item.fromCode,
+        photoURL: item.fromPhotoURL,
+      );
+      await _writeFriendship(me, other, requestId);
+    }
+    await ref.update({
+      'status': accept ? 'accepted' : 'declined',
+      'updatedAt': DateTime.now().millisecondsSinceEpoch,
+    });
   }
 
-  Future<void> decline(String requestId) {
-    return _call('declineFriendRequest', {'requestId': requestId});
+  Future<void> _cancelViaStore(String requestId) async {
+    final me = _uid;
+    if (me == null) throw const FriendException('login-required');
+    final ref = _db.collection('friend_requests').doc(requestId);
+    final snap = await ref.get();
+    if (!snap.exists) throw const FriendException('not-found');
+    final item = FriendRequestItem.fromMap(snap.id, snap.data() ?? {});
+    if (item.fromUid != me || !item.isPending) {
+      throw const FriendException('not-allowed');
+    }
+    await ref.update({
+      'status': 'cancelled',
+      'updatedAt': DateTime.now().millisecondsSinceEpoch,
+    });
   }
 
-  Future<void> cancel(String requestId) {
-    return _call('cancelFriendRequest', {'requestId': requestId});
+  Future<void> _removeViaStore(String uid) async {
+    final me = _uid;
+    if (me == null || uid.isEmpty) {
+      throw const FriendException('login-required');
+    }
+    final batch = _db.batch();
+    batch.delete(
+      _db.collection('friendships').doc(me).collection('friends').doc(uid),
+    );
+    batch.delete(
+      _db.collection('friendships').doc(uid).collection('friends').doc(me),
+    );
+    await batch.commit();
   }
 
-  Future<void> remove(String uid) async {
-    await _call('removeFriend', {'uid': uid});
+  Future<void> _writeFriendship(
+    FriendProfile me,
+    FriendProfile other,
+    String requestId,
+  ) async {
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final batch = _db.batch();
+    batch.set(
+      _db.collection('friendships').doc(me.uid).collection('friends').doc(other.uid),
+      {
+        'uid': other.uid,
+        'displayName': other.displayName,
+        'friendCode': other.friendCode,
+        'photoURL': other.photoURL,
+        'createdAt': now,
+        'requestId': requestId,
+      },
+    );
+    batch.set(
+      _db.collection('friendships').doc(other.uid).collection('friends').doc(me.uid),
+      {
+        'uid': me.uid,
+        'displayName': me.displayName,
+        'friendCode': me.friendCode,
+        'photoURL': me.photoURL,
+        'createdAt': now,
+        'requestId': requestId,
+      },
+    );
+    await batch.commit();
   }
 
   Future<void> deleteAll() async {
@@ -505,34 +817,6 @@ class FriendService {
       'unauthenticated' || 'login-required' => AppStrings.friendsNeedLogin,
       _ => AppStrings.friendsFailed,
     };
-  }
-
-  Future<List<FriendRequestItem>> _pendingWithPhotos(
-    List<FriendRequestItem> items, {
-    required bool outgoing,
-  }) async {
-    return Future.wait([
-      for (final item in items) _fillPhoto(item, outgoing: outgoing),
-    ]);
-  }
-
-  Future<FriendRequestItem> _fillPhoto(
-    FriendRequestItem item, {
-    required bool outgoing,
-  }) async {
-    final hasPhoto = outgoing ? item.toPhotoURL : item.fromPhotoURL;
-    final uid = outgoing ? item.toUid : item.fromUid;
-    if (hasPhoto.isNotEmpty || uid.isEmpty) return item;
-    try {
-      final snap = await _db.collection('profiles').doc(uid).get();
-      final photo = '${snap.data()?['photoURL'] ?? ''}'.trim();
-      if (photo.isEmpty) return item;
-      return outgoing
-          ? item.copyWith(toPhotoURL: photo)
-          : item.copyWith(fromPhotoURL: photo);
-    } catch (_) {
-      return item;
-    }
   }
 
   List<FriendRequestItem> _pendingOf(
@@ -762,6 +1046,20 @@ class FriendService {
     return raw.replaceAll('＃', '#').replaceAll(RegExp(r'\s+'), '').trim();
   }
 
+  static const _actions = {
+    'ensureFriendProfile': 'ensure',
+    'claimFriendCode': 'claim',
+    'updateFriendDisplayName': 'rename',
+    'updateFriendPhoto': 'photo',
+    'lookupFriendCode': 'lookup',
+    'sendFriendRequest': 'send',
+    'acceptFriendRequest': 'accept',
+    'declineFriendRequest': 'decline',
+    'cancelFriendRequest': 'cancel',
+    'removeFriend': 'remove',
+    'deleteFriendData': 'delete',
+  };
+
   Future<Map<String, dynamic>> _call(
     String name, [
     Map<String, dynamic>? data,
@@ -769,15 +1067,28 @@ class FriendService {
     if (!_ready) {
       throw const FriendException('login-required');
     }
+    final payload = <String, dynamic>{
+      'action': _actions[name] ?? name,
+      ...?data,
+    };
     try {
-      final result = await _fn.httpsCallable(name).call(data ?? {});
-      final payload = result.data;
-      if (payload is Map) {
-        return Map<String, dynamic>.from(payload);
+      final result = await _fn
+          .httpsCallable(
+            name == 'deleteFriendData' ? name : 'friendAction',
+            options: HttpsCallableOptions(
+              timeout: const Duration(seconds: 20),
+            ),
+          )
+          .call(name == 'deleteFriendData' ? (data ?? {}) : payload);
+      final body = result.data;
+      if (body is Map) {
+        return Map<String, dynamic>.from(body);
       }
       return {};
     } on FirebaseFunctionsException catch (error) {
       throw FriendException(error.message ?? error.code);
+    } on TimeoutException {
+      throw const FriendException('rate-limited');
     }
   }
 }

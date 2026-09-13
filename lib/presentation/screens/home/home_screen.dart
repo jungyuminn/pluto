@@ -21,6 +21,7 @@ import 'package:pluto/presentation/screens/home/all_events_screen.dart';
 import 'package:pluto/presentation/screens/home/leftover_todos_screen.dart';
 import 'package:pluto/presentation/screens/home/monthly_stats_screen.dart';
 import 'package:pluto/presentation/screens/home/widgets/home_day_card.dart';
+import 'package:pluto/presentation/screens/home/widgets/home_friends_row.dart';
 import 'package:pluto/presentation/screens/home/widgets/home_leftover_card.dart';
 import 'package:pluto/presentation/screens/home/widgets/home_long_goal_card.dart';
 import 'package:pluto/presentation/screens/home/widgets/home_monthly_stats_card.dart';
@@ -370,20 +371,23 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           kind,
     ];
 
-    Widget? header;
-    if (stats.isNotEmpty) {
-      header = Padding(
-        padding: const EdgeInsets.only(bottom: 12),
-        child: Column(
-          children: [
-            for (var i = 0; i < stats.length; i++) ...[
-              if (i > 0) const SizedBox(height: 12),
-              stats[i],
-            ],
-          ],
-        ),
-      );
-    }
+    final header = Column(
+      children: [
+        const HomeFriendsRow(),
+        if (stats.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Column(
+              children: [
+                for (var i = 0; i < stats.length; i++) ...[
+                  if (i > 0) const SizedBox(height: 12),
+                  stats[i],
+                ],
+              ],
+            ),
+          ),
+      ],
+    );
 
     final list = ReorderableListView(
       padding: EdgeInsets.fromLTRB(

@@ -11,6 +11,7 @@ import 'package:pluto/data/datasources/app_backup_service.dart';
 import 'package:pluto/data/datasources/calendar_event_local_datasource.dart';
 import 'package:pluto/data/datasources/cloud_sync_files.dart';
 import 'package:pluto/data/datasources/cloud_sync_snapshot.dart';
+import 'package:pluto/data/datasources/friend_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class CloudSyncService {
@@ -72,6 +73,7 @@ class CloudSyncService {
       _vaultProvider = lastProvider ?? provider;
       _ready = true;
       _startWatch();
+      unawaited(FriendService.instance.bootstrap());
       unawaited(onResumed());
       return;
     }
@@ -141,6 +143,7 @@ class CloudSyncService {
       if (remote.writtenAt > _writtenAt) _writtenAt = remote.writtenAt;
       _startWatch();
       unawaited(_flushIfDirty());
+      unawaited(FriendService.instance.bootstrap());
     } catch (error) {
       debugPrint('Cloud sync login failed: $error');
       if (parkedNow) {
@@ -192,6 +195,7 @@ class CloudSyncService {
         );
       }
       await AppAuthService.instance.signOut();
+      FriendService.instance.reset();
     } catch (error) {
       if (error is AppAuthException) rethrow;
       throw AppAuthException('sync_logout', _code(error));
@@ -269,6 +273,7 @@ class CloudSyncService {
       _startWatch();
       throw AppAuthException('sync', _code(error));
     }
+    await FriendService.instance.deleteAll();
     await AppAuthService.instance.deleteAccount();
     await _restoreParked(scope, prefs);
   }
@@ -295,6 +300,7 @@ class CloudSyncService {
     _vaultProvider = lastProvider ?? provider;
     _ready = true;
     _startWatch();
+    unawaited(FriendService.instance.bootstrap());
     unawaited(onResumed());
   }
 

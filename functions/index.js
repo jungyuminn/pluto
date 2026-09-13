@@ -4,6 +4,7 @@ const {getStorage} = require("firebase-admin/storage");
 const {onCall, onRequest, HttpsError} = require("firebase-functions/v2/https");
 
 initializeApp();
+Object.assign(exports, require("./friends"));
 
 const syncedFolders = new Set([
   "cover_letters",
@@ -26,18 +27,20 @@ const storageCors = [
   },
 ];
 
-getStorage()
-  .bucket()
-  .setCorsConfiguration(storageCors)
-  .catch((error) => {
-    console.error("storage cors skipped", error?.message || error);
-  });
+if (process.env.K_SERVICE) {
+  getStorage()
+    .bucket()
+    .setCorsConfiguration(storageCors)
+    .catch((error) => {
+      console.error("storage cors skipped", error?.message || error);
+    });
+}
 
 exports.kakaoWebSignIn = onCall(
   {
     cors: true,
     invoker: "public",
-    region: "us-central1",
+    region: "asia-northeast3",
   },
   async (request) => {
     try {
@@ -103,6 +106,13 @@ exports.kakaoWebSignIn = onCall(
         }
       }
 
+      if (nickname) {
+        try {
+          await auth.updateUser(uid, {displayName: nickname});
+        } catch (error) {
+          console.error("kakao displayName update skipped", error?.message || error);
+        }
+      }
       return {token: await auth.createCustomToken(uid, {provider: "kakao"})};
     } catch (error) {
       if (error instanceof HttpsError) {
@@ -118,7 +128,7 @@ exports.getSyncedFile = onRequest(
   {
     cors: true,
     invoker: "public",
-    region: "us-central1",
+    region: "asia-northeast3",
     timeoutSeconds: 60,
     memory: "512MiB",
   },

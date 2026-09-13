@@ -506,7 +506,7 @@ class CloudSyncFiles {
       final response = await http
           .get(
             Uri.https(
-              'us-central1-jopb-65c0f.cloudfunctions.net',
+              'asia-northeast3-jopb-65c0f.cloudfunctions.net',
               '/getSyncedFile',
               {'folder': file.folder, 'name': file.name},
             ),

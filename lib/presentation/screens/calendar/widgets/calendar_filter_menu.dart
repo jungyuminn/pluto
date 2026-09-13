@@ -4,8 +4,8 @@ import 'package:pluto/core/constants/app_fonts.dart';
 import 'package:pluto/core/constants/app_icons.dart';
 import 'package:pluto/core/constants/app_strings.dart';
 import 'package:pluto/core/theme/app_colors.dart';
-import 'package:pluto/core/utils/press_bounce.dart';
 import 'package:pluto/presentation/widgets/app_bar_icon_group.dart';
+import 'package:pluto/presentation/widgets/overflow_menu.dart';
 import 'package:pluto/presentation/widgets/themed_asset.dart';
 
 class CalendarOverflowMenu extends StatelessWidget {
@@ -30,11 +30,11 @@ class CalendarOverflowMenu extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _MenuCard(
+    return OverflowMenuCard(
       children: [
         _MenuReveal(
           visible: !showDiary,
-          child: _MenuItem(
+          child: OverflowMenuItem(
             label: AppStrings.calendarVisibleItems,
             trailingAsset: AppIcons.calendarList,
             onPressed: onVisibleItems,
@@ -42,14 +42,14 @@ class CalendarOverflowMenu extends StatelessWidget {
         ),
         _MenuReveal(
           visible: !showDiary,
-          child: _MenuItem(
+          child: OverflowMenuItem(
             label: AppStrings.calendarSortMode,
             trailingAsset: AppIcons.calendarList,
             trailingQuarterTurns: 1,
             onPressed: onSortMode,
           ),
         ),
-        _MenuItem(
+        OverflowMenuItem(
           label: AppStrings.categoryEditTitle,
           trailingAsset: AppIcons.editOutlined,
           onPressed: onEditCategories,
@@ -107,10 +107,10 @@ class CalendarFilterMenu extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _MenuCard(
+    return OverflowMenuCard(
       children: [
         if (onBack != null)
-          _MenuItem(
+          OverflowMenuItem(
             label: AppStrings.calendarVisibleItems,
             leading: Icons.chevron_left_rounded,
             onPressed: onBack!,
@@ -205,10 +205,10 @@ class CalendarSortMenu extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _MenuCard(
+    return OverflowMenuCard(
       children: [
         if (onBack != null)
-          _MenuItem(
+          OverflowMenuItem(
             label: AppStrings.calendarSortMode,
             leading: Icons.chevron_left_rounded,
             onPressed: onBack!,
@@ -269,22 +269,22 @@ class JobOverflowMenu extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _MenuCard(
+    return OverflowMenuCard(
       children: [
-        _MenuItem(
+        OverflowMenuItem(
           label: showLicense
               ? AppStrings.licenseVisibleItems
               : AppStrings.jobVisibleItems,
           trailingAsset: AppIcons.calendarList,
           onPressed: onVisibleItems,
         ),
-        _MenuItem(
+        OverflowMenuItem(
           label: AppStrings.calendarSortMode,
           trailingAsset: AppIcons.calendarList,
           trailingQuarterTurns: 1,
           onPressed: onSortMode,
         ),
-        _MenuItem(
+        OverflowMenuItem(
           label: AppStrings.categoryEditTitle,
           trailingAsset: AppIcons.editOutlined,
           onPressed: onEditCategories,
@@ -317,10 +317,10 @@ class JobVisibleItemsMenu extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _MenuCard(
+    return OverflowMenuCard(
       children: [
         if (onBack != null)
-          _MenuItem(
+          OverflowMenuItem(
             label: AppStrings.jobVisibleItems,
             leading: Icons.chevron_left_rounded,
             onPressed: onBack!,
@@ -358,10 +358,10 @@ class LicenseVisibleItemsMenu extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _MenuCard(
+    return OverflowMenuCard(
       children: [
         if (onBack != null)
-          _MenuItem(
+          OverflowMenuItem(
             label: AppStrings.licenseVisibleItems,
             leading: Icons.chevron_left_rounded,
             onPressed: onBack!,
@@ -395,20 +395,20 @@ class AllEventsOverflowMenu extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _MenuCard(
+    return OverflowMenuCard(
       children: [
-        _MenuItem(
+        OverflowMenuItem(
           label: AppStrings.searchVisibleItems,
           trailingAsset: AppIcons.calendarList,
           onPressed: onVisibleItems,
         ),
-        _MenuItem(
+        OverflowMenuItem(
           label: AppStrings.calendarSortMode,
           trailingAsset: AppIcons.calendarList,
           trailingQuarterTurns: 1,
           onPressed: onSortMode,
         ),
-        _MenuItem(
+        OverflowMenuItem(
           label: AppStrings.searchRangeSetting,
           trailingAsset: AppIcons.calendarOutlined,
           onPressed: onPickRange,
@@ -438,10 +438,10 @@ class AllEventsVisibleMenu extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _MenuCard(
+    return OverflowMenuCard(
       children: [
         if (onBack != null)
-          _MenuItem(
+          OverflowMenuItem(
             label: AppStrings.searchVisibleItems,
             leading: Icons.chevron_left_rounded,
             onPressed: onBack!,
@@ -480,10 +480,10 @@ class AllEventsSortMenu extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _MenuCard(
+    return OverflowMenuCard(
       children: [
         if (onBack != null)
-          _MenuItem(
+          OverflowMenuItem(
             label: AppStrings.calendarSortMode,
             leading: Icons.chevron_left_rounded,
             onPressed: onBack!,
@@ -731,60 +731,6 @@ class _AllEventsFilterMenuButtonState extends State<AllEventsFilterMenuButton>
   }
 }
 
-class _MenuCard extends StatelessWidget {
-  const _MenuCard({required this.children});
-
-  final List<Widget> children;
-
-  static double _minWidthOf(BuildContext context) {
-    final style = TextStyle(
-      fontFamily: AppFonts.of(context),
-      fontSize: 16,
-      fontWeight: FontWeight.w500,
-    );
-    double widthOf(String text) {
-      final painter = TextPainter(
-        text: TextSpan(text: text, style: style),
-        maxLines: 1,
-        textDirection: TextDirection.ltr,
-      )..layout();
-      return painter.width;
-    }
-
-    final label = [
-      AppStrings.calendarVisibleItems,
-      AppStrings.jobVisibleItems,
-      AppStrings.licenseVisibleItems,
-      AppStrings.searchVisibleItems,
-    ].map(widthOf).reduce((a, b) => a > b ? a : b);
-    return label + 74;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: AppColors.of(context).card,
-      elevation: 8,
-      shadowColor: const Color(0x33000000),
-      borderRadius: BorderRadius.circular(18),
-      clipBehavior: Clip.antiAlias,
-      child: ConstrainedBox(
-        constraints: BoxConstraints(minWidth: _minWidthOf(context)),
-        child: IntrinsicWidth(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: children,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 class _MenuReveal extends StatefulWidget {
   const _MenuReveal({required this.visible, required this.child});
 
@@ -845,73 +791,6 @@ class _MenuRevealState extends State<_MenuReveal>
           child: IgnorePointer(
             ignoring: !widget.visible,
             child: widget.child,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _MenuItem extends StatelessWidget {
-  const _MenuItem({
-    required this.label,
-    required this.onPressed,
-    this.leading,
-    this.trailingAsset,
-    this.trailingQuarterTurns = 0,
-  });
-
-  final String label;
-  final VoidCallback onPressed;
-  final IconData? leading;
-  final String? trailingAsset;
-  final int trailingQuarterTurns;
-
-  @override
-  Widget build(BuildContext context) {
-    return PressBounce(
-      onPressed: onPressed,
-      pressedScale: 0.96,
-      borderRadius: BorderRadius.circular(14),
-      child: SizedBox(
-        width: double.infinity,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(14, 14, 16, 14),
-          child: Row(
-            children: [
-              if (leading != null) ...[
-                Icon(leading, size: 22, color: AppColors.of(context).icon),
-                const SizedBox(width: 6),
-              ],
-              Expanded(
-                child: Text(
-                  label,
-                  style: TextStyle(
-                    fontFamily: AppFonts.of(context),
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.of(context).text,
-                  ),
-                ),
-              ),
-              if (trailingAsset != null) ...[
-                const SizedBox(width: 10),
-                RotatedBox(
-                  quarterTurns: trailingQuarterTurns,
-                  child: ColorFiltered(
-                    colorFilter: ColorFilter.mode(
-                      AppColors.light.icon,
-                      BlendMode.srcIn,
-                    ),
-                    child: AppAssetImage(
-                      asset: trailingAsset!,
-                      width: 22,
-                      height: 22,
-                    ),
-                  ),
-                ),
-              ],
-            ],
           ),
         ),
       ),

@@ -87,7 +87,7 @@ Future<KakaoWebTokens> loginWithKakaoOnWeb({
 
   final settings = JSObject();
   settings['isPopup'] = true.toJS;
-  settings['scope'] = 'openid'.toJS;
+  settings['scope'] = 'openid profile_nickname'.toJS;
   settings['throughTalk'] = true.toJS;
   if (nonce != null && nonce.isNotEmpty) {
     settings['nonce'] = nonce.toJS;

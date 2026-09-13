@@ -54,6 +54,7 @@ class AppIcons {
   static const resumeOutlined = 'assets/icons/resume_outlined.svg';
   static const status = 'assets/icons/status.svg';
   static const trashCan = 'assets/icons/trash_can.svg';
+  static const edit = 'assets/icons/edit.svg';
   static const editOutlined = 'assets/icons/edit_outlined.svg';
   static const emoji = 'assets/icons/emoji.svg';
   static const googleLogo = 'assets/icons/google_logo.svg';

@@ -20,6 +20,7 @@ class DayEventLabel extends StatefulWidget {
     this.onPressed,
     this.onLongPressed,
     this.onCompletePressed,
+    this.showComplete = false,
     this.showCategory = true,
     this.memo = '',
     this.overline,
@@ -44,6 +45,7 @@ class DayEventLabel extends StatefulWidget {
   final VoidCallback? onPressed;
   final VoidCallback? onLongPressed;
   final VoidCallback? onCompletePressed;
+  final bool showComplete;
   final bool showCategory;
   final String memo;
   final String? overline;
@@ -78,6 +80,8 @@ class _DayEventLabelState extends State<DayEventLabel> {
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
+    final hasComplete =
+        widget.onCompletePressed != null || widget.showComplete;
     final target = widget.disabled ? colors.muted : widget.color;
     final scale = AppFonts.labelScaleOf(context);
     final typeScale = widget.height / _baseHeight;
@@ -292,9 +296,7 @@ class _DayEventLabelState extends State<DayEventLabel> {
                 if (widget.isRange)
                   Padding(
                     padding: EdgeInsets.only(
-                      right: widget.onCompletePressed == null && !widget.isRepeat
-                          ? 6
-                          : 0,
+                      right: !hasComplete && !widget.isRepeat ? 6 : 0,
                     ),
                     child: SizedBox(
                       width: 28,
@@ -309,7 +311,7 @@ class _DayEventLabelState extends State<DayEventLabel> {
                 if (widget.isRepeat)
                   Padding(
                     padding: EdgeInsets.only(
-                      right: widget.onCompletePressed == null ? 6 : 0,
+                      right: hasComplete ? 0 : 6,
                     ),
                     child: SizedBox(
                       width: 28,
@@ -321,7 +323,7 @@ class _DayEventLabelState extends State<DayEventLabel> {
                       ),
                     ),
                   ),
-                if (widget.onCompletePressed != null)
+                if (hasComplete)
                   Padding(
                     padding: const EdgeInsets.only(right: 6),
                     child: Listener(
@@ -329,11 +331,13 @@ class _DayEventLabelState extends State<DayEventLabel> {
                       child: EventCompleteButton(
                         completed: _completed,
                         color: accent,
-                        onPressed: () {
-                          _skipLabelTap = true;
-                          setState(() => _completed = !_completed);
-                          widget.onCompletePressed!();
-                        },
+                        onPressed: widget.onCompletePressed == null
+                            ? null
+                            : () {
+                                _skipLabelTap = true;
+                                setState(() => _completed = !_completed);
+                                widget.onCompletePressed!();
+                              },
                       ),
                     ),
                   ),

@@ -7,12 +7,12 @@ class EventCompleteButton extends StatefulWidget {
     super.key,
     required this.completed,
     required this.color,
-    required this.onPressed,
+    this.onPressed,
   });
 
   final bool completed;
   final Color color;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
 
   @override
   State<EventCompleteButton> createState() => _EventCompleteButtonState();
@@ -52,14 +52,16 @@ class _EventCompleteButtonState extends State<EventCompleteButton>
   Widget build(BuildContext context) {
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
-      onTap: () {
-        if (widget.completed) {
-          _burst.value = 0;
-        } else {
-          _burst.forward();
-        }
-        widget.onPressed();
-      },
+      onTap: widget.onPressed == null
+          ? null
+          : () {
+              if (widget.completed) {
+                _burst.value = 0;
+              } else {
+                _burst.forward();
+              }
+              widget.onPressed!();
+            },
       child: SizedBox(
         width: 28,
         height: 28,

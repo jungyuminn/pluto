@@ -1,11 +1,103 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isUser(userId) {
+      return signedIn() && request.auth.uid == userId;
+    }
+
+    function isFriendOf(ownerId) {
+      return signedIn() &&
+        exists(/databases/$(database)/documents/friendships/$(ownerId)/friends/$(request.auth.uid));
+    }
+
+    function sharedEventValid() {
+      let data = request.resource.data;
+      return data.keys().hasOnly([
+          'title',
+          'date',
+          'color',
+          'categoryName',
+          'completed',
+          'groupId',
+          'startMinutes',
+          'endMinutes',
+          'visibility',
+          'updatedAt'
+        ]) &&
+        data.title is string &&
+        data.title.size() > 0 &&
+        data.title.size() <= 80 &&
+        data.date is string &&
+        data.color is int &&
+        (data.visibility == 'title' || data.visibility == 'busy') &&
+        data.updatedAt is int &&
+        (!('categoryName' in data) || data.categoryName == null ||
+          (data.categoryName is string && data.categoryName.size() <= 32)) &&
+        (!('completed' in data) || data.completed is bool) &&
+        (!('groupId' in data) || data.groupId == null || data.groupId is string) &&
+        (!('startMinutes' in data) || data.startMinutes == null || data.startMinutes is int) &&
+        (!('endMinutes' in data) || data.endMinutes == null || data.endMinutes is int);
+    }
+
+    function sharedStickerValid() {
+      let data = request.resource.data;
+      return data.keys().hasOnly(['date', 'asset', 'updatedAt']) &&
+        data.date is string &&
+        data.date.size() == 10 &&
+        data.asset is string &&
+        data.asset.size() > 0 &&
+        data.asset.size() <= 200 &&
+        data.asset.matches('assets/stickers/.*') &&
+        data.updatedAt is int;
+    }
+
     match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read, write: if isUser(userId);
       match /vaults/{provider} {
-        allow read, write: if request.auth != null && request.auth.uid == userId;
+        allow read, write: if isUser(userId);
       }
+    }
+
+    match /profiles/{userId} {
+      allow get: if signedIn();
+      allow list, write: if false;
+    }
+
+    match /friend_codes/{code} {
+      allow get: if signedIn();
+      allow list, write: if false;
+    }
+
+    match /friend_requests/{requestId} {
+      allow read: if signedIn() &&
+        (resource.data.fromUid == request.auth.uid ||
+         resource.data.toUid == request.auth.uid);
+      allow write: if false;
+    }
+
+    match /friendships/{userId}/friends/{friendId} {
+      allow read: if isUser(userId) || isUser(friendId);
+      allow write: if false;
+    }
+
+    match /shared_calendars/{userId}/events/{eventId} {
+      allow read: if isUser(userId) || isFriendOf(userId);
+      allow create, update: if isUser(userId) && sharedEventValid();
+      allow delete: if isUser(userId);
+    }
+
+    match /shared_calendars/{userId}/stickers/{stickerId} {
+      allow read: if isUser(userId) || isFriendOf(userId);
+      allow create, update: if isUser(userId) && sharedStickerValid();
+      allow delete: if isUser(userId);
+    }
+
+    match /rate_limits/{id} {
+      allow read, write: if false;
     }
   }
 }

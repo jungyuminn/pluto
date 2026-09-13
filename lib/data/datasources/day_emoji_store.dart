@@ -23,6 +23,8 @@ class DayEmojiStore extends ChangeNotifier {
     _load();
   }
 
+  static void Function(Map<String, String> stickers)? syncEventLayer;
+
   static const key = 'day_emojis';
   static const packOrderKey = 'sticker_pack_order';
 
@@ -67,6 +69,9 @@ class DayEmojiStore extends ChangeNotifier {
     _layers[layer] = current;
     await _persist();
     notifyListeners();
+    if (layer == DayStickerLayer.event) {
+      syncEventLayer?.call(current);
+    }
   }
 
   void reload() {
@@ -78,6 +83,20 @@ class DayEmojiStore extends ChangeNotifier {
     final month = date.month.toString().padLeft(2, '0');
     final day = date.day.toString().padLeft(2, '0');
     return '${date.year}-$month-$day';
+  }
+
+  static Map<String, String> eventStampsFromRaw(String? raw) {
+    if (raw == null || raw.isEmpty) return {};
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is! Map) return {};
+      if (_looksLayered(decoded)) {
+        return _stampMap(decoded[DayStickerLayer.event.name]);
+      }
+      return _stampMap(decoded);
+    } catch (_) {
+      return {};
+    }
   }
 
   void _load() {

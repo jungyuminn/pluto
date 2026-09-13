@@ -67,6 +67,42 @@ class AppAuthService {
     return null;
   }
 
+  static String? socialDisplayName(User user) {
+    final candidates = [
+      user.displayName,
+      ...user.providerData.map((info) => info.displayName),
+    ];
+    for (final raw in candidates) {
+      final name = raw?.trim() ?? '';
+      if (_isSocialName(name)) return name;
+    }
+    return null;
+  }
+
+  static bool _isSocialName(String name) {
+    if (name.isEmpty) return false;
+    if (name.contains('@')) return false;
+    if (RegExp(r'^\d+$').hasMatch(name)) return false;
+    return true;
+  }
+
+  Future<void> applySocialProfile() async {
+    final user = this.user;
+    if (user == null) return;
+    if (user.providerData.any((info) => info.providerId == 'oidc.kakao') ||
+        user.uid.startsWith('kakao_')) {
+      await _applyKakaoProfile(force: true);
+    }
+  }
+
+  static String? _kakaoNicknameOf(kakao.User me) {
+    final fromAccount = me.kakaoAccount?.profile?.nickname?.trim();
+    if (fromAccount != null && fromAccount.isNotEmpty) return fromAccount;
+    final fromProps = me.properties?['nickname']?.trim();
+    if (fromProps != null && fromProps.isNotEmpty) return fromProps;
+    return null;
+  }
+
   static String accountHandle(User user) {
     final emails = [
       user.email,
@@ -78,6 +114,18 @@ class AppAuthService {
     if (emails.isNotEmpty) return emails.first;
     final name = user.displayName?.trim();
     if (name != null && name.isNotEmpty) return name;
+    return accountId(user);
+  }
+
+  static String accountId(User user) {
+    final emails = [
+      user.email,
+      ...user.providerData.map((info) => info.email),
+    ]
+        .whereType<String>()
+        .map((value) => value.trim())
+        .where((value) => value.isNotEmpty);
+    if (emails.isNotEmpty) return emails.first;
     final ids = user.providerData
         .map((info) => info.uid)
         .whereType<String>()
@@ -216,7 +264,7 @@ class AppAuthService {
       token = await _kakaoLogin(nonce);
       if (token.idToken == null || token.idToken!.isEmpty) {
         token = await kakao.UserApi.instance.loginWithNewScopes(
-          ['openid'],
+          ['openid', 'profile_nickname'],
           nonce: nonce,
         );
       }
@@ -257,7 +305,15 @@ class AppAuthService {
         hasNonce ? rawNonce : null,
       );
       _sessionProvider = 'kakao';
-      await _applyKakaoProfile();
+      final jwtName = '${payload['nickname'] ?? payload['name'] ?? ''}'.trim();
+      if (jwtName.isNotEmpty && _isSocialName(jwtName)) {
+        final current = FirebaseAuth.instance.currentUser;
+        if (current != null && current.displayName != jwtName) {
+          await current.updateDisplayName(jwtName);
+          await current.reload();
+        }
+      }
+      await _applyKakaoProfile(force: true);
     } catch (error) {
       debugPrint('Kakao Firebase auth failed: $error');
       throw AppAuthException(
@@ -307,7 +363,7 @@ class AppAuthService {
   Future<String> _exchangeKakaoWebToken(String accessToken) async {
     final response = await http.post(
       Uri.parse(
-        'https://us-central1-jopb-65c0f.cloudfunctions.net/kakaoWebSignIn',
+        'https://asia-northeast3-jopb-65c0f.cloudfunctions.net/kakaoWebSignIn',
       ),
       headers: const {'Content-Type': 'application/json'},
       body: jsonEncode({
@@ -385,24 +441,24 @@ class AppAuthService {
     throw lastError ?? const AppAuthException('kakao_oidc');
   }
 
-  Future<void> _applyKakaoProfile() async {
-    if (_kakaoProfileTried) return;
+  Future<void> _applyKakaoProfile({bool force = false}) async {
+    if (_kakaoProfileTried && !force) return;
     _kakaoProfileTried = true;
     final firebaseUser = FirebaseAuth.instance.currentUser;
     if (firebaseUser == null) return;
     try {
-      final me = await kakao.UserApi.instance.me();
-      final email = me.kakaoAccount?.email?.trim();
-      final nickname = me.kakaoAccount?.profile?.nickname?.trim();
-      final id = me.id.toString();
-      final label = (email != null && email.isNotEmpty)
-          ? email
-          : (id != null && id.isNotEmpty)
-              ? id
-              : nickname;
-      if (label == null || label.isEmpty) return;
-      if (firebaseUser.displayName == label) return;
-      await firebaseUser.updateDisplayName(label);
+      var me = await kakao.UserApi.instance.me();
+      var nickname = _kakaoNicknameOf(me);
+      if ((nickname == null || nickname.isEmpty) &&
+          me.kakaoAccount?.profileNicknameNeedsAgreement == true &&
+          !kIsWeb) {
+        await kakao.UserApi.instance.loginWithNewScopes(['profile_nickname']);
+        me = await kakao.UserApi.instance.me();
+        nickname = _kakaoNicknameOf(me);
+      }
+      if (nickname == null || nickname.isEmpty) return;
+      if (firebaseUser.displayName == nickname) return;
+      await firebaseUser.updateDisplayName(nickname);
       await firebaseUser.reload();
     } catch (error) {
       debugPrint('Kakao profile apply failed: $error');

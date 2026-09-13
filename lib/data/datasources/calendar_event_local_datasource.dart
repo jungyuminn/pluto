@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:pluto/core/home_widget/home_screen_widget_service.dart';
 import 'package:pluto/core/constants/app_strings.dart';
 import 'package:pluto/core/notifications/todo_reminder_service.dart';
+import 'package:pluto/data/datasources/friend_service.dart';
 import 'package:pluto/data/models/calendar_event_model.dart';
 import 'package:pluto/domain/entities/calendar_event.dart';
 import 'package:pluto/domain/entities/event_category.dart';
@@ -88,6 +89,7 @@ class CalendarEventLocalDataSource {
       events.map(CalendarEventModel.toJson).toList(),
     );
     await _prefs.setString(key, payload);
+    FriendService.instance.scheduleSync(events);
     unawaited(_syncSideEffects());
   }
 

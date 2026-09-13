@@ -9,6 +9,8 @@ import 'package:pluto/core/constants/app_strings.dart';
 import 'package:pluto/core/layout/pc_layout.dart';
 import 'package:pluto/core/theme/app_colors.dart';
 import 'package:pluto/core/theme/app_skin_background.dart';
+import 'package:pluto/core/theme/app_theme.dart';
+import 'package:pluto/data/datasources/theme_preference.dart';
 import 'package:pluto/core/utils/press_bounce.dart';
 import 'package:pluto/core/utils/swipe_to_delete.dart';
 import 'package:pluto/data/datasources/day_emoji_store.dart';
@@ -34,6 +36,8 @@ Future<void> showDayEventsDialog(
   required List<CalendarEvent> events,
   VoidCallback? onEventsChanged,
   Rect? origin,
+  bool readOnly = false,
+  String? sticker,
 }) {
   CalendarDayDropTarget.reset();
   return showGeneralDialog<void>(
@@ -43,11 +47,23 @@ Future<void> showDayEventsDialog(
     barrierColor: const Color(0x00000000),
     transitionDuration: const Duration(milliseconds: 150),
     pageBuilder: (context, animation, secondaryAnimation) {
-      return DayEventsDialog(
+      Widget dialog = DayEventsDialog(
         date: date,
         initialEvents: events,
         onEventsChanged: onEventsChanged,
+        readOnly: readOnly,
+        sticker: sticker,
       );
+      if (readOnly) {
+        dialog = Theme(
+          data: AppTheme.themed(
+            dark: Theme.of(context).brightness == Brightness.dark,
+            skin: AppSkin.classic,
+          ),
+          child: dialog,
+        );
+      }
+      return dialog;
     },
     transitionBuilder: (context, animation, secondaryAnimation, child) {
       final t = Curves.easeOutCubic.transform(animation.value);
@@ -119,11 +135,15 @@ class DayEventsDialog extends StatefulWidget {
     required this.date,
     required this.initialEvents,
     this.onEventsChanged,
+    this.readOnly = false,
+    this.sticker,
   });
 
   final DateTime date;
   final List<CalendarEvent> initialEvents;
   final VoidCallback? onEventsChanged;
+  final bool readOnly;
+  final String? sticker;
 
   @override
   State<DayEventsDialog> createState() => _DayEventsDialogState();
@@ -171,11 +191,15 @@ class _DayEventsDialogState extends State<DayEventsDialog> {
     _compact = scope.dayEventsViewPreference.categoryView;
     _sortByTime = scope.dayEventsViewPreference.sortByTime;
     _showTime = scope.dayEventsViewPreference.showTime;
-    final sticker = scope.dayEmojiStore.on(
-      widget.date,
-      layer: DayStickerLayer.event,
-    );
-    _emoji = DayStickers.isAsset(sticker) ? sticker : null;
+    if (widget.readOnly) {
+      _emoji = DayStickers.isAsset(widget.sticker) ? widget.sticker : null;
+    } else {
+      final sticker = scope.dayEmojiStore.on(
+        widget.date,
+        layer: DayStickerLayer.event,
+      );
+      _emoji = DayStickers.isAsset(sticker) ? sticker : null;
+    }
     _items = _itemsForView;
     _loadCategories();
   }
@@ -303,6 +327,7 @@ class _DayEventsDialogState extends State<DayEventsDialog> {
   }
 
   Future<void> _reload({bool animate = true}) async {
+    if (widget.readOnly) return;
     final scope = AppScope.of(context);
     final calendarPrefs = scope.calendarPreference;
     final events = calendarPrefs.showTodos
@@ -368,6 +393,7 @@ class _DayEventsDialogState extends State<DayEventsDialog> {
   }
 
   Future<void> _pickEmoji() async {
+    if (widget.readOnly) return;
     final picked = await showDayEmojiSheet(context, selected: _emoji);
     if (picked == null || !mounted) return;
     await AppScope.of(context).dayEmojiStore.set(
@@ -394,12 +420,14 @@ class _DayEventsDialogState extends State<DayEventsDialog> {
   }
 
   Future<void> _add() async {
+    if (widget.readOnly) return;
     final saved = await showAddEventSheet(context, date: widget.date);
     if (saved && mounted) await _reload();
     if (saved) widget.onEventsChanged?.call();
   }
 
   Future<void> _edit(CalendarEvent event) async {
+    if (widget.readOnly) return;
     if (event.isJob) {
       await _openJob(event);
       return;
@@ -434,6 +462,7 @@ class _DayEventsDialogState extends State<DayEventsDialog> {
   }
 
   Future<bool> _delete(CalendarEvent event) async {
+    if (widget.readOnly) return false;
     if (event.isRepeat) {
       final scope = await showDeleteRepeatEventDialog(context);
       if (scope == null || !mounted) return false;
@@ -466,6 +495,7 @@ class _DayEventsDialogState extends State<DayEventsDialog> {
   }
 
   Future<void> _toggleComplete(CalendarEvent event) async {
+    if (widget.readOnly) return;
     final updater = AppScope.of(context).updateCalendarEvent;
     final next = event.copyWith(completed: !event.completed);
     if (event.isRepeat) {
@@ -742,6 +772,7 @@ class _DayEventsDialogState extends State<DayEventsDialog> {
                 width: PcLayout.dayDialogWidthOf(),
                 child: AppSkinBackground(
                   color: colors.card,
+                  skin: widget.readOnly ? AppSkin.classic : null,
                   liftForNav: false,
                   child: Padding(
                 padding: const EdgeInsets.fromLTRB(20, 20, 16, 20),
@@ -807,22 +838,25 @@ class _DayEventsDialogState extends State<DayEventsDialog> {
                             ],
                           ),
                         ),
-                        AppBarPill(
-                          asset: AppIcons.emoji,
-                          label: AppStrings.emojiAction,
-                          onPressed: _pickEmoji,
-                        ),
+                        if (!widget.readOnly)
+                          AppBarPill(
+                            asset: AppIcons.emoji,
+                            label: AppStrings.emojiAction,
+                            onPressed: _pickEmoji,
+                          ),
                       ],
                     ),
                     const SizedBox(height: 15),
                     Expanded(
                       child: _buildList(),
                     ),
-                    const SizedBox(height: 16),
-                    Padding(
-                      padding: const EdgeInsets.only(right: 8),
-                      child: AddEventButton(onPressed: _add),
-                    ),
+                    if (!widget.readOnly) ...[
+                      const SizedBox(height: 16),
+                      Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: AddEventButton(onPressed: _add),
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -924,6 +958,7 @@ class _DayEventsDialogState extends State<DayEventsDialog> {
 
     final event = item.event!;
     final timeText = _timeText(event);
+    final readOnly = widget.readOnly;
     final label = event.isJob
         ? DayEventLabel(
             title: event.title,
@@ -933,7 +968,7 @@ class _DayEventsDialogState extends State<DayEventsDialog> {
             memo: event.memo,
             timeText: timeText,
             height: _labelHeight,
-            onPressed: () => _edit(event),
+            onPressed: readOnly ? null : () => _edit(event),
           )
         : DayEventLabel(
             title: event.title,
@@ -945,13 +980,15 @@ class _DayEventsDialogState extends State<DayEventsDialog> {
             memo: event.memo,
             timeText: timeText,
             height: _labelHeight,
-            onPressed: () => _edit(event),
-            onCompletePressed: () => _toggleComplete(event),
+            onPressed: readOnly ? null : () => _edit(event),
+            showComplete: true,
+            onCompletePressed:
+                readOnly ? null : () => _toggleComplete(event),
           );
 
     final body = Padding(
       padding: const EdgeInsets.only(bottom: 10),
-      child: event.isJob
+      child: event.isJob || readOnly
           ? label
           : SwipeToDelete(
               onSwipeLeft: () => _delete(event),
@@ -959,7 +996,7 @@ class _DayEventsDialogState extends State<DayEventsDialog> {
             ),
     );
 
-    if (event.isJob) return body;
+    if (event.isJob || readOnly) return body;
 
     return LayoutBuilder(
       builder: (context, constraints) {

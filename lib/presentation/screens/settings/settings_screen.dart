@@ -8,6 +8,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:pluto/app_scope.dart';
+import 'package:pluto/core/calendar/lunar_date.dart';
 import 'package:pluto/core/constants/app_fonts.dart';
 import 'package:pluto/core/constants/app_icons.dart';
 import 'package:pluto/core/constants/app_strings.dart';
@@ -843,6 +844,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     _openFontSettings(_FontSettingsFocus.labelScale),
               ),
               _SettingsTile(
+                label: AppStrings.fontCalendarDateScale,
+                chevron: true,
+                onPressed: () =>
+                    _openFontSettings(_FontSettingsFocus.calendarDate),
+              ),
+              _SettingsTile(
                 label: AppStrings.fontCalendarChipScale,
                 chevron: true,
                 onPressed: () =>
@@ -1311,55 +1318,109 @@ class _FontLivePreview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = AppColors.of(context);
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: colors.card,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: colors.border),
-      ),
-      child: SizedBox(
-        height:
-            52 * FontPreference.maxScale + 18 * FontPreference.maxScale + 74,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const DayEventLabel(
-                title: '자기소개서 제출',
-                categoryName: '서류',
-                color: Color(0xFF3B82F6),
-                timeText: '14:00',
-              ),
-              const SizedBox(height: 12),
-              Row(
+    final calendar = AppScope.of(context).calendarPreference;
+    return ListenableBuilder(
+      listenable: calendar,
+      builder: (context, _) {
+        final colors = AppColors.of(context);
+        final showLunar = calendar.showLunar;
+        final dateScale = AppFonts.calendarDateScaleOf(context);
+        final now = DateTime.now();
+        return DecoratedBox(
+          decoration: BoxDecoration(
+            color: colors.card,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: colors.border),
+          ),
+          child: SizedBox(
+            height: 52 * FontPreference.maxScale +
+                18 * FontPreference.maxScale +
+                98 +
+                (showLunar ? 16 * FontPreference.maxScale : 0),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  for (final label in AppStrings.weekdays)
-                    Expanded(
-                      child: Text(
-                        label,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontFamily: AppFonts.of(context),
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
-                          color: colors.muted,
+                  const DayEventLabel(
+                    title: '자기소개서 제출',
+                    categoryName: '서류',
+                    color: Color(0xFF3B82F6),
+                    timeText: '14:00',
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      for (final label in AppStrings.weekdays)
+                        Expanded(
+                          child: Text(
+                            label,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontFamily: AppFonts.of(context),
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                              color: colors.muted,
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      for (final day in [8, 9, 10, 11, 12, 13, 14])
+                        Expanded(
+                          child: Column(
+                            children: [
+                              Text(
+                                '$day',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontFamily: AppFonts.of(context),
+                                  fontSize: 12 * dateScale,
+                                  fontWeight: FontWeight.w600,
+                                  height: 1,
+                                  color: colors.text,
+                                ),
+                              ),
+                              if (showLunar) ...[
+                                const SizedBox(height: 2),
+                                Text(
+                                  LunarDate.labelOf(
+                                        DateTime(now.year, now.month, day),
+                                      ) ??
+                                      '',
+                                  textAlign: TextAlign.center,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontFamily: AppFonts.of(context),
+                                    fontSize: 9 * dateScale,
+                                    fontWeight: FontWeight.w500,
+                                    height: 1.1,
+                                    color: colors.muted,
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  const CalendarEventLabel(
+                    title: '면접 연습',
+                    color: Color(0xFF22C55E),
+                  ),
                 ],
               ),
-              const SizedBox(height: 8),
-              const CalendarEventLabel(
-                title: '면접 연습',
-                color: Color(0xFF22C55E),
-              ),
-            ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }
@@ -3656,7 +3717,7 @@ class _DeleteCustomThemeDialog extends StatelessWidget {
   }
 }
 
-enum _FontSettingsFocus { family, labelScale, calendarChip }
+enum _FontSettingsFocus { family, labelScale, calendarChip, calendarDate }
 
 class _FontSettingsPage extends StatefulWidget {
   const _FontSettingsPage({this.focus = _FontSettingsFocus.family});
@@ -3671,6 +3732,7 @@ class _FontSettingsPageState extends State<_FontSettingsPage> {
   final _scroll = ScrollController();
   final _labelKey = GlobalKey();
   final _calendarKey = GlobalKey();
+  final _dateKey = GlobalKey();
 
   @override
   void initState() {
@@ -3695,6 +3757,7 @@ class _FontSettingsPageState extends State<_FontSettingsPage> {
       _FontSettingsFocus.family => null,
       _FontSettingsFocus.labelScale => _labelKey,
       _FontSettingsFocus.calendarChip => _calendarKey,
+      _FontSettingsFocus.calendarDate => _dateKey,
     };
     final target = key?.currentContext?.findRenderObject();
     if (target == null || !_scroll.hasClients) {
@@ -3773,6 +3836,26 @@ class _FontSettingsPageState extends State<_FontSettingsPage> {
                               value: font.labelScale,
                               onChanged: (value) =>
                                   font.setLabelScale(value, persist: true),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      KeyedSubtree(
+                        key: _dateKey,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            const _SectionLabel(
+                              AppStrings.fontCalendarDateScale,
+                            ),
+                            _SettingsSliderTile(
+                              value: font.calendarDateScale,
+                              onChanged: (value) => font.setCalendarDateScale(
+                                value,
+                                persist: true,
+                              ),
                             ),
                           ],
                         ),

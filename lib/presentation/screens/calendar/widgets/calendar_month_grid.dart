@@ -384,6 +384,7 @@ class _CalendarMonthGridState extends State<CalendarMonthGrid>
               final cellWidth = constraints.maxWidth / 7;
               final calendarScale = AppFonts.calendarScaleOf(context);
               final labelScale = AppFonts.calendarLabelScaleOf(context);
+              final dateScale = AppFonts.calendarDateScaleOf(context);
               final allowRange =
                   widget.onRangeSelected != null && !widget.showLedger;
               return GestureDetector(
@@ -430,6 +431,7 @@ class _CalendarMonthGridState extends State<CalendarMonthGrid>
                       minHeight: minWeekHeight,
                       calendarScale: calendarScale,
                       labelScale: labelScale,
+                      dateScale: dateScale,
                       showLunar: _showLunar,
                     );
                     final diaryHeight = CalendarWeekDiaries.heightFor(
@@ -438,6 +440,7 @@ class _CalendarMonthGridState extends State<CalendarMonthGrid>
                       minHeight: minWeekHeight,
                       calendarScale: calendarScale,
                       labelScale: labelScale,
+                      dateScale: dateScale,
                       showLunar: _showLunar,
                       cellWidth: cellWidth,
                     );
@@ -448,6 +451,7 @@ class _CalendarMonthGridState extends State<CalendarMonthGrid>
                       minHeight: minWeekHeight,
                       calendarScale: calendarScale,
                       labelScale: labelScale,
+                      dateScale: dateScale,
                       showLunar: _showLunar,
                     );
                     return AnimatedBuilder(
@@ -516,6 +520,7 @@ class _CalendarMonthGridState extends State<CalendarMonthGrid>
                                     emojisOf: widget.emojisOf,
                                     calendarScale: calendarScale,
                                     labelScale: labelScale,
+                                    dateScale: dateScale,
                                     showLunar: _showLunar,
                                     searchHitKey: widget.searchHitKey,
                                   ),
@@ -546,6 +551,7 @@ class _CalendarMonthGridState extends State<CalendarMonthGrid>
                                                   diariesOf: widget.diariesOf!,
                                                   calendarScale: calendarScale,
                                                   labelScale: labelScale,
+                                                  dateScale: dateScale,
                                                   showLunar: _showLunar,
                                                   searchHitKey:
                                                       widget.searchHitKey,
@@ -570,6 +576,7 @@ class _CalendarMonthGridState extends State<CalendarMonthGrid>
                                                   emojisOf: widget.emojisOf,
                                                   calendarScale: calendarScale,
                                                   labelScale: labelScale,
+                                                  dateScale: dateScale,
                                                   showLunar: _showLunar,
                                                   searchHitKey:
                                                       widget.searchHitKey,

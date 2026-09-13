@@ -40,8 +40,9 @@ class MonthCalendarCard extends StatelessWidget {
       typeface: scope?.typeface ?? AppTypeface.pretendard,
       todoScale: scope?.todoScale ?? 1,
       labelScale: scope?.labelScale ?? 1,
-      calendarScale: math.min(scope?.calendarScale ?? 1, 0.82),
+            calendarScale: math.min(scope?.calendarScale ?? 1, 0.82),
       calendarLabelScale: math.min(scope?.calendarLabelScale ?? 1, 0.8),
+      calendarDateScale: math.min(scope?.calendarDateScale ?? 1, 0.82),
       child: Builder(builder: _buildBody),
     );
   }
@@ -163,6 +164,7 @@ class _WeekRow extends StatelessWidget {
               eventsOf: eventsOf,
               calendarScale: calendarScale,
               labelScale: labelScale,
+              dateScale: AppFonts.calendarDateScaleOf(context),
             ),
           ),
         ),

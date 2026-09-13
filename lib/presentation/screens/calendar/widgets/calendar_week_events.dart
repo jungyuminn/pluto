@@ -16,6 +16,7 @@ class CalendarWeekEvents extends StatefulWidget {
     this.emojisOf,
     this.calendarScale = 1,
     this.labelScale = 1,
+    this.dateScale = 1,
     this.showLunar = false,
     this.searchHitKey,
     this.showAccent = true,
@@ -26,6 +27,7 @@ class CalendarWeekEvents extends StatefulWidget {
   final String? Function(DateTime date)? emojisOf;
   final double calendarScale;
   final double labelScale;
+  final double dateScale;
   final bool showLunar;
   final String? searchHitKey;
   final bool showAccent;
@@ -40,6 +42,7 @@ class CalendarWeekEvents extends StatefulWidget {
     String? Function(DateTime date)? emojisOf,
     double calendarScale = 1,
     double labelScale = 1,
+    double dateScale = 1,
     bool showLunar = false,
   }) {
     final blocks = _blocksFor(
@@ -48,12 +51,14 @@ class CalendarWeekEvents extends StatefulWidget {
       calendarScale,
       labelScale,
       showLunar,
+      dateScale,
     );
     var content = 0.0;
     for (final day in days) {
       final top = CalendarDayCell.eventsTopFor(
             hasHoliday: day.isHoliday,
             scale: calendarScale,
+            dateScale: dateScale,
             showLunar: showLunar,
           ) +
           6;
@@ -73,6 +78,7 @@ class CalendarWeekEvents extends StatefulWidget {
         var bottom = CalendarDayCell.eventsTopFor(
           hasHoliday: days[i].isHoliday,
           scale: calendarScale,
+          dateScale: dateScale,
           showLunar: showLunar,
         );
         for (final block in blocks) {
@@ -123,6 +129,7 @@ class _CalendarWeekEventsState extends State<CalendarWeekEvents> {
       widget.calendarScale,
       widget.labelScale,
       widget.showLunar,
+      widget.dateScale,
     );
     _emojiPaths = _emojiPathsOf();
   }
@@ -136,11 +143,13 @@ class _CalendarWeekEventsState extends State<CalendarWeekEvents> {
       widget.calendarScale,
       widget.labelScale,
       widget.showLunar,
+      widget.dateScale,
     );
     final sameWeek = widget.days.first.date == oldWidget.days.first.date &&
         widget.days.last.date == oldWidget.days.last.date &&
         widget.calendarScale == oldWidget.calendarScale &&
-        widget.labelScale == oldWidget.labelScale;
+        widget.labelScale == oldWidget.labelScale &&
+        widget.dateScale == oldWidget.dateScale;
     final nextEmojis = _emojiPathsOf();
     if (!sameWeek) {
       _exitGen++;
@@ -279,6 +288,7 @@ class _CalendarWeekEventsState extends State<CalendarWeekEvents> {
     var bottom = CalendarDayCell.eventsTopFor(
       hasHoliday: widget.days[dayIndex].isHoliday,
       scale: widget.calendarScale,
+      dateScale: widget.dateScale,
       showLunar: widget.showLunar,
     );
     for (final block in _blocks) {
@@ -391,6 +401,7 @@ List<_WeekBlock> _blocksFor(
   double calendarScale,
   double labelScale,
   bool showLunar,
+  double dateScale,
 ) {
   final occupied = List.generate(7, (_) => <_OccupiedRange>[]);
   final seenGroups = <String>{};
@@ -443,6 +454,7 @@ List<_WeekBlock> _blocksFor(
       CalendarDayCell.eventsTopFor(
         hasHoliday: day.isHoliday,
         scale: calendarScale,
+        dateScale: dateScale,
         showLunar: showLunar,
       ),
   ];

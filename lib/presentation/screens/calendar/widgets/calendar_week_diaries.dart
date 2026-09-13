@@ -17,6 +17,7 @@ class CalendarWeekDiaries extends StatefulWidget {
     required this.diariesOf,
     this.calendarScale = 1,
     this.labelScale = 1,
+    this.dateScale = 1,
     this.showLunar = false,
     this.searchHitKey,
     this.cellWidth = 0,
@@ -26,6 +27,7 @@ class CalendarWeekDiaries extends StatefulWidget {
   final List<DiaryEntry> Function(DateTime date) diariesOf;
   final double calendarScale;
   final double labelScale;
+  final double dateScale;
   final bool showLunar;
   final String? searchHitKey;
   final double cellWidth;
@@ -51,6 +53,7 @@ class CalendarWeekDiaries extends StatefulWidget {
     required double minHeight,
     double calendarScale = 1,
     double labelScale = 1,
+    double dateScale = 1,
     bool showLunar = false,
     double cellWidth = 0,
   }) {
@@ -59,6 +62,7 @@ class CalendarWeekDiaries extends StatefulWidget {
       diariesOf: diariesOf,
       calendarScale: calendarScale,
       labelScale: labelScale,
+      dateScale: dateScale,
       showLunar: showLunar,
       cellWidth: cellWidth,
     );
@@ -67,6 +71,7 @@ class CalendarWeekDiaries extends StatefulWidget {
       final top = CalendarDayCell.eventsTopFor(
         hasHoliday: day.isHoliday,
         scale: calendarScale,
+        dateScale: dateScale,
         showLunar: showLunar,
       );
       if (top > content) content = top;
@@ -96,6 +101,7 @@ class _CalendarWeekDiariesState extends State<CalendarWeekDiaries> {
       diariesOf: widget.diariesOf,
       calendarScale: widget.calendarScale,
       labelScale: widget.labelScale,
+      dateScale: widget.dateScale,
       showLunar: widget.showLunar,
       cellWidth: widget.cellWidth,
     );
@@ -109,13 +115,15 @@ class _CalendarWeekDiariesState extends State<CalendarWeekDiaries> {
       diariesOf: widget.diariesOf,
       calendarScale: widget.calendarScale,
       labelScale: widget.labelScale,
+      dateScale: widget.dateScale,
       showLunar: widget.showLunar,
       cellWidth: widget.cellWidth,
     );
     final sameWeek = widget.days.first.date == oldWidget.days.first.date &&
         widget.days.last.date == oldWidget.days.last.date &&
         widget.calendarScale == oldWidget.calendarScale &&
-        widget.labelScale == oldWidget.labelScale;
+        widget.labelScale == oldWidget.labelScale &&
+        widget.dateScale == oldWidget.dateScale;
     if (!sameWeek) {
       _exitGen++;
       setState(() {
@@ -231,6 +239,7 @@ List<_DiaryTile> _tilesFor({
   required double calendarScale,
   required double labelScale,
   required bool showLunar,
+  double dateScale = 1,
   double cellWidth = 0,
 }) {
   bool sameGroup(DiaryEntry diary, DiaryEntry other) {
@@ -335,6 +344,7 @@ List<_DiaryTile> _tilesFor({
       CalendarDayCell.eventsTopFor(
         hasHoliday: day.isHoliday,
         scale: calendarScale,
+        dateScale: dateScale,
         showLunar: showLunar,
       ),
   ];

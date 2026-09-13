@@ -900,6 +900,7 @@ class _JobPlannerMaterialAppState extends State<_JobPlannerMaterialApp>
               labelScale: guest ? 1 : font.labelScale,
               calendarScale: guest ? 1 : font.calendarScale,
               calendarLabelScale: guest ? 1 : font.calendarLabelScale,
+              calendarDateScale: guest ? 1 : font.calendarDateScale,
               child: overlay == null
                   ? (child ?? const SizedBox.shrink())
                   : AnnotatedRegion<SystemUiOverlayStyle>(

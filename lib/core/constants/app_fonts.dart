@@ -9,6 +9,7 @@ class FontScope extends InheritedWidget {
     required this.labelScale,
     required this.calendarScale,
     required this.calendarLabelScale,
+    required this.calendarDateScale,
     required super.child,
   });
 
@@ -17,6 +18,7 @@ class FontScope extends InheritedWidget {
   final double labelScale;
   final double calendarScale;
   final double calendarLabelScale;
+  final double calendarDateScale;
 
   static FontScope? maybeOf(BuildContext context) {
     return context.dependOnInheritedWidgetOfExactType<FontScope>();
@@ -28,7 +30,8 @@ class FontScope extends InheritedWidget {
         todoScale != oldWidget.todoScale ||
         labelScale != oldWidget.labelScale ||
         calendarScale != oldWidget.calendarScale ||
-        calendarLabelScale != oldWidget.calendarLabelScale;
+        calendarLabelScale != oldWidget.calendarLabelScale ||
+        calendarDateScale != oldWidget.calendarDateScale;
   }
 }
 
@@ -61,5 +64,9 @@ class AppFonts {
 
   static double calendarLabelScaleOf(BuildContext context) {
     return FontScope.maybeOf(context)?.calendarLabelScale ?? 1;
+  }
+
+  static double calendarDateScaleOf(BuildContext context) {
+    return FontScope.maybeOf(context)?.calendarDateScale ?? 1;
   }
 }

@@ -51,10 +51,11 @@ class CalendarDayCell extends StatelessWidget {
   static double eventsTopFor({
     required bool hasHoliday,
     double scale = 1,
+    double dateScale = 1,
     bool showLunar = false,
   }) {
     var top = dateTop + dateSizeFor(scale) + eventsTopGap;
-    if (showLunar) top += lunarGap + lunarHeightFor(scale);
+    if (showLunar) top += lunarGap + lunarHeightFor(dateScale);
     if (hasHoliday) top += holidayGap + holidayHeightFor(scale);
     return top;
   }
@@ -89,6 +90,7 @@ class CalendarDayCell extends StatelessWidget {
     final holiday = day.holidayName;
     final today = day.isToday;
     final scale = AppFonts.calendarScaleOf(context);
+    final dateScale = AppFonts.calendarDateScaleOf(context);
     final dateBox = dateSizeFor(scale);
 
     return PressBounce(
@@ -116,7 +118,7 @@ class CalendarDayCell extends StatelessWidget {
                 '${day.date.day}',
                 style: TextStyle(
                   fontFamily: AppFonts.of(context),
-                  fontSize: 12 * scale,
+                  fontSize: 12 * dateScale,
                   fontWeight: today ? FontWeight.w800 : FontWeight.w600,
                   height: 1,
                   color: today ? Colors.white : color,
@@ -132,7 +134,7 @@ class CalendarDayCell extends StatelessWidget {
                     ? Padding(
                         padding: const EdgeInsets.only(top: lunarGap),
                         child: SizedBox(
-                          height: lunarHeightFor(scale),
+                          height: lunarHeightFor(dateScale),
                           child: Text(
                             LunarDate.labelOf(day.date) ?? '',
                             textAlign: TextAlign.center,
@@ -140,7 +142,7 @@ class CalendarDayCell extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
                               fontFamily: AppFonts.of(context),
-                              fontSize: 9 * scale,
+                              fontSize: 9 * dateScale,
                               fontWeight: FontWeight.w500,
                               height: 1.1,
                               color: day.inMonth ? colors.muted : colors.outside,

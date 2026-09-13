@@ -363,6 +363,7 @@ class AppStrings {
   static const fontCalendarSize = '캘린더 크기';
   static const fontCalendarLabelSize = '캘린더 라벨 크기';
   static const fontLabelScale = '할 일 폰트 크기';
+  static const fontCalendarDateScale = '캘린더 날짜 폰트 크기';
   static const fontCalendarChipScale = '캘린더 폰트 크기';
   static const fontPretendard = '프리텐다드';
   static const fontPaperlogy = '페이퍼로지';
@@ -385,7 +386,7 @@ class AppStrings {
   static const fontSizeMedium = '보통';
   static const fontSizeLarge = '크게';
   static const fontSizeExtraLarge = '더 크게';
-  static const settingsFontHelp = '앱에 쓰는 글꼴과, 할 일·캘린더 라벨의 크기를 바꿀 수 있어요';
+  static const settingsFontHelp = '앱에 쓰는 글꼴과, 할 일·캘린더 날짜·라벨의 크기를 바꿀 수 있어요';
   static const settingsCalendarSection = '캘린더 설정';
   static const calendarStartMonday = '월요일부터 시작';
   static const calendarShowLunar = '음력 날짜 표시';

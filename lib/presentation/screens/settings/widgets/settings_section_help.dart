@@ -3,6 +3,8 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:pluto/app_scope.dart';
+import 'package:pluto/core/calendar/lunar_date.dart';
 import 'package:pluto/core/constants/app_fonts.dart';
 import 'package:pluto/core/constants/app_icons.dart';
 import 'package:pluto/core/constants/app_strings.dart';
@@ -1228,6 +1230,10 @@ class _FontPreview extends StatelessWidget {
           caption: AppStrings.fontCalendarChipScale,
           child: _FontScaleDemo(kind: _FontScaleKind.calendar),
         ),
+        const _PreviewFrame(
+          caption: AppStrings.fontCalendarDateScale,
+          child: _FontScaleDemo(kind: _FontScaleKind.date),
+        ),
       ],
     );
   }
@@ -1247,11 +1253,13 @@ class _FontDemoScene extends StatelessWidget {
     this.typeface,
     this.labelScale,
     this.calendarLabelScale,
+    this.calendarDateScale,
   });
 
   final AppTypeface? typeface;
   final double? labelScale;
   final double? calendarLabelScale;
+  final double? calendarDateScale;
 
   @override
   Widget build(BuildContext context) {
@@ -1266,6 +1274,8 @@ class _FontDemoScene extends StatelessWidget {
       calendarScale: current?.calendarScale ?? 1,
       calendarLabelScale:
           calendarLabelScale ?? current?.calendarLabelScale ?? 1,
+      calendarDateScale:
+          calendarDateScale ?? current?.calendarDateScale ?? 1,
       child: Builder(
         builder: (context) {
             return Padding(
@@ -1300,6 +1310,59 @@ class _FontDemoScene extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 8),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      for (final day in [8, 9, 10, 11, 12, 13, 14])
+                        Expanded(
+                          child: Builder(
+                            builder: (context) {
+                              final dateScale =
+                                  AppFonts.calendarDateScaleOf(context);
+                              final showLunar = AppScope.of(context)
+                                  .calendarPreference
+                                  .showLunar;
+                              final now = DateTime.now();
+                              return Column(
+                                children: [
+                                  Text(
+                                    '$day',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontFamily: AppFonts.of(context),
+                                      fontSize: 12 * dateScale,
+                                      fontWeight: FontWeight.w600,
+                                      height: 1,
+                                      color: colors.text,
+                                    ),
+                                  ),
+                                  if (showLunar) ...[
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      LunarDate.labelOf(
+                                            DateTime(now.year, now.month, day),
+                                          ) ??
+                                          '',
+                                      textAlign: TextAlign.center,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(
+                                        fontFamily: AppFonts.of(context),
+                                        fontSize: 9 * dateScale,
+                                        fontWeight: FontWeight.w500,
+                                        height: 1.1,
+                                        color: colors.muted,
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              );
+                            },
+                          ),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
                   const CalendarEventLabel(
                     title: '면접 연습',
                     color: Color(0xFF22C55E),
@@ -1318,6 +1381,7 @@ class _FontDemoScene extends StatelessWidget {
 class _FontScaleKind {
   static const label = 0;
   static const calendar = 1;
+  static const date = 2;
 }
 
 class _FontScaleDemo extends StatefulWidget {
@@ -1395,6 +1459,7 @@ class _FontScaleDemoState extends State<_FontScaleDemo>
         final calendarScale = widget.kind == _FontScaleKind.calendar
             ? scale
             : 1.0;
+        final dateScale = widget.kind == _FontScaleKind.date ? scale : 1.0;
         return IgnorePointer(
           child: DecoratedBox(
             decoration: BoxDecoration(
@@ -1423,6 +1488,7 @@ class _FontScaleDemoState extends State<_FontScaleDemo>
                                 child: _FontDemoScene(
                                   labelScale: labelScale,
                                   calendarLabelScale: calendarScale,
+                                  calendarDateScale: dateScale,
                                 ),
                               ),
                             ),

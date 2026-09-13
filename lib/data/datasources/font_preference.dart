@@ -201,6 +201,9 @@ class FontPreference extends ChangeNotifier {
     _calendarChipScale = clampScale(
       prefs?.getDouble(_calendarChipKey) ?? _calendarLabelSize.scale,
     );
+    _calendarDateScale = clampScale(
+      prefs?.getDouble(_calendarDateKey) ?? _calendarSize.scale,
+    );
   }
 
   static const scaleSteps = [
@@ -223,6 +226,7 @@ class FontPreference extends ChangeNotifier {
   static const _calendarLabelKey = 'font_calendar_label_size';
   static const _labelScaleKey = 'font_label_scale';
   static const _calendarChipKey = 'font_calendar_chip_scale';
+  static const _calendarDateKey = 'font_calendar_date_scale';
 
   final SharedPreferences? _prefs;
   AppTypeface _typeface;
@@ -231,6 +235,7 @@ class FontPreference extends ChangeNotifier {
   FontSizeLevel _calendarLabelSize;
   late double _labelScale;
   late double _calendarChipScale;
+  late double _calendarDateScale;
 
   AppTypeface get typeface => _typeface;
   FontSizeLevel get todoSize => _todoSize;
@@ -238,6 +243,7 @@ class FontPreference extends ChangeNotifier {
   FontSizeLevel get calendarLabelSize => _calendarLabelSize;
   double get labelScale => _labelScale;
   double get calendarChipScale => _calendarChipScale;
+  double get calendarDateScale => _calendarDateScale;
 
   double get todoScale => _todoSize.scale;
   double get calendarScale => _calendarSize.scale;
@@ -310,6 +316,17 @@ class FontPreference extends ChangeNotifier {
     if (persist) await _prefs?.setDouble(_calendarChipKey, next);
   }
 
+  Future<void> setCalendarDateScale(double value, {bool persist = false}) async {
+    final next = clampScale(value);
+    if ((_calendarDateScale - next).abs() < 0.0001) {
+      if (persist) await _prefs?.setDouble(_calendarDateKey, next);
+      return;
+    }
+    _calendarDateScale = next;
+    notifyListeners();
+    if (persist) await _prefs?.setDouble(_calendarDateKey, next);
+  }
+
   void hydrate() {
     final prefs = _prefs;
     if (prefs == null) return;
@@ -337,6 +354,9 @@ class FontPreference extends ChangeNotifier {
     );
     _calendarChipScale = clampScale(
       prefs.getDouble(_calendarChipKey) ?? _calendarLabelSize.scale,
+    );
+    _calendarDateScale = clampScale(
+      prefs.getDouble(_calendarDateKey) ?? _calendarSize.scale,
     );
     notifyListeners();
   }

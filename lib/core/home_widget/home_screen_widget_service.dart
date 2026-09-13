@@ -1031,6 +1031,7 @@ class HomeScreenWidgetService {
             labelScale: 1,
             calendarScale: 1,
             calendarLabelScale: 1,
+            calendarDateScale: 1,
             child: TickerMode(
               enabled: false,
               child: child,

@@ -167,7 +167,7 @@ ReleaseDemo releaseDemoFor(String text, {required bool isFix}) {
   if (text.contains('아이디로 친구') || text.contains('친구를 추가')) {
     return ReleaseDemo.friendsAdd;
   }
-  if (text.contains('Enter로')) return ReleaseDemo.pcEnterSave;
+  if (text.contains('Enter키')) return ReleaseDemo.pcEnterSave;
   if (text.contains('카테고리별로') || text.contains('칸이 부드럽게')) {
     return ReleaseDemo.jobCategorySlide;
   }

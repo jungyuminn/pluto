@@ -19,10 +19,9 @@ abstract final class ReleaseNotes {
     ReleaseNote(
       version: '1.4.0',
       items: [
-        '아이디로 친구를 추가할 수 있어요',
+        '나만의 아이디로 친구를 추가할 수 있어요',
         '친구를 누르면 미니캘린더에서 일정만 보여요',
-        'PC에서 Enter로 저장할 수 있어요',
-        '지원서·자격증을 카테고리별로 보면 칸이 부드럽게 움직여요',
+        'PC에서 Enter키로 저장할 수 있어요',
       ],
       fixes: [
         'PC에서 친구 추가가 안 되던 점을 고쳤어요',

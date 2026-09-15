@@ -56,6 +56,7 @@ class AppIcons {
   static const trashCan = 'assets/icons/trash_can.svg';
   static const edit = 'assets/icons/edit.svg';
   static const editOutlined = 'assets/icons/edit_outlined.svg';
+  static const copy = 'assets/icons/copy.svg';
   static const emoji = 'assets/icons/emoji.svg';
   static const googleLogo = 'assets/icons/google_logo.svg';
   static const kakaoLogo = 'assets/icons/kakao_logo.svg';

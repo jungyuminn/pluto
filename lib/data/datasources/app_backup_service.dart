@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -17,6 +18,7 @@ import 'package:pluto/data/datasources/diary_local_datasource.dart';
 import 'package:pluto/data/datasources/job_application_local_datasource.dart';
 import 'package:pluto/data/datasources/license_local_datasource.dart';
 import 'package:pluto/data/datasources/synced_file_store.dart';
+import 'package:pluto/data/datasources/friend_order_preference.dart';
 import 'package:pluto/data/datasources/theme_preference.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
@@ -265,6 +267,7 @@ class AppBackupService {
     scope.licenseViewPreference.hydrate();
     scope.dayEventsViewPreference.hydrate();
     scope.categorySuggestPreference.hydrate();
+    unawaited(FriendOrderPreference.instance.load());
     revision.value++;
   }
 
@@ -282,6 +285,7 @@ class AppBackupService {
     scope.dayEventsViewPreference.hydrate();
     scope.categorySuggestPreference.hydrate();
     scope.backupPreference.hydrate();
+    unawaited(FriendOrderPreference.instance.load());
     scope.longGoalStore.reload();
     scope.dayEmojiStore.reload();
     if (!kIsWeb) {

@@ -87,6 +87,8 @@ class CloudSyncService {
   }) async {
     final user = AppAuthService.instance.user;
     if (user == null) return;
+    FriendService.instance.hydrateSession();
+    unawaited(FriendService.instance.bootstrap());
     final scope = _scopeFor(context);
     final prefs = await SharedPreferences.getInstance();
     ++_epoch;

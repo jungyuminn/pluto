@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:pluto/app_scope.dart';
 import 'package:pluto/core/constants/app_icons.dart';
 import 'package:pluto/core/theme/app_colors.dart';
+import 'package:pluto/data/datasources/friend_service.dart';
 import 'package:pluto/data/datasources/theme_preference.dart';
 import 'package:pluto/domain/entities/friend_profile.dart';
 import 'package:pluto/presentation/widgets/themed_asset.dart';
@@ -31,9 +32,17 @@ class FriendAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return ValueListenableBuilder<int>(
+      valueListenable: FriendService.instance.avatarTick,
+      builder: (context, _, __) => _body(context),
+    );
+  }
+
+  Widget _body(BuildContext context) {
+    final bytes = preview ?? FriendService.instance.avatarBytes(profile?.uid);
     final url = profile?.photoURL ?? '';
-    final ImageProvider? image = preview != null
-        ? MemoryImage(preview!)
+    final ImageProvider? image = bytes != null
+        ? MemoryImage(bytes)
         : (url.isEmpty ? null : NetworkImage(url));
     return DecoratedBox(
       decoration: BoxDecoration(
@@ -51,6 +60,11 @@ class FriendAvatar extends StatelessWidget {
                   fit: BoxFit.cover,
                   width: size,
                   height: size,
+                  gaplessPlayback: true,
+                  loadingBuilder: (context, child, loading) {
+                    if (loading == null) return child;
+                    return _logo(context);
+                  },
                   errorBuilder: (context, error, stack) => _logo(context),
                 ),
               ),

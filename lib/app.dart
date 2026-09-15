@@ -837,7 +837,7 @@ class _JobPlannerMaterialAppState extends State<_JobPlannerMaterialApp>
     final theme = AppScope.of(context).themePreference;
     final font = AppScope.of(context).fontPreference;
     return ListenableBuilder(
-      listenable: Listenable.merge([theme, font]),
+      listenable: Listenable.merge([theme, font.appearanceListenable]),
       builder: (context, _) {
         return StreamBuilder(
           stream: AppAuthService.instance.authState,
@@ -894,19 +894,24 @@ class _JobPlannerMaterialAppState extends State<_JobPlannerMaterialApp>
                 syncWebThemeColor(background);
               });
             }
-            return FontScope(
-              typeface: typeface,
-              todoScale: guest ? 1 : font.todoScale,
-              labelScale: guest ? 1 : font.labelScale,
-              calendarScale: guest ? 1 : font.calendarScale,
-              calendarLabelScale: guest ? 1 : font.calendarLabelScale,
-              calendarDateScale: guest ? 1 : font.calendarDateScale,
-              child: overlay == null
-                  ? (child ?? const SizedBox.shrink())
-                  : AnnotatedRegion<SystemUiOverlayStyle>(
-                      value: overlay,
-                      child: child ?? const SizedBox.shrink(),
-                    ),
+            return ListenableBuilder(
+              listenable: font,
+              builder: (context, _) {
+                return FontScope(
+                  typeface: typeface,
+                  todoScale: guest ? 1 : font.todoScale,
+                  labelScale: guest ? 1 : font.labelScale,
+                  calendarScale: guest ? 1 : font.calendarScale,
+                  calendarLabelScale: guest ? 1 : font.calendarLabelScale,
+                  calendarDateScale: guest ? 1 : font.calendarDateScale,
+                  child: overlay == null
+                      ? (child ?? const SizedBox.shrink())
+                      : AnnotatedRegion<SystemUiOverlayStyle>(
+                          value: overlay,
+                          child: child ?? const SizedBox.shrink(),
+                        ),
+                );
+              },
             );
           },
           home: kIsWeb ? const WebAuthGate() : const ShellScreen(),

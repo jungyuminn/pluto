@@ -98,10 +98,12 @@ service cloud.firestore {
       allow get: if signedIn() &&
         (resource == null ||
          resource.data.fromUid == request.auth.uid ||
-         resource.data.toUid == request.auth.uid);
+         resource.data.toUid == request.auth.uid ||
+         request.auth.uid in resource.data.participants);
       allow list: if signedIn() &&
         (resource.data.fromUid == request.auth.uid ||
-         resource.data.toUid == request.auth.uid);
+         resource.data.toUid == request.auth.uid ||
+         request.auth.uid in resource.data.participants);
       allow create: if signedIn() && requestCreateOk();
       allow update: if signedIn() &&
         request.resource.data.fromUid == resource.data.fromUid &&

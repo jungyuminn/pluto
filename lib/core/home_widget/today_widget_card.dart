@@ -45,9 +45,14 @@ class TodayWidgetItem {
   final bool showTopGap;
   final bool showDot;
 
-  double get extent {
-    if (event != null) return TodayWidgetCard.eventExtent;
-    return TodayWidgetCard.headerExtent +
+  double get extent => extentFor(1);
+
+  double extentFor(double textScale) {
+    if (event != null) {
+      return TodayWidgetCard.eventLabelHeight * textScale + 10;
+    }
+    return 16 * textScale +
+        8 +
         (showTopGap ? TodayWidgetCard.headerGap : 0);
   }
 }
@@ -65,6 +70,7 @@ class TodayWidgetCard extends StatelessWidget {
   static const shadowPad = EdgeInsets.fromLTRB(4, 2, 4, 8);
   static const _pad = EdgeInsets.fromLTRB(16, 14, 16, 12);
   static const eventExtent = 62.0;
+  static const eventLabelHeight = 52.0;
   static const headerExtent = 24.0;
   static const headerGap = 6.0;
   static const moreExtent = 18.0;
@@ -84,13 +90,17 @@ class TodayWidgetCard extends StatelessWidget {
     required List<TodayWidgetItem> items,
     required int moreCount,
     double width = cardWidth,
+    double textScale = 1,
   }) {
-    var height =
-        shadowPad.vertical + _pad.vertical + titleBlock + dateBlock + listGap;
+    var height = shadowPad.vertical +
+        _pad.vertical +
+        titleBlock * textScale +
+        dateBlock * textScale +
+        listGap;
     for (final item in items) {
-      height += item.extent;
+      height += item.extentFor(textScale);
     }
-    if (moreCount > 0) height += moreExtent;
+    if (moreCount > 0) height += moreExtent * textScale;
     return Size(width, height + 6);
   }
 
@@ -378,13 +388,14 @@ class _CategoryHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scale = MediaQuery.textScalerOf(context).scale(1);
     return Padding(
       padding: EdgeInsets.only(
         top: showTopGap ? TodayWidgetCard.headerGap : 0,
         bottom: 8,
       ),
       child: SizedBox(
-        height: 16,
+        height: 16 * scale,
         child: Row(
           children: [
             if (showDot) ...[
@@ -432,6 +443,7 @@ class _WidgetEventLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
     final background = colors.tint(event.color, 0.14);
+    final height = _height * MediaQuery.textScalerOf(context).scale(1);
     return DecoratedBox(
       decoration: BoxDecoration(
         color: background,
@@ -440,13 +452,13 @@ class _WidgetEventLabel extends StatelessWidget {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(8),
         child: SizedBox(
-          height: _height,
+          height: height,
           width: double.infinity,
           child: Row(
             children: [
               Container(
                 width: (event.completed || event.isJob) ? 0 : 4,
-                height: _height,
+                height: height,
                 color: event.color,
               ),
               Expanded(

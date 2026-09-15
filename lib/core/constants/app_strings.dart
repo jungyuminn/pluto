@@ -363,7 +363,7 @@ class AppStrings {
   static const fontCalendarSize = '캘린더 크기';
   static const fontCalendarLabelSize = '캘린더 라벨 크기';
   static const fontLabelScale = '할 일 폰트 크기';
-  static const fontCalendarDateScale = '캘린더 날짜 폰트 크기';
+  static const fontCalendarDateScale = '날짜 폰트 크기';
   static const fontCalendarChipScale = '캘린더 폰트 크기';
   static const fontPretendard = '프리텐다드';
   static const fontPaperlogy = '페이퍼로지';
@@ -823,6 +823,9 @@ class AppStrings {
   static const deleteRepeatAll = '전체 반복 일정 삭제';
   static const friendsTitle = '친구';
   static const friendsProfile = '프로필';
+  static const friendsProfileSettings = '내 프로필';
+  static const friendsCategoryShare = '카테고리 공개';
+  static const friendsCategoryShareHint = '친구에게 보여줄 카테고리를 설정해요';
   static const friendsPhotoFailed = '사진을 올리지 못했어요';
   static const friendsPhotoTooBig = '5MB보다 작은 사진을 골라 주세요';
   static const friendsAccount = '계정';
@@ -834,12 +837,13 @@ class AppStrings {
   static const friendsNameBad = '1~16자로 적어 주세요. #과 @는 쓸 수 없어요';
   static const friendsMyCode = '아이디';
   static const friendsMyCodeHint = '친구를 찾을 때 이 아이디를 알려 주세요';
+  static const friendsCodeEditHint = '아이디를 입력하세요';
   static const friendsCopy = '복사';
   static const friendsCopied = '아이디를 복사했어요';
   static const friendsAdd = '친구 추가';
-  static const friendsHomeAdd = '추가';
+  static const friendsHomeAdd = '친구 추가';
   static const friendsHomeMe = '나';
-  static const friendsCodeHint = '상대 아이디';
+  static const friendsCodeHint = '상대 아이디를 입력하세요';
   static const friendsCodeRegister = '아이디 만들기';
   static const friendsCodeRegisterHint =
       '친구를 찾을 때 쓰는 아이디예요. 영문 소문자·숫자·밑줄·마침표, 2~32자';

@@ -18,6 +18,7 @@ import 'package:pluto/core/theme/app_colors.dart';
 import 'package:pluto/core/theme/app_skin_background.dart';
 import 'package:pluto/core/theme/app_theme.dart';
 import 'package:pluto/core/home_widget/home_screen_widget_service.dart';
+import 'package:pluto/core/home_widget/today_widget_card.dart';
 import 'package:pluto/core/notifications/todo_reminder_service.dart';
 import 'package:pluto/core/utils/plain_text_editing_controller.dart';
 import 'package:pluto/data/datasources/synced_file_store.dart';
@@ -460,7 +461,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> _setWidgetFontScale(double value) async {
     setState(() => _widgetFontScale = value);
-    await AppScope.of(context).widgetPreference.setFontScale(value);
+  }
+
+  Future<void> _commitWidgetFontScale(double value) async {
+    final next = FontPreference.clampScale(value);
+    setState(() => _widgetFontScale = next);
+    await AppScope.of(context).widgetPreference.setFontScale(next);
   }
 
   Future<void> _setJobMode(bool value) async {
@@ -844,16 +850,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     _openFontSettings(_FontSettingsFocus.labelScale),
               ),
               _SettingsTile(
-                label: AppStrings.fontCalendarDateScale,
-                chevron: true,
-                onPressed: () =>
-                    _openFontSettings(_FontSettingsFocus.calendarDate),
-              ),
-              _SettingsTile(
                 label: AppStrings.fontCalendarChipScale,
                 chevron: true,
                 onPressed: () =>
                     _openFontSettings(_FontSettingsFocus.calendarChip),
+              ),
+              _SettingsTile(
+                label: AppStrings.fontCalendarDateScale,
+                chevron: true,
+                onPressed: () =>
+                    _openFontSettings(_FontSettingsFocus.calendarDate),
               ),
             ],
           ),
@@ -1174,10 +1180,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     _ExpandBelow(
                       open: _widgetFontSliderOpen,
                       child: Padding(
-                        padding: const EdgeInsets.only(bottom: 10),
-                        child: _SettingsSliderTile(
-                          value: _widgetFontScale,
-                          onChanged: _setWidgetFontScale,
+                        padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            _WidgetFontPreview(
+                              scale: _widgetFontScale,
+                              followFont: _followWidgetFont,
+                            ),
+                            const SizedBox(height: 4),
+                            _SettingsSliderTile(
+                              value: _widgetFontScale,
+                              onChanged: _setWidgetFontScale,
+                              onChangeEnd: _commitWidgetFontScale,
+                              smoothPreview: true,
+                            ),
+                          ],
                         ),
                       ),
                     ),
@@ -1421,6 +1439,142 @@ class _FontLivePreview extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+class _WidgetFontPreview extends StatelessWidget {
+  const _WidgetFontPreview({
+    required this.scale,
+    required this.followFont,
+  });
+
+  final double scale;
+  final bool followFont;
+
+  static const _docs = EventCategory(
+    id: 'preview-docs',
+    name: '서류',
+    color: 0xFF3B82F6,
+  );
+
+  static const _exercise = EventCategory(
+    id: 'exercise',
+    name: '운동',
+    color: 0xFF7CB342,
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    final scope = AppScope.of(context);
+    final typeface = followFont
+        ? scope.fontPreference.typeface
+        : AppTypeface.system;
+    final compact = scope.homeViewPreference.isCompact;
+    final showTime = scope.dayEventsViewPreference.showTime;
+    final sortByTime = scope.dayEventsViewPreference.sortByTime;
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final weekday = AppStrings.weekdays[today.weekday % 7];
+    final dateLabel = '${today.month}. ${today.day}. ($weekday)';
+    final events = [
+      CalendarEvent(
+        id: 'widget-preview-docs',
+        title: '자기소개서 제출',
+        date: today,
+        categoryId: _docs.id,
+        categoryName: _docs.name,
+        categoryColor: _docs.color,
+        startMinutes: 14 * 60,
+        endMinutes: 15 * 60,
+      ),
+      CalendarEvent(
+        id: 'widget-preview-gym',
+        title: '헬스장',
+        date: today,
+        categoryId: _exercise.id,
+        categoryName: _exercise.name,
+        categoryColor: _exercise.color,
+      ),
+    ];
+    final snapshot = TodayWidgetCard.snapshotFor(
+      events: events,
+      categories: const [_docs, _exercise],
+      compact: compact,
+      sortByTime: sortByTime,
+    );
+    final previewHeight = TodayWidgetCard.layoutSize(
+          items: snapshot.items,
+          moreCount: snapshot.moreCount,
+          textScale: scale,
+        ).height -
+        TodayWidgetCard.shadowPad.vertical;
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(16),
+      child: ColoredBox(
+        color: colors.groupedBackground,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(8, 8, 8, 4),
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                BoxShadow(
+                  color: colors.shadow,
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(24),
+              child: SizedBox(
+                height: previewHeight,
+                child: MediaQuery(
+                  data: MediaQuery.of(context).copyWith(
+                    textScaler: TextScaler.linear(scale),
+                  ),
+                  child: FontScope(
+                    typeface: typeface,
+                    todoScale: 1,
+                    labelScale: 1,
+                    calendarScale: 1,
+                    calendarLabelScale: 1,
+                    calendarDateScale: 1,
+                    child: AppSkinBackground(
+                      color: colors.card,
+                      liftForNav: false,
+                      scaleByWidth: true,
+                      simple: true,
+                      child: IgnorePointer(
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              TodayWidgetCard.header(
+                                title: AppStrings.todayTitle,
+                                dateLabel: dateLabel,
+                              ),
+                              const SizedBox(height: 12),
+                              for (final item in snapshot.items)
+                                TodayWidgetCard.row(
+                                  item: item,
+                                  showTime: showTime,
+                                ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
@@ -3733,6 +3887,9 @@ class _FontSettingsPageState extends State<_FontSettingsPage> {
   final _labelKey = GlobalKey();
   final _calendarKey = GlobalKey();
   final _dateKey = GlobalKey();
+  double? _previewLabelScale;
+  double? _previewChipScale;
+  double? _previewDateScale;
 
   @override
   void initState() {
@@ -3775,6 +3932,21 @@ class _FontSettingsPageState extends State<_FontSettingsPage> {
     );
   }
 
+  Future<void> _commitLabel(FontPreference font, double value) async {
+    await font.setLabelScale(value, persist: true);
+    if (mounted) setState(() => _previewLabelScale = null);
+  }
+
+  Future<void> _commitChip(FontPreference font, double value) async {
+    await font.setCalendarChipScale(value, persist: true);
+    if (mounted) setState(() => _previewChipScale = null);
+  }
+
+  Future<void> _commitDate(FontPreference font, double value) async {
+    await font.setCalendarDateScale(value, persist: true);
+    if (mounted) setState(() => _previewDateScale = null);
+  }
+
   @override
   Widget build(BuildContext context) {
     final font = AppScope.of(context).fontPreference;
@@ -3795,9 +3967,19 @@ class _FontSettingsPageState extends State<_FontSettingsPage> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               SizedBox(height: top + 56),
-              const Padding(
-                padding: EdgeInsets.fromLTRB(16, 0, 16, 8),
-                child: _FontLivePreview(),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                child: FontScope(
+                  typeface: font.typeface,
+                  todoScale: AppFonts.todoScaleOf(context),
+                  labelScale: _previewLabelScale ?? font.labelScale,
+                  calendarScale: AppFonts.calendarScaleOf(context),
+                  calendarLabelScale:
+                      _previewChipScale ?? font.calendarLabelScale,
+                  calendarDateScale:
+                      _previewDateScale ?? font.calendarDateScale,
+                  child: const _FontLivePreview(),
+                ),
               ),
               Expanded(
                 child: SingleChildScrollView(
@@ -3833,29 +4015,11 @@ class _FontSettingsPageState extends State<_FontSettingsPage> {
                           children: [
                             const _SectionLabel(AppStrings.fontLabelScale),
                             _SettingsSliderTile(
-                              value: font.labelScale,
+                              value: _previewLabelScale ?? font.labelScale,
                               onChanged: (value) =>
-                                  font.setLabelScale(value, persist: true),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      KeyedSubtree(
-                        key: _dateKey,
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            const _SectionLabel(
-                              AppStrings.fontCalendarDateScale,
-                            ),
-                            _SettingsSliderTile(
-                              value: font.calendarDateScale,
-                              onChanged: (value) => font.setCalendarDateScale(
-                                value,
-                                persist: true,
-                              ),
+                                  setState(() => _previewLabelScale = value),
+                              onChangeEnd: (value) => _commitLabel(font, value),
+                              smoothPreview: true,
                             ),
                           ],
                         ),
@@ -3871,11 +4035,31 @@ class _FontSettingsPageState extends State<_FontSettingsPage> {
                               AppStrings.fontCalendarChipScale,
                             ),
                             _SettingsSliderTile(
-                              value: font.calendarChipScale,
-                              onChanged: (value) => font.setCalendarChipScale(
-                                value,
-                                persist: true,
-                              ),
+                              value: _previewChipScale ?? font.calendarChipScale,
+                              onChanged: (value) =>
+                                  setState(() => _previewChipScale = value),
+                              onChangeEnd: (value) => _commitChip(font, value),
+                              smoothPreview: true,
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      KeyedSubtree(
+                        key: _dateKey,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            const _SectionLabel(
+                              AppStrings.fontCalendarDateScale,
+                            ),
+                            _SettingsSliderTile(
+                              value: _previewDateScale ?? font.calendarDateScale,
+                              onChanged: (value) =>
+                                  setState(() => _previewDateScale = value),
+                              onChangeEnd: (value) => _commitDate(font, value),
+                              smoothPreview: true,
                             ),
                           ],
                         ),
@@ -4744,10 +4928,17 @@ class _SettingsCard extends StatelessWidget {
 }
 
 class _SettingsSliderTile extends StatefulWidget {
-  const _SettingsSliderTile({required this.value, required this.onChanged});
+  const _SettingsSliderTile({
+    required this.value,
+    required this.onChanged,
+    this.onChangeEnd,
+    this.smoothPreview = false,
+  });
 
   final double value;
   final ValueChanged<double> onChanged;
+  final ValueChanged<double>? onChangeEnd;
+  final bool smoothPreview;
 
   @override
   State<_SettingsSliderTile> createState() => _SettingsSliderTileState();
@@ -4765,12 +4956,20 @@ class _SettingsSliderTileState extends State<_SettingsSliderTile>
   late Animation<double> _snap;
   late double _t;
   var _dragging = false;
+  var _dragTookOver = false;
+  var _pendingCommit = false;
+  int? _hapticStep;
 
   int get _stepCount => FontPreference.scaleSteps.length;
 
   double get _targetT {
     if (_stepCount <= 1) return 0;
     return FontPreference.stepIndexOf(widget.value) / (_stepCount - 1);
+  }
+
+  double _stepT(double t) {
+    if (_stepCount <= 1) return 0;
+    return (t * (_stepCount - 1)).round() / (_stepCount - 1);
   }
 
   @override
@@ -4781,10 +4980,16 @@ class _SettingsSliderTileState extends State<_SettingsSliderTile>
     _controller =
         AnimationController(
           vsync: this,
-          duration: const Duration(milliseconds: 220),
+          duration: const Duration(milliseconds: 280),
         )..addListener(() {
           if (_dragging) return;
           setState(() => _t = _snap.value);
+          if (widget.smoothPreview) _emitScale(_t);
+        })
+        ..addStatusListener((status) {
+          if (status != AnimationStatus.completed || !_pendingCommit) return;
+          _pendingCommit = false;
+          _commit(_t);
         });
     _press = AnimationController(
       vsync: this,
@@ -4802,6 +5007,10 @@ class _SettingsSliderTileState extends State<_SettingsSliderTile>
 
   @override
   void dispose() {
+    if (_pendingCommit) {
+      _pendingCommit = false;
+      _commit(_t);
+    }
     _controller.dispose();
     _press.dispose();
     super.dispose();
@@ -4812,21 +5021,92 @@ class _SettingsSliderTileState extends State<_SettingsSliderTile>
     return ((dx - _thumbRadius) / inner).clamp(0.0, 1.0);
   }
 
-  void _emitNearest(double t) {
+  double _scaleOf(double t) {
+    return FontPreference.minScale +
+        (FontPreference.maxScale - FontPreference.minScale) * t.clamp(0.0, 1.0);
+  }
+
+  double _snapValue(double t) {
     final steps = FontPreference.scaleSteps;
-    final index = (t * (steps.length - 1)).round();
-    final next = steps[index];
+    final index = (t * (steps.length - 1)).round().clamp(0, steps.length - 1);
+    return steps[index];
+  }
+
+  void _emitNearest(double t) {
+    final next = _snapValue(t);
     if ((next - widget.value).abs() < 0.0001) return;
     HapticFeedback.selectionClick();
     widget.onChanged(next);
   }
 
+  void _emitScale(double t) {
+    final next = _scaleOf(t);
+    if ((next - widget.value).abs() < 0.0001) return;
+    if (_dragging) {
+      final step = FontPreference.stepIndexOf(next);
+      if (_hapticStep != null && step != _hapticStep) {
+        HapticFeedback.selectionClick();
+      }
+      _hapticStep = step;
+    }
+    widget.onChanged(next);
+  }
+
+  void _emit(double t) {
+    if (widget.smoothPreview) {
+      _emitScale(t);
+    } else {
+      _emitNearest(t);
+    }
+  }
+
+  void _commit(double t) {
+    widget.onChangeEnd?.call(_snapValue(t));
+  }
+
+  void _animateTo(double end, {bool commit = false}) {
+    final begin = _t;
+    _pendingCommit = commit;
+    if ((begin - end).abs() < 0.0001) {
+      _t = end;
+      _emit(end);
+      if (commit) {
+        _pendingCommit = false;
+        _commit(end);
+      }
+      return;
+    }
+    _snap = Tween<double>(
+      begin: begin,
+      end: end,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
+    _controller.forward(from: 0);
+  }
+
+  void _seekFromTap(double dx, double width) {
+    if (_dragTookOver || _dragging) return;
+    _controller.stop();
+    _pendingCommit = false;
+    final t = _tFromDx(dx, width);
+    if (widget.smoothPreview) {
+      HapticFeedback.selectionClick();
+      _animateTo(_stepT(t), commit: true);
+      return;
+    }
+    _emitNearest(t);
+    _commit(t);
+    _animateTo(_stepT(t));
+  }
+
   void _start(double dx, double width) {
+    _dragTookOver = true;
+    _pendingCommit = false;
     _controller.stop();
     _dragging = true;
+    _hapticStep = FontPreference.stepIndexOf(widget.value);
     _press.forward();
     setState(() => _t = _tFromDx(dx, width));
-    _emitNearest(_t);
+    _emit(_t);
   }
 
   void _move(double dx, double width) {
@@ -4835,20 +5115,18 @@ class _SettingsSliderTileState extends State<_SettingsSliderTile>
       _press.forward();
     }
     setState(() => _t = _tFromDx(dx, width));
-    _emitNearest(_t);
+    _emit(_t);
   }
 
   void _end() {
     if (!_dragging) return;
     _dragging = false;
     _press.reverse();
-    final begin = _t;
-    final end = _targetT;
-    _snap = Tween<double>(
-      begin: begin,
-      end: end,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
-    _controller.forward(from: 0);
+    _animateTo(_stepT(_t), commit: widget.smoothPreview);
+    if (!widget.smoothPreview) {
+      _emitNearest(_t);
+      _commit(_t);
+    }
   }
 
   @override
@@ -4861,8 +5139,9 @@ class _SettingsSliderTileState extends State<_SettingsSliderTile>
           final width = constraints.maxWidth;
           return GestureDetector(
             behavior: HitTestBehavior.opaque,
-            onTapDown: (details) => _start(details.localPosition.dx, width),
-            onTapUp: (_) => _end(),
+            onTapDown: (_) => _dragTookOver = false,
+            onTapUp: (details) =>
+                _seekFromTap(details.localPosition.dx, width),
             onHorizontalDragStart: (details) =>
                 _start(details.localPosition.dx, width),
             onHorizontalDragUpdate: (details) =>

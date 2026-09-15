@@ -3,9 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:pluto/app_scope.dart';
 import 'package:pluto/core/constants/app_fonts.dart';
 import 'package:pluto/core/constants/app_strings.dart';
-import 'package:pluto/core/layout/pc_layout.dart';
 import 'package:pluto/core/theme/app_colors.dart';
-import 'package:pluto/core/utils/press_bounce.dart';
 import 'package:pluto/core/utils/swipe_to_delete.dart';
 import 'package:pluto/domain/entities/event_category.dart';
 import 'package:pluto/domain/entities/long_goal.dart';
@@ -44,7 +42,9 @@ class _HomeLongGoalCardState extends State<HomeLongGoalCard> {
 
   static const _slotAnim = Duration(milliseconds: 240);
 
-  double get _extent => widget.compact ? 60.0 : 62.0;
+  double get _labelHeight => 52 * AppFonts.labelScaleOf(context);
+
+  double get _extent => _labelHeight + (widget.compact ? 8 : 10);
 
   @override
   void didUpdateWidget(HomeLongGoalCard oldWidget) {
@@ -217,6 +217,7 @@ class _HomeLongGoalCardState extends State<HomeLongGoalCard> {
     final colors = AppColors.of(context);
     return DecoratedBox(
       decoration: BoxDecoration(
+        color: colors.card,
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
@@ -226,35 +227,28 @@ class _HomeLongGoalCardState extends State<HomeLongGoalCard> {
           ),
         ],
       ),
-      child: PressBounce(
-        passthrough: true,
-        hover: !PcLayout.isPc,
-        color: colors.card,
-        pressedColor: Color.lerp(colors.card, Colors.black, 0.08)!,
-        borderRadius: BorderRadius.circular(24),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                AppStrings.longGoalTitle,
-                style: TextStyle(
-                  fontFamily: AppFonts.of(context),
-                  fontSize: 17,
-                  fontWeight: FontWeight.w600,
-                  height: 1.1,
-                  color: colors.text,
-                ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              AppStrings.longGoalTitle,
+              style: TextStyle(
+                fontFamily: AppFonts.of(context),
+                fontSize: 17,
+                fontWeight: FontWeight.w600,
+                height: 1.1,
+                color: colors.text,
               ),
-              const SizedBox(height: 16),
-              _buildList(),
-              AddEventButton(
-                onPressed: _add,
-                label: AppStrings.longGoalAdd,
-              ),
-            ],
-          ),
+            ),
+            const SizedBox(height: 16),
+            _buildList(),
+            AddEventButton(
+              onPressed: _add,
+              label: AppStrings.longGoalAdd,
+            ),
+          ],
         ),
       ),
     );
@@ -350,7 +344,10 @@ class _HomeLongGoalCardState extends State<HomeLongGoalCard> {
                 color: AppColors.of(context).pressed,
                 borderRadius: const BorderRadius.all(Radius.circular(8)),
               ),
-              child: const SizedBox(height: 52, width: double.infinity),
+              child: SizedBox(
+                height: _labelHeight,
+                width: double.infinity,
+              ),
             ),
           ),
           child: body,

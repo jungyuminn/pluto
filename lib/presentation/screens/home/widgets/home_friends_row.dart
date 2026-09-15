@@ -1,8 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:pluto/core/constants/app_fonts.dart';
-import 'package:pluto/core/constants/app_icons.dart';
 import 'package:pluto/core/constants/app_strings.dart';
 import 'package:pluto/core/theme/app_colors.dart';
 import 'package:pluto/core/utils/press_bounce.dart';
@@ -13,7 +13,10 @@ import 'package:pluto/presentation/screens/friends/friend_avatar.dart';
 import 'package:pluto/presentation/screens/friends/friend_calendar_screen.dart';
 import 'package:pluto/presentation/screens/friends/friends_screen.dart';
 import 'package:pluto/presentation/screens/settings/widgets/login_page.dart';
-import 'package:pluto/presentation/widgets/themed_asset.dart';
+
+const _avatarSize = 60.0;
+const _cellWidth = 76.0;
+const _rowHeight = 92.0;
 
 class HomeFriendsRow extends StatefulWidget {
   const HomeFriendsRow({super.key});
@@ -36,6 +39,8 @@ class _HomeFriendsRowState extends State<HomeFriendsRow> {
       initialData: AppAuthService.instance.user,
       builder: (context, auth) {
         if (auth.data == null) return const SizedBox.shrink();
+        FriendService.instance.hydrateSession();
+        unawaited(FriendService.instance.bootstrap());
         return ValueListenableBuilder<FriendProfile?>(
           valueListenable: FriendService.instance.profile,
           builder: (context, me, _) {
@@ -71,41 +76,82 @@ class _HomeFriendsRowState extends State<HomeFriendsRow> {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: SizedBox(
-        height: 86,
-        child: ListView(
-          scrollDirection: Axis.horizontal,
-          padding: EdgeInsets.zero,
+        height: _rowHeight,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _MeCell(
               profile: me,
-              onPressed: () => _openFriends(context, add: false),
-            ),
-            _AddCell(
               requests: requests,
-              onPressed: () => _openFriends(context, add: true),
+              onPressed: () => _openFriends(context),
+              onAdd: () => _openAdd(context),
             ),
-            for (final friend in friends)
-              _FriendCell(
-                friend: friend,
-                onPressed: () => _openCalendar(context, friend),
+            Expanded(
+              child: ReorderableListView(
+                scrollDirection: Axis.horizontal,
+                buildDefaultDragHandles: false,
+                clipBehavior: Clip.none,
+                padding: EdgeInsets.zero,
+                proxyDecorator: (child, index, animation) {
+                  return AnimatedBuilder(
+                    animation: animation,
+                    builder: (context, child) {
+                      final t = Curves.easeOutBack.transform(animation.value);
+                      return Transform.scale(
+                        scale: 1 + 0.06 * t,
+                        child: child,
+                      );
+                    },
+                    child: child,
+                  );
+                },
+                onReorderStart: (_) => HapticFeedback.mediumImpact(),
+                onReorder: (oldIndex, newIndex) {
+                  unawaited(
+                    FriendService.instance.reorderFriends(
+                      friends,
+                      oldIndex: oldIndex,
+                      newIndex: newIndex,
+                    ),
+                  );
+                },
+                children: [
+                  for (var i = 0; i < friends.length; i++)
+                    ReorderableDelayedDragStartListener(
+                      key: ValueKey(friends[i].uid),
+                      index: i,
+                      child: _FriendCell(
+                        friend: friends[i],
+                        onPressed: () => _openCalendar(context, friends[i]),
+                      ),
+                    ),
+                ],
               ),
+            ),
           ],
         ),
       ),
     );
   }
 
-  Future<void> _openFriends(BuildContext context, {required bool add}) async {
+  Future<void> _openFriends(BuildContext context) async {
     if (AppAuthService.instance.user == null) {
       await openLoginPage(context);
       return;
     }
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (context) =>
-            add ? const FriendsScreen.add() : const FriendsScreen(),
+        builder: (context) => const FriendsScreen(),
       ),
     );
+  }
+
+  Future<void> _openAdd(BuildContext context) async {
+    if (AppAuthService.instance.user == null) {
+      await openLoginPage(context);
+      return;
+    }
+    await showAddFriendSheet(context);
   }
 
   Future<void> _openCalendar(BuildContext context, FriendProfile friend) {
@@ -118,10 +164,17 @@ class _HomeFriendsRowState extends State<HomeFriendsRow> {
 }
 
 class _MeCell extends StatelessWidget {
-  const _MeCell({required this.profile, required this.onPressed});
+  const _MeCell({
+    required this.profile,
+    required this.requests,
+    required this.onPressed,
+    required this.onAdd,
+  });
 
   final FriendProfile? profile;
+  final int requests;
   final VoidCallback onPressed;
+  final VoidCallback onAdd;
 
   @override
   Widget build(BuildContext context) {
@@ -129,19 +182,53 @@ class _MeCell extends StatelessWidget {
     final name = (label == null || label.isEmpty)
         ? AppStrings.friendsHomeMe
         : label;
-    return _Cell(
+    return PressBounce(
       onPressed: onPressed,
-      label: name,
-      child: FriendAvatar(
-        size: 54,
-        profile: profile,
+      pressedColor: Colors.transparent,
+      child: SizedBox(
+        width: _cellWidth,
+        child: Column(
+          children: [
+            SizedBox(
+              width: _avatarSize,
+              height: _avatarSize,
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  FriendAvatar(size: _avatarSize, profile: profile),
+                  Positioned(
+                    right: -3,
+                    bottom: -3,
+                    child: _AddBadge(
+                      requests: requests,
+                      onPressed: onAdd,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              name,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontFamily: AppFonts.of(context),
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: AppColors.of(context).secondary,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 }
 
-class _AddCell extends StatelessWidget {
-  const _AddCell({required this.requests, required this.onPressed});
+class _AddBadge extends StatelessWidget {
+  const _AddBadge({required this.requests, required this.onPressed});
 
   final int requests;
   final VoidCallback onPressed;
@@ -149,44 +236,54 @@ class _AddCell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
-    return _Cell(
+    return PressBounce(
       onPressed: onPressed,
-      label: AppStrings.friendsHomeAdd,
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          DecoratedBox(
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: colors.tint(colors.accent, 0.14),
-            ),
-            child: SizedBox(
-              width: 54,
-              height: 54,
-              child: Center(
-                child: AppAssetImage(
-                  asset: AppIcons.addFriend,
-                  width: 22,
-                  height: 22,
-                  color: colors.accent,
+      pressedColor: Colors.transparent,
+      child: Tooltip(
+        message: AppStrings.friendsHomeAdd,
+        child: Semantics(
+          button: true,
+          label: AppStrings.friendsHomeAdd,
+          child: SizedBox(
+            width: 28,
+            height: 28,
+            child: Stack(
+              clipBehavior: Clip.none,
+              alignment: Alignment.center,
+              children: [
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: FriendAvatar.accentOf(context),
+                    border: Border.all(color: colors.background, width: 2.5),
+                  ),
+                  child: const SizedBox(
+                    width: 22,
+                    height: 22,
+                    child: Icon(
+                      Icons.add_rounded,
+                      size: 16,
+                      color: Colors.white,
+                    ),
+                  ),
                 ),
-              ),
+                if (requests > 0)
+                  Positioned(
+                    right: 0,
+                    top: 0,
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: colors.danger,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: colors.background, width: 2),
+                      ),
+                      child: const SizedBox(width: 10, height: 10),
+                    ),
+                  ),
+              ],
             ),
           ),
-          if (requests > 0)
-            Positioned(
-              right: -1,
-              top: -1,
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  color: colors.danger,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: colors.background, width: 2),
-                ),
-                child: const SizedBox(width: 12, height: 12),
-              ),
-            ),
-        ],
+        ),
       ),
     );
   }
@@ -204,7 +301,7 @@ class _FriendCell extends StatelessWidget {
     return _Cell(
       onPressed: onPressed,
       label: label,
-      child: FriendAvatar(size: 54, profile: friend),
+      child: FriendAvatar(size: _avatarSize, profile: friend),
     );
   }
 }
@@ -214,11 +311,13 @@ class _Cell extends StatelessWidget {
     required this.onPressed,
     required this.label,
     required this.child,
+    this.width = _cellWidth,
   });
 
   final VoidCallback onPressed;
   final String label;
   final Widget child;
+  final double width;
 
   @override
   Widget build(BuildContext context) {
@@ -227,7 +326,7 @@ class _Cell extends StatelessWidget {
       onPressed: onPressed,
       pressedColor: Colors.transparent,
       child: SizedBox(
-        width: 72,
+        width: width,
         child: Column(
           children: [
             child,

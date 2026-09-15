@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
@@ -7,9 +9,13 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
+import 'package:path_provider/path_provider.dart';
 import 'package:pluto/core/constants/app_strings.dart';
 import 'package:pluto/data/datasources/app_auth_service.dart';
 import 'package:pluto/data/datasources/calendar_event_local_datasource.dart';
+import 'package:pluto/data/datasources/friend_category_preference.dart';
+import 'package:pluto/data/datasources/friend_order_preference.dart';
 import 'package:pluto/data/datasources/day_emoji_store.dart';
 import 'package:pluto/data/models/calendar_event_model.dart';
 import 'package:pluto/domain/entities/calendar_event.dart';
@@ -26,6 +32,13 @@ class FriendService {
   static const _pendingNameKeyPrefix = 'friend_pending_name_';
 
   final profile = ValueNotifier<FriendProfile?>(null);
+  final avatarTick = ValueNotifier(0);
+  final _avatarMem = <String, Uint8List>{};
+  final _avatarGen = <String, int>{};
+  FriendProfile? _sessionProfile;
+  String? _sessionUid;
+  Future<void>? _bootstrapWork;
+  String? _bootstrapUid;
 
   Timer? _syncTimer;
   Timer? _stickerTimer;
@@ -58,7 +71,38 @@ class FriendService {
   FirebaseFunctions get _fn =>
       FirebaseFunctions.instanceFor(region: _region);
 
+  Uint8List? avatarBytes(String? uid) {
+    if (uid == null || uid.isEmpty) return null;
+    return _avatarMem[uid];
+  }
+
+  void hydrateSession() {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+    final current = profile.value;
+    if (current?.uid == user.uid && current!.photoURL.isNotEmpty) return;
+    if (_sessionUid == user.uid && _sessionProfile != null) {
+      profile.value = _sessionProfile;
+      return;
+    }
+    if (current?.uid == user.uid) return;
+    final photo = AppAuthService.socialPhotoURL(user) ?? '';
+    final name = AppAuthService.socialDisplayName(user) ?? '';
+    if (photo.isEmpty && name.isEmpty) return;
+    profile.value = FriendProfile(
+      uid: user.uid,
+      displayName: name,
+      friendCode: current?.friendCode ?? '',
+      photoURL: photo,
+    );
+  }
+
   void reset() {
+    final current = profile.value;
+    if (current != null && current.uid.isNotEmpty) {
+      _sessionUid = current.uid;
+      _sessionProfile = current;
+    }
     _syncTimer?.cancel();
     _syncTimer = null;
     _stickerTimer?.cancel();
@@ -71,21 +115,49 @@ class FriendService {
     _lastStickerIds = {};
     _needsResync = false;
     _needsStickerResync = false;
+    _bootstrapUid = null;
+    _bootstrapWork = null;
     _disposeRequestStreams();
     profile.value = null;
   }
 
   Future<void> bootstrap() async {
     DayEmojiStore.syncEventLayer = scheduleStickerSync;
-    if (!_ready) return;
+    hydrateSession();
+    unawaited(_warmAvatar(profile.value));
+    final uid = _uid;
+    if (uid == null) {
+      await FriendCategoryPreference.instance.load();
+      await FriendOrderPreference.instance.load();
+      return;
+    }
+    if (_bootstrapUid == uid && _bootstrapWork != null) {
+      return _bootstrapWork;
+    }
+    _bootstrapUid = uid;
+    final work = _runBootstrap();
+    _bootstrapWork = work;
+    try {
+      await work;
+    } finally {
+      if (identical(_bootstrapWork, work)) _bootstrapWork = null;
+    }
+  }
+
+  Future<void> _runBootstrap() async {
     await _restoreLocal();
+    unawaited(_warmAvatar(profile.value));
+    unawaited(FriendCategoryPreference.instance.load());
+    unawaited(FriendOrderPreference.instance.load());
     try {
       if (!kIsWeb) {
         await AppAuthService.instance
             .applySocialProfile()
             .timeout(const Duration(seconds: 3));
+        hydrateSession();
       }
       await ensureProfile();
+      unawaited(_warmAvatar(profile.value));
     } catch (error) {
       debugPrint('Friend bootstrap failed: $error');
     }
@@ -293,6 +365,73 @@ class FriendService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('$_profileKeyPrefix$uid');
     await prefs.remove('$_pendingNameKeyPrefix$uid');
+    _avatarMem.remove(uid);
+    avatarTick.value++;
+    if (_sessionUid == uid) {
+      _sessionUid = null;
+      _sessionProfile = null;
+    }
+    try {
+      final file = await _avatarFile(uid);
+      if (file != null && await file.exists()) await file.delete();
+    } catch (_) {}
+  }
+
+  void _rememberAvatar(String uid, Uint8List bytes) {
+    if (uid.isEmpty || bytes.isEmpty) return;
+    _avatarMem[uid] = bytes;
+    _avatarGen[uid] = (_avatarGen[uid] ?? 0) + 1;
+    avatarTick.value++;
+    unawaited(_writeAvatarFile(uid, bytes));
+  }
+
+  Future<void> _warmAvatar(FriendProfile? next) async {
+    final uid = next?.uid ?? '';
+    final url = next?.photoURL ?? '';
+    if (uid.isEmpty || url.isEmpty) return;
+    if (_avatarMem.containsKey(uid)) return;
+    final gen = _avatarGen[uid] ?? 0;
+    try {
+      final file = await _avatarFile(uid);
+      if (file != null && await file.exists()) {
+        final bytes = await file.readAsBytes();
+        if (bytes.isNotEmpty && (_avatarGen[uid] ?? 0) == gen) {
+          _avatarMem[uid] = bytes;
+          avatarTick.value++;
+          return;
+        }
+      }
+    } catch (_) {}
+    try {
+      final response = await http.get(Uri.parse(url));
+      if (response.statusCode != 200 || response.bodyBytes.isEmpty) return;
+      if ((_avatarGen[uid] ?? 0) != gen) return;
+      final current = profile.value;
+      if (current?.uid == uid &&
+          current!.photoURL.isNotEmpty &&
+          current.photoURL != url) {
+        return;
+      }
+      _rememberAvatar(uid, response.bodyBytes);
+    } catch (_) {}
+  }
+
+  Future<File?> _avatarFile(String uid) async {
+    if (kIsWeb || uid.isEmpty) return null;
+    try {
+      final dir = await getApplicationSupportDirectory();
+      return File('${dir.path}/friend_avatar_$uid');
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> _writeAvatarFile(String uid, Uint8List bytes) async {
+    try {
+      final file = await _avatarFile(uid);
+      if (file == null) return;
+      await file.writeAsBytes(bytes, flush: true);
+    } catch (_) {}
   }
 
   Future<FriendProfile> setPhoto(Uint8List bytes, String contentType) async {
@@ -303,6 +442,7 @@ class FriendService {
     if (bytes.isEmpty || bytes.length > 5 * 1024 * 1024) {
       throw const FriendException('bad-photo');
     }
+    _rememberAvatar(uid, bytes);
     final type = contentType.startsWith('image/') ? contentType : 'image/jpeg';
     final ext = type == 'image/png'
         ? 'png'
@@ -314,14 +454,19 @@ class FriendService {
     final url = await ref.getDownloadURL();
     final current = profile.value;
     if (current != null) {
-      profile.value = current.copyWith(photoURL: url);
+      final next = current.copyWith(photoURL: url);
+      profile.value = next;
+      _sessionUid = uid;
+      _sessionProfile = next;
       await _writeCachedProfile();
     }
     final data = await _call('updateFriendPhoto', {'photoURL': url});
-    final next = FriendProfile.fromMap(data);
-    profile.value = next;
+    final saved = FriendProfile.fromMap(data);
+    profile.value = saved;
+    _sessionUid = uid;
+    _sessionProfile = saved;
     await _writeCachedProfile();
-    return next;
+    return saved;
   }
 
   Future<FriendProfile> setFriendCode(String code) async {
@@ -336,14 +481,18 @@ class FriendService {
     return next;
   }
 
+  List<FriendRequestItem> get lastIncoming => _lastIncoming;
+
+  List<FriendRequestItem> get lastOutgoing => _lastOutgoing;
+
   Stream<List<FriendRequestItem>> incomingRequests() {
     _bindRequestStreams();
-    return _incomingCtrl?.stream ?? Stream.value(const []);
+    return _incomingCtrl?.stream ?? Stream.value(_lastIncoming);
   }
 
   Stream<List<FriendRequestItem>> outgoingRequests() {
     _bindRequestStreams();
-    return _outgoingCtrl?.stream ?? Stream.value(const []);
+    return _outgoingCtrl?.stream ?? Stream.value(_lastOutgoing);
   }
 
   Stream<int> incomingCount() {
@@ -424,19 +573,55 @@ class FriendService {
   Stream<List<FriendProfile>> friends() {
     final uid = _uid;
     if (uid == null) return Stream.value(const []);
-    return _db
+    final remote = _db
         .collection('friendships')
         .doc(uid)
         .collection('friends')
-        .snapshots()
-        .map((snap) {
-      final items = [
-        for (final doc in snap.docs)
-          FriendProfile.fromMap(doc.data(), uid: doc.id),
-      ];
-      items.sort((a, b) => a.label.compareTo(b.label));
-      return items;
+        .snapshots();
+    return Stream<List<FriendProfile>>.multi((controller) {
+      var items = const <FriendProfile>[];
+      var ready = false;
+      void emit() {
+        if (!ready || controller.isClosed) return;
+        controller.add(FriendOrderPreference.instance.apply(items));
+      }
+
+      final order = FriendOrderPreference.instance.listenable;
+      order.addListener(emit);
+      final sub = remote.listen(
+        (snap) {
+          items = [
+            for (final doc in snap.docs)
+              FriendProfile.fromMap(doc.data(), uid: doc.id),
+          ];
+          ready = true;
+          emit();
+        },
+        onError: controller.addError,
+      );
+      controller.onCancel = () {
+        order.removeListener(emit);
+        unawaited(sub.cancel());
+      };
     });
+  }
+
+  Future<void> reorderFriends(
+    List<FriendProfile> friends, {
+    required int oldIndex,
+    required int newIndex,
+  }) {
+    if (oldIndex < 0 || oldIndex >= friends.length) return Future.value();
+    var target = newIndex;
+    if (target > oldIndex) target -= 1;
+    if (target < 0) target = 0;
+    if (target > friends.length - 1) target = friends.length - 1;
+    final next = [...friends];
+    final moved = next.removeAt(oldIndex);
+    next.insert(target, moved);
+    return FriendOrderPreference.instance.setOrder([
+      for (final friend in next) friend.uid,
+    ]);
   }
 
   Future<FriendProfile?> lookupByCode(String code) async {
@@ -990,6 +1175,9 @@ class FriendService {
   bool _shareable(CalendarEvent event) {
     if (event.someday || event.isJob) return false;
     if (event.id.startsWith(CalendarEventLocalDataSource.starterIdPrefix)) {
+      return false;
+    }
+    if (!FriendCategoryPreference.instance.isPublic(event.categoryId)) {
       return false;
     }
     return event.title.trim().isNotEmpty;

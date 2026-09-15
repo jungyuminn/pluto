@@ -4,9 +4,7 @@ import 'package:pluto/app_scope.dart';
 import 'package:pluto/core/constants/app_fonts.dart';
 import 'package:pluto/core/constants/app_icons.dart';
 import 'package:pluto/core/constants/app_strings.dart';
-import 'package:pluto/core/layout/pc_layout.dart';
 import 'package:pluto/core/theme/app_colors.dart';
-import 'package:pluto/core/utils/press_bounce.dart';
 import 'package:pluto/core/utils/swipe_to_delete.dart';
 import 'package:pluto/data/datasources/day_emoji_store.dart';
 import 'package:pluto/domain/entities/calendar_event.dart';
@@ -71,7 +69,8 @@ class _HomeDayCardState extends State<HomeDayCard> {
   var _emojiPop = false;
   var _animateEmojiSlot = false;
 
-  static const _eventExtent = 62.0;
+  static const _labelHeight = 52.0;
+  static const _eventGap = 10.0;
   static const _headerExtent = 24.0;
   static const _headerGap = 6.0;
   static const _dateHeaderExtent = 28.0;
@@ -330,6 +329,10 @@ class _HomeDayCardState extends State<HomeDayCard> {
       if (_items.length == before) return;
       setState(() {});
     });
+  }
+
+  double get _eventExtent {
+    return _labelHeight * AppFonts.labelScaleOf(context) + _eventGap;
   }
 
   double _layoutExtent(_ListEntry item) {
@@ -620,6 +623,7 @@ class _HomeDayCardState extends State<HomeDayCard> {
     final colors = AppColors.of(context);
     return DecoratedBox(
       decoration: BoxDecoration(
+        color: colors.card,
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
@@ -629,23 +633,16 @@ class _HomeDayCardState extends State<HomeDayCard> {
           ),
         ],
       ),
-      child: PressBounce(
-        passthrough: true,
-        hover: !PcLayout.isPc,
-        color: colors.card,
-        pressedColor: Color.lerp(colors.card, Colors.black, 0.08)!,
-        borderRadius: BorderRadius.circular(24),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _buildHeader(context, colors),
-              const SizedBox(height: 16),
-              _buildList(),
-              if (widget.showAddButton) AddEventButton(onPressed: _add),
-            ],
-          ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _buildHeader(context, colors),
+            const SizedBox(height: 16),
+            _buildList(),
+            if (widget.showAddButton) AddEventButton(onPressed: _add),
+          ],
         ),
       ),
     );
@@ -930,7 +927,10 @@ class _HomeDayCardState extends State<HomeDayCard> {
                 color: AppColors.of(context).pressed,
                 borderRadius: const BorderRadius.all(Radius.circular(8)),
               ),
-              child: const SizedBox(height: 52, width: double.infinity),
+              child: SizedBox(
+                height: _labelHeight * AppFonts.labelScaleOf(context),
+                width: double.infinity,
+              ),
             ),
           ),
           child: body,

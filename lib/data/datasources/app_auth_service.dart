@@ -80,6 +80,18 @@ class AppAuthService {
     return null;
   }
 
+  static String? socialPhotoURL(User user) {
+    final candidates = [
+      user.photoURL,
+      ...user.providerData.map((info) => info.photoURL),
+    ];
+    for (final raw in candidates) {
+      final url = raw?.trim() ?? '';
+      if (url.isNotEmpty) return url;
+    }
+    return null;
+  }
+
   static bool _isSocialName(String name) {
     if (name.isEmpty) return false;
     if (name.contains('@')) return false;

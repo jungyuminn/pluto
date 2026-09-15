@@ -15,12 +15,11 @@ import 'package:pluto/data/datasources/diary_photo_storage.dart';
 import 'package:pluto/data/datasources/friend_service.dart';
 import 'package:pluto/data/datasources/synced_file_store.dart';
 import 'package:pluto/domain/entities/friend_profile.dart';
+import 'package:pluto/presentation/screens/friends/category_share_sheet.dart';
 import 'package:pluto/presentation/screens/friends/friend_avatar.dart';
 import 'package:pluto/presentation/screens/friends/friend_calendar_screen.dart';
 import 'package:pluto/presentation/widgets/overflow_menu.dart';
 import 'package:pluto/presentation/widgets/themed_asset.dart';
-
-enum FriendsScreenKind { profile, add }
 
 final _codeFormatters = <TextInputFormatter>[
   LengthLimitingTextInputFormatter(32),
@@ -32,42 +31,45 @@ final _codeFormatters = <TextInputFormatter>[
   }),
 ];
 
-class FriendsScreen extends StatefulWidget {
-  const FriendsScreen({super.key}) : kind = FriendsScreenKind.profile;
-
-  const FriendsScreen.add({super.key}) : kind = FriendsScreenKind.add;
-
-  final FriendsScreenKind kind;
-
-  @override
-  State<FriendsScreen> createState() => _FriendsScreenState();
+Future<void> showAddFriendSheet(BuildContext context) {
+  return showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    isDismissible: true,
+    useSafeArea: false,
+    showDragHandle: false,
+    enableDrag: true,
+    backgroundColor: Colors.transparent,
+    barrierColor: const Color(0x40000000),
+    elevation: 0,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+    ),
+    builder: (context) => const AddFriendSheet(),
+  );
 }
 
-class _FriendsScreenState extends State<FriendsScreen> {
+class AddFriendSheet extends StatefulWidget {
+  const AddFriendSheet({super.key});
+
+  @override
+  State<AddFriendSheet> createState() => _AddFriendSheetState();
+}
+
+class _AddFriendSheetState extends State<AddFriendSheet> {
   final _code = TextEditingController();
-  final _myCode = TextEditingController();
-  final _myName = TextEditingController();
-  final _nameFocus = FocusNode();
-  final _codeFocus = FocusNode();
   final _service = FriendService.instance;
-  var _savingCode = false;
-  var _savingName = false;
-  var _savingPhoto = false;
-  Uint8List? _preview;
   var _hint = '';
   var _hintVisible = false;
   Timer? _hintTimer;
   var _draftOutgoing = <FriendRequestItem>[];
   final _seenOutgoing = <String>{};
-  final _hiddenRequests = <String>{};
   final _cancelWhenReady = <String>{};
   final _inFlightCodes = <String>{};
 
   @override
   void initState() {
     super.initState();
-    _nameFocus.addListener(_onNameFocus);
-    _codeFocus.addListener(_onCodeFocus);
     unawaited(_bootstrap());
   }
 
@@ -82,13 +84,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
 
   @override
   void dispose() {
-    _nameFocus.removeListener(_onNameFocus);
-    _nameFocus.dispose();
-    _codeFocus.removeListener(_onCodeFocus);
-    _codeFocus.dispose();
     _code.dispose();
-    _myCode.dispose();
-    _myName.dispose();
     _hintTimer?.cancel();
     super.dispose();
   }
@@ -96,493 +92,170 @@ class _FriendsScreenState extends State<FriendsScreen> {
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
-    final top = MediaQuery.paddingOf(context).top;
     final bottom = MediaQuery.paddingOf(context).bottom;
-    return Scaffold(
-      backgroundColor: colors.groupedBackground,
-      extendBodyBehindAppBar: true,
-      appBar: _FriendsAppBar(
-        title: widget.kind == FriendsScreenKind.add
-            ? AppStrings.friendsAdd
-            : AppStrings.friendsProfile,
-        onBack: () => Navigator.pop(context),
-      ),
-      body: Stack(
-        children: [
-          PcLayout.constrainWidth(
-        ListView(
-          padding: EdgeInsets.fromLTRB(16, top + 56, 16, 32 + bottom),
-          children: [
-                if (widget.kind == FriendsScreenKind.profile) ...[
-                  ValueListenableBuilder(
-                    valueListenable: _service.profile,
-                    builder: (context, profile, _) {
-                      _syncCode(profile);
-                      return _profileCard(colors, profile);
-                    },
+    final keyboard = MediaQuery.viewInsetsOf(context).bottom;
+    final maxHeight = MediaQuery.sizeOf(context).height * 0.78;
+    return Padding(
+      padding: EdgeInsets.only(bottom: keyboard),
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxHeight: maxHeight),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: colors.groupedBackground,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          child: Stack(
+            fit: StackFit.loose,
+            children: [
+              ListView(
+                shrinkWrap: true,
+                padding: EdgeInsets.fromLTRB(16, 8, 16, 24 + bottom),
+                children: [
+                  Center(
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: colors.border,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                      child: const SizedBox(width: 36, height: 4),
+                    ),
                   ),
-                  const SizedBox(height: 24),
-                  _SectionLabel(AppStrings.friendsList),
-                  StreamBuilder(
-                    stream: _service.friends(),
-                    builder: (context, snapshot) {
-                      final friends = snapshot.data ?? const <FriendProfile>[];
-                      if (friends.isEmpty) {
-                        return _Card(
-                          child: Padding(
-                            padding: const EdgeInsets.fromLTRB(20, 22, 20, 22),
-                            child: Column(
-                              children: [
-                                Text(
-                                  AppStrings.friendsEmpty,
-                                  style: TextStyle(
-                                    fontFamily: AppFonts.of(context),
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w700,
-                                    color: colors.text,
-                                  ),
-                                ),
-                                const SizedBox(height: 6),
-                                Text(
-                                  AppStrings.friendsEmptyHint,
-                                  style: TextStyle(
-                                    fontFamily: AppFonts.of(context),
-                                    fontSize: 13,
-                                    color: colors.muted,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        );
-                      }
-                      return _Card(
-                        child: Column(
-                          children: [
-                            for (var i = 0; i < friends.length; i++) ...[
-                              _FriendTile(
-                                friend: friends[i],
-                                onPressed: () => _openCalendar(friends[i]),
-                                onRemove: () => _removeFriend(friends[i]),
-                              ),
-                              if (i != friends.length - 1)
-                                Padding(
-                                  padding: const EdgeInsets.only(left: 20),
-                                  child: Divider(
-                                    height: 1,
-                                    thickness: 0.5,
-                                    color: colors.border,
-                                  ),
-                                ),
-                            ],
-                          ],
-                        ),
-                      );
-                    },
-                  ),
-                ] else ...[
-                  _Card(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-                      child: Column(
-                        children: [
-                          TextField(
-                            controller: _code,
-                            maxLength: 32,
-                            inputFormatters: _codeFormatters,
-                            textInputAction: TextInputAction.send,
-                            onSubmitted: (_) => _send(),
-                            style: TextStyle(
-                              fontFamily: AppFonts.of(context),
-                              fontSize: 16,
-                              color: colors.text,
-                            ),
-                            decoration: InputDecoration(
-                              hintText: AppStrings.friendsCodeHint,
-                              hintStyle: TextStyle(
-                                fontFamily: AppFonts.of(context),
-                                color: colors.hint,
-                              ),
-                              border: InputBorder.none,
-                              counterText: '',
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          PressBounce(
-                            onPressed: _send,
-                            color: colors.tint(colors.accent, 0.16),
-                            pressedColor: colors.tint(colors.accent, 0.26),
-                            borderRadius: BorderRadius.circular(14),
-                            child: SizedBox(
-                              height: 44,
-                              width: double.infinity,
-                              child: Center(
-                                child: Text(
-                                  AppStrings.friendsSend,
-                                  style: TextStyle(
-                                    fontFamily: AppFonts.of(context),
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w800,
-                                    color: colors.accent,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
+                  const SizedBox(height: 14),
+                  Center(
+                    child: Text(
+                      AppStrings.friendsAdd,
+                      style: TextStyle(
+                        fontFamily: AppFonts.of(context),
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                        color: colors.text,
                       ),
                     ),
                   ),
-                  StreamBuilder(
-                    stream: _service.incomingRequests(),
-                    builder: (context, snapshot) {
-                      return _RequestSection(
-                        key: const ValueKey('incoming'),
-                        title: AppStrings.friendsIncoming,
-                        items: snapshot.data ?? const <FriendRequestItem>[],
-                        incoming: true,
-                        onAccept: _accept,
-                        onDecline: _decline,
-                      );
-                    },
-                  ),
-                  StreamBuilder(
-                    stream: _service.outgoingRequests(),
-                    builder: (context, snapshot) {
-                      return _RequestSection(
-                        key: const ValueKey('outgoing'),
-                        title: AppStrings.friendsOutgoing,
-                        items: _mergedOutgoing(
-                          snapshot.data ?? const <FriendRequestItem>[],
-                        ),
-                        incoming: false,
-                        onCancel: _cancel,
-                      );
-                    },
-                  ),
+                  const SizedBox(height: 16),
+                  _addFriendCard(colors),
+                  _incomingSection(),
+                  _outgoingSection(),
                 ],
-          ],
-        ),
-          ),
-          Positioned(
-            left: 24,
-            right: 24,
-            bottom: 20 + bottom,
-            child: IgnorePointer(
-              child: AnimatedSlide(
-                duration: const Duration(milliseconds: 280),
-                curve: _hintVisible ? Curves.easeOutCubic : Curves.easeInCubic,
-                offset: _hintVisible ? Offset.zero : const Offset(0, 0.18),
-                child: AnimatedOpacity(
-                  duration: const Duration(milliseconds: 280),
-                  curve: _hintVisible ? Curves.easeOutCubic : Curves.easeInCubic,
-                  opacity: _hintVisible ? 1 : 0,
-                  child: _HintToast(text: _hint),
-                ),
               ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _onCodeFocus() {
-    if (_codeFocus.hasFocus) return;
-    unawaited(_saveMyCode());
-  }
-
-  void _syncCode(FriendProfile? profile) {
-    if (_codeFocus.hasFocus) return;
-    final code = profile?.friendCode.trim() ?? '';
-    if (_myCode.text == code) return;
-    _myCode.text = code;
-  }
-
-  Widget _photoButton(AppColors colors, FriendProfile? profile) {
-    return PressBounce(
-      onPressed: _savingPhoto ? null : _pickPhoto,
-      pressedScale: 0.96,
-      pressedColor: Colors.transparent,
-      child: SizedBox(
-        width: 72,
-        height: 72,
-        child: Stack(
-          clipBehavior: Clip.none,
-          children: [
-            FriendAvatar(
-              size: 72,
-              profile: profile,
-              preview: _preview,
-            ),
-            Positioned(
-              right: -2,
-              bottom: -2,
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  color: FriendAvatar.accentOf(context),
-                  shape: BoxShape.circle,
-                  border: Border.all(color: colors.card, width: 2),
-                ),
-                child: SizedBox(
-                  width: 22,
-                  height: 22,
-                  child: Center(
-                    child: AppAssetImage(
-                      asset: AppIcons.edit,
-                      width: 11,
-                      height: 11,
-                      color: Colors.white,
+              Positioned(
+                left: 24,
+                right: 24,
+                bottom: 12 + bottom,
+                child: IgnorePointer(
+                  child: AnimatedSlide(
+                    duration: const Duration(milliseconds: 280),
+                    curve: _hintVisible
+                        ? Curves.easeOutCubic
+                        : Curves.easeInCubic,
+                    offset: _hintVisible ? Offset.zero : const Offset(0, 0.18),
+                    child: AnimatedOpacity(
+                      duration: const Duration(milliseconds: 280),
+                      curve: _hintVisible
+                          ? Curves.easeOutCubic
+                          : Curves.easeInCubic,
+                      opacity: _hintVisible ? 1 : 0,
+                      child: _HintToast(text: _hint),
                     ),
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Future<void> _pickPhoto() async {
-    if (_savingPhoto) return;
-    try {
-      final picked = await const DiaryPhotoStorage().pick();
-      if (picked == null || !mounted) return;
-      final bytes = await SyncedFileStore.instance.read(picked.path);
-      if (bytes == null || bytes.isEmpty) return;
-      if (bytes.length > 5 * 1024 * 1024) {
-        _toast(AppStrings.friendsPhotoTooBig);
-        return;
-      }
-      setState(() {
-        _preview = bytes;
-        _savingPhoto = true;
-      });
-      await _service.setPhoto(bytes, _photoType(picked.name));
-      if (!mounted) return;
-      setState(() => _savingPhoto = false);
-    } catch (error) {
-      if (!mounted) return;
-      setState(() {
-        _preview = null;
-        _savingPhoto = false;
-      });
-      _toast(_service.messageOf(error));
-    }
-  }
-
-  String _photoType(String name) {
-    final lower = name.toLowerCase();
-    if (lower.endsWith('.png')) return 'image/png';
-    if (lower.endsWith('.webp')) return 'image/webp';
-    if (lower.endsWith('.gif')) return 'image/gif';
-    return 'image/jpeg';
-  }
-
-  Widget _accountRow(AppColors colors) {
-    final user = AppAuthService.instance.user;
-    if (user == null) return const SizedBox.shrink();
-    final provider = AppAuthService.providerOf(user);
-    final id = AppAuthService.accountId(user);
-    final (asset, background, tint) = switch (provider) {
-      'kakao' => (AppIcons.kakaoLogo, const Color(0xFFFEE500), null),
-      'google' => (AppIcons.googleLogo, Colors.white, null),
-      'apple' => (AppIcons.appleLogo, const Color(0xFF111111), Colors.white),
-      _ => (AppIcons.planet, colors.tint(colors.accent, 0.16), colors.accent),
-    };
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 14, 20, 14),
-      child: Row(
-        children: [
-          DecoratedBox(
-            decoration: BoxDecoration(
-              color: background,
-              shape: BoxShape.circle,
-              border: provider == 'google'
-                  ? Border.all(color: colors.border)
-                  : null,
-            ),
-            child: SizedBox(
-              width: 24,
-              height: 24,
-              child: Center(
-                child: AppAssetImage(
-                  asset: asset,
-                  width: 13,
-                  height: 13,
-                  color: tint,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              id,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+  Widget _addFriendCard(AppColors colors) {
+    return _Card(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+        child: Column(
+          children: [
+            TextField(
+              controller: _code,
+              autofocus: true,
+              maxLength: 32,
+              inputFormatters: _codeFormatters,
+              textInputAction: TextInputAction.send,
+              onSubmitted: (_) => _send(),
               style: TextStyle(
                 fontFamily: AppFonts.of(context),
                 fontSize: 16,
                 color: colors.text,
               ),
+              decoration: InputDecoration(
+                hintText: AppStrings.friendsCodeHint,
+                hintStyle: TextStyle(
+                  fontFamily: AppFonts.of(context),
+                  color: colors.hint,
+                ),
+                border: InputBorder.none,
+                counterText: '',
+              ),
             ),
-          ),
-        ],
+            const SizedBox(height: 4),
+            PressBounce(
+              onPressed: _send,
+              color: colors.tint(colors.accent, 0.16),
+              pressedColor: colors.tint(colors.accent, 0.26),
+              borderRadius: BorderRadius.circular(14),
+              child: SizedBox(
+                height: 44,
+                width: double.infinity,
+                child: Center(
+                  child: Text(
+                    AppStrings.friendsSend,
+                    style: TextStyle(
+                      fontFamily: AppFonts.of(context),
+                      fontSize: 15,
+                      fontWeight: FontWeight.w800,
+                      color: colors.accent,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  void _onNameFocus() {
-    if (_nameFocus.hasFocus) return;
-    unawaited(_saveMyName());
-  }
-
-  void _syncName(FriendProfile? profile) {
-    if (_nameFocus.hasFocus) return;
-    final name = profile?.displayName.trim() ?? '';
-    if (_myName.text == name) return;
-    _myName.text = name;
-  }
-
-  Widget _profileCard(AppColors colors, FriendProfile? profile) {
-    _syncName(profile);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        _SectionLabel(AppStrings.friendsProfile),
-        _Card(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 16, 16, 16),
-                child: Row(
-                  children: [
-                    _photoButton(colors, profile),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        children: [
-                          TextField(
-                            controller: _myName,
-                            focusNode: _nameFocus,
-                            maxLength: 16,
-                            textInputAction: TextInputAction.done,
-                            onSubmitted: (_) => _saveMyName(),
-                            style: TextStyle(
-                              fontFamily: AppFonts.of(context),
-                              fontSize: 16,
-                              color: colors.text,
-                            ),
-                            decoration: InputDecoration(
-                              hintText: AppStrings.friendsNameEditHint,
-                              hintStyle: TextStyle(
-                                fontFamily: AppFonts.of(context),
-                                color: colors.hint,
-                              ),
-                              border: InputBorder.none,
-                              counterText: '',
-                              isDense: true,
-                              contentPadding: const EdgeInsets.symmetric(
-                                vertical: 8,
-                              ),
-                            ),
-                          ),
-                          Divider(
-                            height: 1,
-                            thickness: 0.5,
-                            color: colors.border,
-                          ),
-                          TextField(
-                            controller: _myCode,
-                            focusNode: _codeFocus,
-                            maxLength: 32,
-                            inputFormatters: _codeFormatters,
-                            textInputAction: TextInputAction.done,
-                            onSubmitted: (_) => _saveMyCode(),
-                            style: TextStyle(
-                              fontFamily: AppFonts.of(context),
-                              fontSize: 16,
-                              color: colors.text,
-                            ),
-                            decoration: InputDecoration(
-                              hintText: profile?.suggestedCode.isNotEmpty == true
-                                  ? profile!.suggestedCode
-                                  : AppStrings.friendsMyCode,
-                              hintStyle: TextStyle(
-                                fontFamily: AppFonts.of(context),
-                                color: colors.hint,
-                              ),
-                              border: InputBorder.none,
-                              counterText: '',
-                              isDense: true,
-                              contentPadding: const EdgeInsets.symmetric(
-                                vertical: 8,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(left: 20),
-                child: Divider(
-                  height: 1,
-                  thickness: 0.5,
-                  color: colors.border,
-                ),
-              ),
-              _accountRow(colors),
-            ],
-          ),
-        ),
-      ],
+  Widget _incomingSection() {
+    return StreamBuilder(
+      stream: _service.incomingRequests(),
+      initialData: _service.lastIncoming,
+      builder: (context, snapshot) {
+        return _RequestSection(
+          key: const ValueKey('incoming'),
+          title: AppStrings.friendsIncoming,
+          items: snapshot.data ?? const <FriendRequestItem>[],
+          incoming: true,
+          onAccept: _accept,
+          onDecline: _decline,
+        );
+      },
     );
   }
 
-  Future<void> _saveMyName() async {
-    final name = _myName.text.trim();
-    final current = _service.profile.value?.displayName.trim() ?? '';
-    if (_savingName || name == current) return;
-    if (name.isEmpty) {
-      _myName.text = current;
-      return;
-    }
-    _savingName = true;
-    try {
-      await _service.setDisplayName(name);
-    } catch (error) {
-      if (!mounted) return;
-      _myName.text = current;
-      _toast(_service.messageOf(error));
-    } finally {
-      _savingName = false;
-    }
-  }
-
-  Future<void> _saveMyCode() async {
-    final code = _myCode.text.trim();
-    final current = _service.profile.value?.friendCode.trim() ?? '';
-    if (_savingCode || code == current) return;
-    if (code.isEmpty) {
-      _myCode.text = current;
-      return;
-    }
-    _savingCode = true;
-    try {
-      await _service.setFriendCode(code);
-    } catch (error) {
-      if (!mounted) return;
-      _myCode.text = current;
-      _toast(_service.messageOf(error));
-    } finally {
-      _savingCode = false;
-    }
+  Widget _outgoingSection() {
+    return StreamBuilder(
+      stream: _service.outgoingRequests(),
+      initialData: _service.lastOutgoing,
+      builder: (context, snapshot) {
+        return _RequestSection(
+          key: const ValueKey('outgoing'),
+          title: AppStrings.friendsOutgoing,
+          items: _mergedOutgoing(
+            snapshot.data ?? const <FriendRequestItem>[],
+          ),
+          incoming: false,
+          onCancel: _cancel,
+        );
+      },
+    );
   }
 
   List<FriendRequestItem> _mergedOutgoing(List<FriendRequestItem> remote) {
@@ -721,6 +394,591 @@ class _FriendsScreenState extends State<FriendsScreen> {
     } catch (error) {
       if (!mounted) return;
       _toast(_service.messageOf(error));
+    }
+  }
+
+  void _toast(String text) {
+    _hintTimer?.cancel();
+    setState(() {
+      _hint = text;
+      _hintVisible = true;
+    });
+    _hintTimer = Timer(const Duration(milliseconds: 2400), () {
+      if (!mounted) return;
+      setState(() => _hintVisible = false);
+    });
+  }
+}
+
+class FriendsScreen extends StatefulWidget {
+  const FriendsScreen({super.key});
+
+  @override
+  State<FriendsScreen> createState() => _FriendsScreenState();
+}
+
+
+class _FriendsScreenState extends State<FriendsScreen> {
+  final _myCode = TextEditingController();
+  final _myName = TextEditingController();
+  final _nameFocus = FocusNode();
+  final _codeFocus = FocusNode();
+  final _service = FriendService.instance;
+  var _savingCode = false;
+  var _savingName = false;
+  var _savingPhoto = false;
+  Uint8List? _preview;
+  var _hint = '';
+  var _hintVisible = false;
+  Timer? _hintTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameFocus.addListener(_onNameFocus);
+    _codeFocus.addListener(_onCodeFocus);
+    unawaited(_bootstrap());
+  }
+
+  Future<void> _bootstrap() async {
+    try {
+      await _service.ensureProfile();
+    } catch (error) {
+      if (!mounted) return;
+      _toast(_service.messageOf(error));
+    }
+  }
+
+  @override
+  void dispose() {
+    _nameFocus.removeListener(_onNameFocus);
+    _nameFocus.dispose();
+    _codeFocus.removeListener(_onCodeFocus);
+    _codeFocus.dispose();
+    _myCode.dispose();
+    _myName.dispose();
+    _hintTimer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    final top = MediaQuery.paddingOf(context).top;
+    final bottom = MediaQuery.paddingOf(context).bottom;
+    return Scaffold(
+      backgroundColor: colors.groupedBackground,
+      extendBodyBehindAppBar: true,
+      appBar: _FriendsAppBar(
+        title: AppStrings.friendsTitle,
+        onBack: () => Navigator.pop(context),
+      ),
+      body: Stack(
+        children: [
+          PcLayout.constrainWidth(
+            ListView(
+              padding: EdgeInsets.fromLTRB(16, top + 56, 16, 32 + bottom),
+              children: [
+                ValueListenableBuilder(
+                  valueListenable: _service.profile,
+                  builder: (context, profile, _) {
+                    _syncCode(profile);
+                    return _profileCard(colors, profile);
+                  },
+                ),
+                _friendsSection(colors),
+              ],
+            ),
+          ),
+          Positioned(
+            left: 24,
+            right: 24,
+            bottom: 20 + bottom,
+            child: IgnorePointer(
+              child: AnimatedSlide(
+                duration: const Duration(milliseconds: 280),
+                curve: _hintVisible ? Curves.easeOutCubic : Curves.easeInCubic,
+                offset: _hintVisible ? Offset.zero : const Offset(0, 0.18),
+                child: AnimatedOpacity(
+                  duration: const Duration(milliseconds: 280),
+                  curve: _hintVisible ? Curves.easeOutCubic : Curves.easeInCubic,
+                  opacity: _hintVisible ? 1 : 0,
+                  child: _HintToast(text: _hint),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _friendsSection(AppColors colors) {
+    return StreamBuilder(
+      stream: _service.friends(),
+      builder: (context, snapshot) {
+        final friends = snapshot.data ?? const <FriendProfile>[];
+        return Padding(
+          padding: const EdgeInsets.only(top: 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _SectionLabel(AppStrings.friendsList),
+              if (friends.isEmpty)
+                const _EmptyCard(
+                  title: AppStrings.friendsEmpty,
+                  hint: AppStrings.friendsEmptyHint,
+                )
+              else
+                _Card(
+                  child: ReorderableListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    padding: EdgeInsets.zero,
+                    buildDefaultDragHandles: false,
+                    itemCount: friends.length,
+                    proxyDecorator: (child, index, animation) {
+                      return AnimatedBuilder(
+                        animation: animation,
+                        builder: (context, child) {
+                          final t = Curves.easeOutBack.transform(
+                            animation.value,
+                          );
+                          return Transform.translate(
+                            offset: Offset(0, -4 * t),
+                            child: Transform.scale(
+                              scale: 1 + 0.02 * t,
+                              child: child,
+                            ),
+                          );
+                        },
+                        child: child,
+                      );
+                    },
+                    onReorderStart: (_) => HapticFeedback.mediumImpact(),
+                    onReorder: (oldIndex, newIndex) {
+                      unawaited(
+                        _service.reorderFriends(
+                          friends,
+                          oldIndex: oldIndex,
+                          newIndex: newIndex,
+                        ),
+                      );
+                    },
+                    itemBuilder: (context, index) {
+                      return ReorderableDelayedDragStartListener(
+                        key: ValueKey(friends[index].uid),
+                        index: index,
+                        child: Column(
+                          children: [
+                            if (index > 0)
+                              Padding(
+                                padding: const EdgeInsets.only(left: 20),
+                                child: Divider(
+                                  height: 1,
+                                  thickness: 0.5,
+                                  color: colors.border,
+                                ),
+                              ),
+                            _FriendTile(
+                              friend: friends[index],
+                              onPressed: () => _openCalendar(friends[index]),
+                              onRemove: () => _removeFriend(friends[index]),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _onCodeFocus() {
+    if (_codeFocus.hasFocus) return;
+    unawaited(_saveMyCode());
+  }
+
+  void _syncCode(FriendProfile? profile) {
+    if (_codeFocus.hasFocus) return;
+    final code = profile?.friendCode.trim() ?? '';
+    if (_myCode.text == code) return;
+    _myCode.text = code;
+  }
+
+  Widget _photoButton(AppColors colors, FriendProfile? profile) {
+    return PressBounce(
+      onPressed: _savingPhoto ? null : _pickPhoto,
+      pressedScale: 0.96,
+      pressedColor: Colors.transparent,
+      child: SizedBox(
+        width: 84,
+        height: 84,
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            FriendAvatar(
+              size: 84,
+              profile: profile,
+              preview: _preview,
+            ),
+            Positioned(
+              right: -2,
+              bottom: -2,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: FriendAvatar.accentOf(context),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: colors.card, width: 2),
+                ),
+                child: SizedBox(
+                  width: 22,
+                  height: 22,
+                  child: Center(
+                    child: AppAssetImage(
+                      asset: AppIcons.edit,
+                      width: 11,
+                      height: 11,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _pickPhoto() async {
+    if (_savingPhoto) return;
+    try {
+      final picked = await const DiaryPhotoStorage().pick();
+      if (picked == null || !mounted) return;
+      final bytes = await SyncedFileStore.instance.read(picked.path);
+      if (bytes == null || bytes.isEmpty) return;
+      if (bytes.length > 5 * 1024 * 1024) {
+        _toast(AppStrings.friendsPhotoTooBig);
+        return;
+      }
+      setState(() {
+        _preview = bytes;
+        _savingPhoto = true;
+      });
+      await _service.setPhoto(bytes, _photoType(picked.name));
+      if (!mounted) return;
+      setState(() => _savingPhoto = false);
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _preview = null;
+        _savingPhoto = false;
+      });
+      _toast(_service.messageOf(error));
+    }
+  }
+
+  String _photoType(String name) {
+    final lower = name.toLowerCase();
+    if (lower.endsWith('.png')) return 'image/png';
+    if (lower.endsWith('.webp')) return 'image/webp';
+    if (lower.endsWith('.gif')) return 'image/gif';
+    return 'image/jpeg';
+  }
+
+  Widget _accountRow(AppColors colors) {
+    final user = AppAuthService.instance.user;
+    if (user == null) return const SizedBox.shrink();
+    final provider = AppAuthService.providerOf(user);
+    final id = AppAuthService.accountId(user);
+    final (asset, background, tint) = switch (provider) {
+      'kakao' => (AppIcons.kakaoLogo, const Color(0xFFFEE500), null),
+      'google' => (AppIcons.googleLogo, Colors.white, null),
+      'apple' => (AppIcons.appleLogo, const Color(0xFF111111), Colors.white),
+      _ => (AppIcons.planet, colors.tint(colors.accent, 0.16), colors.accent),
+    };
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 14, 20, 14),
+      child: Row(
+        children: [
+          DecoratedBox(
+            decoration: BoxDecoration(
+              color: background,
+              shape: BoxShape.circle,
+              border: provider == 'google'
+                  ? Border.all(color: colors.border)
+                  : null,
+            ),
+            child: SizedBox(
+              width: 24,
+              height: 24,
+              child: Center(
+                child: AppAssetImage(
+                  asset: asset,
+                  width: 13,
+                  height: 13,
+                  color: tint,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              id,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontFamily: AppFonts.of(context),
+                fontSize: 16,
+                color: colors.text,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _categoryShareRow(AppColors colors) {
+    return PressBounce(
+      onPressed: () => showCategoryShareSheet(context),
+      pressedScale: 0.99,
+      color: colors.card,
+      pressedColor: colors.pressed,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 16, 16, 16),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                AppStrings.friendsCategoryShare,
+                style: TextStyle(
+                  fontFamily: AppFonts.of(context),
+                  fontSize: 16,
+                  color: colors.text,
+                ),
+              ),
+            ),
+            Icon(
+              Icons.chevron_right_rounded,
+              size: 22,
+              color: colors.muted,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _onNameFocus() {
+    if (_nameFocus.hasFocus) return;
+    unawaited(_saveMyName());
+  }
+
+  void _syncName(FriendProfile? profile) {
+    if (_nameFocus.hasFocus) return;
+    final name = profile?.displayName.trim() ?? '';
+    if (_myName.text == name) return;
+    _myName.text = name;
+  }
+
+  Widget _profileCard(AppColors colors, FriendProfile? profile) {
+    _syncName(profile);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _SectionLabel(AppStrings.friendsProfileSettings),
+        _Card(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 16, 16, 16),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    _photoButton(colors, profile),
+                    const SizedBox(width: 22),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _FieldLabel(AppStrings.friendsMyName),
+                          TextField(
+                            controller: _myName,
+                            focusNode: _nameFocus,
+                            maxLength: 16,
+                            textInputAction: TextInputAction.done,
+                            onSubmitted: (_) => _saveMyName(),
+                            style: TextStyle(
+                              fontFamily: AppFonts.of(context),
+                              fontSize: 16,
+                              color: colors.text,
+                            ),
+                            decoration: InputDecoration(
+                              hintText: AppStrings.friendsNameEditHint,
+                              hintStyle: TextStyle(
+                                fontFamily: AppFonts.of(context),
+                                color: colors.hint,
+                              ),
+                              border: InputBorder.none,
+                              counterText: '',
+                              isDense: true,
+                              contentPadding: const EdgeInsets.fromLTRB(0, 4, 0, 8),
+                            ),
+                          ),
+                          Divider(
+                            height: 1,
+                            thickness: 0.5,
+                            color: colors.border,
+                          ),
+                          const SizedBox(height: 8),
+                          _FieldLabel(AppStrings.friendsMyCode),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: TextField(
+                                  controller: _myCode,
+                                  focusNode: _codeFocus,
+                                  maxLength: 32,
+                                  inputFormatters: _codeFormatters,
+                                  textInputAction: TextInputAction.done,
+                                  onSubmitted: (_) => _saveMyCode(),
+                                  style: TextStyle(
+                                    fontFamily: AppFonts.of(context),
+                                    fontSize: 16,
+                                    color: colors.text,
+                                  ),
+                                  decoration: InputDecoration(
+                                    hintText: AppStrings.friendsCodeEditHint,
+                                    hintStyle: TextStyle(
+                                      fontFamily: AppFonts.of(context),
+                                      color: colors.hint,
+                                    ),
+                                    border: InputBorder.none,
+                                    counterText: '',
+                                    isDense: true,
+                                    contentPadding: const EdgeInsets.fromLTRB(
+                                      0,
+                                      4,
+                                      0,
+                                      8,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              PressBounce(
+                                onPressed: _copyMyCode,
+                                pressedScale: 0.94,
+                                pressedColor: colors.pressed,
+                                borderRadius: BorderRadius.circular(18),
+                                child: Tooltip(
+                                  message: AppStrings.friendsCopy,
+                                  child: Semantics(
+                                    button: true,
+                                    label: AppStrings.friendsCopy,
+                                    child: SizedBox(
+                                      width: 36,
+                                      height: 36,
+                                      child: Center(
+                                        child: AppAssetImage(
+                                          asset: AppIcons.copy,
+                                          width: 20,
+                                          height: 20,
+                                          color: colors.muted,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(left: 20),
+                child: Divider(
+                  height: 1,
+                  thickness: 0.5,
+                  color: colors.border,
+                ),
+              ),
+              _accountRow(colors),
+              Padding(
+                padding: const EdgeInsets.only(left: 20),
+                child: Divider(
+                  height: 1,
+                  thickness: 0.5,
+                  color: colors.border,
+                ),
+              ),
+              _categoryShareRow(colors),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _copyMyCode() async {
+    final code = _myCode.text.trim();
+    if (code.isEmpty) {
+      _toast(AppStrings.friendsCodeNeed);
+      return;
+    }
+    await Clipboard.setData(ClipboardData(text: code));
+    if (!mounted) return;
+    _toast(AppStrings.friendsCopied);
+  }
+
+  Future<void> _saveMyName() async {
+    final name = _myName.text.trim();
+    final current = _service.profile.value?.displayName.trim() ?? '';
+    if (_savingName || name == current) return;
+    if (name.isEmpty) {
+      _myName.text = current;
+      return;
+    }
+    _savingName = true;
+    try {
+      await _service.setDisplayName(name);
+    } catch (error) {
+      if (!mounted) return;
+      _myName.text = current;
+      _toast(_service.messageOf(error));
+    } finally {
+      _savingName = false;
+    }
+  }
+
+  Future<void> _saveMyCode() async {
+    final code = _myCode.text.trim();
+    final current = _service.profile.value?.friendCode.trim() ?? '';
+    if (_savingCode || code == current) return;
+    if (code.isEmpty) {
+      _myCode.text = current;
+      return;
+    }
+    _savingCode = true;
+    try {
+      await _service.setFriendCode(code);
+    } catch (error) {
+      if (!mounted) return;
+      _myCode.text = current;
+      _toast(_service.messageOf(error));
+    } finally {
+      _savingCode = false;
     }
   }
 
@@ -1238,6 +1496,47 @@ class _HintToast extends StatelessWidget {
   }
 }
 
+class _EmptyCard extends StatelessWidget {
+  const _EmptyCard({required this.title, required this.hint});
+
+  final String title;
+  final String hint;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    return _Card(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 22, 20, 22),
+        child: Column(
+          children: [
+            Text(
+              title,
+              style: TextStyle(
+                fontFamily: AppFonts.of(context),
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+                color: colors.text,
+              ),
+            ),
+            if (hint.isNotEmpty) ...[
+              const SizedBox(height: 6),
+              Text(
+                hint,
+                style: TextStyle(
+                  fontFamily: AppFonts.of(context),
+                  fontSize: 13,
+                  color: colors.muted,
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _Card extends StatelessWidget {
   const _Card({required this.child});
 
@@ -1253,6 +1552,25 @@ class _Card extends StatelessWidget {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(24),
         child: child,
+      ),
+    );
+  }
+}
+
+class _FieldLabel extends StatelessWidget {
+  const _FieldLabel(this.text);
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      text,
+      style: TextStyle(
+        fontFamily: AppFonts.of(context),
+        fontSize: 12,
+        fontWeight: FontWeight.w700,
+        color: AppColors.of(context).muted,
       ),
     );
   }

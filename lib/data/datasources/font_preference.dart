@@ -229,6 +229,7 @@ class FontPreference extends ChangeNotifier {
   static const _calendarDateKey = 'font_calendar_date_scale';
 
   final SharedPreferences? _prefs;
+  final ChangeNotifier _appearance = ChangeNotifier();
   AppTypeface _typeface;
   FontSizeLevel _todoSize;
   FontSizeLevel _calendarSize;
@@ -236,6 +237,8 @@ class FontPreference extends ChangeNotifier {
   late double _labelScale;
   late double _calendarChipScale;
   late double _calendarDateScale;
+
+  Listenable get appearanceListenable => _appearance;
 
   AppTypeface get typeface => _typeface;
   FontSizeLevel get todoSize => _todoSize;
@@ -269,6 +272,7 @@ class FontPreference extends ChangeNotifier {
   Future<void> setTypeface(AppTypeface value) async {
     if (_typeface == value) return;
     _typeface = value;
+    _appearance.notifyListeners();
     notifyListeners();
     await _prefs?.setString(_familyKey, value.name);
   }
@@ -359,5 +363,6 @@ class FontPreference extends ChangeNotifier {
       prefs.getDouble(_calendarDateKey) ?? _calendarSize.scale,
     );
     notifyListeners();
+    _appearance.notifyListeners();
   }
 }

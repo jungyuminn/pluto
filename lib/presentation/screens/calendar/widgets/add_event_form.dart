@@ -63,9 +63,7 @@ class _AddEventFormState extends State<AddEventForm>
   CategorySuggestSession? _suggest;
   var _suggestOn = false;
   var _suggesting = false;
-
-  bool get _isSomeday =>
-      widget.someday || (widget.initial?.someday ?? false);
+  late bool _isSomeday;
 
   bool get _hasCategory =>
       _categoryId != null && (_categoryName?.trim().isNotEmpty ?? false);
@@ -82,8 +80,9 @@ class _AddEventFormState extends State<AddEventForm>
     _categoryId = initial?.categoryId ?? travel.id;
     _categoryName = initial?.categoryName ?? travel.name;
     _categoryColor = initial?.categoryColor ?? travel.color;
-    _startMinutes = (initial?.someday ?? false) ? null : initial?.startMinutes;
-    _endMinutes = (initial?.someday ?? false) ? null : initial?.endMinutes;
+    _isSomeday = widget.someday || (initial?.someday ?? false);
+    _startMinutes = _isSomeday ? null : initial?.startMinutes;
+    _endMinutes = _isSomeday ? null : initial?.endMinutes;
     final date = initial?.date ?? widget.date;
     _date = DateTime(date.year, date.month, date.day);
     final rangeEnd = widget.rangeEnd;
@@ -310,6 +309,7 @@ class _AddEventFormState extends State<AddEventForm>
     );
     if (picked == null || !mounted) return;
     setState(() {
+      _isSomeday = false;
       _dateMode = picked.mode;
       _dates = picked.dates;
       _date = picked.date;
@@ -513,21 +513,23 @@ class _AddEventFormState extends State<AddEventForm>
                           loading: _suggesting,
                           onPressed: _pickCategory,
                         ),
+                        const SizedBox(width: 4),
+                        EventDateChip(
+                          date: _date,
+                          color: _accent,
+                          label: _isSomeday
+                              ? AppStrings.somedayTitle
+                              : _isRange
+                              ? AppStrings.rangeEventLabel
+                              : _isMultiple
+                              ? AppStrings.multipleEventLabel
+                              : _dateMode == AppCalendarMode.repeat ||
+                                    widget.initial?.repeatId != null
+                              ? AppStrings.repeatEventLabel
+                              : null,
+                          onPressed: _pickDate,
+                        ),
                         if (!_isSomeday) ...[
-                          const SizedBox(width: 4),
-                          EventDateChip(
-                            date: _date,
-                            color: _accent,
-                            label: _isRange
-                                ? AppStrings.rangeEventLabel
-                                : _isMultiple
-                                ? AppStrings.multipleEventLabel
-                                : _dateMode == AppCalendarMode.repeat ||
-                                      widget.initial?.repeatId != null
-                                ? AppStrings.repeatEventLabel
-                                : null,
-                            onPressed: _pickDate,
-                          ),
                           const SizedBox(width: 4),
                           EventTimeChip(
                             color: _accent,

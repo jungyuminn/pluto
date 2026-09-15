@@ -12,6 +12,8 @@ import 'package:pluto/data/datasources/calendar_preference.dart';
 import 'package:pluto/data/datasources/category_suggest_preference.dart';
 import 'package:pluto/data/datasources/day_events_view_preference.dart';
 import 'package:pluto/data/datasources/font_preference.dart';
+import 'package:pluto/data/datasources/friend_category_preference.dart';
+import 'package:pluto/data/datasources/friend_order_preference.dart';
 import 'package:pluto/data/datasources/home_view_preference.dart';
 import 'package:pluto/data/datasources/job_view_preference.dart';
 import 'package:pluto/data/datasources/license_view_preference.dart';
@@ -88,6 +90,8 @@ class CloudSyncSnapshot {
     ...LicenseViewPreference.syncedKeys,
     ...DayEventsViewPreference.syncedKeys,
     ...CategorySuggestPreference.syncedKeys,
+    ...FriendCategoryPreference.syncedKeys,
+    ...FriendOrderPreference.syncedKeys,
   ];
 
   static const syncedKeys = [
@@ -152,6 +156,8 @@ class CloudSyncSnapshot {
     if (key == darkKey || key == mondayKey) return false;
     if (key == skinKey) return 'classic';
     if (key == diaryCoverOrderKey) return <String>[];
+    if (key == FriendCategoryPreference.key) return <String>[];
+    if (key == FriendOrderPreference.key) return <String>[];
     if (key == FontPreference.syncedKeys.single) {
       return FontPreference.defaultFamily;
     }
@@ -275,6 +281,9 @@ class CloudSyncSnapshot {
     if ((_stringOf(dump, customThemeIdKey) ?? '').isNotEmpty) return false;
     if ((_listOf(dump, stickerOrderKey) ?? const []).isNotEmpty) return false;
     if ((_listOf(dump, diaryCoverOrderKey) ?? const []).isNotEmpty) return false;
+    if ((_listOf(dump, FriendOrderPreference.key) ?? const []).isNotEmpty) {
+      return false;
+    }
     if ((_stringOf(dump, wordmarkHomeKey) ?? '').isNotEmpty) return false;
     if ((_stringOf(dump, wordmarkJobKey) ?? '').isNotEmpty) return false;
     if ((_stringOf(dump, wordmarkLicenseKey) ?? '').isNotEmpty) return false;
@@ -337,6 +346,15 @@ class CloudSyncSnapshot {
       out.remove(diaryCoverOrderKey);
     } else {
       out[diaryCoverOrderKey] = {'t': 'l', 'v': covers};
+    }
+    final friendOrder = _mergeStringLists(
+      _listOf(local, FriendOrderPreference.key),
+      _listOf(remote, FriendOrderPreference.key),
+    );
+    if (friendOrder == null) {
+      out.remove(FriendOrderPreference.key);
+    } else {
+      out[FriendOrderPreference.key] = {'t': 'l', 'v': friendOrder};
     }
     return out;
   }

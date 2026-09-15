@@ -8088,7 +8088,7 @@ class _CategoryHeader extends StatelessWidget {
           style: TextStyle(
             fontFamily: font,
             fontSize: 11,
-            fontWeight: FontWeight.w800,
+            fontWeight: FontWeight.w500,
             color: color,
           ),
         ),

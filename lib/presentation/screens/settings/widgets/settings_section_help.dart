@@ -3605,7 +3605,11 @@ class _TodoSettingsDemoState extends State<_TodoSettingsDemo>
   static const _rowHeight = 40.0;
   static const _itemH = 46.0;
   static const _gap = 6.0;
-  static const _labels = [AppStrings.timeSortView, AppStrings.timeDisplay];
+  static const _labels = [
+    AppStrings.timeSortView,
+    AppStrings.timeDisplay,
+    AppStrings.categoryView,
+  ];
   static const _titles = ['면접 연습', '자기소개서 제출', '코딩테스트 준비'];
   static const _categories = ['면접', '서류', '코딩테스트'];
   static const _colors = [
@@ -3668,7 +3672,7 @@ class _TodoSettingsDemoState extends State<_TodoSettingsDemo>
         final sort = t < 0.50
             ? 0.0
             : Curves.easeOutCubic.transform(_helpGate(t, 0.50, 0.60));
-        final ons = [sort, showTime];
+        final ons = [sort, showTime, 0.0];
         final finger = _fingerOpacity(t);
         final press = _fingerPress(t);
         final fingerRow = _fingerRow(t);
@@ -3748,7 +3752,7 @@ class _TodoSettingsDemoState extends State<_TodoSettingsDemo>
           child: Column(
                             children: [
                               for (var i = 0; i < _labels.length; i++)
-                                _HelpCheckRow(
+                                _HelpSwitchRow(
                                   label: _labels[i],
                                   on: ons[i],
                                   height: _rowHeight,
@@ -3774,48 +3778,6 @@ class _TodoSettingsDemoState extends State<_TodoSettingsDemo>
           ),
         );
       },
-    );
-  }
-}
-
-class _HelpCheckRow extends StatelessWidget {
-  const _HelpCheckRow({
-    required this.label,
-    required this.on,
-    required this.height,
-  });
-
-  final String label;
-  final double on;
-  final double height;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = AppColors.of(context);
-    return SizedBox(
-      height: height,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: Row(
-            children: [
-            Expanded(
-              child: Text(
-                label,
-                style: TextStyle(
-                  fontFamily: AppFonts.of(context),
-                  fontSize: 14,
-                  fontWeight: FontWeight.w400,
-                  color: colors.text,
-                ),
-              ),
-            ),
-            Opacity(
-              opacity: on.clamp(0.0, 1.0),
-              child: Icon(Icons.check_rounded, size: 20, color: colors.text),
-              ),
-            ],
-          ),
-      ),
     );
   }
 }

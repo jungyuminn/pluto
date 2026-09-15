@@ -28,7 +28,7 @@ class HomeDayCard extends StatefulWidget {
     this.date,
     required this.events,
     required this.categories,
-    required this.compact,
+    this.categoryView = false,
     this.sortByTime = false,
     this.showTime = false,
     required this.onEventsChanged,
@@ -43,7 +43,7 @@ class HomeDayCard extends StatefulWidget {
   final DateTime? date;
   final List<CalendarEvent> events;
   final List<EventCategory> categories;
-  final bool compact;
+  final bool categoryView;
   final bool sortByTime;
   final bool showTime;
   final VoidCallback onEventsChanged;
@@ -155,7 +155,7 @@ class _HomeDayCardState extends State<HomeDayCard> {
     List<CalendarEvent> source, {
     String headerKeyPrefix = '',
   }) {
-    if (!widget.compact) {
+    if (!widget.categoryView) {
       final events = widget.sortByTime
           ? CalendarEvent.withLockedThenStartTime(source)
           : source;
@@ -438,7 +438,7 @@ class _HomeDayCardState extends State<HomeDayCard> {
     if (widget.groupDates != null && !_isSameDay(event.day, dragged.day)) {
       return false;
     }
-    if (!widget.compact) return true;
+    if (!widget.categoryView) return true;
     return (event.categoryId ?? event.categoryName) ==
         (dragged.categoryId ?? dragged.categoryName);
   }
@@ -536,7 +536,7 @@ class _HomeDayCardState extends State<HomeDayCard> {
     final jobs = [for (final event in _events) if (event.isJob) event];
     final ranges = [for (final event in _events) if (event.isRange) event];
     final todos = [for (final event in _events) if (!event.isLockedOrder) event];
-    if (widget.compact || widget.groupDates != null) {
+    if (widget.categoryView || widget.groupDates != null) {
       var gi = 0;
       final ids = {for (final event in group) event.id};
       for (var i = 0; i < todos.length; i++) {
@@ -562,7 +562,7 @@ class _HomeDayCardState extends State<HomeDayCard> {
     if (widget.groupDates != null && !_isSameDay(event.day, dragged.day)) {
       return false;
     }
-    if (!widget.compact) return true;
+    if (!widget.categoryView) return true;
     return (event.categoryId ?? event.categoryName) ==
         (dragged.categoryId ?? dragged.categoryName);
   }

@@ -15,6 +15,7 @@ import 'package:pluto/data/datasources/font_preference.dart';
 import 'package:pluto/data/datasources/friend_category_preference.dart';
 import 'package:pluto/data/datasources/friend_order_preference.dart';
 import 'package:pluto/data/datasources/home_view_preference.dart';
+import 'package:pluto/data/datasources/home_memo_local_datasource.dart';
 import 'package:pluto/data/datasources/job_view_preference.dart';
 import 'package:pluto/data/datasources/license_view_preference.dart';
 import 'package:pluto/data/datasources/nav_preference.dart';
@@ -40,6 +41,7 @@ class CloudSyncSnapshot {
   static const stickerOrderKey = DayEmojiStore.packOrderKey;
   static const goalsKey = LongGoalLocalDataSource.goalsKey;
   static const goalLogsKey = LongGoalLocalDataSource.logsKey;
+  static const memosKey = HomeMemoLocalDataSource.key;
   static const eventCategoriesKey = EventCategoryLocalDataSource.eventKey;
   static const companyCategoriesKey = EventCategoryLocalDataSource.companyKey;
   static const ledgerCategoriesKey = EventCategoryLocalDataSource.ledgerKey;
@@ -64,6 +66,7 @@ class CloudSyncSnapshot {
     stickerOrderKey,
     goalsKey,
     goalLogsKey,
+    memosKey,
     eventCategoriesKey,
     companyCategoriesKey,
     ledgerCategoriesKey,
@@ -118,6 +121,7 @@ class CloudSyncSnapshot {
     ledgersKey,
     goalsKey,
     goalLogsKey,
+    memosKey,
     eventCategoriesKey,
     companyCategoriesKey,
     ledgerCategoriesKey,
@@ -235,6 +239,7 @@ class CloudSyncSnapshot {
     if (_hasListItems(dump, ledgersKey)) return true;
     if (_hasListItems(dump, goalsKey)) return true;
     if (_hasListItems(dump, goalLogsKey)) return true;
+    if (_hasListItems(dump, memosKey)) return true;
     if (_hasEmojiItems(_stringOf(dump, emojisKey))) return true;
     return false;
   }
@@ -246,6 +251,7 @@ class CloudSyncSnapshot {
     if (_hasListItems(dump, ledgersKey)) return false;
     if (_hasListItems(dump, goalsKey)) return false;
     if (_hasListItems(dump, goalLogsKey)) return false;
+    if (_hasListItems(dump, memosKey)) return false;
     if (_hasEmojiItems(_stringOf(dump, emojisKey))) return false;
     if (!_eventsAreStarter(_stringOf(dump, eventsKey))) return false;
     if (!_themesAreStarter(_stringOf(dump, themesKey))) return false;

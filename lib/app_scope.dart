@@ -6,6 +6,7 @@ import 'package:pluto/data/datasources/day_events_view_preference.dart';
 import 'package:pluto/data/datasources/day_emoji_store.dart';
 import 'package:pluto/data/datasources/font_preference.dart';
 import 'package:pluto/data/datasources/home_view_preference.dart';
+import 'package:pluto/data/datasources/home_memo_local_datasource.dart';
 import 'package:pluto/data/datasources/long_goal_local_datasource.dart';
 import 'package:pluto/data/datasources/job_view_preference.dart';
 import 'package:pluto/data/datasources/license_view_preference.dart';
@@ -90,6 +91,7 @@ class AppScope extends InheritedWidget {
     required this.licenseViewPreference,
     required this.homeViewPreference,
     required this.longGoalStore,
+    required this.memoStore,
     required this.dayEmojiStore,
     required this.dayEventsViewPreference,
     required this.calendarPreference,
@@ -149,6 +151,7 @@ class AppScope extends InheritedWidget {
   final LicenseViewPreference licenseViewPreference;
   final HomeViewPreference homeViewPreference;
   final LongGoalLocalDataSource longGoalStore;
+  final HomeMemoLocalDataSource memoStore;
   final DayEmojiStore dayEmojiStore;
   final DayEventsViewPreference dayEventsViewPreference;
   final CalendarPreference calendarPreference;
@@ -218,6 +221,7 @@ class AppScope extends InheritedWidget {
         licenseViewPreference != oldWidget.licenseViewPreference ||
         homeViewPreference != oldWidget.homeViewPreference ||
         longGoalStore != oldWidget.longGoalStore ||
+        memoStore != oldWidget.memoStore ||
         dayEmojiStore != oldWidget.dayEmojiStore ||
         dayEventsViewPreference != oldWidget.dayEventsViewPreference ||
         calendarPreference != oldWidget.calendarPreference ||

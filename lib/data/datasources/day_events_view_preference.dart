@@ -109,6 +109,7 @@ class DayEventsViewPreference {
   Future<void> setCategoryView(bool value) async {
     _categoryView = value;
     await _prefs?.setBool(_categoryViewKey, value);
+    unawaited(HomeScreenWidgetService.instance.sync());
   }
 
   Future<void> setShowLedgerTitle(bool value) async {

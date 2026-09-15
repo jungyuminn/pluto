@@ -8,6 +8,7 @@ class HomeViewPreference {
     SharedPreferences? prefs,
     bool compact = false,
     bool showLeftover = true,
+    bool showMemo = false,
     bool showToday = true,
     bool showTomorrow = true,
     bool showWeek = false,
@@ -19,6 +20,7 @@ class HomeViewPreference {
   })  : _prefs = prefs,
         _compact = prefs?.getBool(_compactKey) ?? compact,
         _showLeftover = prefs?.getBool(_leftoverKey) ?? showLeftover,
+        _showMemo = prefs?.getBool(_memoKey) ?? showMemo,
         _showToday = prefs?.getBool(_todayKey) ?? showToday,
         _showTomorrow = prefs?.getBool(_tomorrowKey) ?? showTomorrow,
         _showWeek = prefs?.getBool(_weekKey) ?? showWeek,
@@ -34,6 +36,7 @@ class HomeViewPreference {
 
   static const _compactKey = 'home_events_compact_view';
   static const _leftoverKey = 'home_show_leftover';
+  static const _memoKey = 'home_show_memo';
   static const _todayKey = 'home_show_today';
   static const _tomorrowKey = 'home_show_tomorrow';
   static const _weekKey = 'home_show_week';
@@ -49,6 +52,7 @@ class HomeViewPreference {
   static const syncedKeys = [
     _compactKey,
     _leftoverKey,
+    _memoKey,
     _todayKey,
     _tomorrowKey,
     _weekKey,
@@ -62,6 +66,7 @@ class HomeViewPreference {
   static const defaultBools = {
     _compactKey: false,
     _leftoverKey: true,
+    _memoKey: false,
     _todayKey: true,
     _tomorrowKey: true,
     _weekKey: false,
@@ -85,6 +90,7 @@ class HomeViewPreference {
   final SharedPreferences? _prefs;
   bool _compact;
   bool _showLeftover;
+  bool _showMemo;
   bool _showToday;
   bool _showTomorrow;
   bool _showWeek;
@@ -99,6 +105,7 @@ class HomeViewPreference {
 
   bool get isCompact => _prefs?.getBool(_compactKey) ?? _compact;
   bool get showLeftover => _showLeftover;
+  bool get showMemo => _showMemo;
   bool get showToday => _showToday;
   bool get showTomorrow => _showTomorrow;
   bool get showWeek => _showWeek;
@@ -132,6 +139,11 @@ class HomeViewPreference {
   Future<void> setShowLeftover(bool value) async {
     _showLeftover = value;
     await _prefs?.setBool(_leftoverKey, value);
+  }
+
+  Future<void> setShowMemo(bool value) async {
+    _showMemo = value;
+    await _prefs?.setBool(_memoKey, value);
   }
 
   Future<void> setShowToday(bool value) async {
@@ -190,6 +202,12 @@ class HomeViewPreference {
         if (kind != null && !found.contains(kind)) found.add(kind);
       }
     }
+    if (!found.contains(HomeCardKind.memo)) {
+      final leftoverIdx = found.indexOf(HomeCardKind.leftover);
+      if (leftoverIdx >= 0) {
+        found.insert(leftoverIdx + 1, HomeCardKind.memo);
+      }
+    }
     if (!found.contains(HomeCardKind.someday)) {
       final longIdx = found.indexOf(HomeCardKind.longGoal);
       if (longIdx >= 0) {
@@ -232,6 +250,7 @@ class HomeViewPreference {
     if (prefs == null) return;
     _compact = prefs.getBool(_compactKey) ?? _compact;
     _showLeftover = prefs.getBool(_leftoverKey) ?? _showLeftover;
+    _showMemo = prefs.getBool(_memoKey) ?? _showMemo;
     _showToday = prefs.getBool(_todayKey) ?? _showToday;
     _showTomorrow = prefs.getBool(_tomorrowKey) ?? _showTomorrow;
     _showWeek = prefs.getBool(_weekKey) ?? _showWeek;
@@ -248,6 +267,7 @@ class HomeViewPreference {
 
 enum HomeCardKind {
   leftover,
+  memo,
   today,
   tomorrow,
   week,
@@ -257,6 +277,7 @@ enum HomeCardKind {
 
   static const defaults = [
     leftover,
+    memo,
     today,
     tomorrow,
     week,

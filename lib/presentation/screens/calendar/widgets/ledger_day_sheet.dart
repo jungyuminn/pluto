@@ -872,7 +872,7 @@ class _LedgerDaySheetState extends State<LedgerDaySheet>
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontSize: 13,
-                    fontWeight: FontWeight.w800,
+                    fontWeight: FontWeight.w500,
                     height: 1,
                     color: AppColors.of(context).text,
                   ),

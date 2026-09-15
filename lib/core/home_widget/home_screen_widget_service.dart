@@ -249,7 +249,7 @@ class HomeScreenWidgetService {
           allEvents: allEvents,
           applications: applications,
           categories: categoryList,
-          compact: homeView.isCompact,
+          compact: dayEventsView.categoryView,
           sortByTime: dayEventsView.sortByTime,
           showTime: dayEventsView.showTime,
           isDark: isDark,

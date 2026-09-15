@@ -287,6 +287,7 @@ class AppBackupService {
     scope.backupPreference.hydrate();
     unawaited(FriendOrderPreference.instance.load());
     scope.longGoalStore.reload();
+    scope.memoStore.reload();
     scope.dayEmojiStore.reload();
     if (!kIsWeb) {
       await TodoReminderService.instance.sync();

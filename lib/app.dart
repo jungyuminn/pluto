@@ -26,6 +26,7 @@ import 'package:pluto/data/datasources/day_emoji_store.dart';
 import 'package:pluto/data/datasources/day_events_view_preference.dart';
 import 'package:pluto/data/datasources/font_preference.dart';
 import 'package:pluto/data/datasources/home_view_preference.dart';
+import 'package:pluto/data/datasources/home_memo_local_datasource.dart';
 import 'package:pluto/data/datasources/job_view_preference.dart';
 import 'package:pluto/data/datasources/license_view_preference.dart';
 import 'package:pluto/data/datasources/license_local_datasource.dart';
@@ -130,6 +131,7 @@ class JobPlannerApp extends StatelessWidget {
     this.licenseViewPreference,
     this.homeViewPreference,
     this.longGoalStore,
+    this.memoStore,
     this.dayEmojiStore,
     this.dayEventsViewPreference,
     this.calendarPreference,
@@ -188,6 +190,7 @@ class JobPlannerApp extends StatelessWidget {
   final LicenseViewPreference? licenseViewPreference;
   final HomeViewPreference? homeViewPreference;
   final LongGoalLocalDataSource? longGoalStore;
+  final HomeMemoLocalDataSource? memoStore;
   final DayEmojiStore? dayEmojiStore;
   final DayEventsViewPreference? dayEventsViewPreference;
   final CalendarPreference? calendarPreference;
@@ -297,6 +300,7 @@ class JobPlannerApp extends StatelessWidget {
       licenseViewPreference: licenseViewPreference ?? LicenseViewPreference(),
       homeViewPreference: homeViewPreference ?? HomeViewPreference(),
       longGoalStore: longGoalStore ?? LongGoalLocalDataSource(),
+      memoStore: memoStore ?? HomeMemoLocalDataSource(),
       dayEmojiStore: dayEmojiStore ?? DayEmojiStore(),
       dayEventsViewPreference:
           dayEventsViewPreference ?? DayEventsViewPreference(),
@@ -371,6 +375,7 @@ class _AppBootstrapState extends State<_AppBootstrap> {
   LicenseViewPreference? _licenseViewPreference;
   HomeViewPreference? _homeViewPreference;
   LongGoalLocalDataSource? _longGoalStore;
+  HomeMemoLocalDataSource? _memoStore;
   DayEmojiStore? _dayEmojiStore;
   DayEventsViewPreference? _dayEventsViewPreference;
   CalendarPreference? _calendarPreference;
@@ -428,6 +433,7 @@ class _AppBootstrapState extends State<_AppBootstrap> {
     );
     final homeViewPreference = HomeViewPreference(prefs: prefs);
     final longGoalStore = LongGoalLocalDataSource(prefs: prefs);
+    final memoStore = HomeMemoLocalDataSource(prefs: prefs);
     final dayEmojiStore = DayEmojiStore(prefs: prefs);
     final dayEventsViewPreference = DayEventsViewPreference(prefs: prefs);
     final calendarPreference = CalendarPreference(prefs: prefs);
@@ -511,6 +517,7 @@ class _AppBootstrapState extends State<_AppBootstrap> {
       _licenseViewPreference = LicenseViewPreference(prefs: prefs);
       _homeViewPreference = homeViewPreference;
       _longGoalStore = longGoalStore;
+      _memoStore = memoStore;
       _dayEmojiStore = dayEmojiStore;
       _dayEventsViewPreference = dayEventsViewPreference;
       _calendarPreference = calendarPreference;
@@ -595,6 +602,7 @@ class _AppBootstrapState extends State<_AppBootstrap> {
     final licenseViewPreference = _licenseViewPreference;
     final homeViewPreference = _homeViewPreference;
     final longGoalStore = _longGoalStore;
+    final memoStore = _memoStore;
     final dayEmojiStore = _dayEmojiStore;
     final dayEventsViewPreference = _dayEventsViewPreference;
     final calendarPreference = _calendarPreference;
@@ -652,6 +660,7 @@ class _AppBootstrapState extends State<_AppBootstrap> {
         licenseViewPreference == null ||
         homeViewPreference == null ||
         longGoalStore == null ||
+        memoStore == null ||
         dayEmojiStore == null ||
         dayEventsViewPreference == null ||
         calendarPreference == null ||
@@ -724,6 +733,7 @@ class _AppBootstrapState extends State<_AppBootstrap> {
       licenseViewPreference: licenseViewPreference,
       homeViewPreference: homeViewPreference,
       longGoalStore: longGoalStore,
+      memoStore: memoStore,
       dayEmojiStore: dayEmojiStore,
       dayEventsViewPreference: dayEventsViewPreference,
       calendarPreference: calendarPreference,

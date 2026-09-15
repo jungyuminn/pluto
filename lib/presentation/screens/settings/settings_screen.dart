@@ -78,6 +78,7 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   var _sortByTime = false;
   var _showTime = false;
+  var _categoryView = false;
   var _aiCategory = false;
   var _todoReminderLead = TodoReminderLead.off;
   var _summaryEnabled = true;
@@ -85,6 +86,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   var _leftoverEnabled = true;
   var _leftoverMinutes = NotificationPreference.defaultLeftoverMinutes;
   var _showLeftover = true;
+  var _showMemo = false;
   var _showToday = true;
   var _showTomorrow = true;
   var _showWeek = false;
@@ -131,6 +133,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final scope = AppScope.of(context);
     _sortByTime = scope.dayEventsViewPreference.sortByTime;
     _showTime = scope.dayEventsViewPreference.showTime;
+    _categoryView = scope.dayEventsViewPreference.categoryView;
     _aiCategory = scope.categorySuggestPreference.enabled;
     _todoReminderLead = scope.notificationPreference.todoReminderLead;
     _summaryEnabled = scope.notificationPreference.summaryEnabled;
@@ -138,6 +141,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _leftoverEnabled = scope.notificationPreference.leftoverEnabled;
     _leftoverMinutes = scope.notificationPreference.leftoverMinutes;
     _showLeftover = scope.homeViewPreference.showLeftover;
+    _showMemo = scope.homeViewPreference.showMemo;
     _showToday = scope.homeViewPreference.showToday;
     _showTomorrow = scope.homeViewPreference.showTomorrow;
     _showWeek = scope.homeViewPreference.showWeek;
@@ -174,11 +178,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
     setState(() {
       _sortByTime = scope.dayEventsViewPreference.sortByTime;
       _showTime = scope.dayEventsViewPreference.showTime;
+      _categoryView = scope.dayEventsViewPreference.categoryView;
       _aiCategory = scope.categorySuggestPreference.enabled;
       _todoReminderLead = scope.notificationPreference.todoReminderLead;
       _summaryEnabled = scope.notificationPreference.summaryEnabled;
       _summaryHour = scope.notificationPreference.summaryMinutes;
       _showLeftover = scope.homeViewPreference.showLeftover;
+      _showMemo = scope.homeViewPreference.showMemo;
       _showToday = scope.homeViewPreference.showToday;
       _showTomorrow = scope.homeViewPreference.showTomorrow;
       _showWeek = scope.homeViewPreference.showWeek;
@@ -432,16 +438,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
-  Future<void> _toggleSortByTime() async {
-    final next = !_sortByTime;
-    setState(() => _sortByTime = next);
-    await AppScope.of(context).dayEventsViewPreference.setSortByTime(next);
+  Future<void> _setSortByTime(bool value) async {
+    setState(() => _sortByTime = value);
+    await AppScope.of(context).dayEventsViewPreference.setSortByTime(value);
   }
 
-  Future<void> _toggleShowTime() async {
-    final next = !_showTime;
-    setState(() => _showTime = next);
-    await AppScope.of(context).dayEventsViewPreference.setShowTime(next);
+  Future<void> _setShowTime(bool value) async {
+    setState(() => _showTime = value);
+    await AppScope.of(context).dayEventsViewPreference.setShowTime(value);
+  }
+
+  Future<void> _setCategoryView(bool value) async {
+    setState(() => _categoryView = value);
+    await AppScope.of(context).dayEventsViewPreference.setCategoryView(value);
   }
 
   Future<void> _setAiCategory(bool value) async {
@@ -482,6 +491,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _setShowLeftover(bool value) async {
     setState(() => _showLeftover = value);
     await AppScope.of(context).homeViewPreference.setShowLeftover(value);
+  }
+
+  Future<void> _setShowMemo(bool value) async {
+    setState(() => _showMemo = value);
+    await AppScope.of(context).homeViewPreference.setShowMemo(value);
   }
 
   Future<void> _setShowToday(bool value) async {
@@ -879,6 +893,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 onChanged: _setShowLeftover,
               ),
               _SettingsSwitchTile(
+                label: AppStrings.homeShowMemo,
+                value: _showMemo,
+                onChanged: _setShowMemo,
+              ),
+              _SettingsSwitchTile(
                 label: AppStrings.homeShowToday,
                 value: _showToday,
                 onChanged: _setShowToday,
@@ -978,15 +997,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           _SettingsCard(
             children: [
-              _SettingsTile(
+              _SettingsSwitchTile(
                 label: AppStrings.timeSortView,
-                checked: _sortByTime,
-                onPressed: _toggleSortByTime,
+                value: _sortByTime,
+                onChanged: _setSortByTime,
               ),
-              _SettingsTile(
+              _SettingsSwitchTile(
                 label: AppStrings.timeDisplay,
-                checked: _showTime,
-                onPressed: _toggleShowTime,
+                value: _showTime,
+                onChanged: _setShowTime,
+              ),
+              _SettingsSwitchTile(
+                label: AppStrings.categoryView,
+                value: _categoryView,
+                onChanged: _setCategoryView,
               ),
             ],
           ),
@@ -1471,9 +1495,9 @@ class _WidgetFontPreview extends StatelessWidget {
     final typeface = followFont
         ? scope.fontPreference.typeface
         : AppTypeface.system;
-    final compact = scope.homeViewPreference.isCompact;
     final showTime = scope.dayEventsViewPreference.showTime;
     final sortByTime = scope.dayEventsViewPreference.sortByTime;
+    final categoryView = scope.dayEventsViewPreference.categoryView;
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final weekday = AppStrings.weekdays[today.weekday % 7];
@@ -1501,7 +1525,7 @@ class _WidgetFontPreview extends StatelessWidget {
     final snapshot = TodayWidgetCard.snapshotFor(
       events: events,
       categories: const [_docs, _exercise],
-      compact: compact,
+      compact: categoryView,
       sortByTime: sortByTime,
     );
     final previewHeight = TodayWidgetCard.layoutSize(
@@ -1908,7 +1932,6 @@ class _ThemeHomePreviewPage extends StatelessWidget {
   Widget _fullHomePage(BuildContext context) {
     final scope = AppScope.of(context);
     final today = _themePreviewToday();
-    final compact = scope.homeViewPreference.isCompact;
     final sortPrefs = scope.dayEventsViewPreference;
     final bottomGap = 88 + MediaQuery.paddingOf(context).bottom;
     return Scaffold(
@@ -1922,13 +1945,6 @@ class _ThemeHomePreviewPage extends StatelessWidget {
             AppBarIconAction(
               asset: AppIcons.search,
               label: AppStrings.homeSearchHint,
-              onPressed: () {},
-            ),
-            AppBarIconAction(
-              asset: compact ? AppIcons.detailView : AppIcons.quickView,
-              label: compact
-                  ? AppStrings.detailedView
-                  : AppStrings.compactView,
               onPressed: () {},
             ),
             AppBarIconAction(
@@ -1952,7 +1968,7 @@ class _ThemeHomePreviewPage extends StatelessWidget {
             date: today,
             events: _themePreviewEventsOn(today),
             categories: _themePreviewCategories,
-            compact: compact,
+            categoryView: sortPrefs.categoryView,
             sortByTime: sortPrefs.sortByTime,
             showTime: sortPrefs.showTime,
             onEventsChanged: () {},

@@ -15,6 +15,7 @@ import 'package:pluto/data/datasources/nav_preference.dart';
 import 'package:pluto/domain/entities/calendar_event.dart';
 import 'package:pluto/domain/entities/event_category.dart';
 import 'package:pluto/domain/entities/job_application.dart';
+import 'package:pluto/domain/entities/home_memo.dart';
 import 'package:pluto/domain/entities/long_goal.dart';
 import 'package:pluto/presentation/screens/calendar/calendar_day_events.dart';
 import 'package:pluto/presentation/screens/home/all_events_screen.dart';
@@ -24,6 +25,7 @@ import 'package:pluto/presentation/screens/home/widgets/home_day_card.dart';
 import 'package:pluto/presentation/screens/home/widgets/home_friends_row.dart';
 import 'package:pluto/presentation/screens/home/widgets/home_leftover_card.dart';
 import 'package:pluto/presentation/screens/home/widgets/home_long_goal_card.dart';
+import 'package:pluto/presentation/screens/home/widgets/home_memo_card.dart';
 import 'package:pluto/presentation/screens/home/widgets/home_monthly_stats_card.dart';
 import 'package:pluto/presentation/screens/settings/settings_screen.dart';
 import 'package:pluto/presentation/widgets/app_bar_icon_group.dart';
@@ -50,9 +52,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   var _somedayEvents = <CalendarEvent>[];
   var _categories = <EventCategory>[];
   var _longGoals = <LongGoal>[];
+  var _memos = <HomeMemo>[];
   var _loading = true;
   var _initialized = false;
-  var _compact = false;
   var _startMonday = false;
   CalendarPreference? _calendarPrefs;
   NavPreference? _navPrefs;
@@ -97,7 +99,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     }
     if (_initialized) return;
     _initialized = true;
-    _compact = AppScope.of(context).homeViewPreference.isCompact;
     _startMonday = calendarPrefs.startMonday;
     _reload();
   }
@@ -135,7 +136,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   void _onBackupRestored() {
     if (!mounted) return;
-    _compact = AppScope.of(context).homeViewPreference.isCompact;
     _startMonday = AppScope.of(context).calendarPreference.startMonday;
     _reload();
   }
@@ -213,14 +213,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       ]..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
       _categories = categories;
       _longGoals = List.of(scope.longGoalStore.goals);
+      _memos = List.of(scope.memoStore.memos);
       _loading = false;
     });
-  }
-
-  Future<void> _toggleCompact() async {
-    final next = !_compact;
-    setState(() => _compact = next);
-    await AppScope.of(context).homeViewPreference.setCompact(next);
   }
 
   Future<void> _openMonthlyStats() async {
@@ -266,7 +261,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       ),
     );
     if (!mounted) return;
-    _compact = AppScope.of(context).homeViewPreference.isCompact;
     await _reload();
   }
 
@@ -296,13 +290,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                     ? AppStrings.homeSearchHint
                     : AppStrings.homeSearchHintDaily,
                 onPressed: _openSearch,
-              ),
-              AppBarIconAction(
-                asset: _compact ? AppIcons.detailView : AppIcons.quickView,
-                label: _compact
-                    ? AppStrings.detailedView
-                    : AppStrings.compactView,
-                onPressed: _toggleCompact,
               ),
               AppBarIconAction(
                 asset: AppIcons.setting,
@@ -449,6 +436,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }) {
     return switch (kind) {
       HomeCardKind.leftover => homePrefs.showLeftover && leftover.isNotEmpty,
+      HomeCardKind.memo => homePrefs.showMemo,
       HomeCardKind.today => homePrefs.showToday,
       HomeCardKind.tomorrow => homePrefs.showTomorrow,
       HomeCardKind.week => homePrefs.showWeek,
@@ -469,12 +457,16 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           count: leftover.length,
           onPressed: _openLeftover,
         ),
+      HomeCardKind.memo => HomeMemoCard(
+          memos: _memos,
+          onChanged: _reload,
+        ),
       HomeCardKind.today => HomeDayCard(
           title: AppStrings.todayTitle,
           date: _today,
           events: _todayEvents,
           categories: _categories,
-          compact: _compact,
+          categoryView: sortPrefs.categoryView,
           sortByTime: sortPrefs.sortByTime,
           showTime: sortPrefs.showTime,
           onEventsChanged: _reload,
@@ -484,7 +476,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           date: _tomorrow,
           events: _tomorrowEvents,
           categories: _categories,
-          compact: _compact,
+          categoryView: sortPrefs.categoryView,
           sortByTime: sortPrefs.sortByTime,
           showTime: sortPrefs.showTime,
           onEventsChanged: _reload,
@@ -493,7 +485,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           title: AppStrings.weekTitle,
           events: _weekEvents,
           categories: _categories,
-          compact: _compact,
+          categoryView: sortPrefs.categoryView,
           sortByTime: sortPrefs.sortByTime,
           showTime: sortPrefs.showTime,
           showAddButton: false,
@@ -505,7 +497,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           title: AppStrings.monthTitle,
           events: _monthEvents,
           categories: _categories,
-          compact: _compact,
+          categoryView: sortPrefs.categoryView,
           sortByTime: sortPrefs.sortByTime,
           showTime: sortPrefs.showTime,
           showAddButton: false,
@@ -521,7 +513,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           date: null,
           events: _somedayEvents,
           categories: _categories,
-          compact: _compact,
+          categoryView: sortPrefs.categoryView,
           sortByTime: sortPrefs.sortByTime,
           showTime: false,
           someday: true,
@@ -531,7 +523,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           goals: _longGoals,
           categories: _categories,
           today: _today,
-          compact: _compact,
+          compact: false,
           onChanged: _reload,
         ),
     };

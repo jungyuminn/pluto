@@ -161,7 +161,7 @@ class AppStrings {
   static const tutorialNavHomeBody =
       '기본으로 오늘·내일 할 일이 보여요. 끝나지 않은 할 일이 있으면 위에 미완료 카드도 생겨요';
   static const tutorialHomeToolsTitle = '위쪽 버튼';
-  static const tutorialHomeToolsBody = '돋보기, 간략히 보기, 설정 버튼이에요';
+  static const tutorialHomeToolsBody = '돋보기와 설정 버튼이에요';
   static const tutorialHomeSearchTitle = '전체 일정 찾기';
   static const tutorialHomeSearchBody =
       '돋보기를 누르면 할 일과 지원서를 한곳에서 찾아요. 기간을 정하거나 할 일·지원서만 볼 수 있어요';
@@ -255,6 +255,7 @@ class AppStrings {
   static const settingsHomeSection = '홈 화면';
   static const settingsHomeLayoutSection = '홈 화면 설정';
   static const homeShowLeftover = '미완료 할 일';
+  static const homeShowMemo = '메모';
   static const homeShowToday = '오늘';
   static const homeShowTomorrow = '내일';
   static const homeShowWeek = '이번 주';
@@ -264,6 +265,12 @@ class AppStrings {
   static const somedayTitle = '언젠가';
   static const homePickCards = '보여줄 카드';
   static const homeReorderCards = '순서 바꾸기';
+  static const memoTitle = '메모';
+  static const memoAdd = '+ 메모를 추가하세요';
+  static const memoTitleHint = '제목을 입력하세요';
+  static const memoBodyHint = '메모를 입력하세요';
+  static const memoMissingTitle = '제목은 필수사항이에요!';
+  static const memoDeleteBody = '메모가 사라져요';
   static const longGoalTitle = '챌린지';
   static const longGoalAdd = '+ 할 일을 추가하세요';
   static const longGoalNameHint = '할 일을 입력하세요';
@@ -393,7 +400,8 @@ class AppStrings {
   static const settingsHelpPreview = '미리보기';
   static const settingsHomeLayoutHelp =
       '홈 화면에 보여줄 카드를 고르고, 홈에서 카드를 길게 눌러 순서를 바꿀 수 있어요';
-  static const settingsTodoHelp = '할 일을 시간 순으로 정렬하거나, 라벨에 시간을 표시할 수 있어요';
+  static const settingsTodoHelp =
+      '할 일을 시간 순으로 정렬하거나, 라벨에 시간을 표시하거나, 카테고리별로 모아 볼 수 있어요';
   static const settingsNotificationHelp =
       '시간이 있는 할 일은 미리 알려주고, 매일 정해진 시간에 오늘 일정과 끝내지 않은 할 일을 알려줘요';
   static const settingsAppearanceHelp = '화면을 밝은 테마나 어두운 테마로 바꿀 수 있어요';

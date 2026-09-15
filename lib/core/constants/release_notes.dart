@@ -17,6 +17,16 @@ class ReleaseNote {
 abstract final class ReleaseNotes {
   static const all = [
     ReleaseNote(
+      version: '1.4.1',
+      items: [
+        '홈에 메모를 둘 수 있어요',
+        '할 일을 카테고리별로 모아 볼 수 있어요',
+      ],
+      fixes: [
+        'PC에서 할 일 제목을 치면 AI 카테고리가 바로 골라져요',
+      ],
+    ),
+    ReleaseNote(
       version: '1.4.0',
       items: [
         '나만의 아이디로 친구를 추가할 수 있어요',

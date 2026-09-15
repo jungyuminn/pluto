@@ -34,11 +34,14 @@ class CategorySuggestSession {
   var _locked = false;
   var _gen = 0;
   Timer? _debounce;
+  String? _lastTitle;
 
   void onTitle(String raw) {
     if (_locked) return;
-    _debounce?.cancel();
     final title = raw.trim();
+    if (title == _lastTitle) return;
+    _lastTitle = title;
+    _debounce?.cancel();
     if (title.isEmpty) {
       _gen++;
       onUpdate(null, loading: false);

@@ -6,6 +6,7 @@ import 'package:pluto/core/constants/app_strings.dart';
 import 'package:pluto/core/theme/app_colors.dart';
 import 'package:pluto/core/theme/app_theme.dart';
 import 'package:pluto/core/utils/category_history.dart';
+import 'package:pluto/core/utils/focused_ime_text.dart';
 import 'package:pluto/core/utils/plain_text_editing_controller.dart';
 import 'package:pluto/domain/entities/event_category.dart';
 import 'package:pluto/domain/entities/ledger_entry.dart';
@@ -93,6 +94,7 @@ class _LedgerFormState extends State<LedgerForm> with TickerProviderStateMixin {
   CategorySuggestSession? _suggest;
   var _suggestOn = false;
   var _suggesting = false;
+  var _pendingTitle = '';
 
   bool get _isHourly => _kind == LedgerKind.hourly;
 
@@ -254,11 +256,23 @@ class _LedgerFormState extends State<LedgerForm> with TickerProviderStateMixin {
       onUpdate: _applySuggest,
     );
     setState(() => _suggestOn = true);
-    _suggest?.onTitle(_title.text);
+    _suggest?.onTitle(_titleForSuggest());
+  }
+
+  String _titleForSuggest() {
+    return mergeSuggestTitle(
+      flutter: _pendingTitle.isNotEmpty ? _pendingTitle : _title.text,
+      ime: _titleFocus.hasFocus ? focusedImeText() : null,
+    );
+  }
+
+  void _feedTitle(String text) {
+    _pendingTitle = text;
+    _suggest?.onTitle(text);
   }
 
   void _onTitleChanged() {
-    _suggest?.onTitle(_title.text);
+    _feedTitle(_titleForSuggest());
   }
 
   void _applySuggest(EventCategory? category, {required bool loading}) {
@@ -568,6 +582,7 @@ class _LedgerFormState extends State<LedgerForm> with TickerProviderStateMixin {
             hintText: _isWage
                 ? AppStrings.ledgerWorkplaceHint
                 : AppStrings.ledgerTitleHint,
+            onChanged: _feedTitle,
           ),
           const SizedBox(height: 6),
           _AmountField(

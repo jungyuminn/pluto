@@ -104,6 +104,8 @@ enum ReleaseDemo {
   pcLaunch,
   accountSync,
   categoryAi,
+  homeMemo,
+  categoryView,
   friendsMiniCal,
   friendsAdd,
   pcEnterSave,
@@ -118,6 +120,9 @@ enum ReleaseDemo {
 
 ReleaseDemo releaseDemoFor(String text, {required bool isFix}) {
   if (isFix) {
+    if (text.contains('AI 카테고리') || text.contains('제목을 치면')) {
+      return ReleaseDemo.categoryAi;
+    }
     if (text.contains('친구 추가')) return ReleaseDemo.friendsAdd;
     if (text.contains('월 통계')) return ReleaseDemo.ledgerMonth;
     if (text.contains('날짜 창')) return ReleaseDemo.pcLaunch;
@@ -160,6 +165,12 @@ ReleaseDemo releaseDemoFor(String text, {required bool isFix}) {
     if (text.contains('기능 안내')) return ReleaseDemo.featureIntroStay;
     if (text.contains('스티커 팩')) return ReleaseDemo.stickers;
     return ReleaseDemo.fix;
+  }
+  if (text.contains('홈에 메모') || text.contains('메모를 둘')) {
+    return ReleaseDemo.homeMemo;
+  }
+  if (text.contains('모아 볼') || text.contains('카테고리별 보기')) {
+    return ReleaseDemo.categoryView;
   }
   if (text.contains('미니캘린더') || text.contains('일정만')) {
     return ReleaseDemo.friendsMiniCal;
@@ -449,6 +460,8 @@ class ReleaseDemoView extends StatelessWidget {
       ReleaseDemo.pcLaunch => const _PcLaunchDemo(),
       ReleaseDemo.accountSync => const _AccountSyncDemo(),
       ReleaseDemo.categoryAi => const _CategoryAiDemo(),
+      ReleaseDemo.homeMemo => const _HomeMemoDemo(),
+      ReleaseDemo.categoryView => const _CategoryViewDemo(),
       ReleaseDemo.friendsMiniCal => const _FriendsMiniCalDemo(),
       ReleaseDemo.friendsAdd => const _FriendsAddDemo(),
       ReleaseDemo.pcEnterSave => const _PcEnterSaveDemo(),
@@ -6042,6 +6055,145 @@ class _SyncRangeBar extends StatelessWidget {
         ),
         if (trail > 0) Spacer(flex: trail),
       ],
+    );
+  }
+}
+
+class _HomeMemoDemo extends StatelessWidget {
+  const _HomeMemoDemo();
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 3200,
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final font = AppFonts.of(context);
+        final show = Curves.easeOutCubic.transform(_gate(t, 0.18, 0.42));
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(22, 28, 22, 16),
+          child: Row(
+            children: [
+              Expanded(
+                child: _Card(
+                  padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
+                  child: SizedBox(
+                    height: 88,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '장보기',
+                          style: TextStyle(
+                            fontFamily: font,
+                            fontSize: 13,
+                            height: 1.25,
+                            color: colors.text,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '우유, 계란',
+                          style: TextStyle(
+                            fontFamily: font,
+                            fontSize: 11,
+                            height: 1.3,
+                            color: colors.muted,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Opacity(
+                  opacity: show,
+                  child: Transform.translate(
+                    offset: Offset(0, (1 - show) * 10),
+                    child: _Card(
+                      padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
+                      child: SizedBox(
+                        height: 88,
+                        child: Center(
+                          child: Text(
+                            '+',
+                            style: TextStyle(
+                              fontFamily: font,
+                              fontSize: 22,
+                              height: 1,
+                              color: colors.hint,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _CategoryViewDemo extends StatelessWidget {
+  const _CategoryViewDemo();
+
+  static const _sport = Color(0xFF3B82F6);
+  static const _study = Color(0xFFA855F7);
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 3400,
+      builder: (context, t) {
+        final font = AppFonts.of(context);
+        final grouped = Curves.easeOutCubic.transform(_gate(t, 0.22, 0.48));
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(18, 16, 18, 12),
+          child: _Card(
+            padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Opacity(
+                  opacity: grouped,
+                  child: _CategoryHeader(
+                    name: '운동',
+                    color: _sport,
+                    font: font,
+                  ),
+                ),
+                SizedBox(height: 4 * grouped),
+                CalendarEventLabel(
+                  title: '헬스장가기',
+                  color: _sport,
+                  applyCalendarScale: false,
+                ),
+                const SizedBox(height: 8),
+                Opacity(
+                  opacity: grouped,
+                  child: _CategoryHeader(
+                    name: '공부',
+                    color: _study,
+                    font: font,
+                  ),
+                ),
+                SizedBox(height: 4 * grouped),
+                CalendarEventLabel(
+                  title: '과제하기',
+                  color: _study,
+                  applyCalendarScale: false,
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

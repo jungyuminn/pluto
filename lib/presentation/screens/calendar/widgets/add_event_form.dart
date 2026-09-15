@@ -3,6 +3,7 @@ import 'package:pluto/app_scope.dart';
 import 'package:pluto/core/constants/app_icons.dart';
 import 'package:pluto/core/constants/app_strings.dart';
 import 'package:pluto/core/utils/category_history.dart';
+import 'package:pluto/core/utils/focused_ime_text.dart';
 import 'package:pluto/core/theme/app_colors.dart';
 import 'package:pluto/core/theme/app_theme.dart';
 import 'package:pluto/core/utils/plain_text_editing_controller.dart';
@@ -63,6 +64,7 @@ class _AddEventFormState extends State<AddEventForm>
   CategorySuggestSession? _suggest;
   var _suggestOn = false;
   var _suggesting = false;
+  var _pendingTitle = '';
   late bool _isSomeday;
 
   bool get _hasCategory =>
@@ -122,6 +124,7 @@ class _AddEventFormState extends State<AddEventForm>
       } else {
         animation.addStatusListener(_onSheetOpened);
       }
+      _beginSuggest();
       _loadLastCategory();
       if (!widget.someday && !(widget.initial?.someday ?? false)) {
         _loadGroup();
@@ -203,7 +206,7 @@ class _AddEventFormState extends State<AddEventForm>
         _categoryName == selected.name &&
         _categoryColor == selected.color &&
         _suggestOn == suggestOn) {
-      if (suggestOn) _suggest?.onTitle(_title.text);
+      if (suggestOn) _suggest?.onTitle(_titleForSuggest());
       return;
     }
     setState(() {
@@ -212,11 +215,44 @@ class _AddEventFormState extends State<AddEventForm>
       _categoryName = selected.name;
       _categoryColor = selected.color;
     });
-    if (suggestOn) _suggest?.onTitle(_title.text);
+    if (suggestOn) _suggest?.onTitle(_titleForSuggest());
+  }
+
+  void _beginSuggest() {
+    if (widget.initial != null) return;
+    if (_suggest != null) return;
+    if (!CategorySuggestSession.isOn(context, editing: false)) return;
+    var fallback = EventCategory.presets.first;
+    for (final category in EventCategory.presets) {
+      if (category.id == _categoryId) {
+        fallback = category;
+        break;
+      }
+    }
+    _suggest = CategorySuggestSession(
+      categories: EventCategory.presets,
+      records: const [],
+      fallback: fallback,
+      onUpdate: _applySuggest,
+    );
+    setState(() => _suggestOn = true);
+    _suggest?.onTitle(_titleForSuggest());
+  }
+
+  String _titleForSuggest() {
+    return mergeSuggestTitle(
+      flutter: _pendingTitle.isNotEmpty ? _pendingTitle : _title.text,
+      ime: _titleFocus.hasFocus ? focusedImeText() : null,
+    );
+  }
+
+  void _feedTitle(String text) {
+    _pendingTitle = text;
+    _suggest?.onTitle(text);
   }
 
   void _onTitleChanged() {
-    _suggest?.onTitle(_title.text);
+    _feedTitle(_titleForSuggest());
   }
 
   void _applySuggest(EventCategory? category, {required bool loading}) {
@@ -475,6 +511,7 @@ class _AddEventFormState extends State<AddEventForm>
               controller: _title,
               focusNode: _titleFocus,
               autofocus: false,
+              onChanged: _feedTitle,
             ),
             ClipRect(
               child: SizeTransition(

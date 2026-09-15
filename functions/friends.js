@@ -20,6 +20,8 @@ function requireUid(request) {
   return uid;
 }
 
+const CODE_COOLDOWN_MS = 30 * 24 * 60 * 60 * 1000;
+
 const RESERVED_CODES = new Set([
   "pluto",
   "플루토",
@@ -141,7 +143,7 @@ function toClientProfile(uid, data, displayName) {
     suggestedCode: suggestCode(name),
     needsCode: !usable,
     codeChangedAt: changedAt,
-    nextChangeAt: 0,
+    nextChangeAt: usable && changedAt ? changedAt + CODE_COOLDOWN_MS : 0,
     photoURL: String(data.photoURL || ""),
   };
 }
@@ -200,6 +202,14 @@ async function claimFriendCode(uid, rawCode, hint) {
   if (hadUsable && current === code) {
     return toClientProfile(uid, data, displayName);
   }
+  if (hadUsable) {
+    const changedAt = Number(data.friendCodeChangedAt) || 0;
+    if (changedAt && now < changedAt + CODE_COOLDOWN_MS) {
+      throw new HttpsError("failed-precondition", "code-cooldown", {
+        nextChangeAt: changedAt + CODE_COOLDOWN_MS,
+      });
+    }
+  }
   await db().runTransaction(async (tx) => {
     const taken = await tx.get(db().collection("friend_codes").doc(code));
     if (taken.exists && taken.data()?.uid !== uid) {
@@ -217,6 +227,7 @@ async function claimFriendCode(uid, rawCode, hint) {
     }
   });
   return toClientProfile(uid, {
+    ...data,
     friendCode: code,
     friendCodeChangedAt: now,
   }, displayName);

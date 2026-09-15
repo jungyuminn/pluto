@@ -266,7 +266,6 @@ class _FriendCalendarScreenState extends State<FriendCalendarScreen> {
                   style: TextStyle(
                     fontFamily: AppFonts.of(context),
                     fontSize: 16,
-                    fontWeight: FontWeight.w800,
                     color: colors.text,
                   ),
                 ),

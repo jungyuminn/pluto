@@ -226,7 +226,7 @@ class AppStrings {
   static const featureIntroFriendAccept = '수락';
   static const featureIntroFriendDone = '친구가 되었어요';
   static const webLoginBrand = '플루토';
-  static const webLoginTagline = '나의 모든 기록이 모이는 곳';
+  static const webLoginTagline = '나의 하루가 모이는 곳';
   static const webLoginPcLabel = 'PC버전';
   static const accountLoginWebUrl = 'pluto.day';
   static const accountLoginSocialHint = '소셜 계정으로 로그인';

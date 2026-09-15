@@ -478,6 +478,9 @@ class FriendService {
     });
     final next = FriendProfile.fromMap(data);
     profile.value = next;
+    _sessionUid = _uid;
+    _sessionProfile = next;
+    await _writeCachedProfile();
     return next;
   }
 
@@ -981,6 +984,20 @@ class FriendService {
     ];
   }
 
+  int _codeCooldownDays(Object error) {
+    final fromProfile = profile.value?.cooldownDays ?? 0;
+    if (fromProfile > 0) return fromProfile;
+    if (error is FirebaseFunctionsException) {
+      final details = error.details;
+      if (details is Map) {
+        final at = (details['nextChangeAt'] as num?)?.toInt() ?? 0;
+        final left = at - DateTime.now().millisecondsSinceEpoch;
+        if (left > 0) return (left / 86400000).ceil();
+      }
+    }
+    return 30;
+  }
+
   String messageOf(Object error) {
     final code = error is FriendException
         ? error.code
@@ -997,7 +1014,7 @@ class FriendService {
       'bad-name' => AppStrings.friendsNameBad,
       'bad-photo' => AppStrings.friendsPhotoTooBig,
       'needs-code' => AppStrings.friendsCodeNeed,
-      'code-cooldown' => AppStrings.friendsCodeCooldown(30),
+      'code-cooldown' => AppStrings.friendsCodeCooldown(_codeCooldownDays(error)),
       'rate-limited' || 'resource-exhausted' => AppStrings.friendsRateLimited,
       'unauthenticated' || 'login-required' => AppStrings.friendsNeedLogin,
       _ => AppStrings.friendsFailed,

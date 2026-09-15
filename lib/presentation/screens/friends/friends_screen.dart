@@ -175,7 +175,6 @@ class _AddFriendSheetState extends State<AddFriendSheet> {
           children: [
             TextField(
               controller: _code,
-              autofocus: true,
               maxLength: 32,
               inputFormatters: _codeFormatters,
               textInputAction: TextInputAction.send,
@@ -603,7 +602,17 @@ class _FriendsScreenState extends State<FriendsScreen> {
     unawaited(_saveMyCode());
   }
 
+  void _toastCodeCooldownIfLocked() {
+    final profile = _service.profile.value;
+    if (profile == null || profile.canChangeCode) return;
+    final days = profile.cooldownDays < 1 ? 1 : profile.cooldownDays;
+    _toast(AppStrings.friendsCodeCooldown(days));
+  }
+
   void _syncCode(FriendProfile? profile) {
+    if (profile != null && !profile.canChangeCode && _codeFocus.hasFocus) {
+      _codeFocus.unfocus();
+    }
     if (_codeFocus.hasFocus) return;
     final code = profile?.friendCode.trim() ?? '';
     if (_myCode.text == code) return;
@@ -843,34 +852,54 @@ class _FriendsScreenState extends State<FriendsScreen> {
                           Row(
                             children: [
                               Expanded(
-                                child: TextField(
-                                  controller: _myCode,
-                                  focusNode: _codeFocus,
-                                  maxLength: 32,
-                                  inputFormatters: _codeFormatters,
-                                  textInputAction: TextInputAction.done,
-                                  onSubmitted: (_) => _saveMyCode(),
-                                  style: TextStyle(
-                                    fontFamily: AppFonts.of(context),
-                                    fontSize: 16,
-                                    color: colors.text,
-                                  ),
-                                  decoration: InputDecoration(
-                                    hintText: AppStrings.friendsCodeEditHint,
-                                    hintStyle: TextStyle(
-                                      fontFamily: AppFonts.of(context),
-                                      color: colors.hint,
-                                    ),
-                                    border: InputBorder.none,
-                                    counterText: '',
-                                    isDense: true,
-                                    contentPadding: const EdgeInsets.fromLTRB(
-                                      0,
-                                      4,
-                                      0,
-                                      8,
-                                    ),
-                                  ),
+                                child: Builder(
+                                  builder: (context) {
+                                    final locked = profile != null &&
+                                        !profile.canChangeCode;
+                                    return GestureDetector(
+                                      behavior: HitTestBehavior.opaque,
+                                      onTap: locked
+                                          ? _toastCodeCooldownIfLocked
+                                          : null,
+                                      child: AbsorbPointer(
+                                        absorbing: locked,
+                                        child: TextField(
+                                          controller: _myCode,
+                                          focusNode: _codeFocus,
+                                          readOnly: locked,
+                                          canRequestFocus: !locked,
+                                          enableInteractiveSelection: !locked,
+                                          maxLength: 32,
+                                          inputFormatters: _codeFormatters,
+                                          textInputAction: TextInputAction.done,
+                                          onSubmitted: (_) => _saveMyCode(),
+                                          style: TextStyle(
+                                            fontFamily: AppFonts.of(context),
+                                            fontSize: 16,
+                                            color: colors.text,
+                                          ),
+                                          decoration: InputDecoration(
+                                            hintText:
+                                                AppStrings.friendsCodeEditHint,
+                                            hintStyle: TextStyle(
+                                              fontFamily: AppFonts.of(context),
+                                              color: colors.hint,
+                                            ),
+                                            border: InputBorder.none,
+                                            counterText: '',
+                                            isDense: true,
+                                            contentPadding:
+                                                const EdgeInsets.fromLTRB(
+                                              0,
+                                              4,
+                                              0,
+                                              8,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  },
                                 ),
                               ),
                               PressBounce(
@@ -964,10 +993,16 @@ class _FriendsScreenState extends State<FriendsScreen> {
 
   Future<void> _saveMyCode() async {
     final code = _myCode.text.trim();
-    final current = _service.profile.value?.friendCode.trim() ?? '';
+    final profile = _service.profile.value;
+    final current = profile?.friendCode.trim() ?? '';
     if (_savingCode || code == current) return;
     if (code.isEmpty) {
       _myCode.text = current;
+      return;
+    }
+    if (profile != null && !profile.canChangeCode) {
+      _myCode.text = current;
+      _toastCodeCooldownIfLocked();
       return;
     }
     _savingCode = true;

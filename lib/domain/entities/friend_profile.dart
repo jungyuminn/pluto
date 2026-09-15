@@ -54,7 +54,11 @@ class FriendProfile {
     return friendCode;
   }
 
-  bool get canChangeCode => true;
+  bool get canChangeCode {
+    if (needsCode || friendCode.isEmpty) return true;
+    if (nextChangeAt <= 0) return true;
+    return DateTime.now().millisecondsSinceEpoch >= nextChangeAt;
+  }
 
   int get cooldownDays {
     final left = nextChangeAt - DateTime.now().millisecondsSinceEpoch;

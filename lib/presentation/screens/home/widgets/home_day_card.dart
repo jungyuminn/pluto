@@ -91,6 +91,8 @@ class _HomeDayCardState extends State<HomeDayCard> {
     return '${date.month}. ${date.day}. ($weekday)';
   }
 
+  bool get _orderByTime => widget.sortByTime && !widget.someday;
+
   String? _timeText(CalendarEvent event) {
     if (!widget.showTime || event.someday) return null;
     return event.timeLabel ?? (event.isJob ? null : AppStrings.allDayLabel);
@@ -156,7 +158,7 @@ class _HomeDayCardState extends State<HomeDayCard> {
     String headerKeyPrefix = '',
   }) {
     if (!widget.categoryView) {
-      final events = widget.sortByTime
+      final events = _orderByTime
           ? CalendarEvent.withLockedThenStartTime(source)
           : source;
       return [for (final event in events) _ListEntry.event(event)];
@@ -180,7 +182,7 @@ class _HomeDayCardState extends State<HomeDayCard> {
       required Color color,
       required List<CalendarEvent> events,
     }) {
-      final section = widget.sortByTime
+      final section = _orderByTime
           ? CalendarEvent.withLockedThenStartTime(events)
           : events;
       items.add(
@@ -862,7 +864,7 @@ class _HomeDayCardState extends State<HomeDayCard> {
             timeText: timeText,
             onPressed: () => _edit(event),
             onLongPressed:
-                widget.sortByTime ? _explainTimeSortLock : null,
+                _orderByTime ? _explainTimeSortLock : null,
             onCompletePressed: () => _toggleComplete(event),
           );
 
@@ -876,7 +878,7 @@ class _HomeDayCardState extends State<HomeDayCard> {
             ),
     );
 
-    if (event.isLockedOrder || widget.sortByTime) return body;
+    if (event.isLockedOrder || _orderByTime) return body;
 
     return LayoutBuilder(
       builder: (context, constraints) {

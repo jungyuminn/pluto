@@ -1068,7 +1068,7 @@ class _PickChip extends StatelessWidget {
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w700,
-                color: selected ? category.tint : colors.text,
+                color: selected ? EventCategory.labelOf(category.tint) : colors.text,
               ),
             ),
           ],

@@ -4,6 +4,7 @@ import 'package:pluto/core/constants/app_strings.dart';
 import 'package:pluto/core/theme/app_colors.dart';
 import 'package:pluto/core/utils/open_local_file.dart';
 import 'package:pluto/domain/entities/license.dart';
+import 'package:pluto/domain/entities/event_category.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/day_event_label.dart';
 
 class LicenseCard extends StatefulWidget {
@@ -186,7 +187,7 @@ class _LicenseCardState extends State<LicenseCard>
               fontWeight: FontWeight.w800,
               height: 1,
               letterSpacing: -0.2,
-              color: color,
+              color: EventCategory.labelOf(color),
             ),
           ),
         ),
@@ -259,9 +260,9 @@ class _LicenseCardState extends State<LicenseCard>
                   fontFamily: AppFonts.of(context),
                   fontSize: 13,
                   fontWeight: FontWeight.w500,
-                  color: accent,
+                  color: EventCategory.labelOf(accent),
                   decoration: TextDecoration.underline,
-                  decorationColor: accent,
+                  decorationColor: EventCategory.labelOf(accent),
                 ),
               ),
             ),

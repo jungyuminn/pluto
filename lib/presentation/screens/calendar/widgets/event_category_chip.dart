@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:pluto/core/constants/app_fonts.dart';
 import 'package:pluto/core/theme/app_colors.dart';
 import 'package:pluto/core/utils/press_bounce.dart';
+import 'package:pluto/domain/entities/event_category.dart';
 
 class EventCategoryChip extends StatelessWidget {
   const EventCategoryChip({
@@ -23,6 +24,7 @@ class EventCategoryChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ink = EventCategory.labelOf(color);
     return ConstrainedBox(
       constraints: const BoxConstraints(maxWidth: 140),
       child: PressBounce(
@@ -59,7 +61,7 @@ class EventCategoryChip extends StatelessWidget {
                         fontFamily: AppFonts.of(context),
                         fontSize: 15,
                         fontWeight: FontWeight.w700,
-                        color: color,
+                        color: ink,
                       ),
                     ),
               ),

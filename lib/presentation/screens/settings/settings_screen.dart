@@ -40,6 +40,7 @@ import 'package:pluto/data/datasources/font_preference.dart';
 import 'package:pluto/data/datasources/notification_preference.dart';
 import 'package:pluto/data/datasources/theme_preference.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/calendar_event_label.dart';
+import 'package:pluto/presentation/screens/calendar/widgets/category_color_picker.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/calendar_month_grid.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/calendar_month_header.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/calendar_weekday_header.dart';
@@ -3438,23 +3439,14 @@ class _CustomThemeEditorPageState extends State<_CustomThemeEditorPage> {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Expanded(
-                          child: _ColorDots(
-                            values: EventCategory.palette,
-                            selected: _accent,
-                            onSelected: (value) =>
-                                setState(() => _accent = value),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        SaveCompanyButton(
-                          onPressed: _saving ? () {} : _save,
-                          color: color ?? accent,
-                        ),
-                      ],
+                    CategoryColorPicker(
+                      selected: _accent,
+                      onSelected: (value) =>
+                          setState(() => _accent = value),
+                      trailing: SaveCompanyButton(
+                        onPressed: _saving ? () {} : _save,
+                        color: color ?? accent,
+                      ),
                     ),
             ],
           ),
@@ -3651,59 +3643,6 @@ class _WashSliderState extends State<_WashSlider>
             },
           ),
         ),
-      ],
-    );
-  }
-}
-
-class _ColorDots extends StatelessWidget {
-  const _ColorDots({
-    required this.values,
-    required this.selected,
-    required this.onSelected,
-  });
-
-  final List<int> values;
-  final int selected;
-  final ValueChanged<int> onSelected;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = AppColors.of(context);
-    return Wrap(
-      spacing: 10,
-      runSpacing: 10,
-      children: [
-        for (final value in values)
-          PressBounce(
-            onPressed: () => onSelected(value),
-            pressedScale: 0.9,
-            color: Colors.transparent,
-            pressedColor: Colors.transparent,
-            borderRadius: BorderRadius.circular(999),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 220),
-              curve: Curves.easeOutCubic,
-              width: 28,
-              height: 28,
-              decoration: BoxDecoration(
-                color: Color(value),
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: selected == value ? colors.card : Colors.transparent,
-                  width: 3,
-                ),
-                boxShadow: selected == value
-                    ? const [
-                        BoxShadow(
-                          color: Color(0x33000000),
-                          blurRadius: 6,
-                        ),
-                      ]
-                    : const [],
-              ),
-            ),
-          ),
       ],
     );
   }

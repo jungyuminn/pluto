@@ -5,10 +5,12 @@ import 'package:pluto/core/constants/app_strings.dart';
 import 'package:pluto/core/theme/app_colors.dart';
 import 'package:pluto/core/theme/app_theme.dart';
 import 'package:pluto/core/utils/plain_text_editing_controller.dart';
-import 'package:pluto/core/utils/press_bounce.dart';
+import 'package:pluto/data/datasources/last_category_color_preference.dart';
 import 'package:pluto/domain/entities/event_category.dart';
 import 'package:pluto/presentation/screens/add_company/widgets/missing_fields_dialog.dart';
 import 'package:pluto/presentation/screens/add_company/widgets/save_company_button.dart';
+import 'package:pluto/presentation/screens/calendar/widgets/category_color_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 Future<bool> showAddCategorySheet(
   BuildContext context, {
@@ -51,22 +53,29 @@ class _AddCategorySheetState extends State<AddCategorySheet> {
   var _saving = false;
   final _usedColors = <int>{};
 
-  static const _colors = EventCategory.palette;
-
   @override
   void initState() {
     super.initState();
     final initial = widget.initial;
     _name = PlainTextEditingController(text: initial?.name ?? '');
     _color = initial?.color ?? EventCategory.fallback.color;
-    WidgetsBinding.instance.addPostFrameCallback((_) => _loadUsedColors());
+    WidgetsBinding.instance.addPostFrameCallback((_) => _load());
   }
 
-  Future<void> _loadUsedColors() async {
+  Future<void> _load() async {
     final categories = await AppScope.of(context).fetchCategories(widget.kind);
+    var color = _color;
+    if (widget.initial == null) {
+      final prefs = await SharedPreferences.getInstance();
+      final stored = LastCategoryColorPreference(prefs: prefs).color;
+      if (stored != null && EventCategory.palette.contains(stored)) {
+        color = stored;
+      }
+    }
     if (!mounted) return;
     final editingId = widget.initial?.id;
     setState(() {
+      _color = color;
       _usedColors
         ..clear()
         ..addAll([
@@ -102,6 +111,8 @@ class _AddCategorySheetState extends State<AddCategorySheet> {
     final scope = AppScope.of(context);
     if (initial == null) {
       await scope.addCategory(widget.kind, category);
+      final prefs = await SharedPreferences.getInstance();
+      await LastCategoryColorPreference(prefs: prefs).setColor(_color);
     } else {
       await scope.saveCategory(widget.kind, category);
       if (widget.kind == CategoryKind.event) {
@@ -182,83 +193,30 @@ class _AddCategorySheetState extends State<AddCategorySheet> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              TextField(
-                controller: _name,
-                autofocus: true,
-                textInputAction: TextInputAction.done,
-                style: TextStyle(
-                  fontFamily: AppFonts.of(context),
-                  fontWeight: FontWeight.w700,
-                  fontSize: 20,
-                ),
-                decoration: InputDecoration(
-                  hintText: AppStrings.categoryNameHint,
-                  hintStyle: TextStyle(
-                    fontFamily: AppFonts.of(context),
-                    color: colors.hint,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 20,
-                  ),
-                  border: InputBorder.none,
-                  isDense: true,
-                  contentPadding: EdgeInsets.zero,
-                ),
-              ),
-              const SizedBox(height: 16),
               Row(
                 children: [
                   Expanded(
-                    child: Wrap(
-                      spacing: 10,
-                      runSpacing: 10,
-                      children: [
-                        for (final value in _colors)
-                          PressBounce(
-                            onPressed: () => setState(() => _color = value),
-                            pressedScale: 0.9,
-                            color: Colors.transparent,
-                            pressedColor: Colors.transparent,
-                            borderRadius: BorderRadius.circular(999),
-                            child: Semantics(
-                              selected: _color == value,
-                              label: _usedColors.contains(value)
-                                  ? AppStrings.categoryColorInUse
-                                  : null,
-                              child: AnimatedContainer(
-                                duration: const Duration(milliseconds: 220),
-                                curve: Curves.easeOutCubic,
-                                width: 28,
-                                height: 28,
-                                alignment: Alignment.center,
-                                decoration: BoxDecoration(
-                                  color: Color(value),
-                                  shape: BoxShape.circle,
-                                  border: _color == value
-                                      ? Border.all(color: colors.card, width: 3)
-                                      : Border.all(
-                                          color: Colors.transparent,
-                                          width: 3,
-                                        ),
-                                  boxShadow: _color == value
-                                      ? const [
-                                          BoxShadow(
-                                            color: Color(0x33000000),
-                                            blurRadius: 6,
-                                          ),
-                                        ]
-                                      : const [],
-                                ),
-                                child: _usedColors.contains(value)
-                                    ? const Icon(
-                                        Icons.check_rounded,
-                                        size: 16,
-                                        color: Colors.white,
-                                      )
-                                    : null,
-                              ),
-                            ),
-                          ),
-                      ],
+                    child: TextField(
+                      controller: _name,
+                      autofocus: true,
+                      textInputAction: TextInputAction.done,
+                      style: TextStyle(
+                        fontFamily: AppFonts.of(context),
+                        fontWeight: FontWeight.w700,
+                        fontSize: 20,
+                      ),
+                      decoration: InputDecoration(
+                        hintText: AppStrings.categoryNameHint,
+                        hintStyle: TextStyle(
+                          fontFamily: AppFonts.of(context),
+                          color: colors.hint,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 20,
+                        ),
+                        border: InputBorder.none,
+                        isDense: true,
+                        contentPadding: EdgeInsets.zero,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -274,6 +232,12 @@ class _AddCategorySheetState extends State<AddCategorySheet> {
                     },
                   ),
                 ],
+              ),
+              const SizedBox(height: 16),
+              CategoryColorPicker(
+                selected: _color,
+                usedColors: _usedColors,
+                onSelected: (value) => setState(() => _color = value),
               ),
             ],
           ),

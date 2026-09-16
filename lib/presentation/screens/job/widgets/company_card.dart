@@ -6,6 +6,7 @@ import 'package:pluto/core/utils/open_local_file.dart';
 import 'package:pluto/domain/entities/application_round.dart';
 import 'package:pluto/domain/entities/apply_status.dart';
 import 'package:pluto/domain/entities/job_application.dart';
+import 'package:pluto/domain/entities/event_category.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/day_event_label.dart';
 
 class CompanyCard extends StatefulWidget {
@@ -174,7 +175,7 @@ class _CompanyCardState extends State<CompanyCard>
               fontWeight: FontWeight.w800,
               height: 1,
               letterSpacing: -0.2,
-              color: color,
+              color: EventCategory.labelOf(color),
             ),
           ),
         ),
@@ -215,9 +216,9 @@ class _CompanyCardState extends State<CompanyCard>
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
-                  color: accent,
+                  color: EventCategory.labelOf(accent),
                   decoration: TextDecoration.underline,
-                  decorationColor: accent,
+                  decorationColor: EventCategory.labelOf(accent),
                 ),
               ),
             ),

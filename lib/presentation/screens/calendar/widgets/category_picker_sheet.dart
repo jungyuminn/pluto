@@ -967,7 +967,7 @@ class _CategoryCard extends StatelessWidget {
                       height: 1,
                       leadingDistribution: TextLeadingDistribution.even,
                       color: selected
-                          ? category.tint
+                          ? EventCategory.labelOf(category.tint)
                           : colors.text,
                     ),
                   ),

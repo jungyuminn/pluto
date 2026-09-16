@@ -6,6 +6,7 @@ import 'package:pluto/core/constants/app_icons.dart';
 import 'package:pluto/core/constants/app_strings.dart';
 import 'package:pluto/core/theme/app_colors.dart';
 import 'package:pluto/core/utils/press_bounce.dart';
+import 'package:pluto/domain/entities/event_category.dart';
 import 'package:pluto/presentation/screens/add_company/widgets/save_company_button.dart';
 import 'package:pluto/presentation/widgets/flat_snap_picker.dart';
 import 'package:pluto/presentation/widgets/themed_asset.dart';
@@ -281,6 +282,7 @@ class _TimeCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
+    final ink = EventCategory.labelOf(color);
     return PressBounce(
       onPressed: onPressed,
       color: colors.card,
@@ -300,7 +302,7 @@ class _TimeCard extends StatelessWidget {
                 fontFamily: AppFonts.of(context),
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: selected ? color : colors.muted,
+                color: selected ? ink : colors.muted,
               ),
             ),
             const SizedBox(height: 4),
@@ -312,7 +314,7 @@ class _TimeCard extends StatelessWidget {
                 fontSize: 17,
                 fontWeight: FontWeight.w600,
                 height: 1.1,
-                color: selected ? color : colors.muted,
+                color: selected ? ink : colors.muted,
               ),
             ),
           ],
@@ -508,7 +510,7 @@ class _FlatWheel extends StatelessWidget {
                 fontWeight: FontWeight.w600,
                 height: 1,
                 color: selected
-                    ? selectedColor
+                    ? EventCategory.labelOf(selectedColor)
                     : muted.withValues(alpha: 0.7),
               ),
               child: Text(labelAt(itemIndex)),

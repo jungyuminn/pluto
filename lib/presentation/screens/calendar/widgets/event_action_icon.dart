@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:pluto/core/constants/app_fonts.dart';
 import 'package:pluto/core/theme/app_colors.dart';
 import 'package:pluto/core/utils/press_bounce.dart';
+import 'package:pluto/domain/entities/event_category.dart';
 
 class EventActionIcon extends StatelessWidget {
   const EventActionIcon({
@@ -26,6 +27,7 @@ class EventActionIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
+    final ink = EventCategory.labelOf(color);
     final caption = text?.trim() ?? '';
     final hasText = caption.isNotEmpty;
     final hasIcon = child != null;
@@ -44,7 +46,7 @@ class EventActionIcon extends StatelessWidget {
             children: [
               if (hasIcon)
                 ColorFiltered(
-                  colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
+                  colorFilter: ColorFilter.mode(ink, BlendMode.srcIn),
                   child: SizedBox(
                     width: size,
                     height: size,
@@ -62,7 +64,7 @@ class EventActionIcon extends StatelessWidget {
                     fontFamily: AppFonts.of(context),
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
-                    color: color,
+                    color: ink,
                   ),
                 ),
             ],

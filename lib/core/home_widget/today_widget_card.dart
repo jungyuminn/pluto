@@ -443,6 +443,7 @@ class _WidgetEventLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
     final background = colors.tint(event.color, 0.14);
+    final ink = EventCategory.labelOf(event.color);
     final height = _height * MediaQuery.textScalerOf(context).scale(1);
     return DecoratedBox(
       decoration: BoxDecoration(
@@ -509,7 +510,7 @@ class _WidgetEventLabel extends StatelessWidget {
                                 fontSize: 10,
                                 fontWeight: FontWeight.w700,
                                 height: 1.15,
-                                color: event.color,
+                                color: ink,
                               ),
                             ),
                           ],
@@ -524,7 +525,7 @@ class _WidgetEventLabel extends StatelessWidget {
                   padding: const EdgeInsets.only(right: 8),
                   child: ColorFiltered(
                     colorFilter: ColorFilter.mode(
-                      event.color,
+                      ink,
                       BlendMode.srcIn,
                     ),
                     child: RawImage(
@@ -543,7 +544,7 @@ class _WidgetEventLabel extends StatelessWidget {
                     child: Icon(
                       Icons.swap_horiz_rounded,
                       size: 22,
-                      color: event.color,
+                      color: ink,
                     ),
                   ),
                 ),
@@ -556,7 +557,7 @@ class _WidgetEventLabel extends StatelessWidget {
                     child: Icon(
                       Icons.repeat_rounded,
                       size: 22,
-                      color: event.color,
+                      color: ink,
                     ),
                   ),
                 ),
@@ -573,7 +574,7 @@ class _WidgetEventLabel extends StatelessWidget {
                         child: CustomPaint(
                           painter: _CompleteMarkPainter(
                             completed: event.completed,
-                            color: event.color,
+                            color: ink,
                           ),
                         ),
                       ),

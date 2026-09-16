@@ -4,6 +4,7 @@ import 'package:pluto/core/constants/app_icons.dart';
 import 'package:pluto/core/theme/app_colors.dart';
 import 'package:pluto/core/utils/animated_accent.dart';
 import 'package:pluto/core/utils/press_bounce.dart';
+import 'package:pluto/domain/entities/event_category.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/event_complete_button.dart';
 import 'package:pluto/presentation/widgets/themed_asset.dart';
 
@@ -95,6 +96,7 @@ class _DayEventLabelState extends State<DayEventLabel> {
       builder: (context, accent) {
         final background =
             colors.tint(accent, widget.disabled ? 0.11 : 0.14);
+        final ink = EventCategory.labelOf(accent);
         return AnimatedOpacity(
       duration: const Duration(milliseconds: 420),
       curve: Curves.easeOutCubic,
@@ -147,7 +149,7 @@ class _DayEventLabelState extends State<DayEventLabel> {
                     fontSize: 16 * scale * typeScale,
                     fontWeight: FontWeight.w800,
                     height: 1.1,
-                    color: widget.overlineColor ?? accent,
+                    color: widget.overlineColor ?? ink,
                   ),
                 ),
                 ),
@@ -250,7 +252,7 @@ class _DayEventLabelState extends State<DayEventLabel> {
                                     fontSize: 10 * scale * typeScale,
                                     fontWeight: FontWeight.w700,
                                     height: 1.15,
-                                    color: accent,
+                                    color: ink,
                                   ),
                                 ),
                               ],
@@ -274,7 +276,7 @@ class _DayEventLabelState extends State<DayEventLabel> {
                         fontSize: 14 * scale * typeScale,
                         fontWeight: widget.titleWeight,
                         height: 1,
-                        color: accent,
+                        color: ink,
                       ),
                     ),
                   ),
@@ -283,7 +285,7 @@ class _DayEventLabelState extends State<DayEventLabel> {
                     padding: const EdgeInsets.only(right: 8),
                     child: ColorFiltered(
                       colorFilter: ColorFilter.mode(
-                        accent,
+                        ink,
                         BlendMode.srcIn,
                       ),
                       child: AppAssetImage(
@@ -304,7 +306,7 @@ class _DayEventLabelState extends State<DayEventLabel> {
                       child: Icon(
                         Icons.swap_horiz_rounded,
                         size: 22,
-                        color: accent,
+                        color: ink,
                       ),
                     ),
                   ),
@@ -319,7 +321,7 @@ class _DayEventLabelState extends State<DayEventLabel> {
                       child: Icon(
                         Icons.repeat_rounded,
                         size: 22,
-                        color: accent,
+                        color: ink,
                       ),
                     ),
                   ),
@@ -330,7 +332,7 @@ class _DayEventLabelState extends State<DayEventLabel> {
                       onPointerDown: (_) => _skipLabelTap = true,
                       child: EventCompleteButton(
                         completed: _completed,
-                        color: accent,
+                        color: ink,
                         onPressed: widget.onCompletePressed == null
                             ? null
                             : () {

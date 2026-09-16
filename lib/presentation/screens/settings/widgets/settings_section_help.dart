@@ -16,6 +16,7 @@ import 'package:pluto/core/theme/app_theme.dart';
 import 'package:pluto/core/utils/press_bounce.dart';
 import 'package:pluto/data/datasources/font_preference.dart';
 import 'package:pluto/data/datasources/theme_preference.dart';
+import 'package:pluto/domain/entities/event_category.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/calendar_event_label.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/day_event_label.dart';
 import 'package:pluto/presentation/screens/shell/widgets/pill_bottom_nav.dart';
@@ -4286,6 +4287,7 @@ class _FakeTodo extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
     final background = colors.tint(color, 0.14);
+    final ink = EventCategory.labelOf(color);
     return ClipRRect(
       borderRadius: BorderRadius.circular(8),
       child: ColoredBox(
@@ -4347,7 +4349,7 @@ class _FakeTodo extends StatelessWidget {
                                   fontFamily: AppFonts.of(context),
                                   fontSize: 10,
                                   fontWeight: FontWeight.w700,
-                                  color: color,
+                                  color: ink,
                                   ),
                                 ),
                               ),
@@ -4368,7 +4370,7 @@ class _FakeTodo extends StatelessWidget {
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
                       height: 1,
-                      color: color,
+                      color: ink,
                     ),
                   ),
                 ),
@@ -4378,7 +4380,7 @@ class _FakeTodo extends StatelessWidget {
                   child: DecoratedBox(
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      border: Border.all(color: color, width: 2),
+                      border: Border.all(color: ink, width: 2),
                     ),
                     child: const SizedBox(width: 16, height: 16),
                   ),

@@ -17,6 +17,16 @@ class ReleaseNote {
 abstract final class ReleaseNotes {
   static const all = [
     ReleaseNote(
+      version: '1.4.2',
+      items: [
+        '카테고리 색을 기본·파스텔·더스티·딥으로 나눠 고를 수 있어요',
+        '칸을 새로 만들면 마지막에 쓴 색으로 열려요',
+      ],
+      fixes: [
+        '파스텔 노란·연두 색 글씨가 잘 안 보이던 점을 고쳤어요',
+      ],
+    ),
+    ReleaseNote(
       version: '1.4.1',
       items: [
         '홈에 메모를 둘 수 있어요',

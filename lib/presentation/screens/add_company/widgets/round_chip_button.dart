@@ -4,6 +4,7 @@ import 'package:pluto/core/constants/app_strings.dart';
 import 'package:pluto/core/theme/app_colors.dart';
 import 'package:pluto/core/utils/press_bounce.dart';
 import 'package:pluto/domain/entities/application_round.dart';
+import 'package:pluto/domain/entities/event_category.dart';
 import 'package:pluto/presentation/screens/add_company/widgets/round_editor_sheet.dart';
 
 class RoundChipButton extends StatelessWidget {
@@ -42,6 +43,7 @@ class RoundChipButton extends StatelessWidget {
     final filled = !round.isEmpty;
     final name = round.name.trim();
     final radius = BorderRadius.circular(16);
+    final ink = EventCategory.labelOf(accent);
 
     return Semantics(
       button: true,
@@ -80,7 +82,7 @@ class RoundChipButton extends StatelessWidget {
                         fontWeight: FontWeight.w800,
                         height: 1.1,
                         letterSpacing: 0,
-                        color: filled ? accent : colors.muted,
+                        color: filled ? ink : colors.muted,
                       ),
                     ),
                   ),

@@ -9,6 +9,7 @@ import 'package:pluto/core/utils/plain_text_editing_controller.dart';
 import 'package:pluto/core/utils/press_bounce.dart';
 import 'package:pluto/data/datasources/long_goal_local_datasource.dart';
 import 'package:pluto/domain/entities/long_goal.dart';
+import 'package:pluto/domain/entities/event_category.dart';
 import 'package:pluto/presentation/screens/add_company/widgets/save_company_button.dart';
 import 'package:pluto/presentation/screens/home/widgets/long_goal_edit_sheet.dart';
 
@@ -844,7 +845,7 @@ class _CheckInWeekState extends State<_CheckInWeek>
     required bool isToday,
     required bool isFuture,
   }) {
-    if (isToday) return widget.color;
+    if (isToday) return EventCategory.labelOf(widget.color);
     if (isFuture) return colors.hint;
     if (day.weekday == DateTime.sunday) return _sunday;
     if (day.weekday == DateTime.saturday) return _saturday;
@@ -974,7 +975,7 @@ class _CheckInWeekState extends State<_CheckInWeek>
                   color: missed || isFuture
                       ? colors.muted
                       : isToday || selected
-                          ? widget.color
+                          ? EventCategory.labelOf(widget.color)
                           : colors.text,
                 ),
               ),
@@ -987,7 +988,7 @@ class _CheckInWeekState extends State<_CheckInWeek>
                         checked: checked,
                         missed: missed,
                         isToday: isToday,
-                        color: widget.color,
+                        color: EventCategory.labelOf(widget.color),
                         muted: colors.muted,
                         border: colors.border,
                       )
@@ -1015,6 +1016,7 @@ class _CheckInWeekState extends State<_CheckInWeek>
   }) {
     final unit = widget.unit.trim();
     final empty = label == null || label.isEmpty;
+    final ink = EventCategory.labelOf(widget.color);
     return ClipRect(
       child: AnimatedSwitcher(
         duration: const Duration(milliseconds: 380),
@@ -1050,7 +1052,7 @@ class _CheckInWeekState extends State<_CheckInWeek>
                   fontSize: 12,
                   fontWeight: FontWeight.w800,
                   height: 1,
-                  color: isToday ? widget.color : colors.muted,
+                  color: isToday ? ink : colors.muted,
                 ),
               )
             : Column(
@@ -1068,7 +1070,7 @@ class _CheckInWeekState extends State<_CheckInWeek>
                         fontSize: 12,
                         fontWeight: FontWeight.w800,
                         height: 1,
-                        color: widget.color,
+                        color: ink,
                       ),
                     ),
                   ),
@@ -1084,7 +1086,7 @@ class _CheckInWeekState extends State<_CheckInWeek>
                           fontSize: 9,
                           fontWeight: FontWeight.w700,
                           height: 1,
-                          color: widget.color.withValues(alpha: 0.8),
+                          color: ink.withValues(alpha: 0.8),
                         ),
                       ),
                     ),

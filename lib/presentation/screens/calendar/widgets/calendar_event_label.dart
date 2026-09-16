@@ -3,6 +3,7 @@ import 'package:pluto/core/constants/app_fonts.dart';
 import 'package:pluto/core/layout/pc_layout.dart';
 import 'package:pluto/core/theme/app_colors.dart';
 import 'package:pluto/core/utils/animated_accent.dart';
+import 'package:pluto/domain/entities/event_category.dart';
 
 class CalendarEventLabel extends StatelessWidget {
   const CalendarEventLabel({
@@ -52,7 +53,7 @@ class CalendarEventLabel extends StatelessWidget {
           fontSize: baseFont * scale,
           fontWeight: fontWeight,
           height: 1,
-          color: accent,
+          color: EventCategory.labelOf(accent),
         );
 
         return SizedBox(

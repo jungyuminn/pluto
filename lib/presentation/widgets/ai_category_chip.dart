@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:pluto/core/constants/app_icons.dart';
+import 'package:pluto/domain/entities/event_category.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/event_category_chip.dart';
 import 'package:pluto/presentation/widgets/themed_asset.dart';
 
@@ -25,13 +26,14 @@ class AiCategoryChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ink = EventCategory.labelOf(color);
     return EventCategoryChip(
       name: name,
       color: color,
       selected: selected,
       onPressed: onPressed,
-      mark: active ? _AiStar(color: color, twinkle: loading) : null,
-      caption: loading ? AiCategoryDots(color: color) : null,
+      mark: active ? _AiStar(color: ink, twinkle: loading) : null,
+      caption: loading ? AiCategoryDots(color: ink) : null,
     );
   }
 }

@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:pluto/domain/entities/event_category.dart';
 
 class EventCompleteButton extends StatefulWidget {
   const EventCompleteButton({
@@ -76,7 +77,7 @@ class _EventCompleteButtonState extends State<EventCompleteButton>
                 return CustomPaint(
                   painter: _CompletePainter(
                     progress: t,
-                    color: widget.color,
+                    color: EventCategory.labelOf(widget.color),
                   ),
                 );
               },

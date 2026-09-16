@@ -31,7 +31,16 @@ final _codeFormatters = <TextInputFormatter>[
   }),
 ];
 
-Future<void> showAddFriendSheet(BuildContext context) {
+Future<void> showAddFriendSheet(BuildContext context) async {
+  try {
+    await FriendService.instance.ensureProfile();
+  } catch (_) {}
+  if (!context.mounted) return;
+  final me = FriendService.instance.profile.value;
+  if (me == null || !me.hasIdentity) {
+    showFriendsToast(context, AppStrings.friendsProfileNeed);
+    return;
+  }
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
@@ -47,6 +56,29 @@ Future<void> showAddFriendSheet(BuildContext context) {
     ),
     builder: (context) => const AddFriendSheet(),
   );
+}
+
+void showFriendsToast(BuildContext context, String text) {
+  final overlay = Overlay.of(context, rootOverlay: true);
+  late OverlayEntry entry;
+  entry = OverlayEntry(
+    builder: (context) {
+      final bottom = MediaQuery.paddingOf(context).bottom;
+      return IgnorePointer(
+        child: Align(
+          alignment: Alignment.bottomCenter,
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(24, 0, 24, 20 + bottom),
+            child: _HintToast(text: text),
+          ),
+        ),
+      );
+    },
+  );
+  overlay.insert(entry);
+  Future<void>.delayed(const Duration(milliseconds: 2400), () {
+    entry.remove();
+  });
 }
 
 class AddFriendSheet extends StatefulWidget {
@@ -272,14 +304,18 @@ class _AddFriendSheetState extends State<AddFriendSheet> {
   }
 
   Future<void> _send() async {
+    final me = _service.profile.value;
+    if (me == null || !me.hasIdentity) {
+      _toast(AppStrings.friendsProfileNeed);
+      return;
+    }
     final code = _code.text.trim();
     if (code.isEmpty || _inFlightCodes.contains(code)) return;
     if (_draftOutgoing.any((item) => item.toCode == code)) {
       _toast(AppStrings.friendsAlreadySent);
       return;
     }
-    final me = _service.profile.value;
-    if (me != null && me.friendCode == code) {
+    if (me.friendCode == code) {
       _toast(AppStrings.friendsSelf);
       return;
     }
@@ -292,7 +328,7 @@ class _AddFriendSheetState extends State<AddFriendSheet> {
         _toast(AppStrings.friendsNotFound);
         return;
       }
-      if (other.uid == me?.uid) {
+      if (other.uid == me.uid) {
         _toast(AppStrings.friendsSelf);
         return;
       }
@@ -304,11 +340,11 @@ class _AddFriendSheetState extends State<AddFriendSheet> {
       if (!mounted) return;
       draft = FriendRequestItem(
         id: 'local:$code:${DateTime.now().microsecondsSinceEpoch}',
-        fromUid: me?.uid ?? '',
+        fromUid: me.uid,
         toUid: other.uid,
-        fromName: me?.displayName ?? '',
-        fromCode: me?.friendCode ?? '',
-        fromPhotoURL: me?.photoURL ?? '',
+        fromName: me.displayName,
+        fromCode: me.friendCode,
+        fromPhotoURL: me.photoURL,
         toName: other.label,
         toCode: other.friendCode,
         toPhotoURL: other.photoURL,

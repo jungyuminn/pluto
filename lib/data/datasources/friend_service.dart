@@ -662,6 +662,10 @@ class FriendService {
   }
 
   Future<({String status, String requestId})> sendRequest(String code) async {
+    final me = profile.value;
+    if (me == null || !me.hasIdentity) {
+      throw const FriendException('needs-profile');
+    }
     if (kIsWeb) {
       return _sendViaStore(code);
     }
@@ -684,6 +688,7 @@ class FriendService {
       'already-friends' ||
       'already-sent' ||
       'needs-code' ||
+      'needs-profile' ||
       'no-user' ||
       'not-found' ||
       'bad-code' =>
@@ -755,8 +760,8 @@ class FriendService {
   Future<({String status, String requestId})> _sendViaStore(String code) async {
     final cached = profile.value;
     final uid = (cached?.uid.isNotEmpty == true ? cached!.uid : _uid) ?? '';
-    if (cached == null || cached.friendCode.isEmpty || uid.isEmpty) {
-      throw const FriendException('needs-code');
+    if (cached == null || !cached.hasIdentity || uid.isEmpty) {
+      throw const FriendException('needs-profile');
     }
     final me = FriendProfile(
       uid: uid,
@@ -1014,6 +1019,7 @@ class FriendService {
       'bad-name' => AppStrings.friendsNameBad,
       'bad-photo' => AppStrings.friendsPhotoTooBig,
       'needs-code' => AppStrings.friendsCodeNeed,
+      'needs-profile' => AppStrings.friendsProfileNeed,
       'code-cooldown' => AppStrings.friendsCodeCooldown(_codeCooldownDays(error)),
       'rate-limited' || 'resource-exhausted' => AppStrings.friendsRateLimited,
       'unauthenticated' || 'login-required' => AppStrings.friendsNeedLogin,

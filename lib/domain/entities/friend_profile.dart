@@ -54,6 +54,12 @@ class FriendProfile {
     return friendCode;
   }
 
+  bool get hasIdentity {
+    return !needsCode &&
+        friendCode.trim().isNotEmpty &&
+        displayName.trim().isNotEmpty;
+  }
+
   bool get canChangeCode {
     if (needsCode || friendCode.isEmpty) return true;
     if (nextChangeAt <= 0) return true;

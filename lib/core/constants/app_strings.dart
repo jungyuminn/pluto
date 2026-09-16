@@ -862,6 +862,7 @@ class AppStrings {
   static const friendsCodeBad =
       '영문 소문자, 숫자, _, . 만 2~32자로 써 주세요. .. 는 안 돼요';
   static const friendsCodeNeed = '아이디를 먼저 만들어 주세요';
+  static const friendsProfileNeed = '이름과 아이디를 먼저 등록해 주세요';
   static String friendsCodeCooldown(int days) => '$days일 뒤에 바꿀 수 있어요';
   static const friendsSend = '요청 보내기';
   static const friendsIncoming = '받은 요청';

@@ -274,9 +274,19 @@ class CloudSyncFiles {
     return false;
   }
 
+  static void prefetch(String? path) {
+    if (path == null || path.isEmpty) return;
+    if (SyncedFileStore.instance.exists(path)) return;
+    if (SyncedFileStore.parse(path) == null) return;
+    unawaited(ensureLocal(path));
+  }
+
   static Future<Uint8List?> ensureLocal(String path) async {
     final cached = SyncedFileStore.instance.bytesFor(path);
     if (cached != null && cached.isNotEmpty) return cached;
+    if (!kIsWeb && SyncedFileStore.instance.exists(path)) {
+      return SyncedFileStore.instance.read(path);
+    }
     final parsed = SyncedFileStore.parse(path);
     if (parsed == null) return null;
     final uid = FirebaseAuth.instance.currentUser?.uid;
@@ -343,6 +353,7 @@ class CloudSyncFiles {
       }
       try {
         await FirebaseStorage.instance.ref(_object(uid, file)).writeToFile(dest);
+        SyncedFileStore.instance.notifyFilesChanged();
       } catch (error) {
         ok = false;
         debugPrint('Cloud file download failed ${file.key}: $error');

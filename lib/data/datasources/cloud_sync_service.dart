@@ -377,7 +377,7 @@ class CloudSyncService {
     if (hash == _uploadedHash) return;
     if (CloudSyncSnapshot.isFoundationDump(dump)) return;
     try {
-      await _upload(user.uid, dump, waitForFiles: false);
+      await _upload(user.uid, dump, waitForFiles: true);
     } catch (error) {
       debugPrint('Cloud sync upload failed: $error');
     }
@@ -470,6 +470,8 @@ class CloudSyncService {
         return;
       }
       await CloudSyncFiles.download(uid, needed);
+      await CloudSyncFiles.relocate();
+      await AppBackupService.applyToApp(scope);
       final extras = localFiles.any(
         (file) => remote.files.every((remoteFile) => remoteFile.key != file.key),
       );

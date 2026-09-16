@@ -6,7 +6,7 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
 /// On web this is a session cache of cloud files, not a second source of truth.
-class SyncedFileStore {
+class SyncedFileStore extends ChangeNotifier {
   SyncedFileStore._();
 
   static final instance = SyncedFileStore._();
@@ -94,6 +94,7 @@ class SyncedFileStore {
       final key = keyOf(folder, name);
       _bytes[key] = bytes;
       _sizes[key] = bytes.length;
+      notifyListeners();
       return logicalPath(folder, name);
     }
     final documents = await getApplicationDocumentsDirectory();
@@ -103,6 +104,7 @@ class SyncedFileStore {
     }
     final dest = File(p.join(dir.path, name));
     await dest.writeAsBytes(bytes, flush: true);
+    notifyListeners();
     return dest.path;
   }
 
@@ -123,6 +125,7 @@ class SyncedFileStore {
         'pending::$name::${DateTime.now().microsecondsSinceEpoch}';
     _bytes[token] = bytes;
     _sizes[token] = bytes.length;
+    notifyListeners();
     return token;
   }
 
@@ -137,7 +140,10 @@ class SyncedFileStore {
     _sizes[key] = size;
     if (bytes != null) _bytes[key] = bytes;
     if (url != null && url.isNotEmpty) _urls[key] = url;
+    notifyListeners();
   }
+
+  void notifyFilesChanged() => notifyListeners();
 
   Future<void> deletePath(String? path) async {
     if (path == null || path.isEmpty) return;
@@ -146,6 +152,7 @@ class SyncedFileStore {
     if (parsed != null) {
       _forget(keyOf(parsed.folder, parsed.name));
     }
+    notifyListeners();
     if (kIsWeb) return;
     try {
       final file = File(path);
@@ -164,6 +171,7 @@ class SyncedFileStore {
     for (final key in keys.toSet()) {
       _forget(key);
     }
+    notifyListeners();
     if (kIsWeb) return;
     try {
       final documents = await getApplicationDocumentsDirectory();
@@ -185,6 +193,7 @@ class SyncedFileStore {
     _bytes.clear();
     _urls.clear();
     _sizes.clear();
+    notifyListeners();
     if (kIsWeb) return;
     for (final folder in folders) {
       await clearFolder(folder);
@@ -210,6 +219,7 @@ class SyncedFileStore {
     _parkedBytes = {};
     _parkedUrls = {};
     _parkedSizes = {};
+    notifyListeners();
   }
 
   List<({String folder, String name, int size, String path})> listAll() {

@@ -4,6 +4,7 @@ import 'package:pluto/core/constants/app_strings.dart';
 import 'package:pluto/core/layout/pc_layout.dart';
 import 'package:pluto/core/theme/app_colors.dart';
 import 'package:pluto/core/utils/press_bounce.dart';
+import 'package:pluto/data/datasources/cloud_sync_files.dart';
 import 'package:pluto/data/datasources/diary_photo_storage.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/diary_draw_sheet.dart';
 import 'package:pluto/presentation/widgets/local_file_image.dart';
@@ -30,9 +31,18 @@ class _DiaryPhotoFieldState extends State<DiaryPhotoField> {
   static const _actionsAnim = Duration(milliseconds: 280);
 
   @override
+  void initState() {
+    super.initState();
+    CloudSyncFiles.prefetch(widget.path);
+  }
+
+  @override
   void didUpdateWidget(DiaryPhotoField oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.path != widget.path) _actionsOpen = false;
+    if (oldWidget.path != widget.path) {
+      _actionsOpen = false;
+      CloudSyncFiles.prefetch(widget.path);
+    }
   }
 
   Future<void> _pick() async {

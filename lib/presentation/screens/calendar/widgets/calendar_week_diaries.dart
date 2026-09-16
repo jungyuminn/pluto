@@ -5,6 +5,8 @@ import 'package:pluto/core/calendar/month_grid.dart';
 import 'package:pluto/core/constants/app_strings.dart';
 import 'package:pluto/core/layout/pc_layout.dart';
 import 'package:pluto/core/utils/local_file.dart';
+import 'package:pluto/data/datasources/cloud_sync_files.dart';
+import 'package:pluto/data/datasources/synced_file_store.dart';
 import 'package:pluto/domain/entities/diary_entry.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/calendar_day_cell.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/calendar_event_label.dart';
@@ -96,7 +98,19 @@ class _CalendarWeekDiariesState extends State<CalendarWeekDiaries> {
   @override
   void initState() {
     super.initState();
-    _tiles = _tilesFor(
+    SyncedFileStore.instance.addListener(_onFiles);
+    _tiles = _currentTiles();
+    _requestMissingPhotos();
+  }
+
+  @override
+  void dispose() {
+    SyncedFileStore.instance.removeListener(_onFiles);
+    super.dispose();
+  }
+
+  List<_DiaryTile> _currentTiles() {
+    return _tilesFor(
       days: widget.days,
       diariesOf: widget.diariesOf,
       calendarScale: widget.calendarScale,
@@ -105,6 +119,19 @@ class _CalendarWeekDiariesState extends State<CalendarWeekDiaries> {
       showLunar: widget.showLunar,
       cellWidth: widget.cellWidth,
     );
+  }
+
+  void _onFiles() {
+    if (!mounted) return;
+    setState(() => _tiles = _currentTiles());
+  }
+
+  void _requestMissingPhotos() {
+    for (final day in widget.days) {
+      for (final diary in widget.diariesOf(day.date)) {
+        CloudSyncFiles.prefetch(diary.photoPath);
+      }
+    }
   }
 
   @override
@@ -131,6 +158,7 @@ class _CalendarWeekDiariesState extends State<CalendarWeekDiaries> {
         _exiting = [];
         _appearing = {};
       });
+      _requestMissingPhotos();
       return;
     }
 
@@ -152,6 +180,7 @@ class _CalendarWeekDiariesState extends State<CalendarWeekDiaries> {
       _appearing = appearing;
       _tiles = next;
     });
+    _requestMissingPhotos();
     if (leaving.isEmpty) return;
     Future<void>.delayed(CalendarWeekDiaries.fadeDuration, () {
       if (!mounted || gen != _exitGen) return;

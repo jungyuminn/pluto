@@ -26,6 +26,13 @@ class LocalFileImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return ListenableBuilder(
+      listenable: SyncedFileStore.instance,
+      builder: (context, _) => _image(context),
+    );
+  }
+
+  Widget _image(BuildContext context) {
     Widget fallback(
       BuildContext context,
       Object error,

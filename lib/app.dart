@@ -79,6 +79,7 @@ import 'package:pluto/domain/usecases/update_event_category.dart';
 import 'package:pluto/domain/usecases/update_job_application.dart';
 import 'package:pluto/presentation/screens/shell/shell_screen.dart';
 import 'package:pluto/presentation/screens/settings/widgets/cloud_sync_dialogs.dart';
+import 'package:pluto/presentation/screens/settings/widgets/dots_loading_dialog.dart';
 import 'package:pluto/presentation/screens/settings/widgets/login_page.dart';
 import 'package:pluto/presentation/tutorial/tutorial_controller.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -677,12 +678,7 @@ class _AppBootstrapState extends State<_AppBootstrap> {
         color: Color(0xFFF8FAFC),
         home: Scaffold(
           backgroundColor: Color(0xFFF8FAFC),
-          body: Center(
-            child: CupertinoActivityIndicator(
-              radius: 14,
-              color: Color(0xFF8EC5FF),
-            ),
-          ),
+          body: DotsLoadingDialog(),
         ),
       );
     }

@@ -57,10 +57,39 @@
       html, body { background-color: #0B1220; }
     }
     flt-semantics, flt-span, span { spellcheck: false !important; }
+    #pluto-boot {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      pointer-events: none;
+    }
+    #pluto-boot span {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #40A6FF;
+      opacity: 0.35;
+      animation: pluto-dot 900ms cubic-bezier(0.45, 0, 0.55, 1) infinite;
+    }
+    #pluto-boot span:nth-child(2) { animation-delay: -600ms; }
+    #pluto-boot span:nth-child(3) { animation-delay: -300ms; }
+    @media (prefers-color-scheme: dark) {
+      #pluto-boot span { background: #60A5FA; }
+    }
+    @keyframes pluto-dot {
+      0%, 100% { transform: translateY(0); opacity: 0.35; }
+      50% { transform: translateY(-4px); opacity: 1; }
+    }
   </style>
   <script src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.5/kakao.min.js" crossorigin="anonymous"></script>
 </head>
 <body spellcheck="false">
+  <div id="pluto-boot" aria-hidden="true">
+    <span></span><span></span><span></span>
+  </div>
   <script>
     (function () {
       var key = 'pluto-sw-20260912-revert';
@@ -77,6 +106,12 @@
         location.reload();
       });
     })();
+  </script>
+  <script>
+    window.addEventListener('flutter-first-frame', function () {
+      var boot = document.getElementById('pluto-boot');
+      if (boot) boot.remove();
+    });
   </script>
   <script src="flutter_bootstrap.js" async></script>
 </body>

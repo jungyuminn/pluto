@@ -183,27 +183,30 @@ class FriendService {
     }
     final user = FirebaseAuth.instance.currentUser;
     final name = user == null ? null : AppAuthService.socialDisplayName(user);
-    try {
-      final data = await _call('ensureFriendProfile', {
-        'displayName': ?name,
-      });
-      var next = FriendProfile.fromMap(data);
+    Future<FriendProfile> finish(FriendProfile next) async {
+      var resolved = next;
       final pending = await _readPendingName();
       if (pending != null && pending.isNotEmpty) {
-        next = next.copyWith(displayName: pending);
+        resolved = resolved.copyWith(displayName: pending);
       }
-      profile.value = next;
+      profile.value = resolved;
       await _writeCachedProfile();
-      return next;
-    } catch (error) {
-      final fallback = await _readRemoteProfile();
-      if (fallback != null) {
-        profile.value = fallback;
-        await _writeCachedProfile();
-        return fallback;
-      }
-      rethrow;
+      return resolved;
     }
+
+    if (!kIsWeb) {
+      try {
+        final data = await _call('ensureFriendProfile', {
+          'displayName': ?name,
+        });
+        return finish(FriendProfile.fromMap(data));
+      } catch (error) {
+        debugPrint('Friend ensure function failed: $error');
+        final fallback = await _readRemoteProfile();
+        if (fallback != null) return finish(fallback);
+      }
+    }
+    return finish(await _ensureViaStore(hint: name));
   }
 
   Future<FriendProfile?> _readRemoteProfile() async {
@@ -212,7 +215,7 @@ class FriendService {
     try {
       final snap = await _db.collection('profiles').doc(uid).get();
       if (!snap.exists) return null;
-      return FriendProfile.fromMap(snap.data() ?? {}, uid: uid);
+      return _profileFromStore(uid, snap.data() ?? {});
     } catch (_) {
       return null;
     }
@@ -241,10 +244,13 @@ class FriendService {
     }
     _pushingName = true;
     try {
-      final data = await _call('updateFriendDisplayName', {
-        'displayName': name,
-      });
-      final next = FriendProfile.fromMap(data);
+      final next = kIsWeb
+          ? await _renameViaStore(name)
+          : FriendProfile.fromMap(
+              await _call('updateFriendDisplayName', {
+                'displayName': name,
+              }),
+            );
       profile.value = next;
       await _clearPendingName();
       await _writeCachedProfile();
@@ -472,16 +478,40 @@ class FriendService {
   Future<FriendProfile> setFriendCode(String code) async {
     final user = FirebaseAuth.instance.currentUser;
     final name = user == null ? null : AppAuthService.socialDisplayName(user);
-    final data = await _call('claimFriendCode', {
-      'code': code,
-      'displayName': ?name,
-    });
-    final next = FriendProfile.fromMap(data);
-    profile.value = next;
-    _sessionUid = _uid;
-    _sessionProfile = next;
-    await _writeCachedProfile();
-    return next;
+    Future<FriendProfile> apply(FriendProfile next) async {
+      profile.value = next;
+      _sessionUid = _uid;
+      _sessionProfile = next;
+      await _writeCachedProfile();
+      return next;
+    }
+
+    if (kIsWeb) {
+      return apply(await _claimViaStore(code, hint: name));
+    }
+    try {
+      final data = await _call('claimFriendCode', {
+        'code': code,
+        'displayName': ?name,
+      });
+      return apply(FriendProfile.fromMap(data));
+    } catch (error) {
+      if (error is FriendException && !_retryClaim(error)) rethrow;
+      debugPrint('Friend claim function failed: $error');
+      return apply(await _claimViaStore(code, hint: name));
+    }
+  }
+
+  bool _retryClaim(FriendException error) {
+    return switch (error.code) {
+      'taken' ||
+      'bad-code' ||
+      'code-cooldown' ||
+      'unauthenticated' ||
+      'login-required' =>
+        false,
+      _ => true,
+    };
   }
 
   List<FriendRequestItem> get lastIncoming => _lastIncoming;
@@ -745,14 +775,118 @@ class FriendService {
     }
   }
 
+  Future<FriendProfile> _ensureViaStore({String? hint}) async {
+    final uid = _uid;
+    if (uid == null) throw const FriendException('login-required');
+    final ref = _db.collection('profiles').doc(uid);
+    final snap = await ref.get();
+    final now = DateTime.now().millisecondsSinceEpoch;
+    if (snap.exists) {
+      return _profileFromStore(uid, snap.data() ?? {});
+    }
+    final displayName = (hint ?? '').trim();
+    await ref.set({
+      'displayName': displayName,
+      'friendCode': '',
+      'customName': false,
+      'updatedAt': now,
+    });
+    return _profileFromStore(uid, {
+      'displayName': displayName,
+      'friendCode': '',
+    });
+  }
+
+  Future<FriendProfile> _claimViaStore(String raw, {String? hint}) async {
+    final uid = _uid;
+    if (uid == null) throw const FriendException('login-required');
+    final code = _parseCode(raw);
+    final profileRef = _db.collection('profiles').doc(uid);
+    final codeRef = _db.collection('friend_codes').doc(code);
+    final now = DateTime.now().millisecondsSinceEpoch;
+    await _db.runTransaction((tx) async {
+      final profileSnap = await tx.get(profileRef);
+      final data = Map<String, dynamic>.from(profileSnap.data() ?? {});
+      final current = '${data['friendCode'] ?? ''}'.trim();
+      final hadUsable = _isUsableCode(current);
+      if (hadUsable && current == code) return;
+      if (hadUsable) {
+        final changedAt = (data['friendCodeChangedAt'] as num?)?.toInt() ?? 0;
+        if (changedAt > 0 && now < changedAt + _codeCooldownMs) {
+          throw const FriendException('code-cooldown');
+        }
+      }
+      final taken = await tx.get(codeRef);
+      if (taken.exists && '${taken.data()?['uid'] ?? ''}' != uid) {
+        throw const FriendException('taken');
+      }
+      if (current.isNotEmpty && current != code) {
+        tx.delete(_db.collection('friend_codes').doc(current));
+      }
+      tx.set(codeRef, {'uid': uid});
+      final customName = data['customName'] == true;
+      final hinted = (hint ?? '').trim();
+      tx.set(
+        profileRef,
+        {
+          if (!customName && hinted.isNotEmpty) 'displayName': hinted,
+          'friendCode': code,
+          'friendCodeChangedAt': now,
+          'updatedAt': now,
+        },
+        SetOptions(merge: true),
+      );
+    });
+    final saved = await profileRef.get();
+    return _profileFromStore(uid, saved.data() ?? {});
+  }
+
+  Future<FriendProfile> _renameViaStore(String raw) async {
+    final uid = _uid;
+    if (uid == null) throw const FriendException('login-required');
+    final name = raw
+        .replaceAll(RegExp(r'[\u0000-\u001f\u007f]'), '')
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .trim();
+    if (name.isEmpty || name.length > 16 || RegExp(r'[#＃@＠]').hasMatch(name)) {
+      throw const FriendException('bad-name');
+    }
+    final ref = _db.collection('profiles').doc(uid);
+    await ref.set({
+      'displayName': name,
+      'customName': true,
+      'updatedAt': DateTime.now().millisecondsSinceEpoch,
+    }, SetOptions(merge: true));
+    final saved = await ref.get();
+    return _profileFromStore(uid, saved.data() ?? {});
+  }
+
+  FriendProfile _profileFromStore(String uid, Map<String, dynamic> data) {
+    final stored = '${data['friendCode'] ?? ''}'.trim();
+    final usable = _isUsableCode(stored);
+    final changedAt = (data['friendCodeChangedAt'] as num?)?.toInt() ?? 0;
+    final name = '${data['displayName'] ?? ''}'.trim();
+    return FriendProfile(
+      uid: uid,
+      displayName: name,
+      friendCode: usable ? stored : '',
+      suggestedCode: _suggestCode(name),
+      needsCode: !usable,
+      nextChangeAt: usable && changedAt > 0 ? changedAt + _codeCooldownMs : 0,
+      photoURL: '${data['photoURL'] ?? ''}'.trim(),
+    );
+  }
+
   Future<FriendProfile?> _lookupViaStore(String handle) async {
-    if (handle.isEmpty || !_ready) return null;
-    final codeSnap = await _db.collection('friend_codes').doc(handle).get();
+    final code = _normalize(handle);
+    if (code.isEmpty || !_ready) return null;
+    final codeSnap = await _db.collection('friend_codes').doc(code).get();
+    if (!codeSnap.exists) return null;
     final uid = '${codeSnap.data()?['uid'] ?? ''}';
     if (uid.isEmpty) return null;
     final profileSnap = await _db.collection('profiles').doc(uid).get();
     if (!profileSnap.exists) return null;
-    final next = FriendProfile.fromMap(profileSnap.data() ?? {}, uid: uid);
+    final next = _profileFromStore(uid, profileSnap.data() ?? {});
     if (next.friendCode.isEmpty) return null;
     return next;
   }
@@ -1253,8 +1387,45 @@ class FriendService {
     return '$year-$month-$day';
   }
 
+  static const _codeCooldownMs = 30 * 24 * 60 * 60 * 1000;
+  static const _reservedCodes = {
+    'pluto',
+    '플루토',
+    'admin',
+    'official',
+    'support',
+    'help',
+  };
+
   String _normalize(String raw) {
-    return raw.replaceAll('＃', '#').replaceAll(RegExp(r'\s+'), '').trim();
+    return raw
+        .replaceAll('＃', '#')
+        .replaceAll('＠', '@')
+        .replaceAll(RegExp(r'\s+'), '')
+        .trim()
+        .replaceFirst(RegExp(r'^[@#]+'), '')
+        .toLowerCase();
+  }
+
+  String _parseCode(String raw) {
+    final code = _normalize(raw);
+    if (!_isUsableCode(code)) {
+      throw const FriendException('bad-code');
+    }
+    return code;
+  }
+
+  bool _isUsableCode(String code) {
+    if (code.length < 2 || code.length > 32) return false;
+    if (_reservedCodes.contains(code)) return false;
+    if (!RegExp(r'^[a-z0-9_.]+$').hasMatch(code)) return false;
+    if (code.contains('..')) return false;
+    return true;
+  }
+
+  String _suggestCode(String name) {
+    final code = _normalize(name.replaceAll(RegExp(r'[#＃@＠/\\]'), ''));
+    return _isUsableCode(code) ? code : '';
   }
 
   static const _actions = {

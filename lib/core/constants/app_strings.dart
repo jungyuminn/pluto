@@ -880,7 +880,7 @@ class AppStrings {
   static const friendsNotFound = '해당 아이디의 사용자는 없어요';
   static const friendsSelf = '내 아이디예요';
   static const friendsAlready = '이미 친구예요';
-  static const friendsAlreadySent = '이미 요청을 보냈어요';
+  static const friendsAlreadySent = '이미 친구 요청을 보냈어요';
   static const friendsSent = '친구 요청을 보냈어요';
   static const friendsAccepted = '친구가 되었어요';
   static const friendsRateLimited = '잠시 후 다시 시도해 주세요';

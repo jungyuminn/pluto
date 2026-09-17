@@ -1323,18 +1323,21 @@ class _RequestSectionState extends State<_RequestSection> {
             ),
           ),
           if (widget.incoming) ...[
-            _TextAction(
-              label: AppStrings.friendsDecline,
+            _IconAction(
+              icon: Icons.close_rounded,
               color: colors.muted,
+              semanticLabel: AppStrings.friendsDecline,
               onPressed: () {
                 _hide(item.id);
                 widget.onDecline?.call(item);
               },
             ),
-            const SizedBox(width: 4),
-            _TextAction(
-              label: AppStrings.friendsAccept,
-              color: colors.accent,
+            _IconAction(
+              icon: Icons.check_rounded,
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? const Color(0xFF60A5FA)
+                  : const Color(0xFF40A6FF),
+              semanticLabel: AppStrings.friendsAccept,
               onPressed: () {
                 _hide(item.id);
                 widget.onAccept?.call(item);
@@ -1490,6 +1493,36 @@ class _FriendTile extends StatelessWidget {
             ],
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _IconAction extends StatelessWidget {
+  const _IconAction({
+    required this.icon,
+    required this.color,
+    required this.semanticLabel,
+    required this.onPressed,
+  });
+
+  final IconData icon;
+  final Color color;
+  final String semanticLabel;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return PressBounce(
+      onPressed: onPressed,
+      pressedColor: Colors.transparent,
+      child: Semantics(
+        button: true,
+        label: semanticLabel,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          child: Icon(icon, size: 22, color: color),
+        ),
       ),
     );
   }

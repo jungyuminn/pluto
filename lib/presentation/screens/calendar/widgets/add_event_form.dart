@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:pluto/app_scope.dart';
 import 'package:pluto/core/constants/app_icons.dart';
 import 'package:pluto/core/constants/app_strings.dart';
+import 'package:pluto/core/layout/pc_layout.dart';
 import 'package:pluto/core/utils/category_history.dart';
 import 'package:pluto/core/utils/focused_ime_text.dart';
 import 'package:pluto/core/theme/app_colors.dart';
@@ -491,16 +492,11 @@ class _AddEventFormState extends State<AddEventForm>
       duration: const Duration(milliseconds: 280),
       curve: Curves.easeOutCubic,
       width: double.infinity,
+      clipBehavior: PcLayout.isPc ? Clip.antiAlias : Clip.none,
       decoration: BoxDecoration(
         color: AppColors.of(context).tint(_accent, 0.14),
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x33000000),
-            blurRadius: 16,
-            offset: Offset(0, -2),
-          ),
-        ],
+        borderRadius: PcLayout.sheetRadius(),
+        boxShadow: PcLayout.sheetLift(),
       ),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),

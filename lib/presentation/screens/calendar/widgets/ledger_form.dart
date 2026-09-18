@@ -3,6 +3,7 @@ import 'package:pluto/app_scope.dart';
 import 'package:pluto/core/constants/app_fonts.dart';
 import 'package:pluto/core/constants/app_icons.dart';
 import 'package:pluto/core/constants/app_strings.dart';
+import 'package:pluto/core/layout/pc_layout.dart';
 import 'package:pluto/core/theme/app_colors.dart';
 import 'package:pluto/core/theme/app_theme.dart';
 import 'package:pluto/core/utils/category_history.dart';
@@ -559,16 +560,11 @@ class _LedgerFormState extends State<LedgerForm> with TickerProviderStateMixin {
       duration: const Duration(milliseconds: 420),
       curve: Curves.easeInOutCubic,
       width: double.infinity,
+      clipBehavior: PcLayout.isPc ? Clip.antiAlias : Clip.none,
       decoration: BoxDecoration(
         color: colors.tint(_accent, 0.14),
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x33000000),
-            blurRadius: 16,
-            offset: Offset(0, -2),
-          ),
-        ],
+        borderRadius: PcLayout.sheetRadius(),
+        boxShadow: PcLayout.sheetLift(),
       ),
       padding: EdgeInsets.fromLTRB(20, 16, 20, _isWage ? 24 : 28),
       child: Column(

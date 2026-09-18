@@ -3,6 +3,8 @@ import 'package:pluto/app_scope.dart';
 import 'package:pluto/core/constants/app_fonts.dart';
 import 'package:pluto/core/constants/app_icons.dart';
 import 'package:pluto/core/constants/app_strings.dart';
+import 'package:pluto/core/layout/compose_sheet.dart';
+import 'package:pluto/core/layout/pc_layout.dart';
 import 'package:pluto/core/theme/app_colors.dart';
 import 'package:pluto/core/theme/app_theme.dart';
 import 'package:pluto/core/utils/plain_text_editing_controller.dart';
@@ -18,17 +20,8 @@ Future<bool> showHomeMemoEditSheet(
   BuildContext context, {
   HomeMemo? initial,
 }) async {
-  final saved = await showModalBottomSheet<bool>(
-    context: context,
-    isScrollControlled: true,
-    useSafeArea: false,
-    showDragHandle: false,
-    backgroundColor: Colors.transparent,
-    barrierColor: const Color(0x40000000),
-    elevation: 0,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-    ),
+  final saved = await showComposeSheet<bool>(
+    context,
     builder: (context) => HomeMemoEditSheet(initial: initial),
   );
   return saved == true;
@@ -112,11 +105,12 @@ class _HomeMemoEditSheetState extends State<HomeMemoEditSheet> {
         padding: EdgeInsets.only(
           bottom: MediaQuery.viewInsetsOf(context).bottom,
         ),
-        child: DecoratedBox(
+        child: Container(
           decoration: BoxDecoration(
             color: colors.card,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+            borderRadius: PcLayout.sheetRadius(),
           ),
+          clipBehavior: PcLayout.isPc ? Clip.antiAlias : Clip.none,
           child: SingleChildScrollView(
             padding: EdgeInsets.fromLTRB(20, 16, 20, 16 + bottom),
             child: Column(

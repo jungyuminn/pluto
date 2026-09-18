@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:pluto/core/layout/compose_sheet.dart';
 import 'package:pluto/domain/entities/calendar_event.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/add_event_form.dart';
 
@@ -9,18 +10,8 @@ Future<bool> showAddEventSheet(
   CalendarEvent? event,
   bool someday = false,
 }) async {
-  final saved = await showModalBottomSheet<bool>(
-    context: context,
-    isScrollControlled: true,
-    useSafeArea: false,
-    showDragHandle: false,
-    enableDrag: true,
-    backgroundColor: Colors.transparent,
-    barrierColor: const Color(0x40000000),
-    elevation: 0,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-    ),
+  final saved = await showComposeSheet<bool>(
+    context,
     builder: (context) => AddEventSheet(
       date: date,
       rangeEnd: rangeEnd,

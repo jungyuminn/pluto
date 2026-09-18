@@ -17,6 +17,12 @@ class ReleaseNote {
 abstract final class ReleaseNotes {
   static const all = [
     ReleaseNote(
+      version: '1.4.4',
+      items: [
+        'PC에서 할 일·메모·일기·챌린지·가계부·친구 추가가 가운데에 열려요',
+      ],
+    ),
+    ReleaseNote(
       version: '1.4.3',
       fixes: [
         'PC에서 AI가 카테고리를 안 고르던 문제를 고쳤어요',

@@ -877,7 +877,7 @@ class AppStrings {
   static const friendsRemoveTitle = '친구를 끊을까요?';
   static const friendsRemoveBody = '상대 일정도 더 이상 보이지 않아요';
   static const friendsNeedLogin = '로그인하면 친구를 추가할 수 있어요';
-  static const friendsNotFound = '해당 아이디의 사용자는 없어요';
+  static const friendsNotFound = '이 아이디로 친구를 찾지 못했어요';
   static const friendsSelf = '내 아이디예요';
   static const friendsAlready = '이미 친구예요';
   static const friendsAlreadySent = '이미 친구 요청을 보냈어요';

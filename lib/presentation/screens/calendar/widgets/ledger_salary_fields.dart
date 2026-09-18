@@ -4,6 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:pluto/core/constants/app_fonts.dart';
 import 'package:pluto/core/constants/app_strings.dart';
+import 'package:pluto/core/layout/pc_layout.dart';
 import 'package:pluto/core/theme/app_colors.dart';
 import 'package:pluto/core/utils/press_bounce.dart';
 import 'package:pluto/domain/entities/calendar_event.dart';
@@ -447,9 +448,8 @@ class _PayCycleBarState extends State<_PayCycleBar> {
       overlayChildBuilder: (context) {
         final safe = MediaQuery.paddingOf(context).bottom;
         final keyboard = MediaQuery.viewInsetsOf(context).bottom;
-        return Positioned(
-          left: 20,
-          right: 20,
+        return PcLayout.pinBottomToast(
+          side: 20,
           bottom: (keyboard > 0 ? keyboard : safe) + 16,
           child: IgnorePointer(
             child: AnimatedOpacity(

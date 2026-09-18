@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:pluto/core/layout/compose_sheet.dart';
 import 'package:pluto/domain/entities/event_category.dart';
 import 'package:pluto/domain/entities/ledger_entry.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/ledger_form.dart';
@@ -13,18 +14,8 @@ Future<bool> showLedgerSheet(
     lastCategory = await lastLedgerCategoryOf(context);
     if (!context.mounted) return false;
   }
-  final saved = await showModalBottomSheet<bool>(
-    context: context,
-    isScrollControlled: true,
-    useSafeArea: false,
-    showDragHandle: false,
-    enableDrag: true,
-    backgroundColor: Colors.transparent,
-    barrierColor: const Color(0x40000000),
-    elevation: 0,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-    ),
+  final saved = await showComposeSheet<bool>(
+    context,
     builder: (context) => LedgerSheet(
       date: date,
       initial: initial,

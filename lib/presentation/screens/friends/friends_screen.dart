@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:pluto/core/constants/app_fonts.dart';
 import 'package:pluto/core/constants/app_icons.dart';
 import 'package:pluto/core/constants/app_strings.dart';
+import 'package:pluto/core/layout/compose_sheet.dart';
 import 'package:pluto/core/layout/pc_layout.dart';
 import 'package:pluto/core/theme/app_colors.dart';
 import 'package:pluto/core/utils/press_bounce.dart';
@@ -41,44 +42,33 @@ Future<void> showAddFriendSheet(BuildContext context) async {
     showFriendsToast(context, AppStrings.friendsProfileNeed);
     return;
   }
-  return showModalBottomSheet<void>(
-    context: context,
-    isScrollControlled: true,
-    isDismissible: true,
-    useSafeArea: false,
-    showDragHandle: false,
-    enableDrag: true,
-    backgroundColor: Colors.transparent,
-    barrierColor: const Color(0x40000000),
-    elevation: 0,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-    ),
+  return showComposeSheet<void>(
+    context,
     builder: (context) => const AddFriendSheet(),
   );
 }
 
+OverlayEntry? _friendsToastEntry;
+
 void showFriendsToast(BuildContext context, String text) {
+  final previous = _friendsToastEntry;
+  _friendsToastEntry = null;
+  previous?.remove();
   final overlay = Overlay.of(context, rootOverlay: true);
-  late OverlayEntry entry;
+  late final OverlayEntry entry;
   entry = OverlayEntry(
-    builder: (context) {
-      final bottom = MediaQuery.paddingOf(context).bottom;
-      return IgnorePointer(
-        child: Align(
-          alignment: Alignment.bottomCenter,
-          child: Padding(
-            padding: EdgeInsets.fromLTRB(24, 0, 24, 20 + bottom),
-            child: _HintToast(text: text),
-          ),
-        ),
-      );
-    },
+    builder: (context) => _FriendsToastOverlay(
+      text: text,
+      onFinished: () {
+        if (entry.mounted) entry.remove();
+        if (identical(_friendsToastEntry, entry)) {
+          _friendsToastEntry = null;
+        }
+      },
+    ),
   );
+  _friendsToastEntry = entry;
   overlay.insert(entry);
-  Future<void>.delayed(const Duration(milliseconds: 2400), () {
-    entry.remove();
-  });
 }
 
 class AddFriendSheet extends StatefulWidget {
@@ -91,6 +81,7 @@ class AddFriendSheet extends StatefulWidget {
 class _AddFriendSheetState extends State<AddFriendSheet> {
   final _code = TextEditingController();
   final _service = FriendService.instance;
+  final _toastOverlay = OverlayPortalController();
   var _hint = '';
   var _hintVisible = false;
   Timer? _hintTimer;
@@ -103,6 +94,7 @@ class _AddFriendSheetState extends State<AddFriendSheet> {
   void initState() {
     super.initState();
     unawaited(_bootstrap());
+    if (PcLayout.isPc) _toastOverlay.show();
   }
 
   Future<void> _bootstrap() async {
@@ -127,15 +119,16 @@ class _AddFriendSheetState extends State<AddFriendSheet> {
     final bottom = MediaQuery.paddingOf(context).bottom;
     final keyboard = MediaQuery.viewInsetsOf(context).bottom;
     final maxHeight = MediaQuery.sizeOf(context).height * 0.78;
-    return Padding(
+    final sheet = Padding(
       padding: EdgeInsets.only(bottom: keyboard),
       child: ConstrainedBox(
         constraints: BoxConstraints(maxHeight: maxHeight),
-        child: DecoratedBox(
+        child: Container(
           decoration: BoxDecoration(
             color: colors.groupedBackground,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+            borderRadius: PcLayout.sheetRadius(),
           ),
+          clipBehavior: PcLayout.isPc ? Clip.antiAlias : Clip.none,
           child: Stack(
             fit: StackFit.loose,
             children: [
@@ -143,16 +136,20 @@ class _AddFriendSheetState extends State<AddFriendSheet> {
                 shrinkWrap: true,
                 padding: EdgeInsets.fromLTRB(16, 8, 16, 24 + bottom),
                 children: [
-                  Center(
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        color: colors.border,
-                        borderRadius: BorderRadius.circular(2),
+                  if (PcLayout.isPc)
+                    const SizedBox(height: 14)
+                  else ...[
+                    Center(
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: colors.border,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                        child: const SizedBox(width: 36, height: 4),
                       ),
-                      child: const SizedBox(width: 36, height: 4),
                     ),
-                  ),
-                  const SizedBox(height: 14),
+                    const SizedBox(height: 14),
+                  ],
                   Center(
                     child: Text(
                       AppStrings.friendsAdd,
@@ -170,32 +167,35 @@ class _AddFriendSheetState extends State<AddFriendSheet> {
                   _outgoingSection(),
                 ],
               ),
-              Positioned(
-                left: 24,
-                right: 24,
-                bottom: 12 + bottom,
-                child: IgnorePointer(
-                  child: AnimatedSlide(
-                    duration: const Duration(milliseconds: 280),
-                    curve: _hintVisible
-                        ? Curves.easeOutCubic
-                        : Curves.easeInCubic,
-                    offset: _hintVisible ? Offset.zero : const Offset(0, 0.18),
-                    child: AnimatedOpacity(
-                      duration: const Duration(milliseconds: 280),
-                      curve: _hintVisible
-                          ? Curves.easeOutCubic
-                          : Curves.easeInCubic,
-                      opacity: _hintVisible ? 1 : 0,
-                      child: _HintToast(text: _hint),
-                    ),
+              if (!PcLayout.isPc)
+                Positioned(
+                  left: 24,
+                  right: 24,
+                  bottom: 12 + bottom,
+                  child: _AnimatedHintToast(
+                    text: _hint,
+                    visible: _hintVisible,
                   ),
                 ),
-              ),
             ],
           ),
         ),
       ),
+    );
+    if (!PcLayout.isPc) return sheet;
+    return OverlayPortal(
+      controller: _toastOverlay,
+      overlayChildBuilder: (context) {
+        final safe = MediaQuery.paddingOf(context).bottom;
+        return PcLayout.pinBottomToast(
+          bottom: 20 + safe,
+          child: _AnimatedHintToast(
+            text: _hint,
+            visible: _hintVisible,
+          ),
+        );
+      },
+      child: sheet,
     );
   }
 
@@ -525,22 +525,11 @@ class _FriendsScreenState extends State<FriendsScreen> {
               ],
             ),
           ),
-          Positioned(
-            left: 24,
-            right: 24,
+          PcLayout.pinBottomToast(
             bottom: 20 + bottom,
-            child: IgnorePointer(
-              child: AnimatedSlide(
-                duration: const Duration(milliseconds: 280),
-                curve: _hintVisible ? Curves.easeOutCubic : Curves.easeInCubic,
-                offset: _hintVisible ? Offset.zero : const Offset(0, 0.18),
-                child: AnimatedOpacity(
-                  duration: const Duration(milliseconds: 280),
-                  curve: _hintVisible ? Curves.easeOutCubic : Curves.easeInCubic,
-                  opacity: _hintVisible ? 1 : 0,
-                  child: _HintToast(text: _hint),
-                ),
-              ),
+            child: _AnimatedHintToast(
+              text: _hint,
+              visible: _hintVisible,
             ),
           ),
         ],
@@ -1556,6 +1545,83 @@ class _TextAction extends StatelessWidget {
             fontWeight: weight,
             color: color,
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _FriendsToastOverlay extends StatefulWidget {
+  const _FriendsToastOverlay({
+    required this.text,
+    required this.onFinished,
+  });
+
+  final String text;
+  final VoidCallback onFinished;
+
+  @override
+  State<_FriendsToastOverlay> createState() => _FriendsToastOverlayState();
+}
+
+class _FriendsToastOverlayState extends State<_FriendsToastOverlay> {
+  var _visible = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) setState(() => _visible = true);
+    });
+    Future<void>.delayed(const Duration(milliseconds: 2400), () {
+      if (!mounted) return;
+      setState(() => _visible = false);
+      Future<void>.delayed(const Duration(milliseconds: 280), () {
+        if (mounted) widget.onFinished();
+      });
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bottom = MediaQuery.paddingOf(context).bottom;
+    return IgnorePointer(
+      child: Stack(
+        children: [
+          PcLayout.pinBottomToast(
+            bottom: 20 + bottom,
+            child: _AnimatedHintToast(
+              text: widget.text,
+              visible: _visible,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AnimatedHintToast extends StatelessWidget {
+  const _AnimatedHintToast({
+    required this.text,
+    required this.visible,
+  });
+
+  final String text;
+  final bool visible;
+
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+      child: AnimatedSlide(
+        duration: const Duration(milliseconds: 280),
+        curve: visible ? Curves.easeOutCubic : Curves.easeInCubic,
+        offset: visible ? Offset.zero : const Offset(0, 0.18),
+        child: AnimatedOpacity(
+          duration: const Duration(milliseconds: 280),
+          curve: visible ? Curves.easeOutCubic : Curves.easeInCubic,
+          opacity: visible ? 1 : 0,
+          child: _HintToast(text: text),
         ),
       ),
     );

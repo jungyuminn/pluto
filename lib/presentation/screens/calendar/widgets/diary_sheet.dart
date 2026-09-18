@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:pluto/core/layout/compose_sheet.dart';
+import 'package:pluto/core/layout/pc_layout.dart';
 import 'package:pluto/domain/entities/diary_entry.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/diary_form.dart';
 
@@ -8,18 +10,9 @@ Future<bool> showDiarySheet(
   DateTime? rangeEnd,
   DiaryEntry? initial,
 }) async {
-  final saved = await showModalBottomSheet<bool>(
-    context: context,
-    isScrollControlled: true,
-    useSafeArea: false,
-    showDragHandle: false,
-    enableDrag: true,
-    backgroundColor: Colors.transparent,
-    barrierColor: const Color(0x40000000),
-    elevation: 0,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-    ),
+  final saved = await showComposeSheet<bool>(
+    context,
+    maxWidth: PcLayout.pcDiaryWidth,
     builder: (context) => DiarySheet(
       date: date,
       rangeEnd: rangeEnd,

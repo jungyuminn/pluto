@@ -19,8 +19,8 @@ abstract final class ReleaseNotes {
     ReleaseNote(
       version: '1.4.3',
       fixes: [
-        'PC에서 제목을 치면 AI가 카테고리를 골라요',
-        'PC에서 할 일 추가 칸이 마지막에 저장한 칸으로 열려요',
+        'PC에서 AI가 카테고리를 안 고르던 문제를 고쳤어요',
+        'PC에서 할 일 추가 칸이 마지막에 저장한 칸으로 안 열리던 문제를 고쳤어요',
       ],
     ),
     ReleaseNote(

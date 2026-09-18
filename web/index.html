@@ -92,7 +92,7 @@
   </div>
   <script>
     (function () {
-      var key = 'pluto-sw-20260912-revert';
+      var key = 'pluto-sw-20260918-appcheck';
       if (!('serviceWorker' in navigator) || localStorage.getItem(key)) return;
       navigator.serviceWorker.getRegistrations().then(function (regs) {
         return Promise.all(regs.map(function (reg) { return reg.unregister(); }));

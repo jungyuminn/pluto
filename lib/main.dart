@@ -16,6 +16,7 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   try {
     if (kIsWeb || Platform.isAndroid || Platform.isIOS) {
+      AppCheckService.registerWebPlugin();
       await Firebase.initializeApp(
         options: DefaultFirebaseOptions.currentPlatform,
       );

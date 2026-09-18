@@ -26,7 +26,7 @@ abstract final class CategoryAiClient {
     final prompt = trimmed.length > 80 ? trimmed.substring(0, 80) : trimmed;
     try {
       final model = FirebaseAI.agentPlatform(
-        useLimitedUseAppCheckTokens: true,
+        useLimitedUseAppCheckTokens: !kIsWeb,
       ).generativeModel(
         model: 'gemini-3.5-flash-lite',
         generationConfig: GenerationConfig(

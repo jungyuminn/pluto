@@ -330,7 +330,7 @@ packages:
     source: hosted
     version: "0.4.2+1"
   firebase_app_check_web:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: firebase_app_check_web
       sha256: e1072f46b66c1530820ec617909576924a685e2cf7b78e62acd6af82b50609c4

@@ -7,6 +7,7 @@ import 'package:pluto/core/utils/focused_ime_text.dart';
 import 'package:pluto/core/theme/app_colors.dart';
 import 'package:pluto/core/theme/app_theme.dart';
 import 'package:pluto/core/utils/plain_text_editing_controller.dart';
+import 'package:pluto/data/datasources/last_event_category_preference.dart';
 import 'package:pluto/domain/entities/calendar_event.dart';
 import 'package:pluto/domain/entities/event_category.dart';
 import 'package:pluto/presentation/screens/add_company/widgets/missing_fields_dialog.dart';
@@ -22,6 +23,7 @@ import 'package:pluto/presentation/widgets/ai_category_chip.dart';
 import 'package:pluto/presentation/widgets/app_calendar/app_calendar.dart';
 import 'package:pluto/presentation/widgets/category_suggest_session.dart';
 import 'package:pluto/presentation/widgets/themed_asset.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AddEventForm extends StatefulWidget {
   const AddEventForm({
@@ -157,20 +159,14 @@ class _AddEventFormState extends State<AddEventForm>
     final scope = AppScope.of(context);
     final events = await scope.getCalendarEvents();
     final categories = await scope.getEventCategories();
+    final prefs = await SharedPreferences.getInstance();
     if (!mounted) return;
 
-    EventCategory? last;
-    if (events.isNotEmpty) {
-      final newest = events.reduce(
-        (a, b) => a.id.compareTo(b.id) >= 0 ? a : b,
-      );
-      for (final category in categories) {
-        if (category.id == newest.categoryId) {
-          last = category;
-          break;
-        }
-      }
-    }
+    EventCategory? last = LastEventCategoryPreference.resolve(
+      events: events,
+      categories: categories,
+      storedId: LastEventCategoryPreference(prefs: prefs).id,
+    );
     if (last == null) {
       final travelId = EventCategory.presets.first.id;
       for (final category in categories) {
@@ -402,6 +398,11 @@ class _AddEventFormState extends State<AddEventForm>
     final categoryId = _categoryId;
     final categoryName = _categoryName!;
     final categoryColor = _categoryColor!;
+    if (categoryId != null) {
+      final prefs = await SharedPreferences.getInstance();
+      await LastEventCategoryPreference(prefs: prefs).setId(categoryId);
+      if (!mounted) return;
+    }
     final scope = AppScope.of(context);
     final previous = await scope.getCalendarEvents();
     final initialRepeatId = initial?.repeatId;

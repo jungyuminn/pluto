@@ -18,6 +18,7 @@ import 'package:pluto/data/datasources/home_view_preference.dart';
 import 'package:pluto/data/datasources/home_memo_local_datasource.dart';
 import 'package:pluto/data/datasources/job_view_preference.dart';
 import 'package:pluto/data/datasources/last_category_color_preference.dart';
+import 'package:pluto/data/datasources/last_event_category_preference.dart';
 import 'package:pluto/data/datasources/license_view_preference.dart';
 import 'package:pluto/data/datasources/nav_preference.dart';
 import 'package:pluto/data/datasources/theme_preference.dart';
@@ -95,6 +96,7 @@ class CloudSyncSnapshot {
     ...DayEventsViewPreference.syncedKeys,
     ...CategorySuggestPreference.syncedKeys,
     ...LastCategoryColorPreference.syncedKeys,
+    ...LastEventCategoryPreference.syncedKeys,
     ...FriendCategoryPreference.syncedKeys,
     ...FriendOrderPreference.syncedKeys,
   ];
@@ -205,7 +207,8 @@ class CloudSyncSnapshot {
           await prefs.remove(key);
         } else if (CategorySuggestPreference.syncedKeys.contains(key)) {
           await prefs.setBool(key, false);
-        } else if (LastCategoryColorPreference.syncedKeys.contains(key)) {
+        } else if (LastCategoryColorPreference.syncedKeys.contains(key) ||
+            LastEventCategoryPreference.syncedKeys.contains(key)) {
           await prefs.remove(key);
         }
         continue;

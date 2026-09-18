@@ -1055,49 +1055,8 @@ class _FriendsScreenState extends State<FriendsScreen> {
   }
 
   Future<void> _removeFriend(FriendProfile friend) async {
-    final colors = AppColors.of(context);
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          backgroundColor: colors.card,
-          surfaceTintColor: Colors.transparent,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
-          ),
-          title: Text(
-            AppStrings.friendsRemoveTitle,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w800,
-              color: colors.text,
-            ),
-          ),
-          content: Text(
-            AppStrings.friendsRemoveBody,
-            style: TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w600,
-              color: colors.secondary,
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: Text(AppStrings.friendsCancel),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: Text(
-                AppStrings.friendsRemove,
-                style: TextStyle(color: colors.danger),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-    if (ok != true || !mounted) return;
+    final ok = await confirmRemoveFriend(context);
+    if (!ok || !mounted) return;
     try {
       await _service.remove(friend.uid);
     } catch (error) {
@@ -1427,7 +1386,7 @@ class _FriendTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(8, 4, 4, 4),
+      padding: const EdgeInsets.fromLTRB(8, 4, 12, 4),
       child: Row(
         children: [
           Expanded(

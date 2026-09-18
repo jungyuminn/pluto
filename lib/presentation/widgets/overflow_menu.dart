@@ -262,10 +262,11 @@ class _OverflowMenuButtonState extends State<OverflowMenuButton>
         child: AppBarIconSlot(
           selected: _portal.isShowing,
           onPressed: _toggle,
-          child: ThemedAsset(
+          child: AppAssetImage(
             asset: AppIcons.more,
             width: 18,
             height: 18,
+            color: AppColors.of(context).muted,
           ),
         ),
       ),

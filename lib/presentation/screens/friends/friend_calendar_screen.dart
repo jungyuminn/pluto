@@ -12,10 +12,58 @@ import 'package:pluto/data/datasources/day_emoji_store.dart';
 import 'package:pluto/data/datasources/friend_service.dart';
 import 'package:pluto/domain/entities/calendar_event.dart';
 import 'package:pluto/domain/entities/friend_profile.dart';
+import 'package:pluto/presentation/screens/add_company/widgets/missing_fields_dialog.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/calendar_month_grid.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/calendar_weekday_header.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/day_events_dialog.dart';
 import 'package:pluto/presentation/screens/friends/friend_avatar.dart';
+import 'package:pluto/presentation/widgets/overflow_menu.dart';
+
+Future<bool> confirmRemoveFriend(BuildContext context) async {
+  final colors = AppColors.of(context);
+  final ok = await showDialog<bool>(
+    context: context,
+    builder: (context) {
+      return AlertDialog(
+        backgroundColor: colors.card,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+        ),
+        title: Text(
+          AppStrings.friendsRemoveTitle,
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w800,
+            color: colors.text,
+          ),
+        ),
+        content: Text(
+          AppStrings.friendsRemoveBody,
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w600,
+            color: colors.secondary,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(AppStrings.friendsCancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(
+              AppStrings.friendsRemove,
+              style: TextStyle(color: colors.danger),
+            ),
+          ),
+        ],
+      );
+    },
+  );
+  return ok == true;
+}
 
 class FriendCalendarScreen extends StatefulWidget {
   const FriendCalendarScreen({super.key, required this.friend});
@@ -244,13 +292,30 @@ class _FriendCalendarScreenState extends State<FriendCalendarScreen> {
     );
   }
 
+  Future<void> _removeFriend() async {
+    final ok = await confirmRemoveFriend(context);
+    if (!ok || !mounted) return;
+    try {
+      await FriendService.instance.remove(widget.friend.uid);
+      if (!mounted) return;
+      Navigator.of(context).pop();
+    } catch (error) {
+      if (!mounted) return;
+      await showMissingFieldsDialog(
+        context,
+        title: AppStrings.friendsRemove,
+        body: FriendService.instance.messageOf(error),
+      );
+    }
+  }
+
   Widget _profileHeader(AppColors colors) {
     final friend = widget.friend;
     final name = friend.label;
     final id = friend.friendCode.trim();
     final showId = id.isNotEmpty && id != name;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 16, 16, 16),
+      padding: const EdgeInsets.fromLTRB(20, 16, 12, 16),
       child: Row(
         children: [
           FriendAvatar(size: 48, profile: friend),
@@ -282,6 +347,15 @@ class _FriendCalendarScreenState extends State<FriendCalendarScreen> {
                   ),
               ],
             ),
+          ),
+          OverflowMenuButton(
+            actions: [
+              OverflowMenuAction(
+                label: AppStrings.friendsRemove,
+                color: colors.danger,
+                onPressed: _removeFriend,
+              ),
+            ],
           ),
         ],
       ),

@@ -722,8 +722,8 @@ class _AllEventsFilterMenuButtonState extends State<AllEventsFilterMenuButton>
           onPressed: _toggle,
           child: ThemedAsset(
             asset: AppIcons.more,
-            width: 18,
-            height: 18,
+            width: 19,
+            height: 19,
           ),
         ),
       ),

@@ -253,8 +253,8 @@ class _JobOverflowMenuButtonState extends State<JobOverflowMenuButton>
           onPressed: _toggle,
           child: ThemedAsset(
             asset: AppIcons.more,
-            width: 18,
-            height: 18,
+            width: 19,
+            height: 19,
           ),
         ),
       ),

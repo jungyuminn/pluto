@@ -40,10 +40,10 @@ class HomeScreen extends StatefulWidget {
   final bool visible;
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  State<HomeScreen> createState() => HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
+class HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   var _todayEvents = <CalendarEvent>[];
   var _tomorrowEvents = <CalendarEvent>[];
   var _weekEvents = <CalendarEvent>[];
@@ -56,6 +56,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   var _loading = true;
   var _initialized = false;
   var _startMonday = false;
+  final _scroll = ScrollController();
   CalendarPreference? _calendarPrefs;
   NavPreference? _navPrefs;
   String? _weekLabel;
@@ -140,11 +141,21 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     _reload();
   }
 
+  void scrollToTop() {
+    if (!_scroll.hasClients) return;
+    _scroll.animateTo(
+      0,
+      duration: const Duration(milliseconds: 280),
+      curve: Curves.easeOutCubic,
+    );
+  }
+
   @override
   void dispose() {
     AppBackupService.revision.removeListener(_onBackupRestored);
     _calendarPrefs?.removeListener(_onCalendarPrefs);
     _navPrefs?.removeListener(_onNavPrefs);
+    _scroll.dispose();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -377,6 +388,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     );
 
     final list = ReorderableListView(
+      scrollController: _scroll,
       padding: EdgeInsets.fromLTRB(
         16,
         OverlayAppBar.overlapOf(context) + 8,

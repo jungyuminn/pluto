@@ -43,10 +43,10 @@ class CompanyList extends StatefulWidget {
   final double paddingTop;
 
   @override
-  State<CompanyList> createState() => _CompanyListState();
+  State<CompanyList> createState() => CompanyListState();
 }
 
-class _CompanyListState extends State<CompanyList>
+class CompanyListState extends State<CompanyList>
     with SingleTickerProviderStateMixin {
   final _scroll = ScrollController();
   final _listBoxKey = GlobalKey();
@@ -104,6 +104,15 @@ class _CompanyListState extends State<CompanyList>
     _rejectedReveal.dispose();
     _scroll.dispose();
     super.dispose();
+  }
+
+  void scrollToTop() {
+    if (!_scroll.hasClients) return;
+    _scroll.animateTo(
+      0,
+      duration: const Duration(milliseconds: 280),
+      curve: Curves.easeOutCubic,
+    );
   }
 
   void _sync(List<JobApplication> next) {

@@ -43,10 +43,10 @@ class LicenseList extends StatefulWidget {
   final double paddingTop;
 
   @override
-  State<LicenseList> createState() => _LicenseListState();
+  State<LicenseList> createState() => LicenseListState();
 }
 
-class _LicenseListState extends State<LicenseList>
+class LicenseListState extends State<LicenseList>
     with SingleTickerProviderStateMixin {
   final _scroll = ScrollController();
   final _listBoxKey = GlobalKey();
@@ -105,6 +105,15 @@ class _LicenseListState extends State<LicenseList>
     _expiredReveal.dispose();
     _scroll.dispose();
     super.dispose();
+  }
+
+  void scrollToTop() {
+    if (!_scroll.hasClients) return;
+    _scroll.animateTo(
+      0,
+      duration: const Duration(milliseconds: 280),
+      curve: Curves.easeOutCubic,
+    );
   }
 
   void _sync(List<License> next) {

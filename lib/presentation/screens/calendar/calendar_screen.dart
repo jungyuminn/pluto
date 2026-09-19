@@ -38,10 +38,10 @@ class CalendarScreen extends StatefulWidget {
   final bool visible;
 
   @override
-  State<CalendarScreen> createState() => _CalendarScreenState();
+  State<CalendarScreen> createState() => CalendarScreenState();
 }
 
-class _CalendarScreenState extends State<CalendarScreen>
+class CalendarScreenState extends State<CalendarScreen>
     with WidgetsBindingObserver, SingleTickerProviderStateMixin {
   static const _initialPage = 12000;
 
@@ -216,6 +216,20 @@ class _CalendarScreenState extends State<CalendarScreen>
       _visibleMonth = DateTime(year, _visibleMonth.month);
       _zoom = CalendarZoomLevel.months;
     });
+  }
+
+  void goToToday() {
+    final now = DateTime.now();
+    final current = DateTime(now.year, now.month);
+    final onToday = _zoom == CalendarZoomLevel.days &&
+        _visibleMonth.year == current.year &&
+        _visibleMonth.month == current.month;
+    if (onToday) return;
+    if (_zoom != CalendarZoomLevel.days) {
+      _showCurrentMonth(jump: true);
+      return;
+    }
+    _goToMonth(current);
   }
 
   void _showCurrentMonth({bool jump = false}) {

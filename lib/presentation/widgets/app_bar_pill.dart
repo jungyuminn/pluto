@@ -41,8 +41,8 @@ class AppBarPill extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             child: ThemedAsset(
               asset: asset,
-              width: 18,
-              height: 18,
+              width: 19,
+              height: 19,
               semanticLabel: label,
             ),
           ),

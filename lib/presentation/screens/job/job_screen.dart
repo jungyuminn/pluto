@@ -31,11 +31,13 @@ class JobScreen extends StatefulWidget {
   const JobScreen({super.key});
 
   @override
-  State<JobScreen> createState() => _JobScreenState();
+  State<JobScreen> createState() => JobScreenState();
 }
 
-class _JobScreenState extends State<JobScreen>
+class JobScreenState extends State<JobScreen>
     with SingleTickerProviderStateMixin {
+  final _jobsKey = GlobalKey<CompanyListState>();
+  final _licensesKey = GlobalKey<LicenseListState>();
   final _search = PlainTextEditingController();
   final _searchFocus = FocusNode();
   late final AnimationController _searchAnimation;
@@ -99,6 +101,14 @@ class _JobScreenState extends State<JobScreen>
     _initialized = true;
     _readPrefs();
     _reload();
+  }
+
+  void scrollToTop() {
+    if (_showLicense) {
+      _licensesKey.currentState?.scrollToTop();
+      return;
+    }
+    _jobsKey.currentState?.scrollToTop();
   }
 
   @override
@@ -458,7 +468,7 @@ class _JobScreenState extends State<JobScreen>
                             switchOutCurve: Curves.easeInCubic,
                             child: _showLicense
                                 ? LicenseList(
-                                    key: const ValueKey('licenses'),
+                                    key: _licensesKey,
                                     licenses: _visibleLicenses,
                                     onAdd: _openAddSheet,
                                     onOpen: _openEditLicense,
@@ -479,7 +489,7 @@ class _JobScreenState extends State<JobScreen>
                                     paddingTop: paddingTop,
                                   )
                                 : CompanyList(
-                                    key: const ValueKey('jobs'),
+                                    key: _jobsKey,
                                     applications: _visibleJobs,
                                     onAdd: _openAddSheet,
                                     onOpen: _openEditJob,

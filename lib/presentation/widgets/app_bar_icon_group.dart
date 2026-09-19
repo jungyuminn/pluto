@@ -52,8 +52,8 @@ class AppBarIconGroup extends StatelessWidget {
               onPressed: action.onPressed,
               child: ThemedAsset(
                 asset: action.asset,
-                width: 18,
-                height: 18,
+                width: 19,
+                height: 19,
                 semanticLabel: action.label,
               ),
             ),

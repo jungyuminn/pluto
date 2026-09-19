@@ -264,8 +264,8 @@ class _OverflowMenuButtonState extends State<OverflowMenuButton>
           onPressed: _toggle,
           child: AppAssetImage(
             asset: AppIcons.more,
-            width: 18,
-            height: 18,
+            width: 19,
+            height: 19,
             color: AppColors.of(context).muted,
           ),
         ),

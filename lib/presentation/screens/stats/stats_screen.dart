@@ -32,11 +32,12 @@ class StatsScreen extends StatefulWidget {
   final bool visible;
 
   @override
-  State<StatsScreen> createState() => _StatsScreenState();
+  State<StatsScreen> createState() => StatsScreenState();
 }
 
-class _StatsScreenState extends State<StatsScreen>
+class StatsScreenState extends State<StatsScreen>
     with SingleTickerProviderStateMixin {
+  final _scroll = ScrollController();
   late DateTime _month;
   late DateTime _zoomFocus;
   var _zoom = CalendarZoomLevel.days;
@@ -85,10 +86,37 @@ class _StatsScreenState extends State<StatsScreen>
     if (widget.visible && !oldWidget.visible) _reload();
   }
 
+  void scrollToTop() {
+    final now = _nowMonth;
+    if (_zoom != CalendarZoomLevel.days ||
+        _month.year != now.year ||
+        _month.month != now.month) {
+      setState(() {
+        _zoom = CalendarZoomLevel.days;
+        _zoomFocus = now;
+        _month = now;
+        _stats = MonthlyStats.of(
+          month: now,
+          events: _events,
+          applications: const [],
+        );
+      });
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_scroll.hasClients) return;
+      _scroll.animateTo(
+        0,
+        duration: const Duration(milliseconds: 280),
+        curve: Curves.easeOutCubic,
+      );
+    });
+  }
+
   @override
   void dispose() {
     AppBackupService.revision.removeListener(_reload);
     _wave.dispose();
+    _scroll.dispose();
     super.dispose();
   }
 
@@ -296,6 +324,7 @@ class _StatsScreenState extends State<StatsScreen>
                         },
                         child: PcLayout.constrainWidth(
                           ListView(
+                            controller: _scroll,
                             padding: EdgeInsets.fromLTRB(
                               20,
                               OverlayAppBar.overlapOf(context) - 30,

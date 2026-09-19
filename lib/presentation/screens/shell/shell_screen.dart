@@ -26,16 +26,21 @@ class _ShellScreenState extends State<ShellScreen>
   static const _statsTab = 2;
   static const _jobTab = 3;
 
+  final _homeKey = GlobalKey<HomeScreenState>();
+  final _calendarKey = GlobalKey<CalendarScreenState>();
+  final _statsKey = GlobalKey<StatsScreenState>();
+  final _jobKey = GlobalKey<JobScreenState>();
+
   Widget _tabAt(int index) {
     switch (index) {
       case 0:
-        return HomeScreen(visible: _index == 0);
+        return HomeScreen(key: _homeKey, visible: _index == 0);
       case 1:
-        return CalendarScreen(visible: _index == 1);
+        return CalendarScreen(key: _calendarKey, visible: _index == 1);
       case _statsTab:
-        return StatsScreen(visible: _index == _statsTab);
+        return StatsScreen(key: _statsKey, visible: _index == _statsTab);
       default:
-        return const JobScreen();
+        return JobScreen(key: _jobKey);
     }
   }
 
@@ -156,7 +161,11 @@ class _ShellScreenState extends State<ShellScreen>
     if (_nav?.showStatsTab != true && index == _statsTab) {
       index = _calendarTab;
     }
-    if (index == _index) return;
+    if (index == _index) {
+      if (_tutorial?.active == true) return;
+      _resetCurrentTab();
+      return;
+    }
     final fromLeft = _visualOrder(index) < _visualOrder(_index);
     final dx = fromLeft ? -0.18 : 0.18;
     final curve = CurvedAnimation(
@@ -188,6 +197,19 @@ class _ShellScreenState extends State<ShellScreen>
       _index = index;
     });
     _controller.forward(from: 0);
+  }
+
+  void _resetCurrentTab() {
+    switch (_index) {
+      case 0:
+        _homeKey.currentState?.scrollToTop();
+      case _calendarTab:
+        _calendarKey.currentState?.goToToday();
+      case _statsTab:
+        _statsKey.currentState?.scrollToTop();
+      case _jobTab:
+        _jobKey.currentState?.scrollToTop();
+    }
   }
 
   @override

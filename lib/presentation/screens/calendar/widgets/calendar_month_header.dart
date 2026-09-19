@@ -503,8 +503,8 @@ class _CalendarMonthMenuButtonState extends State<CalendarMonthMenuButton>
           onPressed: _toggle,
           child: ThemedAsset(
             asset: AppIcons.more,
-            width: 18,
-            height: 18,
+            width: 19,
+            height: 19,
           ),
         ),
       ),

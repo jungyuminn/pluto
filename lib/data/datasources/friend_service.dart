@@ -481,6 +481,64 @@ class FriendService {
     return saved;
   }
 
+  Future<FriendProfile> clearPhoto() async {
+    final uid = _uid;
+    if (uid == null) {
+      throw const FriendException('login-required');
+    }
+    _avatarMem.remove(uid);
+    _avatarGen[uid] = (_avatarGen[uid] ?? 0) + 1;
+    avatarTick.value++;
+    try {
+      final file = await _avatarFile(uid);
+      if (file != null && await file.exists()) await file.delete();
+    } catch (_) {}
+    final current = profile.value;
+    if (current != null) {
+      final next = current.copyWith(photoURL: '');
+      profile.value = next;
+      _sessionUid = uid;
+      _sessionProfile = next;
+      await _writeCachedProfile();
+    }
+    for (final ext in const ['jpg', 'png', 'webp']) {
+      try {
+        await FirebaseStorage.instance
+            .ref('users/$uid/profile/avatar.$ext')
+            .delete();
+      } catch (_) {}
+    }
+    try {
+      final data = await _call('updateFriendPhoto', {'photoURL': ''});
+      final saved = FriendProfile.fromMap(data);
+      profile.value = saved;
+      _sessionUid = uid;
+      _sessionProfile = saved;
+      await _writeCachedProfile();
+      return saved;
+    } on FriendException catch (error) {
+      if (error.code != 'bad-photo') rethrow;
+      return _clearPhotoViaStore();
+    }
+  }
+
+  Future<FriendProfile> _clearPhotoViaStore() async {
+    final uid = _uid;
+    if (uid == null) throw const FriendException('login-required');
+    final ref = _db.collection('profiles').doc(uid);
+    await ref.set({
+      'photoURL': '',
+      'updatedAt': DateTime.now().millisecondsSinceEpoch,
+    }, SetOptions(merge: true));
+    final saved = await ref.get();
+    final next = _profileFromStore(uid, saved.data() ?? {});
+    profile.value = next;
+    _sessionUid = uid;
+    _sessionProfile = next;
+    await _writeCachedProfile();
+    return next;
+  }
+
   Future<FriendProfile> setFriendCode(String code) async {
     final user = FirebaseAuth.instance.currentUser;
     final name = user == null ? null : AppAuthService.socialDisplayName(user);

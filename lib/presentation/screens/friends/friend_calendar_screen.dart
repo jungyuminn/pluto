@@ -331,6 +331,10 @@ class _FriendCalendarScreenState extends State<FriendCalendarScreen> {
     try {
       await FriendService.instance.remove(widget.friend.uid);
       if (!mounted) return;
+      showFriendsToast(
+        context,
+        AppStrings.friendsUnfriended(widget.friend.label),
+      );
       Navigator.of(context).pop();
     } catch (error) {
       if (!mounted) return;
@@ -417,11 +421,18 @@ class _FriendCalendarScreenState extends State<FriendCalendarScreen> {
                             : AppStrings.friendsHomePin,
                         leadingAsset: AppIcons.addHome,
                         leadingFlipX: true,
-                        onPressed: () =>
-                            FriendHomePreference.instance.setPinned(
-                          friend.uid,
-                          !pinned,
-                        ),
+                        onPressed: () {
+                          final next = !pinned;
+                          FriendHomePreference.instance.setPinned(
+                            friend.uid,
+                            next,
+                          );
+                          _toast(
+                            next
+                                ? AppStrings.friendsHomePinned(friend.label)
+                                : AppStrings.friendsHomeUnpinned(friend.label),
+                          );
+                        },
                       ),
                       OverflowMenuAction(
                         label: AppStrings.friendsRemove,

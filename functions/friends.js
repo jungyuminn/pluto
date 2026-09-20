@@ -276,6 +276,7 @@ async function propagateName(uid, name) {
 
 function parsePhotoURL(raw) {
   const url = String(raw || "").trim();
+  if (!url) return "";
   if (!url.startsWith("https://") || url.length > 2048) {
     throw new HttpsError("invalid-argument", "bad-photo");
   }

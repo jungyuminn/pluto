@@ -836,6 +836,12 @@ class AppStrings {
   static const friendsCategoryShareHint = '친구에게 보여줄 카테고리를 설정해요';
   static const friendsPhotoFailed = '사진을 올리지 못했어요';
   static const friendsPhotoTooBig = '5MB보다 작은 사진을 골라 주세요';
+  static const friendsPhotoTitle = '프로필 이미지';
+  static const friendsPhotoPick = '바꾸기';
+  static const friendsPhotoClear = '삭제';
+  static const friendsPhotoClearTitle = '프로필 이미지를 삭제할까요?';
+  static const friendsPhotoClearBody = '기본 이미지로 변경돼요';
+  static const friendsPhotoCleared = '기본 이미지로 바꿨어요';
   static const friendsAccount = '계정';
   static const friendsMyName = '이름';
   static const friendsMyNameHint = '친구에게 보이는 이름이에요';
@@ -878,7 +884,13 @@ class AppStrings {
   static const friendsFavoriteRemoved = '즐겨찾기에서 해제했어요';
   static const friendsHomePin = '홈 화면에 추가';
   static const friendsHomeUnpin = '홈 화면에서 삭제';
+  static String friendsHomePinned(String name) =>
+      '${name.trim()}님을 홈 화면에 추가했어요';
+  static String friendsHomeUnpinned(String name) =>
+      '${name.trim()}님을 홈 화면에서 삭제했어요';
   static const friendsRemove = '친구 끊기';
+  static String friendsUnfriended(String name) =>
+      '${name.trim()}님과 친구를 끊었어요';
   static const friendsRemoveTitle = '친구를 끊을까요?';
   static const friendsRemoveBody = '상대 일정도 더 이상 보이지 않아요';
   static const friendsNeedLogin = '로그인하면 친구를 추가할 수 있어요';
@@ -886,7 +898,8 @@ class AppStrings {
   static const friendsSelf = '내 아이디예요';
   static const friendsAlready = '이미 친구예요';
   static const friendsAlreadySent = '이미 친구 요청을 보냈어요';
-  static const friendsSent = '친구 요청을 보냈어요';
+  static String friendsSent(String name) =>
+      '${name.trim()}님에게 친구 요청을 보냈어요';
   static const friendsAccepted = '친구가 되었어요';
   static const friendsRateLimited = '잠시 후 다시 시도해 주세요';
   static const friendsFailed = '잠시 후 다시 시도해 주세요';

@@ -337,7 +337,7 @@ class _AddFriendSheetState extends State<AddFriendSheet> {
       setState(() {
         _draftOutgoing = [..._draftOutgoing, draft!];
       });
-      _toast(AppStrings.friendsSent);
+      _toast(AppStrings.friendsSent(other.label));
       final result = await _service.sendRequest(code);
       if (_cancelWhenReady.contains(code)) {
         if (result.requestId.isNotEmpty) {
@@ -444,6 +444,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
   var _savingCode = false;
   var _savingName = false;
   var _savingPhoto = false;
+  var _photoMenuOpen = false;
   Uint8List? _preview;
   var _hint = '';
   var _hintVisible = false;
@@ -753,11 +754,17 @@ class _FriendsScreenState extends State<FriendsScreen> {
                         favorited: FriendFavoritePreference.instance
                             .contains(friend.uid),
                         onPressed: () => _openCalendar(friend),
-                        onHomeChanged: (value) =>
-                            FriendHomePreference.instance.setPinned(
-                          friend.uid,
-                          value,
-                        ),
+                        onHomeChanged: (value) {
+                          FriendHomePreference.instance.setPinned(
+                            friend.uid,
+                            value,
+                          );
+                          _toast(
+                            value
+                                ? AppStrings.friendsHomePinned(friend.label)
+                                : AppStrings.friendsHomeUnpinned(friend.label),
+                          );
+                        },
                         onFavoriteChanged: (value) =>
                             _toggleFavorite(friend, value),
                         onRemove: () => _removeFriend(friend),
@@ -795,28 +802,94 @@ class _FriendsScreenState extends State<FriendsScreen> {
   }
 
   Widget _photoButton(AppColors colors, FriendProfile? profile) {
-    return PressBounce(
-      onPressed: _savingPhoto ? null : _pickPhoto,
-      pressedScale: 0.96,
-      pressedColor: Colors.transparent,
-      child: SizedBox(
-        width: 84,
-        height: 84,
-        child: Stack(
-          clipBehavior: Clip.none,
-          children: [
-            FriendAvatar(
+    final hasPhoto = _hasPhoto(profile);
+    final open = hasPhoto && _photoMenuOpen;
+    return SizedBox(
+      width: 84,
+      height: 84,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          PressBounce(
+            onPressed: _savingPhoto || open
+                ? null
+                : () {
+                    if (!hasPhoto) {
+                      unawaited(_pickPhoto());
+                      return;
+                    }
+                    setState(() => _photoMenuOpen = true);
+                  },
+            pressedScale: 0.96,
+            pressedColor: Colors.transparent,
+            child: FriendAvatar(
               size: 84,
               profile: profile,
               preview: _preview,
               showFavorite: false,
             ),
-            Positioned(
-              right: -2,
-              bottom: -2,
+          ),
+          Positioned.fill(
+            child: IgnorePointer(
+              ignoring: !open,
+              child: AnimatedOpacity(
+                opacity: open ? 1 : 0,
+                duration: const Duration(milliseconds: 180),
+                curve: Curves.easeOutCubic,
+                child: ClipOval(
+                  child: ColoredBox(
+                    color: const Color(0xB8000000),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: _photoSplit(
+                            icon: AppIcons.edit,
+                            label: AppStrings.friendsPhotoPick,
+                            onPressed: () {
+                              setState(() => _photoMenuOpen = false);
+                              unawaited(_pickPhoto());
+                            },
+                          ),
+                        ),
+                        ColoredBox(
+                          color: Colors.white.withValues(alpha: 0.28),
+                          child: const SizedBox(width: 1, height: 84),
+                        ),
+                        Expanded(
+                          child: _photoSplit(
+                            icon: AppIcons.trashCan,
+                            label: AppStrings.friendsPhotoClear,
+                            danger: true,
+                            onPressed: () => unawaited(_confirmClearPhoto()),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            right: -2,
+            bottom: -2,
+            child: PressBounce(
+              onPressed: _savingPhoto
+                  ? null
+                  : () {
+                      if (!hasPhoto) {
+                        unawaited(_pickPhoto());
+                        return;
+                      }
+                      setState(() => _photoMenuOpen = !_photoMenuOpen);
+                    },
+              pressedScale: 0.92,
+              pressedColor: Colors.transparent,
               child: DecoratedBox(
                 decoration: BoxDecoration(
-                  color: FriendAvatar.accentOf(context),
+                  color: open
+                      ? colors.text
+                      : FriendAvatar.accentOf(context),
                   shape: BoxShape.circle,
                   border: Border.all(color: colors.card, width: 2),
                 ),
@@ -824,20 +897,182 @@ class _FriendsScreenState extends State<FriendsScreen> {
                   width: 22,
                   height: 22,
                   child: Center(
-                    child: AppAssetImage(
-                      asset: AppIcons.edit,
-                      width: 11,
-                      height: 11,
-                      color: Colors.white,
-                    ),
+                    child: open
+                        ? Icon(
+                            Icons.close_rounded,
+                            size: 12,
+                            color: colors.card,
+                          )
+                        : const AppAssetImage(
+                            asset: AppIcons.edit,
+                            width: 11,
+                            height: 11,
+                            color: Colors.white,
+                          ),
                   ),
                 ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _photoSplit({
+    required String icon,
+    required String label,
+    required VoidCallback onPressed,
+    bool danger = false,
+  }) {
+    return PressBounce(
+      onPressed: onPressed,
+      pressedScale: 0.94,
+      pressedColor: Colors.white.withValues(alpha: 0.12),
+      borderRadius: BorderRadius.zero,
+      child: ColoredBox(
+        color: danger
+            ? const Color(0x33FF3B30)
+            : Colors.transparent,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            AppAssetImage(
+              asset: icon,
+              width: 16,
+              height: 16,
+              color: Colors.white,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                fontFamily: AppFonts.of(context),
+                fontSize: 10,
+                fontWeight: FontWeight.w600,
+                height: 1,
+                color: Colors.white,
               ),
             ),
           ],
         ),
       ),
     );
+  }
+
+  bool _hasPhoto(FriendProfile? profile) {
+    if (_preview != null) return true;
+    return FriendService.instance.avatarBytes(profile?.uid) != null;
+  }
+
+  Future<void> _confirmClearPhoto() async {
+    if (_savingPhoto) return;
+    final colors = AppColors.of(context);
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: colors.card,
+          surfaceTintColor: Colors.transparent,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
+          title: Text(
+            AppStrings.friendsPhotoClearTitle,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w800,
+              color: colors.text,
+            ),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                AppStrings.friendsPhotoClearBody,
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  color: colors.secondary,
+                ),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  Expanded(
+                    child: PressBounce(
+                      onPressed: () => Navigator.pop(context, false),
+                      color: colors.border,
+                      pressedColor:
+                          Color.lerp(colors.border, Colors.black, 0.12)!,
+                      borderRadius: BorderRadius.circular(14),
+                      child: SizedBox(
+                        height: 48,
+                        child: Center(
+                          child: Text(
+                            AppStrings.cancel,
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w800,
+                              color: colors.text,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: PressBounce(
+                      onPressed: () => Navigator.pop(context, true),
+                      color: colors.danger,
+                      pressedColor:
+                          Color.lerp(colors.danger, Colors.black, 0.16)!,
+                      borderRadius: BorderRadius.circular(14),
+                      child: const SizedBox(
+                        height: 48,
+                        child: Center(
+                          child: Text(
+                            AppStrings.delete,
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w800,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+    if (!mounted || ok != true) return;
+    await _clearPhoto();
+  }
+
+  Future<void> _clearPhoto() async {
+    if (_savingPhoto) return;
+    setState(() {
+      _preview = null;
+      _photoMenuOpen = false;
+      _savingPhoto = true;
+    });
+    try {
+      await _service.clearPhoto();
+      if (!mounted) return;
+      setState(() => _savingPhoto = false);
+      _toast(AppStrings.friendsPhotoCleared);
+    } catch (error) {
+      if (!mounted) return;
+      setState(() => _savingPhoto = false);
+      _toast(_service.messageOf(error));
+    }
   }
 
   Future<void> _pickPhoto() async {
@@ -1210,6 +1445,8 @@ class _FriendsScreenState extends State<FriendsScreen> {
     if (!ok || !mounted) return;
     try {
       await _service.remove(friend.uid);
+      if (!mounted) return;
+      _toast(AppStrings.friendsUnfriended(friend.label));
     } catch (error) {
       if (!mounted) return;
       _toast(_service.messageOf(error));

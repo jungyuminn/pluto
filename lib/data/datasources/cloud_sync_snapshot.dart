@@ -13,6 +13,7 @@ import 'package:pluto/data/datasources/category_suggest_preference.dart';
 import 'package:pluto/data/datasources/day_events_view_preference.dart';
 import 'package:pluto/data/datasources/font_preference.dart';
 import 'package:pluto/data/datasources/friend_category_preference.dart';
+import 'package:pluto/data/datasources/friend_favorite_preference.dart';
 import 'package:pluto/data/datasources/friend_home_preference.dart';
 import 'package:pluto/data/datasources/friend_order_preference.dart';
 import 'package:pluto/data/datasources/home_view_preference.dart';
@@ -101,6 +102,7 @@ class CloudSyncSnapshot {
     ...FriendCategoryPreference.syncedKeys,
     ...FriendOrderPreference.syncedKeys,
     ...FriendHomePreference.syncedKeys,
+    ...FriendFavoritePreference.syncedKeys,
   ];
 
   static const syncedKeys = [
@@ -168,6 +170,7 @@ class CloudSyncSnapshot {
     if (key == diaryCoverOrderKey) return <String>[];
     if (key == FriendCategoryPreference.key) return <String>[];
     if (key == FriendOrderPreference.key) return <String>[];
+    if (key == FriendFavoritePreference.key) return <String>[];
     if (key == FriendHomePreference.uidsKey) return <String>[];
     if (key == FriendHomePreference.seenKey) return <String>[];
     if (key == FriendHomePreference.seededKey) return false;
@@ -302,6 +305,9 @@ class CloudSyncSnapshot {
     if ((_listOf(dump, FriendOrderPreference.key) ?? const []).isNotEmpty) {
       return false;
     }
+    if ((_listOf(dump, FriendFavoritePreference.key) ?? const []).isNotEmpty) {
+      return false;
+    }
     if (_boolOf(dump, FriendHomePreference.seededKey) == true) return false;
     if ((_listOf(dump, FriendHomePreference.uidsKey) ?? const []).isNotEmpty) {
       return false;
@@ -380,6 +386,15 @@ class CloudSyncSnapshot {
       out.remove(FriendOrderPreference.key);
     } else {
       out[FriendOrderPreference.key] = {'t': 'l', 'v': friendOrder};
+    }
+    final friendFavorites = _mergeStringLists(
+      _listOf(local, FriendFavoritePreference.key),
+      _listOf(remote, FriendFavoritePreference.key),
+    );
+    if (friendFavorites == null) {
+      out.remove(FriendFavoritePreference.key);
+    } else {
+      out[FriendFavoritePreference.key] = {'t': 'l', 'v': friendFavorites};
     }
     final localHomeSeeded = _boolOf(local, FriendHomePreference.seededKey) == true;
     final remoteHomeSeeded =

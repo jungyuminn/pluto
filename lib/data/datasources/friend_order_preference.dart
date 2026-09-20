@@ -39,21 +39,42 @@ class FriendOrderPreference {
     await prefs.setStringList(key, next);
   }
 
+  Future<void> replaceSubsequence(List<String> visible) {
+    final moved = [
+      for (final id in visible)
+        if (id.trim().isNotEmpty) id.trim(),
+    ];
+    if (uids.isEmpty) return setOrder(moved);
+    final ids = {for (final id in moved) id};
+    final iter = moved.iterator;
+    final next = <String>[];
+    for (final id in uids) {
+      if (ids.contains(id)) {
+        if (iter.moveNext()) next.add(iter.current);
+      } else {
+        next.add(id);
+      }
+    }
+    for (final id in moved) {
+      if (!next.contains(id)) next.add(id);
+    }
+    return setOrder(next);
+  }
+
   List<FriendProfile> apply(List<FriendProfile> items) {
     if (items.length <= 1) return items;
     final order = listenable.value;
-    if (order.isEmpty) {
-      return [...items]..sort((a, b) => a.label.compareTo(b.label));
-    }
+    if (order.isEmpty) return items;
     final byId = {for (final item in items) item.uid: item};
     final out = <FriendProfile>[];
     for (final id in order) {
       final item = byId.remove(id);
       if (item != null) out.add(item);
     }
-    final rest = byId.values.toList()
-      ..sort((a, b) => a.label.compareTo(b.label));
-    out.addAll(rest);
+    out.addAll([
+      for (final item in items)
+        if (byId.containsKey(item.uid)) item,
+    ]);
     return out;
   }
 }

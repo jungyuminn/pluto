@@ -5,7 +5,7 @@
     "display": "standalone",
     "background_color": "#FFFFFF",
     "theme_color": "#FFFFFF",
-    "description": "나의 하루가 모이는 캘린더",
+    "description": "오직 나만의 캘린더",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

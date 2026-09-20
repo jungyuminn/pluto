@@ -13,13 +13,17 @@ import 'package:pluto/core/theme/app_colors.dart';
 import 'package:pluto/core/utils/press_bounce.dart';
 import 'package:pluto/data/datasources/app_auth_service.dart';
 import 'package:pluto/data/datasources/diary_photo_storage.dart';
+import 'package:pluto/data/datasources/friend_favorite_preference.dart';
 import 'package:pluto/data/datasources/friend_home_preference.dart';
+import 'package:pluto/data/datasources/friend_order_preference.dart';
 import 'package:pluto/data/datasources/friend_service.dart';
 import 'package:pluto/data/datasources/synced_file_store.dart';
 import 'package:pluto/domain/entities/friend_profile.dart';
 import 'package:pluto/presentation/screens/friends/category_share_sheet.dart';
 import 'package:pluto/presentation/screens/friends/friend_avatar.dart';
 import 'package:pluto/presentation/screens/friends/friend_calendar_screen.dart';
+import 'package:pluto/presentation/screens/friends/friend_star_button.dart';
+import 'package:pluto/presentation/screens/friends/friends_toast.dart';
 import 'package:pluto/presentation/widgets/overflow_menu.dart';
 import 'package:pluto/presentation/widgets/themed_asset.dart';
 
@@ -47,29 +51,6 @@ Future<void> showAddFriendSheet(BuildContext context) async {
     context,
     builder: (context) => const AddFriendSheet(),
   );
-}
-
-OverlayEntry? _friendsToastEntry;
-
-void showFriendsToast(BuildContext context, String text) {
-  final previous = _friendsToastEntry;
-  _friendsToastEntry = null;
-  previous?.remove();
-  final overlay = Overlay.of(context, rootOverlay: true);
-  late final OverlayEntry entry;
-  entry = OverlayEntry(
-    builder: (context) => _FriendsToastOverlay(
-      text: text,
-      onFinished: () {
-        if (entry.mounted) entry.remove();
-        if (identical(_friendsToastEntry, entry)) {
-          _friendsToastEntry = null;
-        }
-      },
-    ),
-  );
-  _friendsToastEntry = entry;
-  overlay.insert(entry);
 }
 
 class AddFriendSheet extends StatefulWidget {
@@ -173,7 +154,7 @@ class _AddFriendSheetState extends State<AddFriendSheet> {
                   left: 24,
                   right: 24,
                   bottom: 12 + bottom,
-                  child: _AnimatedHintToast(
+                  child: AnimatedFriendsToast(
                     text: _hint,
                     visible: _hintVisible,
                   ),
@@ -190,7 +171,7 @@ class _AddFriendSheetState extends State<AddFriendSheet> {
         final safe = MediaQuery.paddingOf(context).bottom;
         return PcLayout.pinBottomToast(
           bottom: 20 + safe,
-          child: _AnimatedHintToast(
+          child: AnimatedFriendsToast(
             text: _hint,
             visible: _hintVisible,
           ),
@@ -466,6 +447,12 @@ class _FriendsScreenState extends State<FriendsScreen> {
   Uint8List? _preview;
   var _hint = '';
   var _hintVisible = false;
+  String? _flyingUid;
+  OverlayEntry? _flightEntry;
+  final _flightKey = GlobalKey<_FlyingFriendTileState>();
+  final _tileKeys = <String, GlobalKey>{};
+  var _shownFavorites = const <FriendProfile>[];
+  var _shownRegulars = const <FriendProfile>[];
   Timer? _hintTimer;
 
   @override
@@ -494,7 +481,92 @@ class _FriendsScreenState extends State<FriendsScreen> {
     _myCode.dispose();
     _myName.dispose();
     _hintTimer?.cancel();
+    _flightEntry?.remove();
     super.dispose();
+  }
+
+  GlobalKey _tileKey(String uid) {
+    return _tileKeys.putIfAbsent(uid, GlobalKey.new);
+  }
+
+  Rect? _tileRect(String uid) {
+    final box = _tileKey(uid).currentContext?.findRenderObject() as RenderBox?;
+    if (box == null || !box.hasSize || !box.attached) return null;
+    return box.localToGlobal(Offset.zero) & box.size;
+  }
+
+  bool _willFavoriteMove(FriendProfile friend, bool nextFavorite) {
+    final favs = _shownFavorites;
+    final regs = _shownRegulars;
+    if (nextFavorite) {
+      if (favs.isEmpty && regs.length <= 1) return false;
+      final fromSlot =
+          favs.length + regs.indexWhere((item) => item.uid == friend.uid);
+      return fromSlot != favs.length;
+    }
+    if (regs.isEmpty && favs.length <= 1) return false;
+    final fromSlot = favs.indexWhere((item) => item.uid == friend.uid);
+    final nextRegs = FriendOrderPreference.instance.apply([
+      ...regs,
+      friend,
+    ]);
+    final toSlot = (favs.length - 1) +
+        nextRegs.indexWhere((item) => item.uid == friend.uid);
+    return fromSlot != toSlot;
+  }
+
+  void _toggleFavorite(FriendProfile friend, bool value) {
+    final from = _tileRect(friend.uid);
+    final moves = _willFavoriteMove(friend, value);
+    if (moves) {
+      _flyingUid = friend.uid;
+      if (from != null) _parkFlight(friend, favorited: value, from: from);
+    }
+    FriendFavoritePreference.instance.setFavorite(friend.uid, value);
+    _toast(
+      value
+          ? AppStrings.friendsFavoriteAdded
+          : AppStrings.friendsFavoriteRemoved,
+    );
+    if (!moves) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final to = _tileRect(friend.uid);
+      if (to == null || (from != null && (from.center - to.center).distance < 2)) {
+        _clearFlight();
+        return;
+      }
+      _flightKey.currentState?.flyTo(to);
+    });
+  }
+
+  void _parkFlight(
+    FriendProfile friend, {
+    required bool favorited,
+    required Rect from,
+  }) {
+    _flightEntry?.remove();
+    late final OverlayEntry entry;
+    entry = OverlayEntry(
+      builder: (context) => _FlyingFriendTile(
+        key: _flightKey,
+        friend: friend,
+        favorited: favorited,
+        homePinned: FriendHomePreference.instance.contains(friend.uid),
+        from: from,
+        onDone: _clearFlight,
+      ),
+    );
+    _flightEntry = entry;
+    Overlay.of(context, rootOverlay: true).insert(entry);
+  }
+
+  void _clearFlight() {
+    _flightEntry?.remove();
+    _flightEntry = null;
+    if (!mounted) return;
+    if (_flyingUid == null) return;
+    setState(() => _flyingUid = null);
   }
 
   @override
@@ -528,7 +600,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
           ),
           PcLayout.pinBottomToast(
             bottom: 20 + bottom,
-            child: _AnimatedHintToast(
+            child: AnimatedFriendsToast(
               text: _hint,
               visible: _hintVisible,
             ),
@@ -542,7 +614,26 @@ class _FriendsScreenState extends State<FriendsScreen> {
     return StreamBuilder(
       stream: _service.friends(),
       builder: (context, snapshot) {
-        final friends = snapshot.data ?? const <FriendProfile>[];
+        return ListenableBuilder(
+          listenable: Listenable.merge([
+            FriendFavoritePreference.instance.listenable,
+            FriendHomePreference.instance.listenable,
+            FriendOrderPreference.instance.listenable,
+          ]),
+          builder: (context, _) {
+        final friends = FriendFavoritePreference.instance.apply(
+          snapshot.data ?? const <FriendProfile>[],
+        );
+        final favorites = [
+          for (final friend in friends)
+            if (FriendFavoritePreference.instance.contains(friend.uid)) friend,
+        ];
+        final regulars = [
+          for (final friend in friends)
+            if (!FriendFavoritePreference.instance.contains(friend.uid)) friend,
+        ];
+        _shownFavorites = favorites;
+        _shownRegulars = regulars;
         return Padding(
           padding: const EdgeInsets.only(top: 24),
           child: Column(
@@ -556,82 +647,125 @@ class _FriendsScreenState extends State<FriendsScreen> {
                 )
               else
                 _Card(
-                  child: ReorderableListView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    padding: EdgeInsets.zero,
-                    buildDefaultDragHandles: false,
-                    itemCount: friends.length,
-                    proxyDecorator: (child, index, animation) {
-                      return AnimatedBuilder(
-                        animation: animation,
-                        builder: (context, child) {
-                          final t = Curves.easeOutBack.transform(
-                            animation.value,
-                          );
-                          return Transform.translate(
-                            offset: Offset(0, -4 * t),
-                            child: Transform.scale(
-                              scale: 1 + 0.02 * t,
-                              child: child,
-                            ),
-                          );
-                        },
-                        child: child,
-                      );
-                    },
-                    onReorderStart: (_) => HapticFeedback.mediumImpact(),
-                    onReorder: (oldIndex, newIndex) {
-                      unawaited(
-                        _service.reorderFriends(
-                          friends,
-                          oldIndex: oldIndex,
-                          newIndex: newIndex,
-                        ),
-                      );
-                    },
-                    itemBuilder: (context, index) {
-                      return ReorderableDelayedDragStartListener(
-                        key: ValueKey(friends[index].uid),
-                        index: index,
-                        child: Column(
-                          children: [
-                            if (index > 0)
-                              Padding(
-                                padding: const EdgeInsets.only(left: 20),
-                                child: Divider(
-                                  height: 1,
-                                  thickness: 0.5,
-                                  color: colors.border,
-                                ),
+                  child: Column(
+                    children: [
+                      if (favorites.isNotEmpty)
+                        _friendGroup(
+                          colors,
+                          friends: favorites,
+                          leadingDivider: false,
+                          onReorder: (oldIndex, newIndex) {
+                            unawaited(
+                              _service.reorderFavorites(
+                                favorites,
+                                oldIndex: oldIndex,
+                                newIndex: newIndex,
                               ),
-                            ListenableBuilder(
-                              listenable:
-                                  FriendHomePreference.instance.listenable,
-                              builder: (context, _) {
-                                final friend = friends[index];
-                                final pinned = FriendHomePreference.instance
-                                    .contains(friend.uid);
-                                return _FriendTile(
-                                  friend: friend,
-                                  homePinned: pinned,
-                                  onPressed: () => _openCalendar(friend),
-                                  onHomeChanged: (value) =>
-                                      FriendHomePreference.instance.setPinned(
-                                    friend.uid,
-                                    value,
-                                  ),
-                                  onRemove: () => _removeFriend(friend),
-                                );
-                              },
-                            ),
-                          ],
+                            );
+                          },
                         ),
-                      );
-                    },
+                      if (regulars.isNotEmpty)
+                        _friendGroup(
+                          colors,
+                          friends: regulars,
+                          leadingDivider: favorites.isNotEmpty,
+                          onReorder: (oldIndex, newIndex) {
+                            unawaited(
+                              _service.reorderRegulars(
+                                regulars,
+                                oldIndex: oldIndex,
+                                newIndex: newIndex,
+                              ),
+                            );
+                          },
+                        ),
+                    ],
                   ),
                 ),
             ],
+          ),
+        );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _friendGroup(
+    AppColors colors, {
+    required List<FriendProfile> friends,
+    required bool leadingDivider,
+    required void Function(int oldIndex, int newIndex) onReorder,
+  }) {
+    return ReorderableListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      padding: EdgeInsets.zero,
+      buildDefaultDragHandles: false,
+      itemCount: friends.length,
+      proxyDecorator: (child, index, animation) {
+        return AnimatedBuilder(
+          animation: animation,
+          builder: (context, child) {
+            final t = Curves.easeOutBack.transform(animation.value);
+            return Transform.translate(
+              offset: Offset(0, -4 * t),
+              child: Transform.scale(
+                scale: 1 + 0.02 * t,
+                child: child,
+              ),
+            );
+          },
+          child: child,
+        );
+      },
+      onReorderStart: (_) => HapticFeedback.mediumImpact(),
+      onReorder: onReorder,
+      itemBuilder: (context, index) {
+        final friend = friends[index];
+        final showLine = index > 0 || leadingDivider;
+        final flying = _flyingUid == friend.uid;
+        return ReorderableDelayedDragStartListener(
+          key: ValueKey(friend.uid),
+          index: index,
+          child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(left: 20),
+                  child: Divider(
+                    height: 1,
+                    thickness: 0.5,
+                    color: showLine
+                        ? colors.border
+                        : colors.border.withValues(alpha: 0),
+                  ),
+                ),
+                KeyedSubtree(
+                  key: _tileKey(friend.uid),
+                  child: IgnorePointer(
+                    ignoring: flying,
+                    child: Opacity(
+                      opacity: flying ? 0 : 1,
+                      child: _FriendTile(
+                        friend: friend,
+                        homePinned: FriendHomePreference.instance
+                            .contains(friend.uid),
+                        favorited: FriendFavoritePreference.instance
+                            .contains(friend.uid),
+                        onPressed: () => _openCalendar(friend),
+                        onHomeChanged: (value) =>
+                            FriendHomePreference.instance.setPinned(
+                          friend.uid,
+                          value,
+                        ),
+                        onFavoriteChanged: (value) =>
+                            _toggleFavorite(friend, value),
+                        onRemove: () => _removeFriend(friend),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
           ),
         );
       },
@@ -675,6 +809,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
               size: 84,
               profile: profile,
               preview: _preview,
+              showFavorite: false,
             ),
             Positioned(
               right: -2,
@@ -1387,19 +1522,116 @@ class _RequestRevealState extends State<_RequestReveal>
   }
 }
 
+class _FlyingFriendTile extends StatefulWidget {
+  const _FlyingFriendTile({
+    super.key,
+    required this.friend,
+    required this.favorited,
+    required this.homePinned,
+    required this.from,
+    required this.onDone,
+  });
+
+  final FriendProfile friend;
+  final bool favorited;
+  final bool homePinned;
+  final Rect from;
+  final VoidCallback onDone;
+
+  @override
+  State<_FlyingFriendTile> createState() => _FlyingFriendTileState();
+}
+
+class _FlyingFriendTileState extends State<_FlyingFriendTile>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _move;
+  late Rect _from = widget.from;
+  late Rect _to = widget.from;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 320),
+    );
+    _move = CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic);
+    _controller.addStatusListener((status) {
+      if (status == AnimationStatus.completed) widget.onDone();
+    });
+  }
+
+  void flyTo(Rect to) {
+    if ((to.center - _from.center).distance < 2) {
+      widget.onDone();
+      return;
+    }
+    _from = Rect.lerp(_from, _to, _move.value) ?? _from;
+    _to = to;
+    _controller.forward(from: 0);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    return IgnorePointer(
+      child: AnimatedBuilder(
+        animation: _move,
+        builder: (context, child) {
+          final rect = Rect.lerp(_from, _to, _move.value)!;
+          return Stack(
+            children: [
+              Positioned(
+                left: rect.left,
+                top: rect.top,
+                width: rect.width,
+                height: rect.height,
+                child: child!,
+              ),
+            ],
+          );
+        },
+        child: Material(
+          color: colors.card,
+          child: _FriendTile(
+            friend: widget.friend,
+            homePinned: widget.homePinned,
+            favorited: widget.favorited,
+            onPressed: () {},
+            onHomeChanged: (_) {},
+            onFavoriteChanged: (_) {},
+            onRemove: () {},
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _FriendTile extends StatelessWidget {
   const _FriendTile({
     required this.friend,
     required this.homePinned,
+    required this.favorited,
     required this.onPressed,
     required this.onHomeChanged,
+    required this.onFavoriteChanged,
     required this.onRemove,
   });
 
   final FriendProfile friend;
   final bool homePinned;
+  final bool favorited;
   final VoidCallback onPressed;
   final ValueChanged<bool> onHomeChanged;
+  final ValueChanged<bool> onFavoriteChanged;
   final VoidCallback onRemove;
 
   @override
@@ -1451,14 +1683,19 @@ class _FriendTile extends StatelessWidget {
               ),
             ),
           ),
+          FriendStarButton(
+            favorited: favorited,
+            onPressed: () => onFavoriteChanged(!favorited),
+          ),
           OverflowMenuButton(
             actions: [
               OverflowMenuAction(
-                label: AppStrings.friendsHomePin,
+                label: homePinned
+                    ? AppStrings.friendsHomeUnpin
+                    : AppStrings.friendsHomePin,
                 leadingAsset: AppIcons.addHome,
                 leadingFlipX: true,
-                value: homePinned,
-                onChanged: onHomeChanged,
+                onPressed: () => onHomeChanged(!homePinned),
               ),
               OverflowMenuAction(
                 label: AppStrings.friendsRemove,
@@ -1531,121 +1768,6 @@ class _TextAction extends StatelessWidget {
             fontSize: 14,
             fontWeight: weight,
             color: color,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _FriendsToastOverlay extends StatefulWidget {
-  const _FriendsToastOverlay({
-    required this.text,
-    required this.onFinished,
-  });
-
-  final String text;
-  final VoidCallback onFinished;
-
-  @override
-  State<_FriendsToastOverlay> createState() => _FriendsToastOverlayState();
-}
-
-class _FriendsToastOverlayState extends State<_FriendsToastOverlay> {
-  var _visible = false;
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) setState(() => _visible = true);
-    });
-    Future<void>.delayed(const Duration(milliseconds: 2400), () {
-      if (!mounted) return;
-      setState(() => _visible = false);
-      Future<void>.delayed(const Duration(milliseconds: 280), () {
-        if (mounted) widget.onFinished();
-      });
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final bottom = MediaQuery.paddingOf(context).bottom;
-    return IgnorePointer(
-      child: Stack(
-        children: [
-          PcLayout.pinBottomToast(
-            bottom: 20 + bottom,
-            child: _AnimatedHintToast(
-              text: widget.text,
-              visible: _visible,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _AnimatedHintToast extends StatelessWidget {
-  const _AnimatedHintToast({
-    required this.text,
-    required this.visible,
-  });
-
-  final String text;
-  final bool visible;
-
-  @override
-  Widget build(BuildContext context) {
-    return IgnorePointer(
-      child: AnimatedSlide(
-        duration: const Duration(milliseconds: 280),
-        curve: visible ? Curves.easeOutCubic : Curves.easeInCubic,
-        offset: visible ? Offset.zero : const Offset(0, 0.18),
-        child: AnimatedOpacity(
-          duration: const Duration(milliseconds: 280),
-          curve: visible ? Curves.easeOutCubic : Curves.easeInCubic,
-          opacity: visible ? 1 : 0,
-          child: _HintToast(text: text),
-        ),
-      ),
-    );
-  }
-}
-
-class _HintToast extends StatelessWidget {
-  const _HintToast({required this.text});
-
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = AppColors.of(context);
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: colors.card,
-        borderRadius: BorderRadius.circular(18),
-        boxShadow: [
-          BoxShadow(
-            color: colors.shadow,
-            blurRadius: 16,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-        child: Text(
-          text,
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            fontFamily: AppFonts.of(context),
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            height: 1.35,
-            color: colors.text,
           ),
         ),
       ),

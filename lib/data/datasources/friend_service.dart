@@ -15,6 +15,7 @@ import 'package:pluto/core/constants/app_strings.dart';
 import 'package:pluto/data/datasources/app_auth_service.dart';
 import 'package:pluto/data/datasources/calendar_event_local_datasource.dart';
 import 'package:pluto/data/datasources/friend_category_preference.dart';
+import 'package:pluto/data/datasources/friend_favorite_preference.dart';
 import 'package:pluto/data/datasources/friend_home_preference.dart';
 import 'package:pluto/data/datasources/friend_order_preference.dart';
 import 'package:pluto/data/datasources/day_emoji_store.dart';
@@ -131,6 +132,7 @@ class FriendService {
       await FriendCategoryPreference.instance.load();
       await FriendOrderPreference.instance.load();
       await FriendHomePreference.instance.load();
+      await FriendFavoritePreference.instance.load();
       return;
     }
     if (_bootstrapUid == uid && _bootstrapWork != null) {
@@ -152,6 +154,7 @@ class FriendService {
     unawaited(FriendCategoryPreference.instance.load());
     unawaited(FriendOrderPreference.instance.load());
     unawaited(FriendHomePreference.instance.load());
+    unawaited(FriendFavoritePreference.instance.load());
     try {
       if (!kIsWeb) {
         await AppAuthService.instance
@@ -632,10 +635,14 @@ class FriendService {
       order.addListener(emit);
       final sub = remote.listen(
         (snap) {
-          items = [
+          final rows = [
             for (final doc in snap.docs)
-              FriendProfile.fromMap(doc.data(), uid: doc.id),
-          ];
+              (
+                profile: FriendProfile.fromMap(doc.data(), uid: doc.id),
+                createdAt: (doc.data()['createdAt'] as num?)?.toInt() ?? 0,
+              ),
+          ]..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+          items = [for (final row in rows) row.profile];
           ready = true;
           emit();
         },
@@ -648,22 +655,57 @@ class FriendService {
     });
   }
 
+  Future<void> reorderFavorites(
+    List<FriendProfile> favorites, {
+    required int oldIndex,
+    required int newIndex,
+  }) {
+    return FriendFavoritePreference.instance.reorder(
+      favorites,
+      oldIndex: oldIndex,
+      newIndex: newIndex,
+    );
+  }
+
+  Future<void> reorderRegulars(
+    List<FriendProfile> regulars, {
+    required int oldIndex,
+    required int newIndex,
+  }) {
+    if (oldIndex < 0 || oldIndex >= regulars.length) return Future.value();
+    var target = newIndex;
+    if (target > oldIndex) target -= 1;
+    if (target < 0) target = 0;
+    if (target > regulars.length - 1) target = regulars.length - 1;
+    final next = [...regulars];
+    final moved = next.removeAt(oldIndex);
+    next.insert(target, moved);
+    return FriendOrderPreference.instance.replaceSubsequence([
+      for (final friend in next) friend.uid,
+    ]);
+  }
+
   Future<void> reorderFriends(
     List<FriendProfile> friends, {
     required int oldIndex,
     required int newIndex,
   }) {
-    if (oldIndex < 0 || oldIndex >= friends.length) return Future.value();
-    var target = newIndex;
-    if (target > oldIndex) target -= 1;
-    if (target < 0) target = 0;
-    if (target > friends.length - 1) target = friends.length - 1;
-    final next = [...friends];
-    final moved = next.removeAt(oldIndex);
-    next.insert(target, moved);
-    return FriendOrderPreference.instance.setOrder([
-      for (final friend in next) friend.uid,
-    ]);
+    final favCount = FriendFavoritePreference.instance.countIn(friends);
+    if (oldIndex < favCount) {
+      return reorderFavorites(
+        friends,
+        oldIndex: oldIndex,
+        newIndex: newIndex,
+      );
+    }
+    return reorderRegulars(
+      [
+        for (final friend in friends)
+          if (!FriendFavoritePreference.instance.contains(friend.uid)) friend,
+      ],
+      oldIndex: oldIndex - favCount,
+      newIndex: newIndex - favCount,
+    );
   }
 
   Future<void> reorderHomeFriends(
@@ -671,17 +713,11 @@ class FriendService {
     required int oldIndex,
     required int newIndex,
   }) {
-    if (oldIndex < 0 || oldIndex >= friends.length) return Future.value();
-    var target = newIndex;
-    if (target > oldIndex) target -= 1;
-    if (target < 0) target = 0;
-    if (target > friends.length - 1) target = friends.length - 1;
-    final next = [...friends];
-    final moved = next.removeAt(oldIndex);
-    next.insert(target, moved);
-    return FriendHomePreference.instance.setOrder([
-      for (final friend in next) friend.uid,
-    ]);
+    return reorderFriends(
+      friends,
+      oldIndex: oldIndex,
+      newIndex: newIndex,
+    );
   }
 
   Future<FriendProfile?> lookupByCode(String code) async {
@@ -789,6 +825,7 @@ class FriendService {
       await _removeViaStore(uid);
     }
     await FriendHomePreference.instance.forget(uid);
+    await FriendFavoritePreference.instance.forget(uid);
   }
 
   Future<DocumentSnapshot<Map<String, dynamic>>?> _requestSnap(

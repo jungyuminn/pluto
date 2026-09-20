@@ -7,7 +7,9 @@ import 'package:pluto/core/constants/app_strings.dart';
 import 'package:pluto/core/theme/app_colors.dart';
 import 'package:pluto/core/utils/press_bounce.dart';
 import 'package:pluto/data/datasources/app_auth_service.dart';
+import 'package:pluto/data/datasources/friend_favorite_preference.dart';
 import 'package:pluto/data/datasources/friend_home_preference.dart';
+import 'package:pluto/data/datasources/friend_order_preference.dart';
 import 'package:pluto/data/datasources/friend_service.dart';
 import 'package:pluto/domain/entities/friend_profile.dart';
 import 'package:pluto/presentation/screens/friends/friend_avatar.dart';
@@ -50,7 +52,11 @@ class _HomeFriendsRowState extends State<HomeFriendsRow> {
               builder: (context, snapshot) {
                 final friends = snapshot.data ?? const <FriendProfile>[];
                 return ListenableBuilder(
-                  listenable: FriendHomePreference.instance.listenable,
+                  listenable: Listenable.merge([
+                    FriendHomePreference.instance.listenable,
+                    FriendFavoritePreference.instance.listenable,
+                    FriendOrderPreference.instance.listenable,
+                  ]),
                   builder: (context, _) {
                     return StreamBuilder<int>(
                       stream: FriendService.instance.incomingCount(),
@@ -58,7 +64,11 @@ class _HomeFriendsRowState extends State<HomeFriendsRow> {
                         return _row(
                           context,
                           me: me,
-                          friends: FriendHomePreference.instance.onHome(friends),
+                          friends: FriendFavoritePreference.instance.apply(
+                            FriendOrderPreference.instance.apply(
+                              FriendHomePreference.instance.onHome(friends),
+                            ),
+                          ),
                           requests: requestSnap.data ?? 0,
                         );
                       },
@@ -79,6 +89,14 @@ class _HomeFriendsRowState extends State<HomeFriendsRow> {
     required List<FriendProfile> friends,
     required int requests,
   }) {
+    final favorites = [
+      for (final friend in friends)
+        if (FriendFavoritePreference.instance.contains(friend.uid)) friend,
+    ];
+    final regulars = [
+      for (final friend in friends)
+        if (!FriendFavoritePreference.instance.contains(friend.uid)) friend,
+    ];
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: SizedBox(
@@ -93,49 +111,94 @@ class _HomeFriendsRowState extends State<HomeFriendsRow> {
               onAdd: () => _openAdd(context),
             ),
             Expanded(
-              child: ReorderableListView(
+              child: SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
-                buildDefaultDragHandles: false,
                 clipBehavior: Clip.none,
-                padding: EdgeInsets.zero,
-                proxyDecorator: (child, index, animation) {
-                  return AnimatedBuilder(
-                    animation: animation,
-                    builder: (context, child) {
-                      final t = Curves.easeOutBack.transform(animation.value);
-                      return Transform.scale(
-                        scale: 1 + 0.06 * t,
-                        child: child,
-                      );
-                    },
-                    child: child,
-                  );
-                },
-                onReorderStart: (_) => HapticFeedback.mediumImpact(),
-                onReorder: (oldIndex, newIndex) {
-                  unawaited(
-                    FriendService.instance.reorderHomeFriends(
-                      friends,
-                      oldIndex: oldIndex,
-                      newIndex: newIndex,
-                    ),
-                  );
-                },
-                children: [
-                  for (var i = 0; i < friends.length; i++)
-                    ReorderableDelayedDragStartListener(
-                      key: ValueKey(friends[i].uid),
-                      index: i,
-                      child: _FriendCell(
-                        friend: friends[i],
-                        onPressed: () => _openCalendar(context, friends[i]),
+                child: Row(
+                  children: [
+                    if (favorites.isNotEmpty)
+                      _homeGroup(
+                        context,
+                        friends: favorites,
+                        onReorder: (oldIndex, newIndex) {
+                          unawaited(
+                            FriendService.instance.reorderFavorites(
+                              favorites,
+                              oldIndex: oldIndex,
+                              newIndex: newIndex,
+                            ),
+                          );
+                        },
                       ),
-                    ),
-                ],
+                    if (regulars.isNotEmpty)
+                      _homeGroup(
+                        context,
+                        friends: regulars,
+                        onReorder: (oldIndex, newIndex) {
+                          unawaited(
+                            FriendService.instance.reorderRegulars(
+                              regulars,
+                              oldIndex: oldIndex,
+                              newIndex: newIndex,
+                            ),
+                          );
+                        },
+                      ),
+                  ],
+                ),
               ),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _homeGroup(
+    BuildContext context, {
+    required List<FriendProfile> friends,
+    required void Function(int oldIndex, int newIndex) onReorder,
+  }) {
+    return AnimatedSize(
+      duration: const Duration(milliseconds: 280),
+      curve: Curves.easeOutCubic,
+      alignment: Alignment.centerLeft,
+      child: SizedBox(
+      width: friends.length * _cellWidth,
+      height: _rowHeight,
+      child: ReorderableListView(
+        scrollDirection: Axis.horizontal,
+        buildDefaultDragHandles: false,
+        physics: const NeverScrollableScrollPhysics(),
+        clipBehavior: Clip.none,
+        padding: EdgeInsets.zero,
+        proxyDecorator: (child, index, animation) {
+          return AnimatedBuilder(
+            animation: animation,
+            builder: (context, child) {
+              final t = Curves.easeOutBack.transform(animation.value);
+              return Transform.scale(
+                scale: 1 + 0.06 * t,
+                child: child,
+              );
+            },
+            child: child,
+          );
+        },
+        onReorderStart: (_) => HapticFeedback.mediumImpact(),
+        onReorder: onReorder,
+        children: [
+          for (var i = 0; i < friends.length; i++)
+            ReorderableDelayedDragStartListener(
+              key: ValueKey(friends[i].uid),
+              index: i,
+              child: _FriendCell(
+                friend: friends[i],
+                onPressed: () => _openCalendar(context, friends[i]),
+              ),
+            ),
+        ],
+      ),
       ),
     );
   }
@@ -201,7 +264,11 @@ class _MeCell extends StatelessWidget {
               child: Stack(
                 clipBehavior: Clip.none,
                 children: [
-                  FriendAvatar(size: _avatarSize, profile: profile),
+                  FriendAvatar(
+                    size: _avatarSize,
+                    profile: profile,
+                    showFavorite: false,
+                  ),
                   Positioned(
                     right: -3,
                     bottom: -3,
@@ -296,17 +363,19 @@ class _AddBadge extends StatelessWidget {
 }
 
 class _FriendCell extends StatelessWidget {
-  const _FriendCell({required this.friend, required this.onPressed});
+  const _FriendCell({
+    required this.friend,
+    required this.onPressed,
+  });
 
   final FriendProfile friend;
   final VoidCallback onPressed;
 
   @override
   Widget build(BuildContext context) {
-    final label = friend.label;
     return _Cell(
       onPressed: onPressed,
-      label: label,
+      label: friend.label,
       child: FriendAvatar(size: _avatarSize, profile: friend),
     );
   }

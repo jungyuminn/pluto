@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -10,6 +11,7 @@ import 'package:pluto/core/theme/app_colors.dart';
 import 'package:pluto/core/utils/mouse_drag_scroll.dart';
 import 'package:pluto/core/utils/press_bounce.dart';
 import 'package:pluto/data/datasources/day_emoji_store.dart';
+import 'package:pluto/data/datasources/friend_favorite_preference.dart';
 import 'package:pluto/data/datasources/friend_home_preference.dart';
 import 'package:pluto/data/datasources/friend_service.dart';
 import 'package:pluto/domain/entities/calendar_event.dart';
@@ -19,6 +21,8 @@ import 'package:pluto/presentation/screens/calendar/widgets/calendar_month_grid.
 import 'package:pluto/presentation/screens/calendar/widgets/calendar_weekday_header.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/day_events_dialog.dart';
 import 'package:pluto/presentation/screens/friends/friend_avatar.dart';
+import 'package:pluto/presentation/screens/friends/friend_star_button.dart';
+import 'package:pluto/presentation/screens/friends/friends_toast.dart';
 import 'package:pluto/presentation/widgets/overflow_menu.dart';
 
 Future<bool> confirmRemoveFriend(BuildContext context) async {
@@ -87,6 +91,9 @@ class _FriendCalendarScreenState extends State<FriendCalendarScreen> {
   final _failedMonths = <String>{};
   var _loading = true;
   String? _error;
+  var _hint = '';
+  var _hintVisible = false;
+  Timer? _hintTimer;
 
   @override
   void initState() {
@@ -102,8 +109,21 @@ class _FriendCalendarScreenState extends State<FriendCalendarScreen> {
 
   @override
   void dispose() {
+    _hintTimer?.cancel();
     _pages.dispose();
     super.dispose();
+  }
+
+  void _toast(String text) {
+    _hintTimer?.cancel();
+    setState(() {
+      _hint = text;
+      _hintVisible = true;
+    });
+    _hintTimer = Timer(const Duration(milliseconds: 2400), () {
+      if (!mounted) return;
+      setState(() => _hintVisible = false);
+    });
   }
 
   String _monthKey(DateTime month) => '${month.year}-${month.month}';
@@ -190,7 +210,9 @@ class _FriendCalendarScreenState extends State<FriendCalendarScreen> {
         title: '',
         onBack: () => Navigator.pop(context),
       ),
-      body: PcLayout.constrainWidth(
+      body: Stack(
+        children: [
+          PcLayout.constrainWidth(
         Padding(
           padding: EdgeInsets.fromLTRB(16, top + 56, 16, 12),
           child: Column(
@@ -277,6 +299,15 @@ class _FriendCalendarScreenState extends State<FriendCalendarScreen> {
             ],
           ),
         ),
+          ),
+          PcLayout.pinBottomToast(
+            bottom: 20 + MediaQuery.paddingOf(context).bottom,
+            child: AnimatedFriendsToast(
+              text: _hint,
+              visible: _hintVisible,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -351,28 +382,54 @@ class _FriendCalendarScreenState extends State<FriendCalendarScreen> {
             ),
           ),
           ListenableBuilder(
-            listenable: FriendHomePreference.instance.listenable,
+            listenable: Listenable.merge([
+              FriendHomePreference.instance.listenable,
+              FriendFavoritePreference.instance.listenable,
+            ]),
             builder: (context, _) {
               final pinned =
                   FriendHomePreference.instance.contains(friend.uid);
-              return OverflowMenuButton(
-                actions: [
-                  OverflowMenuAction(
-                    label: AppStrings.friendsHomePin,
-                    leadingAsset: AppIcons.addHome,
-                    leadingFlipX: true,
-                    value: pinned,
-                    onChanged: (value) =>
-                        FriendHomePreference.instance.setPinned(
-                      friend.uid,
-                      value,
-                    ),
+              final favorited =
+                  FriendFavoritePreference.instance.contains(friend.uid);
+              return Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  FriendStarButton(
+                    favorited: favorited,
+                    onPressed: () {
+                      final next = !favorited;
+                      FriendFavoritePreference.instance.setFavorite(
+                        friend.uid,
+                        next,
+                      );
+                      _toast(
+                        next
+                            ? AppStrings.friendsFavoriteAdded
+                            : AppStrings.friendsFavoriteRemoved,
+                      );
+                    },
                   ),
-                  OverflowMenuAction(
-                    label: AppStrings.friendsRemove,
-                    leadingAsset: AppIcons.trashCan,
-                    color: colors.danger,
-                    onPressed: _removeFriend,
+                  OverflowMenuButton(
+                    actions: [
+                      OverflowMenuAction(
+                        label: pinned
+                            ? AppStrings.friendsHomeUnpin
+                            : AppStrings.friendsHomePin,
+                        leadingAsset: AppIcons.addHome,
+                        leadingFlipX: true,
+                        onPressed: () =>
+                            FriendHomePreference.instance.setPinned(
+                          friend.uid,
+                          !pinned,
+                        ),
+                      ),
+                      OverflowMenuAction(
+                        label: AppStrings.friendsRemove,
+                        leadingAsset: AppIcons.trashCan,
+                        color: colors.danger,
+                        onPressed: _removeFriend,
+                      ),
+                    ],
                   ),
                 ],
               );

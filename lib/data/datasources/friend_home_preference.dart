@@ -38,10 +38,9 @@ class FriendHomePreference {
 
   List<FriendProfile> onHome(List<FriendProfile> friends) {
     if (!_seeded) return friends;
-    final byId = {for (final friend in friends) friend.uid: friend};
     return [
-      for (final id in uids)
-        if (byId[id] != null) byId[id]!,
+      for (final friend in friends)
+        if (contains(friend.uid)) friend,
     ];
   }
 
@@ -54,18 +53,32 @@ class FriendHomePreference {
         await _write(uids: friends, seen: friends, seeded: true);
         return;
       }
-      if (_seen.isEmpty && friends.isNotEmpty) {
+      if (friends.isEmpty) return;
+      if (_seen.isEmpty) {
         await _write(uids: uids, seen: friends, seeded: true);
         return;
       }
+      final friendSet = {for (final id in friends) id};
+      final keptUids = [
+        for (final id in uids)
+          if (friendSet.contains(id)) id,
+      ];
+      final keptSeen = [
+        for (final id in _seen)
+          if (friendSet.contains(id)) id,
+      ];
       final newcomers = [
         for (final id in friends)
-          if (!_seen.contains(id)) id,
+          if (!keptSeen.contains(id)) id,
       ];
-      if (newcomers.isEmpty) return;
+      if (newcomers.isEmpty &&
+          listEquals(keptUids, uids) &&
+          listEquals(keptSeen, _seen)) {
+        return;
+      }
       await _write(
-        uids: [...uids, ...newcomers],
-        seen: [..._seen, ...newcomers],
+        uids: [...keptUids, ...newcomers],
+        seen: [...keptSeen, ...newcomers],
         seeded: true,
       );
     } finally {

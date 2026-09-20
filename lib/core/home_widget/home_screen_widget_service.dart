@@ -17,6 +17,7 @@ import 'package:pluto/core/theme/app_colors.dart';
 import 'package:pluto/core/theme/app_skin_background.dart';
 import 'package:pluto/core/theme/app_theme.dart';
 import 'package:pluto/data/datasources/calendar_event_local_datasource.dart';
+import 'package:pluto/data/datasources/friend_service.dart';
 import 'package:pluto/data/datasources/calendar_preference.dart';
 import 'package:pluto/data/datasources/day_events_view_preference.dart';
 import 'package:pluto/data/datasources/event_category_local_datasource.dart';
@@ -151,12 +152,16 @@ class HomeScreenWidgetService {
       }
     }
     if (match == null || match.isJob) return;
-    final next = !match.completed;
+    final toggled = await FriendService.instance.toggleComplete(match);
     final groupId = match.isRepeat ? null : match.groupId;
     await events.saveAll([
       for (final event in current)
         if (event.id == id || (groupId != null && event.groupId == groupId))
-          event.copyWith(completed: next)
+          event.copyWith(
+            completed: toggled.completed,
+            sharedMine: toggled.sharedMine,
+            sharedPeer: toggled.sharedPeer,
+          )
         else
           event,
     ]);

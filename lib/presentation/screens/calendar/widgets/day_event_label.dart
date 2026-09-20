@@ -15,6 +15,9 @@ class DayEventLabel extends StatefulWidget {
     required this.categoryName,
     required this.color,
     this.completed = false,
+    this.waiting = false,
+    this.shared = false,
+    this.peerCompleted = false,
     this.isRepeat = false,
     this.isRange = false,
     this.isJob = false,
@@ -40,6 +43,9 @@ class DayEventLabel extends StatefulWidget {
   final String categoryName;
   final Color color;
   final bool completed;
+  final bool waiting;
+  final bool shared;
+  final bool peerCompleted;
   final bool isRepeat;
   final bool isRange;
   final bool isJob;
@@ -67,6 +73,9 @@ class DayEventLabel extends StatefulWidget {
 class _DayEventLabelState extends State<DayEventLabel> {
   var _skipLabelTap = false;
   late var _completed = widget.completed;
+  late var _waiting = widget.waiting;
+  late var _mine = widget.waiting || (widget.shared && widget.completed);
+  late var _peer = widget.peerCompleted;
 
   static const _baseHeight = 52.0;
 
@@ -75,6 +84,17 @@ class _DayEventLabelState extends State<DayEventLabel> {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.completed != widget.completed) {
       _completed = widget.completed;
+    }
+    if (oldWidget.waiting != widget.waiting) {
+      _waiting = widget.waiting;
+    }
+    if (oldWidget.peerCompleted != widget.peerCompleted) {
+      _peer = widget.peerCompleted;
+    }
+    if (widget.shared &&
+        (oldWidget.waiting != widget.waiting ||
+            oldWidget.completed != widget.completed)) {
+      _mine = widget.waiting || widget.completed;
     }
   }
 
@@ -280,18 +300,30 @@ class _DayEventLabelState extends State<DayEventLabel> {
                       ),
                     ),
                   ),
-                if (widget.isJob)
+                if (widget.isJob || widget.shared)
                   Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: ColorFiltered(
-                      colorFilter: ColorFilter.mode(
-                        ink,
-                        BlendMode.srcIn,
-                      ),
-                      child: AppAssetImage(
-                        asset: AppIcons.officeOutlined,
-                        width: 20,
-                        height: 20,
+                    padding: EdgeInsets.only(
+                      right: !hasComplete && !widget.isRepeat && !widget.isRange
+                          ? 6
+                          : 0,
+                    ),
+                    child: SizedBox(
+                      width: 28,
+                      height: 28,
+                      child: Center(
+                        child: ColorFiltered(
+                          colorFilter: ColorFilter.mode(
+                            ink,
+                            BlendMode.srcIn,
+                          ),
+                          child: AppAssetImage(
+                            asset: widget.isJob
+                                ? AppIcons.officeOutlined
+                                : AppIcons.linkOutlined,
+                            width: 22,
+                            height: 22,
+                          ),
+                        ),
                       ),
                     ),
                   ),
@@ -331,13 +363,29 @@ class _DayEventLabelState extends State<DayEventLabel> {
                     child: Listener(
                       onPointerDown: (_) => _skipLabelTap = true,
                       child: EventCompleteButton(
-                        completed: _completed,
+                        completed: widget.shared ? _mine : _completed,
+                        waiting: widget.shared ? false : _waiting,
+                        shared: widget.shared,
+                        peer: _peer,
                         color: ink,
                         onPressed: widget.onCompletePressed == null
                             ? null
                             : () {
                                 _skipLabelTap = true;
-                                setState(() => _completed = !_completed);
+                                setState(() {
+                                  if (widget.shared) {
+                                    _mine = !_mine;
+                                    _waiting = _mine && !_peer;
+                                    _completed = _mine && _peer;
+                                  } else if (_completed) {
+                                    _completed = false;
+                                    _waiting = false;
+                                  } else if (_waiting) {
+                                    _waiting = false;
+                                  } else {
+                                    _completed = true;
+                                  }
+                                });
                                 widget.onCompletePressed!();
                               },
                       ),

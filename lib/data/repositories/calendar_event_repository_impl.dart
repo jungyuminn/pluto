@@ -1,4 +1,5 @@
 import 'package:pluto/data/datasources/calendar_event_local_datasource.dart';
+import 'package:pluto/data/datasources/friend_service.dart';
 import 'package:pluto/domain/entities/calendar_event.dart';
 import 'package:pluto/domain/repositories/calendar_event_repository.dart';
 
@@ -34,9 +35,21 @@ class CalendarEventRepositoryImpl implements CalendarEventRepository {
     ]);
   }
 
+  Future<void> _forgetShared(Iterable<CalendarEvent> events) async {
+    for (final event in events) {
+      final sharedId = event.sharedId?.trim() ?? '';
+      if (sharedId.isEmpty) continue;
+      await FriendService.instance.removeShared(sharedId);
+    }
+  }
+
   @override
   Future<void> delete(String id) async {
     final current = _localDataSource.fetchAll();
+    await _forgetShared([
+      for (final item in current)
+        if (item.id == id) item,
+    ]);
     await _localDataSource.saveAll([
       for (final item in current)
         if (item.id != id) item,
@@ -48,6 +61,10 @@ class CalendarEventRepositoryImpl implements CalendarEventRepository {
     final remove = ids.toSet();
     if (remove.isEmpty) return;
     final current = _localDataSource.fetchAll();
+    await _forgetShared([
+      for (final item in current)
+        if (remove.contains(item.id)) item,
+    ]);
     await _localDataSource.saveAll([
       for (final item in current)
         if (!remove.contains(item.id)) item,
@@ -55,8 +72,24 @@ class CalendarEventRepositoryImpl implements CalendarEventRepository {
   }
 
   @override
+  Future<void> deleteBySharedId(String sharedId) async {
+    final id = sharedId.trim();
+    if (id.isEmpty) return;
+    await FriendService.instance.removeShared(id);
+    final current = _localDataSource.fetchAll();
+    await _localDataSource.saveAll([
+      for (final item in current)
+        if ((item.sharedId ?? '').trim() != id) item,
+    ]);
+  }
+
+  @override
   Future<void> deleteGroup(String groupId) async {
     final current = _localDataSource.fetchAll();
+    await _forgetShared([
+      for (final item in current)
+        if (item.groupId == groupId) item,
+    ]);
     await _localDataSource.saveAll([
       for (final item in current)
         if (item.groupId != groupId) item,
@@ -97,6 +130,10 @@ class CalendarEventRepositoryImpl implements CalendarEventRepository {
   @override
   Future<void> deleteRepeat(String repeatId) async {
     final current = _localDataSource.fetchAll();
+    await _forgetShared([
+      for (final item in current)
+        if (item.repeatId == repeatId) item,
+    ]);
     await _localDataSource.saveAll([
       for (final item in current)
         if (item.repeatId != repeatId) item,
@@ -107,6 +144,17 @@ class CalendarEventRepositoryImpl implements CalendarEventRepository {
   Future<void> deleteRepeatFrom(String repeatId, DateTime from) async {
     final start = DateTime(from.year, from.month, from.day);
     final current = _localDataSource.fetchAll();
+    final removing = [
+      for (final item in current)
+        if (item.repeatId == repeatId && !item.day.isBefore(start)) item,
+    ];
+    final sharedId = removing
+        .map((item) => item.sharedId?.trim() ?? '')
+        .firstWhere((id) => id.isNotEmpty, orElse: () => '');
+    if (sharedId.isNotEmpty) {
+      await deleteBySharedId(sharedId);
+      return;
+    }
     await _localDataSource.saveAll([
       for (final item in current)
         if (item.repeatId != repeatId || item.day.isBefore(start)) item,

@@ -33,7 +33,7 @@ class OverflowMenuCard extends StatelessWidget {
       AppStrings.licenseVisibleItems,
       AppStrings.searchVisibleItems,
     ].map(widthOf).reduce((a, b) => a > b ? a : b);
-    return label + 74;
+    return label + 90;
   }
 
   @override

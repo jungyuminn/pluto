@@ -829,7 +829,6 @@ class AppStrings {
   static const deleteRepeatThis = '이 일정만 삭제';
   static const deleteRepeatFollowing = '이후 일정 모두 삭제';
   static const deleteRepeatAll = '전체 반복 일정 삭제';
-  static const friendsTitle = '친구';
   static const friendsProfile = '프로필';
   static const friendsProfileSettings = '내 프로필';
   static const friendsCategoryShare = '카테고리 공개';
@@ -873,6 +872,17 @@ class AppStrings {
   static const friendsSend = '요청 보내기';
   static const friendsIncoming = '받은 요청';
   static const friendsOutgoing = '보낸 요청';
+  static const friendsSharedTodo = '같이 할 일';
+  static const friendsSharedTodoAdd = '같이 할 일 추가';
+  static const friendsSharedTodoIncoming = '받은 같이 할 일';
+  static const friendsSharedTodoOutgoing = '보낸 같이 할 일';
+  static String friendsSharedTodoSent(String name) =>
+      '${name.trim()}님에게 같이 할 일을 보냈어요';
+  static const friendsSharedTodoAccepted = '같이 할 일이 생겼어요';
+  static const friendsSharedTodoWaiting = '상대도 완료해야 끝나요';
+  static const friendsSharedTodoDone = '둘 다 완료했어요';
+  static const friendsSharedTodoBad = '할 일을 다시 확인해 주세요';
+  static const friendsNotFriends = '친구가 아니에요';
   static const friendsList = '내 친구';
   static const friendsEmpty = '아직 친구가 없어요';
   static const friendsEmptyHint = '아이디를 알려 주고 요청을 보내 보세요';
@@ -892,7 +902,7 @@ class AppStrings {
   static String friendsUnfriended(String name) =>
       '${name.trim()}님과 친구를 끊었어요';
   static const friendsRemoveTitle = '친구를 끊을까요?';
-  static const friendsRemoveBody = '상대 일정도 더 이상 보이지 않아요';
+  static const friendsRemoveBody = '상대도 내 일정을 볼 수 없어요';
   static const friendsNeedLogin = '로그인하면 친구를 추가할 수 있어요';
   static const friendsNotFound = '이 아이디로 친구를 찾지 못했어요';
   static const friendsSelf = '내 아이디예요';

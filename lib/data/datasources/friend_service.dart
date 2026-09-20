@@ -14,6 +14,8 @@ import 'package:path_provider/path_provider.dart';
 import 'package:pluto/core/constants/app_strings.dart';
 import 'package:pluto/data/datasources/app_auth_service.dart';
 import 'package:pluto/data/datasources/calendar_event_local_datasource.dart';
+import 'package:pluto/data/datasources/event_category_local_datasource.dart';
+import 'package:pluto/data/datasources/last_event_category_preference.dart';
 import 'package:pluto/data/datasources/friend_category_preference.dart';
 import 'package:pluto/data/datasources/friend_favorite_preference.dart';
 import 'package:pluto/data/datasources/friend_home_preference.dart';
@@ -21,7 +23,9 @@ import 'package:pluto/data/datasources/friend_order_preference.dart';
 import 'package:pluto/data/datasources/day_emoji_store.dart';
 import 'package:pluto/data/models/calendar_event_model.dart';
 import 'package:pluto/domain/entities/calendar_event.dart';
+import 'package:pluto/domain/entities/event_category.dart';
 import 'package:pluto/domain/entities/friend_profile.dart';
+import 'package:pluto/domain/entities/todo_request.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class FriendService {
@@ -61,6 +65,21 @@ class FriendService {
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _outgoingSub;
   var _lastIncoming = const <FriendRequestItem>[];
   var _lastOutgoing = const <FriendRequestItem>[];
+  String? _todoStreamUid;
+  StreamController<List<TodoRequestItem>>? _incomingTodoCtrl;
+  StreamController<List<TodoRequestItem>>? _outgoingTodoCtrl;
+  StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _incomingTodoSub;
+  StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _outgoingTodoSub;
+  var _lastIncomingTodos = const <TodoRequestItem>[];
+  var _lastOutgoingTodos = const <TodoRequestItem>[];
+  var _incomingTodoAll = const <TodoRequestItem>[];
+  var _outgoingTodoAll = const <TodoRequestItem>[];
+  Future<List<CalendarEvent>> Function()? _readCalendar;
+  Future<void> Function(CalendarEvent event)? _addCalendar;
+  Future<void> Function(CalendarEvent event)? _updateCalendar;
+  Future<void> Function(List<CalendarEvent> events)? _writeCalendar;
+  VoidCallback? _onCalendarChanged;
+  Future<void> _materializeWork = Future.value();
 
   bool get _ready =>
       Firebase.apps.isNotEmpty && FirebaseAuth.instance.currentUser != null;
@@ -120,6 +139,7 @@ class FriendService {
     _bootstrapUid = null;
     _bootstrapWork = null;
     _disposeRequestStreams();
+    _disposeTodoStreams();
     profile.value = null;
   }
 
@@ -163,6 +183,7 @@ class FriendService {
         hydrateSession();
       }
       await ensureProfile();
+      _bindTodoStreams();
       unawaited(_warmAvatar(profile.value));
     } catch (error) {
       debugPrint('Friend bootstrap failed: $error');
@@ -592,8 +613,45 @@ class FriendService {
     return _outgoingCtrl?.stream ?? Stream.value(_lastOutgoing);
   }
 
-  Stream<int> incomingCount() {
+  Stream<int> incomingRequestCount() {
+    _bindRequestStreams();
     return incomingRequests().map((items) => items.length);
+  }
+
+  Stream<int> incomingTodoCount() {
+    _bindTodoStreams();
+    return incomingTodos().map((items) => items.length);
+  }
+
+  void bindCalendar({
+    required Future<List<CalendarEvent>> Function() read,
+    required Future<void> Function(CalendarEvent event) add,
+    Future<void> Function(CalendarEvent event)? update,
+    Future<void> Function(List<CalendarEvent> events)? write,
+    VoidCallback? onChanged,
+  }) {
+    _readCalendar = read;
+    _addCalendar = add;
+    _updateCalendar = update;
+    _writeCalendar = write;
+    _onCalendarChanged = onChanged;
+    unawaited(_syncSharedTodos());
+  }
+
+  List<TodoRequestItem> get lastIncomingTodos => _lastIncomingTodos;
+
+  List<TodoRequestItem> get lastOutgoingTodos => _lastOutgoingTodos;
+
+  Future<void> resyncSharedTodos() => _syncSharedTodos();
+
+  Stream<List<TodoRequestItem>> incomingTodos() {
+    _bindTodoStreams();
+    return _incomingTodoCtrl?.stream ?? Stream.value(_lastIncomingTodos);
+  }
+
+  Stream<List<TodoRequestItem>> outgoingTodos() {
+    _bindTodoStreams();
+    return _outgoingTodoCtrl?.stream ?? Stream.value(_lastOutgoingTodos);
   }
 
   void _disposeRequestStreams() {
@@ -665,6 +723,363 @@ class FriendService {
       if (controller == null || controller.isClosed) return;
       controller.add(last);
     });
+  }
+
+  void _disposeTodoStreams() {
+    _incomingTodoSub?.cancel();
+    _outgoingTodoSub?.cancel();
+    _incomingTodoSub = null;
+    _outgoingTodoSub = null;
+    _incomingTodoCtrl?.close();
+    _outgoingTodoCtrl?.close();
+    _incomingTodoCtrl = null;
+    _outgoingTodoCtrl = null;
+    _todoStreamUid = null;
+    _lastIncomingTodos = const [];
+    _lastOutgoingTodos = const [];
+    _incomingTodoAll = const [];
+    _outgoingTodoAll = const [];
+  }
+
+  void _bindTodoStreams() {
+    final uid = _uid;
+    if (uid == null) {
+      _disposeTodoStreams();
+      return;
+    }
+    if (_todoStreamUid == uid &&
+        _incomingTodoCtrl != null &&
+        _outgoingTodoCtrl != null) {
+      unawaited(_syncSharedTodos());
+      return;
+    }
+    _disposeTodoStreams();
+    _todoStreamUid = uid;
+    _incomingTodoCtrl = StreamController<List<TodoRequestItem>>.broadcast(
+      onListen: () => _replayTodos(_incomingTodoCtrl, _lastIncomingTodos),
+    );
+    _outgoingTodoCtrl = StreamController<List<TodoRequestItem>>.broadcast(
+      onListen: () => _replayTodos(_outgoingTodoCtrl, _lastOutgoingTodos),
+    );
+    _incomingTodoSub = _db
+        .collection('todo_requests')
+        .where('toUid', isEqualTo: uid)
+        .snapshots()
+        .listen(
+          (snap) {
+            final items = _todosOf(snap);
+            _incomingTodoAll = items;
+            _lastIncomingTodos = [
+              for (final item in items)
+                if (item.isPending) item,
+            ];
+            _incomingTodoCtrl?.add(_lastIncomingTodos);
+            unawaited(_syncSharedTodos());
+          },
+          onError: (Object error) {
+            debugPrint('Shared todo incoming stream failed: $error');
+          },
+        );
+    _outgoingTodoSub = _db
+        .collection('todo_requests')
+        .where('fromUid', isEqualTo: uid)
+        .snapshots()
+        .listen(
+          (snap) {
+            final previousIds = {
+              for (final item in _outgoingTodoAll) item.id,
+            };
+            final items = _todosOf(snap);
+            _outgoingTodoAll = items;
+            _lastOutgoingTodos = [
+              for (final item in items)
+                if (item.isPending) item,
+            ];
+            _outgoingTodoCtrl?.add(_lastOutgoingTodos);
+            unawaited(_recoverOutgoing(previousIds, items));
+            unawaited(_syncSharedTodos());
+          },
+          onError: (Object error) {
+            debugPrint('Shared todo outgoing stream failed: $error');
+          },
+        );
+  }
+
+  void _replayTodos(
+    StreamController<List<TodoRequestItem>>? controller,
+    List<TodoRequestItem> last,
+  ) {
+    scheduleMicrotask(() {
+      if (controller == null || controller.isClosed) return;
+      controller.add(last);
+    });
+  }
+
+  List<TodoRequestItem> _todosOf(
+    QuerySnapshot<Map<String, dynamic>> snap,
+  ) {
+    final items = [
+      for (final doc in snap.docs) TodoRequestItem.fromMap(doc.id, doc.data()),
+    ];
+    items.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    return items;
+  }
+
+  Future<void> _materializeAccepted(List<TodoRequestItem> items) {
+    return _syncSharedTodos(extra: items);
+  }
+
+  Future<void> _materializeById(String requestId) async {
+    try {
+      final snap = await _db.collection('todo_requests').doc(requestId).get();
+      if (!snap.exists) return;
+      await _materializeAccepted([
+        TodoRequestItem.fromMap(snap.id, snap.data() ?? {}),
+      ]);
+    } catch (error) {
+      debugPrint('Shared todo load failed: $error');
+    }
+  }
+
+  Future<void> _recoverOutgoing(
+    Set<String> previousIds,
+    List<TodoRequestItem> current,
+  ) async {
+    final have = {for (final item in current) item.id};
+    final missing = previousIds.difference(have);
+    if (missing.isEmpty) return;
+    final extras = <TodoRequestItem>[];
+    for (final id in missing) {
+      try {
+        final snap = await _db.collection('todo_requests').doc(id).get();
+        if (!snap.exists) continue;
+        extras.add(TodoRequestItem.fromMap(snap.id, snap.data() ?? {}));
+      } catch (error) {
+        debugPrint('Shared todo recover failed: $error');
+      }
+    }
+    if (extras.isEmpty) return;
+    final known = {for (final item in _outgoingTodoAll) item.id};
+    _outgoingTodoAll = [
+      ..._outgoingTodoAll,
+      for (final item in extras)
+        if (!known.contains(item.id)) item,
+    ];
+    await _syncSharedTodos();
+  }
+
+  Future<void> _syncSharedTodos({List<TodoRequestItem>? extra}) {
+    final seen = <String>{};
+    final accepted = <TodoRequestItem>[];
+    final gone = <String>{};
+    for (final item in [
+      ..._incomingTodoAll,
+      ..._outgoingTodoAll,
+      ...?extra,
+    ]) {
+      if (!seen.add(item.id)) continue;
+      if (item.isAccepted) {
+        accepted.add(item);
+      } else if (item.isGone) {
+        gone.add(item.id);
+      }
+    }
+    if (accepted.isEmpty && gone.isEmpty) return Future.value();
+    final previous = _materializeWork;
+    final work = () async {
+      try {
+        await previous;
+      } catch (_) {}
+      final read = _readCalendar;
+      final write = _writeCalendar;
+      if (read == null) return;
+      try {
+        final uid = _uid;
+        final current = await read();
+        final byShared = <String, List<CalendarEvent>>{};
+        for (final event in current) {
+          final sharedId = event.sharedId ?? '';
+          if (sharedId.isEmpty) continue;
+          (byShared[sharedId] ??= []).add(event);
+        }
+        var next = [
+          for (final event in current)
+            if ((event.sharedId ?? '').isEmpty ||
+                !gone.contains(event.sharedId))
+              event,
+        ];
+        var changed = next.length != current.length;
+        for (final item in accepted) {
+          final existing = byShared[item.id] ?? const <CalendarEvent>[];
+          final desired = item.toEvents(
+            uid: uid,
+            category: existing.isEmpty
+                ? await _categoryFor(item, uid)
+                : null,
+            existing: existing,
+          );
+          if (_sameSharedEvents(existing, desired)) continue;
+          next = [
+            for (final event in next)
+              if ((event.sharedId ?? '') != item.id) event,
+            ...desired,
+          ];
+          changed = true;
+        }
+        if (!changed) return;
+        if (write != null) {
+          await write(next);
+        } else {
+          await _applySharedFallback(current, next);
+        }
+        _onCalendarChanged?.call();
+      } catch (error) {
+        debugPrint('Shared todo calendar sync failed: $error');
+      }
+    }();
+    _materializeWork = work;
+    return work;
+  }
+
+  bool _sameSharedEvents(List<CalendarEvent> a, List<CalendarEvent> b) {
+    if (a.length != b.length) return false;
+    final byId = {for (final event in a) event.id: event};
+    for (final event in b) {
+      final other = byId[event.id];
+      if (other == null || !_sameSharedEvent(other, event)) return false;
+    }
+    return true;
+  }
+
+  bool _sameSharedEvent(CalendarEvent a, CalendarEvent b) {
+    return a.id == b.id &&
+        a.title == b.title &&
+        a.memo.trim() == b.memo.trim() &&
+        a.day.year == b.day.year &&
+        a.day.month == b.day.month &&
+        a.day.day == b.day.day &&
+        a.startMinutes == b.startMinutes &&
+        a.endMinutes == b.endMinutes &&
+        a.groupId == b.groupId &&
+        a.repeatId == b.repeatId &&
+        a.sharedMine == b.sharedMine &&
+        a.sharedPeer == b.sharedPeer &&
+        a.completed == b.completed &&
+        a.categoryId == b.categoryId &&
+        a.categoryName == b.categoryName &&
+        a.categoryColor == b.categoryColor;
+  }
+
+  Future<void> _applySharedFallback(
+    List<CalendarEvent> current,
+    List<CalendarEvent> next,
+  ) async {
+    final add = _addCalendar;
+    final update = _updateCalendar;
+    if (add == null && update == null) return;
+    final have = {for (final event in current) event.id: event};
+    for (final event in next) {
+      final before = have[event.id];
+      if (before == null) {
+        await add?.call(event);
+      } else if (!_sameSharedEvent(before, event)) {
+        await update?.call(event);
+      }
+    }
+  }
+
+  Future<EventCategory> _categoryFor(TodoRequestItem item, String? uid) async {
+    final prefs = await SharedPreferences.getInstance();
+    final categories = EventCategoryLocalDataSource(prefs).fetchAll();
+    if (uid != null && uid == item.fromUid) {
+      for (final category in categories) {
+        if (category.name == item.categoryName) return category;
+      }
+      return EventCategory(
+        id: '',
+        name: item.categoryName,
+        color: item.categoryColor,
+      );
+    }
+    final events = await _readCalendar?.call() ?? const <CalendarEvent>[];
+    return LastEventCategoryPreference.resolve(
+          events: events,
+          categories: categories,
+          storedId: LastEventCategoryPreference(prefs: prefs).id,
+        ) ??
+        EventCategory.fallback;
+  }
+
+  Future<CalendarEvent> toggleComplete(CalendarEvent event) async {
+    if (!event.isShared) {
+      return event.copyWith(completed: !event.completed);
+    }
+    final uid = _uid;
+    final sharedId = event.sharedId!.trim();
+    final nextMine = !event.sharedMine;
+    var peerDone = event.sharedPeer || (event.completed && event.sharedMine);
+    if (uid != null && sharedId.isNotEmpty) {
+      peerDone = await _setTodoMineCompleted(
+        sharedId,
+        uid,
+        nextMine,
+        day: event.day,
+        fallback: peerDone,
+      );
+    }
+    return event.copyWith(
+      sharedMine: nextMine,
+      sharedPeer: peerDone,
+      completed: nextMine && peerDone,
+    );
+  }
+
+  Future<bool> _setTodoMineCompleted(
+    String requestId,
+    String uid,
+    bool mine, {
+    DateTime? day,
+    bool fallback = false,
+  }) async {
+    try {
+      final ref = _db.collection('todo_requests').doc(requestId);
+      final snap = await ref.get();
+      if (!snap.exists) return fallback;
+      final item = TodoRequestItem.fromMap(snap.id, snap.data() ?? {});
+      if (!item.isAccepted) return fallback;
+      if (uid != item.fromUid && uid != item.toUid) return fallback;
+      final useDates = item.days.length > 1 ||
+          item.fromCompletedDates != null ||
+          item.toCompletedDates != null;
+      if (!useDates || day == null) {
+        final field = uid == item.fromUid ? 'fromCompleted' : 'toCompleted';
+        await ref.update({
+          field: mine,
+          'updatedAt': DateTime.now().millisecondsSinceEpoch,
+        });
+        return uid == item.fromUid ? item.toCompleted : item.fromCompleted;
+      }
+      final key = TodoRequestItem.dateKey(day);
+      final mineField =
+          uid == item.fromUid ? 'fromCompletedDates' : 'toCompletedDates';
+      final boolField = uid == item.fromUid ? 'fromCompleted' : 'toCompleted';
+      final mineKeys = item.completedKeys(uid, mine: true);
+      final peerKeys = item.completedKeys(uid, mine: false);
+      if (mine) {
+        if (!mineKeys.contains(key)) mineKeys.add(key);
+      } else {
+        mineKeys.remove(key);
+      }
+      await ref.update({
+        mineField: mineKeys,
+        boolField: mineKeys.length >= item.days.length && item.days.isNotEmpty,
+        'updatedAt': DateTime.now().millisecondsSinceEpoch,
+      });
+      return peerKeys.contains(key);
+    } catch (error) {
+      debugPrint('Shared todo complete failed: $error');
+      return fallback;
+    }
   }
 
   Stream<List<FriendProfile>> friends() {
@@ -884,6 +1299,361 @@ class FriendService {
     }
     await FriendHomePreference.instance.forget(uid);
     await FriendFavoritePreference.instance.forget(uid);
+  }
+
+  Future<({String status, String requestId})> sendTodo({
+    required FriendProfile to,
+    required String title,
+    required DateTime date,
+    String memo = '',
+    String categoryName = CalendarEvent.defaultCategoryName,
+    int categoryColor = CalendarEvent.defaultCategoryColor,
+    int? startMinutes,
+    int? endMinutes,
+    List<DateTime>? days,
+    String dateMode = 'single',
+  }) async {
+    final clean = title.trim();
+    if (clean.isEmpty || clean.length > 80) {
+      throw const FriendException('bad-todo');
+    }
+    final allDays = _sharedDays(days ?? [date]);
+    final mode = _sharedMode(dateMode, allDays);
+    if (kIsWeb) {
+      return _sendTodoViaStore(
+        to: to,
+        title: clean,
+        date: allDays.first,
+        memo: memo,
+        categoryName: categoryName,
+        categoryColor: categoryColor,
+        startMinutes: startMinutes,
+        endMinutes: endMinutes,
+        days: allDays,
+        dateMode: mode,
+      );
+    }
+    try {
+      final result = await _call('sendSharedTodo', {
+        'toUid': to.uid,
+        'title': clean,
+        'date': _date(allDays.first),
+        'dates': [for (final day in allDays) _date(day)],
+        'dateMode': mode,
+        'memo': memo.trim(),
+        'categoryName': categoryName.trim(),
+        'categoryColor': categoryColor,
+        'startMinutes': ?startMinutes,
+        'endMinutes': ?endMinutes,
+      });
+      return (
+        status: '${result['status'] ?? 'pending'}',
+        requestId: '${result['requestId'] ?? ''}',
+      );
+    } catch (error) {
+      debugPrint('Shared todo send function failed: $error');
+      return _sendTodoViaStore(
+        to: to,
+        title: clean,
+        date: allDays.first,
+        memo: memo,
+        categoryName: categoryName,
+        categoryColor: categoryColor,
+        startMinutes: startMinutes,
+        endMinutes: endMinutes,
+        days: allDays,
+        dateMode: mode,
+      );
+    }
+  }
+
+  Future<void> acceptTodo(String requestId) async {
+    try {
+      await _call('acceptSharedTodo', {'requestId': requestId});
+    } catch (error) {
+      debugPrint('Shared todo accept function failed: $error');
+      await _respondTodoViaStore(requestId, 'accepted');
+      return;
+    }
+    await _materializeById(requestId);
+  }
+
+  Future<void> declineTodo(String requestId) async {
+    try {
+      await _call('declineSharedTodo', {'requestId': requestId});
+    } catch (error) {
+      debugPrint('Shared todo decline function failed: $error');
+      await _respondTodoViaStore(requestId, 'declined');
+    }
+  }
+
+  Future<void> cancelTodo(String requestId) async {
+    try {
+      await _call('cancelSharedTodo', {'requestId': requestId});
+    } catch (error) {
+      debugPrint('Shared todo cancel function failed: $error');
+      await _respondTodoViaStore(requestId, 'cancelled');
+    }
+  }
+
+  final _removingShared = <String>{};
+
+  Future<void> editShared(
+    CalendarEvent event, {
+    List<DateTime>? days,
+    String dateMode = 'single',
+  }) async {
+    final id = event.sharedId?.trim() ?? '';
+    if (id.isEmpty) return;
+    final allDays = _sharedDays(days ?? [event.day]);
+    final mode = _sharedMode(dateMode, allDays);
+    await _reshapeSharedLocal(event, allDays, mode);
+    final payload = {
+      'requestId': id,
+      'title': event.title,
+      'date': _date(allDays.first),
+      'dates': [for (final day in allDays) _date(day)],
+      'dateMode': mode,
+      'memo': event.memo,
+      'startMinutes': ?event.startMinutes,
+      'endMinutes': ?event.endMinutes,
+    };
+    try {
+      if (kIsWeb) {
+        try {
+          await _editTodoViaStore(event, days: allDays, dateMode: mode);
+        } catch (error) {
+          debugPrint('Shared todo edit store failed: $error');
+          await _call('editSharedTodo', payload);
+        }
+        return;
+      }
+      try {
+        await _call('editSharedTodo', payload);
+      } catch (error) {
+        debugPrint('Shared todo edit function failed: $error');
+        await _editTodoViaStore(event, days: allDays, dateMode: mode);
+      }
+    } catch (error) {
+      debugPrint('Shared todo edit failed: $error');
+    }
+  }
+
+  List<DateTime> _sharedDays(List<DateTime> days) {
+    final seen = <String>{};
+    final all = <DateTime>[];
+    for (final date in days) {
+      final day = DateTime(date.year, date.month, date.day);
+      if (!seen.add(TodoRequestItem.dateKey(day))) continue;
+      all.add(day);
+      if (all.length >= TodoRequestItem.maxDays) break;
+    }
+    all.sort((a, b) => a.compareTo(b));
+    return all.isEmpty ? [DateTime.now()] : all;
+  }
+
+  String _sharedMode(String raw, List<DateTime> days) {
+    return TodoRequestItem.parseMode(raw, days);
+  }
+
+  Future<void> _reshapeSharedLocal(
+    CalendarEvent event,
+    List<DateTime> days,
+    String dateMode,
+  ) async {
+    final read = _readCalendar;
+    final write = _writeCalendar;
+    final sharedId = event.sharedId?.trim() ?? '';
+    if (read == null || write == null || sharedId.isEmpty) return;
+    final current = await read();
+    final existing = [
+      for (final item in current)
+        if ((item.sharedId ?? '') == sharedId) item,
+    ];
+    final byDay = <String, CalendarEvent>{
+      for (final item in existing) TodoRequestItem.dateKey(item.day): item,
+    };
+    final range = dateMode == 'range' && days.length >= 2;
+    final repeat = dateMode == 'repeat';
+    final sample = existing.isEmpty ? null : existing.first;
+    final groupId = range ? (sample?.groupId ?? 'shared_${sharedId}_g') : null;
+    final repeatId = repeat ? (sample?.repeatId ?? 'shared_${sharedId}_r') : null;
+    final desired = <CalendarEvent>[];
+    for (var i = 0; i < days.length; i++) {
+      final day = days[i];
+      final prev = byDay[TodoRequestItem.dateKey(day)];
+      desired.add(
+        CalendarEvent(
+          id: prev?.id ??
+              (days.length == 1
+                  ? 'shared_$sharedId'
+                  : 'shared_${sharedId}_${TodoRequestItem.dateKey(day)}'),
+          title: event.title,
+          date: day,
+          memo: event.memo,
+          categoryId: event.categoryId,
+          categoryName: event.categoryName,
+          categoryColor: event.categoryColor,
+          startMinutes: event.startMinutes,
+          endMinutes: event.endMinutes,
+          sortOrder: prev?.sortOrder ?? event.sortOrder + i,
+          groupId: groupId,
+          repeatId: repeatId,
+          sharedId: sharedId,
+          sharedMine: prev?.sharedMine ?? false,
+          sharedPeer: prev?.sharedPeer ?? false,
+          completed: (prev?.sharedMine ?? false) && (prev?.sharedPeer ?? false),
+        ),
+      );
+    }
+    if (_sameSharedEvents(existing, desired)) return;
+    await write([
+      for (final item in current)
+        if ((item.sharedId ?? '') != sharedId) item,
+      ...desired,
+    ]);
+    _onCalendarChanged?.call();
+  }
+
+  Future<void> removeShared(String requestId) async {
+    final id = requestId.trim();
+    if (id.isEmpty || !_removingShared.add(id)) return;
+    try {
+      try {
+        await _call('removeSharedTodo', {'requestId': id});
+      } catch (error) {
+        debugPrint('Shared todo remove function failed: $error');
+        await _removeTodoViaStore(id);
+      }
+    } finally {
+      _removingShared.remove(id);
+    }
+  }
+
+  Future<({String status, String requestId})> _sendTodoViaStore({
+    required FriendProfile to,
+    required String title,
+    required DateTime date,
+    required String memo,
+    required String categoryName,
+    required int categoryColor,
+    int? startMinutes,
+    int? endMinutes,
+    List<DateTime>? days,
+    String dateMode = 'single',
+  }) async {
+    final me = profile.value;
+    final uid = (me?.uid.isNotEmpty == true ? me!.uid : _uid) ?? '';
+    if (me == null || !me.hasIdentity || uid.isEmpty) {
+      throw const FriendException('needs-profile');
+    }
+    if (to.uid.isEmpty || to.uid == uid) {
+      throw const FriendException('self');
+    }
+    if (!await isFriend(to.uid)) {
+      throw const FriendException('not-friends');
+    }
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final id = '${uid}_${to.uid}_$now';
+    await _db.collection('todo_requests').doc(id).set({
+      'fromUid': uid,
+      'toUid': to.uid,
+      'fromName': me.displayName,
+      'fromCode': me.friendCode,
+      'fromPhotoURL': me.photoURL,
+      'toName': to.displayName,
+      'toCode': to.friendCode,
+      'toPhotoURL': to.photoURL,
+      'title': title,
+      'date': _date(date),
+      'dates': [for (final day in days ?? [date]) _date(day)],
+      'dateMode': dateMode,
+      'memo': memo.trim(),
+      'categoryName': categoryName.trim(),
+      'categoryColor': categoryColor,
+      'startMinutes': startMinutes,
+      'endMinutes': endMinutes,
+      'status': 'pending',
+      'fromCompleted': false,
+      'toCompleted': false,
+      'createdAt': now,
+      'participants': [uid, to.uid],
+    });
+    return (status: 'pending', requestId: id);
+  }
+
+  Future<void> _respondTodoViaStore(String requestId, String status) async {
+    final me = _uid;
+    if (me == null) throw const FriendException('login-required');
+    final ref = _db.collection('todo_requests').doc(requestId);
+    final snap = await ref.get();
+    if (!snap.exists) throw const FriendException('not-found');
+    final item = TodoRequestItem.fromMap(snap.id, snap.data() ?? {});
+    if (!item.isPending) throw const FriendException('not-allowed');
+    if (status == 'cancelled') {
+      if (item.fromUid != me) throw const FriendException('not-allowed');
+    } else if (item.toUid != me) {
+      throw const FriendException('not-allowed');
+    }
+    await ref.update({
+      'status': status,
+      'updatedAt': DateTime.now().millisecondsSinceEpoch,
+    });
+    if (status == 'accepted') {
+      await _materializeAccepted([item.copyWithStatus(status)]);
+    }
+  }
+
+  Future<void> _editTodoViaStore(
+    CalendarEvent event, {
+    List<DateTime>? days,
+    String dateMode = 'single',
+  }) async {
+    final me = _uid;
+    final id = event.sharedId?.trim() ?? '';
+    if (me == null) throw const FriendException('login-required');
+    if (id.isEmpty) return;
+    final title = event.title.trim();
+    if (title.isEmpty || title.length > 80) {
+      throw const FriendException('bad-todo');
+    }
+    final allDays = _sharedDays(days ?? [event.day]);
+    final mode = _sharedMode(dateMode, allDays);
+    final ref = _db.collection('todo_requests').doc(id);
+    final snap = await ref.get();
+    if (!snap.exists) return;
+    final item = TodoRequestItem.fromMap(snap.id, snap.data() ?? {});
+    if (item.fromUid != me && item.toUid != me) {
+      throw const FriendException('not-allowed');
+    }
+    if (!item.isAccepted) return;
+    await ref.update({
+      'title': title,
+      'date': _date(allDays.first),
+      'dates': [for (final day in allDays) _date(day)],
+      'dateMode': mode,
+      'memo': event.memo.trim(),
+      'startMinutes': event.startMinutes ?? FieldValue.delete(),
+      'endMinutes': event.endMinutes ?? FieldValue.delete(),
+      'updatedAt': DateTime.now().millisecondsSinceEpoch,
+    });
+  }
+
+  Future<void> _removeTodoViaStore(String requestId) async {
+    final me = _uid;
+    if (me == null) throw const FriendException('login-required');
+    final ref = _db.collection('todo_requests').doc(requestId);
+    final snap = await ref.get();
+    if (!snap.exists) return;
+    final item = TodoRequestItem.fromMap(snap.id, snap.data() ?? {});
+    if (item.fromUid != me && item.toUid != me) {
+      throw const FriendException('not-allowed');
+    }
+    if (item.isGone) return;
+    await ref.update({
+      'status': 'removed',
+      'updatedAt': DateTime.now().millisecondsSinceEpoch,
+    });
   }
 
   Future<DocumentSnapshot<Map<String, dynamic>>?> _requestSnap(
@@ -1268,6 +2038,8 @@ class FriendService {
             : '';
     return switch (code) {
       'no-user' || 'not-found' => AppStrings.friendsNotFound,
+      'not-friends' => AppStrings.friendsNotFriends,
+      'bad-todo' => AppStrings.friendsSharedTodoBad,
       'self' => AppStrings.friendsSelf,
       'already-friends' => AppStrings.friendsAlready,
       'already-sent' => AppStrings.friendsAlreadySent,
@@ -1562,6 +2334,12 @@ class FriendService {
     'declineFriendRequest': 'decline',
     'cancelFriendRequest': 'cancel',
     'removeFriend': 'remove',
+    'sendSharedTodo': 'todo-send',
+    'acceptSharedTodo': 'todo-accept',
+    'declineSharedTodo': 'todo-decline',
+    'cancelSharedTodo': 'todo-cancel',
+    'removeSharedTodo': 'todo-remove',
+    'editSharedTodo': 'todo-edit',
     'deleteFriendData': 'delete',
   };
 

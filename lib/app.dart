@@ -25,6 +25,7 @@ import 'package:pluto/data/datasources/event_category_local_datasource.dart';
 import 'package:pluto/data/datasources/day_emoji_store.dart';
 import 'package:pluto/data/datasources/day_events_view_preference.dart';
 import 'package:pluto/data/datasources/font_preference.dart';
+import 'package:pluto/data/datasources/friend_service.dart';
 import 'package:pluto/data/datasources/home_view_preference.dart';
 import 'package:pluto/data/datasources/home_memo_local_datasource.dart';
 import 'package:pluto/data/datasources/job_view_preference.dart';
@@ -482,6 +483,13 @@ class _AppBootstrapState extends State<_AppBootstrap> {
       _reorderLicenses = ReorderLicenses(licenseRepository);
       _getCalendarEvents = GetCalendarEvents(eventRepository);
       _addCalendarEvent = AddCalendarEvent(eventRepository);
+      FriendService.instance.bindCalendar(
+        read: eventRepository.getAll,
+        add: eventRepository.add,
+        update: eventRepository.update,
+        write: eventRepository.replaceAll,
+        onChanged: () => AppBackupService.revision.value++,
+      );
       _updateCalendarEvent = UpdateCalendarEvent(eventRepository);
       _deleteCalendarEvent = DeleteCalendarEvent(eventRepository);
       _reorderCalendarEvents = ReorderCalendarEvents(eventRepository);

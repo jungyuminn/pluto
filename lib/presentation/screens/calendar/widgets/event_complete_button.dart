@@ -8,10 +8,16 @@ class EventCompleteButton extends StatefulWidget {
     super.key,
     required this.completed,
     required this.color,
+    this.waiting = false,
+    this.shared = false,
+    this.peer = false,
     this.onPressed,
   });
 
   final bool completed;
+  final bool waiting;
+  final bool shared;
+  final bool peer;
   final Color color;
   final VoidCallback? onPressed;
 
@@ -51,6 +57,7 @@ class _EventCompleteButtonState extends State<EventCompleteButton>
 
   @override
   Widget build(BuildContext context) {
+    final ink = EventCategory.labelOf(widget.color);
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: widget.onPressed == null
@@ -58,30 +65,64 @@ class _EventCompleteButtonState extends State<EventCompleteButton>
           : () {
               if (widget.completed) {
                 _burst.value = 0;
+              } else if (widget.waiting && !widget.shared) {
+                _burst.value = 0;
               } else {
-                _burst.forward();
+                _burst.forward(from: widget.waiting ? 0.45 : 0);
               }
               widget.onPressed!();
             },
       child: SizedBox(
         width: 28,
-        height: 28,
+        height: widget.shared ? 52 : 28,
         child: Center(
-          child: SizedBox(
-            width: 22,
-            height: 22,
-            child: AnimatedBuilder(
-              animation: _burst,
-              builder: (context, child) {
-                final t = Curves.easeInOutCubic.transform(_burst.value);
-                return CustomPaint(
+          child: AnimatedBuilder(
+            animation: _burst,
+            builder: (context, child) {
+              final t = widget.completed
+                  ? Curves.easeInOutCubic.transform(_burst.value)
+                  : widget.waiting && !widget.shared
+                      ? 0.45
+                      : Curves.easeInOutCubic.transform(_burst.value);
+              if (widget.shared) {
+                return Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CustomPaint(
+                        painter: _CompletePainter(
+                          progress: t,
+                          color: ink,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 1),
+                    SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CustomPaint(
+                        painter: _CompletePainter(
+                          progress: widget.peer ? 1 : 0,
+                          color: ink.withValues(alpha: 0.5),
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              }
+              return SizedBox(
+                width: 22,
+                height: 22,
+                child: CustomPaint(
                   painter: _CompletePainter(
                     progress: t,
-                    color: EventCategory.labelOf(widget.color),
+                    color: ink,
                   ),
-                );
-              },
-            ),
+                ),
+              );
+            },
           ),
         ),
       ),
@@ -93,17 +134,19 @@ class _CompletePainter extends CustomPainter {
   const _CompletePainter({
     required this.progress,
     required this.color,
+    this.strokeWidth = 1.35,
   });
 
   final double progress;
   final Color color;
+  final double strokeWidth;
 
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
       ..color = color
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.35
+      ..strokeWidth = strokeWidth
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round;
     final checkProgress = progress;
@@ -137,6 +180,8 @@ class _CompletePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _CompletePainter oldDelegate) {
-    return oldDelegate.progress != progress || oldDelegate.color != color;
+    return oldDelegate.progress != progress ||
+        oldDelegate.color != color ||
+        oldDelegate.strokeWidth != strokeWidth;
   }
 }

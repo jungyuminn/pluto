@@ -12,14 +12,14 @@ class EventTimeChip extends StatelessWidget {
   const EventTimeChip({
     super.key,
     required this.color,
-    required this.onPressed,
+    this.onPressed,
     this.startMinutes,
     this.endMinutes,
     this.emptyLabel,
   });
 
   final Color color;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
   final int? startMinutes;
   final int? endMinutes;
   final String? emptyLabel;

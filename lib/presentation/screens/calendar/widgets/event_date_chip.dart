@@ -12,14 +12,14 @@ class EventDateChip extends StatelessWidget {
     super.key,
     required this.date,
     required this.color,
-    required this.onPressed,
+    this.onPressed,
     this.label,
     this.iconSize = 20,
   });
 
   final DateTime date;
   final Color color;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
   final String? label;
   final double iconSize;
 

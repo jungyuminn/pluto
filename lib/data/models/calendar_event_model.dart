@@ -21,6 +21,12 @@ class CalendarEventModel {
       startMinutes: json['startMinutes'] as int?,
       endMinutes: json['endMinutes'] as int?,
       someday: json['someday'] as bool? ?? false,
+      sharedId: () {
+        final raw = '${json['sharedId'] ?? ''}'.trim();
+        return raw.isEmpty ? null : raw;
+      }(),
+      sharedMine: json['sharedMine'] == true,
+      sharedPeer: json['sharedPeer'] == true,
     );
   }
 
@@ -40,6 +46,9 @@ class CalendarEventModel {
       'startMinutes': event.startMinutes,
       'endMinutes': event.endMinutes,
       'someday': event.someday,
+      if ((event.sharedId ?? '').trim().isNotEmpty) 'sharedId': event.sharedId,
+      if (event.sharedMine) 'sharedMine': true,
+      if (event.sharedPeer) 'sharedPeer': true,
     };
   }
 

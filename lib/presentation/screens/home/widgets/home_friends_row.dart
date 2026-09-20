@@ -59,17 +59,27 @@ class _HomeFriendsRowState extends State<HomeFriendsRow> {
                   ]),
                   builder: (context, _) {
                     return StreamBuilder<int>(
-                      stream: FriendService.instance.incomingCount(),
+                      stream: FriendService.instance.incomingRequestCount(),
+                      initialData:
+                          FriendService.instance.lastIncoming.length,
                       builder: (context, requestSnap) {
-                        return _row(
-                          context,
-                          me: me,
-                          friends: FriendFavoritePreference.instance.apply(
-                            FriendOrderPreference.instance.apply(
-                              FriendHomePreference.instance.onHome(friends),
-                            ),
-                          ),
-                          requests: requestSnap.data ?? 0,
+                        return StreamBuilder<int>(
+                          stream: FriendService.instance.incomingTodoCount(),
+                          initialData:
+                              FriendService.instance.lastIncomingTodos.length,
+                          builder: (context, todoSnap) {
+                            return _row(
+                              context,
+                              me: me,
+                              friends: FriendFavoritePreference.instance.apply(
+                                FriendOrderPreference.instance.apply(
+                                  FriendHomePreference.instance.onHome(friends),
+                                ),
+                              ),
+                              requests: requestSnap.data ?? 0,
+                              todos: todoSnap.data ?? 0,
+                            );
+                          },
                         );
                       },
                     );
@@ -88,6 +98,7 @@ class _HomeFriendsRowState extends State<HomeFriendsRow> {
     required FriendProfile? me,
     required List<FriendProfile> friends,
     required int requests,
+    required int todos,
   }) {
     final favorites = [
       for (final friend in friends)
@@ -107,6 +118,7 @@ class _HomeFriendsRowState extends State<HomeFriendsRow> {
             _MeCell(
               profile: me,
               requests: requests,
+              todos: todos,
               onPressed: () => _openFriends(context),
               onAdd: () => _openAdd(context),
             ),
@@ -236,12 +248,14 @@ class _MeCell extends StatelessWidget {
   const _MeCell({
     required this.profile,
     required this.requests,
+    required this.todos,
     required this.onPressed,
     required this.onAdd,
   });
 
   final FriendProfile? profile;
   final int requests;
+  final int todos;
   final VoidCallback onPressed;
   final VoidCallback onAdd;
 
@@ -269,6 +283,12 @@ class _MeCell extends StatelessWidget {
                     profile: profile,
                     showFavorite: false,
                   ),
+                  if (todos > 0)
+                    const Positioned(
+                      right: -2,
+                      top: -2,
+                      child: IgnorePointer(child: _InboxDot()),
+                    ),
                   Positioned(
                     right: -3,
                     bottom: -3,
@@ -341,23 +361,33 @@ class _AddBadge extends StatelessWidget {
                   ),
                 ),
                 if (requests > 0)
-                  Positioned(
-                    right: 0,
-                    top: 0,
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        color: colors.danger,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: colors.background, width: 2),
-                      ),
-                      child: const SizedBox(width: 10, height: 10),
-                    ),
+                  const Positioned(
+                    right: -2,
+                    top: -2,
+                    child: IgnorePointer(child: _InboxDot()),
                   ),
               ],
             ),
           ),
         ),
       ),
+    );
+  }
+}
+
+class _InboxDot extends StatelessWidget {
+  const _InboxDot();
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: colors.danger,
+        shape: BoxShape.circle,
+        border: Border.all(color: colors.background, width: 2),
+      ),
+      child: const SizedBox(width: 12, height: 12),
     );
   }
 }

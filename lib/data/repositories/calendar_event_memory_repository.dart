@@ -44,6 +44,13 @@ class CalendarEventMemoryRepository implements CalendarEventRepository {
   }
 
   @override
+  Future<void> deleteBySharedId(String sharedId) async {
+    final id = sharedId.trim();
+    if (id.isEmpty) return;
+    _items.removeWhere((item) => (item.sharedId ?? '').trim() == id);
+  }
+
+  @override
   Future<void> updateGroup(String groupId, CalendarEvent patch) async {
     for (var i = 0; i < _items.length; i++) {
       final item = _items[i];

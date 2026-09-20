@@ -8,6 +8,7 @@ abstract class CalendarEventRepository {
   Future<void> delete(String id);
   Future<void> deleteMany(Iterable<String> ids);
   Future<void> deleteGroup(String groupId);
+  Future<void> deleteBySharedId(String sharedId);
   Future<void> updateGroup(String groupId, CalendarEvent patch);
   Future<void> updateRepeatTitles(String repeatId, String title);
   Future<void> deleteRepeat(String repeatId);

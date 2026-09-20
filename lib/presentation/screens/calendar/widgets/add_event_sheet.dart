@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:pluto/core/layout/compose_sheet.dart';
 import 'package:pluto/domain/entities/calendar_event.dart';
+import 'package:pluto/domain/entities/friend_profile.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/add_event_form.dart';
 
 Future<bool> showAddEventSheet(
@@ -9,6 +10,7 @@ Future<bool> showAddEventSheet(
   DateTime? rangeEnd,
   CalendarEvent? event,
   bool someday = false,
+  FriendProfile? shareWith,
 }) async {
   final saved = await showComposeSheet<bool>(
     context,
@@ -17,6 +19,7 @@ Future<bool> showAddEventSheet(
       rangeEnd: rangeEnd,
       event: event,
       someday: someday,
+      shareWith: shareWith,
     ),
   );
   return saved == true;
@@ -29,12 +32,14 @@ class AddEventSheet extends StatelessWidget {
     this.rangeEnd,
     this.event,
     this.someday = false,
+    this.shareWith,
   });
 
   final DateTime date;
   final DateTime? rangeEnd;
   final CalendarEvent? event;
   final bool someday;
+  final FriendProfile? shareWith;
 
   @override
   Widget build(BuildContext context) {
@@ -49,6 +54,7 @@ class AddEventSheet extends StatelessWidget {
           rangeEnd: rangeEnd,
           initial: event,
           someday: someday,
+          shareWith: shareWith,
         ),
       ),
     );

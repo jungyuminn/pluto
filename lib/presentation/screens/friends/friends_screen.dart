@@ -18,7 +18,10 @@ import 'package:pluto/data/datasources/friend_home_preference.dart';
 import 'package:pluto/data/datasources/friend_order_preference.dart';
 import 'package:pluto/data/datasources/friend_service.dart';
 import 'package:pluto/data/datasources/synced_file_store.dart';
+import 'package:pluto/domain/entities/calendar_event.dart';
 import 'package:pluto/domain/entities/friend_profile.dart';
+import 'package:pluto/domain/entities/todo_request.dart';
+import 'package:pluto/presentation/screens/calendar/widgets/add_event_sheet.dart';
 import 'package:pluto/presentation/screens/friends/category_share_sheet.dart';
 import 'package:pluto/presentation/screens/friends/friend_avatar.dart';
 import 'package:pluto/presentation/screens/friends/friend_calendar_screen.dart';
@@ -579,7 +582,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
       backgroundColor: colors.groupedBackground,
       extendBodyBehindAppBar: true,
       appBar: _FriendsAppBar(
-        title: AppStrings.friendsTitle,
+        title: AppStrings.friendsProfileSettings,
         onBack: () => Navigator.pop(context),
       ),
       body: Stack(
@@ -595,6 +598,8 @@ class _FriendsScreenState extends State<FriendsScreen> {
                     return _profileCard(colors, profile);
                   },
                 ),
+                _incomingTodos(),
+                _outgoingTodos(),
                 _friendsSection(colors),
               ],
             ),
@@ -767,6 +772,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
                         },
                         onFavoriteChanged: (value) =>
                             _toggleFavorite(friend, value),
+                        onSharedTodo: () => _addSharedTodo(friend),
                         onRemove: () => _removeFriend(friend),
                       ),
                     ),
@@ -1441,7 +1447,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
   }
 
   Future<void> _removeFriend(FriendProfile friend) async {
-    final ok = await confirmRemoveFriend(context);
+    final ok = await confirmRemoveFriend(context, friend);
     if (!ok || !mounted) return;
     try {
       await _service.remove(friend.uid);
@@ -1453,10 +1459,290 @@ class _FriendsScreenState extends State<FriendsScreen> {
     }
   }
 
+  Widget _incomingTodos() {
+    return StreamBuilder(
+      stream: _service.incomingTodos(),
+      initialData: _service.lastIncomingTodos,
+      builder: (context, snapshot) {
+        return _TodoRequestSection(
+          key: const ValueKey('todo-incoming'),
+          title: AppStrings.friendsSharedTodoIncoming,
+          items: snapshot.data ?? const <TodoRequestItem>[],
+          incoming: true,
+          onAccept: _acceptTodo,
+          onDecline: _declineTodo,
+        );
+      },
+    );
+  }
+
+  Widget _outgoingTodos() {
+    return StreamBuilder(
+      stream: _service.outgoingTodos(),
+      initialData: _service.lastOutgoingTodos,
+      builder: (context, snapshot) {
+        return _TodoRequestSection(
+          key: const ValueKey('todo-outgoing'),
+          title: AppStrings.friendsSharedTodoOutgoing,
+          items: snapshot.data ?? const <TodoRequestItem>[],
+          incoming: false,
+          onCancel: _cancelTodo,
+        );
+      },
+    );
+  }
+
+  Future<void> _addSharedTodo(FriendProfile friend) async {
+    final sent = await showAddEventSheet(
+      context,
+      date: DateTime.now(),
+      shareWith: friend,
+    );
+    if (!mounted || !sent) return;
+    _toast(AppStrings.friendsSharedTodoSent(friend.label));
+  }
+
+  Future<void> _acceptTodo(TodoRequestItem item) async {
+    try {
+      await _service.acceptTodo(item.id);
+      if (!mounted) return;
+      _toast(AppStrings.friendsSharedTodoAccepted);
+    } catch (error) {
+      if (!mounted) return;
+      _toast(_service.messageOf(error));
+    }
+  }
+
+  Future<void> _declineTodo(TodoRequestItem item) async {
+    try {
+      await _service.declineTodo(item.id);
+    } catch (error) {
+      if (!mounted) return;
+      _toast(_service.messageOf(error));
+    }
+  }
+
+  Future<void> _cancelTodo(TodoRequestItem item) async {
+    try {
+      await _service.cancelTodo(item.id);
+    } catch (error) {
+      if (!mounted) return;
+      _toast(_service.messageOf(error));
+    }
+  }
+
   Future<void> _openCalendar(FriendProfile friend) async {
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (context) => FriendCalendarScreen(friend: friend),
+      ),
+    );
+  }
+}
+
+class _TodoRequestSection extends StatefulWidget {
+  const _TodoRequestSection({
+    super.key,
+    required this.title,
+    required this.items,
+    required this.incoming,
+    this.onAccept,
+    this.onDecline,
+    this.onCancel,
+  });
+
+  final String title;
+  final List<TodoRequestItem> items;
+  final bool incoming;
+  final ValueChanged<TodoRequestItem>? onAccept;
+  final ValueChanged<TodoRequestItem>? onDecline;
+  final ValueChanged<TodoRequestItem>? onCancel;
+
+  @override
+  State<_TodoRequestSection> createState() => _TodoRequestSectionState();
+}
+
+class _TodoRequestSectionState extends State<_TodoRequestSection> {
+  static const _anim = Duration(milliseconds: 280);
+
+  var _items = <TodoRequestItem>[];
+  final _entering = <String>{};
+  final _leaving = <String>{};
+
+  @override
+  void initState() {
+    super.initState();
+    _items = List.of(widget.items);
+  }
+
+  @override
+  void didUpdateWidget(_TodoRequestSection oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _sync(widget.items);
+  }
+
+  void _sync(List<TodoRequestItem> next) {
+    final nextIds = {for (final item in next) item.id};
+    var changed = false;
+    for (final item in next) {
+      if (_leaving.contains(item.id)) continue;
+      final index = _items.indexWhere((entry) => entry.id == item.id);
+      if (index >= 0) {
+        if (!identical(_items[index], item)) {
+          _items[index] = item;
+          changed = true;
+        }
+        continue;
+      }
+      _items.add(item);
+      _entering.add(item.id);
+      changed = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        setState(() => _entering.remove(item.id));
+      });
+    }
+    for (final item in List.of(_items)) {
+      if (nextIds.contains(item.id) || _leaving.contains(item.id)) continue;
+      _hide(item.id);
+      changed = true;
+    }
+    if (changed) setState(() {});
+  }
+
+  void _hide(String id) {
+    if (_leaving.contains(id)) return;
+    setState(() {
+      _leaving.add(id);
+      _entering.remove(id);
+    });
+    Future<void>.delayed(_anim, () {
+      if (!mounted) return;
+      setState(() {
+        _items.removeWhere((item) => item.id == id);
+        _leaving.remove(id);
+      });
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    return AnimatedSize(
+      duration: _anim,
+      curve: Curves.easeOutCubic,
+      alignment: Alignment.topCenter,
+      child: _items.isEmpty
+          ? const SizedBox(width: double.infinity)
+          : Padding(
+              padding: const EdgeInsets.only(top: 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _SectionLabel(widget.title),
+                  _Card(
+                    child: Column(
+                      children: [
+                        for (var i = 0; i < _items.length; i++)
+                          _RequestReveal(
+                            key: ValueKey(_items[i].id),
+                            visible: !_entering.contains(_items[i].id) &&
+                                !_leaving.contains(_items[i].id),
+                            child: Column(
+                              children: [
+                                _row(colors, _items[i]),
+                                if (i != _items.length - 1)
+                                  Padding(
+                                    padding: const EdgeInsets.only(left: 68),
+                                    child: Divider(
+                                      height: 1,
+                                      thickness: 0.5,
+                                      color: colors.border,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+    );
+  }
+
+  Widget _row(AppColors colors, TodoRequestItem item) {
+    final other = widget.incoming ? item.fromProfile : item.toProfile;
+    final time = item.startMinutes == null
+        ? item.dateLabel
+        : '${item.dateLabel}  ${CalendarEvent.formatMinutes(item.startMinutes!)}';
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 12, 12),
+      child: Row(
+        children: [
+          FriendAvatar(size: 40, profile: other),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  item.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontFamily: AppFonts.of(context),
+                    fontSize: 16,
+                    fontWeight: FontWeight.w400,
+                    color: colors.text,
+                  ),
+                ),
+                Text(
+                  '${other.label} · $time',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontFamily: AppFonts.of(context),
+                    fontSize: 13,
+                    color: colors.muted,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (widget.incoming) ...[
+            _IconAction(
+              icon: Icons.close_rounded,
+              color: colors.muted,
+              semanticLabel: AppStrings.friendsDecline,
+              onPressed: () {
+                _hide(item.id);
+                widget.onDecline?.call(item);
+              },
+            ),
+            _IconAction(
+              icon: Icons.check_rounded,
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? const Color(0xFF60A5FA)
+                  : const Color(0xFF40A6FF),
+              semanticLabel: AppStrings.friendsAccept,
+              onPressed: () {
+                _hide(item.id);
+                widget.onAccept?.call(item);
+              },
+            ),
+          ] else
+            _TextAction(
+              label: AppStrings.friendsCancel,
+              color: colors.muted,
+              weight: FontWeight.w400,
+              onPressed: () {
+                _hide(item.id);
+                widget.onCancel?.call(item);
+              },
+            ),
+        ],
       ),
     );
   }
@@ -1844,6 +2130,7 @@ class _FlyingFriendTileState extends State<_FlyingFriendTile>
             onPressed: () {},
             onHomeChanged: (_) {},
             onFavoriteChanged: (_) {},
+            onSharedTodo: () {},
             onRemove: () {},
           ),
         ),
@@ -1860,6 +2147,7 @@ class _FriendTile extends StatelessWidget {
     required this.onPressed,
     required this.onHomeChanged,
     required this.onFavoriteChanged,
+    required this.onSharedTodo,
     required this.onRemove,
   });
 
@@ -1869,6 +2157,7 @@ class _FriendTile extends StatelessWidget {
   final VoidCallback onPressed;
   final ValueChanged<bool> onHomeChanged;
   final ValueChanged<bool> onFavoriteChanged;
+  final VoidCallback onSharedTodo;
   final VoidCallback onRemove;
 
   @override
@@ -1927,10 +2216,16 @@ class _FriendTile extends StatelessWidget {
           OverflowMenuButton(
             actions: [
               OverflowMenuAction(
+                label: AppStrings.friendsSharedTodoAdd,
+                leadingAsset: AppIcons.linkOutlined,
+                onPressed: onSharedTodo,
+              ),
+              OverflowMenuAction(
                 label: homePinned
                     ? AppStrings.friendsHomeUnpin
                     : AppStrings.friendsHomePin,
-                leadingAsset: AppIcons.addHome,
+                leadingAsset:
+                    homePinned ? AppIcons.removeHome : AppIcons.addHome,
                 leadingFlipX: true,
                 onPressed: () => onHomeChanged(!homePinned),
               ),

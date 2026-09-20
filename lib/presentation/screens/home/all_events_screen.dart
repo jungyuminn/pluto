@@ -9,6 +9,7 @@ import 'package:pluto/core/utils/plain_text_editing_controller.dart';
 import 'package:pluto/core/utils/press_bounce.dart';
 import 'package:pluto/core/utils/swipe_to_delete.dart';
 import 'package:pluto/data/datasources/app_backup_service.dart';
+import 'package:pluto/data/datasources/calendar_complete.dart';
 import 'package:pluto/domain/entities/calendar_event.dart';
 import 'package:pluto/domain/entities/event_category.dart';
 import 'package:pluto/domain/entities/job_application.dart';
@@ -459,13 +460,10 @@ class _AllEventsScreenState extends State<AllEventsScreen> {
 
   Future<void> _toggleComplete(CalendarEvent event) async {
     if (event.isJob) return;
-    final updater = AppScope.of(context).updateCalendarEvent;
-    final next = event.copyWith(completed: !event.completed);
-    if (event.isRepeat) {
-      await updater.instance(next);
-    } else {
-      await updater(next);
-    }
+    await saveCompleteToggle(
+      updater: AppScope.of(context).updateCalendarEvent,
+      event: event,
+    );
     if (mounted) await _reload();
   }
 
@@ -725,6 +723,9 @@ class _AllEventsScreenState extends State<AllEventsScreen> {
                                                     : _eventDateLabel(event),
                                                 color: event.color,
                                                 completed: event.completed,
+                                                waiting: event.isSharedWaiting,
+                                                shared: event.isShared,
+                                                peerCompleted: event.sharedPeer,
                                                 isRepeat: event.isRepeat,
                                                 isRange: event.isRange,
                                                 memo: event.memo,

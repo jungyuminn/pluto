@@ -17,6 +17,19 @@ class ReleaseNote {
 abstract final class ReleaseNotes {
   static const all = [
     ReleaseNote(
+      version: '1.4.5',
+      items: [
+        '친구에게 같이 할 일을 보낼 수 있어요',
+        '둘 다 체크해야 완료돼요',
+        '기간이나 반복으로도 같이 넣을 수 있어요',
+        '제목과 날짜를 바꾸면 상대 캘린더도 따라가요',
+        '받은 같이 할 일은 내 얼굴에, 친구 요청은 더하기에 표시돼요',
+      ],
+      fixes: [
+        '할 일을 다른 날로 끌면 상대에게도 날짜가 바뀌어요',
+      ],
+    ),
+    ReleaseNote(
       version: '1.4.4',
       items: [
         'PC에서 할 일·메모·일기·챌린지·가계부·친구 추가가 가운데에 열려요',

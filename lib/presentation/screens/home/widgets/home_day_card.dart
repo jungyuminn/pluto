@@ -6,6 +6,7 @@ import 'package:pluto/core/constants/app_icons.dart';
 import 'package:pluto/core/constants/app_strings.dart';
 import 'package:pluto/core/theme/app_colors.dart';
 import 'package:pluto/core/utils/swipe_to_delete.dart';
+import 'package:pluto/data/datasources/calendar_complete.dart';
 import 'package:pluto/data/datasources/day_emoji_store.dart';
 import 'package:pluto/domain/entities/calendar_event.dart';
 import 'package:pluto/domain/entities/event_category.dart';
@@ -415,13 +416,10 @@ class _HomeDayCardState extends State<HomeDayCard> {
   }
 
   Future<void> _toggleComplete(CalendarEvent event) async {
-    final updater = AppScope.of(context).updateCalendarEvent;
-    final next = event.copyWith(completed: !event.completed);
-    if (event.isRepeat) {
-      await updater.instance(next);
-    } else {
-      await updater(next);
-    }
+    await saveCompleteToggle(
+      updater: AppScope.of(context).updateCalendarEvent,
+      event: event,
+    );
     widget.onEventsChanged();
   }
 
@@ -858,6 +856,9 @@ class _HomeDayCardState extends State<HomeDayCard> {
             categoryName: categoryName,
             color: event.color,
             completed: event.completed,
+            waiting: event.isSharedWaiting,
+            shared: event.isShared,
+            peerCompleted: event.sharedPeer,
             isRepeat: event.isRepeat,
             isRange: event.isRange,
             memo: event.memo,
@@ -913,6 +914,9 @@ class _HomeDayCardState extends State<HomeDayCard> {
                     categoryName: categoryName,
                     color: event.color,
                     completed: event.completed,
+                    waiting: event.isSharedWaiting,
+                    shared: event.isShared,
+                    peerCompleted: event.sharedPeer,
                     isRepeat: event.isRepeat,
                     isRange: event.isRange,
                     memo: event.memo,

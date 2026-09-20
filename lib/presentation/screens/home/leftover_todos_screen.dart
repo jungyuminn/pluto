@@ -5,6 +5,7 @@ import 'package:pluto/core/constants/app_strings.dart';
 import 'package:pluto/core/layout/pc_layout.dart';
 import 'package:pluto/core/theme/app_colors.dart';
 import 'package:pluto/core/utils/press_bounce.dart';
+import 'package:pluto/data/datasources/calendar_complete.dart';
 import 'package:pluto/domain/entities/calendar_event.dart';
 import 'package:pluto/presentation/screens/calendar/calendar_day_events.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/add_event_sheet.dart';
@@ -99,30 +100,25 @@ class _LeftoverTodosScreenState extends State<LeftoverTodosScreen> {
   }
 
   Future<void> _toggleComplete(CalendarEvent event) async {
-    final updater = AppScope.of(context).updateCalendarEvent;
-    final next = event.copyWith(completed: !event.completed);
-    if (event.isRepeat) {
-      await updater.instance(next);
-    } else {
-      await updater(next);
-    }
+    await saveCompleteToggle(
+      updater: AppScope.of(context).updateCalendarEvent,
+      event: event,
+    );
     if (mounted) await _reload(popIfEmpty: true);
   }
 
   Future<void> _completeAll() async {
     final updater = AppScope.of(context).updateCalendarEvent;
     final events = List.of(_events);
+    final done = <String>{};
     for (final event in events) {
-      final next = event.copyWith(completed: true);
-      if (event.isRepeat) {
-        await updater.instance(next);
-      } else {
-        await updater(next);
-      }
+      final next = await saveCompleteToggle(updater: updater, event: event);
+      if (next.completed) done.add(event.id);
     }
     if (!mounted) return;
     final list = _listKey.currentState;
     for (var i = _events.length - 1; i >= 0; i--) {
+      if (!done.contains(_events[i].id)) continue;
       final removed = _events.removeAt(i);
       list?.removeItem(
         i,
@@ -130,9 +126,13 @@ class _LeftoverTodosScreenState extends State<LeftoverTodosScreen> {
         duration: _removeDuration,
       );
     }
-    setState(() {});
-    await Future<void>.delayed(_removeDuration);
-    if (mounted) Navigator.pop(context);
+    if (_events.isEmpty) {
+      setState(() {});
+      await Future<void>.delayed(_removeDuration);
+      if (mounted) Navigator.pop(context);
+      return;
+    }
+    await _reload(popIfEmpty: true);
   }
 
   Future<bool> _delete(CalendarEvent event) async {

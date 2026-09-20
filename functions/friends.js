@@ -564,6 +564,179 @@ exports.removeFriend = onCall(callable, async (request) => {
   return removeFriendFor(requireUid(request), String(request.data?.uid || ""));
 });
 
+function parseTodoDate(raw) {
+  const date = String(raw || "").trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    throw new HttpsError("invalid-argument", "bad-todo");
+  }
+  return date;
+}
+
+function parseTodoTitle(raw) {
+  const title = String(raw || "").trim();
+  if (!title || title.length > 80) {
+    throw new HttpsError("invalid-argument", "bad-todo");
+  }
+  return title;
+}
+
+const TODO_MODES = new Set(["single", "range", "repeat", "multiple"]);
+const TODO_DATE_MAX = 366;
+
+function parseTodoSchedule(data) {
+  const date = parseTodoDate(data?.date);
+  const seen = new Set();
+  const dates = [];
+  const raw = Array.isArray(data?.dates) ? data.dates : [];
+  for (const item of raw) {
+    const value = String(item || "").trim();
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(value) || seen.has(value)) continue;
+    seen.add(value);
+    dates.push(value);
+    if (dates.length >= TODO_DATE_MAX) break;
+  }
+  if (!dates.length) {
+    dates.push(date);
+  } else if (!seen.has(date) && dates.length < TODO_DATE_MAX) {
+    dates.push(date);
+  }
+  dates.sort();
+  const modeRaw = String(data?.dateMode || "").trim();
+  const dateMode = TODO_MODES.has(modeRaw)
+    ? modeRaw
+    : (dates.length > 1 ? "multiple" : "single");
+  return {date: dates[0], dates, dateMode};
+}
+
+async function sendTodoFor(uid, data) {
+  await rateLimit(uid, "todo-send", 20, 60 * 1000);
+  const me = await ensureProfile(uid);
+  const otherUid = String(data?.toUid || "");
+  if (!otherUid || otherUid === uid) {
+    throw new HttpsError("invalid-argument", "bad-uid");
+  }
+  if (!(await areFriends(uid, otherUid))) {
+    throw new HttpsError("failed-precondition", "not-friends");
+  }
+  const other = await profileOf(otherUid);
+  if (!other) {
+    throw new HttpsError("not-found", "no-user");
+  }
+  const title = parseTodoTitle(data?.title);
+  const schedule = parseTodoSchedule(data);
+  const memo = String(data?.memo || "").slice(0, 2000);
+  const categoryName = String(data?.categoryName || "").trim().slice(0, 32);
+  const categoryColor = Number(data?.categoryColor);
+  const startMinutes = data?.startMinutes == null ? null : Number(data.startMinutes);
+  const endMinutes = data?.endMinutes == null ? null : Number(data.endMinutes);
+  const id = `${uid}_${otherUid}_${Date.now()}`;
+  await db().collection("todo_requests").doc(id).set({
+    fromUid: me.uid,
+    toUid: other.uid,
+    fromName: me.displayName,
+    fromCode: me.friendCode,
+    fromPhotoURL: String(me.photoURL || ""),
+    toName: other.displayName,
+    toCode: other.friendCode,
+    toPhotoURL: String(other.photoURL || ""),
+    title,
+    date: schedule.date,
+    dates: schedule.dates,
+    dateMode: schedule.dateMode,
+    memo,
+    categoryName,
+    categoryColor: Number.isFinite(categoryColor) ? categoryColor : 0xFF3B82F6,
+    startMinutes: Number.isFinite(startMinutes) ? startMinutes : null,
+    endMinutes: Number.isFinite(endMinutes) ? endMinutes : null,
+    status: "pending",
+    fromCompleted: false,
+    toCompleted: false,
+    createdAt: Date.now(),
+    participants: [me.uid, other.uid],
+  });
+  return {status: "pending", requestId: id};
+}
+
+async function respondTodoFor(uid, requestId, nextStatus) {
+  if (!requestId) {
+    throw new HttpsError("invalid-argument", "missing-request");
+  }
+  const ref = db().collection("todo_requests").doc(requestId);
+  const snap = await ref.get();
+  if (!snap.exists) {
+    throw new HttpsError("not-found", "no-request");
+  }
+  const data = snap.data() || {};
+  if (data.status !== "pending") {
+    throw new HttpsError("failed-precondition", "not-allowed");
+  }
+  if (nextStatus === "cancelled") {
+    if (data.fromUid !== uid) {
+      throw new HttpsError("permission-denied", "not-allowed");
+    }
+  } else if (data.toUid !== uid) {
+    throw new HttpsError("permission-denied", "not-allowed");
+  }
+  await ref.update({status: nextStatus, updatedAt: Date.now()});
+  return {status: nextStatus};
+}
+
+async function editTodoFor(uid, data) {
+  await rateLimit(uid, "todo-edit", 30, 60 * 1000);
+  const requestId = String(data?.requestId || "");
+  if (!requestId) {
+    throw new HttpsError("invalid-argument", "missing-request");
+  }
+  const ref = db().collection("todo_requests").doc(requestId);
+  const snap = await ref.get();
+  if (!snap.exists) {
+    throw new HttpsError("not-found", "no-request");
+  }
+  const current = snap.data() || {};
+  if (current.fromUid !== uid && current.toUid !== uid) {
+    throw new HttpsError("permission-denied", "not-allowed");
+  }
+  if (current.status !== "accepted") {
+    throw new HttpsError("failed-precondition", "not-allowed");
+  }
+  const title = parseTodoTitle(data?.title);
+  const schedule = parseTodoSchedule(data);
+  const memo = String(data?.memo || "").slice(0, 2000);
+  const startMinutes = data?.startMinutes == null ? null : Number(data.startMinutes);
+  const endMinutes = data?.endMinutes == null ? null : Number(data.endMinutes);
+  await ref.update({
+    title,
+    date: schedule.date,
+    dates: schedule.dates,
+    dateMode: schedule.dateMode,
+    memo,
+    startMinutes: Number.isFinite(startMinutes) ? startMinutes : null,
+    endMinutes: Number.isFinite(endMinutes) ? endMinutes : null,
+    updatedAt: Date.now(),
+  });
+  return {status: "accepted"};
+}
+
+async function removeTodoFor(uid, requestId) {
+  if (!requestId) {
+    throw new HttpsError("invalid-argument", "missing-request");
+  }
+  const ref = db().collection("todo_requests").doc(requestId);
+  const snap = await ref.get();
+  if (!snap.exists) {
+    return {status: "removed"};
+  }
+  const data = snap.data() || {};
+  if (data.fromUid !== uid && data.toUid !== uid) {
+    throw new HttpsError("permission-denied", "not-allowed");
+  }
+  if (data.status === "removed" || data.status === "declined" || data.status === "cancelled") {
+    return {status: data.status};
+  }
+  await ref.update({status: "removed", updatedAt: Date.now()});
+  return {status: "removed"};
+}
+
 exports.friendAction = onCall(callable, async (request) => {
   const uid = requireUid(request);
   const action = String(request.data?.action || "");
@@ -592,6 +765,18 @@ exports.friendAction = onCall(callable, async (request) => {
       return cancelFriendFor(uid, request.data?.requestId);
     case "remove":
       return removeFriendFor(uid, String(request.data?.uid || ""));
+    case "todo-send":
+      return sendTodoFor(uid, request.data || {});
+    case "todo-accept":
+      return respondTodoFor(uid, String(request.data?.requestId || ""), "accepted");
+    case "todo-decline":
+      return respondTodoFor(uid, String(request.data?.requestId || ""), "declined");
+    case "todo-cancel":
+      return respondTodoFor(uid, String(request.data?.requestId || ""), "cancelled");
+    case "todo-remove":
+      return removeTodoFor(uid, String(request.data?.requestId || ""));
+    case "todo-edit":
+      return editTodoFor(uid, request.data || {});
     default:
       throw new HttpsError("invalid-argument", "bad-action");
   }
@@ -612,6 +797,8 @@ exports.deleteFriendData = onCall(callable, async (request) => {
 
   await addAll(store.collection("friend_requests").where("fromUid", "==", uid));
   await addAll(store.collection("friend_requests").where("toUid", "==", uid));
+  await addAll(store.collection("todo_requests").where("fromUid", "==", uid));
+  await addAll(store.collection("todo_requests").where("toUid", "==", uid));
   await addAll(store.collection("friendships").doc(uid).collection("friends"));
   await addAll(store.collection("shared_calendars").doc(uid).collection("events"));
   await addAll(store.collection("shared_calendars").doc(uid).collection("stickers"));

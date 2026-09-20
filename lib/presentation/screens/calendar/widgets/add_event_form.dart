@@ -9,8 +9,11 @@ import 'package:pluto/core/theme/app_colors.dart';
 import 'package:pluto/core/theme/app_theme.dart';
 import 'package:pluto/core/utils/plain_text_editing_controller.dart';
 import 'package:pluto/data/datasources/last_event_category_preference.dart';
+import 'package:pluto/data/datasources/friend_service.dart';
 import 'package:pluto/domain/entities/calendar_event.dart';
 import 'package:pluto/domain/entities/event_category.dart';
+import 'package:pluto/domain/entities/friend_profile.dart';
+import 'package:pluto/domain/entities/todo_request.dart';
 import 'package:pluto/presentation/screens/add_company/widgets/missing_fields_dialog.dart';
 import 'package:pluto/presentation/screens/add_company/widgets/save_company_button.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/category_picker_sheet.dart';
@@ -33,12 +36,14 @@ class AddEventForm extends StatefulWidget {
     this.rangeEnd,
     this.initial,
     this.someday = false,
+    this.shareWith,
   });
 
   final DateTime date;
   final DateTime? rangeEnd;
   final CalendarEvent? initial;
   final bool someday;
+  final FriendProfile? shareWith;
 
   @override
   State<AddEventForm> createState() => _AddEventFormState();
@@ -73,6 +78,8 @@ class _AddEventFormState extends State<AddEventForm>
   bool get _hasCategory =>
       _categoryId != null && (_categoryName?.trim().isNotEmpty ?? false);
 
+  bool get _shared => widget.initial?.isShared == true;
+
   Color get _accent => Color(_categoryColor ?? EventCategory.fallback.color);
 
   @override
@@ -85,7 +92,8 @@ class _AddEventFormState extends State<AddEventForm>
     _categoryId = initial?.categoryId ?? travel.id;
     _categoryName = initial?.categoryName ?? travel.name;
     _categoryColor = initial?.categoryColor ?? travel.color;
-    _isSomeday = widget.someday || (initial?.someday ?? false);
+    _isSomeday = widget.shareWith == null &&
+        (widget.someday || (initial?.someday ?? false));
     _startMinutes = _isSomeday ? null : initial?.startMinutes;
     _endMinutes = _isSomeday ? null : initial?.endMinutes;
     final date = initial?.date ?? widget.date;
@@ -130,7 +138,11 @@ class _AddEventFormState extends State<AddEventForm>
       _beginSuggest();
       _loadLastCategory();
       if (!widget.someday && !(widget.initial?.someday ?? false)) {
-        _loadGroup();
+        if (widget.initial?.isShared == true) {
+          _loadSharedDates();
+        } else {
+          _loadGroup();
+        }
       }
     });
   }
@@ -263,6 +275,42 @@ class _AddEventFormState extends State<AddEventForm>
     });
   }
 
+  Future<void> _loadSharedDates() async {
+    final initial = widget.initial;
+    final sharedId = initial?.sharedId?.trim() ?? '';
+    if (sharedId.isEmpty) return;
+    final events = await AppScope.of(context).getCalendarEvents();
+    final days = [
+      for (final event in events)
+        if ((event.sharedId ?? '') == sharedId)
+          DateTime(event.date.year, event.date.month, event.date.day),
+    ]..sort((a, b) => a.compareTo(b));
+    if (!mounted || days.isEmpty) return;
+    setState(() {
+      if (initial!.isRange && days.length >= 2) {
+        _dateMode = AppCalendarMode.range;
+        _dates = [days.first, days.last];
+      } else if (initial.isRepeat) {
+        _dateMode = AppCalendarMode.repeat;
+        _dates = days;
+      } else if (days.length >= 2) {
+        _dateMode = AppCalendarMode.multiple;
+        _dates = days;
+      } else {
+        _dateMode = AppCalendarMode.single;
+        _dates = [days.first];
+      }
+      _date = days.first;
+    });
+  }
+
+  String get _sharedDateMode {
+    if (_isRange) return 'range';
+    if (_isMultiple) return 'multiple';
+    if (_dateMode == AppCalendarMode.repeat) return 'repeat';
+    return 'single';
+  }
+
   Future<void> _loadGroup() async {
     final groupId = widget.initial?.groupId;
     if (groupId == null) return;
@@ -301,18 +349,25 @@ class _AddEventFormState extends State<AddEventForm>
   }
 
   List<DateTime> _daysToSave() {
-    if (_isRange) return _daysOn(_dates.first, _dates.last);
-    if (_dateMode == AppCalendarMode.multiple) {
-      final days = {
+    late final List<DateTime> days;
+    if (_isRange) {
+      days = _daysOn(_dates.first, _dates.last);
+    } else if (_dateMode == AppCalendarMode.multiple) {
+      days = {
         for (final date in _dates) _dateOnly(date),
       }.toList()
         ..sort((a, b) => a.compareTo(b));
-      if (days.isNotEmpty) return days;
+      if (days.isEmpty) days.add(_date);
+    } else if (_dateMode == AppCalendarMode.repeat && _dates.isNotEmpty) {
+      days = [..._dates]..sort((a, b) => a.compareTo(b));
+    } else {
+      days = [_date];
     }
-    if (_dateMode == AppCalendarMode.repeat && _dates.isNotEmpty) {
-      return [..._dates]..sort((a, b) => a.compareTo(b));
+    if ((_shared || widget.shareWith != null) &&
+        days.length > TodoRequestItem.maxDays) {
+      return days.sublist(0, TodoRequestItem.maxDays);
     }
-    return [_date];
+    return days;
   }
 
   Future<void> _pickCategory() async {
@@ -382,6 +437,34 @@ class _AddEventFormState extends State<AddEventForm>
     _memoToggling = false;
   }
 
+  Future<void> _sendShared(String title, {required String memo}) async {
+    final friend = widget.shareWith;
+    if (friend == null) return;
+    try {
+      await FriendService.instance.sendTodo(
+        to: friend,
+        title: title,
+        date: _date,
+        memo: memo,
+        categoryName: _categoryName ?? CalendarEvent.defaultCategoryName,
+        categoryColor: _categoryColor ?? CalendarEvent.defaultCategoryColor,
+        startMinutes: _startMinutes,
+        endMinutes: _endMinutes,
+        days: _daysToSave(),
+        dateMode: _sharedDateMode,
+      );
+      if (!mounted) return;
+      Navigator.of(context).pop(true);
+    } catch (error) {
+      if (!mounted) return;
+      setState(() => _saving = false);
+      await showMissingFieldsDialog(
+        context,
+        body: FriendService.instance.messageOf(error),
+      );
+    }
+  }
+
   Future<void> _save() async {
     final title = _title.text.trim();
     final days = _daysToSave();
@@ -394,6 +477,38 @@ class _AddEventFormState extends State<AddEventForm>
     }
     if (_saving) return;
     setState(() => _saving = true);
+    if (widget.shareWith != null) {
+      await _sendShared(title, memo: _memo.text.trim());
+      return;
+    }
+    if (_shared) {
+      final initial = widget.initial!;
+      final categoryId = _categoryId;
+      if (categoryId != null) {
+        final prefs = await SharedPreferences.getInstance();
+        await LastEventCategoryPreference(prefs: prefs).setId(categoryId);
+        if (!mounted) return;
+      }
+      final next = initial.copyWith(
+        title: title,
+        date: days.first,
+        memo: _memo.text.trim(),
+        categoryId: categoryId,
+        categoryName: _categoryName,
+        categoryColor: _categoryColor,
+        startMinutes: _startMinutes,
+        endMinutes: _endMinutes,
+        clearTime: _startMinutes == null || _endMinutes == null,
+      );
+      await FriendService.instance.editShared(
+        next,
+        days: days,
+        dateMode: _sharedDateMode,
+      );
+      if (!mounted) return;
+      Navigator.of(context).pop(true);
+      return;
+    }
     final initial = widget.initial;
     final memo = _memo.text.trim();
     final categoryId = _categoryId;

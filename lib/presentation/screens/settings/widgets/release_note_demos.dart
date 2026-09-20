@@ -175,6 +175,12 @@ ReleaseDemo releaseDemoFor(String text, {required bool isFix}) {
   if (text.contains('미니캘린더') || text.contains('일정만')) {
     return ReleaseDemo.friendsMiniCal;
   }
+  if (text.contains('같이 할 일') ||
+      text.contains('둘 다 체크') ||
+      text.contains('상대 캘린더') ||
+      text.contains('내 얼굴')) {
+    return ReleaseDemo.friendsMiniCal;
+  }
   if (text.contains('아이디로 친구') || text.contains('친구를 추가')) {
     return ReleaseDemo.friendsAdd;
   }

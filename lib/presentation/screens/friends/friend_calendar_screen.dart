@@ -19,56 +19,150 @@ import 'package:pluto/domain/entities/friend_profile.dart';
 import 'package:pluto/presentation/screens/add_company/widgets/missing_fields_dialog.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/calendar_month_grid.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/calendar_weekday_header.dart';
+import 'package:pluto/presentation/screens/calendar/widgets/add_event_sheet.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/day_events_dialog.dart';
 import 'package:pluto/presentation/screens/friends/friend_avatar.dart';
 import 'package:pluto/presentation/screens/friends/friend_star_button.dart';
 import 'package:pluto/presentation/screens/friends/friends_toast.dart';
 import 'package:pluto/presentation/widgets/overflow_menu.dart';
 
-Future<bool> confirmRemoveFriend(BuildContext context) async {
-  final colors = AppColors.of(context);
+Future<bool> confirmRemoveFriend(
+  BuildContext context,
+  FriendProfile friend,
+) async {
   final ok = await showDialog<bool>(
     context: context,
-    builder: (context) {
-      return AlertDialog(
-        backgroundColor: colors.card,
-        surfaceTintColor: Colors.transparent,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
-        ),
-        title: Text(
-          AppStrings.friendsRemoveTitle,
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w800,
-            color: colors.text,
-          ),
-        ),
-        content: Text(
-          AppStrings.friendsRemoveBody,
-          style: TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w600,
-            color: colors.secondary,
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(AppStrings.friendsCancel),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(
-              AppStrings.friendsRemove,
-              style: TextStyle(color: colors.danger),
-            ),
-          ),
-        ],
-      );
-    },
+    builder: (context) => _RemoveFriendDialog(friend: friend),
   );
   return ok == true;
+}
+
+class _RemoveFriendDialog extends StatelessWidget {
+  const _RemoveFriendDialog({required this.friend});
+
+  final FriendProfile friend;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    final font = AppFonts.of(context);
+    final code = friend.friendCode.trim();
+    return AlertDialog(
+      backgroundColor: colors.card,
+      surfaceTintColor: Colors.transparent,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      titlePadding: EdgeInsets.zero,
+      contentPadding: const EdgeInsets.fromLTRB(20, 28, 20, 20),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          FriendAvatar(
+            size: 68,
+            profile: friend,
+            showFavorite: false,
+          ),
+          const SizedBox(height: 12),
+          Text(
+            friend.label,
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontFamily: font,
+              fontSize: 17,
+              fontWeight: FontWeight.w800,
+              color: colors.text,
+            ),
+          ),
+          if (code.isNotEmpty) ...[
+            const SizedBox(height: 2),
+            Text(
+              code,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontFamily: font,
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: colors.muted,
+              ),
+            ),
+          ],
+          const SizedBox(height: 18),
+          Text(
+            AppStrings.friendsRemoveTitle,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontFamily: font,
+              fontSize: 18,
+              fontWeight: FontWeight.w800,
+              color: colors.text,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            AppStrings.friendsRemoveBody,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontFamily: font,
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: colors.secondary,
+            ),
+          ),
+          const SizedBox(height: 22),
+          Row(
+            children: [
+              Expanded(
+                child: PressBounce(
+                  onPressed: () => Navigator.pop(context, false),
+                  color: colors.border,
+                  pressedColor: Color.lerp(colors.border, Colors.black, 0.12)!,
+                  borderRadius: BorderRadius.circular(14),
+                  child: SizedBox(
+                    height: 48,
+                    child: Center(
+                      child: Text(
+                        AppStrings.cancel,
+                        style: TextStyle(
+                          fontFamily: font,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w800,
+                          color: colors.text,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: PressBounce(
+                  onPressed: () => Navigator.pop(context, true),
+                  color: colors.danger,
+                  pressedColor: Color.lerp(colors.danger, Colors.black, 0.16)!,
+                  borderRadius: BorderRadius.circular(14),
+                  child: SizedBox(
+                    height: 48,
+                    child: Center(
+                      child: Text(
+                        AppStrings.friendsRemove,
+                        style: TextStyle(
+                          fontFamily: font,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class FriendCalendarScreen extends StatefulWidget {
@@ -325,8 +419,18 @@ class _FriendCalendarScreenState extends State<FriendCalendarScreen> {
     );
   }
 
+  Future<void> _addSharedTodo() async {
+    final sent = await showAddEventSheet(
+      context,
+      date: DateTime.now(),
+      shareWith: widget.friend,
+    );
+    if (!mounted || !sent) return;
+    _toast(AppStrings.friendsSharedTodoSent(widget.friend.label));
+  }
+
   Future<void> _removeFriend() async {
-    final ok = await confirmRemoveFriend(context);
+    final ok = await confirmRemoveFriend(context, widget.friend);
     if (!ok || !mounted) return;
     try {
       await FriendService.instance.remove(widget.friend.uid);
@@ -416,10 +520,16 @@ class _FriendCalendarScreenState extends State<FriendCalendarScreen> {
                   OverflowMenuButton(
                     actions: [
                       OverflowMenuAction(
+                        label: AppStrings.friendsSharedTodoAdd,
+                        leadingAsset: AppIcons.linkOutlined,
+                        onPressed: _addSharedTodo,
+                      ),
+                      OverflowMenuAction(
                         label: pinned
                             ? AppStrings.friendsHomeUnpin
                             : AppStrings.friendsHomePin,
-                        leadingAsset: AppIcons.addHome,
+                        leadingAsset:
+                            pinned ? AppIcons.removeHome : AppIcons.addHome,
                         leadingFlipX: true,
                         onPressed: () {
                           final next = !pinned;

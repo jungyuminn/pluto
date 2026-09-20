@@ -701,6 +701,7 @@ class CloudSyncService {
       debugPrint('Cloud sync file download failed: $error');
     }
     await AppBackupService.applyToApp(scope);
+    unawaited(FriendService.instance.resyncSharedTodos());
   }
 
   Future<void> _resetLocal(AppScope scope, SharedPreferences prefs) async {

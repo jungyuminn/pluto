@@ -10,6 +10,8 @@ import 'package:pluto/core/layout/pc_layout.dart';
 import 'package:pluto/core/theme/app_colors.dart';
 import 'package:pluto/core/theme/app_skin_background.dart';
 import 'package:pluto/core/theme/app_theme.dart';
+import 'package:pluto/data/datasources/calendar_complete.dart';
+import 'package:pluto/data/datasources/friend_service.dart';
 import 'package:pluto/data/datasources/theme_preference.dart';
 import 'package:pluto/core/utils/press_bounce.dart';
 import 'package:pluto/core/utils/swipe_to_delete.dart';
@@ -496,13 +498,10 @@ class _DayEventsDialogState extends State<DayEventsDialog> {
 
   Future<void> _toggleComplete(CalendarEvent event) async {
     if (widget.readOnly) return;
-    final updater = AppScope.of(context).updateCalendarEvent;
-    final next = event.copyWith(completed: !event.completed);
-    if (event.isRepeat) {
-      await updater.instance(next);
-    } else {
-      await updater(next);
-    }
+    await saveCompleteToggle(
+      updater: AppScope.of(context).updateCalendarEvent,
+      event: event,
+    );
     if (mounted) await _reload(animate: false);
     widget.onEventsChanged?.call();
   }
@@ -631,6 +630,11 @@ class _DayEventsDialogState extends State<DayEventsDialog> {
 
   Future<void> _moveToDate(CalendarEvent event, DateTime date) async {
     final target = DateTime(date.year, date.month, date.day);
+    if (event.isShared) {
+      await _moveSharedToDate(event, target);
+      widget.onEventsChanged?.call();
+      return;
+    }
     final updater = AppScope.of(context).updateCalendarEvent;
     final groupId = event.groupId;
     if (groupId != null) {
@@ -641,6 +645,45 @@ class _DayEventsDialogState extends State<DayEventsDialog> {
       await updater(event.copyWith(date: target));
     }
     widget.onEventsChanged?.call();
+  }
+
+  Future<void> _moveSharedToDate(CalendarEvent event, DateTime target) async {
+    final events = await AppScope.of(context).getCalendarEvents();
+    final sharedId = event.sharedId ?? '';
+    final siblings = [
+      for (final item in events)
+        if ((item.sharedId ?? '') == sharedId) item,
+    ]..sort((a, b) => a.day.compareTo(b.day));
+    if (event.isRange && siblings.length >= 2) {
+      final first = siblings.first.day;
+      final delta = target.difference(first).inDays;
+      final days = [
+        for (final item in siblings)
+          DateTime(item.day.year, item.day.month, item.day.day + delta),
+      ];
+      await FriendService.instance.editShared(
+        event.copyWith(date: days.first),
+        days: days,
+        dateMode: 'range',
+      );
+      return;
+    }
+    if (siblings.length > 1) {
+      final days = [
+        for (final item in siblings)
+          item.id == event.id ? target : item.day,
+      ]..sort((a, b) => a.compareTo(b));
+      await FriendService.instance.editShared(
+        event.copyWith(date: target),
+        days: days,
+        dateMode: event.isRepeat ? 'repeat' : 'multiple',
+      );
+      return;
+    }
+    await FriendService.instance.editShared(
+      event.copyWith(date: target),
+      days: [target],
+    );
   }
 
   CalendarEvent? get _draggedEvent {
@@ -975,6 +1018,9 @@ class _DayEventsDialogState extends State<DayEventsDialog> {
             categoryName: event.categoryName,
             color: event.color,
             completed: event.completed,
+            waiting: event.isSharedWaiting,
+            shared: event.isShared,
+            peerCompleted: event.sharedPeer,
             isRepeat: event.isRepeat,
             isRange: event.isRange,
             memo: event.memo,
@@ -1031,6 +1077,9 @@ class _DayEventsDialogState extends State<DayEventsDialog> {
                     categoryName: event.categoryName,
                     color: event.color,
                     completed: event.completed,
+                    waiting: event.isSharedWaiting,
+                    shared: event.isShared,
+                    peerCompleted: event.sharedPeer,
                     isRepeat: event.isRepeat,
                     isRange: event.isRange,
                     memo: event.memo,

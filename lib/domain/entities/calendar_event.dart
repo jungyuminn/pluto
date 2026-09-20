@@ -18,6 +18,9 @@ class CalendarEvent {
     this.startMinutes,
     this.endMinutes,
     this.someday = false,
+    this.sharedId,
+    this.sharedMine = false,
+    this.sharedPeer = false,
   });
 
   static const defaultCategoryColor = 0xFF3B82F6;
@@ -39,6 +42,13 @@ class CalendarEvent {
   final int? startMinutes;
   final int? endMinutes;
   final bool someday;
+  final String? sharedId;
+  final bool sharedMine;
+  final bool sharedPeer;
+
+  bool get isShared => (sharedId ?? '').trim().isNotEmpty;
+
+  bool get isSharedWaiting => isShared && sharedMine && !completed;
 
   Color get color => Color(categoryColor);
 
@@ -158,6 +168,9 @@ class CalendarEvent {
     int? startMinutes,
     int? endMinutes,
     bool? someday,
+    String? sharedId,
+    bool? sharedMine,
+    bool? sharedPeer,
     bool clearTime = false,
   }) {
     return CalendarEvent(
@@ -177,6 +190,9 @@ class CalendarEvent {
       startMinutes: clearTime ? null : startMinutes ?? this.startMinutes,
       endMinutes: clearTime ? null : endMinutes ?? this.endMinutes,
       someday: someday ?? this.someday,
+      sharedId: sharedId ?? this.sharedId,
+      sharedMine: sharedMine ?? this.sharedMine,
+      sharedPeer: sharedPeer ?? this.sharedPeer,
     );
   }
 }

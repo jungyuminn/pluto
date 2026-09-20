@@ -67,67 +67,104 @@ class OverflowMenuItem extends StatelessWidget {
     required this.label,
     required this.onPressed,
     this.leading,
+    this.leadingAsset,
+    this.leadingFlipX = false,
     this.trailingAsset,
     this.trailingQuarterTurns = 0,
+    this.value,
+    this.onChanged,
     this.color,
   });
 
   final String label;
   final VoidCallback onPressed;
   final IconData? leading;
+  final String? leadingAsset;
+  final bool leadingFlipX;
   final String? trailingAsset;
   final int trailingQuarterTurns;
+  final bool? value;
+  final ValueChanged<bool>? onChanged;
   final Color? color;
 
   @override
   Widget build(BuildContext context) {
     final tint = color ?? AppColors.of(context).text;
+    final colors = AppColors.of(context);
+    final toggle = value;
+    final row = SizedBox(
+      width: double.infinity,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(14, 14, 12, 14),
+        child: Row(
+          children: [
+            if (leading != null) ...[
+              Icon(leading, size: 22, color: color ?? colors.icon),
+              const SizedBox(width: 10),
+            ],
+            if (leadingAsset != null) ...[
+              Transform.flip(
+                flipX: leadingFlipX,
+                child: AppAssetImage(
+                  asset: leadingAsset!,
+                  width: 22,
+                  height: 22,
+                  color: color ?? colors.icon,
+                ),
+              ),
+              const SizedBox(width: 10),
+            ],
+            Expanded(
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontFamily: AppFonts.of(context),
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  color: tint,
+                ),
+              ),
+            ),
+            if (toggle != null) ...[
+              const SizedBox(width: 10),
+              SizedBox(
+                width: 22,
+                height: 22,
+                child: toggle
+                    ? Icon(
+                        Icons.check_rounded,
+                        size: 22,
+                        color: colors.icon,
+                      )
+                    : null,
+              ),
+            ],
+            if (trailingAsset != null) ...[
+              const SizedBox(width: 10),
+              RotatedBox(
+                quarterTurns: trailingQuarterTurns,
+                child: ColorFiltered(
+                  colorFilter: ColorFilter.mode(
+                    AppColors.light.icon,
+                    BlendMode.srcIn,
+                  ),
+                  child: AppAssetImage(
+                    asset: trailingAsset!,
+                    width: 22,
+                    height: 22,
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
     return PressBounce(
       onPressed: onPressed,
       pressedScale: 0.96,
       borderRadius: BorderRadius.circular(14),
-      child: SizedBox(
-        width: double.infinity,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(14, 14, 16, 14),
-          child: Row(
-            children: [
-              if (leading != null) ...[
-                Icon(leading, size: 22, color: color ?? AppColors.of(context).icon),
-                const SizedBox(width: 6),
-              ],
-              Expanded(
-                child: Text(
-                  label,
-                  style: TextStyle(
-                    fontFamily: AppFonts.of(context),
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                    color: tint,
-                  ),
-                ),
-              ),
-              if (trailingAsset != null) ...[
-                const SizedBox(width: 10),
-                RotatedBox(
-                  quarterTurns: trailingQuarterTurns,
-                  child: ColorFiltered(
-                    colorFilter: ColorFilter.mode(
-                      AppColors.light.icon,
-                      BlendMode.srcIn,
-                    ),
-                    child: AppAssetImage(
-                      asset: trailingAsset!,
-                      width: 22,
-                      height: 22,
-                    ),
-                  ),
-                ),
-              ],
-            ],
-          ),
-        ),
-      ),
+      child: row,
     );
   }
 }
@@ -135,13 +172,23 @@ class OverflowMenuItem extends StatelessWidget {
 class OverflowMenuAction {
   const OverflowMenuAction({
     required this.label,
-    required this.onPressed,
+    this.onPressed,
+    this.value,
+    this.onChanged,
+    this.leadingAsset,
+    this.leadingFlipX = false,
     this.color,
   });
 
   final String label;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
+  final bool? value;
+  final ValueChanged<bool>? onChanged;
+  final String? leadingAsset;
+  final bool leadingFlipX;
   final Color? color;
+
+  bool get isToggle => onChanged != null && value != null;
 }
 
 class OverflowMenuButton extends StatefulWidget {
@@ -242,9 +289,17 @@ class _OverflowMenuButtonState extends State<OverflowMenuButton>
                             OverflowMenuItem(
                               label: action.label,
                               color: action.color,
+                              leadingAsset: action.leadingAsset,
+                              leadingFlipX: action.leadingFlipX,
+                              value: action.value,
+                              onChanged: action.onChanged,
                               onPressed: () async {
+                                if (action.isToggle) {
+                                  action.onChanged!(!action.value!);
+                                  return;
+                                }
                                 await _close();
-                                action.onPressed();
+                                action.onPressed?.call();
                               },
                             ),
                         ],

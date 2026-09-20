@@ -13,6 +13,7 @@ import 'package:pluto/core/theme/app_colors.dart';
 import 'package:pluto/core/utils/press_bounce.dart';
 import 'package:pluto/data/datasources/app_auth_service.dart';
 import 'package:pluto/data/datasources/diary_photo_storage.dart';
+import 'package:pluto/data/datasources/friend_home_preference.dart';
 import 'package:pluto/data/datasources/friend_service.dart';
 import 'package:pluto/data/datasources/synced_file_store.dart';
 import 'package:pluto/domain/entities/friend_profile.dart';
@@ -604,10 +605,25 @@ class _FriendsScreenState extends State<FriendsScreen> {
                                   color: colors.border,
                                 ),
                               ),
-                            _FriendTile(
-                              friend: friends[index],
-                              onPressed: () => _openCalendar(friends[index]),
-                              onRemove: () => _removeFriend(friends[index]),
+                            ListenableBuilder(
+                              listenable:
+                                  FriendHomePreference.instance.listenable,
+                              builder: (context, _) {
+                                final friend = friends[index];
+                                final pinned = FriendHomePreference.instance
+                                    .contains(friend.uid);
+                                return _FriendTile(
+                                  friend: friend,
+                                  homePinned: pinned,
+                                  onPressed: () => _openCalendar(friend),
+                                  onHomeChanged: (value) =>
+                                      FriendHomePreference.instance.setPinned(
+                                    friend.uid,
+                                    value,
+                                  ),
+                                  onRemove: () => _removeFriend(friend),
+                                );
+                              },
                             ),
                           ],
                         ),
@@ -1374,12 +1390,16 @@ class _RequestRevealState extends State<_RequestReveal>
 class _FriendTile extends StatelessWidget {
   const _FriendTile({
     required this.friend,
+    required this.homePinned,
     required this.onPressed,
+    required this.onHomeChanged,
     required this.onRemove,
   });
 
   final FriendProfile friend;
+  final bool homePinned;
   final VoidCallback onPressed;
+  final ValueChanged<bool> onHomeChanged;
   final VoidCallback onRemove;
 
   @override
@@ -1434,7 +1454,15 @@ class _FriendTile extends StatelessWidget {
           OverflowMenuButton(
             actions: [
               OverflowMenuAction(
+                label: AppStrings.friendsHomePin,
+                leadingAsset: AppIcons.addHome,
+                leadingFlipX: true,
+                value: homePinned,
+                onChanged: onHomeChanged,
+              ),
+              OverflowMenuAction(
                 label: AppStrings.friendsRemove,
+                leadingAsset: AppIcons.trashCan,
                 color: colors.danger,
                 onPressed: onRemove,
               ),

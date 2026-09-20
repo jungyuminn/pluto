@@ -3,12 +3,14 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:pluto/app_scope.dart';
 import 'package:pluto/core/constants/app_fonts.dart';
+import 'package:pluto/core/constants/app_icons.dart';
 import 'package:pluto/core/constants/app_strings.dart';
 import 'package:pluto/core/layout/pc_layout.dart';
 import 'package:pluto/core/theme/app_colors.dart';
 import 'package:pluto/core/utils/mouse_drag_scroll.dart';
 import 'package:pluto/core/utils/press_bounce.dart';
 import 'package:pluto/data/datasources/day_emoji_store.dart';
+import 'package:pluto/data/datasources/friend_home_preference.dart';
 import 'package:pluto/data/datasources/friend_service.dart';
 import 'package:pluto/domain/entities/calendar_event.dart';
 import 'package:pluto/domain/entities/friend_profile.dart';
@@ -348,14 +350,33 @@ class _FriendCalendarScreenState extends State<FriendCalendarScreen> {
               ],
             ),
           ),
-          OverflowMenuButton(
-            actions: [
-              OverflowMenuAction(
-                label: AppStrings.friendsRemove,
-                color: colors.danger,
-                onPressed: _removeFriend,
-              ),
-            ],
+          ListenableBuilder(
+            listenable: FriendHomePreference.instance.listenable,
+            builder: (context, _) {
+              final pinned =
+                  FriendHomePreference.instance.contains(friend.uid);
+              return OverflowMenuButton(
+                actions: [
+                  OverflowMenuAction(
+                    label: AppStrings.friendsHomePin,
+                    leadingAsset: AppIcons.addHome,
+                    leadingFlipX: true,
+                    value: pinned,
+                    onChanged: (value) =>
+                        FriendHomePreference.instance.setPinned(
+                      friend.uid,
+                      value,
+                    ),
+                  ),
+                  OverflowMenuAction(
+                    label: AppStrings.friendsRemove,
+                    leadingAsset: AppIcons.trashCan,
+                    color: colors.danger,
+                    onPressed: _removeFriend,
+                  ),
+                ],
+              );
+            },
           ),
         ],
       ),

@@ -873,6 +873,7 @@ class AppStrings {
   static const friendsAccept = '수락';
   static const friendsDecline = '거절';
   static const friendsCancel = '취소';
+  static const friendsHomePin = '홈에서 보기';
   static const friendsRemove = '친구 끊기';
   static const friendsRemoveTitle = '친구를 끊을까요?';
   static const friendsRemoveBody = '상대 일정도 더 이상 보이지 않아요';

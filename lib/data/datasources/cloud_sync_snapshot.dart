@@ -13,6 +13,7 @@ import 'package:pluto/data/datasources/category_suggest_preference.dart';
 import 'package:pluto/data/datasources/day_events_view_preference.dart';
 import 'package:pluto/data/datasources/font_preference.dart';
 import 'package:pluto/data/datasources/friend_category_preference.dart';
+import 'package:pluto/data/datasources/friend_home_preference.dart';
 import 'package:pluto/data/datasources/friend_order_preference.dart';
 import 'package:pluto/data/datasources/home_view_preference.dart';
 import 'package:pluto/data/datasources/home_memo_local_datasource.dart';
@@ -99,6 +100,7 @@ class CloudSyncSnapshot {
     ...LastEventCategoryPreference.syncedKeys,
     ...FriendCategoryPreference.syncedKeys,
     ...FriendOrderPreference.syncedKeys,
+    ...FriendHomePreference.syncedKeys,
   ];
 
   static const syncedKeys = [
@@ -166,6 +168,9 @@ class CloudSyncSnapshot {
     if (key == diaryCoverOrderKey) return <String>[];
     if (key == FriendCategoryPreference.key) return <String>[];
     if (key == FriendOrderPreference.key) return <String>[];
+    if (key == FriendHomePreference.uidsKey) return <String>[];
+    if (key == FriendHomePreference.seenKey) return <String>[];
+    if (key == FriendHomePreference.seededKey) return false;
     if (key == FontPreference.syncedKeys.single) {
       return FontPreference.defaultFamily;
     }
@@ -297,6 +302,13 @@ class CloudSyncSnapshot {
     if ((_listOf(dump, FriendOrderPreference.key) ?? const []).isNotEmpty) {
       return false;
     }
+    if (_boolOf(dump, FriendHomePreference.seededKey) == true) return false;
+    if ((_listOf(dump, FriendHomePreference.uidsKey) ?? const []).isNotEmpty) {
+      return false;
+    }
+    if ((_listOf(dump, FriendHomePreference.seenKey) ?? const []).isNotEmpty) {
+      return false;
+    }
     if ((_stringOf(dump, wordmarkHomeKey) ?? '').isNotEmpty) return false;
     if ((_stringOf(dump, wordmarkJobKey) ?? '').isNotEmpty) return false;
     if ((_stringOf(dump, wordmarkLicenseKey) ?? '').isNotEmpty) return false;
@@ -368,6 +380,40 @@ class CloudSyncSnapshot {
       out.remove(FriendOrderPreference.key);
     } else {
       out[FriendOrderPreference.key] = {'t': 'l', 'v': friendOrder};
+    }
+    final localHomeSeeded = _boolOf(local, FriendHomePreference.seededKey) == true;
+    final remoteHomeSeeded =
+        _boolOf(remote, FriendHomePreference.seededKey) == true;
+    if (localHomeSeeded || remoteHomeSeeded) {
+      out[FriendHomePreference.seededKey] = {'t': 'b', 'v': true};
+      final homeUids = localHomeSeeded && remoteHomeSeeded
+          ? _mergeStringLists(
+              _listOf(local, FriendHomePreference.uidsKey),
+              _listOf(remote, FriendHomePreference.uidsKey),
+            )
+          : _listOf(
+              localHomeSeeded ? local : remote,
+              FriendHomePreference.uidsKey,
+            );
+      if (homeUids == null) {
+        out.remove(FriendHomePreference.uidsKey);
+      } else {
+        out[FriendHomePreference.uidsKey] = {'t': 'l', 'v': homeUids};
+      }
+      final homeSeen = localHomeSeeded && remoteHomeSeeded
+          ? _mergeStringLists(
+              _listOf(local, FriendHomePreference.seenKey),
+              _listOf(remote, FriendHomePreference.seenKey),
+            )
+          : _listOf(
+              localHomeSeeded ? local : remote,
+              FriendHomePreference.seenKey,
+            );
+      if (homeSeen == null) {
+        out.remove(FriendHomePreference.seenKey);
+      } else {
+        out[FriendHomePreference.seenKey] = {'t': 'l', 'v': homeSeen};
+      }
     }
     return out;
   }

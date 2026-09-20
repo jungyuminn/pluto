@@ -15,6 +15,7 @@ import 'package:pluto/core/constants/app_strings.dart';
 import 'package:pluto/data/datasources/app_auth_service.dart';
 import 'package:pluto/data/datasources/calendar_event_local_datasource.dart';
 import 'package:pluto/data/datasources/friend_category_preference.dart';
+import 'package:pluto/data/datasources/friend_home_preference.dart';
 import 'package:pluto/data/datasources/friend_order_preference.dart';
 import 'package:pluto/data/datasources/day_emoji_store.dart';
 import 'package:pluto/data/models/calendar_event_model.dart';
@@ -129,6 +130,7 @@ class FriendService {
     if (uid == null) {
       await FriendCategoryPreference.instance.load();
       await FriendOrderPreference.instance.load();
+      await FriendHomePreference.instance.load();
       return;
     }
     if (_bootstrapUid == uid && _bootstrapWork != null) {
@@ -149,6 +151,7 @@ class FriendService {
     unawaited(_warmAvatar(profile.value));
     unawaited(FriendCategoryPreference.instance.load());
     unawaited(FriendOrderPreference.instance.load());
+    unawaited(FriendHomePreference.instance.load());
     try {
       if (!kIsWeb) {
         await AppAuthService.instance
@@ -616,7 +619,13 @@ class FriendService {
       var ready = false;
       void emit() {
         if (!ready || controller.isClosed) return;
-        controller.add(FriendOrderPreference.instance.apply(items));
+        final ordered = FriendOrderPreference.instance.apply(items);
+        unawaited(
+          FriendHomePreference.instance.seedIfNeeded([
+            for (final friend in ordered) friend.uid,
+          ]),
+        );
+        controller.add(ordered);
       }
 
       final order = FriendOrderPreference.instance.listenable;
@@ -653,6 +662,24 @@ class FriendService {
     final moved = next.removeAt(oldIndex);
     next.insert(target, moved);
     return FriendOrderPreference.instance.setOrder([
+      for (final friend in next) friend.uid,
+    ]);
+  }
+
+  Future<void> reorderHomeFriends(
+    List<FriendProfile> friends, {
+    required int oldIndex,
+    required int newIndex,
+  }) {
+    if (oldIndex < 0 || oldIndex >= friends.length) return Future.value();
+    var target = newIndex;
+    if (target > oldIndex) target -= 1;
+    if (target < 0) target = 0;
+    if (target > friends.length - 1) target = friends.length - 1;
+    final next = [...friends];
+    final moved = next.removeAt(oldIndex);
+    next.insert(target, moved);
+    return FriendHomePreference.instance.setOrder([
       for (final friend in next) friend.uid,
     ]);
   }
@@ -761,6 +788,7 @@ class FriendService {
       debugPrint('Friend remove function failed: $error');
       await _removeViaStore(uid);
     }
+    await FriendHomePreference.instance.forget(uid);
   }
 
   Future<DocumentSnapshot<Map<String, dynamic>>?> _requestSnap(

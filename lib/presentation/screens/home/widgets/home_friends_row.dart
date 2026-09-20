@@ -7,6 +7,7 @@ import 'package:pluto/core/constants/app_strings.dart';
 import 'package:pluto/core/theme/app_colors.dart';
 import 'package:pluto/core/utils/press_bounce.dart';
 import 'package:pluto/data/datasources/app_auth_service.dart';
+import 'package:pluto/data/datasources/friend_home_preference.dart';
 import 'package:pluto/data/datasources/friend_service.dart';
 import 'package:pluto/domain/entities/friend_profile.dart';
 import 'package:pluto/presentation/screens/friends/friend_avatar.dart';
@@ -48,14 +49,19 @@ class _HomeFriendsRowState extends State<HomeFriendsRow> {
               stream: FriendService.instance.friends(),
               builder: (context, snapshot) {
                 final friends = snapshot.data ?? const <FriendProfile>[];
-                return StreamBuilder<int>(
-                  stream: FriendService.instance.incomingCount(),
-                  builder: (context, requestSnap) {
-                    return _row(
-                      context,
-                      me: me,
-                      friends: friends,
-                      requests: requestSnap.data ?? 0,
+                return ListenableBuilder(
+                  listenable: FriendHomePreference.instance.listenable,
+                  builder: (context, _) {
+                    return StreamBuilder<int>(
+                      stream: FriendService.instance.incomingCount(),
+                      builder: (context, requestSnap) {
+                        return _row(
+                          context,
+                          me: me,
+                          friends: FriendHomePreference.instance.onHome(friends),
+                          requests: requestSnap.data ?? 0,
+                        );
+                      },
                     );
                   },
                 );
@@ -108,7 +114,7 @@ class _HomeFriendsRowState extends State<HomeFriendsRow> {
                 onReorderStart: (_) => HapticFeedback.mediumImpact(),
                 onReorder: (oldIndex, newIndex) {
                   unawaited(
-                    FriendService.instance.reorderFriends(
+                    FriendService.instance.reorderHomeFriends(
                       friends,
                       oldIndex: oldIndex,
                       newIndex: newIndex,

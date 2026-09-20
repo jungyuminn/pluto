@@ -17,6 +17,7 @@ class AppIcons {
   static const search = 'assets/icons/search.svg';
   static const stars = 'assets/icons/stars.svg';
   static const addFriend = 'assets/icons/add_friend.svg';
+  static const addHome = 'assets/icons/add_home.svg';
   static const monitor = 'assets/icons/monitor.svg';
   static const link = 'assets/icons/link.svg';
   static const more = 'assets/icons/more.svg';

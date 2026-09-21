@@ -60,6 +60,12 @@ class CalendarEvent {
 
   bool get isLockedOrder => isJob || isRange;
 
+  bool get isBeforeToday {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    return day.isBefore(today);
+  }
+
   bool get hasTime => startMinutes != null && endMinutes != null;
 
   String? get timeLabel {
@@ -133,7 +139,7 @@ class CalendarEvent {
       }
     }
     todos.sort(_compareStartTime);
-    return [...jobs, ...ranges, ...todos];
+    return [...ranges, ...jobs, ...todos];
   }
 
   static int _compareStartTime(CalendarEvent a, CalendarEvent b) {

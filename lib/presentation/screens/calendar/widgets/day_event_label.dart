@@ -150,7 +150,7 @@ class _DayEventLabelState extends State<DayEventLabel> {
             if (hasOverline)
               Padding(
                 padding: EdgeInsets.fromLTRB(
-                  (widget.showAccent && !_completed && !widget.isJob)
+                  (widget.showAccent && !_completed)
                       ? 14
                       : 10,
                   8,
@@ -182,11 +182,7 @@ class _DayEventLabelState extends State<DayEventLabel> {
                 AnimatedContainer(
                   duration: const Duration(milliseconds: 240),
                   curve: Curves.easeOutCubic,
-                  width: (widget.showAccent &&
-                          !_completed &&
-                          !widget.isJob)
-                      ? 4
-                      : 0,
+                  width: (widget.showAccent && !_completed) ? 4 : 0,
                 ),
                 Expanded(
                   child: Padding(
@@ -320,8 +316,8 @@ class _DayEventLabelState extends State<DayEventLabel> {
                             asset: widget.isJob
                                 ? AppIcons.officeOutlined
                                 : AppIcons.linkOutlined,
-                            width: 22,
-                            height: 22,
+                            width: widget.isJob ? 22 : 18,
+                            height: widget.isJob ? 22 : 18,
                           ),
                         ),
                       ),
@@ -404,11 +400,7 @@ class _DayEventLabelState extends State<DayEventLabel> {
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 240),
                 curve: Curves.easeOutCubic,
-                width: (widget.showAccent &&
-                        !_completed &&
-                        !widget.isJob)
-                    ? 4
-                    : 0,
+                width: (widget.showAccent && !_completed) ? 4 : 0,
                 color: accent,
               ),
             ),

@@ -355,7 +355,9 @@ class _FadingLabelState extends State<_FadingLabel> {
         title: block.event.title,
         color: block.event.color,
         completed: block.event.completed,
-        showAccent: widget.showAccent && block.showAccent,
+        showAccent: widget.showAccent &&
+            block.showAccent &&
+            (!block.event.isJob || !block.event.isBeforeToday),
         isJob: block.event.isJob,
       ),
     );
@@ -533,13 +535,13 @@ List<_WeekBlock> _blocksFor(
 
   var rangeLane = 0;
   for (final item in raw) {
-    if (!item.event.isJob) continue;
-    place(item);
-  }
-  for (final item in raw) {
     if (item.event.isJob || !item.event.isRange) continue;
     place(item, lane: rangeLane);
     rangeLane++;
+  }
+  for (final item in raw) {
+    if (!item.event.isJob) continue;
+    place(item);
   }
   for (final item in raw) {
     if (item.event.isJob || item.event.isRange) continue;

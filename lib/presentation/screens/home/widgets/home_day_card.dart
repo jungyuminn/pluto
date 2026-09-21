@@ -552,7 +552,7 @@ class _HomeDayCardState extends State<HomeDayCard> {
     setState(() {
       _events
         ..clear()
-        ..addAll([...jobs, ...ranges, ...todos]);
+        ..addAll([...ranges, ...jobs, ...todos]);
       _items = _itemsForView;
     });
     HapticFeedback.selectionClick();
@@ -847,6 +847,7 @@ class _HomeDayCardState extends State<HomeDayCard> {
             categoryName: event.categoryName,
             color: event.color,
             isJob: true,
+            showAccent: !event.isBeforeToday,
             memo: event.memo,
             timeText: timeText,
             onPressed: () => _edit(event),

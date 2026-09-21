@@ -307,6 +307,7 @@ class _EventEntry extends StatelessWidget {
             title: event.title,
             color: event.color,
             completed: event.completed,
+            showAccent: !event.isJob || !event.isBeforeToday,
             isJob: event.isJob,
             height: WeekTimetableCard.chipHeight,
             fontSize: 13,

@@ -71,7 +71,7 @@ class CalendarEventLabel extends StatelessWidget {
                   AnimatedContainer(
                     duration: const Duration(milliseconds: 240),
                     curve: Curves.easeOutCubic,
-                    width: (showAccent && !completed && !isJob) ? 3 : 0,
+                    width: (showAccent && !completed) ? 3 : 0,
                     height: labelHeight,
                     child: ColoredBox(color: accent),
                   ),

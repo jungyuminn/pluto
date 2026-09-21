@@ -79,7 +79,11 @@ List<CalendarEvent> calendarEventsOn({
     }),
     all: events.where((event) => !event.isJob && !event.someday),
   );
-  return [...jobs, ...todos];
+  return [
+    ...[for (final event in todos) if (event.isRange) event],
+    ...jobs,
+    ...[for (final event in todos) if (!event.isRange) event],
+  ];
 }
 
 List<CalendarEvent> calendarEventsByCategory(

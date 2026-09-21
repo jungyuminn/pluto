@@ -17,6 +17,18 @@ class ReleaseNote {
 abstract final class ReleaseNotes {
   static const all = [
     ReleaseNote(
+      version: '1.4.6',
+      items: [
+        '받은·보낸 목록이 친구 요청과 같이 할 일 요청으로 보여요',
+      ],
+      fixes: [
+        '같이 할 일을 지우면 상대 프로필에서도 바로 없어져요',
+        '마지막 요청을 처리하면 제목도 같이 사라져요',
+        '친구 캘린더에서 할 일을 추가해도 뒤 화면이 밀리지 않아요',
+        '폰에서 같이 할 일 요청이 바로 보내져요',
+      ],
+    ),
+    ReleaseNote(
       version: '1.4.5',
       items: [
         '친구에게 같이 할 일을 보낼 수 있어요',

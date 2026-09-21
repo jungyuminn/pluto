@@ -120,6 +120,13 @@ enum ReleaseDemo {
 
 ReleaseDemo releaseDemoFor(String text, {required bool isFix}) {
   if (isFix) {
+    if (text.contains('상대 프로필') ||
+        text.contains('바로 없어') ||
+        text.contains('제목도 같이') ||
+        text.contains('뒤 화면') ||
+        text.contains('바로 보내')) {
+      return ReleaseDemo.friendsMiniCal;
+    }
     if (text.contains('AI 카테고리') || text.contains('제목을 치면')) {
       return ReleaseDemo.categoryAi;
     }

@@ -299,6 +299,7 @@ class _FriendCalendarScreenState extends State<FriendCalendarScreen> {
     final top = MediaQuery.paddingOf(context).top;
     return Scaffold(
       backgroundColor: colors.groupedBackground,
+      resizeToAvoidBottomInset: false,
       extendBodyBehindAppBar: true,
       appBar: _FriendsAppBar(
         title: '',

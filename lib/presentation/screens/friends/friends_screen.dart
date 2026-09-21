@@ -580,6 +580,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
     final bottom = MediaQuery.paddingOf(context).bottom;
     return Scaffold(
       backgroundColor: colors.groupedBackground,
+      resizeToAvoidBottomInset: false,
       extendBodyBehindAppBar: true,
       appBar: _FriendsAppBar(
         title: AppStrings.friendsProfileSettings,
@@ -1628,45 +1629,52 @@ class _TodoRequestSectionState extends State<_TodoRequestSection> {
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
+    final sectionOpen =
+        _items.any((item) => !_leaving.contains(item.id));
     return AnimatedSize(
       duration: _anim,
       curve: Curves.easeOutCubic,
       alignment: Alignment.topCenter,
       child: _items.isEmpty
           ? const SizedBox(width: double.infinity)
-          : Padding(
-              padding: const EdgeInsets.only(top: 24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  _SectionLabel(widget.title),
-                  _Card(
-                    child: Column(
-                      children: [
-                        for (var i = 0; i < _items.length; i++)
-                          _RequestReveal(
-                            key: ValueKey(_items[i].id),
-                            visible: !_entering.contains(_items[i].id) &&
-                                !_leaving.contains(_items[i].id),
-                            child: Column(
-                              children: [
-                                _row(colors, _items[i]),
-                                if (i != _items.length - 1)
-                                  Padding(
-                                    padding: const EdgeInsets.only(left: 68),
-                                    child: Divider(
-                                      height: 1,
-                                      thickness: 0.5,
-                                      color: colors.border,
+          : _RequestReveal(
+              visible: sectionOpen,
+              child: Padding(
+                padding: const EdgeInsets.only(top: 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _SectionLabel(widget.title),
+                    _Card(
+                      child: Column(
+                        children: [
+                          for (var i = 0; i < _items.length; i++)
+                            _RequestReveal(
+                              key: ValueKey(_items[i].id),
+                              visible: sectionOpen
+                                  ? !_entering.contains(_items[i].id) &&
+                                      !_leaving.contains(_items[i].id)
+                                  : true,
+                              child: Column(
+                                children: [
+                                  _row(colors, _items[i]),
+                                  if (i != _items.length - 1)
+                                    Padding(
+                                      padding: const EdgeInsets.only(left: 68),
+                                      child: Divider(
+                                        height: 1,
+                                        thickness: 0.5,
+                                        color: colors.border,
+                                      ),
                                     ),
-                                  ),
-                              ],
+                                ],
+                              ),
                             ),
-                          ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
     );
@@ -1864,45 +1872,52 @@ class _RequestSectionState extends State<_RequestSection> {
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
+    final sectionOpen =
+        _items.any((item) => !_leaving.contains(item.id));
     return AnimatedSize(
       duration: _anim,
       curve: Curves.easeOutCubic,
       alignment: Alignment.topCenter,
       child: _items.isEmpty
           ? const SizedBox(width: double.infinity)
-          : Padding(
-              padding: const EdgeInsets.only(top: 24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  _SectionLabel(widget.title),
-                  _Card(
-                    child: Column(
-                      children: [
-                        for (var i = 0; i < _items.length; i++)
-                          _RequestReveal(
-                            key: ValueKey(_rowKey(_items[i])),
-                            visible: !_entering.contains(_items[i].id) &&
-                                !_leaving.contains(_items[i].id),
-                            child: Column(
-                              children: [
-                                _requestRow(colors, _items[i]),
-                                if (i != _items.length - 1)
-                                  Padding(
-                                    padding: const EdgeInsets.only(left: 68),
-                                    child: Divider(
-                                      height: 1,
-                                      thickness: 0.5,
-                                      color: colors.border,
+          : _RequestReveal(
+              visible: sectionOpen,
+              child: Padding(
+                padding: const EdgeInsets.only(top: 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _SectionLabel(widget.title),
+                    _Card(
+                      child: Column(
+                        children: [
+                          for (var i = 0; i < _items.length; i++)
+                            _RequestReveal(
+                              key: ValueKey(_rowKey(_items[i])),
+                              visible: sectionOpen
+                                  ? !_entering.contains(_items[i].id) &&
+                                      !_leaving.contains(_items[i].id)
+                                  : true,
+                              child: Column(
+                                children: [
+                                  _requestRow(colors, _items[i]),
+                                  if (i != _items.length - 1)
+                                    Padding(
+                                      padding: const EdgeInsets.only(left: 68),
+                                      child: Divider(
+                                        height: 1,
+                                        thickness: 0.5,
+                                        color: colors.border,
+                                      ),
                                     ),
-                                  ),
-                              ],
+                                ],
+                              ),
                             ),
-                          ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
     );

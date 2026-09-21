@@ -870,14 +870,14 @@ class AppStrings {
   static const friendsProfileNeed = '이름과 아이디를 먼저 등록해 주세요';
   static String friendsCodeCooldown(int days) => '$days일 뒤에 바꿀 수 있어요';
   static const friendsSend = '요청 보내기';
-  static const friendsIncoming = '받은 요청';
-  static const friendsOutgoing = '보낸 요청';
+  static const friendsIncoming = '받은 친구 요청';
+  static const friendsOutgoing = '보낸 친구 요청';
   static const friendsSharedTodo = '같이 할 일';
   static const friendsSharedTodoAdd = '같이 할 일 추가';
-  static const friendsSharedTodoIncoming = '받은 같이 할 일';
-  static const friendsSharedTodoOutgoing = '보낸 같이 할 일';
+  static const friendsSharedTodoIncoming = '받은 같이 할 일 요청';
+  static const friendsSharedTodoOutgoing = '보낸 같이 할 일 요청';
   static String friendsSharedTodoSent(String name) =>
-      '${name.trim()}님에게 같이 할 일을 보냈어요';
+      '${name.trim()}님에게 같이 할 일 요청을 보냈어요';
   static const friendsSharedTodoAccepted = '같이 할 일이 생겼어요';
   static const friendsSharedTodoWaiting = '상대도 완료해야 끝나요';
   static const friendsSharedTodoDone = '둘 다 완료했어요';

@@ -1319,52 +1319,18 @@ class FriendService {
     }
     final allDays = _sharedDays(days ?? [date]);
     final mode = _sharedMode(dateMode, allDays);
-    if (kIsWeb) {
-      return _sendTodoViaStore(
-        to: to,
-        title: clean,
-        date: allDays.first,
-        memo: memo,
-        categoryName: categoryName,
-        categoryColor: categoryColor,
-        startMinutes: startMinutes,
-        endMinutes: endMinutes,
-        days: allDays,
-        dateMode: mode,
-      );
-    }
-    try {
-      final result = await _call('sendSharedTodo', {
-        'toUid': to.uid,
-        'title': clean,
-        'date': _date(allDays.first),
-        'dates': [for (final day in allDays) _date(day)],
-        'dateMode': mode,
-        'memo': memo.trim(),
-        'categoryName': categoryName.trim(),
-        'categoryColor': categoryColor,
-        'startMinutes': ?startMinutes,
-        'endMinutes': ?endMinutes,
-      });
-      return (
-        status: '${result['status'] ?? 'pending'}',
-        requestId: '${result['requestId'] ?? ''}',
-      );
-    } catch (error) {
-      debugPrint('Shared todo send function failed: $error');
-      return _sendTodoViaStore(
-        to: to,
-        title: clean,
-        date: allDays.first,
-        memo: memo,
-        categoryName: categoryName,
-        categoryColor: categoryColor,
-        startMinutes: startMinutes,
-        endMinutes: endMinutes,
-        days: allDays,
-        dateMode: mode,
-      );
-    }
+    return _sendTodoViaStore(
+      to: to,
+      title: clean,
+      date: allDays.first,
+      memo: memo,
+      categoryName: categoryName,
+      categoryColor: categoryColor,
+      startMinutes: startMinutes,
+      endMinutes: endMinutes,
+      days: allDays,
+      dateMode: mode,
+    );
   }
 
   Future<void> acceptTodo(String requestId) async {

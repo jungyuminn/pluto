@@ -2216,11 +2216,6 @@ class _FriendTile extends StatelessWidget {
           OverflowMenuButton(
             actions: [
               OverflowMenuAction(
-                label: AppStrings.friendsSharedTodoAdd,
-                leadingAsset: AppIcons.linkOutlined,
-                onPressed: onSharedTodo,
-              ),
-              OverflowMenuAction(
                 label: homePinned
                     ? AppStrings.friendsHomeUnpin
                     : AppStrings.friendsHomePin,
@@ -2228,6 +2223,11 @@ class _FriendTile extends StatelessWidget {
                     homePinned ? AppIcons.removeHome : AppIcons.addHome,
                 leadingFlipX: true,
                 onPressed: () => onHomeChanged(!homePinned),
+              ),
+              OverflowMenuAction(
+                label: AppStrings.friendsSharedTodoAdd,
+                leadingAsset: AppIcons.linkOutlined,
+                onPressed: onSharedTodo,
               ),
               OverflowMenuAction(
                 label: AppStrings.friendsRemove,

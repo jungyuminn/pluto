@@ -717,6 +717,48 @@ async function editTodoFor(uid, data) {
   return {status: "accepted"};
 }
 
+function sharedCalendarEventIds(requestId, data) {
+  const dates = [];
+  const seen = new Set();
+  const raw = Array.isArray(data?.dates) ? data.dates : [];
+  for (const item of raw) {
+    const value = String(item || "").trim();
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(value) || seen.has(value)) continue;
+    seen.add(value);
+    dates.push(value);
+  }
+  const date = String(data?.date || "").trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(date) && !seen.has(date)) {
+    dates.push(date);
+  }
+  if (dates.length <= 1) {
+    return [`shared_${requestId}`];
+  }
+  return dates.map((day) => `shared_${requestId}_${day}`);
+}
+
+async function deleteSharedCalendarCopies(data, requestId) {
+  const uids = [...new Set([data?.fromUid, data?.toUid].filter(Boolean))];
+  const eventIds = sharedCalendarEventIds(requestId, data);
+  if (!uids.length || !eventIds.length) return;
+  const store = db();
+  const refs = [];
+  for (const uid of uids) {
+    for (const eventId of eventIds) {
+      refs.push(
+          store.collection("shared_calendars").doc(uid).collection("events").doc(eventId),
+      );
+    }
+  }
+  for (let i = 0; i < refs.length; i += 400) {
+    const batch = store.batch();
+    for (const ref of refs.slice(i, i + 400)) {
+      batch.delete(ref);
+    }
+    await batch.commit();
+  }
+}
+
 async function removeTodoFor(uid, requestId) {
   if (!requestId) {
     throw new HttpsError("invalid-argument", "missing-request");
@@ -730,10 +772,10 @@ async function removeTodoFor(uid, requestId) {
   if (data.fromUid !== uid && data.toUid !== uid) {
     throw new HttpsError("permission-denied", "not-allowed");
   }
-  if (data.status === "removed" || data.status === "declined" || data.status === "cancelled") {
-    return {status: data.status};
+  if (data.status !== "removed" && data.status !== "declined" && data.status !== "cancelled") {
+    await ref.update({status: "removed", updatedAt: Date.now()});
   }
-  await ref.update({status: "removed", updatedAt: Date.now()});
+  await deleteSharedCalendarCopies(data, requestId);
   return {status: "removed"};
 }
 

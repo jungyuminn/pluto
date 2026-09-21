@@ -329,7 +329,7 @@ class _FriendCalendarScreenState extends State<FriendCalendarScreen> {
                           textAlign: TextAlign.left,
                           style: TextStyle(
                             fontFamily: AppFonts.of(context),
-                            fontSize: 18,
+                            fontSize: 20,
                             fontWeight: FontWeight.w800,
                             color: colors.text,
                           ),
@@ -520,11 +520,6 @@ class _FriendCalendarScreenState extends State<FriendCalendarScreen> {
                   OverflowMenuButton(
                     actions: [
                       OverflowMenuAction(
-                        label: AppStrings.friendsSharedTodoAdd,
-                        leadingAsset: AppIcons.linkOutlined,
-                        onPressed: _addSharedTodo,
-                      ),
-                      OverflowMenuAction(
                         label: pinned
                             ? AppStrings.friendsHomeUnpin
                             : AppStrings.friendsHomePin,
@@ -543,6 +538,11 @@ class _FriendCalendarScreenState extends State<FriendCalendarScreen> {
                                 : AppStrings.friendsHomeUnpinned(friend.label),
                           );
                         },
+                      ),
+                      OverflowMenuAction(
+                        label: AppStrings.friendsSharedTodoAdd,
+                        leadingAsset: AppIcons.linkOutlined,
+                        onPressed: _addSharedTodo,
                       ),
                       OverflowMenuAction(
                         label: AppStrings.friendsRemove,

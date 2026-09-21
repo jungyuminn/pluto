@@ -395,26 +395,15 @@ class _CalendarFeatureIntroSheetState extends State<CalendarFeatureIntroSheet> {
                     borderRadius: BorderRadius.circular(999),
                     child: Padding(
                       padding: const EdgeInsets.symmetric(vertical: 13),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          AppAssetImage(
-                            asset: AppIcons.plutoLogo,
-                            width: 26,
-                            height: 26,
-                            color: defaultTheme ? null : colors.accent,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            AppStrings.accountLogin,
-                            style: TextStyle(
-                              fontFamily: font,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w800,
-                              color: colors.accent,
-                            ),
-                          ),
-                        ],
+                      child: Text(
+                        AppStrings.accountLogin,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontFamily: font,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                          color: colors.accent,
+                        ),
                       ),
                     ),
                   ),

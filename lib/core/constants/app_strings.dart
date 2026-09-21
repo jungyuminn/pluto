@@ -220,7 +220,7 @@ class AppStrings {
   static const featureIntroAiThinking = '고르는 중';
   static const featureIntroAiPicked = '운동으로 집어 두었어요';
   static const featureIntroFriendsTitle = '친구 추가';
-  static const featureIntroFriendsBody = '친구 일정을 미니캘린더로 볼 수 있어요';
+  static const featureIntroFriendsBody = '친구 일정을 보고, 서로 공유하는 할 일을 만들 수 있어요';
   static const featureIntroFriendRequest = '친구 요청';
   static const featureIntroFriendDecline = '거절';
   static const featureIntroFriendAccept = '수락';

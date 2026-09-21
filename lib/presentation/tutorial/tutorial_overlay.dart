@@ -268,7 +268,6 @@ class _TutorialOverlayState extends State<TutorialOverlay>
       isFirst: _displayedFirst,
       isLast: _displayedLast,
       index: _displayedIndex,
-      total: tutorial?.stepCount ?? TutorialController.steps.length,
       onNext: canAct ? tutorial.next : () {},
       onPrev: canAct ? tutorial.previous : () {},
       onSkip: canAct ? tutorial.skip : () {},
@@ -558,7 +557,6 @@ class _TutorialCard extends StatelessWidget {
     required this.isFirst,
     required this.isLast,
     required this.index,
-    required this.total,
     required this.onNext,
     required this.onPrev,
     required this.onSkip,
@@ -568,7 +566,6 @@ class _TutorialCard extends StatelessWidget {
   final bool isFirst;
   final bool isLast;
   final int index;
-  final int total;
   final VoidCallback onNext;
   final VoidCallback onPrev;
   final VoidCallback onSkip;
@@ -577,22 +574,16 @@ class _TutorialCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
     final font = AppFonts.of(context);
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: colors.card,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: colors.border.withValues(alpha: 0.7)),
-        boxShadow: [
-          BoxShadow(
-            color: colors.shadow,
-            blurRadius: 24,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(18, 16, 18, 14),
-        child: AnimatedSize(
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(32),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: colors.card,
+          borderRadius: BorderRadius.circular(32),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(18, 16, 18, 14),
+          child: AnimatedSize(
           duration: const Duration(milliseconds: 280),
           curve: Curves.easeOutCubic,
           alignment: Alignment.topCenter,
@@ -600,53 +591,6 @@ class _TutorialCard extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(999),
-                child: LinearProgressIndicator(
-                  value: (index + 1) / total,
-                  minHeight: 4,
-                  backgroundColor: colors.border,
-                  color: colors.accent,
-                ),
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  if (step.badge.isNotEmpty)
-                    DecoratedBox(
-                      decoration: BoxDecoration(
-                        color: colors.accent.withValues(alpha: 0.14),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        child: Text(
-                          step.badge,
-                          style: TextStyle(
-                            fontFamily: font,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w800,
-                            color: colors.accent,
-                          ),
-                        ),
-                      ),
-                    ),
-                  const Spacer(),
-                  Text(
-                    '${index + 1} / $total',
-                    style: TextStyle(
-                      fontFamily: font,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: colors.muted,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 10),
               AnimatedSwitcher(
                 duration: const Duration(milliseconds: 280),
                 switchInCurve: Curves.easeOutCubic,
@@ -732,7 +676,7 @@ class _TutorialCard extends StatelessWidget {
                       onPressed: onPrev,
                       color: colors.accent.withValues(alpha: 0.14),
                       pressedColor: colors.accent.withValues(alpha: 0.24),
-                      borderRadius: BorderRadius.circular(999),
+                      borderRadius: BorderRadius.circular(14),
                       child: Padding(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 20,
@@ -756,7 +700,7 @@ class _TutorialCard extends StatelessWidget {
                     color: colors.accent,
                     pressedColor:
                         Color.lerp(colors.accent, Colors.black, 0.12)!,
-                    borderRadius: BorderRadius.circular(999),
+                    borderRadius: BorderRadius.circular(14),
                     child: Padding(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 20,
@@ -781,6 +725,7 @@ class _TutorialCard extends StatelessWidget {
               ),
             ],
           ),
+        ),
         ),
       ),
     );

@@ -901,15 +901,7 @@ class _FakeTutorialPeek extends StatelessWidget {
     return DecoratedBox(
       decoration: BoxDecoration(
         color: colors.card,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: colors.shadow,
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-        border: Border.all(color: colors.border.withValues(alpha: 0.7)),
+        borderRadius: BorderRadius.circular(32),
       ),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
@@ -917,52 +909,6 @@ class _FakeTutorialPeek extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(999),
-              child: LinearProgressIndicator(
-                value: 0.12,
-                minHeight: 4,
-                backgroundColor: colors.border,
-                color: colors.accent,
-              ),
-            ),
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: colors.accent.withValues(alpha: 0.14),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    child: Text(
-                      AppStrings.tutorialBadgeStart,
-                      style: TextStyle(
-                        fontFamily: font,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w800,
-                        color: colors.accent,
-                      ),
-                    ),
-                  ),
-                ),
-                const Spacer(),
-                Text(
-                  '1 / 12',
-                  style: TextStyle(
-                    fontFamily: font,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: colors.muted,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
             Text(
               AppStrings.tutorialWelcomeTitle,
               maxLines: 1,

@@ -5,8 +5,10 @@ import 'package:pluto/core/constants/app_fonts.dart';
 import 'package:pluto/core/constants/app_icons.dart';
 import 'package:pluto/core/constants/app_strings.dart';
 import 'package:pluto/core/theme/app_colors.dart';
+import 'package:pluto/domain/entities/friend_profile.dart';
 import 'package:pluto/domain/entities/ledger_entry.dart';
 import 'package:pluto/presentation/screens/add_company/widgets/save_company_button.dart';
+import 'package:pluto/presentation/screens/friends/friend_avatar.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/calendar_event_label.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/event_action_icon.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/event_category_chip.dart';
@@ -179,10 +181,7 @@ ReleaseDemo releaseDemoFor(String text, {required bool isFix}) {
   if (text.contains('24시간') || text.contains('오전·오후')) {
     return ReleaseDemo.settingsHelp;
   }
-  if (text.contains('끝 시간')) {
-    return ReleaseDemo.settingsHelp;
-  }
-  if (text.contains('항목마다 미리보기') || text.contains('할 일 설정 도움말')) {
+  if (text.contains('종료 시간')) {
     return ReleaseDemo.settingsHelp;
   }
   if (text.contains('홈에 메모') || text.contains('메모를 둘')) {
@@ -1914,36 +1913,20 @@ class _TutorialDemo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _Loop(
-      builder: (context, t) {
+      builder: (context, _) {
         final colors = AppColors.of(context);
         final font = AppFonts.of(context);
-        final fill = _gate(t, 0.1, 0.85);
         return Padding(
           padding: const EdgeInsets.fromLTRB(20, 28, 20, 16),
           child: _Card(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(999),
-                  child: LinearProgressIndicator(
-                    value: fill,
-                    minHeight: 4,
-                    backgroundColor: colors.border,
-                    color: colors.accent,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  AppStrings.tutorialWelcomeTitle,
-                  style: TextStyle(
-                    fontFamily: font,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w800,
-                    color: colors.text,
-                  ),
-                ),
-              ],
+            child: Text(
+              AppStrings.tutorialWelcomeTitle,
+              style: TextStyle(
+                fontFamily: font,
+                fontSize: 14,
+                fontWeight: FontWeight.w800,
+                color: colors.text,
+              ),
             ),
           ),
         );
@@ -6427,65 +6410,83 @@ class _FriendsMiniCalDemo extends StatelessWidget {
   static const _junhoSpans = [
     _SyncSpan(2, 4, '출장', Color(0xFF38BDF8)),
   ];
+  static const _gahyunLabels = {5: '카페', 12: '수업'};
+  static const _gahyunColors = {
+    5: Color(0xFFF97316),
+    12: Color(0xFF3B82F6),
+  };
+  static const _gahyunSpans = [
+    _SyncSpan(16, 18, '여행', Color(0xFFA855F7)),
+  ];
+  static const _junhyukLabels = {2: '헬스', 15: '알바'};
+  static const _junhyukColors = {
+    2: Color(0xFF34D399),
+    15: Color(0xFFEC4899),
+  };
+  static const _junhyukSpans = [
+    _SyncSpan(8, 10, '시험', Color(0xFF38BDF8)),
+  ];
+  static const _cals = [
+    (_junhoLabels, _junhoColors, _junhoSpans),
+    (_gahyunLabels, _gahyunColors, _gahyunSpans),
+    (_junhyukLabels, _junhyukColors, _junhyukSpans),
+  ];
+  static const _taehee = FriendProfile(
+    uid: 'demo-taehee',
+    displayName: '태희',
+    friendCode: 'taehee',
+  );
+  static const _friends = [
+    _taehee,
+    FriendProfile(uid: 'demo-gahyun', displayName: '가현', friendCode: 'gahyun'),
+    FriendProfile(uid: 'demo-junhyuk', displayName: '준혁', friendCode: 'junhyuk'),
+    FriendProfile(uid: 'demo-minsu', displayName: '민수', friendCode: 'minsu'),
+    FriendProfile(uid: 'demo-sua', displayName: '수아', friendCode: 'sua'),
+  ];
 
   @override
   Widget build(BuildContext context) {
     return _Loop(
-      ms: 7800,
+      ms: 9000,
       boxHeight: 220,
       builder: (context, t) {
         final colors = AppColors.of(context);
         final font = AppFonts.of(context);
-        final acceptTap = _pulse(t, 0.10, 0.20, 0.32);
-        final accepted = t >= 0.18;
-        final reveal = Curves.easeOutCubic.transform(_gate(t, 0.26, 0.42));
-        final hide = Curves.easeInCubic.transform(_gate(t, 0.88, 1.0));
+        final acceptTap = _pulse(t, 0.08, 0.16, 0.26);
+        final accepted = t >= 0.14;
+        final reveal = Curves.easeOutCubic.transform(_gate(t, 0.22, 0.36));
+        final hide = Curves.easeInCubic.transform(_gate(t, 0.90, 1.0));
         final requestOpacity = (1 - reveal + hide).clamp(0.0, 1.0);
         final friendsOpacity = (reveal - hide).clamp(0.0, 1.0);
-        final toMinji = Curves.easeInOutCubic.transform(_gate(t, 0.50, 0.64));
-        final back = Curves.easeInOutCubic.transform(_gate(t, 0.80, 0.88));
-        final page = (toMinji - back).clamp(0.0, 1.0);
-        final tapMinji = _pulse(t, 0.44, 0.54, 0.68);
-        return Padding(
-          padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              color: colors.card,
-              borderRadius: BorderRadius.circular(22),
-              boxShadow: [
-                BoxShadow(
-                  color: colors.shadow.withValues(alpha: 0.12),
-                  blurRadius: 18,
-                  offset: const Offset(0, 6),
+        final toGahyun = Curves.easeInOutCubic.transform(_gate(t, 0.46, 0.58));
+        final toJunhyuk = Curves.easeInOutCubic.transform(_gate(t, 0.68, 0.80));
+        final page = toGahyun + toJunhyuk;
+        return Stack(
+          children: [
+            Opacity(
+              opacity: requestOpacity,
+              child: IgnorePointer(
+                child: _FriendRequestPane(
+                  accepted: accepted,
+                  tap: acceptTap,
+                  font: font,
+                  colors: colors,
                 ),
-              ],
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(22),
-              child: Stack(
-                children: [
-                  Opacity(
-                    opacity: requestOpacity,
-                    child: _FriendRequestPane(
-                      accepted: accepted,
-                      tap: acceptTap,
-                      font: font,
-                      colors: colors,
-                    ),
-                  ),
-                  Opacity(
-                    opacity: friendsOpacity,
-                    child: _FriendCalPane(
-                      page: page,
-                      tapMinji: tapMinji,
-                      font: font,
-                      colors: colors,
-                    ),
-                  ),
-                ],
               ),
             ),
-          ),
+            Opacity(
+              opacity: friendsOpacity,
+              child: IgnorePointer(
+                child: _FriendHomePane(
+                  page: page,
+                  tapGahyun: _pulse(t, 0.40, 0.48, 0.60),
+                  tapJunhyuk: _pulse(t, 0.62, 0.70, 0.82),
+                  font: font,
+                  colors: colors,
+                ),
+              ),
+            ),
+          ],
         );
       },
     );
@@ -6507,69 +6508,86 @@ class _FriendRequestPane extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final check = Theme.of(context).brightness == Brightness.dark
+        ? const Color(0xFF60A5FA)
+        : const Color(0xFF40A6FF);
     return Center(
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 22),
+        padding: const EdgeInsets.fromLTRB(16, 18, 16, 16),
         child: Column(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _FriendAvatar(
-              name: '준호',
-              color: _FriendsMiniCalDemo._junho,
-              size: 48,
-              colors: colors,
-            ),
-            const SizedBox(height: 10),
-            Text(
-              '준호',
-              style: TextStyle(
-                fontFamily: font,
-                fontSize: 16,
-                fontWeight: FontWeight.w800,
-                height: 1.1,
-                color: colors.text,
+            Padding(
+              padding: const EdgeInsets.fromLTRB(8, 0, 2, 8),
+              child: Text(
+                AppStrings.friendsIncoming,
+                style: TextStyle(
+                  fontFamily: font,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: colors.text,
+                ),
               ),
             ),
-            const SizedBox(height: 4),
-            Text(
-              accepted
-                  ? AppStrings.featureIntroFriendDone
-                  : AppStrings.featureIntroFriendRequest,
-              style: TextStyle(
-                fontFamily: font,
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: colors.muted,
+            DecoratedBox(
+              decoration: BoxDecoration(
+                color: colors.card,
+                borderRadius: BorderRadius.circular(24),
               ),
-            ),
-            const SizedBox(height: 14),
-            Row(
-              children: [
-                Expanded(
-                  child: Opacity(
-                    opacity: accepted ? 0.35 : 1,
-                    child: _FriendActionButton(
-                      label: AppStrings.featureIntroFriendDecline,
-                      fill: colors.selected,
-                      text: colors.secondary,
-                      font: font,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 8, 12),
+                child: Row(
+                  children: [
+                    const FriendAvatar(
+                      size: 40,
+                      profile: _FriendsMiniCalDemo._taehee,
+                      showFavorite: false,
                     ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _SyncTapChip(
-                    tap: tap,
-                    child: _FriendActionButton(
-                      label: AppStrings.featureIntroFriendAccept,
-                      fill: colors.accent,
-                      text: Colors.white,
-                      font: font,
-                      icon: accepted ? Icons.check_rounded : null,
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '태희',
+                            style: TextStyle(
+                              fontFamily: font,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              color: colors.text,
+                            ),
+                          ),
+                          Text(
+                            'taehee',
+                            style: TextStyle(
+                              fontFamily: font,
+                              fontSize: 13,
+                              color: colors.muted,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
+                    Opacity(
+                      opacity: accepted ? 0.35 : 1,
+                      child: Icon(
+                        Icons.close_rounded,
+                        size: 22,
+                        color: colors.muted,
+                      ),
+                    ),
+                    _SyncTapChip(
+                      tap: tap,
+                      child: Icon(
+                        Icons.check_rounded,
+                        size: 22,
+                        color: check,
+                      ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ],
         ),
@@ -6578,157 +6596,40 @@ class _FriendRequestPane extends StatelessWidget {
   }
 }
 
-class _FriendActionButton extends StatelessWidget {
-  const _FriendActionButton({
-    required this.label,
-    required this.fill,
-    required this.text,
-    required this.font,
-    this.icon,
-  });
-
-  final String label;
-  final Color fill;
-  final Color text;
-  final String? font;
-  final IconData? icon;
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 220),
-      curve: Curves.easeOutCubic,
-      padding: const EdgeInsets.symmetric(vertical: 9),
-      decoration: BoxDecoration(
-        color: fill,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      alignment: Alignment.center,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          if (icon != null) ...[
-            Icon(icon, size: 15, color: text),
-            const SizedBox(width: 4),
-          ],
-          Flexible(
-            child: Text(
-              label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontFamily: font,
-                fontSize: 13,
-                fontWeight: FontWeight.w800,
-                color: text,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _FriendCalPane extends StatelessWidget {
-  const _FriendCalPane({
+class _FriendHomePane extends StatelessWidget {
+  const _FriendHomePane({
     required this.page,
-    required this.tapMinji,
+    required this.tapGahyun,
+    required this.tapJunhyuk,
     required this.font,
     required this.colors,
   });
 
   final double page;
-  final double tapMinji;
+  final double tapGahyun;
+  final double tapJunhyuk;
   final String? font;
   final AppColors colors;
-
-  static const _people = [
-    (name: '민지', color: _FriendsMiniCalDemo._minji),
-    (name: '준호', color: _FriendsMiniCalDemo._junho),
-    (name: '수아', color: Color(0xFFA855F7)),
-    (name: '현우', color: Color(0xFFF59E0B)),
-    (name: '지윤', color: Color(0xFFFB7185)),
-  ];
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(8, 8, 8, 6),
+      padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
       child: Column(
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              for (final person in _people)
-                _SyncTapChip(
-                  tap: person.name == '민지' ? tapMinji : 0,
-                  child: _FriendStory(
-                    name: person.name,
-                    color: person.color,
-                    selected: person.name == '민지'
-                        ? page > 0.5
-                        : person.name == '준호' && page <= 0.5,
-                    font: font,
-                    colors: colors,
-                  ),
-                ),
-            ],
+          _FriendHomeRow(
+            page: page,
+            tapGahyun: tapGahyun,
+            tapJunhyuk: tapJunhyuk,
+            font: font,
+            colors: colors,
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 8),
           Expanded(
-            child: LayoutBuilder(
-              builder: (context, box) {
-                final slide = box.maxWidth;
-                return ClipRRect(
-                  borderRadius: BorderRadius.circular(14),
-                  child: ColoredBox(
-                    color: colors.groupedBackground,
-                    child: Stack(
-                      children: [
-                        Positioned.fill(
-                          child: Transform.translate(
-                            offset: Offset(slide * -page, 0),
-                            child: FittedBox(
-                              fit: BoxFit.scaleDown,
-                              alignment: Alignment.topCenter,
-                              child: SizedBox(
-                                width: slide,
-                                child: _SyncVaultCal(
-                                  font: font,
-                                  colors: colors,
-                                  labels: _FriendsMiniCalDemo._junhoLabels,
-                                  labelColors: _FriendsMiniCalDemo._junhoColors,
-                                  spans: _FriendsMiniCalDemo._junhoSpans,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                        Positioned.fill(
-                          child: Transform.translate(
-                            offset: Offset(slide * (1 - page), 0),
-                            child: FittedBox(
-                              fit: BoxFit.scaleDown,
-                              alignment: Alignment.topCenter,
-                              child: SizedBox(
-                                width: slide,
-                                child: _SyncVaultCal(
-                                  font: font,
-                                  colors: colors,
-                                  labels: _FriendsMiniCalDemo._minjiLabels,
-                                  labelColors: _FriendsMiniCalDemo._minjiColors,
-                                  spans: _FriendsMiniCalDemo._minjiSpans,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              },
+            child: _FriendCalendarCard(
+              page: page,
+              font: font,
+              colors: colors,
             ),
           ),
         ],
@@ -6737,45 +6638,171 @@ class _FriendCalPane extends StatelessWidget {
   }
 }
 
-class _FriendStory extends StatelessWidget {
-  const _FriendStory({
-    required this.name,
-    required this.color,
-    required this.selected,
+class _FriendHomeRow extends StatelessWidget {
+  const _FriendHomeRow({
+    required this.page,
+    required this.tapGahyun,
+    required this.tapJunhyuk,
     required this.font,
     required this.colors,
   });
 
-  final String name;
-  final Color color;
-  final bool selected;
+  final double page;
+  final double tapGahyun;
+  final double tapJunhyuk;
   final String? font;
   final AppColors colors;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        _FriendAvatar(
-          name: name,
-          color: color,
-          size: 22,
-          selected: selected,
-          colors: colors,
-        ),
-        const SizedBox(height: 3),
-        Text(
-          name,
-          style: TextStyle(
-            fontFamily: font,
-            fontSize: 9,
-            fontWeight: FontWeight.w700,
-            height: 1,
-            color: selected ? colors.text : colors.muted,
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      physics: const NeverScrollableScrollPhysics(),
+      child: Row(
+        children: [
+          _FriendHomeCell(
+            label: AppStrings.friendsHomeMe,
+            font: font,
+            colors: colors,
+            child: SizedBox(
+              width: 34,
+              height: 34,
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  const FriendAvatar(size: 34, showFavorite: false),
+                  Positioned(
+                    right: -2,
+                    bottom: -2,
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: FriendAvatar.accentOf(context),
+                        border: Border.all(color: colors.background, width: 2),
+                      ),
+                      child: const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: Icon(
+                          Icons.add_rounded,
+                          size: 12,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
+          for (var i = 0; i < _FriendsMiniCalDemo._friends.length; i++)
+            _SyncTapChip(
+              tap: i == 1
+                  ? tapGahyun
+                  : i == 2
+                      ? tapJunhyuk
+                      : 0,
+              child: _FriendHomeCell(
+                label: _FriendsMiniCalDemo._friends[i].label,
+                selected: (page - i).abs() < 0.5,
+                font: font,
+                colors: colors,
+                child: FriendAvatar(
+                  size: 34,
+                  profile: _FriendsMiniCalDemo._friends[i],
+                  showFavorite: false,
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _FriendHomeCell extends StatelessWidget {
+  const _FriendHomeCell({
+    required this.label,
+    required this.child,
+    required this.font,
+    required this.colors,
+    this.selected = false,
+  });
+
+  final String label;
+  final Widget child;
+  final String? font;
+  final AppColors colors;
+  final bool selected;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 48,
+      child: Column(
+        children: [
+          child,
+          const SizedBox(height: 4),
+          Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontFamily: font,
+              fontSize: 10,
+              fontWeight: selected ? FontWeight.w800 : FontWeight.w700,
+              color: selected ? colors.text : colors.secondary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _FriendCalendarCard extends StatelessWidget {
+  const _FriendCalendarCard({
+    required this.page,
+    required this.font,
+    required this.colors,
+  });
+
+  final double page;
+  final String? font;
+  final AppColors colors;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: colors.card,
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: LayoutBuilder(
+          builder: (context, box) {
+            return Stack(
+              children: [
+                for (var i = 0; i < _FriendsMiniCalDemo._cals.length; i++)
+                  Positioned.fill(
+                    child: Transform.translate(
+                      offset: Offset(box.maxWidth * (i - page), 0),
+                      child: _SyncVaultCal(
+                        font: font,
+                        colors: colors,
+                        labels: _FriendsMiniCalDemo._cals[i].$1,
+                        labelColors: _FriendsMiniCalDemo._cals[i].$2,
+                        spans: _FriendsMiniCalDemo._cals[i].$3,
+                      ),
+                    ),
+                  ),
+              ],
+            );
+          },
         ),
-      ],
+      ),
     );
   }
 }

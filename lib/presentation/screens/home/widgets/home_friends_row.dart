@@ -111,56 +111,51 @@ class _HomeFriendsRowState extends State<HomeFriendsRow> {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: SizedBox(
+        width: double.infinity,
         height: _rowHeight,
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _MeCell(
-              profile: me,
-              requests: requests,
-              todos: todos,
-              onPressed: () => _openFriends(context),
-              onAdd: () => _openAdd(context),
-            ),
-            Expanded(
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                clipBehavior: Clip.none,
-                child: Row(
-                  children: [
-                    if (favorites.isNotEmpty)
-                      _homeGroup(
-                        context,
-                        friends: favorites,
-                        onReorder: (oldIndex, newIndex) {
-                          unawaited(
-                            FriendService.instance.reorderFavorites(
-                              favorites,
-                              oldIndex: oldIndex,
-                              newIndex: newIndex,
-                            ),
-                          );
-                        },
-                      ),
-                    if (regulars.isNotEmpty)
-                      _homeGroup(
-                        context,
-                        friends: regulars,
-                        onReorder: (oldIndex, newIndex) {
-                          unawaited(
-                            FriendService.instance.reorderRegulars(
-                              regulars,
-                              oldIndex: oldIndex,
-                              newIndex: newIndex,
-                            ),
-                          );
-                        },
-                      ),
-                  ],
+        child: ClipRect(
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                _MeCell(
+                  profile: me,
+                  requests: requests,
+                  todos: todos,
+                  onPressed: () => _openFriends(context),
+                  onAdd: () => _openAdd(context),
                 ),
-              ),
+                if (favorites.isNotEmpty)
+                  _homeGroup(
+                    context,
+                    friends: favorites,
+                    onReorder: (oldIndex, newIndex) {
+                      unawaited(
+                        FriendService.instance.reorderFavorites(
+                          favorites,
+                          oldIndex: oldIndex,
+                          newIndex: newIndex,
+                        ),
+                      );
+                    },
+                  ),
+                if (regulars.isNotEmpty)
+                  _homeGroup(
+                    context,
+                    friends: regulars,
+                    onReorder: (oldIndex, newIndex) {
+                      unawaited(
+                        FriendService.instance.reorderRegulars(
+                          regulars,
+                          oldIndex: oldIndex,
+                          newIndex: newIndex,
+                        ),
+                      );
+                    },
+                  ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -182,7 +177,6 @@ class _HomeFriendsRowState extends State<HomeFriendsRow> {
         scrollDirection: Axis.horizontal,
         buildDefaultDragHandles: false,
         physics: const NeverScrollableScrollPhysics(),
-        clipBehavior: Clip.none,
         padding: EdgeInsets.zero,
         proxyDecorator: (child, index, animation) {
           return AnimatedBuilder(

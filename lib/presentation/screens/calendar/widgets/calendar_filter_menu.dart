@@ -178,6 +178,8 @@ class CalendarSortMenu extends StatelessWidget {
     required this.showTime,
     required this.onSortByTimeChanged,
     required this.onShowTimeChanged,
+    this.hour24 = true,
+    this.onHour24Changed,
     this.showTimeOption = true,
     this.showTimeSortOption = true,
     this.categoryView = false,
@@ -193,6 +195,8 @@ class CalendarSortMenu extends StatelessWidget {
   final bool showTime;
   final ValueChanged<bool> onSortByTimeChanged;
   final ValueChanged<bool> onShowTimeChanged;
+  final bool hour24;
+  final ValueChanged<bool>? onHour24Changed;
   final bool showTimeOption;
   final bool showTimeSortOption;
   final bool categoryView;
@@ -227,6 +231,14 @@ class CalendarSortMenu extends StatelessWidget {
             label: AppStrings.timeDisplay,
             checked: showTime,
             onChanged: onShowTimeChanged,
+          ),
+        ),
+        _MenuReveal(
+          visible: showTimeOption && showTime,
+          child: _FilterItem(
+            label: AppStrings.timeHour24,
+            checked: hour24,
+            onChanged: onHour24Changed ?? (_) {},
           ),
         ),
         _MenuReveal(

@@ -161,6 +161,7 @@ class _DayEventsDialogState extends State<DayEventsDialog> {
   var _compact = false;
   var _sortByTime = false;
   var _showTime = false;
+  var _hour24 = true;
   var _initialized = false;
   String? _emoji;
   var _emojiPop = false;
@@ -193,6 +194,7 @@ class _DayEventsDialogState extends State<DayEventsDialog> {
     _compact = scope.dayEventsViewPreference.categoryView;
     _sortByTime = scope.dayEventsViewPreference.sortByTime;
     _showTime = scope.dayEventsViewPreference.showTime;
+    _hour24 = scope.dayEventsViewPreference.hour24;
     if (widget.readOnly) {
       _emoji = DayStickers.isAsset(widget.sticker) ? widget.sticker : null;
     } else {
@@ -239,7 +241,8 @@ class _DayEventsDialogState extends State<DayEventsDialog> {
 
   String? _timeText(CalendarEvent event) {
     if (!_showTime) return null;
-    return event.timeLabel ?? (event.isJob ? null : AppStrings.allDayLabel);
+    return event.labelTime(hour24: _hour24) ??
+        (event.isJob ? null : AppStrings.allDayLabel);
   }
 
   List<_ListEntry> get _itemsForView {

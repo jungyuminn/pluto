@@ -66,19 +66,31 @@ class CalendarEvent {
     return day.isBefore(today);
   }
 
-  bool get hasTime => startMinutes != null && endMinutes != null;
+  bool get hasTime => startMinutes != null;
 
-  String? get timeLabel {
+  String? get timeLabel => labelTime();
+
+  String? labelTime({bool hour24 = true}) {
     final start = startMinutes;
+    if (start == null) return null;
+    final startText = formatClock(start, hour24: hour24);
     final end = endMinutes;
-    if (start == null || end == null) return null;
-    return '${formatMinutes(start)}–${formatMinutes(end)}';
+    if (end == null) return startText;
+    return '$startText–${formatClock(end, hour24: hour24)}';
   }
 
-  static String formatMinutes(int minutes) {
+  static String formatMinutes(int minutes) =>
+      formatClock(minutes, hour24: true);
+
+  static String formatClock(int minutes, {bool hour24 = true}) {
     final hour = (minutes ~/ 60).clamp(0, 23);
     final minute = (minutes % 60).clamp(0, 59);
-    return '${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}';
+    if (hour24) {
+      return '${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}';
+    }
+    final period = hour < 12 ? '오전' : '오후';
+    final hour12 = hour % 12 == 0 ? 12 : hour % 12;
+    return '$period $hour12:${minute.toString().padLeft(2, '0')}';
   }
 
   static List<CalendarEvent> withRangesFirst(
@@ -178,6 +190,7 @@ class CalendarEvent {
     bool? sharedMine,
     bool? sharedPeer,
     bool clearTime = false,
+    bool clearEnd = false,
   }) {
     return CalendarEvent(
       id: id ?? this.id,
@@ -194,7 +207,9 @@ class CalendarEvent {
       jobApplicationId: jobApplicationId ?? this.jobApplicationId,
       sortOrder: sortOrder ?? this.sortOrder,
       startMinutes: clearTime ? null : startMinutes ?? this.startMinutes,
-      endMinutes: clearTime ? null : endMinutes ?? this.endMinutes,
+      endMinutes: clearTime || clearEnd
+          ? null
+          : endMinutes ?? this.endMinutes,
       someday: someday ?? this.someday,
       sharedId: sharedId ?? this.sharedId,
       sharedMine: sharedMine ?? this.sharedMine,

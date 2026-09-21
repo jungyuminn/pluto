@@ -8,6 +8,7 @@ import 'package:pluto/core/utils/focused_ime_text.dart';
 import 'package:pluto/core/theme/app_colors.dart';
 import 'package:pluto/core/theme/app_theme.dart';
 import 'package:pluto/core/utils/plain_text_editing_controller.dart';
+import 'package:pluto/core/utils/title_time_parse.dart';
 import 'package:pluto/data/datasources/last_event_category_preference.dart';
 import 'package:pluto/data/datasources/friend_service.dart';
 import 'package:pluto/domain/entities/calendar_event.dart';
@@ -114,6 +115,7 @@ class _AddEventFormState extends State<AddEventForm>
       _dates = [_date];
     }
     _title.addListener(_onTitleChanged);
+    _titleFocus.addListener(_onTitleFocus);
     _memoOpen = initial?.memo.trim().isNotEmpty ?? false;
     _memoAnimation = AnimationController(
       vsync: this,
@@ -160,6 +162,7 @@ class _AddEventFormState extends State<AddEventForm>
     _memoAnimation.dispose();
     _suggest?.dispose();
     _title.removeListener(_onTitleChanged);
+    _titleFocus.removeListener(_onTitleFocus);
     _titleFocus.dispose();
     _memoFocus.dispose();
     _title.dispose();
@@ -262,6 +265,42 @@ class _AddEventFormState extends State<AddEventForm>
 
   void _onTitleChanged() {
     _feedTitle(_titleForSuggest());
+    _syncTitleTimeHighlight();
+  }
+
+  void _syncTitleTimeHighlight({bool force = false}) {
+    if (!mounted) return;
+    TextRange? range;
+    if (!_isSomeday &&
+        AppScope.of(context).dayEventsViewPreference.parseTitleTime) {
+      final match = TitleTimeParse.match(_title.text);
+      if (match != null) {
+        range = TextRange(start: match.start, end: match.end);
+      }
+    }
+    _title.setHighlight(range, force: force);
+  }
+
+  void _onTitleFocus() {
+    if (_titleFocus.hasFocus) return;
+    _syncTitleTimeHighlight(force: true);
+  }
+
+  void _applyTitleTime() {
+    if (_isSomeday) return;
+    if (!AppScope.of(context).dayEventsViewPreference.parseTitleTime) return;
+    final parsed = TitleTimeParse.of(_title.text);
+    if (parsed == null) return;
+    _title.value = TextEditingValue(
+      text: parsed.title,
+      selection: TextSelection.collapsed(offset: parsed.title.length),
+    );
+    final end = _endMinutes;
+    setState(() {
+      _startMinutes = parsed.startMinutes;
+      if (end != null && end <= parsed.startMinutes) _endMinutes = null;
+    });
+    _syncTitleTimeHighlight();
   }
 
   void _applySuggest(EventCategory? category, {required bool loading}) {
@@ -273,6 +312,7 @@ class _AddEventFormState extends State<AddEventForm>
       _categoryName = category.name;
       _categoryColor = category.color;
     });
+    _syncTitleTimeHighlight(force: true);
   }
 
   Future<void> _loadSharedDates() async {
@@ -377,7 +417,10 @@ class _AddEventFormState extends State<AddEventForm>
       context,
       selectedId: _categoryId,
     );
-    if (picked == null || !mounted) return;
+    if (picked == null || !mounted) {
+      if (mounted) _syncTitleTimeHighlight(force: true);
+      return;
+    }
     _suggest?.userPicked();
     setState(() {
       _suggesting = false;
@@ -385,9 +428,12 @@ class _AddEventFormState extends State<AddEventForm>
       _categoryName = picked.name;
       _categoryColor = picked.color;
     });
+    _syncTitleTimeHighlight(force: true);
   }
 
   Future<void> _pickDate() async {
+    _titleFocus.unfocus();
+    _memoFocus.unfocus();
     final picked = await showAppCalendarSheet(
       context,
       date: _date,
@@ -395,13 +441,17 @@ class _AddEventFormState extends State<AddEventForm>
       mode: _dateMode,
       color: _accent,
     );
-    if (picked == null || !mounted) return;
+    if (picked == null || !mounted) {
+      if (mounted) _syncTitleTimeHighlight(force: true);
+      return;
+    }
     setState(() {
       _isSomeday = false;
       _dateMode = picked.mode;
       _dates = picked.dates;
       _date = picked.date;
     });
+    _syncTitleTimeHighlight(force: true);
   }
 
   Future<void> _pickTime() async {
@@ -413,11 +463,15 @@ class _AddEventFormState extends State<AddEventForm>
       endMinutes: _endMinutes,
       color: _accent,
     );
-    if (picked == null || !mounted) return;
+    if (picked == null || !mounted) {
+      if (mounted) _syncTitleTimeHighlight(force: true);
+      return;
+    }
     setState(() {
       _startMinutes = picked.startMinutes;
       _endMinutes = picked.endMinutes;
     });
+    _syncTitleTimeHighlight(force: true);
   }
 
   Future<void> _toggleMemo() async {
@@ -466,6 +520,7 @@ class _AddEventFormState extends State<AddEventForm>
   }
 
   Future<void> _save() async {
+    _applyTitleTime();
     final title = _title.text.trim();
     final days = _daysToSave();
     if (title.isEmpty || days.isEmpty || !_hasCategory) {
@@ -498,7 +553,8 @@ class _AddEventFormState extends State<AddEventForm>
         categoryColor: _categoryColor,
         startMinutes: _startMinutes,
         endMinutes: _endMinutes,
-        clearTime: _startMinutes == null || _endMinutes == null,
+        clearTime: _startMinutes == null,
+        clearEnd: _startMinutes != null && _endMinutes == null,
       );
       await FriendService.instance.editShared(
         next,
@@ -540,8 +596,9 @@ class _AddEventFormState extends State<AddEventForm>
           startMinutes: _isSomeday ? null : _startMinutes,
           endMinutes: _isSomeday ? null : _endMinutes,
           someday: _isSomeday,
-          clearTime: _isSomeday ||
-              _startMinutes == null ||
+          clearTime: _isSomeday || _startMinutes == null,
+          clearEnd: !_isSomeday &&
+              _startMinutes != null &&
               _endMinutes == null,
         ),
       );
@@ -601,8 +658,16 @@ class _AddEventFormState extends State<AddEventForm>
 
   @override
   Widget build(BuildContext context) {
-    return AccentSelectionTheme(
-      color: _accent,
+    return TweenAnimationBuilder<Color?>(
+      duration: const Duration(milliseconds: 280),
+      curve: Curves.easeOutCubic,
+      tween: ColorTween(end: _accent),
+      builder: (context, color, child) {
+        return AccentSelectionTheme(
+          color: color ?? _accent,
+          child: child!,
+        );
+      },
       child: AnimatedContainer(
       duration: const Duration(milliseconds: 280),
       curve: Curves.easeOutCubic,

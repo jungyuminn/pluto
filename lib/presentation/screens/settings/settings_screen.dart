@@ -79,6 +79,8 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   var _sortByTime = false;
   var _showTime = false;
+  var _hour24 = true;
+  var _parseTitleTime = false;
   var _categoryView = false;
   var _aiCategory = false;
   var _todoReminderLead = TodoReminderLead.off;
@@ -134,6 +136,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final scope = AppScope.of(context);
     _sortByTime = scope.dayEventsViewPreference.sortByTime;
     _showTime = scope.dayEventsViewPreference.showTime;
+    _hour24 = scope.dayEventsViewPreference.hour24;
+    _parseTitleTime = scope.dayEventsViewPreference.parseTitleTime;
     _categoryView = scope.dayEventsViewPreference.categoryView;
     _aiCategory = scope.categorySuggestPreference.enabled;
     _todoReminderLead = scope.notificationPreference.todoReminderLead;
@@ -179,6 +183,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     setState(() {
       _sortByTime = scope.dayEventsViewPreference.sortByTime;
       _showTime = scope.dayEventsViewPreference.showTime;
+      _hour24 = scope.dayEventsViewPreference.hour24;
+      _parseTitleTime = scope.dayEventsViewPreference.parseTitleTime;
       _categoryView = scope.dayEventsViewPreference.categoryView;
       _aiCategory = scope.categorySuggestPreference.enabled;
       _todoReminderLead = scope.notificationPreference.todoReminderLead;
@@ -447,6 +453,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _setShowTime(bool value) async {
     setState(() => _showTime = value);
     await AppScope.of(context).dayEventsViewPreference.setShowTime(value);
+  }
+
+  Future<void> _setHour24(bool value) async {
+    setState(() => _hour24 = value);
+    await AppScope.of(context).dayEventsViewPreference.setHour24(value);
+  }
+
+  Future<void> _setParseTitleTime(bool value) async {
+    setState(() => _parseTitleTime = value);
+    await AppScope.of(context).dayEventsViewPreference.setParseTitleTime(value);
   }
 
   Future<void> _setCategoryView(bool value) async {
@@ -1003,15 +1019,46 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 value: _sortByTime,
                 onChanged: _setSortByTime,
               ),
-              _SettingsSwitchTile(
-                label: AppStrings.timeDisplay,
-                value: _showTime,
-                onChanged: _setShowTime,
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _SettingsSwitchTile(
+                    label: AppStrings.timeDisplay,
+                    value: _showTime,
+                    onChanged: _setShowTime,
+                  ),
+                  _ExpandBelow(
+                    open: _showTime,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.only(left: 20),
+                          child: Divider(
+                            height: 1,
+                            thickness: 0.5,
+                            color: AppColors.of(context).border,
+                          ),
+                        ),
+                        _SettingsSwitchTile(
+                          label: AppStrings.timeHour24,
+                          value: _hour24,
+                          onChanged: _setHour24,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
               _SettingsSwitchTile(
                 label: AppStrings.categoryView,
                 value: _categoryView,
                 onChanged: _setCategoryView,
+              ),
+              _SettingsSwitchTile(
+                label: AppStrings.parseTitleTime,
+                value: _parseTitleTime,
+                onChanged: _setParseTitleTime,
               ),
             ],
           ),
@@ -1497,6 +1544,7 @@ class _WidgetFontPreview extends StatelessWidget {
         ? scope.fontPreference.typeface
         : AppTypeface.system;
     final showTime = scope.dayEventsViewPreference.showTime;
+    final hour24 = scope.dayEventsViewPreference.hour24;
     final sortByTime = scope.dayEventsViewPreference.sortByTime;
     final categoryView = scope.dayEventsViewPreference.categoryView;
     final now = DateTime.now();
@@ -1587,6 +1635,7 @@ class _WidgetFontPreview extends StatelessWidget {
                                 TodayWidgetCard.row(
                                   item: item,
                                   showTime: showTime,
+                                  hour24: hour24,
                                 ),
                             ],
                           ),
@@ -1972,6 +2021,7 @@ class _ThemeHomePreviewPage extends StatelessWidget {
             categoryView: sortPrefs.categoryView,
             sortByTime: sortPrefs.sortByTime,
             showTime: sortPrefs.showTime,
+            hour24: sortPrefs.hour24,
             onEventsChanged: () {},
           ),
         ],

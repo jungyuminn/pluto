@@ -17,9 +17,15 @@ import 'package:pluto/core/utils/press_bounce.dart';
 import 'package:pluto/data/datasources/font_preference.dart';
 import 'package:pluto/data/datasources/theme_preference.dart';
 import 'package:pluto/domain/entities/event_category.dart';
+import 'package:pluto/presentation/screens/add_company/widgets/save_company_button.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/calendar_event_label.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/day_event_label.dart';
+import 'package:pluto/presentation/screens/calendar/widgets/event_action_icon.dart';
+import 'package:pluto/presentation/screens/calendar/widgets/event_category_chip.dart';
+import 'package:pluto/presentation/screens/calendar/widgets/event_date_chip.dart';
+import 'package:pluto/presentation/screens/calendar/widgets/event_time_chip.dart';
 import 'package:pluto/presentation/screens/shell/widgets/pill_bottom_nav.dart';
+import 'package:pluto/presentation/widgets/themed_asset.dart';
 
 enum SettingsHelpSection {
   homeLayout,
@@ -109,28 +115,33 @@ class SettingsSectionHelpSheet extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 10),
-                  Text(
-                    section.body,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontFamily: AppFonts.of(context),
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      height: 1.45,
-                      color: colors.secondary,
+                  if (section.body.isNotEmpty) ...[
+                    Text(
+                      section.body,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontFamily: AppFonts.of(context),
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        height: 1.45,
+                        color: colors.secondary,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 18),
-                  DecoratedBox(
-                    decoration: BoxDecoration(
-                      color: colors.groupedBackground,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(12, 14, 12, 14),
-                      child: section.preview,
-                    ),
-                  ),
+                    const SizedBox(height: 18),
+                  ],
+                  if (section.wrapsPreview)
+                    DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: colors.groupedBackground,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(12, 14, 12, 14),
+                        child: section.preview,
+                      ),
+                    )
+                  else
+                    section.preview,
                 ],
               ),
             ),
@@ -186,7 +197,7 @@ extension on SettingsHelpSection {
             ? AppStrings.settingsCalendarHelpWithFontSize
             : AppStrings.settingsCalendarHelp;
       case SettingsHelpSection.todo:
-        return AppStrings.settingsTodoHelp;
+        return '';
       case SettingsHelpSection.notification:
         return AppStrings.settingsNotificationHelp;
       case SettingsHelpSection.font:
@@ -209,6 +220,8 @@ extension on SettingsHelpSection {
         return AppStrings.settingsCategoryHelp;
     }
   }
+
+  bool get wrapsPreview => this != SettingsHelpSection.todo;
 
   Widget get preview {
     switch (this) {
@@ -414,12 +427,42 @@ class _FakeWeekStartCalendar extends StatelessWidget {
   }
 }
 
+enum _TodoHelpKind { sort, showTime, hour24, category, parseTitle }
+
 class _TodoPreview extends StatelessWidget {
   const _TodoPreview();
 
   @override
   Widget build(BuildContext context) {
-    return const _TodoSettingsDemo();
+    return const _CyclingPreview(
+      frames: [
+        _PreviewFrame(
+          caption: AppStrings.timeSortView,
+          description: AppStrings.settingsTodoHelpSort,
+          child: _TodoSettingsDemo(kind: _TodoHelpKind.sort),
+        ),
+        _PreviewFrame(
+          caption: AppStrings.timeDisplay,
+          description: AppStrings.settingsTodoHelpTime,
+          child: _TodoSettingsDemo(kind: _TodoHelpKind.showTime),
+        ),
+        _PreviewFrame(
+          caption: AppStrings.timeHour24,
+          description: AppStrings.settingsTodoHelpHour24,
+          child: _TodoSettingsDemo(kind: _TodoHelpKind.hour24),
+        ),
+        _PreviewFrame(
+          caption: AppStrings.categoryView,
+          description: AppStrings.settingsTodoHelpCategory,
+          child: _TodoSettingsDemo(kind: _TodoHelpKind.category),
+        ),
+        _PreviewFrame(
+          caption: AppStrings.parseTitleTime,
+          description: AppStrings.settingsTodoHelpParse,
+          child: _TodoSettingsDemo(kind: _TodoHelpKind.parseTitle),
+        ),
+      ],
+    );
   }
 }
 
@@ -2566,10 +2609,15 @@ class _AppearancePreview extends StatelessWidget {
 }
 
 class _PreviewFrame {
-  const _PreviewFrame({required this.caption, required this.child});
+  const _PreviewFrame({
+    required this.caption,
+    required this.child,
+    this.description,
+  });
 
   final String caption;
   final Widget child;
+  final String? description;
 }
 
 class _CyclingPreview extends StatefulWidget {
@@ -2621,6 +2669,106 @@ class _CyclingPreviewState extends State<_CyclingPreview> {
   Widget build(BuildContext context) {
     final frame = widget.frames[_index];
     final colors = AppColors.of(context);
+    final description = frame.description ?? '';
+
+    final preview = Column(
+      children: [
+        Row(
+          children: [
+            if (_canCycle)
+              _PreviewNavButton(
+                icon: Icons.chevron_left_rounded,
+                onPressed: () => _goTo(_index - 1, fromUser: true),
+              )
+            else
+              const SizedBox(width: 32),
+            Expanded(
+              child: Center(
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 420),
+                  child: DecoratedBox(
+                    key: ValueKey(frame.caption),
+                    decoration: BoxDecoration(
+                      color: colors.tint(colors.accentBright, 0.18),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
+                      child: Text(
+                        frame.caption,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontFamily: AppFonts.of(context),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: colors.accentBright,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            if (_canCycle)
+              _PreviewNavButton(
+                icon: Icons.chevron_right_rounded,
+                onPressed: () => _goTo(_index + 1, fromUser: true),
+              )
+            else
+              const SizedBox(width: 32),
+          ],
+        ),
+        const SizedBox(height: 10),
+        AnimatedSize(
+          duration: const Duration(milliseconds: 280),
+          curve: Curves.easeOutCubic,
+          alignment: Alignment.topCenter,
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 480),
+            switchInCurve: Curves.easeOutCubic,
+            switchOutCurve: Curves.easeInCubic,
+            child: KeyedSubtree(
+              key: ValueKey(frame.caption),
+              child: IgnorePointer(child: frame.child),
+            ),
+          ),
+        ),
+        if (_canCycle) ...[
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              for (var i = 0; i < widget.frames.length; i++)
+                PressBounce(
+                  onPressed: () => _goTo(i, fromUser: true),
+                  pressedScale: 0.9,
+                  pressedColor: Colors.transparent,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 4,
+                      vertical: 6,
+                    ),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 220),
+                      width: i == _index ? 16 : 6,
+                      height: 6,
+                      decoration: BoxDecoration(
+                        color: i == _index
+                            ? colors.accentBright
+                            : colors.border,
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ],
+      ],
+    );
 
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
@@ -2631,104 +2779,48 @@ class _CyclingPreviewState extends State<_CyclingPreview> {
               if (velocity.abs() < 180) return;
               _goTo(velocity < 0 ? _index + 1 : _index - 1, fromUser: true);
             },
-      child: Column(
-        children: [
-          Row(
-            children: [
-              if (_canCycle)
-                _PreviewNavButton(
-                  icon: Icons.chevron_left_rounded,
-                  onPressed: () => _goTo(_index - 1, fromUser: true),
-                )
-              else
-                const SizedBox(width: 32),
-              Expanded(
-                child: Center(
+      child: description.isEmpty
+          ? preview
+          : Column(
+              children: [
+                AnimatedSize(
+                  duration: const Duration(milliseconds: 280),
+                  curve: Curves.easeOutCubic,
+                  alignment: Alignment.topCenter,
                   child: AnimatedSwitcher(
                     duration: const Duration(milliseconds: 420),
-                    child: DecoratedBox(
-                      key: ValueKey(frame.caption),
-                      decoration: BoxDecoration(
-                        color: colors.tint(colors.accentBright, 0.18),
-                        borderRadius: BorderRadius.circular(999),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 4,
-                        ),
-                        child: Text(
-                          frame.caption,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontFamily: AppFonts.of(context),
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            color: colors.accentBright,
-                          ),
-                        ),
+                    switchInCurve: Curves.easeOutCubic,
+                    switchOutCurve: Curves.easeInCubic,
+                    child: Text(
+                      description,
+                      key: ValueKey(description),
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontFamily: AppFonts.of(context),
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        height: 1.45,
+                        color: colors.secondary,
                       ),
                     ),
                   ),
                 ),
-              ),
-              if (_canCycle)
-                _PreviewNavButton(
-                  icon: Icons.chevron_right_rounded,
-                  onPressed: () => _goTo(_index + 1, fromUser: true),
-                )
-              else
-                const SizedBox(width: 32),
-            ],
-          ),
-          const SizedBox(height: 10),
-          AnimatedSize(
-            duration: const Duration(milliseconds: 280),
-            curve: Curves.easeOutCubic,
-            alignment: Alignment.topCenter,
-            child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 480),
-              switchInCurve: Curves.easeOutCubic,
-              switchOutCurve: Curves.easeInCubic,
-              child: KeyedSubtree(
-                key: ValueKey(frame.caption),
-                child: IgnorePointer(child: frame.child),
-              ),
-            ),
-          ),
-          if (_canCycle) ...[
-            const SizedBox(height: 12),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                for (var i = 0; i < widget.frames.length; i++)
-                  PressBounce(
-                    onPressed: () => _goTo(i, fromUser: true),
-                    pressedScale: 0.9,
-                    pressedColor: Colors.transparent,
+                const SizedBox(height: 18),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(20),
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: colors.groupedBackground,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 4,
-                        vertical: 6,
-                      ),
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 220),
-                        width: i == _index ? 16 : 6,
-                        height: 6,
-                        decoration: BoxDecoration(
-                          color: i == _index
-                              ? colors.accentBright
-                              : colors.border,
-                          borderRadius: BorderRadius.circular(999),
-                        ),
-                      ),
+                      padding: const EdgeInsets.fromLTRB(12, 14, 12, 14),
+                      child: preview,
                     ),
                   ),
+                ),
               ],
             ),
-          ],
-        ],
-      ),
     );
   }
 }
@@ -3594,7 +3686,9 @@ class _StatsToggleDemoState extends State<_StatsToggleDemo>
 }
 
 class _TodoSettingsDemo extends StatefulWidget {
-  const _TodoSettingsDemo();
+  const _TodoSettingsDemo({required this.kind});
+
+  final _TodoHelpKind kind;
 
   @override
   State<_TodoSettingsDemo> createState() => _TodoSettingsDemoState();
@@ -3602,15 +3696,10 @@ class _TodoSettingsDemo extends StatefulWidget {
 
 class _TodoSettingsDemoState extends State<_TodoSettingsDemo>
     with SingleTickerProviderStateMixin {
-  static const _sceneHeight = 236.0;
-  static const _rowHeight = 40.0;
+  static const _rowHeight = 44.0;
   static const _itemH = 46.0;
   static const _gap = 6.0;
-  static const _labels = [
-    AppStrings.timeSortView,
-    AppStrings.timeDisplay,
-    AppStrings.categoryView,
-  ];
+  static const _headerH = 22.0;
   static const _titles = ['면접 연습', '자기소개서 제출', '코딩테스트 준비'];
   static const _categories = ['면접', '서류', '코딩테스트'];
   static const _colors = [
@@ -3618,17 +3707,46 @@ class _TodoSettingsDemoState extends State<_TodoSettingsDemo>
     Color(0xFF3B82F6),
     Color(0xFFF59E0B),
   ];
-  static const _times = ['오후 4:00', '오전 9:00', '오후 2:00'];
+  static const _times24 = ['16:00', '09:00', '14:00'];
+  static const _times12 = ['오후 4:00', '오전 9:00', '오후 2:00'];
   static const _sortedSlot = [2.0, 0.0, 1.0];
 
   late final AnimationController _loop;
+
+  bool get _isParse => widget.kind == _TodoHelpKind.parseTitle;
+
+  double get _sceneHeight {
+    switch (widget.kind) {
+      case _TodoHelpKind.category:
+        return 300;
+      case _TodoHelpKind.parseTitle:
+        return 220;
+      default:
+        return 220;
+    }
+  }
+
+  String get _label {
+    switch (widget.kind) {
+      case _TodoHelpKind.sort:
+        return AppStrings.timeSortView;
+      case _TodoHelpKind.showTime:
+        return AppStrings.timeDisplay;
+      case _TodoHelpKind.hour24:
+        return AppStrings.timeHour24;
+      case _TodoHelpKind.category:
+        return AppStrings.categoryView;
+      case _TodoHelpKind.parseTitle:
+        return AppStrings.parseTitleTime;
+    }
+  }
 
   @override
   void initState() {
     super.initState();
     _loop = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 5600),
+      duration: Duration(milliseconds: _isParse ? 6000 : 5200),
     )..repeat();
   }
 
@@ -3638,26 +3756,38 @@ class _TodoSettingsDemoState extends State<_TodoSettingsDemo>
     super.dispose();
   }
 
-  double _fingerRow(double t) {
-    if (t < 0.38) return 1;
-    if (t < 0.48) {
-      return 1 - Curves.easeInOutCubic.transform(_helpGate(t, 0.38, 0.48));
+  double _toggle(double t) {
+    if (t < 0.22) return 0;
+    if (t < 0.34) {
+      return Curves.easeOutCubic.transform(_helpGate(t, 0.22, 0.34));
+    }
+    if (t < 0.68) return 1;
+    if (t < 0.80) {
+      return 1 - Curves.easeOutCubic.transform(_helpGate(t, 0.68, 0.80));
     }
     return 0;
   }
 
-  double _fingerOpacity(double t) {
-    if (t < 0.08) return 0;
-    if (t < 0.16) return _helpGate(t, 0.08, 0.16);
-    if (t < 0.88) return 1;
-    if (t < 0.96) return 1 - _helpGate(t, 0.88, 0.96);
+  double _switchFinger(double t) {
+    if (t < 0.10) return 0;
+    if (t < 0.18) return _helpGate(t, 0.10, 0.18);
+    if (t < 0.40) return 1;
+    if (t < 0.48) return 1 - _helpGate(t, 0.40, 0.48);
+    if (t < 0.56) return 0;
+    if (t < 0.64) return _helpGate(t, 0.56, 0.64);
+    if (t < 0.86) return 1;
+    if (t < 0.94) return 1 - _helpGate(t, 0.86, 0.94);
     return 0;
   }
 
-  double _fingerPress(double t) {
+  double _switchPress(double t) {
     final a = _helpPulse(t, 0.18, 0.26, 0.36);
-    final b = _helpPulse(t, 0.48, 0.56, 0.66);
+    final b = _helpPulse(t, 0.64, 0.72, 0.82);
     return a > b ? a : b;
+  }
+
+  double _parseApplied(double t) {
+    return Curves.easeOutCubic.transform(_helpGate(t, 0.58, 0.74));
   }
 
   @override
@@ -3667,118 +3797,298 @@ class _TodoSettingsDemoState extends State<_TodoSettingsDemo>
       animation: _loop,
       builder: (context, child) {
         final t = _loop.value;
-        final showTime = t < 0.22
-            ? 0.0
-            : Curves.easeOutCubic.transform(_helpGate(t, 0.22, 0.32));
-        final sort = t < 0.50
-            ? 0.0
-            : Curves.easeOutCubic.transform(_helpGate(t, 0.50, 0.60));
-        final ons = [sort, showTime, 0.0];
-        final finger = _fingerOpacity(t);
-        final press = _fingerPress(t);
-        final fingerRow = _fingerRow(t);
-        final slot = _itemH + _gap;
-        return IgnorePointer(
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: colors.border),
-            ),
+        if (_isParse) {
+          return IgnorePointer(
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(17),
-              child: SizedBox(
-                height: _sceneHeight + _rowHeight * _labels.length,
-                width: double.infinity,
-                child: Stack(
-                  children: [
-                    Column(
-                      children: [
-                        SizedBox(
-                          height: _sceneHeight,
-                          width: double.infinity,
-                          child: ColoredBox(
-                            color: colors.groupedBackground,
-                            child: Padding(
-                              padding: const EdgeInsets.fromLTRB(
-                                12,
-                                14,
-                                12,
-                                10,
-                              ),
-                              child: Align(
-                                alignment: Alignment.topCenter,
-                                child: _FakeHomeCard(
-                                  title: AppStrings.todayTitle,
-                                  children: [
-                                    SizedBox(
-                                      width: double.infinity,
-                                      height: _itemH * 3 + _gap * 2,
-                                      child: Stack(
-                                        children: [
-                                          for (
-                                            var i = 0;
-                                            i < _titles.length;
-                                            i++
-                                          )
-                                            Positioned(
-                                              top:
-                                                  lerpDouble(
-                                                    i.toDouble(),
-                                                    _sortedSlot[i],
-                                                    sort,
-                                                  )! *
-                                                  slot,
-                                              left: 0,
-                                              right: 0,
-                                              height: _itemH,
-                                              child: _FakeTodo(
-                                                title: _titles[i],
-                                                category: _categories[i],
-                                                color: _colors[i],
-                                                timeText: _times[i],
-                                                timeOpacity: showTime,
-                ),
-              ),
-            ],
-          ),
-        ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                        ColoredBox(
-                          color: colors.card,
-          child: Column(
-                            children: [
-                              for (var i = 0; i < _labels.length; i++)
-                                _HelpSwitchRow(
-                                  label: _labels[i],
-                                  on: ons[i],
-                                  height: _rowHeight,
-                                ),
-                            ],
-                          ),
-              ),
-            ],
-          ),
-                    if (finger > 0)
-                      Positioned(
-                        right: 28,
-                        top:
-                            _sceneHeight +
-                            fingerRow * _rowHeight +
-                            (_rowHeight - 28) / 2,
-                        child: _HelpFinger(pressed: press, opacity: finger),
-                      ),
-                  ],
+              borderRadius: BorderRadius.circular(18),
+              child: ColoredBox(
+                color: colors.groupedBackground,
+                child: SizedBox(
+                  height: 220,
+                  width: double.infinity,
+                  child: Align(
+                    alignment: Alignment.bottomCenter,
+                    child: _parseForm(context, t),
+                  ),
                 ),
               ),
             ),
+          );
+        }
+        final on = _toggle(t);
+        final finger = _switchFinger(t);
+        final press = _switchPress(t);
+        return IgnorePointer(
+          child: Column(
+            children: [
+              SizedBox(
+                height: _sceneHeight,
+                width: double.infinity,
+                child: ClipRect(
+                  child: OverflowBox(
+                    alignment: Alignment.topCenter,
+                    maxHeight: double.infinity,
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(4, 4, 4, 12),
+                      child: Align(
+                        alignment: Alignment.topCenter,
+                        child: _scene(context, t, on),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              Stack(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(24),
+                    child: ColoredBox(
+                      color: colors.card,
+                      child: _HelpSwitchRow(
+                        label: _label,
+                        on: on,
+                        height: _rowHeight,
+                      ),
+                    ),
+                  ),
+                  if (finger > 0)
+                    Positioned(
+                      right: 16,
+                      top: (_rowHeight - 28) / 2,
+                      child: _HelpFinger(pressed: press, opacity: finger),
+                    ),
+                ],
+              ),
+            ],
           ),
         );
       },
+    );
+  }
+
+  Widget _scene(BuildContext context, double t, double on) {
+    final slot = _itemH + _gap;
+    final listH = widget.kind == _TodoHelpKind.category
+        ? lerpDouble(
+            _itemH * 3 + _gap * 2,
+            _headerH * 3 + _itemH * 3 + _gap * 2,
+            on,
+          )!
+        : _itemH * 3 + _gap * 2;
+    return _FakeHomeCard(
+      title: AppStrings.todayTitle,
+      children: [
+        SizedBox(
+          width: double.infinity,
+          height: listH,
+          child: Stack(
+            children: [
+              if (widget.kind == _TodoHelpKind.category)
+                for (var i = 0; i < _titles.length; i++)
+                  Positioned(
+                    top: lerpDouble(i * slot, i * (_headerH + slot), on)!,
+                    left: 0,
+                    right: 0,
+                    height: 16,
+                    child: Opacity(
+                      opacity: on.clamp(0.0, 1.0),
+                      child: _FakeCategoryDotHeader(
+                        name: _categories[i],
+                        color: _colors[i],
+                      ),
+                    ),
+                  ),
+              for (var i = 0; i < _titles.length; i++)
+                Positioned(
+                  top: _itemTop(i, on, slot),
+                  left: 0,
+                  right: 0,
+                  height: _itemH,
+                  child: _FakeTodo(
+                    title: _titles[i],
+                    category: _categories[i],
+                    color: _colors[i],
+                    timeText: _timeText(i, on),
+                    timeOpacity: _timeOpacity(on),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  double _itemTop(int i, double on, double slot) {
+    switch (widget.kind) {
+      case _TodoHelpKind.sort:
+        return lerpDouble(i.toDouble(), _sortedSlot[i], on)! * slot;
+      case _TodoHelpKind.category:
+        return lerpDouble(i * slot, i * (_headerH + slot) + _headerH, on)!;
+      default:
+        return i * slot;
+    }
+  }
+
+  String? _timeText(int i, double on) {
+    switch (widget.kind) {
+      case _TodoHelpKind.sort:
+      case _TodoHelpKind.showTime:
+        return _times24[i];
+      case _TodoHelpKind.hour24:
+        return on > 0.5 ? _times24[i] : _times12[i];
+      default:
+        return null;
+    }
+  }
+
+  double _timeOpacity(double on) {
+    switch (widget.kind) {
+      case _TodoHelpKind.sort:
+      case _TodoHelpKind.hour24:
+        return 1;
+      case _TodoHelpKind.showTime:
+        return on;
+      default:
+        return 0;
+    }
+  }
+
+  Widget _parseForm(BuildContext context, double t) {
+    const full = '면접 연습 14시';
+    const markAt = 6;
+    const color = Color(0xFF22C55E);
+    final font = AppFonts.of(context);
+    final colors = AppColors.of(context);
+    final typed = (full.length * _helpGate(t, 0.08, 0.36)).round();
+    final shown = full.substring(0, typed);
+    final saved = _parseApplied(t) > 0.45;
+    final caretOn = t < 0.36 && (t * 12).floor().isEven;
+    final title = saved ? '면접 연습' : shown;
+    void noop() {}
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: colors.tint(color, 0.14),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x33000000),
+            blurRadius: 16,
+            offset: Offset(0, -2),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text.rich(
+              TextSpan(
+                children: [
+                  if (title.isEmpty)
+                    TextSpan(
+                      text: AppStrings.eventTitleHint,
+                      style: TextStyle(
+                        fontFamily: font,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                        color: colors.hint,
+                      ),
+                    )
+                  else if (saved || title.length <= markAt)
+                    TextSpan(
+                      text: title,
+                      style: TextStyle(
+                        fontFamily: font,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                        color: colors.text,
+                      ),
+                    )
+                  else ...[
+                    TextSpan(
+                      text: full.substring(0, markAt),
+                      style: TextStyle(
+                        fontFamily: font,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                        color: colors.text,
+                      ),
+                    ),
+                    TextSpan(
+                      text: title.substring(markAt),
+                      style: TextStyle(
+                        fontFamily: font,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                        color: colors.text,
+                        backgroundColor: color.withValues(alpha: 0.28),
+                      ),
+                    ),
+                  ],
+                  if (title.isNotEmpty && caretOn)
+                    TextSpan(
+                      text: '|',
+                      style: TextStyle(
+                        fontFamily: font,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w400,
+                        color: color,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 5),
+            Row(
+              children: [
+                Expanded(
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    physics: const NeverScrollableScrollPhysics(),
+                    child: Row(
+                      children: [
+                        EventCategoryChip(
+                          name: '면접',
+                          color: color,
+                          onPressed: noop,
+                        ),
+                        const SizedBox(width: 4),
+                        EventDateChip(
+                          date: DateTime(2026, 9, 11),
+                          color: color,
+                          onPressed: noop,
+                        ),
+                        const SizedBox(width: 4),
+                        EventTimeChip(
+                          color: color,
+                          startMinutes: saved ? 14 * 60 : null,
+                          onPressed: noop,
+                        ),
+                        const SizedBox(width: 4),
+                        EventActionIcon(
+                          label: AppStrings.memoAction,
+                          color: color,
+                          onPressed: noop,
+                          child: const AppAssetImage(
+                            asset: AppIcons.memoOutlined,
+                            width: 20,
+                            height: 20,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                SaveCompanyButton(onPressed: noop, color: color),
+              ],
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -4256,6 +4566,37 @@ class _FakeLeftoverPeek extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _FakeCategoryDotHeader extends StatelessWidget {
+  const _FakeCategoryDotHeader({required this.name, required this.color});
+
+  final String name;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          width: 8,
+          height: 8,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        ),
+        const SizedBox(width: 6),
+        Text(
+          name,
+          style: TextStyle(
+            fontFamily: AppFonts.of(context),
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
+            height: 1,
+            color: AppColors.of(context).text,
+          ),
+        ),
+      ],
     );
   }
 }

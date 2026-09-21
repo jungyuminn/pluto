@@ -462,6 +462,7 @@ class _LedgerFormState extends State<LedgerForm> with TickerProviderStateMixin {
       startMinutes: _salary.startMinutes,
       endMinutes: _salary.endMinutes,
       color: _accent,
+      requireEnd: true,
     );
     if (picked == null || !mounted) return;
     if (picked.isCleared) {

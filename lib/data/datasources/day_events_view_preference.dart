@@ -8,6 +8,8 @@ class DayEventsViewPreference {
     SharedPreferences? prefs,
     bool sortByTime = false,
     bool showTime = false,
+    bool hour24 = true,
+    bool parseTitleTime = false,
     bool categoryView = false,
     bool showLedgerTitle = true,
     bool showLedgerAmount = false,
@@ -17,6 +19,9 @@ class DayEventsViewPreference {
   })  : _prefs = prefs,
         _sortByTime = prefs?.getBool(_sortKey) ?? sortByTime,
         _showTime = prefs?.getBool(_showTimeKey) ?? showTime,
+        _hour24 = prefs?.getBool(_hour24Key) ?? hour24,
+        _parseTitleTime =
+            prefs?.getBool(_parseTitleTimeKey) ?? parseTitleTime,
         _categoryView = prefs?.getBool(_categoryViewKey) ?? categoryView,
         _showLedgerTitle =
             prefs?.getBool(_ledgerTitleKey) ?? showLedgerTitle,
@@ -31,6 +36,8 @@ class DayEventsViewPreference {
 
   static const _sortKey = 'day_events_sort_by_time';
   static const _showTimeKey = 'day_events_show_time';
+  static const _hour24Key = 'day_events_hour24';
+  static const _parseTitleTimeKey = 'day_events_parse_title_time';
   static const _categoryViewKey = 'day_events_category_view';
   static const _ledgerTitleKey = 'calendar_show_ledger_title';
   static const _ledgerAmountKey = 'calendar_show_ledger_amount';
@@ -40,6 +47,8 @@ class DayEventsViewPreference {
   static const syncedKeys = [
     _sortKey,
     _showTimeKey,
+    _hour24Key,
+    _parseTitleTimeKey,
     _categoryViewKey,
     _ledgerTitleKey,
     _ledgerAmountKey,
@@ -50,6 +59,8 @@ class DayEventsViewPreference {
   static const defaultBools = {
     _sortKey: false,
     _showTimeKey: false,
+    _hour24Key: true,
+    _parseTitleTimeKey: false,
     _categoryViewKey: false,
     _ledgerTitleKey: true,
     _ledgerAmountKey: false,
@@ -61,6 +72,8 @@ class DayEventsViewPreference {
   final SharedPreferences? _prefs;
   bool _sortByTime;
   bool _showTime;
+  bool _hour24;
+  bool _parseTitleTime;
   bool _categoryView;
   bool _showLedgerTitle;
   bool _showLedgerAmount;
@@ -70,6 +83,9 @@ class DayEventsViewPreference {
 
   bool get sortByTime => _prefs?.getBool(_sortKey) ?? _sortByTime;
   bool get showTime => _prefs?.getBool(_showTimeKey) ?? _showTime;
+  bool get hour24 => _prefs?.getBool(_hour24Key) ?? _hour24;
+  bool get parseTitleTime =>
+      _prefs?.getBool(_parseTitleTimeKey) ?? _parseTitleTime;
   bool get categoryView => _prefs?.getBool(_categoryViewKey) ?? _categoryView;
   bool get showLedgerTitle {
     final title = _prefs?.getBool(_ledgerTitleKey) ?? _showLedgerTitle;
@@ -104,6 +120,17 @@ class DayEventsViewPreference {
     _showTime = value;
     await _prefs?.setBool(_showTimeKey, value);
     unawaited(HomeScreenWidgetService.instance.sync());
+  }
+
+  Future<void> setHour24(bool value) async {
+    _hour24 = value;
+    await _prefs?.setBool(_hour24Key, value);
+    unawaited(HomeScreenWidgetService.instance.sync());
+  }
+
+  Future<void> setParseTitleTime(bool value) async {
+    _parseTitleTime = value;
+    await _prefs?.setBool(_parseTitleTimeKey, value);
   }
 
   Future<void> setCategoryView(bool value) async {
@@ -150,6 +177,8 @@ class DayEventsViewPreference {
     if (prefs == null) return;
     _sortByTime = prefs.getBool(_sortKey) ?? _sortByTime;
     _showTime = prefs.getBool(_showTimeKey) ?? _showTime;
+    _hour24 = prefs.getBool(_hour24Key) ?? _hour24;
+    _parseTitleTime = prefs.getBool(_parseTitleTimeKey) ?? _parseTitleTime;
     _categoryView = prefs.getBool(_categoryViewKey) ?? _categoryView;
     _showLedgerTitle = prefs.getBool(_ledgerTitleKey) ?? _showLedgerTitle;
     _showLedgerAmount = prefs.getBool(_ledgerAmountKey) ?? _showLedgerAmount;

@@ -352,6 +352,13 @@ class _AllEventsScreenState extends State<AllEventsScreen> {
     return _dateLabel(event.day);
   }
 
+  String? _timeText(CalendarEvent event) {
+    if (event.someday) return null;
+    return event.labelTime(
+      hour24: AppScope.of(context).dayEventsViewPreference.hour24,
+    );
+  }
+
   String _dateLabel(DateTime date) {
     final weekday = AppStrings.weekdays[date.weekday % 7];
     final now = DateTime.now();
@@ -709,9 +716,7 @@ class _AllEventsScreenState extends State<AllEventsScreen> {
                                               isJob: true,
                                               showAccent: !event.isBeforeToday,
                                               memo: event.memo,
-                                              timeText: event.someday
-                                                  ? null
-                                                  : event.timeLabel,
+                                              timeText: _timeText(event),
                                               onPressed: () => _edit(event),
                                             )
                                           : SwipeToDelete(
@@ -730,9 +735,7 @@ class _AllEventsScreenState extends State<AllEventsScreen> {
                                                 isRepeat: event.isRepeat,
                                                 isRange: event.isRange,
                                                 memo: event.memo,
-                                                timeText: event.someday
-                                                    ? null
-                                                    : event.timeLabel,
+                                                timeText: _timeText(event),
                                                 onPressed: () =>
                                                     _edit(event),
                                                 onCompletePressed: () =>

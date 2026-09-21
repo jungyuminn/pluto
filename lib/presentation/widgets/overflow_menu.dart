@@ -16,7 +16,7 @@ class OverflowMenuCard extends StatelessWidget {
     final style = TextStyle(
       fontFamily: AppFonts.of(context),
       fontSize: 16,
-      fontWeight: FontWeight.w400,
+      fontWeight: FontWeight.w500,
     );
     double widthOf(String text) {
       final painter = TextPainter(
@@ -42,7 +42,7 @@ class OverflowMenuCard extends StatelessWidget {
       color: AppColors.of(context).card,
       elevation: 8,
       shadowColor: const Color(0x33000000),
-      borderRadius: BorderRadius.circular(18),
+      borderRadius: BorderRadius.circular(32),
       clipBehavior: Clip.antiAlias,
       child: ConstrainedBox(
         constraints: BoxConstraints(minWidth: _minWidthOf(context)),
@@ -120,7 +120,7 @@ class OverflowMenuItem extends StatelessWidget {
                 style: TextStyle(
                   fontFamily: AppFonts.of(context),
                   fontSize: 16,
-                  fontWeight: FontWeight.w400,
+                  fontWeight: FontWeight.w500,
                   color: tint,
                 ),
               ),

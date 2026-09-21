@@ -26,10 +26,11 @@ class EventTimeChip extends StatelessWidget {
 
   String get _label {
     final start = startMinutes;
-    final end = endMinutes;
-    if (start == null || end == null) {
+    if (start == null) {
       return emptyLabel ?? AppStrings.allDayLabel;
     }
+    final end = endMinutes;
+    if (end == null) return CalendarEvent.formatMinutes(start);
     return '${CalendarEvent.formatMinutes(start)}–${CalendarEvent.formatMinutes(end)}';
   }
 

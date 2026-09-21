@@ -173,6 +173,18 @@ ReleaseDemo releaseDemoFor(String text, {required bool isFix}) {
     if (text.contains('스티커 팩')) return ReleaseDemo.stickers;
     return ReleaseDemo.fix;
   }
+  if (text.contains('시간에 넣') || text.contains('4시나')) {
+    return ReleaseDemo.categoryAi;
+  }
+  if (text.contains('24시간') || text.contains('오전·오후')) {
+    return ReleaseDemo.settingsHelp;
+  }
+  if (text.contains('끝 시간')) {
+    return ReleaseDemo.settingsHelp;
+  }
+  if (text.contains('항목마다 미리보기') || text.contains('할 일 설정 도움말')) {
+    return ReleaseDemo.settingsHelp;
+  }
   if (text.contains('홈에 메모') || text.contains('메모를 둘')) {
     return ReleaseDemo.homeMemo;
   }

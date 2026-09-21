@@ -388,6 +388,12 @@ class _CalendarMonthMenuButtonState extends State<CalendarMonthMenuButton>
           if (mounted) setState(() {});
           widget.onSortPrefsChanged?.call();
         },
+        hour24: prefs.hour24,
+        onHour24Changed: (value) async {
+          await prefs.setHour24(value);
+          if (mounted) setState(() {});
+          widget.onSortPrefsChanged?.call();
+        },
         showTimeOption: !ledger,
         showTimeSortOption: !ledger,
         showCategoryOption: true,

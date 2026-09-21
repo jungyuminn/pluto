@@ -17,6 +17,15 @@ class ReleaseNote {
 abstract final class ReleaseNotes {
   static const all = [
     ReleaseNote(
+      version: '1.4.7',
+      items: [
+        '제목에 4시나 14시, 오후 4시를 적으면 저장할 때 시간에 넣어요',
+        '시간을 24시간이나 오전·오후로 볼 수 있어요',
+        '할 일 끝 시간을 빼 둘 수 있어요',
+        '할 일 설정 도움말이 항목마다 미리보기로 나와요',
+      ],
+    ),
+    ReleaseNote(
       version: '1.4.6',
       items: [
         '받은·보낸 목록이 친구 요청과 같이 할 일 요청으로 보여요',

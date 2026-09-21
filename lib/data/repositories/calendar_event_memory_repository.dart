@@ -65,6 +65,7 @@ class CalendarEventMemoryRepository implements CalendarEventRepository {
         startMinutes: patch.startMinutes,
         endMinutes: patch.endMinutes,
         clearTime: !patch.hasTime,
+        clearEnd: patch.hasTime && patch.endMinutes == null,
       );
     }
   }

@@ -13,6 +13,7 @@ class WeekTimetableCard extends StatelessWidget {
     required this.today,
     required this.columns,
     this.showTime = true,
+    this.hour24 = true,
   });
 
   static const logicalSize = Size(440, 340);
@@ -36,6 +37,7 @@ class WeekTimetableCard extends StatelessWidget {
   final DateTime today;
   final List<List<CalendarEvent>> columns;
   final bool showTime;
+  final bool hour24;
 
   static DateTime weekStartOn(DateTime today, {bool startMonday = false}) {
     return calendarWeekStart(today, startMonday: startMonday);
@@ -89,6 +91,7 @@ class WeekTimetableCard extends StatelessWidget {
                         events: columns[i],
                         isToday: _isSameDay(days[i], today),
                         showTime: showTime,
+                        hour24: hour24,
                       ),
                     ),
                   ],
@@ -182,11 +185,13 @@ class _DayColumn extends StatelessWidget {
     required this.events,
     required this.isToday,
     required this.showTime,
+    required this.hour24,
   });
 
   final List<CalendarEvent> events;
   final bool isToday;
   final bool showTime;
+  final bool hour24;
 
   @override
   Widget build(BuildContext context) {
@@ -223,6 +228,7 @@ class _DayColumn extends StatelessWidget {
                   _EventEntry(
                     event: visible[i],
                     showTime: showTime,
+                    hour24: hour24,
                   ),
                 ],
                 if (more > 0) ...[
@@ -271,16 +277,18 @@ class _EventEntry extends StatelessWidget {
   const _EventEntry({
     required this.event,
     required this.showTime,
+    required this.hour24,
   });
 
   final CalendarEvent event;
   final bool showTime;
+  final bool hour24;
 
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
     final time = showTime && event.hasTime
-        ? CalendarEvent.formatMinutes(event.startMinutes!)
+        ? CalendarEvent.formatClock(event.startMinutes!, hour24: hour24)
         : null;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,

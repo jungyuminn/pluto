@@ -400,8 +400,14 @@ class AppStrings {
   static const settingsHelpPreview = '미리보기';
   static const settingsHomeLayoutHelp =
       '홈 화면에 보여줄 카드를 고르고, 홈에서 카드를 길게 눌러 순서를 바꿀 수 있어요';
-  static const settingsTodoHelp =
-      '할 일을 시간 순으로 정렬하거나, 라벨에 시간을 표시하거나, 카테고리별로 모아 볼 수 있어요';
+  static const settingsTodoHelpSort =
+      '시작 시간이 있는 할 일을 빠른 시간부터 줄 세워요. 켜 두면 손으로 순서를 바꿀 수 없어요';
+  static const settingsTodoHelpTime = '할 일 라벨에 시작 시간을 보여 줘요';
+  static const settingsTodoHelpHour24 =
+      '16:00처럼 24시간으로 볼지, 오후 4:00처럼 볼지 골라요. 시간 표시가 켜져 있을 때만 나와요';
+  static const settingsTodoHelpCategory = '같은 칸의 할 일을 묶어서 보여 줘요';
+  static const settingsTodoHelpParse =
+      '제목에 4시나 14시, 오후 4시처럼 적으면 저장할 때 그 글자를 빼고 시간에 넣어요';
   static const settingsNotificationHelp =
       '시간이 있는 할 일은 미리 알려주고, 매일 정해진 시간에 오늘 일정과 끝내지 않은 할 일을 알려줘요';
   static const settingsAppearanceHelp = '화면을 밝은 테마나 어두운 테마로 바꿀 수 있어요';
@@ -795,6 +801,8 @@ class AppStrings {
   static const timeAction = '시간';
   static const timeSortView = '시간 순으로 보기';
   static const timeDisplay = '시간 표시';
+  static const timeHour24 = '24시간으로 표시';
+  static const parseTitleTime = '자동 시간 입력';
   static const timeSortLockTitle = '순서를 바꿀 수 없어요';
   static const timeSortLockBody = '시간 순으로 보기가 켜져 있어요!';
   static const dateSortAction = '날짜순 정리';
@@ -802,6 +810,7 @@ class AppStrings {
   static const rejectedReorderLockBody = '탈락한 지원서는 순서를 바꿀 수 없어요';
   static const timeStartLabel = '시작';
   static const timeEndLabel = '종료';
+  static const timeEndEmpty = '없음';
   static const timeClear = '시간 초기화';
   static const timeOrderInvalid = '종료 시간이 시작 시간보다 빠를 수 없어요!';
   static const allDayLabel = '하루 종일';

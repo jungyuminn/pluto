@@ -481,6 +481,7 @@ class HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           categoryView: sortPrefs.categoryView,
           sortByTime: sortPrefs.sortByTime,
           showTime: sortPrefs.showTime,
+          hour24: sortPrefs.hour24,
           onEventsChanged: _reload,
         ),
       HomeCardKind.tomorrow => HomeDayCard(
@@ -491,6 +492,7 @@ class HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           categoryView: sortPrefs.categoryView,
           sortByTime: sortPrefs.sortByTime,
           showTime: sortPrefs.showTime,
+          hour24: sortPrefs.hour24,
           onEventsChanged: _reload,
         ),
       HomeCardKind.week => HomeDayCard(
@@ -500,6 +502,7 @@ class HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           categoryView: sortPrefs.categoryView,
           sortByTime: sortPrefs.sortByTime,
           showTime: sortPrefs.showTime,
+          hour24: sortPrefs.hour24,
           showAddButton: false,
           dateLabel: _weekLabel,
           groupDates: calendarDaysInRange(_today, _weekEnd),
@@ -512,6 +515,7 @@ class HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           categoryView: sortPrefs.categoryView,
           sortByTime: sortPrefs.sortByTime,
           showTime: sortPrefs.showTime,
+          hour24: sortPrefs.hour24,
           showAddButton: false,
           dateLabel: _monthLabel,
           groupDates: calendarDaysInRange(

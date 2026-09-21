@@ -63,6 +63,7 @@ class TodayWidgetCard extends StatelessWidget {
     required this.dateLabel,
     required this.snapshot,
     required this.showTime,
+    this.hour24 = true,
     this.officeIcon,
   });
 
@@ -84,6 +85,7 @@ class TodayWidgetCard extends StatelessWidget {
   final String dateLabel;
   final TodayWidgetSnapshot snapshot;
   final bool showTime;
+  final bool hour24;
   final ui.Image? officeIcon;
 
   static Size layoutSize({
@@ -219,12 +221,17 @@ class TodayWidgetCard extends StatelessWidget {
   }
 
   String? _timeText(CalendarEvent event) {
-    return timeTextFor(event, showTime);
+    return timeTextFor(event, showTime, hour24: hour24);
   }
 
-  static String? timeTextFor(CalendarEvent event, bool showTime) {
+  static String? timeTextFor(
+    CalendarEvent event,
+    bool showTime, {
+    bool hour24 = true,
+  }) {
     if (!showTime) return null;
-    return event.timeLabel ?? (event.isJob ? null : AppStrings.allDayLabel);
+    return event.labelTime(hour24: hour24) ??
+        (event.isJob ? null : AppStrings.allDayLabel);
   }
 
   static Widget header({
@@ -272,6 +279,7 @@ class TodayWidgetCard extends StatelessWidget {
   static Widget row({
     required TodayWidgetItem item,
     required bool showTime,
+    bool hour24 = true,
     ui.Image? officeIcon,
   }) {
     if (item.event == null) {
@@ -286,7 +294,7 @@ class TodayWidgetCard extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 10),
       child: _WidgetEventLabel(
         event: item.event!,
-        timeText: timeTextFor(item.event!, showTime),
+        timeText: timeTextFor(item.event!, showTime, hour24: hour24),
         officeIcon: officeIcon,
       ),
     );

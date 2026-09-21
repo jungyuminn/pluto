@@ -32,6 +32,7 @@ class HomeDayCard extends StatefulWidget {
     this.categoryView = false,
     this.sortByTime = false,
     this.showTime = false,
+    this.hour24 = true,
     required this.onEventsChanged,
     this.showAddButton = true,
     this.showEventDates = false,
@@ -47,6 +48,7 @@ class HomeDayCard extends StatefulWidget {
   final bool categoryView;
   final bool sortByTime;
   final bool showTime;
+  final bool hour24;
   final VoidCallback onEventsChanged;
   final bool showAddButton;
   final bool showEventDates;
@@ -96,7 +98,8 @@ class _HomeDayCardState extends State<HomeDayCard> {
 
   String? _timeText(CalendarEvent event) {
     if (!widget.showTime || event.someday) return null;
-    return event.timeLabel ?? (event.isJob ? null : AppStrings.allDayLabel);
+    return event.labelTime(hour24: widget.hour24) ??
+        (event.isJob ? null : AppStrings.allDayLabel);
   }
 
   String _dayHeaderName(DateTime date) {

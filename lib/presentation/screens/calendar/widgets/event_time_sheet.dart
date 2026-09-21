@@ -25,6 +25,7 @@ Future<EventTimePickResult?> showEventTimeSheet(
   int? startMinutes,
   int? endMinutes,
   Color color = const Color(0xFF3B82F6),
+  bool requireEnd = false,
 }) {
   FocusManager.instance.primaryFocus?.unfocus();
   return showModalBottomSheet<EventTimePickResult>(
@@ -40,6 +41,7 @@ Future<EventTimePickResult?> showEventTimeSheet(
       startMinutes: startMinutes,
       endMinutes: endMinutes,
       color: color,
+      requireEnd: requireEnd,
     ),
   );
 }
@@ -50,11 +52,13 @@ class EventTimeSheet extends StatefulWidget {
     this.startMinutes,
     this.endMinutes,
     required this.color,
+    this.requireEnd = false,
   });
 
   final int? startMinutes;
   final int? endMinutes;
   final Color color;
+  final bool requireEnd;
 
   @override
   State<EventTimeSheet> createState() => _EventTimeSheetState();
@@ -62,7 +66,7 @@ class EventTimeSheet extends StatefulWidget {
 
 class _EventTimeSheetState extends State<EventTimeSheet> {
   late int _startMinutes;
-  late int _endMinutes;
+  int? _endMinutes;
   var _editStart = true;
   Timer? _hintTimer;
   var _hintVisible = false;
@@ -75,7 +79,11 @@ class _EventTimeSheetState extends State<EventTimeSheet> {
     final now = DateTime.now();
     final hourStart = now.hour * 60;
     _startMinutes = _snap(widget.startMinutes ?? hourStart);
-    _endMinutes = _snap(widget.endMinutes ?? _startMinutes + 60);
+    if (widget.requireEnd) {
+      _endMinutes = _snap(widget.endMinutes ?? _startMinutes + 60);
+    } else if (widget.endMinutes != null) {
+      _endMinutes = _snap(widget.endMinutes!);
+    }
   }
 
   @override
@@ -99,13 +107,35 @@ class _EventTimeSheetState extends State<EventTimeSheet> {
   }
 
   void _save() {
-    if (_endMinutes <= _startMinutes) {
+    final end = _endMinutes;
+    if (widget.requireEnd && end == null) {
+      _showInvalidHint();
+      return;
+    }
+    if (end != null && end <= _startMinutes) {
       _showInvalidHint();
       return;
     }
     Navigator.of(context).pop(
-      EventTimePickResult(startMinutes: _startMinutes, endMinutes: _endMinutes),
+      EventTimePickResult(startMinutes: _startMinutes, endMinutes: end),
     );
+  }
+
+  void _selectStart() {
+    if (_editStart) return;
+    setState(() => _editStart = true);
+  }
+
+  void _selectEnd() {
+    setState(() {
+      if (!widget.requireEnd && !_editStart && _endMinutes != null) {
+        _endMinutes = null;
+        _editStart = true;
+        return;
+      }
+      _editStart = false;
+      _endMinutes ??= _snap(_startMinutes + 60);
+    });
   }
 
   @override
@@ -191,10 +221,7 @@ class _EventTimeSheetState extends State<EventTimeSheet> {
                           minutes: _startMinutes,
                           color: widget.color,
                           selected: _editStart,
-                          onPressed: () {
-                            if (_editStart) return;
-                            setState(() => _editStart = true);
-                          },
+                          onPressed: _selectStart,
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -204,10 +231,7 @@ class _EventTimeSheetState extends State<EventTimeSheet> {
                           minutes: _endMinutes,
                           color: widget.color,
                           selected: !_editStart,
-                          onPressed: () {
-                            if (!_editStart) return;
-                            setState(() => _editStart = false);
-                          },
+                          onPressed: _selectEnd,
                         ),
                       ),
                     ],
@@ -226,7 +250,9 @@ class _EventTimeSheetState extends State<EventTimeSheet> {
                       child: SizedBox(
                         height: _FlatWheel.extent * 5,
                         child: _TimeWheels(
-                          minutes: _editStart ? _startMinutes : _endMinutes,
+                          minutes: _editStart
+                              ? _startMinutes
+                              : (_endMinutes ?? _startMinutes),
                           selectedColor: widget.color,
                           onChanged: (value) {
                             setState(() {
@@ -274,7 +300,7 @@ class _TimeCard extends StatelessWidget {
   });
 
   final String label;
-  final int minutes;
+  final int? minutes;
   final Color color;
   final bool selected;
   final VoidCallback onPressed;
@@ -307,7 +333,9 @@ class _TimeCard extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             Text(
-              _formatTime(minutes),
+              minutes == null
+                  ? AppStrings.timeEndEmpty
+                  : _formatTime(minutes!),
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontFamily: AppFonts.of(context),

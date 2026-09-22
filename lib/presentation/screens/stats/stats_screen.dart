@@ -226,7 +226,7 @@ class StatsScreenState extends State<StatsScreen>
       events: calendarPrefs.showTodos ? _events : const [],
       applications: applications,
       companyCategories: companyCategories,
-      includeRejected: scope.jobViewPreference.showRejected,
+      includeRejected: false,
     );
     final prefs = scope.dayEventsViewPreference;
     if (prefs.categoryView) {

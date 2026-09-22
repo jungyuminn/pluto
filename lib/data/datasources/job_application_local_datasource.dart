@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:pluto/core/home_widget/home_screen_widget_service.dart';
 import 'package:pluto/core/notifications/todo_reminder_service.dart';
+import 'package:pluto/data/datasources/friend_service.dart';
 import 'package:pluto/data/models/job_application_model.dart';
 import 'package:pluto/domain/entities/job_application.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -35,5 +36,6 @@ class JobApplicationLocalDataSource {
   Future<void> _syncSideEffects() async {
     await TodoReminderService.instance.sync();
     await HomeScreenWidgetService.instance.sync();
+    unawaited(FriendService.instance.syncFromLocal());
   }
 }

@@ -18,6 +18,7 @@ import 'package:pluto/presentation/screens/calendar/widgets/event_memo_field.dar
 import 'package:pluto/presentation/screens/add_company/widgets/round_chip_row.dart';
 import 'package:pluto/presentation/screens/add_company/widgets/save_company_button.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/category_picker_sheet.dart';
+import 'package:pluto/presentation/screens/friends/friends_toast.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/event_action_icon.dart';
 import 'package:pluto/presentation/widgets/ai_category_chip.dart';
 import 'package:pluto/presentation/widgets/category_suggest_session.dart';
@@ -272,6 +273,14 @@ class _AddCompanyFormViewState extends State<AddCompanyForm>
       await scope.updateJobApplication(application);
     }
     if (!mounted) return;
+    final becameRejected =
+        application.isRejected && !(initial?.isRejected ?? false);
+    if (becameRejected) {
+      showFriendsToast(
+        context,
+        AppStrings.jobRejectedCalendarToast(name),
+      );
+    }
     Navigator.of(context).pop(true);
   }
 

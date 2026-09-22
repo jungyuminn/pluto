@@ -37,6 +37,8 @@ class CategoryShareSheet extends StatefulWidget {
 
 class _CategoryShareSheetState extends State<CategoryShareSheet> {
   var _categories = <EventCategory>[];
+  var _companyCategories = <EventCategory>[];
+  var _showJobs = false;
   var _loading = true;
 
   @override
@@ -48,16 +50,28 @@ class _CategoryShareSheetState extends State<CategoryShareSheet> {
   Future<void> _load() async {
     await FriendCategoryPreference.instance.load();
     if (!mounted) return;
-    final categories = await AppScope.of(context).getEventCategories();
+    final scope = AppScope.of(context);
+    final jobMode = scope.navPreference.showJobTab;
+    final categories = await scope.getEventCategories();
+    final companies = jobMode
+        ? await scope.fetchCategories(CategoryKind.company)
+        : const <EventCategory>[];
     if (!mounted) return;
     setState(() {
       _categories = categories;
+      _companyCategories = companies;
+      _showJobs = jobMode;
       _loading = false;
     });
   }
 
   Future<void> _setPublic(String id, bool public) async {
     await FriendCategoryPreference.instance.setPublic(id, public);
+    unawaited(FriendService.instance.syncFromLocal());
+  }
+
+  Future<void> _setCompanyPublic(String id, bool public) async {
+    await FriendCategoryPreference.instance.setCompanyPublic(id, public);
     unawaited(FriendService.instance.syncFromLocal());
   }
 
@@ -112,40 +126,77 @@ class _CategoryShareSheetState extends State<CategoryShareSheet> {
                 ),
               ),
               const SizedBox(height: 16),
-              DecoratedBox(
-                decoration: BoxDecoration(
-                  color: colors.card,
-                  borderRadius: BorderRadius.circular(24),
-                ),
-                child: _loading
-                    ? const SizedBox(height: 72)
-                    : ValueListenableBuilder<Set<String>>(
-                        valueListenable:
-                            FriendCategoryPreference.instance.listenable,
-                        builder: (context, privateIds, _) {
-                          return Column(
-                            children: [
-                              for (var i = 0; i < _categories.length; i++) ...[
-                                _row(
-                                  colors,
-                                  _categories[i],
-                                  public: !privateIds.contains(_categories[i].id),
-                                ),
-                                if (i != _categories.length - 1)
-                                  Padding(
-                                    padding: const EdgeInsets.only(left: 52),
-                                    child: Divider(
-                                      height: 1,
-                                      thickness: 0.5,
-                                      color: colors.border,
+              if (_loading)
+                _card(const SizedBox(height: 72))
+              else
+                ListenableBuilder(
+                  listenable: FriendCategoryPreference.instance.allListenable,
+                  builder: (context, _) {
+                    final prefs = FriendCategoryPreference.instance;
+                    final companies = _showJobs
+                        ? _companyCategories
+                        : const <EventCategory>[];
+                    final split = companies.isNotEmpty;
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (split && _categories.isNotEmpty)
+                          _sectionTitle(
+                            colors,
+                            AppStrings.monthlyStatsTodoSection,
+                          ),
+                        if (_categories.isNotEmpty)
+                          _card(
+                            Column(
+                              children: [
+                                for (var i = 0;
+                                    i < _categories.length;
+                                    i++) ...[
+                                  _row(
+                                    colors,
+                                    _categories[i],
+                                    public: prefs.isPublic(_categories[i].id),
+                                  ),
+                                  if (i != _categories.length - 1)
+                                    _divider(colors),
+                                ],
+                              ],
+                            ),
+                          ),
+                        if (split) ...[
+                          if (_categories.isNotEmpty) const SizedBox(height: 18),
+                          _sectionTitle(
+                            colors,
+                            AppStrings.jobScreenTitle,
+                          ),
+                          _card(
+                            Column(
+                              children: [
+                                for (var i = 0;
+                                    i < companies.length;
+                                    i++) ...[
+                                  _row(
+                                    colors,
+                                    companies[i],
+                                    public: prefs.isCompanyPublic(
+                                      companies[i].id,
+                                    ),
+                                    onChanged: (value) => _setCompanyPublic(
+                                      companies[i].id,
+                                      value,
                                     ),
                                   ),
+                                  if (i != companies.length - 1)
+                                    _divider(colors),
+                                ],
                               ],
-                            ],
-                          );
-                        },
-                      ),
-              ),
+                            ),
+                          ),
+                        ],
+                      ],
+                    );
+                  },
+                ),
             ],
           ),
         ),
@@ -153,22 +204,81 @@ class _CategoryShareSheetState extends State<CategoryShareSheet> {
     );
   }
 
-  Widget _row(AppColors colors, EventCategory category, {required bool public}) {
+  Widget _sectionTitle(AppColors colors, String label) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontFamily: AppFonts.of(context),
+          fontSize: 15,
+          fontWeight: FontWeight.w600,
+          color: colors.text,
+        ),
+      ),
+    );
+  }
+
+  Widget _card(Widget child) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: AppColors.of(context).card,
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: child,
+    );
+  }
+
+  Widget _divider(AppColors colors) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 52),
+      child: Divider(
+        height: 1,
+        thickness: 0.5,
+        color: colors.border,
+      ),
+    );
+  }
+
+  Widget _row(
+    AppColors colors,
+    EventCategory category, {
+    required bool public,
+    ValueChanged<bool>? onChanged,
+  }) {
+    return _switchRow(
+      colors,
+      label: category.name,
+      public: public,
+      color: category.tint,
+      onChanged: onChanged ?? (value) => _setPublic(category.id, value),
+    );
+  }
+
+  Widget _switchRow(
+    AppColors colors, {
+    required String label,
+    required bool public,
+    required ValueChanged<bool> onChanged,
+    Color? color,
+  }) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
       child: Row(
         children: [
-          DecoratedBox(
-            decoration: BoxDecoration(
-              color: category.tint,
-              shape: BoxShape.circle,
+          if (color != null) ...[
+            DecoratedBox(
+              decoration: BoxDecoration(
+                color: color,
+                shape: BoxShape.circle,
+              ),
+              child: const SizedBox(width: 12, height: 12),
             ),
-            child: const SizedBox(width: 12, height: 12),
-          ),
-          const SizedBox(width: 12),
+            const SizedBox(width: 12),
+          ],
           Expanded(
             child: Text(
-              category.name,
+              label,
               style: TextStyle(
                 fontFamily: AppFonts.of(context),
                 fontSize: 16,
@@ -182,7 +292,7 @@ class _CategoryShareSheetState extends State<CategoryShareSheet> {
               child: CupertinoSwitch(
                 value: public,
                 activeTrackColor: colors.accentBright,
-                onChanged: (value) => _setPublic(category.id, value),
+                onChanged: onChanged,
               ),
             ),
           ),

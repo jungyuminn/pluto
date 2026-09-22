@@ -90,8 +90,9 @@ class FriendAvatar extends StatelessWidget {
   }
 
   Widget _body(BuildContext context) {
-    final bytes = preview ?? FriendService.instance.avatarBytes(profile?.uid);
-    final url = profile?.photoURL ?? '';
+    final url = profile?.hasAppPhoto == true ? profile!.photoURL : '';
+    final bytes = preview ??
+        (url.isEmpty ? null : FriendService.instance.avatarBytes(profile?.uid));
     final ImageProvider? image = bytes != null
         ? MemoryImage(bytes)
         : (url.isEmpty ? null : NetworkImage(url));

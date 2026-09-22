@@ -37,6 +37,7 @@ import 'package:pluto/data/datasources/backup_preference.dart';
 import 'package:pluto/data/datasources/device_calendar_import.dart';
 import 'package:pluto/data/datasources/device_calendar_mapper.dart';
 import 'package:pluto/data/datasources/font_preference.dart';
+import 'package:pluto/data/datasources/friend_service.dart';
 import 'package:pluto/data/datasources/notification_preference.dart';
 import 'package:pluto/data/datasources/theme_preference.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/calendar_event_label.dart';
@@ -501,6 +502,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _setJobMode(bool value) async {
     setState(() => _jobMode = value);
     await AppScope.of(context).navPreference.setJobMode(value);
+    unawaited(FriendService.instance.syncFromLocal());
   }
 
   Future<void> _setShowStatsTab(bool value) async {
@@ -910,54 +912,61 @@ class _SettingsScreenState extends State<SettingsScreen> {
               SettingsHelpSection.homeLayout,
             ),
           ),
-          _SettingsCard(
-            children: [
-              _SettingsSwitchTile(
-                label: AppStrings.homeShowFriends,
-                value: _showFriends,
-                onChanged: _setShowFriends,
-              ),
-              _SettingsSwitchTile(
-                label: AppStrings.homeShowLeftover,
-                value: _showLeftover,
-                onChanged: _setShowLeftover,
-              ),
-              _SettingsSwitchTile(
-                label: AppStrings.homeShowMemo,
-                value: _showMemo,
-                onChanged: _setShowMemo,
-              ),
-              _SettingsSwitchTile(
-                label: AppStrings.homeShowToday,
-                value: _showToday,
-                onChanged: _setShowToday,
-              ),
-              _SettingsSwitchTile(
-                label: AppStrings.homeShowTomorrow,
-                value: _showTomorrow,
-                onChanged: _setShowTomorrow,
-              ),
-              _SettingsSwitchTile(
-                label: AppStrings.homeShowWeek,
-                value: _showWeek,
-                onChanged: _setShowWeek,
-              ),
-              _SettingsSwitchTile(
-                label: AppStrings.homeShowMonth,
-                value: _showMonth,
-                onChanged: _setShowMonth,
-              ),
-              _SettingsSwitchTile(
-                label: AppStrings.homeShowSomeday,
-                value: _showSomeday,
-                onChanged: _setShowSomeday,
-              ),
-              _SettingsSwitchTile(
-                label: AppStrings.homeShowLongGoal,
-                value: _showLongGoal,
-                onChanged: _setShowLongGoal,
-              ),
-            ],
+          StreamBuilder(
+            stream: AppAuthService.instance.authState,
+            initialData: AppAuthService.instance.user,
+            builder: (context, snapshot) {
+              return _SettingsCard(
+                children: [
+                  if (snapshot.data != null)
+                    _SettingsSwitchTile(
+                      label: AppStrings.homeShowFriends,
+                      value: _showFriends,
+                      onChanged: _setShowFriends,
+                    ),
+                  _SettingsSwitchTile(
+                    label: AppStrings.homeShowLeftover,
+                    value: _showLeftover,
+                    onChanged: _setShowLeftover,
+                  ),
+                  _SettingsSwitchTile(
+                    label: AppStrings.homeShowMemo,
+                    value: _showMemo,
+                    onChanged: _setShowMemo,
+                  ),
+                  _SettingsSwitchTile(
+                    label: AppStrings.homeShowToday,
+                    value: _showToday,
+                    onChanged: _setShowToday,
+                  ),
+                  _SettingsSwitchTile(
+                    label: AppStrings.homeShowTomorrow,
+                    value: _showTomorrow,
+                    onChanged: _setShowTomorrow,
+                  ),
+                  _SettingsSwitchTile(
+                    label: AppStrings.homeShowWeek,
+                    value: _showWeek,
+                    onChanged: _setShowWeek,
+                  ),
+                  _SettingsSwitchTile(
+                    label: AppStrings.homeShowMonth,
+                    value: _showMonth,
+                    onChanged: _setShowMonth,
+                  ),
+                  _SettingsSwitchTile(
+                    label: AppStrings.homeShowSomeday,
+                    value: _showSomeday,
+                    onChanged: _setShowSomeday,
+                  ),
+                  _SettingsSwitchTile(
+                    label: AppStrings.homeShowLongGoal,
+                    value: _showLongGoal,
+                    onChanged: _setShowLongGoal,
+                  ),
+                ],
+              );
+            },
           ),
           const SizedBox(height: 24),
           _SectionLabel(

@@ -26,7 +26,8 @@ service cloud.firestore {
           'startMinutes',
           'endMinutes',
           'visibility',
-          'updatedAt'
+          'updatedAt',
+          'isJob'
         ]) &&
         data.title is string &&
         data.title.size() > 0 &&
@@ -40,7 +41,8 @@ service cloud.firestore {
         (!('completed' in data) || data.completed is bool) &&
         (!('groupId' in data) || data.groupId == null || data.groupId is string) &&
         (!('startMinutes' in data) || data.startMinutes == null || data.startMinutes is int) &&
-        (!('endMinutes' in data) || data.endMinutes == null || data.endMinutes is int);
+        (!('endMinutes' in data) || data.endMinutes == null || data.endMinutes is int) &&
+        (!('isJob' in data) || data.isJob is bool);
     }
 
     function sharedStickerValid() {

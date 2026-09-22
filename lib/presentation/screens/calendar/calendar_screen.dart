@@ -425,11 +425,8 @@ class CalendarScreenState extends State<CalendarScreen>
       }
       if (calendarPrefs.showCompanies &&
           AppScope.of(context).navPreference.showJobTab) {
-        final showRejected = AppScope.of(
-          context,
-        ).jobViewPreference.showRejected;
         for (final application in _applications) {
-          if (!showRejected && application.isRejected) continue;
+          if (application.isRejected) continue;
           for (var i = 0; i < application.rounds.length; i++) {
             final round = application.rounds[i];
             final date = round.date;
@@ -485,7 +482,7 @@ class CalendarScreenState extends State<CalendarScreen>
           ? _applications
           : const [],
       companyCategories: _companyCategories,
-      includeRejected: AppScope.of(context).jobViewPreference.showRejected,
+      includeRejected: false,
     );
     final prefs = AppScope.of(context).dayEventsViewPreference;
     if (prefs.categoryView) {

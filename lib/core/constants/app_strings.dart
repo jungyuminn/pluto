@@ -647,6 +647,8 @@ class AppStrings {
   static const calendarVisibleItems = '캘린더에 표시할 항목';
   static const jobVisibleItems = '지원서에 표시할 항목';
   static const jobShowRejected = '탈락한 지원서';
+  static String jobRejectedCalendarToast(String name) =>
+      '$name의 일정이 더 이상 캘린더에 나오지 않아요';
   static const calendarSortMode = '정렬 방식';
   static const calendarDiaryMode = '일기 전환';
   static const calendarLedgerMode = '가계부 전환';

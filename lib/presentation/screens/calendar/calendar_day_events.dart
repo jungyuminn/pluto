@@ -57,6 +57,31 @@ List<CalendarEvent> jobEventsOn(
   return items;
 }
 
+List<CalendarEvent> jobEventsAll(
+  Iterable<JobApplication> applications, {
+  List<EventCategory> companyCategories = const [],
+}) {
+  final items = <CalendarEvent>[];
+  for (final application in applications) {
+    if (application.isRejected) continue;
+    final seen = <String>{};
+    for (final round in application.rounds) {
+      final date = round.date;
+      if (date == null) continue;
+      final key = '${date.year}-${date.month}-${date.day}';
+      if (!seen.add(key)) continue;
+      items.addAll(
+        jobEventsOn(
+          date,
+          [application],
+          companyCategories: companyCategories,
+        ),
+      );
+    }
+  }
+  return items;
+}
+
 List<CalendarEvent> calendarEventsOn({
   required DateTime date,
   required List<CalendarEvent> events,

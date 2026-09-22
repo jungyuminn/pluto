@@ -15,6 +15,9 @@ import 'package:pluto/core/constants/app_strings.dart';
 import 'package:pluto/data/datasources/app_auth_service.dart';
 import 'package:pluto/data/datasources/calendar_event_local_datasource.dart';
 import 'package:pluto/data/datasources/event_category_local_datasource.dart';
+import 'package:pluto/data/datasources/job_application_local_datasource.dart';
+import 'package:pluto/data/datasources/nav_preference.dart';
+import 'package:pluto/presentation/screens/calendar/calendar_day_events.dart';
 import 'package:pluto/data/datasources/last_event_category_preference.dart';
 import 'package:pluto/data/datasources/friend_category_preference.dart';
 import 'package:pluto/data/datasources/friend_favorite_preference.dart';
@@ -97,24 +100,31 @@ class FriendService {
     return _avatarMem[uid];
   }
 
+  FriendProfile _withoutSocialPhoto(FriendProfile next) {
+    if (next.hasAppPhoto) return next;
+    if (next.photoURL.isEmpty) return next;
+    return next.copyWith(photoURL: '');
+  }
+
   void hydrateSession() {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
     final current = profile.value;
-    if (current?.uid == user.uid && current!.photoURL.isNotEmpty) return;
+    if (current?.uid == user.uid && current!.hasAppPhoto) return;
     if (_sessionUid == user.uid && _sessionProfile != null) {
-      profile.value = _sessionProfile;
+      profile.value = _withoutSocialPhoto(_sessionProfile!);
       return;
     }
-    if (current?.uid == user.uid) return;
-    final photo = AppAuthService.socialPhotoURL(user) ?? '';
+    if (current?.uid == user.uid) {
+      profile.value = _withoutSocialPhoto(current!);
+      return;
+    }
     final name = AppAuthService.socialDisplayName(user) ?? '';
-    if (photo.isEmpty && name.isEmpty) return;
+    if (name.isEmpty) return;
     profile.value = FriendProfile(
       uid: user.uid,
       displayName: name,
       friendCode: current?.friendCode ?? '',
-      photoURL: photo,
     );
   }
 
@@ -216,7 +226,9 @@ class FriendService {
       if (pending != null && pending.isNotEmpty) {
         resolved = resolved.copyWith(displayName: pending);
       }
+      resolved = _withoutSocialPhoto(resolved);
       profile.value = resolved;
+      if (!resolved.hasAppPhoto) _forgetAvatar(resolved.uid);
       await _writeCachedProfile();
       return resolved;
     }
@@ -349,14 +361,16 @@ class FriendService {
     }
     final pending = prefs.getString('$_pendingNameKeyPrefix$uid')?.trim();
     if (cached == null && (pending == null || pending.isEmpty)) return;
-    profile.value = (cached ?? FriendProfile(
-      uid: uid,
-      displayName: pending ?? '',
-      friendCode: '',
-    )).copyWith(
-      displayName: pending == null || pending.isEmpty
-          ? null
-          : pending,
+    profile.value = _withoutSocialPhoto(
+      (cached ?? FriendProfile(
+        uid: uid,
+        displayName: pending ?? '',
+        friendCode: '',
+      )).copyWith(
+        displayName: pending == null || pending.isEmpty
+            ? null
+            : pending,
+      ),
     );
   }
 
@@ -410,6 +424,19 @@ class FriendService {
     } catch (_) {}
   }
 
+  void _forgetAvatar(String uid) {
+    if (uid.isEmpty) return;
+    _avatarMem.remove(uid);
+    _avatarGen[uid] = (_avatarGen[uid] ?? 0) + 1;
+    avatarTick.value++;
+    unawaited(() async {
+      try {
+        final file = await _avatarFile(uid);
+        if (file != null && await file.exists()) await file.delete();
+      } catch (_) {}
+    }());
+  }
+
   void _rememberAvatar(String uid, Uint8List bytes) {
     if (uid.isEmpty || bytes.isEmpty) return;
     _avatarMem[uid] = bytes;
@@ -420,7 +447,7 @@ class FriendService {
 
   Future<void> _warmAvatar(FriendProfile? next) async {
     final uid = next?.uid ?? '';
-    final url = next?.photoURL ?? '';
+    final url = next?.hasAppPhoto == true ? next!.photoURL : '';
     if (uid.isEmpty || url.isEmpty) return;
     if (_avatarMem.containsKey(uid)) return;
     final gen = _avatarGen[uid] ?? 0;
@@ -1905,7 +1932,7 @@ class FriendService {
     _pending = events;
     _syncTimer?.cancel();
     _syncTimer = Timer(const Duration(milliseconds: 800), () {
-      unawaited(_pushShared(_pending));
+      unawaited(_pushSharedWithJobs(_pending));
     });
   }
 
@@ -1914,7 +1941,7 @@ class FriendService {
     final prefs = await SharedPreferences.getInstance();
     final raw = prefs.getString(CalendarEventLocalDataSource.key);
     if (raw == null || raw.isEmpty) {
-      await _pushShared(const []);
+      await _pushSharedWithJobs(const []);
     } else {
       try {
         final decoded = jsonDecode(raw) as List<dynamic>;
@@ -1923,7 +1950,7 @@ class FriendService {
             if (item is Map<String, dynamic>)
               CalendarEventModel.fromJson(item),
         ];
-        await _pushShared(events);
+        await _pushSharedWithJobs(events);
       } catch (error) {
         debugPrint('Friend calendar parse failed: $error');
       }
@@ -2190,8 +2217,37 @@ class FriendService {
     return asset.length <= 200;
   }
 
+  Future<void> _pushSharedWithJobs(List<CalendarEvent> events) async {
+    await FriendCategoryPreference.instance.load();
+    final prefs = await SharedPreferences.getInstance();
+    await _pushShared(_withJobs(events, prefs));
+  }
+
+  List<CalendarEvent> _withJobs(
+    List<CalendarEvent> events,
+    SharedPreferences prefs,
+  ) {
+    final todos = [for (final event in events) if (!event.isJob) event];
+    if (!NavPreference(prefs: prefs).showJobTab) return todos;
+    final jobs = JobApplicationLocalDataSource(prefs).fetchAll();
+    final categories = EventCategoryLocalDataSource(
+      prefs,
+      key: EventCategoryLocalDataSource.companyKey,
+      presets: EventCategory.companyPresets,
+      syncHomeWidget: false,
+    ).fetchAll();
+    return [
+      ...todos,
+      ...jobEventsAll(jobs, companyCategories: categories),
+    ];
+  }
+
   bool _shareable(CalendarEvent event) {
-    if (event.someday || event.isJob) return false;
+    if (event.someday) return false;
+    if (event.isJob) {
+      return event.title.trim().isNotEmpty &&
+          FriendCategoryPreference.instance.isCompanyPublic(event.categoryId);
+    }
     if (event.id.startsWith(CalendarEventLocalDataSource.starterIdPrefix)) {
       return false;
     }
@@ -2215,6 +2271,7 @@ class FriendService {
       'endMinutes': event.endMinutes,
       'visibility': 'title',
       'updatedAt': updatedAt,
+      if (event.isJob) 'isJob': true,
     };
   }
 
@@ -2238,6 +2295,7 @@ class FriendService {
       groupId: data['groupId'] as String?,
       startMinutes: (data['startMinutes'] as num?)?.toInt(),
       endMinutes: (data['endMinutes'] as num?)?.toInt(),
+      isJob: data['isJob'] == true || id.startsWith('job:'),
     );
   }
 

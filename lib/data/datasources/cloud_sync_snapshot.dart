@@ -120,6 +120,7 @@ class CloudSyncSnapshot {
     LicenseViewPreference.defaultBools,
     DayEventsViewPreference.defaultBools,
     CategorySuggestPreference.defaultBools,
+    FriendCategoryPreference.defaultBools,
   ];
 
   static const _listMergeKeys = {
@@ -169,6 +170,7 @@ class CloudSyncSnapshot {
     if (key == skinKey) return 'classic';
     if (key == diaryCoverOrderKey) return <String>[];
     if (key == FriendCategoryPreference.key) return <String>[];
+    if (key == FriendCategoryPreference.companyKey) return <String>[];
     if (key == FriendOrderPreference.key) return <String>[];
     if (key == FriendFavoritePreference.key) return <String>[];
     if (key == FriendHomePreference.uidsKey) return <String>[];

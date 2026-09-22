@@ -354,7 +354,7 @@ class _DayEventsDialogState extends State<DayEventsDialog> {
           events: events,
           applications: applications,
           companyCategories: companyCategories,
-          includeRejected: scope.jobViewPreference.showRejected,
+          includeRejected: false,
         ),
       );
     _syncItems(_itemsForView, animate: animate);

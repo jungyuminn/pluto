@@ -60,6 +60,14 @@ class FriendProfile {
         displayName.trim().isNotEmpty;
   }
 
+  bool get hasAppPhoto {
+    final url = photoURL.trim();
+    if (url.isEmpty) return false;
+    return url.contains('firebasestorage.googleapis.com') ||
+        url.contains('firebasestorage.app') ||
+        url.contains('storage.googleapis.com');
+  }
+
   bool get canChangeCode {
     if (needsCode || friendCode.isEmpty) return true;
     if (nextChangeAt <= 0) return true;

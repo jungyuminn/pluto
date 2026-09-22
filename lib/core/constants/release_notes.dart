@@ -17,6 +17,18 @@ class ReleaseNote {
 abstract final class ReleaseNotes {
   static const all = [
     ReleaseNote(
+      version: '1.4.9',
+      items: [
+        '친구 프로필 사진을 누르면 크게 볼 수 있어요',
+        '친구에게 보여줄 할 일과 지원서를 따로 정할 수 있어요',
+        '친구 캘린더에서도 월과 해를 골라요',
+        'PC에서 친구 캘린더가 넓게 보여요',
+      ],
+      fixes: [
+        '취준 일정이 친구 캘린더에 안 보이던 점을 고쳤어요',
+      ],
+    ),
+    ReleaseNote(
       version: '1.4.8',
       items: [
         '홈에서 친구 줄을 숨길 수 있어요',

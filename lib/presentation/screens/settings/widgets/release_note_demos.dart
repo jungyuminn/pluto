@@ -109,6 +109,8 @@ enum ReleaseDemo {
   homeMemo,
   categoryView,
   friendsMiniCal,
+  friendsPhotoPeek,
+  friendsShare,
   friendsAdd,
   pcEnterSave,
   jobCategorySlide,
@@ -122,6 +124,9 @@ enum ReleaseDemo {
 
 ReleaseDemo releaseDemoFor(String text, {required bool isFix}) {
   if (isFix) {
+    if (text.contains('취준 일정') || text.contains('친구 캘린더에 안 보이')) {
+      return ReleaseDemo.friendsMiniCal;
+    }
     if (text.contains('상대 프로필') ||
         text.contains('바로 없어') ||
         text.contains('제목도 같이') ||
@@ -190,6 +195,12 @@ ReleaseDemo releaseDemoFor(String text, {required bool isFix}) {
   if (text.contains('모아 볼') || text.contains('카테고리별 보기')) {
     return ReleaseDemo.categoryView;
   }
+  if (text.contains('프로필 사진')) return ReleaseDemo.friendsPhotoPeek;
+  if (text.contains('할 일과 지원서') || text.contains('지원서를 따로')) {
+    return ReleaseDemo.friendsShare;
+  }
+  if (text.contains('월과 해')) return ReleaseDemo.calendarTitle;
+  if (text.contains('친구 캘린더가 넓게')) return ReleaseDemo.pcLaunch;
   if (text.contains('미니캘린더') || text.contains('일정만')) {
     return ReleaseDemo.friendsMiniCal;
   }
@@ -487,6 +498,8 @@ class ReleaseDemoView extends StatelessWidget {
       ReleaseDemo.homeMemo => const _HomeMemoDemo(),
       ReleaseDemo.categoryView => const _CategoryViewDemo(),
       ReleaseDemo.friendsMiniCal => const _FriendsMiniCalDemo(),
+      ReleaseDemo.friendsPhotoPeek => const _FriendsPhotoPeekDemo(),
+      ReleaseDemo.friendsShare => const _FriendsShareDemo(),
       ReleaseDemo.friendsAdd => const _FriendsAddDemo(),
       ReleaseDemo.pcEnterSave => const _PcEnterSaveDemo(),
       ReleaseDemo.jobCategorySlide => const _JobCategorySlideDemo(),
@@ -6386,6 +6399,229 @@ class _AiDots extends StatelessWidget {
   double _bounce(int index) {
     final phase = (t * (6000 / 900) - index / 3) % 1;
     return math.sin(phase * math.pi).clamp(0.0, 1.0);
+  }
+}
+
+class _FriendsPhotoPeekDemo extends StatelessWidget {
+  const _FriendsPhotoPeekDemo();
+
+  static const _photo = Color(0xFF7CB7FE);
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 3400,
+      boxHeight: 196,
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final font = AppFonts.of(context);
+        final press = _pulse(t, 0.16, 0.26, 0.34);
+        final open = Curves.easeOut.transform(_gate(t, 0.32, 0.46));
+        final hold = 1 - _gate(t, 0.74, 0.88);
+        final peek = (open * hold).clamp(0.0, 1.0);
+        final bounce = 1 - press * 0.05;
+        return Stack(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 22, 16, 16),
+              child: _Card(
+                child: Row(
+                  children: [
+                    Transform.scale(
+                      scale: bounce,
+                      child: _PeekFace(size: 48, border: colors.border),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            '태희',
+                            style: TextStyle(
+                              fontFamily: font,
+                              fontSize: 16,
+                              color: colors.text,
+                            ),
+                          ),
+                          Text(
+                            'taehee',
+                            style: TextStyle(
+                              fontFamily: font,
+                              fontSize: 13,
+                              color: colors.muted,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            if (press > 0)
+              const Positioned(left: 28, top: 36, child: _Finger(pressed: 1)),
+            Positioned.fill(
+              child: IgnorePointer(
+                child: ColoredBox(
+                  color: Color.fromRGBO(0, 0, 0, 0.4 * peek),
+                  child: Center(
+                    child: Opacity(
+                      opacity: peek,
+                      child: Transform.scale(
+                        scale: 0.96 + 0.04 * peek,
+                        child: _PeekFace(size: 112, border: colors.border),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _PeekFace extends StatelessWidget {
+  const _PeekFace({required this.size, required this.border});
+
+  final double size;
+  final Color border;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(color: border, width: 1),
+      ),
+      child: ClipOval(
+        child: SizedBox(
+          width: size,
+          height: size,
+          child: const ColoredBox(color: _FriendsPhotoPeekDemo._photo),
+        ),
+      ),
+    );
+  }
+}
+
+class _FriendsShareDemo extends StatelessWidget {
+  const _FriendsShareDemo();
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 2800,
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final font = AppFonts.of(context);
+        final on = _gate(t, 0.28, 0.42);
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(18, 16, 18, 14),
+          child: _Card(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  AppStrings.monthlyStatsTodoSection,
+                  style: TextStyle(
+                    fontFamily: font,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: colors.text,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                _ShareRow(
+                  name: '운동',
+                  color: const Color(0xFF3B82F6),
+                  on: true,
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  AppStrings.jobScreenTitle,
+                  style: TextStyle(
+                    fontFamily: font,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: colors.text,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                _ShareRow(
+                  name: '네이버',
+                  color: const Color(0xFFF97316),
+                  on: on > 0.5,
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _ShareRow extends StatelessWidget {
+  const _ShareRow({
+    required this.name,
+    required this.color,
+    required this.on,
+  });
+
+  final String name;
+  final Color color;
+  final bool on;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    return Row(
+      children: [
+        DecoratedBox(
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          child: const SizedBox(width: 10, height: 10),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            name,
+            style: TextStyle(
+              fontFamily: AppFonts.of(context),
+              fontSize: 15,
+              color: colors.text,
+            ),
+          ),
+        ),
+        DecoratedBox(
+          decoration: BoxDecoration(
+            color: on ? colors.accent : colors.border,
+            borderRadius: BorderRadius.circular(999),
+          ),
+          child: SizedBox(
+            width: 36,
+            height: 22,
+            child: Align(
+              alignment: on ? Alignment.centerRight : Alignment.centerLeft,
+              child: const Padding(
+                padding: EdgeInsets.all(2),
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                  ),
+                  child: SizedBox(width: 18, height: 18),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
   }
 }
 

@@ -19,9 +19,12 @@ import 'package:pluto/domain/entities/friend_profile.dart';
 import 'package:pluto/presentation/screens/add_company/widgets/missing_fields_dialog.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/calendar_month_grid.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/calendar_weekday_header.dart';
+import 'package:pluto/presentation/widgets/app_calendar/calendar_zoom_picker.dart';
+import 'package:pluto/presentation/widgets/app_calendar/web_calendar_arrow.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/add_event_sheet.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/day_events_dialog.dart';
 import 'package:pluto/presentation/screens/friends/friend_avatar.dart';
+import 'package:pluto/presentation/screens/friends/friend_photo_peek.dart';
 import 'package:pluto/presentation/screens/friends/friend_star_button.dart';
 import 'package:pluto/presentation/screens/friends/friends_toast.dart';
 import 'package:pluto/presentation/widgets/overflow_menu.dart';
@@ -187,6 +190,7 @@ class _FriendCalendarScreenState extends State<FriendCalendarScreen> {
   String? _error;
   var _hint = '';
   var _hintVisible = false;
+  var _zoom = CalendarZoomLevel.days;
   Timer? _hintTimer;
 
   @override
@@ -227,6 +231,93 @@ class _FriendCalendarScreenState extends State<FriendCalendarScreen> {
 
   DateTime _monthAt(int page) {
     return DateTime(_baseMonth.year, _baseMonth.month + (page - _initialPage));
+  }
+
+  int _pageOf(DateTime month) {
+    final delta =
+        (month.year - _baseMonth.year) * 12 + (month.month - _baseMonth.month);
+    return _initialPage + delta;
+  }
+
+  void _onTitlePressed() {
+    if (_zoom == CalendarZoomLevel.years) {
+      unawaited(_showDays());
+      return;
+    }
+    setState(() => _zoom = CalendarZoom.next(_zoom));
+  }
+
+  void _pickYear(int year) {
+    setState(() {
+      _month = DateTime(year, _month.month);
+      _zoom = CalendarZoomLevel.months;
+    });
+  }
+
+  Future<void> _pickMonth(DateTime month) async {
+    await _showDays(month);
+  }
+
+  Future<void> _showDays([DateTime? month]) async {
+    final target = DateTime(
+      (month ?? _month).year,
+      (month ?? _month).month,
+    );
+    setState(() {
+      _zoom = CalendarZoomLevel.days;
+      _month = target;
+    });
+    await WidgetsBinding.instance.endOfFrame;
+    if (!mounted) return;
+    await _goToMonth(target);
+    _load(target);
+    _load(DateTime(target.year, target.month - 1));
+    _load(DateTime(target.year, target.month + 1));
+  }
+
+  void _stepCalendar(int direction) {
+    final next = switch (_zoom) {
+      CalendarZoomLevel.days => DateTime(_month.year, _month.month + direction),
+      CalendarZoomLevel.months => DateTime(_month.year + direction, _month.month),
+      CalendarZoomLevel.years => DateTime(_month.year + 10 * direction, _month.month),
+    };
+    if (_zoom == CalendarZoomLevel.days) {
+      unawaited(_goToMonth(next));
+      return;
+    }
+    setState(() => _month = next);
+  }
+
+  Future<void> _goToMonth(DateTime month) async {
+    final target = DateTime(month.year, month.month);
+    if (!_pages.hasClients) {
+      if (mounted) setState(() => _month = target);
+      return;
+    }
+    final page = _pageOf(target);
+    final current = _pages.page?.round() ?? _initialPage;
+    if (current == page) {
+      if (!_sameMonth(_month, target)) {
+        setState(() => _month = target);
+      }
+      return;
+    }
+    final distance = (page - current).abs();
+    if (distance > 18) {
+      _pages.jumpToPage(page);
+      if (mounted) setState(() => _month = target);
+      return;
+    }
+    final ms = (200 + distance * 45).clamp(240, 560);
+    await _pages.animateToPage(
+      page,
+      duration: Duration(milliseconds: ms),
+      curve: Curves.easeOutCubic,
+    );
+    if (!mounted) return;
+    if (!_sameMonth(_month, target)) {
+      setState(() => _month = target);
+    }
   }
 
   Future<void> _load(DateTime month) async {
@@ -307,7 +398,6 @@ class _FriendCalendarScreenState extends State<FriendCalendarScreen> {
       ),
       body: Stack(
         children: [
-          PcLayout.constrainWidth(
         Padding(
           padding: EdgeInsets.fromLTRB(16, top + 56, 16, 12),
           child: Column(
@@ -320,51 +410,118 @@ class _FriendCalendarScreenState extends State<FriendCalendarScreen> {
               Expanded(
                 child: _card(
                   colors,
-                  child: Column(
+                  child: Stack(
+                    children: [
+                      Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       Padding(
                         padding: const EdgeInsets.fromLTRB(20, 16, 16, 8),
-                        child: Text(
-                          _monthTitle,
-                          textAlign: TextAlign.left,
-                          style: TextStyle(
-                            fontFamily: AppFonts.of(context),
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: CalendarZoomTitle(
+                            text: CalendarZoom.title(
+                              _zoom,
+                              _month,
+                              hideCurrentYear: true,
+                            ),
                             fontSize: 20,
-                            fontWeight: FontWeight.w800,
-                            color: colors.text,
+                            onPressed: _onTitlePressed,
                           ),
                         ),
                       ),
-                      CalendarWeekdayHeader(startMonday: startMonday),
                       Expanded(
-                        child: MouseDragScroll(
-                          controller: _pages,
-                          child: PageView.builder(
-                            controller: _pages,
-                            onPageChanged: _onPageChanged,
-                            itemBuilder: (context, page) {
-                              final month = _monthAt(page);
-                              return CalendarMonthGrid(
-                                month: month,
-                                startMonday: startMonday,
-                                eventsOf: (date) => _eventsOn(month, date),
-                                emojisOf: (date) => _emojiOn(month, date),
-                                onDayPressed: (date, origin) {
-                                  showDayEventsDialog(
-                                    context,
-                                    date: date,
-                                    events: _eventsOn(month, date),
-                                    origin: origin,
-                                    readOnly: true,
-                                    sticker: _emojiOn(month, date),
-                                  );
-                                },
-                              );
-                            },
-                          ),
+                        child: CalendarZoomTransition(
+                          level: _zoom,
+                          child: switch (_zoom) {
+                            CalendarZoomLevel.days => Column(
+                              children: [
+                                CalendarWeekdayHeader(
+                                  startMonday: startMonday,
+                                ),
+                                Expanded(
+                                  child: MouseDragScroll(
+                                    controller: _pages,
+                                    child: PageView.builder(
+                                      controller: _pages,
+                                      onPageChanged: _onPageChanged,
+                                      itemBuilder: (context, page) {
+                                        final month = _monthAt(page);
+                                        return CalendarMonthGrid(
+                                          month: month,
+                                          startMonday: startMonday,
+                                          eventsOf: (date) =>
+                                              _eventsOn(month, date),
+                                          emojisOf: (date) =>
+                                              _emojiOn(month, date),
+                                          onDayPressed: (date, origin) {
+                                            showDayEventsDialog(
+                                              context,
+                                              date: date,
+                                              events: _eventsOn(month, date),
+                                              origin: origin,
+                                              readOnly: true,
+                                              sticker: _emojiOn(month, date),
+                                            );
+                                          },
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            CalendarZoomLevel.months => CalendarMonthZoomView(
+                              focused: _month,
+                              accent: colors.accentBright,
+                              onFocusedChanged: (month) {
+                                setState(() => _month = month);
+                              },
+                              onMonthPressed: _pickMonth,
+                            ),
+                            CalendarZoomLevel.years => CalendarYearZoomView(
+                              focused: _month,
+                              accent: colors.accentBright,
+                              onFocusedChanged: (month) {
+                                setState(() => _month = month);
+                              },
+                              onYearPressed: _pickYear,
+                            ),
+                          },
                         ),
                       ),
+                    ],
+                      ),
+                      if (PcLayout.isPc) ...[
+                        Positioned(
+                          left: 16,
+                          top: 0,
+                          bottom: 0,
+                          child: Center(
+                            child: WebCalendarArrow(
+                              left: true,
+                              visible: PcLayout.showCalendarArrowsOf(
+                                MediaQuery.sizeOf(context).width,
+                              ),
+                              onPressed: () => _stepCalendar(-1),
+                            ),
+                          ),
+                        ),
+                        Positioned(
+                          right: 16,
+                          top: 0,
+                          bottom: 0,
+                          child: Center(
+                            child: WebCalendarArrow(
+                              left: false,
+                              visible: PcLayout.showCalendarArrowsOf(
+                                MediaQuery.sizeOf(context).width,
+                              ),
+                              onPressed: () => _stepCalendar(1),
+                            ),
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -382,7 +539,7 @@ class _FriendCalendarScreenState extends State<FriendCalendarScreen> {
                     ),
                   ),
                 )
-              else if (_loading)
+              else if (_loading && _zoom == CalendarZoomLevel.days)
                 const Padding(
                   padding: EdgeInsets.only(top: 8, bottom: 8),
                   child: SizedBox(
@@ -394,7 +551,6 @@ class _FriendCalendarScreenState extends State<FriendCalendarScreen> {
             ],
           ),
         ),
-          ),
           PcLayout.pinBottomToast(
             bottom: 20 + MediaQuery.paddingOf(context).bottom,
             child: AnimatedFriendsToast(
@@ -460,7 +616,7 @@ class _FriendCalendarScreenState extends State<FriendCalendarScreen> {
       padding: const EdgeInsets.fromLTRB(20, 16, 12, 16),
       child: Row(
         children: [
-          FriendAvatar(size: 48, profile: friend),
+          FriendPhotoPeekTarget(size: 48, profile: friend),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -560,13 +716,6 @@ class _FriendCalendarScreenState extends State<FriendCalendarScreen> {
         ],
       ),
     );
-  }
-
-  String get _monthTitle {
-    final now = DateTime.now();
-    final monthLabel = '${_month.month}${AppStrings.monthSuffix}';
-    if (_month.year == now.year) return monthLabel;
-    return '${_month.year}${AppStrings.yearSuffix} $monthLabel';
   }
 
   String? _emojiOn(DateTime month, DateTime date) {

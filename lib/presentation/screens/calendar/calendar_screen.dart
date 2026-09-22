@@ -7,7 +7,6 @@ import 'package:pluto/core/theme/app_skin_background.dart';
 import 'package:pluto/core/utils/korean_search.dart';
 import 'package:pluto/core/utils/mouse_drag_scroll.dart';
 import 'package:pluto/core/utils/plain_text_editing_controller.dart';
-import 'package:pluto/core/utils/press_bounce.dart';
 import 'package:pluto/data/datasources/app_backup_service.dart';
 import 'package:pluto/data/datasources/day_emoji_store.dart';
 import 'package:pluto/data/datasources/job_view_preference.dart';
@@ -31,6 +30,7 @@ import 'package:pluto/presentation/screens/calendar/widgets/diary_sheet.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/ledger_day_sheet.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/ledger_month_stats_sheet.dart';
 import 'package:pluto/presentation/widgets/app_calendar/calendar_zoom_picker.dart';
+import 'package:pluto/presentation/widgets/app_calendar/web_calendar_arrow.dart';
 
 class CalendarScreen extends StatefulWidget {
   const CalendarScreen({super.key, this.visible = true});
@@ -882,7 +882,7 @@ class CalendarScreenState extends State<CalendarScreen>
                                     top: 0,
                                     bottom: 0,
                                     child: Center(
-                                      child: _WebCalendarArrow(
+                                      child: WebCalendarArrow(
                                         left: true,
                                         visible: PcLayout.showCalendarArrowsOf(
                                           MediaQuery.sizeOf(context).width,
@@ -896,7 +896,7 @@ class CalendarScreenState extends State<CalendarScreen>
                                     top: 0,
                                     bottom: 0,
                                     child: Center(
-                                      child: _WebCalendarArrow(
+                                      child: WebCalendarArrow(
                                         left: false,
                                         visible: PcLayout.showCalendarArrowsOf(
                                           MediaQuery.sizeOf(context).width,
@@ -929,106 +929,6 @@ class _SearchHit {
   final String key;
   final DateTime day;
 }
-
-class _WebCalendarArrow extends StatefulWidget {
-  const _WebCalendarArrow({
-    required this.left,
-    required this.onPressed,
-    required this.visible,
-  });
-
-  final bool left;
-  final VoidCallback onPressed;
-  final bool visible;
-
-  @override
-  State<_WebCalendarArrow> createState() => _WebCalendarArrowState();
-}
-
-class _WebCalendarArrowState extends State<_WebCalendarArrow>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
-  late final CurvedAnimation _pop;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 420),
-      reverseDuration: const Duration(milliseconds: 360),
-      value: widget.visible ? 1 : 0,
-    );
-    _pop = CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeOutBack,
-    );
-  }
-
-  @override
-  void didUpdateWidget(_WebCalendarArrow oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.visible == oldWidget.visible) return;
-    if (widget.visible) {
-      _controller.forward();
-    } else {
-      _controller.reverse();
-    }
-  }
-
-  @override
-  void dispose() {
-    _pop.dispose();
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = AppColors.of(context);
-    return AnimatedBuilder(
-      animation: _pop,
-      builder: (context, child) {
-        final t = _pop.value.clamp(0.0, 1.35);
-        return IgnorePointer(
-          ignoring: t < 0.05,
-          child: Opacity(
-            opacity: t.clamp(0.0, 1.0),
-            child: Transform.scale(
-              scale: t,
-              child: child,
-            ),
-          ),
-        );
-      },
-      child: Material(
-        color: colors.card,
-        elevation: 4,
-        shadowColor: colors.shadow,
-        shape: const CircleBorder(),
-        child: PressBounce(
-          onPressed: widget.onPressed,
-          pressedScale: 0.92,
-          color: colors.card,
-          pressedColor: colors.pressed,
-          borderRadius: BorderRadius.circular(999),
-          child: SizedBox(
-            width: 48,
-            height: 48,
-            child: Icon(
-              widget.left
-                  ? Icons.chevron_left_rounded
-                  : Icons.chevron_right_rounded,
-              size: 28,
-              color: colors.icon,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 
 class _SearchStableViewport extends StatefulWidget {
   const _SearchStableViewport({required this.animation, required this.child});

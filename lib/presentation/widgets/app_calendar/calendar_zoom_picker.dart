@@ -86,7 +86,10 @@ class CalendarZoomTitle extends StatelessWidget {
     return PressBounce(
       onPressed: onPressed,
       pressedScale: 0.97,
-      pressedColor: Colors.transparent,
+      pressedColor: colors.isDark
+          ? colors.pressed
+          : const Color(0xFFD5DCE6),
+      borderRadius: BorderRadius.circular(10),
       child: Text(
         text,
         maxLines: 1,

@@ -25,6 +25,7 @@ import 'package:pluto/presentation/screens/calendar/widgets/add_event_sheet.dart
 import 'package:pluto/presentation/screens/friends/category_share_sheet.dart';
 import 'package:pluto/presentation/screens/friends/friend_avatar.dart';
 import 'package:pluto/presentation/screens/friends/friend_calendar_screen.dart';
+import 'package:pluto/presentation/screens/friends/friend_photo_peek.dart';
 import 'package:pluto/presentation/screens/friends/friend_star_button.dart';
 import 'package:pluto/presentation/screens/friends/friends_toast.dart';
 import 'package:pluto/presentation/widgets/overflow_menu.dart';
@@ -1705,7 +1706,7 @@ class _TodoRequestSectionState extends State<_TodoRequestSection> {
       padding: const EdgeInsets.fromLTRB(16, 12, 12, 12),
       child: Row(
         children: [
-          FriendAvatar(size: 40, profile: other),
+          FriendPhotoPeekTarget(size: 40, profile: other),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -1944,7 +1945,7 @@ class _RequestSectionState extends State<_RequestSection> {
       padding: const EdgeInsets.fromLTRB(16, 12, 12, 12),
       child: Row(
         children: [
-          FriendAvatar(
+          FriendPhotoPeekTarget(
             size: 40,
             profile: widget.incoming ? item.fromProfile : item.toProfile,
           ),
@@ -2198,6 +2199,10 @@ class _FriendTile extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(8, 4, 12, 4),
       child: Row(
         children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 12, 0, 12),
+            child: FriendPhotoPeekTarget(size: 40, profile: friend),
+          ),
           Expanded(
             child: PressBounce(
               onPressed: onPressed,
@@ -2207,34 +2212,26 @@ class _FriendTile extends StatelessWidget {
               borderRadius: BorderRadius.circular(16),
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(12, 12, 8, 12),
-                child: Row(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    FriendAvatar(size: 40, profile: friend),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            friend.label,
-                            style: TextStyle(
-                              fontFamily: AppFonts.of(context),
-                              fontSize: 16,
-                              color: colors.text,
-                            ),
-                          ),
-                          if (friend.friendCode.isNotEmpty)
-                            Text(
-                              friend.friendCode,
-                              style: TextStyle(
-                                fontFamily: AppFonts.of(context),
-                                fontSize: 13,
-                                color: colors.muted,
-                              ),
-                            ),
-                        ],
+                    Text(
+                      friend.label,
+                      style: TextStyle(
+                        fontFamily: AppFonts.of(context),
+                        fontSize: 16,
+                        color: colors.text,
                       ),
                     ),
+                    if (friend.friendCode.isNotEmpty)
+                      Text(
+                        friend.friendCode,
+                        style: TextStyle(
+                          fontFamily: AppFonts.of(context),
+                          fontSize: 13,
+                          color: colors.muted,
+                        ),
+                      ),
                   ],
                 ),
               ),

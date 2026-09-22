@@ -17,6 +17,16 @@ class ReleaseNote {
 abstract final class ReleaseNotes {
   static const all = [
     ReleaseNote(
+      version: '1.4.8',
+      items: [
+        '홈에서 친구 줄을 숨길 수 있어요',
+        '튜토리얼에 진행 바가 다시 나와요',
+      ],
+      fixes: [
+        '친구 이름·아이디 칸에 노란 밑줄이 나오던 점을 고쳤어요',
+      ],
+    ),
+    ReleaseNote(
       version: '1.4.7',
       items: [
         '제목에 4시나 14시, 오후 4시를 적으면 저장할 때 시간에 넣어요',

@@ -88,6 +88,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   var _summaryHour = NotificationPreference.defaultSummaryMinutes;
   var _leftoverEnabled = true;
   var _leftoverMinutes = NotificationPreference.defaultLeftoverMinutes;
+  var _showFriends = true;
   var _showLeftover = true;
   var _showMemo = false;
   var _showToday = true;
@@ -145,6 +146,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _summaryHour = scope.notificationPreference.summaryMinutes;
     _leftoverEnabled = scope.notificationPreference.leftoverEnabled;
     _leftoverMinutes = scope.notificationPreference.leftoverMinutes;
+    _showFriends = scope.homeViewPreference.showFriends;
     _showLeftover = scope.homeViewPreference.showLeftover;
     _showMemo = scope.homeViewPreference.showMemo;
     _showToday = scope.homeViewPreference.showToday;
@@ -190,6 +192,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       _todoReminderLead = scope.notificationPreference.todoReminderLead;
       _summaryEnabled = scope.notificationPreference.summaryEnabled;
       _summaryHour = scope.notificationPreference.summaryMinutes;
+      _showFriends = scope.homeViewPreference.showFriends;
       _showLeftover = scope.homeViewPreference.showLeftover;
       _showMemo = scope.homeViewPreference.showMemo;
       _showToday = scope.homeViewPreference.showToday;
@@ -503,6 +506,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _setShowStatsTab(bool value) async {
     setState(() => _showStatsTab = value);
     await AppScope.of(context).navPreference.setShowStatsTab(value);
+  }
+
+  Future<void> _setShowFriends(bool value) async {
+    setState(() => _showFriends = value);
+    await AppScope.of(context).homeViewPreference.setShowFriends(value);
   }
 
   Future<void> _setShowLeftover(bool value) async {
@@ -904,6 +912,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           _SettingsCard(
             children: [
+              _SettingsSwitchTile(
+                label: AppStrings.homeShowFriends,
+                value: _showFriends,
+                onChanged: _setShowFriends,
+              ),
               _SettingsSwitchTile(
                 label: AppStrings.homeShowLeftover,
                 value: _showLeftover,

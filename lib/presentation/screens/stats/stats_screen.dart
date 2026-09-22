@@ -658,12 +658,12 @@ class _LevelBlock extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.baseline,
-                textBaseline: TextBaseline.alphabetic,
-                children: [
-                  Text(
-                    AppStrings.statsPlanetStage(level),
+              if (play.isMax)
+                SizedBox(
+                  width: double.infinity,
+                  child: Text(
+                    AppStrings.statsPlanetFull,
+                    textAlign: TextAlign.center,
                     style: TextStyle(
                       fontFamily: font,
                       fontSize: 13,
@@ -671,27 +671,42 @@ class _LevelBlock extends StatelessWidget {
                       color: colors.muted,
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 280),
-                      layoutBuilder: (current, _) =>
-                          current ?? const SizedBox.shrink(),
-                      child: Text(
-                        label,
-                        key: ValueKey(label),
-                        textAlign: TextAlign.right,
-                        style: TextStyle(
-                          fontFamily: font,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                          color: colors.muted,
+                )
+              else
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.baseline,
+                  textBaseline: TextBaseline.alphabetic,
+                  children: [
+                    Text(
+                      AppStrings.statsPlanetStage(level),
+                      style: TextStyle(
+                        fontFamily: font,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: colors.muted,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 280),
+                        layoutBuilder: (current, _) =>
+                            current ?? const SizedBox.shrink(),
+                        child: Text(
+                          label,
+                          key: ValueKey(label),
+                          textAlign: TextAlign.right,
+                          style: TextStyle(
+                            fontFamily: font,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: colors.muted,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ],
-              ),
+                  ],
+                ),
               const SizedBox(height: 4),
               _ExpBar(
                 value: play.hasTodos

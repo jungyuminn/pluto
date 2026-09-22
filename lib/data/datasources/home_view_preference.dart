@@ -7,6 +7,7 @@ class HomeViewPreference {
   HomeViewPreference({
     SharedPreferences? prefs,
     bool compact = false,
+    bool showFriends = true,
     bool showLeftover = true,
     bool showMemo = false,
     bool showToday = true,
@@ -19,6 +20,7 @@ class HomeViewPreference {
     bool showWeeklyStats = false,
   })  : _prefs = prefs,
         _compact = prefs?.getBool(_compactKey) ?? compact,
+        _showFriends = prefs?.getBool(_friendsKey) ?? showFriends,
         _showLeftover = prefs?.getBool(_leftoverKey) ?? showLeftover,
         _showMemo = prefs?.getBool(_memoKey) ?? showMemo,
         _showToday = prefs?.getBool(_todayKey) ?? showToday,
@@ -35,6 +37,7 @@ class HomeViewPreference {
         _cardOrder = parseCardOrder(prefs?.getString(_cardOrderKey));
 
   static const _compactKey = 'home_events_compact_view';
+  static const _friendsKey = 'home_show_friends';
   static const _leftoverKey = 'home_show_leftover';
   static const _memoKey = 'home_show_memo';
   static const _todayKey = 'home_show_today';
@@ -51,6 +54,7 @@ class HomeViewPreference {
   static const cardOrderKey = _cardOrderKey;
   static const syncedKeys = [
     _compactKey,
+    _friendsKey,
     _leftoverKey,
     _memoKey,
     _todayKey,
@@ -65,6 +69,7 @@ class HomeViewPreference {
   ];
   static const defaultBools = {
     _compactKey: false,
+    _friendsKey: true,
     _leftoverKey: true,
     _memoKey: false,
     _todayKey: true,
@@ -89,6 +94,7 @@ class HomeViewPreference {
 
   final SharedPreferences? _prefs;
   bool _compact;
+  bool _showFriends;
   bool _showLeftover;
   bool _showMemo;
   bool _showToday;
@@ -104,6 +110,7 @@ class HomeViewPreference {
   List<HomeCardKind> _cardOrder;
 
   bool get isCompact => _prefs?.getBool(_compactKey) ?? _compact;
+  bool get showFriends => _showFriends;
   bool get showLeftover => _showLeftover;
   bool get showMemo => _showMemo;
   bool get showToday => _showToday;
@@ -134,6 +141,11 @@ class HomeViewPreference {
     _compact = value;
     await _prefs?.setBool(_compactKey, value);
     unawaited(HomeScreenWidgetService.instance.sync());
+  }
+
+  Future<void> setShowFriends(bool value) async {
+    _showFriends = value;
+    await _prefs?.setBool(_friendsKey, value);
   }
 
   Future<void> setShowLeftover(bool value) async {
@@ -249,6 +261,7 @@ class HomeViewPreference {
     final prefs = _prefs;
     if (prefs == null) return;
     _compact = prefs.getBool(_compactKey) ?? _compact;
+    _showFriends = prefs.getBool(_friendsKey) ?? _showFriends;
     _showLeftover = prefs.getBool(_leftoverKey) ?? _showLeftover;
     _showMemo = prefs.getBool(_memoKey) ?? _showMemo;
     _showToday = prefs.getBool(_todayKey) ?? _showToday;

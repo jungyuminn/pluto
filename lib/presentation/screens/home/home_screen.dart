@@ -371,7 +371,7 @@ class HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
     final header = Column(
       children: [
-        const HomeFriendsRow(),
+        if (homePrefs.showFriends) const HomeFriendsRow(),
         if (stats.isNotEmpty)
           Padding(
             padding: const EdgeInsets.only(bottom: 12),

@@ -268,6 +268,7 @@ class _TutorialOverlayState extends State<TutorialOverlay>
       isFirst: _displayedFirst,
       isLast: _displayedLast,
       index: _displayedIndex,
+      total: tutorial?.stepCount ?? TutorialController.steps.length,
       onNext: canAct ? tutorial.next : () {},
       onPrev: canAct ? tutorial.previous : () {},
       onSkip: canAct ? tutorial.skip : () {},
@@ -557,6 +558,7 @@ class _TutorialCard extends StatelessWidget {
     required this.isFirst,
     required this.isLast,
     required this.index,
+    required this.total,
     required this.onNext,
     required this.onPrev,
     required this.onSkip,
@@ -566,6 +568,7 @@ class _TutorialCard extends StatelessWidget {
   final bool isFirst;
   final bool isLast;
   final int index;
+  final int total;
   final VoidCallback onNext;
   final VoidCallback onPrev;
   final VoidCallback onSkip;
@@ -591,6 +594,53 @@ class _TutorialCard extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(999),
+                child: LinearProgressIndicator(
+                  value: (index + 1) / total,
+                  minHeight: 4,
+                  backgroundColor: colors.border,
+                  color: colors.accent,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  if (step.badge.isNotEmpty)
+                    DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: colors.accent.withValues(alpha: 0.14),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        child: Text(
+                          step.badge,
+                          style: TextStyle(
+                            fontFamily: font,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w800,
+                            color: colors.accent,
+                          ),
+                        ),
+                      ),
+                    ),
+                  const Spacer(),
+                  Text(
+                    '${index + 1} / $total',
+                    style: TextStyle(
+                      fontFamily: font,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: colors.muted,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
               AnimatedSwitcher(
                 duration: const Duration(milliseconds: 280),
                 switchInCurve: Curves.easeOutCubic,

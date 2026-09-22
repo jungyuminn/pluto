@@ -172,6 +172,7 @@ class _FriendsToastCard extends StatelessWidget {
             fontWeight: FontWeight.w600,
             height: 1.35,
             color: colors.text,
+            decoration: TextDecoration.none,
           ),
         ),
       ),

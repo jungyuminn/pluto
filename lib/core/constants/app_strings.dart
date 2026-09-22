@@ -254,6 +254,7 @@ class AppStrings {
   static const releaseNotesPreview = '이렇게 바뀌었어요';
   static const settingsHomeSection = '홈 화면';
   static const settingsHomeLayoutSection = '홈 화면 설정';
+  static const homeShowFriends = '친구';
   static const homeShowLeftover = '미완료 할 일';
   static const homeShowMemo = '메모';
   static const homeShowToday = '오늘';

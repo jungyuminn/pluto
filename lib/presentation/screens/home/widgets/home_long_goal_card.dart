@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:pluto/app_scope.dart';
 import 'package:pluto/core/constants/app_fonts.dart';
 import 'package:pluto/core/constants/app_strings.dart';
 import 'package:pluto/core/theme/app_colors.dart';
+import 'package:pluto/core/utils/drop_in.dart';
 import 'package:pluto/core/utils/swipe_to_delete.dart';
 import 'package:pluto/domain/entities/event_category.dart';
 import 'package:pluto/domain/entities/long_goal.dart';
@@ -39,6 +42,9 @@ class _HomeLongGoalCardState extends State<HomeLongGoalCard> {
   final _reveals = <String, double>{};
   final _liveIds = <String>{};
   String? _draggingId;
+  String? _settlingId;
+  Offset _settleFrom = Offset.zero;
+  var _settleGen = 0;
 
   static const _slotAnim = Duration(milliseconds: 240);
 
@@ -171,10 +177,34 @@ class _HomeLongGoalCardState extends State<HomeLongGoalCard> {
     _moveTo(_indexAt(box.globalToLocal(global).dy));
   }
 
-  Future<void> _onDragEnded() async {
-    final shouldSave = _draggingId != null;
-    setState(() => _draggingId = null);
-    if (!shouldSave || !mounted) return;
+  Offset? _slotOrigin(String id) {
+    final box = _listBoxKey.currentContext?.findRenderObject() as RenderBox?;
+    if (box == null || !box.hasSize) return null;
+    var y = 0.0;
+    for (final goal in _goals) {
+      if (goal.id == id) {
+        return box.localToGlobal(Offset(0, y));
+      }
+      y += _layoutExtent(goal);
+    }
+    return box.localToGlobal(Offset.zero);
+  }
+
+  Future<void> _onDragEnded(DraggableDetails details) async {
+    final id = _draggingId;
+    final origin = id == null ? null : _slotOrigin(id);
+    final delta = origin == null ? Offset.zero : details.offset - origin;
+    setState(() {
+      if (id != null && delta.distance > 2) {
+        _settlingId = id;
+        _settleFrom = delta;
+        _settleGen++;
+      } else {
+        _settlingId = null;
+      }
+      _draggingId = null;
+    });
+    if (id == null || !mounted) return;
     await AppScope.of(context).longGoalStore.reorderGoals(_goals);
     widget.onChanged();
   }
@@ -278,20 +308,34 @@ class _HomeLongGoalCardState extends State<HomeLongGoalCard> {
               left: 0,
               right: 0,
               height: _layoutExtent(_goals[i]),
-              child: ClipRect(
-                child: AnimatedOpacity(
-                  duration: _slotAnim,
-                  curve: Curves.easeOutCubic,
-                  opacity: _reveals[_goals[i].id] ?? 1,
-                  child: IgnorePointer(
-                    ignoring: (_reveals[_goals[i].id] ?? 1) < 1,
-                    child: _tile(_goals[i]),
-                  ),
-                ),
-              ),
+              child: _slotBody(_goals[i]),
             ),
         ],
       ),
+    );
+  }
+
+  Widget _slotBody(LongGoal goal) {
+    final settling = goal.id == _settlingId;
+    final body = AnimatedOpacity(
+      duration: _slotAnim,
+      curve: Curves.easeOutCubic,
+      opacity: _reveals[goal.id] ?? 1,
+      child: IgnorePointer(
+        ignoring: settling || (_reveals[goal.id] ?? 1) < 1,
+        child: _tile(goal),
+      ),
+    );
+    final clipped = settling ? body : ClipRect(child: body);
+    if (!settling) return clipped;
+    return DropIn(
+      key: ValueKey(_settleGen),
+      from: _settleFrom,
+      onDone: () {
+        if (!mounted || _settlingId != goal.id) return;
+        setState(() => _settlingId = null);
+      },
+      child: clipped,
     );
   }
 
@@ -314,7 +358,7 @@ class _HomeLongGoalCardState extends State<HomeLongGoalCard> {
           maxSimultaneousDrags: 1,
           onDragStarted: () => _onDragStarted(goal),
           onDragUpdate: (details) => _onDragUpdate(details.globalPosition),
-          onDragEnd: (_) => _onDragEnded(),
+          onDragEnd: (details) => unawaited(_onDragEnded(details)),
           feedback: Material(
             color: Colors.transparent,
             child: SizedBox(

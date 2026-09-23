@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -6,6 +7,7 @@ import 'package:pluto/app_scope.dart';
 import 'package:pluto/core/constants/app_fonts.dart';
 import 'package:pluto/core/constants/app_strings.dart';
 import 'package:pluto/core/theme/app_colors.dart';
+import 'package:pluto/core/utils/drop_in.dart';
 import 'package:pluto/core/utils/press_bounce.dart';
 import 'package:pluto/data/datasources/app_backup_service.dart';
 import 'package:pluto/domain/entities/event_category.dart';
@@ -68,6 +70,7 @@ class _CategoryPickerSheetState extends State<CategoryPickerSheet>
   var _loading = true;
   var _editing = false;
   String? _draggingId;
+  final _drop = DropSettle();
   List<EventCategory>? _orderBeforeDrag;
   final _marked = <String>{};
   final _gridKey = GlobalKey();
@@ -477,11 +480,30 @@ class _CategoryPickerSheetState extends State<CategoryPickerSheet>
     return !rect.contains(local);
   }
 
-  Future<void> _onDragEnded() async {
+  Offset? _slotOrigin(String id) {
+    final index = _categories.indexWhere((category) => category.id == id);
+    final box = _gridKey.currentContext?.findRenderObject() as RenderBox?;
+    if (index < 0 || box == null || !box.hasSize) return null;
+    final cell = _cellSize(box.size.width);
+    final stride = cell + _gap;
+    return box.localToGlobal(
+      Offset(
+        (index % _columns) * stride,
+        (index ~/ _columns) * stride,
+      ),
+    );
+  }
+
+  Future<void> _onDragEnded(DraggableDetails details) async {
     final id = _draggingId;
     final discard = _discarding.value;
     _discarding.value = false;
-    setState(() => _draggingId = null);
+    final origin = discard || id == null ? null : _slotOrigin(id);
+    final delta = origin == null ? Offset.zero : details.offset - origin;
+    setState(() {
+      _drop.arm(discard ? null : id, delta);
+      _draggingId = null;
+    });
     if (id == null) return;
     if (discard) {
       await _deleteDragged(id);
@@ -744,11 +766,18 @@ class _CategoryPickerSheetState extends State<CategoryPickerSheet>
                   top: (i ~/ _columns) * (cell + _gap),
                   width: cell,
                   height: cell,
-                  child: _GridTile(
-                    appear: _appearIds.contains(_categories[i].id),
-                    exiting: _exiting.contains(_categories[i].id),
-                    duration: _slotAnim,
-                    child: _slot(_categories[i], cell),
+                  child: _drop.wrap(
+                    itemId: _categories[i].id,
+                    onDone: () {
+                      if (!mounted || _drop.id != _categories[i].id) return;
+                      setState(_drop.clear);
+                    },
+                    child: _GridTile(
+                      appear: _appearIds.contains(_categories[i].id),
+                      exiting: _exiting.contains(_categories[i].id),
+                      duration: _slotAnim,
+                      child: _slot(_categories[i], cell),
+                    ),
                   ),
                 ),
             ],
@@ -773,7 +802,7 @@ class _CategoryPickerSheetState extends State<CategoryPickerSheet>
         maxSimultaneousDrags: _exiting.contains(category.id) ? 0 : 1,
         onDragStarted: () => _onDragStarted(category),
         onDragUpdate: (details) => _onDragUpdate(details.globalPosition),
-        onDragEnd: (_) => _onDragEnded(),
+        onDragEnd: (details) => unawaited(_onDragEnded(details)),
         feedback: Material(
           color: Colors.transparent,
           child: ValueListenableBuilder<bool>(

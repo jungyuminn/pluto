@@ -203,11 +203,13 @@ class OverflowMenuButton extends StatefulWidget {
 class _OverflowMenuButtonState extends State<OverflowMenuButton>
     with SingleTickerProviderStateMixin {
   final _link = LayerLink();
+  final _targetKey = GlobalKey();
   final _portal = OverlayPortalController();
   late final AnimationController _animation;
   late final CurvedAnimation _fade;
   late final Animation<double> _scale;
   var _closing = false;
+  var _openUp = false;
 
   @override
   void initState() {
@@ -232,11 +234,30 @@ class _OverflowMenuButtonState extends State<OverflowMenuButton>
     super.dispose();
   }
 
+  double _menuHeight() => 16 + widget.actions.length * 50;
+
+  bool _shouldOpenUp() {
+    final box = _targetKey.currentContext?.findRenderObject() as RenderBox?;
+    final overlay =
+        Overlay.maybeOf(context)?.context.findRenderObject() as RenderBox?;
+    if (box == null || !box.hasSize || overlay == null || !overlay.hasSize) {
+      return false;
+    }
+    final topLeft = box.localToGlobal(Offset.zero, ancestor: overlay);
+    const gap = 6.0;
+    final needed = _menuHeight() + 8;
+    final spaceBelow = overlay.size.height - topLeft.dy - box.size.height - gap;
+    if (spaceBelow >= needed) return false;
+    final spaceAbove = topLeft.dy - gap;
+    return spaceAbove > spaceBelow;
+  }
+
   Future<void> _toggle() async {
     if (_portal.isShowing) {
       await _close();
     } else {
       FocusManager.instance.primaryFocus?.unfocus();
+      _openUp = _shouldOpenUp();
       _portal.show();
       _animation.forward(from: 0);
       setState(() {});
@@ -272,16 +293,19 @@ class _OverflowMenuButtonState extends State<OverflowMenuButton>
               CompositedTransformFollower(
                 link: _link,
                 showWhenUnlinked: false,
-                targetAnchor: Alignment.bottomRight,
-                followerAnchor: Alignment.topRight,
-                offset: const Offset(0, 6),
+                targetAnchor:
+                    _openUp ? Alignment.topRight : Alignment.bottomRight,
+                followerAnchor:
+                    _openUp ? Alignment.bottomRight : Alignment.topRight,
+                offset: Offset(0, _openUp ? -6 : 6),
                 child: UnconstrainedBox(
-                  alignment: Alignment.topRight,
+                  alignment: _openUp ? Alignment.bottomRight : Alignment.topRight,
                   clipBehavior: Clip.none,
                   child: FadeTransition(
                     opacity: _fade,
                     child: ScaleTransition(
-                      alignment: Alignment.topRight,
+                      alignment:
+                          _openUp ? Alignment.bottomRight : Alignment.topRight,
                       scale: _scale,
                       child: OverflowMenuCard(
                         children: [
@@ -313,6 +337,7 @@ class _OverflowMenuButtonState extends State<OverflowMenuButton>
         );
       },
       child: CompositedTransformTarget(
+        key: _targetKey,
         link: _link,
         child: AppBarIconSlot(
           selected: _portal.isShowing,

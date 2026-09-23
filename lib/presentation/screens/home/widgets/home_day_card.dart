@@ -5,6 +5,7 @@ import 'package:pluto/core/constants/app_fonts.dart';
 import 'package:pluto/core/constants/app_icons.dart';
 import 'package:pluto/core/constants/app_strings.dart';
 import 'package:pluto/core/theme/app_colors.dart';
+import 'package:pluto/core/utils/drop_in.dart';
 import 'package:pluto/core/utils/swipe_to_delete.dart';
 import 'package:pluto/data/datasources/calendar_complete.dart';
 import 'package:pluto/data/datasources/day_emoji_store.dart';
@@ -67,6 +68,9 @@ class _HomeDayCardState extends State<HomeDayCard> {
   final _reveals = <String, double>{};
   final _liveIds = <String>{};
   String? _draggingId;
+  String? _settlingId;
+  Offset _settleFrom = Offset.zero;
+  var _settleGen = 0;
   DayEmojiStore? _emojiStore;
   String? _emoji;
   var _emojiPop = false;
@@ -477,10 +481,27 @@ class _HomeDayCardState extends State<HomeDayCard> {
     _moveInGroup(dragged, _groupIndexAt(box.globalToLocal(global).dy, dragged));
   }
 
-  void _onDragEnded() {
-    final shouldSave = _draggingId != null;
-    setState(() => _draggingId = null);
-    if (shouldSave) _persistTodoOrder();
+  Offset? _slotOrigin(String id) {
+    final box = _listBoxKey.currentContext?.findRenderObject() as RenderBox?;
+    if (box == null || !box.hasSize) return null;
+    return box.localToGlobal(Offset(0, _offsetOfEvent(id)));
+  }
+
+  void _onDragEnded(DraggableDetails details) {
+    final id = _draggingId;
+    final origin = id == null ? null : _slotOrigin(id);
+    final delta = origin == null ? Offset.zero : details.offset - origin;
+    setState(() {
+      if (id != null && delta.distance > 2) {
+        _settlingId = id;
+        _settleFrom = delta;
+        _settleGen++;
+      } else {
+        _settlingId = null;
+      }
+      _draggingId = null;
+    });
+    if (id != null) _persistTodoOrder();
   }
 
   CalendarEvent? get _draggedEvent {
@@ -765,20 +786,34 @@ class _HomeDayCardState extends State<HomeDayCard> {
               left: 0,
               right: 0,
               height: _layoutExtent(_items[i]),
-              child: ClipRect(
-                child: AnimatedOpacity(
-                  duration: _slotAnim,
-                  curve: Curves.easeOutCubic,
-                  opacity: _reveals[_items[i].id] ?? 1,
-                  child: IgnorePointer(
-                    ignoring: (_reveals[_items[i].id] ?? 1) < 1,
-                    child: _tile(_items[i]),
-                  ),
-                ),
-              ),
+              child: _slotBody(_items[i]),
             ),
         ],
       ),
+    );
+  }
+
+  Widget _slotBody(_ListEntry item) {
+    final settling = item.event?.id == _settlingId;
+    final body = AnimatedOpacity(
+      duration: _slotAnim,
+      curve: Curves.easeOutCubic,
+      opacity: _reveals[item.id] ?? 1,
+      child: IgnorePointer(
+        ignoring: settling || (_reveals[item.id] ?? 1) < 1,
+        child: _tile(item),
+      ),
+    );
+    final clipped = settling ? body : ClipRect(child: body);
+    if (!settling) return clipped;
+    return DropIn(
+      key: ValueKey(_settleGen),
+      from: _settleFrom,
+      onDone: () {
+        if (!mounted || _settlingId != item.event?.id) return;
+        setState(() => _settlingId = null);
+      },
+      child: clipped,
     );
   }
 
@@ -895,7 +930,7 @@ class _HomeDayCardState extends State<HomeDayCard> {
           maxSimultaneousDrags: 1,
           onDragStarted: () => _onDragStarted(event),
           onDragUpdate: (details) => _onDragUpdate(details.globalPosition),
-          onDragEnd: (_) => _onDragEnded(),
+          onDragEnd: _onDragEnded,
           feedback: Material(
             color: Colors.transparent,
             child: SizedBox(

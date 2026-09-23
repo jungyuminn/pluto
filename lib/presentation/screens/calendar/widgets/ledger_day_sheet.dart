@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui' show lerpDouble;
 
 import 'package:flutter/material.dart';
@@ -8,6 +9,7 @@ import 'package:pluto/core/constants/app_strings.dart';
 import 'package:pluto/core/layout/pc_layout.dart';
 import 'package:pluto/core/theme/app_colors.dart';
 import 'package:pluto/core/theme/app_skin_background.dart';
+import 'package:pluto/core/utils/drop_in.dart';
 import 'package:pluto/core/utils/press_bounce.dart';
 import 'package:pluto/core/utils/swipe_to_delete.dart';
 import 'package:pluto/data/datasources/day_emoji_store.dart';
@@ -138,6 +140,9 @@ class _LedgerDaySheetState extends State<LedgerDaySheet>
   var _emojiPop = false;
   var _animateEmojiSlot = false;
   String? _draggingId;
+  String? _settlingId;
+  Offset _settleFrom = Offset.zero;
+  var _settleGen = 0;
   var _draggingOutside = false;
   final _reveals = <String, double>{};
   late final AnimationController _statsAnimation;
@@ -541,7 +546,13 @@ class _LedgerDaySheetState extends State<LedgerDaySheet>
     CalendarDayDropTarget.clear();
   }
 
-  Future<void> _onDragEnded() async {
+  Offset? _slotOrigin(String id) {
+    final box = _listBoxKey.currentContext?.findRenderObject() as RenderBox?;
+    if (box == null || !box.hasSize) return null;
+    return box.localToGlobal(Offset(0, _offsetOfEntry(id)));
+  }
+
+  Future<void> _onDragEnded(DraggableDetails details) async {
     final entry = _draggedEntry;
     final dropDate = CalendarDayDropTarget.highlighted.value;
     final shouldSaveOrder = _draggingId != null;
@@ -553,7 +564,16 @@ class _LedgerDaySheetState extends State<LedgerDaySheet>
     CalendarDayDropTarget.clear();
     if (!moving) CalendarDayDropTarget.setScrimHidden(false);
     if (!mounted) return;
+    final origin = entry == null || moving ? null : _slotOrigin(entry.id);
+    final delta = origin == null ? Offset.zero : details.offset - origin;
     setState(() {
+      if (!moving && entry != null && delta.distance > 2) {
+        _settlingId = entry.id;
+        _settleFrom = delta;
+        _settleGen++;
+      } else {
+        _settlingId = null;
+      }
       _draggingId = null;
       _draggingOutside = false;
     });
@@ -827,21 +847,35 @@ class _LedgerDaySheetState extends State<LedgerDaySheet>
                 left: 0,
                 right: 0,
                 height: _layoutExtent(_items[i]),
-                child: ClipRect(
-                  child: AnimatedOpacity(
-                    duration: _slotAnim,
-                    curve: Curves.easeOutCubic,
-                    opacity: _reveals[_items[i].id] ?? 1,
-                    child: IgnorePointer(
-                      ignoring: (_reveals[_items[i].id] ?? 1) < 1,
-                      child: _tile(_items[i]),
-                    ),
-                  ),
-                ),
+                child: _slotBody(_items[i]),
               ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _slotBody(_ListEntry item) {
+    final settling = item.entry?.id == _settlingId;
+    final body = AnimatedOpacity(
+      duration: _slotAnim,
+      curve: Curves.easeOutCubic,
+      opacity: _reveals[item.id] ?? 1,
+      child: IgnorePointer(
+        ignoring: settling || (_reveals[item.id] ?? 1) < 1,
+        child: _tile(item),
+      ),
+    );
+    final clipped = settling ? body : ClipRect(child: body);
+    if (!settling) return clipped;
+    return DropIn(
+      key: ValueKey(_settleGen),
+      from: _settleFrom,
+      onDone: () {
+        if (!mounted || _settlingId != item.entry?.id) return;
+        setState(() => _settlingId = null);
+      },
+      child: clipped,
     );
   }
 
@@ -919,7 +953,7 @@ class _LedgerDaySheetState extends State<LedgerDaySheet>
           maxSimultaneousDrags: 1,
           onDragStarted: () => _onDragStarted(entry),
           onDragUpdate: (details) => _onDragUpdate(details.globalPosition),
-          onDragEnd: (_) => _onDragEnded(),
+          onDragEnd: (details) => unawaited(_onDragEnded(details)),
           feedback: Material(
             color: Colors.transparent,
             child: SizedBox(

@@ -17,6 +17,15 @@ class ReleaseNote {
 abstract final class ReleaseNotes {
   static const all = [
     ReleaseNote(
+      version: '1.4.10',
+      items: [
+        '할 일·지원서·카테고리를 놓으면 자리로 미끄러져요',
+        '아래쪽 친구의 메뉴가 위로 열려요',
+        '앱 아이콘 여백을 넓혔어요',
+        '알림창에 쓰는 아이콘을 바꿨어요',
+      ],
+    ),
+    ReleaseNote(
       version: '1.4.9',
       items: [
         '친구 프로필 사진을 누르면 크게 볼 수 있어요',

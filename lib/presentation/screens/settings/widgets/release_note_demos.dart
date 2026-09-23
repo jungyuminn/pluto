@@ -14,6 +14,7 @@ import 'package:pluto/presentation/screens/calendar/widgets/event_action_icon.da
 import 'package:pluto/presentation/screens/calendar/widgets/event_category_chip.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/event_date_chip.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/event_time_chip.dart';
+import 'package:pluto/presentation/widgets/overflow_menu.dart';
 import 'package:pluto/presentation/widgets/themed_asset.dart';
 
 enum ReleaseDemo {
@@ -112,6 +113,10 @@ enum ReleaseDemo {
   friendsPhotoPeek,
   friendsShare,
   friendsAdd,
+  dropSettle,
+  overflowUp,
+  iconPad,
+  notifyIcon,
   pcEnterSave,
   jobCategorySlide,
   featureIntro,
@@ -195,6 +200,12 @@ ReleaseDemo releaseDemoFor(String text, {required bool isFix}) {
   if (text.contains('모아 볼') || text.contains('카테고리별 보기')) {
     return ReleaseDemo.categoryView;
   }
+  if (text.contains('미끄러') || text.contains('자리로')) {
+    return ReleaseDemo.dropSettle;
+  }
+  if (text.contains('메뉴가 위로')) return ReleaseDemo.overflowUp;
+  if (text.contains('앱 아이콘 여백')) return ReleaseDemo.iconPad;
+  if (text.contains('알림창에 쓰는')) return ReleaseDemo.notifyIcon;
   if (text.contains('프로필 사진')) return ReleaseDemo.friendsPhotoPeek;
   if (text.contains('할 일과 지원서') || text.contains('지원서를 따로')) {
     return ReleaseDemo.friendsShare;
@@ -499,6 +510,10 @@ class ReleaseDemoView extends StatelessWidget {
       ReleaseDemo.categoryView => const _CategoryViewDemo(),
       ReleaseDemo.friendsMiniCal => const _FriendsMiniCalDemo(),
       ReleaseDemo.friendsPhotoPeek => const _FriendsPhotoPeekDemo(),
+      ReleaseDemo.dropSettle => const _DropSettleDemo(),
+      ReleaseDemo.overflowUp => const _OverflowUpDemo(),
+      ReleaseDemo.iconPad => const _IconPadDemo(),
+      ReleaseDemo.notifyIcon => const _NotifyIconDemo(),
       ReleaseDemo.friendsShare => const _FriendsShareDemo(),
       ReleaseDemo.friendsAdd => const _FriendsAddDemo(),
       ReleaseDemo.pcEnterSave => const _PcEnterSaveDemo(),
@@ -6505,6 +6520,319 @@ class _PeekFace extends StatelessWidget {
           child: const ColoredBox(color: _FriendsPhotoPeekDemo._photo),
         ),
       ),
+    );
+  }
+}
+
+class _DropSettleDemo extends StatelessWidget {
+  const _DropSettleDemo();
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 3800,
+      boxHeight: 188,
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final font = AppFonts.of(context);
+        final press = _pulse(t, 0.10, 0.20, 0.56);
+        final drag = Curves.easeInOutCubic.transform(_gate(t, 0.20, 0.52));
+        final settle = Curves.easeOutCubic.transform(_gate(t, 0.52, 0.70));
+        const slot0 = 0.0;
+        const slot1 = 40.0;
+        const overshoot = -8.0;
+        final heldY = settle > 0
+            ? overshoot + (slot0 - overshoot) * settle
+            : slot1 + (overshoot - slot1) * drag;
+        final otherY = slot0 + (slot1 - slot0) * drag;
+        final lift = (press * (1 - settle)).clamp(0.0, 1.0);
+        return Stack(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(18, 16, 18, 14),
+              child: _Card(
+                padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '24일',
+                      style: TextStyle(
+                        fontFamily: font,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w800,
+                        color: colors.muted,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    SizedBox(
+                      height: 76,
+                      child: Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          Positioned(
+                            left: 0,
+                            right: 0,
+                            top: otherY,
+                            child: CalendarEventLabel(
+                              title: '헬스장',
+                              color: const Color(0xFF3B82F6),
+                              height: 28,
+                              fontSize: 13,
+                              applyCalendarScale: false,
+                            ),
+                          ),
+                          Positioned(
+                            left: 0,
+                            right: 0,
+                            top: heldY,
+                            child: Transform.scale(
+                              scale: 1 + lift * 0.04,
+                              alignment: Alignment.centerLeft,
+                              child: DecoratedBox(
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(4),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withValues(
+                                        alpha: 0.16 * lift,
+                                      ),
+                                      blurRadius: 10 * lift,
+                                      offset: Offset(0, 4 * lift),
+                                    ),
+                                  ],
+                                ),
+                                child: CalendarEventLabel(
+                                  title: '장보기',
+                                  color: const Color(0xFF22C55E),
+                                  height: 28,
+                                  fontSize: 13,
+                                  applyCalendarScale: false,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            if (press > 0)
+              Positioned(
+                left: 52,
+                top: 62 + heldY,
+                child: _Finger(pressed: press),
+              ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _OverflowUpDemo extends StatelessWidget {
+  const _OverflowUpDemo();
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 3400,
+      boxHeight: 196,
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final font = AppFonts.of(context);
+        final press = _pulse(t, 0.16, 0.26, 0.34);
+        final open = Curves.easeOutCubic.transform(_gate(t, 0.28, 0.44));
+        final hold = 1 - _gate(t, 0.74, 0.88);
+        final shown = (open * hold).clamp(0.0, 1.0);
+        return Stack(
+          children: [
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(14, 0, 14, 12),
+                child: _Card(
+                  child: Row(
+                    children: [
+                      const _PeekFace(size: 40, border: Color(0x22000000)),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          '태희',
+                          style: TextStyle(
+                            fontFamily: font,
+                            fontSize: 16,
+                            color: colors.text,
+                          ),
+                        ),
+                      ),
+                      ThemedAsset(
+                        asset: AppIcons.more,
+                        width: 18,
+                        height: 18,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            if (press > 0)
+              const Positioned(
+                right: 28,
+                bottom: 28,
+                child: _Finger(pressed: 1),
+              ),
+            Positioned(
+              right: 22,
+              bottom: 78,
+              child: IgnorePointer(
+                child: Opacity(
+                  opacity: shown,
+                  child: Transform.translate(
+                    offset: Offset(0, 10 * (1 - shown)),
+                    child: OverflowMenuCard(
+                      children: [
+                        OverflowMenuItem(
+                          label: AppStrings.friendsHomePin,
+                          leadingAsset: AppIcons.addHome,
+                          leadingFlipX: true,
+                          onPressed: () {},
+                        ),
+                        OverflowMenuItem(
+                          label: AppStrings.friendsRemove,
+                          leadingAsset: AppIcons.trashCan,
+                          color: colors.danger,
+                          onPressed: () {},
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _IconPadDemo extends StatelessWidget {
+  const _IconPadDemo();
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 3000,
+      builder: (context, t) {
+        final pad = 0.08 +
+            0.10 * Curves.easeInOutCubic.transform(_gate(t, 0.20, 0.52));
+        return Center(
+          child: SizedBox(
+            width: 92,
+            height: 92,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(22),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.12),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Padding(
+                padding: EdgeInsets.all(92 * pad),
+                child: const AppAssetImage(asset: AppIcons.plutoLogo),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _NotifyIconDemo extends StatelessWidget {
+  const _NotifyIconDemo();
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 2800,
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final font = AppFonts.of(context);
+        final show = Curves.easeOutCubic.transform(_gate(t, 0.22, 0.40));
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(16, 28, 16, 20),
+          child: _Card(
+            padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Opacity(
+                      opacity: show,
+                      child: Transform.scale(
+                        scale: 0.7 + 0.3 * show,
+                        child: ColorFiltered(
+                          colorFilter: const ColorFilter.mode(
+                            Color(0xFF3B82F6),
+                            BlendMode.srcIn,
+                          ),
+                          child: const AppAssetImage(
+                            asset: AppIcons.plutoLogo,
+                            width: 16,
+                            height: 16,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      '플루토',
+                      style: TextStyle(
+                        fontFamily: font,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: colors.muted,
+                      ),
+                    ),
+                    const Spacer(),
+                    Text(
+                      '지금',
+                      style: TextStyle(
+                        fontFamily: font,
+                        fontSize: 11,
+                        color: colors.muted,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Opacity(
+                  opacity: show,
+                  child: Text(
+                    '장보기',
+                    style: TextStyle(
+                      fontFamily: font,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w800,
+                      color: colors.text,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

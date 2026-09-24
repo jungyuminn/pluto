@@ -5,7 +5,11 @@ import 'package:pluto/core/theme/app_colors.dart';
 
 OverlayEntry? _friendsToastEntry;
 
-void showFriendsToast(BuildContext context, String text) {
+void showFriendsToast(
+  BuildContext context,
+  String text, {
+  bool top = false,
+}) {
   final previous = _friendsToastEntry;
   _friendsToastEntry = null;
   previous?.remove();
@@ -14,6 +18,7 @@ void showFriendsToast(BuildContext context, String text) {
   entry = OverlayEntry(
     builder: (context) => _FriendsToastOverlay(
       text: text,
+      top: top,
       onFinished: () {
         if (entry.mounted) entry.remove();
         if (identical(_friendsToastEntry, entry)) {
@@ -31,10 +36,12 @@ class AnimatedFriendsToast extends StatefulWidget {
     super.key,
     required this.text,
     required this.visible,
+    this.fromTop = false,
   });
 
   final String text;
   final bool visible;
+  final bool fromTop;
 
   @override
   State<AnimatedFriendsToast> createState() => _AnimatedFriendsToastState();
@@ -79,7 +86,9 @@ class _AnimatedFriendsToastState extends State<AnimatedFriendsToast> {
       child: AnimatedSlide(
         duration: _duration,
         curve: _visible ? Curves.easeOutCubic : Curves.easeInCubic,
-        offset: _visible ? Offset.zero : const Offset(0, 0.18),
+        offset: _visible
+            ? Offset.zero
+            : Offset(0, widget.fromTop ? -0.18 : 0.18),
         child: AnimatedOpacity(
           duration: _duration,
           curve: _visible ? Curves.easeOutCubic : Curves.easeInCubic,
@@ -95,10 +104,12 @@ class _FriendsToastOverlay extends StatefulWidget {
   const _FriendsToastOverlay({
     required this.text,
     required this.onFinished,
+    this.top = false,
   });
 
   final String text;
   final VoidCallback onFinished;
+  final bool top;
 
   @override
   State<_FriendsToastOverlay> createState() => _FriendsToastOverlayState();
@@ -124,17 +135,25 @@ class _FriendsToastOverlayState extends State<_FriendsToastOverlay> {
 
   @override
   Widget build(BuildContext context) {
-    final bottom = MediaQuery.paddingOf(context).bottom;
+    final padding = MediaQuery.paddingOf(context);
+    final toast = AnimatedFriendsToast(
+      text: widget.text,
+      visible: _visible,
+      fromTop: widget.top,
+    );
     return IgnorePointer(
       child: Stack(
         children: [
-          PcLayout.pinBottomToast(
-            bottom: 20 + bottom,
-            child: AnimatedFriendsToast(
-              text: widget.text,
-              visible: _visible,
+          if (widget.top)
+            PcLayout.pinTopToast(
+              top: 20 + padding.top,
+              child: toast,
+            )
+          else
+            PcLayout.pinBottomToast(
+              bottom: 20 + padding.bottom,
+              child: toast,
             ),
-          ),
         ],
       ),
     );

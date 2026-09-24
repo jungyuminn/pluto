@@ -117,6 +117,7 @@ enum ReleaseDemo {
   overflowUp,
   iconPad,
   notifyIcon,
+  stickerBtn,
   pcEnterSave,
   jobCategorySlide,
   featureIntro,
@@ -304,6 +305,12 @@ ReleaseDemo releaseDemoFor(String text, {required bool isFix}) {
     return ReleaseDemo.stickers;
   }
   if (text.contains('내역 또는 금액')) return ReleaseDemo.ledgerLabel;
+  if (text.contains('따라 하면') || text.contains('화면을 둘러')) {
+    return ReleaseDemo.appTutorial;
+  }
+  if (text.contains('스티커 버튼') || text.contains('더 가볍게')) {
+    return ReleaseDemo.stickerBtn;
+  }
   if (text.contains('스티커를 누르면') || text.contains('날짜에 스티커')) {
     return ReleaseDemo.daySticker;
   }
@@ -453,7 +460,8 @@ class ReleaseDemoView extends StatelessWidget {
       ReleaseDemo.rangeDiary => const _RangeDiaryDemo(),
       ReleaseDemo.diaryDelete ||
       ReleaseDemo.diaryLongPress => const _DiaryDeleteDemo(),
-      ReleaseDemo.tutorial || ReleaseDemo.appTutorial => const _TutorialDemo(),
+      ReleaseDemo.tutorial || ReleaseDemo.appTutorial => const _TutorialFollowDemo(),
+      ReleaseDemo.stickerBtn => const _StickerBtnDemo(),
       ReleaseDemo.tabTransition || ReleaseDemo.homeCalendar => const _TabDemo(),
       ReleaseDemo.importPick ||
       ReleaseDemo.samsungImport ||
@@ -1935,28 +1943,383 @@ class _DiaryDeleteDemo extends StatelessWidget {
   }
 }
 
-class _TutorialDemo extends StatelessWidget {
-  const _TutorialDemo();
+class _TutorialFollowDemo extends StatelessWidget {
+  const _TutorialFollowDemo();
+
+  static const _title = '헬스장가기';
+  static const _accent = Color(0xFF7CB342);
 
   @override
   Widget build(BuildContext context) {
     return _Loop(
-      builder: (context, _) {
+      ms: 7600,
+      boxHeight: 220,
+      builder: (context, t) {
         final colors = AppColors.of(context);
         final font = AppFonts.of(context);
-        return Padding(
-          padding: const EdgeInsets.fromLTRB(20, 28, 20, 16),
-          child: _Card(
-            child: Text(
-              AppStrings.tutorialWelcomeTitle,
-              style: TextStyle(
-                fontFamily: font,
-                fontSize: 14,
-                fontWeight: FontWeight.w800,
-                color: colors.text,
+        final tapDay = _pulse(t, 0.10, 0.18, 0.26);
+        final sheet = t < 0.82
+            ? Curves.easeOutCubic.transform(_gate(t, 0.22, 0.34))
+            : 1 - Curves.easeInCubic.transform(_gate(t, 0.82, 0.94));
+        final typed = (_title.length * _gate(t, 0.36, 0.52)).round();
+        final shown = _title.substring(0, typed);
+        final catOn = _gate(t, 0.54, 0.62);
+        final tapCat = _pulse(t, 0.54, 0.62, 0.70);
+        final tapSave = _pulse(t, 0.70, 0.78, 0.88);
+        final saved = Curves.easeOutCubic.transform(_gate(t, 0.76, 0.86));
+        final label = Curves.easeOutCubic.transform(_gate(t, 0.86, 0.96));
+        return ClipRect(
+          child: Stack(
+            children: [
+              Opacity(
+                opacity: (1 - sheet * 0.45).clamp(0.28, 1.0),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text(
+                        '9${AppStrings.monthSuffix}',
+                        style: TextStyle(
+                          fontFamily: font,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w800,
+                          height: 1,
+                          color: colors.text,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Expanded(
+                        child: _TutorialMiniGrid(
+                          colors: colors,
+                          font: font,
+                          pulse: tapDay,
+                          label: label,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
+              if (tapDay > 0 && sheet < 0.2)
+                const Positioned(
+                  left: 118,
+                  top: 118,
+                  child: _Finger(pressed: 1),
+                ),
+              if (sheet > 0)
+                Align(
+                  alignment: Alignment.bottomCenter,
+                  child: FractionalTranslation(
+                    translation: Offset(0, 1 - sheet),
+                    child: _TutorialAddSheet(
+                      colors: colors,
+                      font: font,
+                      shown: shown,
+                      catOn: catOn,
+                      tapCat: tapCat,
+                      tapSave: tapSave,
+                      saved: saved,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _TutorialMiniGrid extends StatelessWidget {
+  const _TutorialMiniGrid({
+    required this.colors,
+    required this.font,
+    required this.pulse,
+    required this.label,
+  });
+
+  final AppColors colors;
+  final String? font;
+  final double pulse;
+  final double label;
+
+  @override
+  Widget build(BuildContext context) {
+    const days = [21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 1, 2, 3, 4];
+    return Column(
+      children: [
+        for (var row = 0; row < 2; row++)
+          Expanded(
+            child: Row(
+              children: [
+                for (var col = 0; col < 7; col++)
+                  Expanded(
+                    child: _TutorialDayCell(
+                      day: days[row * 7 + col],
+                      today: days[row * 7 + col] == 24,
+                      pulse: pulse,
+                      label: label,
+                      colors: colors,
+                      font: font,
+                    ),
+                  ),
+              ],
             ),
           ),
+      ],
+    );
+  }
+}
+
+class _TutorialDayCell extends StatelessWidget {
+  const _TutorialDayCell({
+    required this.day,
+    required this.today,
+    required this.pulse,
+    required this.label,
+    required this.colors,
+    required this.font,
+  });
+
+  final int day;
+  final bool today;
+  final double pulse;
+  final double label;
+  final AppColors colors;
+  final String? font;
+
+  @override
+  Widget build(BuildContext context) {
+    final hole = today ? 0.10 + pulse * 0.22 : 0.0;
+    return Padding(
+      padding: const EdgeInsets.all(2),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: today
+              ? Color.lerp(colors.card, _TutorialFollowDemo._accent, hole)
+              : colors.card,
+          borderRadius: BorderRadius.circular(8),
+          border: today
+              ? Border.all(
+                  color: _TutorialFollowDemo._accent.withValues(
+                    alpha: 0.35 + pulse * 0.45,
+                  ),
+                )
+              : null,
+        ),
+        child: Stack(
+          children: [
+            Align(
+              alignment: Alignment.topLeft,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(5, 4, 0, 0),
+                child: Text(
+                  '$day',
+                  style: TextStyle(
+                    fontFamily: font,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    color: today ? _TutorialFollowDemo._accent : colors.muted,
+                  ),
+                ),
+              ),
+            ),
+            if (today && label > 0)
+              Align(
+                alignment: Alignment.bottomCenter,
+                child: Opacity(
+                  opacity: label,
+                  child: Transform.translate(
+                    offset: Offset(0, 4 * (1 - label)),
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(3, 0, 3, 4),
+                      child: CalendarEventLabel(
+                        title: _TutorialFollowDemo._title,
+                        color: _TutorialFollowDemo._accent,
+                        height: 16,
+                        fontSize: 9,
+                        applyCalendarScale: false,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _TutorialAddSheet extends StatelessWidget {
+  const _TutorialAddSheet({
+    required this.colors,
+    required this.font,
+    required this.shown,
+    required this.catOn,
+    required this.tapCat,
+    required this.tapSave,
+    required this.saved,
+  });
+
+  final AppColors colors;
+  final String? font;
+  final String shown;
+  final double catOn;
+  final double tapCat;
+  final double tapSave;
+  final double saved;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: colors.tint(_TutorialFollowDemo._accent, 0.14),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(22)),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x33000000),
+            blurRadius: 16,
+            offset: Offset(0, -2),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              shown.isEmpty ? AppStrings.eventTitleHint : shown,
+              style: TextStyle(
+                fontFamily: font,
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: shown.isEmpty ? colors.hint : colors.text,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    EventCategoryChip(
+                      name: '운동',
+                      color: _TutorialFollowDemo._accent,
+                      selected: catOn > 0.4,
+                      onPressed: () {},
+                    ),
+                    if (tapCat > 0)
+                      const Positioned(
+                        left: 18,
+                        top: 14,
+                        child: _Finger(pressed: 1),
+                      ),
+                  ],
+                ),
+                const Spacer(),
+                Transform.scale(
+                  scale: 1 - tapSave * 0.12,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      SaveCompanyButton(
+                        onPressed: () {},
+                        color: _TutorialFollowDemo._accent,
+                      ),
+                      if (saved > 0.2)
+                        Opacity(
+                          opacity: saved,
+                          child: const Icon(
+                            Icons.check_rounded,
+                            size: 22,
+                            color: Colors.white,
+                          ),
+                        ),
+                      if (tapSave > 0)
+                        const Positioned(
+                          right: -4,
+                          bottom: -6,
+                          child: _Finger(pressed: 1),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _StickerBtnDemo extends StatelessWidget {
+  const _StickerBtnDemo();
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 3600,
+      boxHeight: 188,
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final font = AppFonts.of(context);
+        final tap = _pulse(t, 0.16, 0.26, 0.38);
+        final pop = Curves.elasticOut.transform(_gate(t, 0.30, 0.52));
+        final hold = 1 - _gate(t, 0.78, 0.92);
+        final shown = (pop * hold).clamp(0.0, 1.0);
+        return Stack(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(18, 22, 18, 16),
+              child: _Card(
+                padding: const EdgeInsets.fromLTRB(14, 12, 10, 12),
+                child: Row(
+                  children: [
+                    if (shown > 0)
+                      Padding(
+                        padding: const EdgeInsets.only(right: 10),
+                        child: Transform.scale(
+                          scale: shown,
+                          child: Image.asset(
+                            'assets/stickers/daily_dog/01_thank_you.png',
+                            width: 42,
+                            height: 42,
+                          ),
+                        ),
+                      ),
+                    Expanded(
+                      child: Text(
+                        '24일',
+                        style: TextStyle(
+                          fontFamily: font,
+                          fontSize: 17,
+                          fontWeight: FontWeight.w700,
+                          color: colors.text,
+                        ),
+                      ),
+                    ),
+                    AppAssetImage(
+                      asset: AppIcons.emoji,
+                      width: 21,
+                      height: 21,
+                      color: colors.muted,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            if (tap > 0)
+              const Positioned(
+                right: 28,
+                top: 36,
+                child: _Finger(pressed: 1),
+              ),
+          ],
         );
       },
     );

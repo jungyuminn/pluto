@@ -64,6 +64,7 @@ class _ShellScreenState extends State<ShellScreen>
   TutorialController? _tutorial;
   NavPreference? _nav;
   var _autoStarted = false;
+  var _tutorialWasActive = false;
 
   @override
   void initState() {
@@ -131,8 +132,22 @@ class _ShellScreenState extends State<ShellScreen>
 
   void _onTutorial() {
     final tutorial = _tutorial;
-    if (tutorial == null || !tutorial.active) return;
-    _onTabChanged(tutorial.step.tab);
+    if (tutorial == null) return;
+    final active = tutorial.active;
+    if (_tutorialWasActive && !active) {
+      _tutorialWasActive = false;
+      _onTabChanged(_calendarTab);
+      return;
+    }
+    _tutorialWasActive = active;
+    if (!active) return;
+    if (tutorial.step.forceTab) {
+      _onTabChanged(tutorial.step.tab);
+    }
+    if (tutorial.step.action == TutorialAction.tapDay ||
+        tutorial.step.action == TutorialAction.handleEvent) {
+      _calendarKey.currentState?.goToToday();
+    }
   }
 
   Future<void> _maybeStartTutorial() async {
@@ -197,6 +212,7 @@ class _ShellScreenState extends State<ShellScreen>
       _index = index;
     });
     _controller.forward(from: 0);
+    _tutorial?.noteTab(index);
   }
 
   void _resetCurrentTab() {

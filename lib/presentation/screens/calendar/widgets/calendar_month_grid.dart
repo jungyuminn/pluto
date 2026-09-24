@@ -9,6 +9,7 @@ import 'package:pluto/domain/entities/ledger_entry.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/calendar_day_cell.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/calendar_week_diaries.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/calendar_week_events.dart';
+import 'package:pluto/presentation/tutorial/tutorial_anchor.dart';
 
 class CalendarDayDropTarget {
   CalendarDayDropTarget._();
@@ -255,6 +256,14 @@ class _CalendarMonthGridState extends State<CalendarMonthGrid>
     return _weekKeys.putIfAbsent(week, GlobalKey.new);
   }
 
+  Widget _maybeTodayAnchor(CalendarDay day, Widget child) {
+    if (!day.inMonth || !day.isToday) return child;
+    return TutorialAnchor(
+      id: TutorialAnchorId.calendarDay,
+      child: child,
+    );
+  }
+
   DateTime? dateAt(Offset global) {
     final days = MonthGrid.daysFor(
       widget.month,
@@ -481,26 +490,29 @@ class _CalendarMonthGridState extends State<CalendarMonthGrid>
                                   child: KeyedSubtree(
                                     key: _keyFor(weekDays[weekday].date),
                                     child: SizedBox.expand(
-                                      child: CalendarDayCell(
-                                        day: weekDays[weekday],
-                                        inRange: _inRange(weekDays[weekday].date),
-                                        highlighted: _isDropTarget(
-                                          weekDays[weekday].date,
-                                          highlighted,
+                                      child: _maybeTodayAnchor(
+                                        weekDays[weekday],
+                                        CalendarDayCell(
+                                          day: weekDays[weekday],
+                                          inRange: _inRange(weekDays[weekday].date),
+                                          highlighted: _isDropTarget(
+                                            weekDays[weekday].date,
+                                            highlighted,
+                                          ),
+                                          showLunar: _showLunar,
+                                          onPressed: widget.onDayPressed == null
+                                              ? null
+                                              : (origin) => widget.onDayPressed!(
+                                                    weekDays[weekday].date,
+                                                    origin,
+                                                  ),
+                                          onLongPressed:
+                                              widget.onDayLongPressed == null
+                                                  ? null
+                                                  : () => widget.onDayLongPressed!(
+                                                        weekDays[weekday].date,
+                                                      ),
                                         ),
-                                        showLunar: _showLunar,
-                                        onPressed: widget.onDayPressed == null
-                                            ? null
-                                            : (origin) => widget.onDayPressed!(
-                                                  weekDays[weekday].date,
-                                                  origin,
-                                                ),
-                                        onLongPressed:
-                                            widget.onDayLongPressed == null
-                                                ? null
-                                                : () => widget.onDayLongPressed!(
-                                                      weekDays[weekday].date,
-                                                    ),
                                       ),
                                     ),
                                   ),

@@ -479,7 +479,8 @@ class _CalendarMonthMenuButtonState extends State<CalendarMonthMenuButton>
                             );
                           },
                           transitionBuilder: (child, animation) {
-                            final submenu = child.key != const ValueKey('root');
+                            final submenu =
+                                child.key != const ValueKey('root');
                             return FadeTransition(
                               opacity: animation,
                               child: SlideTransition(

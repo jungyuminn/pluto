@@ -17,6 +17,13 @@ class ReleaseNote {
 abstract final class ReleaseNotes {
   static const all = [
     ReleaseNote(
+      version: '1.4.11',
+      items: [
+        '튜토리얼을 따라 하면 할 일을 넣고 화면을 둘러볼 수 있어요',
+        '스티커 버튼이 더 가볍게 보여요',
+      ],
+    ),
+    ReleaseNote(
       version: '1.4.10',
       items: [
         '할 일·지원서·카테고리를 놓으면 자리로 미끄러져요',

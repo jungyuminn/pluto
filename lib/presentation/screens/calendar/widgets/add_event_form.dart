@@ -27,6 +27,9 @@ import 'package:pluto/presentation/screens/calendar/widgets/event_title_field.da
 import 'package:pluto/presentation/widgets/ai_category_chip.dart';
 import 'package:pluto/presentation/widgets/app_calendar/app_calendar.dart';
 import 'package:pluto/presentation/widgets/category_suggest_session.dart';
+import 'package:pluto/presentation/screens/friends/friends_toast.dart';
+import 'package:pluto/presentation/tutorial/tutorial_controller.dart';
+import 'package:pluto/presentation/tutorial/tutorial_hint.dart';
 import 'package:pluto/presentation/widgets/themed_asset.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -266,6 +269,8 @@ class _AddEventFormState extends State<AddEventForm>
   void _onTitleChanged() {
     _feedTitle(_titleForSuggest());
     _syncTitleTimeHighlight();
+    TutorialController.find(context)
+        ?.noteAddTitle(_title.text.trim().isNotEmpty);
   }
 
   void _syncTitleTimeHighlight({bool force = false}) {
@@ -410,7 +415,15 @@ class _AddEventFormState extends State<AddEventForm>
     return days;
   }
 
+  bool _allowsAdd(TutorialAction needed) {
+    final tutorial = TutorialController.find(context);
+    if (tutorial == null || tutorial.allowsAddInteract(needed)) return true;
+    showFriendsToast(context, tutorial.step.body, top: true);
+    return false;
+  }
+
   Future<void> _pickCategory() async {
+    if (!_allowsAdd(TutorialAction.composeEvent)) return;
     _titleFocus.unfocus();
     _memoFocus.unfocus();
     final picked = await showCategoryPickerSheet(
@@ -428,10 +441,12 @@ class _AddEventFormState extends State<AddEventForm>
       _categoryName = picked.name;
       _categoryColor = picked.color;
     });
+    TutorialController.find(context)?.noteCategoryPicked();
     _syncTitleTimeHighlight(force: true);
   }
 
   Future<void> _pickDate() async {
+    if (!_allowsAdd(TutorialAction.pickDateMode)) return;
     _titleFocus.unfocus();
     _memoFocus.unfocus();
     final picked = await showAppCalendarSheet(
@@ -441,20 +456,21 @@ class _AddEventFormState extends State<AddEventForm>
       mode: _dateMode,
       color: _accent,
     );
-    if (picked == null || !mounted) {
-      if (mounted) _syncTitleTimeHighlight(force: true);
-      return;
+    if (picked != null && mounted) {
+      setState(() {
+        _isSomeday = false;
+        _dateMode = picked.mode;
+        _dates = picked.dates;
+        _date = picked.date;
+      });
     }
-    setState(() {
-      _isSomeday = false;
-      _dateMode = picked.mode;
-      _dates = picked.dates;
-      _date = picked.date;
-    });
+    if (!mounted) return;
+    TutorialController.find(context)?.noteDateMode();
     _syncTitleTimeHighlight(force: true);
   }
 
   Future<void> _pickTime() async {
+    if (!_allowsAdd(TutorialAction.none)) return;
     _titleFocus.unfocus();
     _memoFocus.unfocus();
     final picked = await showEventTimeSheet(
@@ -475,6 +491,7 @@ class _AddEventFormState extends State<AddEventForm>
   }
 
   Future<void> _toggleMemo() async {
+    if (!_allowsAdd(TutorialAction.none)) return;
     if (_memoToggling) return;
     _memoToggling = true;
     if (_memoOpen) {
@@ -520,6 +537,7 @@ class _AddEventFormState extends State<AddEventForm>
   }
 
   Future<void> _save() async {
+    if (!_allowsAdd(TutorialAction.saveEvent)) return;
     _applyTitleTime();
     final title = _title.text.trim();
     final days = _daysToSave();
@@ -658,6 +676,18 @@ class _AddEventFormState extends State<AddEventForm>
 
   @override
   Widget build(BuildContext context) {
+    final tutorial = TutorialController.maybeOf(context);
+    final allowTitle =
+        tutorial?.allowsAddInteract(TutorialAction.composeEvent) ?? true;
+    final allowExtra =
+        tutorial?.allowsAddInteract(TutorialAction.none) ?? true;
+    if (!allowTitle && (_titleFocus.hasFocus || _memoFocus.hasFocus)) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        _titleFocus.unfocus();
+        _memoFocus.unfocus();
+      });
+    }
     return TweenAnimationBuilder<Color?>(
       duration: const Duration(milliseconds: 280),
       curve: Curves.easeOutCubic,
@@ -684,11 +714,21 @@ class _AddEventFormState extends State<AddEventForm>
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            EventTitleField(
-              controller: _title,
-              focusNode: _titleFocus,
-              autofocus: false,
-              onChanged: _feedTitle,
+            TutorialSheetHint(color: _accent),
+            TutorialPulse(
+              active: tutorial?.step.action == TutorialAction.composeEvent,
+              radius: 16,
+              color: _accent,
+              child: EventTitleField(
+                controller: _title,
+                focusNode: _titleFocus,
+                autofocus: false,
+                readOnly: !allowTitle,
+                onChanged: _feedTitle,
+                onTap: allowTitle
+                    ? null
+                    : () => _allowsAdd(TutorialAction.composeEvent),
+              ),
             ),
             ClipRect(
               child: SizeTransition(
@@ -703,6 +743,7 @@ class _AddEventFormState extends State<AddEventForm>
                       child: EventMemoField(
                         controller: _memo,
                         focusNode: _memoFocus,
+                        readOnly: !allowExtra,
                       ),
                     ),
                   ),
@@ -717,31 +758,43 @@ class _AddEventFormState extends State<AddEventForm>
                     scrollDirection: Axis.horizontal,
                     child: Row(
                       children: [
-                        AiCategoryChip(
-                          name: _categoryName ?? AppStrings.categoryAction,
+                        TutorialPulse(
+                          active: tutorial?.step.action ==
+                              TutorialAction.composeEvent,
                           color: _hasCategory
                               ? _accent
                               : AppColors.of(context).muted,
-                          selected: _hasCategory,
-                          active: _suggestOn,
-                          loading: _suggesting,
-                          onPressed: _pickCategory,
+                          child: AiCategoryChip(
+                            name: _categoryName ?? AppStrings.categoryAction,
+                            color: _hasCategory
+                                ? _accent
+                                : AppColors.of(context).muted,
+                            selected: _hasCategory,
+                            active: _suggestOn,
+                            loading: _suggesting,
+                            onPressed: _pickCategory,
+                          ),
                         ),
                         const SizedBox(width: 4),
-                        EventDateChip(
-                          date: _date,
+                        TutorialPulse(
+                          active: tutorial?.step.action ==
+                              TutorialAction.pickDateMode,
                           color: _accent,
-                          label: _isSomeday
-                              ? AppStrings.somedayTitle
-                              : _isRange
-                              ? AppStrings.rangeEventLabel
-                              : _isMultiple
-                              ? AppStrings.multipleEventLabel
-                              : _dateMode == AppCalendarMode.repeat ||
-                                    widget.initial?.repeatId != null
-                              ? AppStrings.repeatEventLabel
-                              : null,
-                          onPressed: _pickDate,
+                          child: EventDateChip(
+                            date: _date,
+                            color: _accent,
+                            label: _isSomeday
+                                ? AppStrings.somedayTitle
+                                : _isRange
+                                ? AppStrings.rangeEventLabel
+                                : _isMultiple
+                                ? AppStrings.multipleEventLabel
+                                : _dateMode == AppCalendarMode.repeat ||
+                                      widget.initial?.repeatId != null
+                                ? AppStrings.repeatEventLabel
+                                : null,
+                            onPressed: _pickDate,
+                          ),
                         ),
                         if (!_isSomeday) ...[
                           const SizedBox(width: 4),
@@ -771,9 +824,13 @@ class _AddEventFormState extends State<AddEventForm>
                   ),
                 ),
                 const SizedBox(width: 8),
-                SaveCompanyButton(
-                  onPressed: _saving ? () {} : _save,
+                TutorialPulse(
+                  active: tutorial?.step.action == TutorialAction.saveEvent,
                   color: _accent,
+                  child: SaveCompanyButton(
+                    onPressed: _saving ? () {} : _save,
+                    color: _accent,
+                  ),
                 ),
               ],
             ),

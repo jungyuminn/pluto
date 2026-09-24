@@ -3,12 +3,14 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:pluto/core/constants/app_fonts.dart';
+import 'package:pluto/core/constants/app_icons.dart';
 import 'package:pluto/core/constants/app_strings.dart';
 import 'package:pluto/core/theme/app_colors.dart';
 import 'package:pluto/core/utils/press_bounce.dart';
 import 'package:pluto/presentation/tutorial/tutorial_anchor.dart';
 import 'package:pluto/presentation/tutorial/tutorial_controller.dart';
 import 'package:pluto/presentation/tutorial/tutorial_demos.dart';
+import 'package:pluto/presentation/widgets/themed_asset.dart';
 
 class TutorialOverlay extends StatefulWidget {
   const TutorialOverlay({super.key});
@@ -27,6 +29,7 @@ class _TutorialOverlayState extends State<TutorialOverlay>
   var _displayedIndex = 0;
   var _displayedLast = false;
   var _displayedFirst = true;
+  var _displayedCanPrev = false;
   int? _shownTab;
   Rect? _hole;
   Rect? _holeFrom;
@@ -105,7 +108,7 @@ class _TutorialOverlayState extends State<TutorialOverlay>
   Future<void> _prepareStep() async {
     final generation = ++_generation;
     final tutorial = _tutorial;
-    if (tutorial == null || !tutorial.active) {
+    if (tutorial == null || !tutorial.active || !tutorial.overlayVisible) {
       _syncPulse(false);
       if (!_visible && _appear.value == 0) return;
       await _appear.reverse();
@@ -135,6 +138,7 @@ class _TutorialOverlayState extends State<TutorialOverlay>
         _displayedIndex = tutorial.index;
         _displayedLast = tutorial.isLast;
         _displayedFirst = tutorial.isFirst;
+        _displayedCanPrev = tutorial.canPrevious;
       });
     }
     if (_appear.status != AnimationStatus.forward &&
@@ -191,6 +195,7 @@ class _TutorialOverlayState extends State<TutorialOverlay>
       _displayedIndex = tutorial.index;
       _displayedLast = tutorial.isLast;
       _displayedFirst = tutorial.isFirst;
+      _displayedCanPrev = tutorial.canPrevious;
       _spotlightHidden = false;
     });
     _syncPulse(nextHole != null);
@@ -213,20 +218,38 @@ class _TutorialOverlayState extends State<TutorialOverlay>
 
   Rect? _readHole(TutorialAnchorId? anchor) {
     if (anchor == null) return null;
-    final box = TutorialAnchor.keyOf(anchor).currentContext?.findRenderObject();
     final overlay = _layerKey.currentContext?.findRenderObject() ??
         context.findRenderObject();
-    if (box is! RenderBox || overlay is! RenderBox) return null;
-    if (!box.attached || !overlay.attached) return null;
-    if (!box.hasSize || !overlay.hasSize) return null;
-    if (box.size.shortestSide < 8 || overlay.size.isEmpty) return null;
+    if (overlay is! RenderBox || !overlay.attached || !overlay.hasSize) {
+      return null;
+    }
+    if (overlay.size.isEmpty) return null;
+    final main = _holeOf(anchor, overlay);
+    if (anchor == TutorialAnchorId.homeList) {
+      final extra = _holeOf(TutorialAnchorId.homeTomorrow, overlay);
+      if (main != null && extra != null) {
+        return _visibleHole(
+          main.expandToInclude(extra).inflate(4),
+          overlay.size,
+        );
+      }
+      final home = main ?? extra;
+      return home == null ? null : _visibleHole(home, overlay.size);
+    }
+    return main == null ? null : _visibleHole(main, overlay.size);
+  }
+
+  Rect? _holeOf(TutorialAnchorId anchor, RenderBox overlay) {
+    final box = TutorialAnchor.keyOf(anchor).currentContext?.findRenderObject();
+    if (box is! RenderBox || !box.attached || !box.hasSize) return null;
+    if (box.size.shortestSide < 8) return null;
     try {
       final rect = MatrixUtils.transformRect(
         box.getTransformTo(overlay),
         Offset.zero & box.size,
       );
       if (!rect.isFinite || rect.width < 8 || rect.height < 8) return null;
-      return _visibleHole(rect, overlay.size);
+      return rect;
     } catch (_) {
       return null;
     }
@@ -267,8 +290,10 @@ class _TutorialOverlayState extends State<TutorialOverlay>
       step: step,
       isFirst: _displayedFirst,
       isLast: _displayedLast,
+      showPrev: _displayedCanPrev,
       index: _displayedIndex,
       total: tutorial?.stepCount ?? TutorialController.steps.length,
+      awaitAction: step.action != TutorialAction.none,
       onNext: canAct ? tutorial.next : () {},
       onPrev: canAct ? tutorial.previous : () {},
       onSkip: canAct ? tutorial.skip : () {},
@@ -289,7 +314,7 @@ class _TutorialOverlayState extends State<TutorialOverlay>
                     return _BlockingScrim(
                       hole: _paintedHole,
                       color: Colors.black.withValues(alpha: dim),
-                      passHole: false,
+                      passHole: step.passHole,
                       pulse: _pulse.value,
                     );
                   },
@@ -322,6 +347,7 @@ class _TutorialOverlayState extends State<TutorialOverlay>
                         toHole: _hole,
                         t: _holeEase.value,
                         safe: padding,
+                        maxWidth: _displayedFirst ? 280 : 360,
                       ),
                       child: child ?? const SizedBox.shrink(),
                     );
@@ -465,7 +491,7 @@ class _HolePulsePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    if (!visible || hole == null) return;
+    if (!visible || hole == null || hole!.height > 180) return;
     final t = Curves.easeOut.transform(pulse);
     final rect = hole!.inflate(8 + 10 * t);
     canvas.drawRRect(
@@ -491,16 +517,18 @@ class _CardDelegate extends SingleChildLayoutDelegate {
     required this.toHole,
     required this.t,
     required this.safe,
+    this.maxWidth = 360,
   });
 
   final Offset? fromPos;
   final Rect? toHole;
   final double t;
   final EdgeInsets safe;
+  final double maxWidth;
 
   @override
   BoxConstraints getConstraintsForChild(BoxConstraints constraints) {
-    final maxWidth = (constraints.maxWidth - 40).clamp(0.0, 360.0);
+    final maxWidth = (constraints.maxWidth - 40).clamp(0.0, this.maxWidth);
     final maxHeight = (constraints.maxHeight - safe.vertical - 24).clamp(
       0.0,
       constraints.maxHeight,
@@ -520,6 +548,8 @@ class _CardDelegate extends SingleChildLayoutDelegate {
     final target = hole;
     if (target == null) {
       top = (size.height - childSize.height) / 2;
+    } else if (target.height > 180) {
+      top = high;
     } else {
       final below = target.bottom + gap;
       final above = target.top - gap - childSize.height;
@@ -548,7 +578,8 @@ class _CardDelegate extends SingleChildLayoutDelegate {
     return fromPos != oldDelegate.fromPos ||
         toHole != oldDelegate.toHole ||
         t != oldDelegate.t ||
-        safe != oldDelegate.safe;
+        safe != oldDelegate.safe ||
+        maxWidth != oldDelegate.maxWidth;
   }
 }
 
@@ -557,18 +588,22 @@ class _TutorialCard extends StatelessWidget {
     required this.step,
     required this.isFirst,
     required this.isLast,
+    required this.showPrev,
     required this.index,
     required this.total,
     required this.onNext,
     required this.onPrev,
     required this.onSkip,
+    this.awaitAction = false,
   });
 
   final TutorialStep step;
   final bool isFirst;
   final bool isLast;
+  final bool showPrev;
   final int index;
   final int total;
+  final bool awaitAction;
   final VoidCallback onNext;
   final VoidCallback onPrev;
   final VoidCallback onSkip;
@@ -585,7 +620,7 @@ class _TutorialCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(32),
         ),
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(18, 16, 18, 14),
+          padding: EdgeInsets.fromLTRB(18, isFirst ? 36 : 16, 18, isFirst ? 22 : 14),
           child: AnimatedSize(
           duration: const Duration(milliseconds: 280),
           curve: Curves.easeOutCubic,
@@ -594,53 +629,66 @@ class _TutorialCard extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(999),
-                child: LinearProgressIndicator(
-                  value: (index + 1) / total,
-                  minHeight: 4,
-                  backgroundColor: colors.border,
-                  color: colors.accent,
+              if (!isFirst) ...[
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(999),
+                  child: LinearProgressIndicator(
+                    value: (index + 1) / total,
+                    minHeight: 4,
+                    backgroundColor: colors.border,
+                    color: colors.accent,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  if (step.badge.isNotEmpty)
-                    DecoratedBox(
-                      decoration: BoxDecoration(
-                        color: colors.accent.withValues(alpha: 0.14),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    if (step.badge.isNotEmpty)
+                      DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: colors.accent.withValues(alpha: 0.14),
+                          borderRadius: BorderRadius.circular(8),
                         ),
-                        child: Text(
-                          step.badge,
-                          style: TextStyle(
-                            fontFamily: font,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w800,
-                            color: colors.accent,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          child: Text(
+                            step.badge,
+                            style: TextStyle(
+                              fontFamily: font,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w800,
+                              color: colors.accent,
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  const Spacer(),
-                  Text(
-                    '${index + 1} / $total',
-                    style: TextStyle(
-                      fontFamily: font,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: colors.muted,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 10),
+                    const Spacer(),
+                    if (!isLast)
+                      PressBounce(
+                        onPressed: onSkip,
+                        pressedColor: Colors.transparent,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 4,
+                            vertical: 4,
+                          ),
+                          child: Text(
+                            AppStrings.tutorialSkip,
+                            style: TextStyle(
+                              fontFamily: font,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: colors.muted,
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+              ],
               AnimatedSwitcher(
                 duration: const Duration(milliseconds: 280),
                 switchInCurve: Curves.easeOutCubic,
@@ -669,110 +717,160 @@ class _TutorialCard extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    if (isFirst) ...[
+                      const Center(
+                        child: AppAssetImage(
+                          asset: AppIcons.plutoLogo,
+                          width: 84,
+                          height: 84,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
                     Text(
                       step.title,
+                      textAlign: isFirst ? TextAlign.center : TextAlign.start,
                       style: TextStyle(
                         fontFamily: font,
                         fontSize: 18,
                         fontWeight: FontWeight.w800,
-                        height: 1.25,
+                        height: 1.35,
                         color: colors.text,
                       ),
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      step.body,
-                      style: TextStyle(
-                        fontFamily: font,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        height: 1.5,
-                        color: colors.secondary,
+                    if (step.body.isNotEmpty) ...[
+                      SizedBox(height: isFirst ? 12 : 8),
+                      Text(
+                        step.body,
+                        textAlign: isFirst ? TextAlign.center : TextAlign.start,
+                        style: TextStyle(
+                          fontFamily: font,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          height: 1.5,
+                          color: colors.secondary,
+                        ),
                       ),
-                    ),
-                    if (step.demo != TutorialDemo.none) ...[
+                    ],
+                    if (!isFirst && step.demo != TutorialDemo.none) ...[
                       const SizedBox(height: 12),
                       TutorialDemoView(demo: step.demo),
                     ],
                   ],
                 ),
               ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  if (!isLast)
-                    PressBounce(
-                      onPressed: onSkip,
-                      pressedColor: Colors.transparent,
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 4,
-                          vertical: 10,
-                        ),
-                        child: Text(
-                          AppStrings.tutorialSkip,
-                          style: TextStyle(
-                            fontFamily: font,
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                            color: colors.muted,
-                          ),
-                        ),
-                      ),
-                    ),
-                  const Spacer(),
-                  if (!isFirst) ...[
-                    PressBounce(
-                      onPressed: onPrev,
-                      color: colors.accent.withValues(alpha: 0.14),
-                      pressedColor: colors.accent.withValues(alpha: 0.24),
-                      borderRadius: BorderRadius.circular(14),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 11,
-                        ),
-                        child: Text(
-                          AppStrings.tutorialPrev,
-                          style: TextStyle(
-                            fontFamily: font,
-                            fontSize: 15,
-                            fontWeight: FontWeight.w800,
-                            color: colors.accent,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                  ],
-                  PressBounce(
-                    onPressed: onNext,
-                    color: colors.accent,
-                    pressedColor:
-                        Color.lerp(colors.accent, Colors.black, 0.12)!,
-                    borderRadius: BorderRadius.circular(14),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 11,
-                      ),
+              SizedBox(height: isFirst ? 22 : 16),
+              if (isFirst) ...[
+                PressBounce(
+                  onPressed: onNext,
+                  color: colors.tint(colors.accent, 0.16),
+                  pressedColor: colors.tint(colors.accent, 0.26),
+                  borderRadius: BorderRadius.circular(999),
+                  child: SizedBox(
+                    height: 48,
+                    child: Center(
                       child: Text(
-                        isLast
-                            ? AppStrings.tutorialDone
-                            : index == 0
-                                ? AppStrings.tutorialStart
-                                : AppStrings.tutorialNext,
+                        AppStrings.tutorialStart,
                         style: TextStyle(
                           fontFamily: font,
                           fontSize: 15,
                           fontWeight: FontWeight.w800,
-                          color: Colors.white,
+                          color: colors.accent,
                         ),
                       ),
                     ),
                   ),
-                ],
-              ),
+                ),
+                const SizedBox(height: 10),
+                PressBounce(
+                  onPressed: onSkip,
+                  color: colors.pressed,
+                  pressedColor: Color.lerp(colors.pressed, Colors.black, 0.08)!,
+                  borderRadius: BorderRadius.circular(999),
+                  child: SizedBox(
+                    height: 48,
+                    child: Center(
+                      child: Text(
+                        AppStrings.tutorialSkip,
+                        style: TextStyle(
+                          fontFamily: font,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: colors.danger,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ] else
+                Row(
+                  children: [
+                    if (showPrev)
+                      PressBounce(
+                        onPressed: onPrev,
+                        color: colors.accent.withValues(alpha: 0.14),
+                        pressedColor: colors.accent.withValues(alpha: 0.24),
+                        borderRadius: BorderRadius.circular(14),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 11,
+                          ),
+                          child: Text(
+                            AppStrings.tutorialPrev,
+                            style: TextStyle(
+                              fontFamily: font,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w800,
+                              color: colors.accent,
+                            ),
+                          ),
+                        ),
+                      ),
+                    const Spacer(),
+                    if (awaitAction)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 11,
+                        ),
+                        child: Text(
+                          AppStrings.tutorialFollow,
+                          style: TextStyle(
+                            fontFamily: font,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: colors.muted,
+                          ),
+                        ),
+                      )
+                    else
+                      PressBounce(
+                        onPressed: onNext,
+                        color: colors.accent,
+                        pressedColor:
+                            Color.lerp(colors.accent, Colors.black, 0.12)!,
+                        borderRadius: BorderRadius.circular(14),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 11,
+                          ),
+                          child: Text(
+                            isLast
+                                ? AppStrings.tutorialDone
+                                : AppStrings.tutorialNext,
+                            style: TextStyle(
+                              fontFamily: font,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w800,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
             ],
           ),
         ),

@@ -22,25 +22,29 @@ class AppBarIconGroup extends StatelessWidget {
     super.key,
     this.actions = const [],
     this.trailing = const [],
+    this.bare = false,
   });
 
   final List<AppBarIconAction> actions;
   final List<Widget> trailing;
+  final bool bare;
 
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: colors.card,
+        color: bare ? Colors.transparent : colors.card,
         borderRadius: BorderRadius.circular(999),
-        boxShadow: [
-          BoxShadow(
-            color: colors.shadow,
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        boxShadow: bare
+            ? null
+            : [
+                BoxShadow(
+                  color: colors.shadow,
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),

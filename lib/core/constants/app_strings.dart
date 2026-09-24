@@ -118,11 +118,36 @@ class AppStrings {
   static const tutorialStatsDaysTitle = '활동한 날';
   static const tutorialStatsDaysBody =
       '아래 달력에서 할 일을 끝낸 날이 표시돼요. 날짜를 누르면 그날 할 일을 열 수 있어요';
-  static const tutorialWelcomeTitle = '플루토에 오신 걸 환영해요';
-  static const tutorialWelcomeBody =
-      '할 일, 캘린더, 지원서를 한곳에서 관리해요. 화면을 따라가며 어디를 누르면 되는지 알려줄게요';
-  static const tutorialWelcomeBodyDaily =
-      '할 일과 캘린더를 한곳에서 관리해요. 화면을 따라가며 어디를 누르면 되는지 알려줄게요';
+  static const tutorialWelcomeTitle = '플루토에 처음 오셨네요!';
+  static const tutorialWelcomeBody = '튜토리얼을 시작할까요?';
+  static const tutorialWelcomeBodyDaily = '튜토리얼을 시작할까요?';
+  static const tutorialFollow = '따라 해보세요';
+  static const tutorialAddTapTitle = '날짜를 눌러 추가';
+  static const tutorialAddTapBody = '오늘 칸을 누르면 할 일을 넣을 수 있어요';
+  static const tutorialAddComposeTitle = '할 일 추가';
+  static const tutorialAddComposeBody = '제목을 적고 밑에서 카테고리를 골라 보세요';
+  static const tutorialAddModeTitle = '넣는 날을 고르기';
+  static const tutorialAddModeBody =
+      '날짜를 누른 뒤 일반·기간·다중·반복 중에서 골라 보세요';
+  static const tutorialAddSaveTitle = '저장하기';
+  static const tutorialAddSaveBody = '오른쪽 버튼을 눌러 저장할 수 있어요';
+  static const tutorialHandleTitle = '밀어서 지우기 · 꾹 눌러 옮기기';
+  static const tutorialHandleBody =
+      '왼쪽으로 밀면 지울 수 있고, 꾹 눌러 빼면 다른 날로 옮겨요';
+  static const tutorialMoreTitle = '더 많은 기능';
+  static const tutorialMoreBody =
+      '오른쪽 ··· 을 누르면 일기·가계부로 바꿀 수 있어요. 그 밖에 정렬 방식 등의 여러 기능이 있어요';
+  static const tutorialHomeGoTitle = '홈 화면';
+  static const tutorialHomeGoBody = '오늘·내일 할 일을 한눈에 볼 수 있어요';
+  static const tutorialSettingsTitle = '설정';
+  static const tutorialSettingsBody =
+      '테마·글꼴·알림 등 다양한 기능으로 나만의 캘린더를 만들 수 있어요';
+  static const tutorialStatsGoTitle = '행성이 성장해요';
+  static const tutorialStatsGoBody =
+      '할 일을 끝내면 행성이 성장해요. 이번 달 얼마나 했는지 한눈에 볼 수 있어요';
+  static const tutorialJobGoTitle = '지원서 화면';
+  static const tutorialJobGoBody = '아래 지원서를 누르면 회사 카드를 모을 수 있어요';
+  static const tutorialJobAddFollowBody = '아래 + 를 누르면 지원서를 넣을 수 있어요';
   static const tutorialNavBarTitle = '아래 탭으로 이동';
   static const tutorialNavBarBody =
       '왼쪽부터 홈, 캘린더, 통계예요. 취준 모드를 켜면 지원서가 통계 앞에 생겨요';

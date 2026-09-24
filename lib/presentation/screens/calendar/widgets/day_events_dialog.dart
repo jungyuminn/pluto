@@ -32,6 +32,8 @@ import 'package:pluto/presentation/screens/calendar/widgets/delete_event_dialog.
 import 'package:pluto/presentation/screens/calendar/widgets/delete_repeat_event_dialog.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/day_emoji_sheet.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/day_sticker_image.dart';
+import 'package:pluto/presentation/tutorial/tutorial_controller.dart';
+import 'package:pluto/presentation/tutorial/tutorial_hint.dart';
 import 'package:pluto/presentation/widgets/app_bar_pill.dart';
 
 Future<void> showDayEventsDialog(
@@ -42,9 +44,12 @@ Future<void> showDayEventsDialog(
   Rect? origin,
   bool readOnly = false,
   String? sticker,
-}) {
+}) async {
   CalendarDayDropTarget.reset();
-  return showGeneralDialog<void>(
+  final tutorial = TutorialController.find(context);
+  tutorial?.setCovered(true);
+  try {
+    await showGeneralDialog<void>(
     context: context,
     barrierDismissible: false,
     barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
@@ -70,6 +75,8 @@ Future<void> showDayEventsDialog(
       return dialog;
     },
     transitionBuilder: (context, animation, secondaryAnimation, child) {
+      final handle = TutorialController.maybeOf(context)?.step.action ==
+          TutorialAction.handleEvent;
       final t = Curves.easeOutCubic.transform(animation.value);
       final fade = (0.25 + animation.value * 1.5).clamp(0.0, 1.0);
       final source = origin;
@@ -116,7 +123,9 @@ Future<void> showDayEventsDialog(
                       opacity: hiding ? 0 : 1,
                       duration: const Duration(milliseconds: 140),
                       child: GestureDetector(
-                        onTap: () => Navigator.of(context).maybePop(),
+                        onTap: handle
+                            ? null
+                            : () => Navigator.of(context).maybePop(),
                         behavior: HitTestBehavior.opaque,
                         child: const ColoredBox(color: Color(0x33000000)),
                       ),
@@ -127,10 +136,27 @@ Future<void> showDayEventsDialog(
             ),
           ),
           dialog,
+          if (handle)
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: FadeTransition(
+                opacity: animation,
+                child: SafeArea(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                    child: const TutorialHandleCard(),
+                  ),
+                ),
+              ),
+            ),
         ],
       );
     },
-  );
+    );
+  } finally {
+    tutorial?.setCovered(false);
+    tutorial?.noteDayClosed();
+  }
 }
 
 class DayEventsDialog extends StatefulWidget {
@@ -506,10 +532,12 @@ class _DayEventsDialogState extends State<DayEventsDialog> {
 
   Future<void> _toggleComplete(CalendarEvent event) async {
     if (widget.readOnly) return;
-    await saveCompleteToggle(
+    final tutorial = TutorialController.find(context);
+    final next = await saveCompleteToggle(
       updater: AppScope.of(context).updateCalendarEvent,
       event: event,
     );
+    tutorial?.noteCompleted(completed: next.completed);
     if (mounted) await _reload(animate: false);
     widget.onEventsChanged?.call();
   }

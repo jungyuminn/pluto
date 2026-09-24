@@ -62,6 +62,78 @@ Future<void> showSettingsSectionHelp(
   );
 }
 
+class SettingsHelpPreview extends StatelessWidget {
+  const SettingsHelpPreview({super.key, required this.section});
+
+  final SettingsHelpSection section;
+
+  @override
+  Widget build(BuildContext context) => section.preview;
+}
+
+class SettingsHelpTutorialReel extends StatelessWidget {
+  const SettingsHelpTutorialReel({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const _CyclingPreview(
+      frames: [
+        _PreviewFrame(
+          caption: AppStrings.settingsThemeSection,
+          child: _TutorialFitScene(
+            child: SettingsHelpPreview(section: SettingsHelpSection.theme),
+          ),
+        ),
+        _PreviewFrame(
+          caption: AppStrings.settingsAppearanceSection,
+          child: _TutorialFitScene(
+            child: SettingsHelpPreview(section: SettingsHelpSection.appearance),
+          ),
+        ),
+        _PreviewFrame(
+          caption: AppStrings.settingsNotificationSection,
+          child: _TutorialFitScene(
+            child: SettingsHelpPreview(section: SettingsHelpSection.notification),
+          ),
+        ),
+        _PreviewFrame(
+          caption: AppStrings.settingsNavSection,
+          child: _TutorialFitScene(
+            child: SettingsHelpPreview(section: SettingsHelpSection.nav),
+          ),
+        ),
+        _PreviewFrame(
+          caption: AppStrings.settingsHomeLayoutSection,
+          child: _TutorialFitScene(
+            child: SettingsHelpPreview(section: SettingsHelpSection.homeLayout),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _TutorialFitScene extends StatelessWidget {
+  const _TutorialFitScene({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 300,
+      width: double.infinity,
+      child: ClipRect(
+        child: FittedBox(
+          fit: BoxFit.contain,
+          alignment: Alignment.topCenter,
+          child: SizedBox(width: 320, child: child),
+        ),
+      ),
+    );
+  }
+}
+
 class SettingsSectionHelpSheet extends StatelessWidget {
   const SettingsSectionHelpSheet({super.key, required this.section});
 

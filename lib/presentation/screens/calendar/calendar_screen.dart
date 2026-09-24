@@ -26,6 +26,7 @@ import 'package:pluto/presentation/screens/calendar/widgets/calendar_weekday_hea
 import 'package:pluto/presentation/screens/calendar/widgets/day_events_dialog.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/add_event_sheet.dart';
 import 'package:pluto/presentation/tutorial/tutorial_anchor.dart';
+import 'package:pluto/presentation/tutorial/tutorial_controller.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/diary_sheet.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/ledger_day_sheet.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/ledger_month_stats_sheet.dart';
@@ -76,6 +77,8 @@ class CalendarScreenState extends State<CalendarScreen>
   DateTime? _searchDay;
   String? _searchHitKey;
   JobViewPreference? _jobView;
+  TutorialController? _tutorial;
+  var _handleDialogOpen = false;
 
   @override
   void initState() {
@@ -108,9 +111,55 @@ class CalendarScreenState extends State<CalendarScreen>
     if (mounted) setState(() {});
   }
 
+  void _onTutorial() {
+    final tutorial = _tutorial;
+    if (tutorial == null || !tutorial.active) return;
+    if (tutorial.step.action != TutorialAction.handleEvent) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _maybeOpenHandleDialog();
+    });
+  }
+
+  Future<void> _maybeOpenHandleDialog() async {
+    final tutorial = _tutorial;
+    if (!mounted || tutorial == null || !tutorial.active) return;
+    if (tutorial.step.action != TutorialAction.handleEvent) return;
+    if (_handleDialogOpen) return;
+    _handleDialogOpen = true;
+    final now = DateTime.now();
+    var date = DateTime(now.year, now.month, now.day);
+    if (_eventsOn(date).isEmpty) {
+      CalendarEvent? latest;
+      for (final event in _events) {
+        if (event.someday) continue;
+        if (latest == null || event.date.isAfter(latest.date)) {
+          latest = event;
+        }
+      }
+      if (latest != null) {
+        date = DateTime(latest.date.year, latest.date.month, latest.date.day);
+      }
+    }
+    await showDayEventsDialog(
+      context,
+      date: date,
+      events: _eventsOn(date),
+      onEventsChanged: _reload,
+    );
+    if (!mounted) return;
+    _handleDialogOpen = false;
+    await _reload();
+  }
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    final nextTutorial = TutorialController.maybeOf(context);
+    if (!identical(nextTutorial, _tutorial)) {
+      _tutorial?.removeListener(_onTutorial);
+      _tutorial = nextTutorial;
+      _tutorial?.addListener(_onTutorial);
+    }
     final next = AppScope.of(context).jobViewPreference;
     if (!identical(next, _jobView)) {
       _jobView?.removeListener(_onJobView);
@@ -138,6 +187,7 @@ class CalendarScreenState extends State<CalendarScreen>
   @override
   void dispose() {
     AppBackupService.revision.removeListener(_onBackupRestored);
+    _tutorial?.removeListener(_onTutorial);
     _jobView?.removeListener(_onJobView);
     WidgetsBinding.instance.removeObserver(this);
     _searchFade.dispose();
@@ -577,6 +627,14 @@ class CalendarScreenState extends State<CalendarScreen>
       if (mounted) await _reload();
       return;
     }
+    final tutorial = TutorialController.find(context);
+    if (tutorial != null &&
+        tutorial.active &&
+        tutorial.step.action == TutorialAction.tapDay) {
+      await showAddEventSheet(context, date: date);
+      if (mounted) await _reload();
+      return;
+    }
     await showDayEventsDialog(
       context,
       date: date,
@@ -600,6 +658,11 @@ class CalendarScreenState extends State<CalendarScreen>
 
   @override
   Widget build(BuildContext context) {
+    final tutorial = TutorialController.maybeOf(context);
+    final lockMonth = tutorial != null &&
+        tutorial.active &&
+        (tutorial.step.action == TutorialAction.tapDay ||
+            tutorial.step.action == TutorialAction.handleEvent);
     final bottomGap =
         72 +
         (PcLayout.isPc ? PcLayout.navLift : 0) +
@@ -752,7 +815,7 @@ class CalendarScreenState extends State<CalendarScreen>
                                         child: switch (_zoom) {
                                           CalendarZoomLevel.days => MouseDragScroll(
                                             controller: _pages,
-                                            enabled: !_rangeDragging,
+                                            enabled: !_rangeDragging && !lockMonth,
                                             child: Column(
                                               children: [
                                                 CalendarWeekdayHeader(
@@ -761,7 +824,8 @@ class CalendarScreenState extends State<CalendarScreen>
                                                 Expanded(
                                                   child: PageView.builder(
                                                     controller: _pages,
-                                                    physics: _rangeDragging
+                                                    physics: _rangeDragging ||
+                                                            lockMonth
                                                         ? const NeverScrollableScrollPhysics()
                                                         : null,
                                                     onPageChanged: (page) {
@@ -825,14 +889,17 @@ class CalendarScreenState extends State<CalendarScreen>
                                                             onDayPressed:
                                                                 _openDay,
                                                             onRangeDragChanged:
-                                                                (dragging) {
-                                                                  setState(
-                                                                    () => _rangeDragging =
-                                                                        dragging,
-                                                                  );
-                                                                },
+                                                                lockMonth
+                                                                ? null
+                                                                : (dragging) {
+                                                                    setState(
+                                                                      () => _rangeDragging =
+                                                                          dragging,
+                                                                    );
+                                                                  },
                                                             onRangeSelected:
-                                                                _showLedger
+                                                                lockMonth ||
+                                                                    _showLedger
                                                                 ? null
                                                                 : _openRange,
                                                           );

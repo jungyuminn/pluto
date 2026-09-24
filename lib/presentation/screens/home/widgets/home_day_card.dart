@@ -21,6 +21,7 @@ import 'package:pluto/presentation/screens/calendar/widgets/day_event_label.dart
 import 'package:pluto/presentation/screens/calendar/widgets/day_sticker_image.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/delete_event_dialog.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/delete_repeat_event_dialog.dart';
+import 'package:pluto/presentation/tutorial/tutorial_controller.dart';
 import 'package:pluto/presentation/widgets/app_bar_pill.dart';
 
 class HomeDayCard extends StatefulWidget {
@@ -423,10 +424,12 @@ class _HomeDayCardState extends State<HomeDayCard> {
   }
 
   Future<void> _toggleComplete(CalendarEvent event) async {
-    await saveCompleteToggle(
+    final tutorial = TutorialController.find(context);
+    final next = await saveCompleteToggle(
       updater: AppScope.of(context).updateCalendarEvent,
       event: event,
     );
+    tutorial?.noteCompleted(completed: next.completed);
     widget.onEventsChanged();
   }
 

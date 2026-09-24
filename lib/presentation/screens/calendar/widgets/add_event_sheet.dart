@@ -3,6 +3,7 @@ import 'package:pluto/core/layout/compose_sheet.dart';
 import 'package:pluto/domain/entities/calendar_event.dart';
 import 'package:pluto/domain/entities/friend_profile.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/add_event_form.dart';
+import 'package:pluto/presentation/tutorial/tutorial_controller.dart';
 
 Future<bool> showAddEventSheet(
   BuildContext context, {
@@ -12,6 +13,8 @@ Future<bool> showAddEventSheet(
   bool someday = false,
   FriendProfile? shareWith,
 }) async {
+  final tutorial = TutorialController.find(context);
+  tutorial?.noteAddOpened();
   final saved = await showComposeSheet<bool>(
     context,
     builder: (context) => AddEventSheet(
@@ -22,6 +25,7 @@ Future<bool> showAddEventSheet(
       shareWith: shareWith,
     ),
   );
+  tutorial?.noteAddClosed(saved: saved == true);
   return saved == true;
 }
 

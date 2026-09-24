@@ -332,12 +332,22 @@ class StatsScreenState extends State<StatsScreen>
                               bottomGap,
                             ),
                             children: [
-                              _PlanetHero(
-                                wave: _wave,
-                                play: play,
+                              TutorialAnchor(
+                                id: TutorialAnchorId.statsPlanet,
+                                child: Column(
+                                  children: [
+                                    _PlanetHero(
+                                      wave: _wave,
+                                      play: play,
+                                    ),
+                                    const SizedBox(height: 12),
+                                    _LevelBlock(
+                                      play: play,
+                                      progress: progress,
+                                    ),
+                                  ],
+                                ),
                               ),
-                              const SizedBox(height: 12),
-                              _LevelBlock(play: play, progress: progress),
                               const SizedBox(height: 16),
                               TutorialAnchor(
                                 id: TutorialAnchorId.statsCollected,
@@ -505,27 +515,24 @@ class _PlanetHero extends StatelessWidget {
                   maxWidth: 240,
                   maxHeight: 240,
                 ),
-                child: TutorialAnchor(
-                  id: TutorialAnchorId.statsPlanet,
-                  child: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 380),
-                    switchInCurve: Curves.easeOutCubic,
-                    switchOutCurve: Curves.easeOutCubic,
-                    transitionBuilder: (child, animation) {
-                      return FadeTransition(
-                        opacity: animation,
-                        child: child,
-                      );
-                    },
-                    child: PlanetFill(
-                      key: ValueKey(
-                        '${play.month.year}-${play.month.month}-$level',
-                      ),
-                      level: level,
-                      wave: wave.value,
-                      outline: colors.icon,
-                      empty: colors.card,
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 380),
+                  switchInCurve: Curves.easeOutCubic,
+                  switchOutCurve: Curves.easeOutCubic,
+                  transitionBuilder: (child, animation) {
+                    return FadeTransition(
+                      opacity: animation,
+                      child: child,
+                    );
+                  },
+                  child: PlanetFill(
+                    key: ValueKey(
+                      '${play.month.year}-${play.month.month}-$level',
                     ),
+                    level: level,
+                    wave: wave.value,
+                    outline: colors.icon,
+                    empty: colors.card,
                   ),
                 ),
               ),

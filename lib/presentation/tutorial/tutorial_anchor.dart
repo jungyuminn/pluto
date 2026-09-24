@@ -12,8 +12,11 @@ enum TutorialAnchorId {
   calendarTitle,
   calendarMenu,
   calendarGrid,
+  calendarDay,
   homeTools,
+  homeSettings,
   homeList,
+  homeTomorrow,
   jobTools,
   jobAdd,
 }

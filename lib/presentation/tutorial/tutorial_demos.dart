@@ -6,16 +6,21 @@ import 'package:pluto/core/constants/app_fonts.dart';
 import 'package:pluto/core/constants/app_icons.dart';
 import 'package:pluto/core/constants/app_strings.dart';
 import 'package:pluto/core/theme/app_colors.dart';
+import 'package:pluto/domain/entities/event_category.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/calendar_event_label.dart';
+import 'package:pluto/presentation/screens/add_company/widgets/save_company_button.dart';
+import 'package:pluto/presentation/screens/settings/widgets/settings_section_help.dart';
+import 'package:pluto/presentation/screens/calendar/widgets/event_category_chip.dart';
 import 'package:pluto/presentation/screens/stats/widgets/planet_fill.dart';
 import 'package:pluto/presentation/screens/shell/widgets/pill_bottom_nav.dart';
 import 'package:pluto/presentation/tutorial/tutorial_controller.dart';
 import 'package:pluto/presentation/widgets/themed_asset.dart';
 
 class TutorialDemoView extends StatelessWidget {
-  const TutorialDemoView({super.key, required this.demo});
+  const TutorialDemoView({super.key, required this.demo, this.color});
 
   final TutorialDemo demo;
+  final Color? color;
 
   @override
   Widget build(BuildContext context) {
@@ -34,10 +39,15 @@ class TutorialDemoView extends StatelessWidget {
       TutorialDemo.homeSearch => _SearchDemo(jobMode: jobOn),
       TutorialDemo.homeSettings => const _SettingsDemo(),
       TutorialDemo.homeReorder => const _ReorderDemo(),
+      TutorialDemo.settingsHelp => const _SettingsHelpDemo(),
       TutorialDemo.statsPlanetFill => const _PlanetFillDemo(),
       TutorialDemo.statsCollection => const _PlanetCollectionDemo(),
       TutorialDemo.statsDays => const _StatsDaysDemo(),
       TutorialDemo.jobSwipe => const _SwipeDemo(),
+      TutorialDemo.dateModes => const _DateModeDemo(),
+      TutorialDemo.saveEvent => _SaveDemo(color: color),
+      TutorialDemo.swipeAndMove => const _HandleDemo(),
+      TutorialDemo.composeEvent => const _ComposeDemo(),
     };
   }
 }
@@ -47,11 +57,13 @@ class _DemoLoop extends StatefulWidget {
     required this.builder,
     this.duration = const Duration(milliseconds: 2600),
     this.height = 108,
+    this.color,
   });
 
   final Widget Function(BuildContext context, double t) builder;
   final Duration duration;
   final double height;
+  final Color? color;
 
   @override
   State<_DemoLoop> createState() => _DemoLoopState();
@@ -80,14 +92,16 @@ class _DemoLoopState extends State<_DemoLoop>
     return ClipRRect(
       borderRadius: BorderRadius.circular(16),
       child: ColoredBox(
-        color: colors.groupedBackground,
+        color: widget.color ?? colors.groupedBackground,
         child: SizedBox(
           height: widget.height,
           width: double.infinity,
           child: IgnorePointer(
             child: AnimatedBuilder(
               animation: _loop,
-              builder: (context, child) => widget.builder(context, _loop.value),
+              builder: (context, child) => ClipRect(
+                child: widget.builder(context, _loop.value),
+              ),
             ),
           ),
         ),
@@ -621,6 +635,29 @@ class _FilterPill extends StatelessWidget {
           fontSize: 11,
           fontWeight: FontWeight.w800,
           color: selected ? Colors.white : colors.text,
+        ),
+      ),
+    );
+  }
+}
+
+class _SettingsHelpDemo extends StatelessWidget {
+  const _SettingsHelpDemo();
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(16),
+      child: ColoredBox(
+        color: colors.groupedBackground,
+        child: const SizedBox(
+          height: 400,
+          width: double.infinity,
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(8, 10, 8, 8),
+            child: SettingsHelpTutorialReel(),
+          ),
         ),
       ),
     );
@@ -1438,11 +1475,14 @@ class _WeekStrip extends StatelessWidget {
         const labelH = 16.0;
         final cell = (constraints.maxWidth - pad * 2 - gap * 6) / 7;
         final fingerX = pad + fingerDay * (cell + gap) + cell / 2;
-        const labelTop = 10 + dateH + 6 + cellH + 4;
+        const labelTop = 8 + dateH + 6 + cellH + 4;
+        final labelBlock = hasJobs ? labelH * 2 + 4 : labelH;
+        final dayH = dateH + 6 + cellH + 4 + labelBlock;
         return Stack(
+          clipBehavior: Clip.hardEdge,
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(pad, 10, pad, 8),
+              padding: const EdgeInsets.fromLTRB(pad, 8, pad, 4),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -1450,54 +1490,64 @@ class _WeekStrip extends StatelessWidget {
                     if (i > 0) const SizedBox(width: gap),
                     SizedBox(
                       width: cell,
-                      child: Column(
+                      height: dayH,
+                      child: Stack(
+                        clipBehavior: Clip.hardEdge,
                         children: [
-                          Text(
-                            '${13 + i}',
-                            style: TextStyle(
-                              fontFamily: font,
-                              fontSize: 10,
-                              fontWeight: FontWeight.w700,
-                              color: colors.muted,
-                              height: 1,
+                          Positioned(
+                            left: 0,
+                            right: 0,
+                            top: 0,
+                            height: dateH,
+                            child: Text(
+                              '${13 + i}',
+                              textAlign: TextAlign.center,
+                              maxLines: 1,
+                              overflow: TextOverflow.clip,
+                              style: TextStyle(
+                                fontFamily: font,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                                color: colors.muted,
+                                height: 1,
+                              ),
                             ),
                           ),
-                          const SizedBox(height: 6),
-                          _DayCell(
-                            size: cell,
-                            selected: i == highlight ||
-                                (rangeStart >= 0 &&
-                                    i >= rangeStart &&
-                                    i <= rangeEnd),
-                            first: i == rangeStart || i == highlight,
-                            last: i == rangeEnd || i == highlight,
-                          ),
-                          const SizedBox(height: 4),
-                          SizedBox(
-                            height: hasJobs ? labelH * 2 + 4 : labelH,
-                            child: Column(
-                              children: [
-                                SizedBox(
-                                  height: labelH,
-                                  child: labels[i] == null
-                                      ? const SizedBox.shrink()
-                                      : _DayLabel(item: labels[i]!),
-                                ),
-                                if (hasJobs) ...[
-                                  const SizedBox(height: 4),
-                                  SizedBox(
-                                    height: labelH,
-                                    child: jobLabels[i] == null
-                                        ? const SizedBox.shrink()
-                                        : _DayLabel(
-                                            item: jobLabels[i]!,
-                                            opacity: jobOpacity,
-                                          ),
-                                  ),
-                                ],
-                              ],
+                          Positioned(
+                            left: 0,
+                            top: dateH + 6,
+                            child: _DayCell(
+                              size: cell,
+                              selected: i == highlight ||
+                                  (rangeStart >= 0 &&
+                                      i >= rangeStart &&
+                                      i <= rangeEnd),
+                              first: i == rangeStart || i == highlight,
+                              last: i == rangeEnd || i == highlight,
                             ),
                           ),
+                          Positioned(
+                            left: 0,
+                            right: 0,
+                            top: dateH + 6 + cellH + 4,
+                            height: labelH,
+                            child: labels[i] == null
+                                ? const SizedBox.shrink()
+                                : _DayLabel(item: labels[i]!),
+                          ),
+                          if (hasJobs)
+                            Positioned(
+                              left: 0,
+                              right: 0,
+                              top: dateH + 6 + cellH + 4 + labelH + 4,
+                              height: labelH,
+                              child: jobLabels[i] == null
+                                  ? const SizedBox.shrink()
+                                  : _DayLabel(
+                                      item: jobLabels[i]!,
+                                      opacity: jobOpacity,
+                                    ),
+                            ),
                         ],
                       ),
                     ),
@@ -1625,6 +1675,402 @@ class _DayCell extends StatelessWidget {
     );
   }
 }
+
+class _ComposeDemo extends StatelessWidget {
+  const _ComposeDemo();
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    final font = AppFonts.of(context);
+    const title = '헬스장가기';
+    const category = EventCategory(
+      id: 'exercise',
+      name: '운동',
+      color: 0xFF7CB342,
+    );
+    final accent = Color(category.color);
+    return _DemoLoop(
+      height: 96,
+      duration: const Duration(milliseconds: 3000),
+      color: colors.tint(accent, 0.14),
+      builder: (context, t) {
+        final typed = (title.length * _gate(t, 0.08, 0.44)).round();
+        final tap = _pulse(t, 0.54, 0.66, 0.92);
+        final shown = title.substring(0, typed);
+        return Stack(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 6),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    shown.isEmpty ? AppStrings.eventTitleHint : shown,
+                    style: TextStyle(
+                      fontFamily: font,
+                      fontSize: 20,
+                      fontWeight: shown.isEmpty
+                          ? FontWeight.w600
+                          : FontWeight.w700,
+                      height: 1.2,
+                      color: shown.isEmpty ? colors.hint : colors.text,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  EventCategoryChip(
+                    name: category.name,
+                    color: accent,
+                    selected: true,
+                    onPressed: () {},
+                  ),
+                ],
+              ),
+            ),
+            if (tap > 0)
+              Positioned(
+                left: 36,
+                top: 58,
+                child: _Finger(pressed: tap),
+              ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _DateModeDemo extends StatelessWidget {
+  const _DateModeDemo();
+
+  static const _labels = ['일반', '기간', '다중', '반복'];
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    final font = AppFonts.of(context);
+    return _DemoLoop(
+      height: 72,
+      duration: const Duration(milliseconds: 2800),
+      builder: (context, t) {
+        final selected = (t * 4).floor().clamp(0, 3);
+        final tap = _pulse(t, selected * 0.25 + 0.04, selected * 0.25 + 0.1, 1);
+        return Stack(
+          alignment: Alignment.center,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
+                children: [
+                  for (var i = 0; i < _labels.length; i++) ...[
+                    if (i > 0) const SizedBox(width: 6),
+                    Expanded(
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: i == selected
+                              ? colors.accent
+                              : colors.card,
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          child: Text(
+                            _labels[i],
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontFamily: font,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w800,
+                              color: i == selected
+                                  ? Colors.white
+                                  : colors.secondary,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            if (tap > 0)
+              Align(
+                alignment: Alignment(-0.75 + selected * 0.5, 0.55),
+                child: _Finger(pressed: tap),
+              ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _SaveDemo extends StatelessWidget {
+  const _SaveDemo({this.color});
+
+  final Color? color;
+
+  @override
+  Widget build(BuildContext context) {
+    return _DemoLoop(
+      height: 72,
+      builder: (context, t) {
+        final tap = _pulse(t, 0.22, 0.36, 0.86);
+        return Stack(
+          alignment: Alignment.center,
+          children: [
+            SaveCompanyButton(
+              onPressed: () {},
+              color: color ?? AppColors.of(context).accent,
+            ),
+            if (tap > 0)
+              Transform.translate(
+                offset: const Offset(10, 18),
+                child: _Finger(pressed: tap),
+              ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _HandleDemo extends StatelessWidget {
+  const _HandleDemo();
+
+  static const _accent = Color(0xFF7CB342);
+
+  @override
+  Widget build(BuildContext context) {
+    return _DemoLoop(
+      height: 148,
+      duration: const Duration(milliseconds: 5400),
+      builder: (context, t) {
+        if (t < 0.46) {
+          return _swipeFrame(context, (t / 0.46).clamp(0.0, 1.0));
+        }
+        final fade = Curves.easeInOut.transform(_gate(t, 0.46, 0.52));
+        return Opacity(
+          opacity: fade,
+          child: _MoveDemoFrame(t: ((t - 0.52) / 0.48).clamp(0.0, 1.0)),
+        );
+      },
+    );
+  }
+
+  Widget _swipeFrame(BuildContext context, double t) {
+    final colors = AppColors.of(context);
+    final press = _pulse(t, 0.1, 0.22, 0.88);
+    final swipe = t < 0.26
+        ? 0.0
+        : t < 0.56
+            ? Curves.easeInOutCubic.transform(_gate(t, 0.26, 0.56))
+            : t < 0.78
+                ? 1.0
+                : Curves.easeInOutCubic.transform(1 - _gate(t, 0.78, 0.96));
+    return Stack(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(14, 16, 14, 14),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(14),
+            child: SizedBox(
+              height: 52,
+              child: Stack(
+                children: [
+                  ColoredBox(
+                    color: colors.danger.withValues(alpha: 0.14),
+                    child: Align(
+                      alignment: Alignment.centerRight,
+                      child: Padding(
+                        padding: const EdgeInsets.only(right: 18),
+                        child: Opacity(
+                          opacity: swipe.clamp(0.0, 1.0),
+                          child: Icon(
+                            Icons.delete_outline_rounded,
+                            size: 22,
+                            color: colors.danger,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Transform.translate(
+                    offset: Offset(-88 * swipe, 0),
+                    child: const _HandleTodo(),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        if (press > 0)
+          Positioned(
+            left: 150 - 88 * swipe,
+            top: 42,
+            child: _Finger(pressed: press),
+          ),
+      ],
+    );
+  }
+}
+
+class _MoveDemoFrame extends StatelessWidget {
+  const _MoveDemoFrame({required this.t});
+
+  final double t;
+
+  @override
+  Widget build(BuildContext context) {
+    final press = _pulse(t, 0.06, 0.2, 0.94);
+    final hold = Curves.easeOut.transform(_gate(t, 0.08, 0.22));
+    final drag = t < 0.22
+        ? 0.0
+        : t < 0.6
+            ? Curves.easeInOutCubic.transform(_gate(t, 0.22, 0.6))
+            : 1.0;
+    final land =
+        Curves.easeOutBack.transform(_gate(t, 0.58, 0.78)).clamp(0.0, 1.0);
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        const pad = 12.0;
+        const gap = 5.0;
+        final cell = (constraints.maxWidth - pad * 2 - gap * 6) / 7;
+        final startX = pad + 10;
+        final startY = 10.0;
+        final endX = pad + 4 * (cell + gap);
+        final endY = 62.0;
+        return Stack(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(14, 10, 14, 0),
+              child: Opacity(
+                opacity: (1 - drag * 0.72).clamp(0.18, 1),
+                child: _HandleTodo(lifted: hold > 0.4 && land < 0.8),
+              ),
+            ),
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              height: 84,
+              child: _WeekStrip(
+                highlight: land > 0.45 ? 4 : -1,
+                finger: 0,
+                labels: {
+                  if (land > 0)
+                    4: _LabelAppear(
+                      progress: land,
+                      title: '헬스장',
+                      color: _HandleDemo._accent,
+                    ),
+                },
+              ),
+            ),
+            if (drag > 0 && land < 1)
+              Positioned(
+                left: startX + (endX - startX) * drag,
+                top: startY + (endY - startY) * drag,
+                width: 118,
+                child: Opacity(
+                  opacity: (press * (1 - land)).clamp(0.0, 1.0),
+                  child: Transform.rotate(
+                    angle: -0.1 * drag,
+                    child: CalendarEventLabel(
+                      title: '헬스장가기',
+                      color: _HandleDemo._accent,
+                      height: 20,
+                      fontSize: 11,
+                      applyCalendarScale: false,
+                    ),
+                  ),
+                ),
+              ),
+            if (press > 0)
+              Positioned(
+                left: startX + (endX - startX) * drag + 36,
+                top: startY + (endY - startY) * drag + 22,
+                child: _Finger(pressed: press),
+              ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _HandleTodo extends StatelessWidget {
+  const _HandleTodo({this.lifted = false});
+
+  final bool lifted;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    final font = AppFonts.of(context);
+    return Transform.scale(
+      scale: lifted ? 1.04 : 1,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: colors.tint(_HandleDemo._accent, 0.14),
+          borderRadius: BorderRadius.circular(8),
+          boxShadow: lifted
+              ? [
+                  BoxShadow(
+                    color: colors.shadow,
+                    blurRadius: 10,
+                    offset: const Offset(0, 3),
+                  ),
+                ]
+              : null,
+        ),
+        child: SizedBox(
+          height: 52,
+          child: Row(
+            children: [
+              Container(width: 4, color: _HandleDemo._accent),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '헬스장가기',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontFamily: font,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        height: 1.15,
+                        color: colors.text,
+                        decoration: TextDecoration.none,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '운동',
+                      style: TextStyle(
+                        fontFamily: font,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                        height: 1.15,
+                        color: colors.hint,
+                        decoration: TextDecoration.none,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 
 class _Finger extends StatelessWidget {
   const _Finger({required this.pressed});

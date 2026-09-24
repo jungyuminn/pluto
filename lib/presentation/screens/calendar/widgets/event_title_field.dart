@@ -16,6 +16,7 @@ class EventTitleField extends StatefulWidget {
     this.readOnly = false,
     this.hintText,
     this.onChanged,
+    this.onTap,
   });
 
   final TextEditingController controller;
@@ -24,6 +25,7 @@ class EventTitleField extends StatefulWidget {
   final bool readOnly;
   final String? hintText;
   final ValueChanged<String>? onChanged;
+  final VoidCallback? onTap;
 
   @override
   State<EventTitleField> createState() => _EventTitleFieldState();
@@ -88,6 +90,7 @@ class _EventTitleFieldState extends State<EventTitleField> {
       autofocus: widget.autofocus,
       readOnly: widget.readOnly,
       textInputAction: TextInputAction.done,
+      onTap: widget.onTap,
       onChanged: (value) => _push(flutter: value),
       style: Theme.of(context).textTheme.headlineSmall?.copyWith(
         fontFamily: AppFonts.of(context),

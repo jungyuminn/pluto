@@ -3,6 +3,18 @@ import 'package:pluto/core/constants/app_strings.dart';
 import 'package:pluto/data/datasources/tutorial_preference.dart';
 import 'package:pluto/presentation/tutorial/tutorial_anchor.dart';
 
+enum TutorialAction {
+  none,
+  tapDay,
+  composeEvent,
+  pickDateMode,
+  saveEvent,
+  handleEvent,
+  completeEvent,
+  openHome,
+  openJob,
+}
+
 class TutorialStep {
   const TutorialStep({
     required this.tab,
@@ -11,6 +23,12 @@ class TutorialStep {
     this.badge = '',
     this.anchor,
     this.demo = TutorialDemo.none,
+    this.action = TutorialAction.none,
+    this.passHole = false,
+    this.hideOverlay = false,
+    this.forceTab = false,
+    this.jobOnly = false,
+    this.statsOnly = false,
   });
 
   final int tab;
@@ -19,6 +37,12 @@ class TutorialStep {
   final String title;
   final String body;
   final TutorialDemo demo;
+  final TutorialAction action;
+  final bool passHole;
+  final bool hideOverlay;
+  final bool forceTab;
+  final bool jobOnly;
+  final bool statsOnly;
 }
 
 enum TutorialDemo {
@@ -33,10 +57,15 @@ enum TutorialDemo {
   homeSearch,
   homeSettings,
   homeReorder,
+  settingsHelp,
   statsPlanetFill,
   statsCollection,
   statsDays,
   jobSwipe,
+  dateModes,
+  saveEvent,
+  swipeAndMove,
+  composeEvent,
 }
 
 class TutorialController extends ChangeNotifier {
@@ -45,133 +74,93 @@ class TutorialController extends ChangeNotifier {
   static const steps = [
     TutorialStep(
       tab: 1,
-      badge: AppStrings.tutorialBadgeStart,
       title: AppStrings.tutorialWelcomeTitle,
       body: AppStrings.tutorialWelcomeBody,
-    ),
-    TutorialStep(
-      tab: 1,
-      badge: AppStrings.tutorialBadgeNav,
-      anchor: TutorialAnchorId.navBar,
-      title: AppStrings.tutorialNavBarTitle,
-      body: AppStrings.tutorialNavBarBody,
-      demo: TutorialDemo.navTabs,
+      forceTab: true,
     ),
     TutorialStep(
       tab: 1,
       badge: AppStrings.tutorialBadgeCalendar,
-      anchor: TutorialAnchorId.navCalendar,
-      title: AppStrings.tutorialNavCalendarTitle,
-      body: AppStrings.tutorialNavCalendarBody,
-    ),
-    TutorialStep(
-      tab: 1,
-      badge: AppStrings.tutorialBadgeCalendar,
-      anchor: TutorialAnchorId.calendarTitle,
-      title: AppStrings.tutorialCalendarTitleTitle,
-      body: AppStrings.tutorialCalendarTitleBody,
-      demo: TutorialDemo.calendarTitle,
-    ),
-    TutorialStep(
-      tab: 1,
-      badge: AppStrings.tutorialBadgeCalendar,
-      anchor: TutorialAnchorId.calendarGrid,
-      title: AppStrings.tutorialCalendarGridTitle,
-      body: AppStrings.tutorialCalendarGridBody,
+      anchor: TutorialAnchorId.calendarDay,
+      title: AppStrings.tutorialAddTapTitle,
+      body: AppStrings.tutorialAddTapBody,
       demo: TutorialDemo.calendarTap,
+      action: TutorialAction.tapDay,
+      passHole: true,
+      forceTab: true,
     ),
     TutorialStep(
       tab: 1,
       badge: AppStrings.tutorialBadgeCalendar,
-      anchor: TutorialAnchorId.calendarGrid,
-      title: AppStrings.tutorialCalendarRangeTitle,
-      body: AppStrings.tutorialCalendarRangeBody,
-      demo: TutorialDemo.calendarRange,
+      title: AppStrings.tutorialAddComposeTitle,
+      body: AppStrings.tutorialAddComposeBody,
+      demo: TutorialDemo.composeEvent,
+      action: TutorialAction.composeEvent,
+      hideOverlay: true,
     ),
     TutorialStep(
       tab: 1,
       badge: AppStrings.tutorialBadgeCalendar,
-      anchor: TutorialAnchorId.calendarGrid,
-      title: AppStrings.tutorialCalendarCompleteTitle,
-      body: AppStrings.tutorialCalendarCompleteBody,
-      demo: TutorialDemo.todoComplete,
+      title: AppStrings.tutorialAddModeTitle,
+      body: AppStrings.tutorialAddModeBody,
+      demo: TutorialDemo.dateModes,
+      action: TutorialAction.pickDateMode,
+      hideOverlay: true,
     ),
     TutorialStep(
       tab: 1,
       badge: AppStrings.tutorialBadgeCalendar,
-      anchor: TutorialAnchorId.calendarGrid,
-      title: AppStrings.tutorialCalendarMoveTitle,
-      body: AppStrings.tutorialCalendarMoveBody,
-      demo: TutorialDemo.todoMove,
+      title: AppStrings.tutorialAddSaveTitle,
+      body: AppStrings.tutorialAddSaveBody,
+      demo: TutorialDemo.saveEvent,
+      action: TutorialAction.saveEvent,
+      hideOverlay: true,
+    ),
+    TutorialStep(
+      tab: 1,
+      badge: AppStrings.tutorialBadgeCalendar,
+      title: AppStrings.tutorialHandleTitle,
+      body: AppStrings.tutorialHandleBody,
+      demo: TutorialDemo.swipeAndMove,
+      action: TutorialAction.handleEvent,
+      hideOverlay: true,
+      forceTab: true,
     ),
     TutorialStep(
       tab: 1,
       badge: AppStrings.tutorialBadgeCalendar,
       anchor: TutorialAnchorId.calendarMenu,
-      title: AppStrings.tutorialCalendarMenuTitle,
-      body: AppStrings.tutorialCalendarMenuBody,
+      title: AppStrings.tutorialMoreTitle,
+      body: AppStrings.tutorialMoreBody,
       demo: TutorialDemo.calendarMenu,
-    ),
-    TutorialStep(
-      tab: 0,
-      badge: AppStrings.tutorialBadgeHome,
-      anchor: TutorialAnchorId.navHome,
-      title: AppStrings.tutorialNavHomeTitle,
-      body: AppStrings.tutorialNavHomeBody,
-    ),
-    TutorialStep(
-      tab: 0,
-      badge: AppStrings.tutorialBadgeHome,
-      anchor: TutorialAnchorId.homeTools,
-      title: AppStrings.tutorialHomeToolsTitle,
-      body: AppStrings.tutorialHomeToolsBody,
-    ),
-    TutorialStep(
-      tab: 0,
-      badge: AppStrings.tutorialBadgeHome,
-      anchor: TutorialAnchorId.homeTools,
-      title: AppStrings.tutorialHomeSearchTitle,
-      body: AppStrings.tutorialHomeSearchBody,
-      demo: TutorialDemo.homeSearch,
-    ),
-    TutorialStep(
-      tab: 0,
-      badge: AppStrings.tutorialBadgeHome,
-      anchor: TutorialAnchorId.homeTools,
-      title: AppStrings.tutorialHomeSettingsTitle,
-      body: AppStrings.tutorialHomeSettingsBody,
-      demo: TutorialDemo.homeSettings,
+      forceTab: true,
     ),
     TutorialStep(
       tab: 0,
       badge: AppStrings.tutorialBadgeHome,
       anchor: TutorialAnchorId.homeList,
-      title: AppStrings.tutorialHomeListTitle,
-      body: AppStrings.tutorialHomeListBody,
-      demo: TutorialDemo.homeReorder,
+      title: AppStrings.tutorialHomeGoTitle,
+      body: AppStrings.tutorialHomeGoBody,
+      forceTab: true,
+    ),
+    TutorialStep(
+      tab: 0,
+      badge: AppStrings.tutorialBadgeHome,
+      anchor: TutorialAnchorId.homeSettings,
+      title: AppStrings.tutorialSettingsTitle,
+      body: AppStrings.tutorialSettingsBody,
+      demo: TutorialDemo.settingsHelp,
+      forceTab: true,
     ),
     TutorialStep(
       tab: 2,
       badge: AppStrings.tutorialBadgeStats,
       anchor: TutorialAnchorId.statsPlanet,
-      title: AppStrings.tutorialNavStatsTitle,
-      body: AppStrings.tutorialNavStatsBody,
-    ),
-    TutorialStep(
-      tab: 2,
-      badge: AppStrings.tutorialBadgeStats,
-      anchor: TutorialAnchorId.statsPlanet,
-      title: AppStrings.tutorialStatsPlanetTitle,
-      body: AppStrings.tutorialStatsPlanetBody,
+      title: AppStrings.tutorialStatsGoTitle,
+      body: AppStrings.tutorialStatsGoBody,
       demo: TutorialDemo.statsPlanetFill,
-    ),
-    TutorialStep(
-      tab: 2,
-      badge: AppStrings.tutorialBadgeStats,
-      anchor: TutorialAnchorId.statsCollected,
-      title: AppStrings.tutorialStatsGuideTitle,
-      body: AppStrings.tutorialStatsGuideBody,
-      demo: TutorialDemo.statsCollection,
+      forceTab: true,
+      statsOnly: true,
     ),
     TutorialStep(
       tab: 2,
@@ -179,29 +168,19 @@ class TutorialController extends ChangeNotifier {
       anchor: TutorialAnchorId.statsCalendar,
       title: AppStrings.tutorialStatsDaysTitle,
       body: AppStrings.tutorialStatsDaysBody,
-      demo: TutorialDemo.statsDays,
+      forceTab: true,
+      statsOnly: true,
     ),
     TutorialStep(
       tab: 3,
       badge: AppStrings.tutorialBadgeJob,
       anchor: TutorialAnchorId.navJob,
-      title: AppStrings.tutorialNavJobTitle,
-      body: AppStrings.tutorialNavJobBody,
-    ),
-    TutorialStep(
-      tab: 3,
-      badge: AppStrings.tutorialBadgeJob,
-      anchor: TutorialAnchorId.jobTools,
-      title: AppStrings.tutorialJobToolsTitle,
-      body: AppStrings.tutorialJobToolsBody,
-    ),
-    TutorialStep(
-      tab: 3,
-      badge: AppStrings.tutorialBadgeJob,
-      anchor: TutorialAnchorId.jobAdd,
-      title: AppStrings.tutorialJobAddTitle,
-      body: AppStrings.tutorialJobAddBody,
+      title: AppStrings.tutorialJobGoTitle,
+      body: AppStrings.tutorialJobGoBody,
       demo: TutorialDemo.jobSwipe,
+      action: TutorialAction.openJob,
+      passHole: true,
+      jobOnly: true,
     ),
     TutorialStep(
       tab: 2,
@@ -216,12 +195,30 @@ class TutorialController extends ChangeNotifier {
   var _active = false;
   var _index = 0;
   var _fromSettings = false;
+  var _covered = false;
+  var _navPhase = 0;
+  var _jobPhase = 0;
+  var _typedTitle = false;
+  var _pickedCategory = false;
 
   bool get active => _active;
   int get index => _index;
   bool get isFirst => _index <= 0;
+  bool get canPrevious {
+    if (!_active || isFirst) return false;
+    return _previousOverlayIndex() != null;
+  }
+
+  int? _previousOverlayIndex() {
+    for (var i = _index - 1; i >= 0; i--) {
+      if (!visibleSteps[i].hideOverlay) return i;
+    }
+    return null;
+  }
   bool get isLast => _index >= visibleSteps.length - 1;
-  TutorialStep get step => visibleSteps[_index];
+  bool get overlayVisible => _active && !step.hideOverlay && !_covered;
+  bool get awaitAction => step.action != TutorialAction.none;
+  TutorialStep get step => _displayStep(visibleSteps[_index]);
   int get stepCount => visibleSteps.length;
   bool get shouldAutoStart => _preference.shouldAutoStart;
   bool get showFeatureIntro => _preference.featureIntroVisible;
@@ -238,69 +235,62 @@ class TutorialController extends ChangeNotifier {
       for (final step in steps)
         if (!_shouldSkip(step))
           TutorialStep(
-            tab: _remapTab(step.tab),
+            tab: step.tab,
             badge: step.badge,
             anchor: step.anchor,
             title: step.title,
             body: _adaptedBody(step),
             demo: step.demo,
+            action: step.action,
+            passHole: step.passHole,
+            hideOverlay: step.hideOverlay,
+            forceTab: step.forceTab,
+            jobOnly: step.jobOnly,
+            statsOnly: step.statsOnly,
           ),
     ];
   }
 
+  TutorialStep _displayStep(TutorialStep step) {
+    if (step.action == TutorialAction.openHome && _navPhase == 1) {
+      return TutorialStep(
+        tab: 2,
+        badge: AppStrings.tutorialBadgeStats,
+        anchor: TutorialAnchorId.navStats,
+        title: AppStrings.tutorialStatsGoTitle,
+        body: AppStrings.tutorialStatsGoBody,
+        demo: TutorialDemo.statsPlanetFill,
+        action: TutorialAction.openHome,
+        passHole: true,
+      );
+    }
+    if (step.action == TutorialAction.openJob && _jobPhase == 1) {
+      return TutorialStep(
+        tab: 3,
+        badge: AppStrings.tutorialBadgeJob,
+        anchor: TutorialAnchorId.jobAdd,
+        title: AppStrings.tutorialJobAddTitle,
+        body: AppStrings.tutorialJobAddFollowBody,
+        demo: TutorialDemo.jobSwipe,
+        action: TutorialAction.openJob,
+        passHole: true,
+        jobOnly: true,
+      );
+    }
+    return step;
+  }
+
   bool _shouldSkip(TutorialStep step) {
-    if (_hideJobTab && _isJobOnly(step)) return true;
-    if (_hideStatsTab && _isStatsOnly(step)) return true;
+    if (_hideJobTab && step.jobOnly) return true;
+    if (_hideStatsTab && step.statsOnly) return true;
     return false;
   }
 
-  int _remapTab(int tab) {
-    if (_hideStatsTab && tab == 2) return 1;
-    return tab;
-  }
-
   String _adaptedBody(TutorialStep step) {
-    if (step.body == AppStrings.tutorialNavBarBody) {
-      if (_hideStatsTab && _hideJobTab) {
-        return AppStrings.tutorialNavBarBodyNoStatsDaily;
-      }
-      if (_hideStatsTab) return AppStrings.tutorialNavBarBodyNoStats;
-      if (_hideJobTab) return AppStrings.tutorialNavBarBodyDaily;
-      return step.body;
-    }
-    if (_hideJobTab) return _dailyBody(step);
-    return step.body;
-  }
-
-  static String _dailyBody(TutorialStep step) {
-    if (step.body == AppStrings.tutorialWelcomeBody) {
+    if (_hideJobTab && step.body == AppStrings.tutorialWelcomeBody) {
       return AppStrings.tutorialWelcomeBodyDaily;
     }
-    if (step.body == AppStrings.tutorialNavBarBody) {
-      return AppStrings.tutorialNavBarBodyDaily;
-    }
-    if (step.body == AppStrings.tutorialNavCalendarBody) {
-      return AppStrings.tutorialNavCalendarBodyDaily;
-    }
-    if (step.body == AppStrings.tutorialCalendarMenuBody) {
-      return AppStrings.tutorialCalendarMenuBodyDaily;
-    }
-    if (step.body == AppStrings.tutorialHomeSearchBody) {
-      return AppStrings.tutorialHomeSearchBodyDaily;
-    }
     return step.body;
-  }
-
-  static bool _isJobOnly(TutorialStep step) {
-    return step.anchor == TutorialAnchorId.navJob ||
-        step.anchor == TutorialAnchorId.jobTools ||
-        step.anchor == TutorialAnchorId.jobAdd;
-  }
-
-  static bool _isStatsOnly(TutorialStep step) {
-    return step.anchor == TutorialAnchorId.statsPlanet ||
-        step.anchor == TutorialAnchorId.statsCollected ||
-        step.anchor == TutorialAnchorId.statsCalendar;
   }
 
   void _clampIndex() {
@@ -335,6 +325,10 @@ class TutorialController extends ChangeNotifier {
         ?.notifier;
   }
 
+  static TutorialController? find(BuildContext context) {
+    return context.getInheritedWidgetOfExactType<TutorialScope>()?.notifier;
+  }
+
   Future<void> maybeAutoStart({required bool hasExistingData}) async {
     if (!hasExistingData && _preference.shouldAutoStart) {
       start();
@@ -357,6 +351,8 @@ class TutorialController extends ChangeNotifier {
     _fromSettings = fromSettings;
     _active = true;
     _index = 0;
+    _covered = false;
+    _resetFlags();
     notifyListeners();
   }
 
@@ -367,12 +363,26 @@ class TutorialController extends ChangeNotifier {
       return;
     }
     _index += 1;
+    _resetFlags();
     notifyListeners();
   }
 
   void previous() {
-    if (!_active || isFirst) return;
-    _index -= 1;
+    if (!_active || !canPrevious) return;
+    if (step.action == TutorialAction.openHome && _navPhase == 1) {
+      _navPhase = 0;
+      notifyListeners();
+      return;
+    }
+    if (step.action == TutorialAction.openJob && _jobPhase == 1) {
+      _jobPhase = 0;
+      notifyListeners();
+      return;
+    }
+    final prev = _previousOverlayIndex();
+    if (prev == null) return;
+    _index = prev;
+    _resetFlags();
     notifyListeners();
   }
 
@@ -383,12 +393,145 @@ class TutorialController extends ChangeNotifier {
     _fromSettings = false;
     _active = false;
     _index = 0;
+    _covered = false;
+    _resetFlags();
     notifyListeners();
     await _preference.markCompleted();
     if (replay) return;
     await Future<void>.delayed(const Duration(milliseconds: 280));
     await _preference.markFeatureIntroEligible();
     notifyListeners();
+  }
+
+  void setCovered(bool value) {
+    if (!_active || _covered == value) return;
+    _covered = value;
+    notifyListeners();
+  }
+
+  void noteDayClosed() {
+    if (!_active) return;
+    if (visibleSteps[_index].action == TutorialAction.handleEvent) {
+      next();
+    }
+  }
+
+  void noteAddOpened() {
+    if (!_active) return;
+    if (visibleSteps[_index].action == TutorialAction.tapDay) {
+      next();
+    }
+  }
+
+  void noteAddClosed({required bool saved}) {
+    if (!_active) return;
+    _covered = false;
+    final action = visibleSteps[_index].action;
+    if (saved) {
+      while (_active && _isAddFollow(visibleSteps[_index].action)) {
+        next();
+      }
+      return;
+    }
+    if (_isAddFollow(action)) {
+      _goTo(TutorialAction.tapDay);
+    } else {
+      notifyListeners();
+    }
+  }
+
+  static bool _isAddFollow(TutorialAction action) {
+    return action == TutorialAction.composeEvent ||
+        action == TutorialAction.pickDateMode ||
+        action == TutorialAction.saveEvent;
+  }
+
+  bool get isAddFollow {
+    if (!_active) return false;
+    return _isAddFollow(visibleSteps[_index].action);
+  }
+
+  bool allowsAddInteract(TutorialAction needed) {
+    if (!isAddFollow) return true;
+    return visibleSteps[_index].action == needed;
+  }
+
+  void noteAddTitle(bool hasTitle) {
+    if (!_active) return;
+    if (visibleSteps[_index].action != TutorialAction.composeEvent) return;
+    _typedTitle = hasTitle;
+    _tryComposeNext();
+  }
+
+  void noteCategoryPicked() {
+    if (!_active) return;
+    if (visibleSteps[_index].action != TutorialAction.composeEvent) return;
+    _pickedCategory = true;
+    _tryComposeNext();
+  }
+
+  void _tryComposeNext() {
+    if (_typedTitle && _pickedCategory) next();
+  }
+
+  void noteDateMode() {
+    if (!_active) return;
+    if (visibleSteps[_index].action == TutorialAction.pickDateMode) {
+      next();
+    }
+  }
+
+  void noteCompleted({required bool completed}) {
+    if (!_active || !completed) return;
+    if (visibleSteps[_index].action == TutorialAction.completeEvent) {
+      next();
+    }
+  }
+
+  void noteTab(int tab) {
+    if (!_active) return;
+    final action = visibleSteps[_index].action;
+    if (action == TutorialAction.openHome) {
+      if (_navPhase == 0 && tab == 0) {
+        if (_hideStatsTab) {
+          next();
+          return;
+        }
+        _navPhase = 1;
+        notifyListeners();
+        return;
+      }
+      if (_navPhase == 1 && tab == 2) {
+        next();
+      }
+      return;
+    }
+    if (action == TutorialAction.openJob && _jobPhase == 0 && tab == 3) {
+      _jobPhase = 1;
+      notifyListeners();
+    }
+  }
+
+  void noteJobOpened() {
+    if (!_active) return;
+    if (visibleSteps[_index].action == TutorialAction.openJob) {
+      next();
+    }
+  }
+
+  void _goTo(TutorialAction action) {
+    final i = visibleSteps.indexWhere((step) => step.action == action);
+    if (i < 0) return;
+    _index = i;
+    _resetFlags();
+    notifyListeners();
+  }
+
+  void _resetFlags() {
+    _navPhase = 0;
+    _jobPhase = 0;
+    _typedTitle = false;
+    _pickedCategory = false;
   }
 }
 

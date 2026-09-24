@@ -22,6 +22,7 @@ import 'package:pluto/presentation/screens/job/widgets/job_overflow_menu_button.
 import 'package:pluto/presentation/screens/license/widgets/add_license_sheet.dart';
 import 'package:pluto/presentation/screens/license/widgets/delete_license_dialog.dart';
 import 'package:pluto/presentation/screens/license/widgets/license_list.dart';
+import 'package:pluto/presentation/tutorial/tutorial_controller.dart';
 import 'package:pluto/presentation/widgets/app_bar_icon_group.dart';
 import 'package:pluto/presentation/tutorial/tutorial_anchor.dart';
 import 'package:pluto/presentation/widgets/app_bar_wordmark.dart';
@@ -199,9 +200,13 @@ class JobScreenState extends State<JobScreen>
   }
 
   Future<void> _openAddSheet() async {
+    final tutorial = TutorialController.find(context);
+    tutorial?.setCovered(true);
     final saved = _showLicense
         ? await showAddLicenseSheet(context)
         : await showAddCompanySheet(context);
+    tutorial?.noteJobOpened();
+    tutorial?.setCovered(false);
     if (saved && mounted) await _reload();
   }
 

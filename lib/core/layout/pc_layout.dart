@@ -73,11 +73,35 @@ class PcLayout {
     required Widget child,
     double side = 24,
   }) {
+    return _pinToast(
+      alignment: Alignment.bottomCenter,
+      padding: EdgeInsets.fromLTRB(side, 0, side, bottom),
+      child: child,
+    );
+  }
+
+  static Widget pinTopToast({
+    required double top,
+    required Widget child,
+    double side = 24,
+  }) {
+    return _pinToast(
+      alignment: Alignment.topCenter,
+      padding: EdgeInsets.fromLTRB(side, top, side, 0),
+      child: child,
+    );
+  }
+
+  static Widget _pinToast({
+    required Alignment alignment,
+    required EdgeInsets padding,
+    required Widget child,
+  }) {
     return Positioned.fill(
       child: Align(
-        alignment: Alignment.bottomCenter,
+        alignment: alignment,
         child: Padding(
-          padding: EdgeInsets.fromLTRB(side, 0, side, bottom),
+          padding: padding,
           child: ConstrainedBox(
             constraints: BoxConstraints(
               maxWidth: isPc ? contentMaxWidth : double.infinity,

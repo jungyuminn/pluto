@@ -31,7 +31,9 @@ import 'package:pluto/presentation/screens/settings/settings_screen.dart';
 import 'package:pluto/presentation/widgets/app_bar_icon_group.dart';
 import 'package:pluto/presentation/widgets/app_bar_wordmark.dart';
 import 'package:pluto/presentation/widgets/overlay_app_bar.dart';
+import 'package:pluto/presentation/widgets/themed_asset.dart';
 import 'package:pluto/presentation/tutorial/tutorial_anchor.dart';
+import 'package:pluto/presentation/tutorial/tutorial_controller.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -283,6 +285,10 @@ class HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     final leftover = _leftoverEvents;
     final sortPrefs = AppScope.of(context).dayEventsViewPreference;
     final homePrefs = AppScope.of(context).homeViewPreference;
+    final tutorial = TutorialController.maybeOf(context);
+    final hideToolsChrome = tutorial != null &&
+        tutorial.active &&
+        tutorial.step.anchor == TutorialAnchorId.homeList;
 
     return AppSkinBackground(
       child: Scaffold(
@@ -294,6 +300,7 @@ class HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         actions: TutorialAnchor(
           id: TutorialAnchorId.homeTools,
           child: AppBarIconGroup(
+            bare: hideToolsChrome,
             actions: [
               AppBarIconAction(
                 asset: AppIcons.search,
@@ -302,10 +309,19 @@ class HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                     : AppStrings.homeSearchHintDaily,
                 onPressed: _openSearch,
               ),
-              AppBarIconAction(
-                asset: AppIcons.setting,
-                label: AppStrings.settingsTitle,
-                onPressed: _openSettings,
+            ],
+            trailing: [
+              TutorialAnchor(
+                id: TutorialAnchorId.homeSettings,
+                child: AppBarIconSlot(
+                  onPressed: _openSettings,
+                  child: ThemedAsset(
+                    asset: AppIcons.setting,
+                    width: 19,
+                    height: 19,
+                    semanticLabel: AppStrings.settingsTitle,
+                  ),
+                ),
               ),
             ],
           ),
@@ -314,14 +330,11 @@ class HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : FadeIn(
-              child: TutorialAnchor(
-                id: TutorialAnchorId.homeList,
-                child: _homeList(
-                  leftover: leftover,
-                  homePrefs: homePrefs,
-                  sortPrefs: sortPrefs,
-                  bottomGap: bottomGap,
-                ),
+              child: _homeList(
+                leftover: leftover,
+                homePrefs: homePrefs,
+                sortPrefs: sortPrefs,
+                bottomGap: bottomGap,
               ),
             ),
     ),
@@ -473,27 +486,33 @@ class HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           memos: _memos,
           onChanged: _reload,
         ),
-      HomeCardKind.today => HomeDayCard(
-          title: AppStrings.todayTitle,
-          date: _today,
-          events: _todayEvents,
-          categories: _categories,
-          categoryView: sortPrefs.categoryView,
-          sortByTime: sortPrefs.sortByTime,
-          showTime: sortPrefs.showTime,
-          hour24: sortPrefs.hour24,
-          onEventsChanged: _reload,
+      HomeCardKind.today => TutorialAnchor(
+          id: TutorialAnchorId.homeList,
+          child: HomeDayCard(
+            title: AppStrings.todayTitle,
+            date: _today,
+            events: _todayEvents,
+            categories: _categories,
+            categoryView: sortPrefs.categoryView,
+            sortByTime: sortPrefs.sortByTime,
+            showTime: sortPrefs.showTime,
+            hour24: sortPrefs.hour24,
+            onEventsChanged: _reload,
+          ),
         ),
-      HomeCardKind.tomorrow => HomeDayCard(
-          title: AppStrings.tomorrowTitle,
-          date: _tomorrow,
-          events: _tomorrowEvents,
-          categories: _categories,
-          categoryView: sortPrefs.categoryView,
-          sortByTime: sortPrefs.sortByTime,
-          showTime: sortPrefs.showTime,
-          hour24: sortPrefs.hour24,
-          onEventsChanged: _reload,
+      HomeCardKind.tomorrow => TutorialAnchor(
+          id: TutorialAnchorId.homeTomorrow,
+          child: HomeDayCard(
+            title: AppStrings.tomorrowTitle,
+            date: _tomorrow,
+            events: _tomorrowEvents,
+            categories: _categories,
+            categoryView: sortPrefs.categoryView,
+            sortByTime: sortPrefs.sortByTime,
+            showTime: sortPrefs.showTime,
+            hour24: sortPrefs.hour24,
+            onEventsChanged: _reload,
+          ),
         ),
       HomeCardKind.week => HomeDayCard(
           title: AppStrings.weekTitle,

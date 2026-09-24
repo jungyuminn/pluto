@@ -580,7 +580,7 @@ class _FadingDiaryState extends State<_FadingDiary> {
     final label = CalendarEventLabel(
       title: title,
       color: diary.color,
-      showAccent: tile.showAccent,
+      showAccent: false,
     );
     final photoStart = tile.photoStart;
     final photoEnd = tile.photoEnd;

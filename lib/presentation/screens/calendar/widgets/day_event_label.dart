@@ -66,6 +66,8 @@ class DayEventLabel extends StatefulWidget {
   final double height;
   final Widget? footer;
 
+  static const pressedScale = 0.98;
+
   @override
   State<DayEventLabel> createState() => _DayEventLabelState();
 }
@@ -122,6 +124,7 @@ class _DayEventLabelState extends State<DayEventLabel> {
       curve: Curves.easeOutCubic,
       opacity: widget.disabled ? 0.42 : 1,
       child: PressBounce(
+      pressedScale: DayEventLabel.pressedScale,
       onPressed: () {
         if (_skipLabelTap) {
           _skipLabelTap = false;

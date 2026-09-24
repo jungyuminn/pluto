@@ -794,6 +794,11 @@ class _ExpBarState extends State<_ExpBar>
         const track = 16.0;
         const inset = planet * 0.42;
         final maxed = widget.isMax;
+        final from = PlanetColors.of(widget.currentLevel);
+        final to = PlanetColors.of(widget.nextLevel);
+        final fill = maxed
+            ? [from.bottom, from.mid, from.top]
+            : [from.bottom, from.mid, to.top];
         return SizedBox(
           height: 28,
           child: Stack(
@@ -814,71 +819,68 @@ class _ExpBarState extends State<_ExpBar>
                         width: double.infinity,
                         child: ColoredBox(
                           color: colors.border,
-                          child: FractionallySizedBox(
+                          child: Align(
                             alignment: Alignment.centerLeft,
-                            widthFactor: bar,
-                            child: Stack(
-                              fit: StackFit.expand,
-                              children: [
-                                DecoratedBox(
-                                  decoration: BoxDecoration(
-                                    gradient: LinearGradient(
-                                      colors: widget.isMax
-                                          ? const [
-                                              Color(0xFFD9898A),
-                                              Color(0xFFFFD36A),
-                                              Color(0xFFFFF6DE),
-                                            ]
-                                          : const [
-                                              Color(0xFFD9898A),
-                                              Color(0xFFF3C3A0),
-                                              Color(0xFFFFE7C2),
-                                            ],
+                            child: FractionallySizedBox(
+                              widthFactor: bar,
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(999),
+                                child: Stack(
+                                  fit: StackFit.expand,
+                                  children: [
+                                    DecoratedBox(
+                                      decoration: BoxDecoration(
+                                        gradient: LinearGradient(colors: fill),
+                                      ),
                                     ),
-                                  ),
-                                ),
-                                if (widget.isMax)
-                                  AnimatedBuilder(
-                                    animation: _shine,
-                                    builder: (context, _) {
-                                      if (_shine.value <= 0 ||
-                                          _shine.isCompleted) {
-                                        return const SizedBox.shrink();
-                                      }
-                                      return LayoutBuilder(
-                                        builder: (context, constraints) {
-                                          final width = constraints.maxWidth;
-                                          final x = _shine.value *
-                                                  (width + 56) -
-                                              28;
-                                          return Transform.translate(
-                                            offset: Offset(x, 0),
-                                            child: SizedBox(
-                                              width: 40,
-                                              child: DecoratedBox(
-                                                decoration: BoxDecoration(
-                                                  gradient: LinearGradient(
-                                                    colors: [
-                                                      Colors.white.withValues(
-                                                        alpha: 0,
+                                    if (widget.isMax)
+                                      AnimatedBuilder(
+                                        animation: _shine,
+                                        builder: (context, _) {
+                                          if (_shine.value <= 0 ||
+                                              _shine.isCompleted) {
+                                            return const SizedBox.shrink();
+                                          }
+                                          return LayoutBuilder(
+                                            builder: (context, constraints) {
+                                              final width =
+                                                  constraints.maxWidth;
+                                              final x = _shine.value *
+                                                      (width + 56) -
+                                                  28;
+                                              return Transform.translate(
+                                                offset: Offset(x, 0),
+                                                child: SizedBox(
+                                                  width: 40,
+                                                  child: DecoratedBox(
+                                                    decoration: BoxDecoration(
+                                                      gradient: LinearGradient(
+                                                        colors: [
+                                                          Colors.white
+                                                              .withValues(
+                                                            alpha: 0,
+                                                          ),
+                                                          Colors.white
+                                                              .withValues(
+                                                            alpha: 0.78,
+                                                          ),
+                                                          Colors.white
+                                                              .withValues(
+                                                            alpha: 0,
+                                                          ),
+                                                        ],
                                                       ),
-                                                      Colors.white.withValues(
-                                                        alpha: 0.78,
-                                                      ),
-                                                      Colors.white.withValues(
-                                                        alpha: 0,
-                                                      ),
-                                                    ],
+                                                    ),
                                                   ),
                                                 ),
-                                              ),
-                                            ),
+                                              );
+                                            },
                                           );
                                         },
-                                      );
-                                    },
-                                  ),
-                              ],
+                                      ),
+                                  ],
+                                ),
+                              ),
                             ),
                           ),
                         ),
@@ -892,6 +894,7 @@ class _ExpBarState extends State<_ExpBar>
                               alignment: Alignment.centerRight,
                               child: _MilestoneDot(
                                 reached: widget.progress >= mark,
+                                color: from.mid,
                               ),
                             ),
                           ),
@@ -937,9 +940,13 @@ class _ExpBarState extends State<_ExpBar>
 }
 
 class _MilestoneDot extends StatelessWidget {
-  const _MilestoneDot({required this.reached});
+  const _MilestoneDot({
+    required this.reached,
+    required this.color,
+  });
 
   final bool reached;
+  final Color color;
 
   @override
   Widget build(BuildContext context) {
@@ -949,7 +956,7 @@ class _MilestoneDot extends StatelessWidget {
         shape: BoxShape.circle,
         color: reached ? Colors.white : colors.card,
         border: Border.all(
-          color: reached ? const Color(0xFFE3898A) : colors.muted,
+          color: reached ? color : colors.muted,
           width: 1.6,
         ),
       ),

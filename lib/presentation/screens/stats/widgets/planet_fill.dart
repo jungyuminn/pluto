@@ -92,6 +92,27 @@ class _PlanetFillState extends State<PlanetFill>
   }
 }
 
+class PlanetColors {
+  const PlanetColors({
+    required this.top,
+    required this.mid,
+    required this.bottom,
+  });
+
+  final Color top;
+  final Color mid;
+  final Color bottom;
+
+  static PlanetColors of(int level) {
+    final look = _Look.of(level);
+    return PlanetColors(
+      top: look.top,
+      mid: look.mid,
+      bottom: look.bottom,
+    );
+  }
+}
+
 enum _Face { sleep, yawn, round, shy, smile, happy }
 
 class _Look {

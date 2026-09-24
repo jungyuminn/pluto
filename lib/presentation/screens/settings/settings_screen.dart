@@ -84,7 +84,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   var _parseTitleTime = false;
   var _categoryView = false;
   var _aiCategory = false;
-  var _todoReminderLead = TodoReminderLead.off;
+  var _todoReminderLead = TodoReminderLead.minutes10;
   var _summaryEnabled = true;
   var _summaryHour = NotificationPreference.defaultSummaryMinutes;
   var _leftoverEnabled = true;

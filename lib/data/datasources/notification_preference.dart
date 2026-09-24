@@ -23,7 +23,7 @@ enum TodoReminderLead {
 class NotificationPreference {
   NotificationPreference({
     SharedPreferences? prefs,
-    TodoReminderLead todoReminderLead = TodoReminderLead.off,
+    TodoReminderLead todoReminderLead = TodoReminderLead.minutes10,
   })  : _prefs = prefs,
         _todoReminderLead = TodoReminderLead.fromMinutes(
           prefs?.getInt(_todoLeadKey) ?? todoReminderLead.minutes,
@@ -35,7 +35,7 @@ class NotificationPreference {
           prefs?.getInt(_leftoverMinutesKey),
         );
 
-  static const defaultSummaryHour = 7;
+  static const defaultSummaryHour = 9;
   static const defaultSummaryMinutes = defaultSummaryHour * 60;
   static const defaultLeftoverHour = 21;
   static const defaultLeftoverMinutes = defaultLeftoverHour * 60;

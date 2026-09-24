@@ -89,8 +89,12 @@ class OverflowMenuItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tint = color ?? AppColors.of(context).text;
     final colors = AppColors.of(context);
+    final iconTint = color ??
+        (Theme.of(context).brightness == Brightness.dark
+            ? AppColors.dark.icon
+            : AppColors.light.icon);
+    final tint = color ?? colors.text;
     final toggle = value;
     final row = SizedBox(
       width: double.infinity,
@@ -99,7 +103,7 @@ class OverflowMenuItem extends StatelessWidget {
         child: Row(
           children: [
             if (leading != null) ...[
-              Icon(leading, size: 22, color: color ?? colors.icon),
+              Icon(leading, size: 22, color: iconTint),
               const SizedBox(width: 10),
             ],
             if (leadingAsset != null) ...[
@@ -109,7 +113,7 @@ class OverflowMenuItem extends StatelessWidget {
                   asset: leadingAsset!,
                   width: 22,
                   height: 22,
-                  color: color ?? colors.icon,
+                  color: iconTint,
                 ),
               ),
               const SizedBox(width: 10),
@@ -134,7 +138,7 @@ class OverflowMenuItem extends StatelessWidget {
                     ? Icon(
                         Icons.check_rounded,
                         size: 22,
-                        color: colors.icon,
+                        color: iconTint,
                       )
                     : null,
               ),

@@ -78,6 +78,7 @@ class CalendarMonthGrid extends StatefulWidget {
     this.showLunar = false,
     this.searchDay,
     this.searchHitKey,
+    this.tutorial = true,
   });
 
   final DateTime month;
@@ -99,6 +100,7 @@ class CalendarMonthGrid extends StatefulWidget {
   final bool showLunar;
   final DateTime? searchDay;
   final String? searchHitKey;
+  final bool tutorial;
 
   @override
   State<CalendarMonthGrid> createState() => _CalendarMonthGridState();
@@ -257,7 +259,7 @@ class _CalendarMonthGridState extends State<CalendarMonthGrid>
   }
 
   Widget _maybeTodayAnchor(CalendarDay day, Widget child) {
-    if (!day.inMonth || !day.isToday) return child;
+    if (!widget.tutorial || !day.inMonth || !day.isToday) return child;
     return TutorialAnchor(
       id: TutorialAnchorId.calendarDay,
       child: child,

@@ -1,7 +1,9 @@
 import 'dart:math' as math;
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:pluto/core/utils/mouse_drag_scroll.dart';
 
 class FlatSnapPicker extends StatefulWidget {
   const FlatSnapPicker({
@@ -34,6 +36,7 @@ class _FlatSnapPickerState extends State<FlatSnapPicker> {
   late final ScrollController _controller;
   late int _index;
   var _programmatic = false;
+  var _wheel = 0.0;
 
   int get _count => widget.itemCount;
 
@@ -132,6 +135,19 @@ class _FlatSnapPickerState extends State<FlatSnapPicker> {
     _animateTo(index);
   }
 
+  void _onWheel(PointerScrollEvent event) {
+    GestureBinding.instance.pointerSignalResolver.register(event, (resolved) {
+      if (resolved is! PointerScrollEvent) return;
+      if (!mounted || !_controller.hasClients) return;
+      _wheel += resolved.scrollDelta.dy;
+      if (_wheel.abs() < _extent * 0.35) return;
+      final dir = _wheel > 0 ? 1 : -1;
+      _wheel = 0;
+      final next = (_index + dir).clamp(0, _childCount - 1);
+      _select(next);
+    });
+  }
+
   @override
   void dispose() {
     _controller
@@ -143,40 +159,45 @@ class _FlatSnapPickerState extends State<FlatSnapPicker> {
   @override
   Widget build(BuildContext context) {
     final pad = _extent * ((widget.visibleCount - 1) / 2);
-    return NotificationListener<ScrollNotification>(
-      onNotification: (notification) {
-        if (notification is ScrollStartNotification &&
-            notification.dragDetails != null) {
-          _programmatic = false;
-        }
-        return false;
+    return Listener(
+      onPointerSignal: (event) {
+        if (event is PointerScrollEvent) _onWheel(event);
       },
-      child: ScrollConfiguration(
-        behavior: ScrollConfiguration.of(context).copyWith(
-          scrollbars: false,
-          overscroll: false,
-        ),
-        child: ListView.builder(
-          controller: _controller,
-          primary: false,
-          physics: _SnapScrollPhysics(
-            itemExtent: _extent,
-            parent: const ClampingScrollPhysics(),
+      child: NotificationListener<ScrollNotification>(
+        onNotification: (notification) {
+          if (notification is ScrollStartNotification &&
+              notification.dragDetails != null) {
+            _programmatic = false;
+          }
+          return false;
+        },
+        child: ScrollConfiguration(
+          behavior: const MouseDragScrollBehavior().copyWith(
+            scrollbars: false,
+            overscroll: false,
           ),
-          padding: EdgeInsets.symmetric(vertical: pad),
-          itemExtent: _extent,
-          itemCount: _childCount,
-          itemBuilder: (context, index) {
-            return GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: () => _select(index),
-              child: widget.itemBuilder(
-                context,
-                _logical(index),
-                index == _index,
-              ),
-            );
-          },
+          child: ListView.builder(
+            controller: _controller,
+            primary: false,
+            physics: _SnapScrollPhysics(
+              itemExtent: _extent,
+              parent: const ClampingScrollPhysics(),
+            ),
+            padding: EdgeInsets.symmetric(vertical: pad),
+            itemExtent: _extent,
+            itemCount: _childCount,
+            itemBuilder: (context, index) {
+              return GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => _select(index),
+                child: widget.itemBuilder(
+                  context,
+                  _logical(index),
+                  index == _index,
+                ),
+              );
+            },
+          ),
         ),
       ),
     );

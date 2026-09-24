@@ -17,6 +17,16 @@ class ReleaseNote {
 abstract final class ReleaseNotes {
   static const all = [
     ReleaseNote(
+      version: '1.4.12',
+      items: [
+        'PC에서 시간을 굴려 바꿀 수 있어요',
+      ],
+      fixes: [
+        '친구 캘린더를 열면 화면이 깨지던 점을 고쳤어요',
+        '친구 메뉴 아이콘이 테마색을 따라가던 점을 고쳤어요',
+      ],
+    ),
+    ReleaseNote(
       version: '1.4.11',
       items: [
         '튜토리얼을 따라 하면 할 일을 넣고 화면을 둘러볼 수 있어요',

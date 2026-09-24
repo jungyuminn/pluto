@@ -449,6 +449,7 @@ class _FriendCalendarScreenState extends State<FriendCalendarScreen> {
                                         final month = _monthAt(page);
                                         return CalendarMonthGrid(
                                           month: month,
+                                          tutorial: false,
                                           startMonday: startMonday,
                                           eventsOf: (date) =>
                                               _eventsOn(month, date),

@@ -2155,6 +2155,7 @@ class _ThemeCalendarPreviewPage extends StatelessWidget {
               Expanded(
                 child: CalendarMonthGrid(
                   month: month,
+                  tutorial: false,
                   startMonday: startMonday,
                   showLunar: showLunar,
                   eventsOf: _themePreviewEventsOn,

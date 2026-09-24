@@ -118,6 +118,8 @@ enum ReleaseDemo {
   iconPad,
   notifyIcon,
   stickerBtn,
+  pcTimeWheel,
+  friendsMenuIcon,
   pcEnterSave,
   jobCategorySlide,
   featureIntro,
@@ -181,6 +183,12 @@ ReleaseDemo releaseDemoFor(String text, {required bool isFix}) {
     }
     if (text.contains('흰 카드') || text.contains('같이 줄지')) {
       return ReleaseDemo.searchOpenList;
+    }
+    if (text.contains('친구 캘린더를 열면') || text.contains('화면이 깨지')) {
+      return ReleaseDemo.friendsMiniCal;
+    }
+    if (text.contains('친구 메뉴 아이콘') || text.contains('테마색을 따라가')) {
+      return ReleaseDemo.friendsMenuIcon;
     }
     if (text.contains('기능 안내')) return ReleaseDemo.featureIntroStay;
     if (text.contains('스티커 팩')) return ReleaseDemo.stickers;
@@ -310,6 +318,9 @@ ReleaseDemo releaseDemoFor(String text, {required bool isFix}) {
   }
   if (text.contains('스티커 버튼') || text.contains('더 가볍게')) {
     return ReleaseDemo.stickerBtn;
+  }
+  if (text.contains('시간을 굴려') || text.contains('마우스 휠')) {
+    return ReleaseDemo.pcTimeWheel;
   }
   if (text.contains('스티커를 누르면') || text.contains('날짜에 스티커')) {
     return ReleaseDemo.daySticker;
@@ -462,6 +473,8 @@ class ReleaseDemoView extends StatelessWidget {
       ReleaseDemo.diaryLongPress => const _DiaryDeleteDemo(),
       ReleaseDemo.tutorial || ReleaseDemo.appTutorial => const _TutorialFollowDemo(),
       ReleaseDemo.stickerBtn => const _StickerBtnDemo(),
+      ReleaseDemo.pcTimeWheel => const _PcTimeWheelDemo(),
+      ReleaseDemo.friendsMenuIcon => const _FriendsMenuIconDemo(),
       ReleaseDemo.tabTransition || ReleaseDemo.homeCalendar => const _TabDemo(),
       ReleaseDemo.importPick ||
       ReleaseDemo.samsungImport ||
@@ -2320,6 +2333,181 @@ class _StickerBtnDemo extends StatelessWidget {
                 child: _Finger(pressed: 1),
               ),
           ],
+        );
+      },
+    );
+  }
+}
+
+class _PcTimeWheelDemo extends StatelessWidget {
+  const _PcTimeWheelDemo();
+
+  static const _accent = Color(0xFF3B82F6);
+  static const _hours = [10, 11, 12, 1, 2];
+  static const _mins = [28, 29, 30, 31, 32];
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 4200,
+      boxHeight: 196,
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final font = AppFonts.of(context);
+        final shift = (t * 4).floor() % 4;
+        final slide = Curves.easeOutCubic.transform((t * 4) % 1);
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(18, 16, 18, 14),
+          child: _Card(
+            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+            child: Row(
+              children: [
+                Expanded(
+                  child: _TimeCol(
+                    labels: const ['오전', '오후'],
+                    selected: 0,
+                    font: font,
+                    colors: colors,
+                  ),
+                ),
+                Expanded(
+                  child: _TimeCol(
+                    labels: [
+                      for (var i = 0; i < 5; i++)
+                        '${_hours[(i + shift) % _hours.length]}',
+                    ],
+                    selected: 2,
+                    offset: -slide * 18,
+                    font: font,
+                    colors: colors,
+                  ),
+                ),
+                Expanded(
+                  child: _TimeCol(
+                    labels: [
+                      for (final m in _mins) m.toString().padLeft(2, '0'),
+                    ],
+                    selected: 2,
+                    font: font,
+                    colors: colors,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _TimeCol extends StatelessWidget {
+  const _TimeCol({
+    required this.labels,
+    required this.selected,
+    required this.font,
+    required this.colors,
+    this.offset = 0,
+  });
+
+  final List<String> labels;
+  final int selected;
+  final String? font;
+  final AppColors colors;
+  final double offset;
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRect(
+      child: Transform.translate(
+        offset: Offset(0, offset),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            for (var i = 0; i < labels.length; i++)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 3),
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: i == selected
+                        ? _PcTimeWheelDemo._accent.withValues(alpha: 0.14)
+                        : Colors.transparent,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: SizedBox(
+                    width: 52,
+                    height: 26,
+                    child: Center(
+                      child: Text(
+                        labels[i],
+                        style: TextStyle(
+                          fontFamily: font,
+                          fontSize: i == selected ? 17 : 13,
+                          fontWeight: FontWeight.w700,
+                          color: i == selected
+                              ? _PcTimeWheelDemo._accent
+                              : colors.muted.withValues(alpha: 0.7),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _FriendsMenuIconDemo extends StatelessWidget {
+  const _FriendsMenuIconDemo();
+
+  static const _swatch = [
+    Color(0xFF3B82F6),
+    Color(0xFFA855F7),
+    Color(0xFF22C55E),
+    Color(0xFFFB7185),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 4800,
+      boxHeight: 210,
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final i = (t * 4).floor().clamp(0, 3);
+        final accent = Color.lerp(
+          _swatch[i],
+          _swatch[(i + 1) % 4],
+          (t * 4) % 1,
+        )!;
+        return ColoredBox(
+          color: colors.tint(accent, 0.18),
+          child: Center(
+            child: OverflowMenuCard(
+              children: [
+                OverflowMenuItem(
+                  label: AppStrings.friendsHomePin,
+                  leadingAsset: AppIcons.addHome,
+                  leadingFlipX: true,
+                  onPressed: () {},
+                ),
+                OverflowMenuItem(
+                  label: AppStrings.friendsSharedTodoAdd,
+                  leadingAsset: AppIcons.linkOutlined,
+                  onPressed: () {},
+                ),
+                OverflowMenuItem(
+                  label: AppStrings.friendsRemove,
+                  leadingAsset: AppIcons.trashCan,
+                  color: colors.danger,
+                  onPressed: () {},
+                ),
+              ],
+            ),
+          ),
         );
       },
     );

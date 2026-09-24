@@ -8,7 +8,7 @@ Future<CalendarEvent> saveCompleteToggle({
   required CalendarEvent event,
 }) async {
   final next = await FriendService.instance.toggleComplete(event);
-  if (event.isShared || event.isRepeat) {
+  if (event.isRepeat || (event.isShared && !event.isRange)) {
     await updater.instance(next);
   } else {
     await updater(next);

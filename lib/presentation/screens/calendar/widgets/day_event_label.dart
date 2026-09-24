@@ -105,6 +105,10 @@ class _DayEventLabelState extends State<DayEventLabel> {
     final colors = AppColors.of(context);
     final hasComplete =
         widget.onCompletePressed != null || widget.showComplete;
+    final sharedDual = widget.shared &&
+        (widget.onCompletePressed != null ||
+            widget.peerCompleted ||
+            widget.waiting);
     final target = widget.disabled ? colors.muted : widget.color;
     final scale = AppFonts.labelScaleOf(context);
     final typeScale = widget.height / _baseHeight;
@@ -362,9 +366,9 @@ class _DayEventLabelState extends State<DayEventLabel> {
                     child: Listener(
                       onPointerDown: (_) => _skipLabelTap = true,
                       child: EventCompleteButton(
-                        completed: widget.shared ? _mine : _completed,
-                        waiting: widget.shared ? false : _waiting,
-                        shared: widget.shared,
+                        completed: sharedDual ? _mine : _completed,
+                        waiting: sharedDual ? false : _waiting,
+                        shared: sharedDual,
                         peer: _peer,
                         color: ink,
                         onPressed: widget.onCompletePressed == null

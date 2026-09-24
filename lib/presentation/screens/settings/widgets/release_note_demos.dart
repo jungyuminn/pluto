@@ -10,6 +10,7 @@ import 'package:pluto/domain/entities/ledger_entry.dart';
 import 'package:pluto/presentation/screens/add_company/widgets/save_company_button.dart';
 import 'package:pluto/presentation/screens/friends/friend_avatar.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/calendar_event_label.dart';
+import 'package:pluto/presentation/screens/calendar/widgets/day_event_label.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/event_action_icon.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/event_category_chip.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/event_date_chip.dart';
@@ -120,6 +121,9 @@ enum ReleaseDemo {
   stickerBtn,
   pcTimeWheel,
   friendsMenuIcon,
+  friendSharedIcon,
+  sharedRangeComplete,
+  pcDeleteCategory,
   pcEnterSave,
   jobCategorySlide,
   featureIntro,
@@ -190,6 +194,12 @@ ReleaseDemo releaseDemoFor(String text, {required bool isFix}) {
     if (text.contains('친구 메뉴 아이콘') || text.contains('테마색을 따라가')) {
       return ReleaseDemo.friendsMenuIcon;
     }
+    if (text.contains('날짜마다 따로') || text.contains('기간으로 만든 같이')) {
+      return ReleaseDemo.sharedRangeComplete;
+    }
+    if (text.contains('카테고리 삭제 창') || text.contains('너비가 들쭉날쭉')) {
+      return ReleaseDemo.pcDeleteCategory;
+    }
     if (text.contains('기능 안내')) return ReleaseDemo.featureIntroStay;
     if (text.contains('스티커 팩')) return ReleaseDemo.stickers;
     return ReleaseDemo.fix;
@@ -223,6 +233,10 @@ ReleaseDemo releaseDemoFor(String text, {required bool isFix}) {
   if (text.contains('친구 캘린더가 넓게')) return ReleaseDemo.pcLaunch;
   if (text.contains('미니캘린더') || text.contains('일정만')) {
     return ReleaseDemo.friendsMiniCal;
+  }
+  if (text.contains('같이 할 일 아이콘') ||
+      text.contains('친구 캘린더에서도 같이')) {
+    return ReleaseDemo.friendSharedIcon;
   }
   if (text.contains('같이 할 일') ||
       text.contains('둘 다 체크') ||
@@ -475,6 +489,9 @@ class ReleaseDemoView extends StatelessWidget {
       ReleaseDemo.stickerBtn => const _StickerBtnDemo(),
       ReleaseDemo.pcTimeWheel => const _PcTimeWheelDemo(),
       ReleaseDemo.friendsMenuIcon => const _FriendsMenuIconDemo(),
+      ReleaseDemo.friendSharedIcon => const _FriendSharedIconDemo(),
+      ReleaseDemo.sharedRangeComplete => const _SharedRangeCompleteDemo(),
+      ReleaseDemo.pcDeleteCategory => const _PcDeleteCategoryDemo(),
       ReleaseDemo.tabTransition || ReleaseDemo.homeCalendar => const _TabDemo(),
       ReleaseDemo.importPick ||
       ReleaseDemo.samsungImport ||
@@ -2510,6 +2527,239 @@ class _FriendsMenuIconDemo extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+class _FriendSharedIconDemo extends StatelessWidget {
+  const _FriendSharedIconDemo();
+
+  static const _accent = Color(0xFF3B82F6);
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 3200,
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final font = AppFonts.of(context);
+        final show = Curves.easeOutBack.transform(_gate(t, 0.22, 0.48));
+        return ColoredBox(
+          color: colors.tint(_accent, 0.12),
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 22),
+              child: _Card(
+                padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      '9월 25일',
+                      style: TextStyle(
+                        fontFamily: font,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w800,
+                        color: colors.text,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    DayEventLabel(
+                      title: '같이 운동',
+                      categoryName: '운동',
+                      color: _accent,
+                      shared: true,
+                      showComplete: true,
+                      height: 48,
+                      trailing: Opacity(
+                        opacity: show.clamp(0.0, 1.0),
+                        child: Transform.scale(
+                          scale: 0.7 + 0.3 * show,
+                          child: SizedBox(
+                            width: 28,
+                            height: 28,
+                            child: ColorFiltered(
+                              colorFilter: ColorFilter.mode(
+                                _accent,
+                                BlendMode.srcIn,
+                              ),
+                              child: const AppAssetImage(
+                                asset: AppIcons.linkOutlined,
+                                width: 18,
+                                height: 18,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _SharedRangeCompleteDemo extends StatelessWidget {
+  const _SharedRangeCompleteDemo();
+
+  static const _accent = Color(0xFF22C55E);
+  static const _days = ['25일', '26일', '27일'];
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 3600,
+      boxHeight: 210,
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final done = t >= 0.38;
+        return ColoredBox(
+          color: colors.tint(_accent, 0.1),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(18, 14, 18, 12),
+            child: Column(
+              children: [
+                for (var i = 0; i < _days.length; i++) ...[
+                  if (i > 0) const SizedBox(height: 8),
+                  DayEventLabel(
+                    title: '제주 여행',
+                    categoryName: _days[i],
+                    color: _accent,
+                    shared: true,
+                    isRange: true,
+                    completed: done,
+                    peerCompleted: done,
+                    showComplete: true,
+                    height: 44,
+                  ),
+                ],
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _PcDeleteCategoryDemo extends StatelessWidget {
+  const _PcDeleteCategoryDemo();
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 2600,
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final font = AppFonts.of(context);
+        final pop = Curves.easeOutBack.transform(_gate(t, 0.08, 0.32));
+        return ColoredBox(
+          color: colors.groupedBackground,
+          child: Center(
+            child: Transform.scale(
+              scale: 0.86 + 0.14 * pop,
+              child: Opacity(
+                opacity: pop.clamp(0.0, 1.0),
+                child: SizedBox(
+                  width: 220,
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: colors.card,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(18, 16, 18, 14),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text.rich(
+                            TextSpan(
+                              children: [
+                                TextSpan(
+                                  text: '운동',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w800,
+                                    color: colors.danger,
+                                  ),
+                                ),
+                                TextSpan(
+                                  text: ' ${AppStrings.deleteCategoryBody}',
+                                ),
+                              ],
+                            ),
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontFamily: font,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: colors.secondary,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          _DemoPill(
+                            label: AppStrings.deleteCategoryOnly,
+                            color: colors.pressed,
+                            text: colors.danger,
+                          ),
+                          const SizedBox(height: 8),
+                          _DemoPill(
+                            label: AppStrings.deleteCategoryWithItems,
+                            color: colors.pressed,
+                            text: colors.danger,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _DemoPill extends StatelessWidget {
+  const _DemoPill({
+    required this.label,
+    required this.color,
+    required this.text,
+  });
+
+  final String label;
+  final Color color;
+  final Color text;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: SizedBox(
+        height: 36,
+        width: double.infinity,
+        child: Center(
+          child: Text(
+            label,
+            style: TextStyle(
+              fontFamily: AppFonts.of(context),
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: text,
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

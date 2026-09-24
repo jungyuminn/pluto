@@ -91,6 +91,13 @@ class TodoRequestItem {
             : uid == toUid
                 ? fromCompletedDates
                 : null);
+    if (isRangeMode) {
+      if (keys != null) {
+        if (keys.isEmpty || days.isEmpty) return false;
+        return days.every((item) => keys.contains(dateKey(item)));
+      }
+      return mine ? mineCompleted(uid) : peerCompleted(uid);
+    }
     if (keys != null) return keys.contains(dateKey(day));
     return mine ? mineCompleted(uid) : peerCompleted(uid);
   }

@@ -1075,21 +1075,34 @@ class FriendService {
       final item = TodoRequestItem.fromMap(snap.id, snap.data() ?? {});
       if (!item.isAccepted) return fallback;
       if (uid != item.fromUid && uid != item.toUid) return fallback;
+      final mineField =
+          uid == item.fromUid ? 'fromCompletedDates' : 'toCompletedDates';
+      final boolField = uid == item.fromUid ? 'fromCompleted' : 'toCompleted';
+      final peerDone = uid == item.fromUid ? item.toCompleted : item.fromCompleted;
+      if (item.isRangeMode) {
+        final allKeys = [
+          for (final day in item.days) TodoRequestItem.dateKey(day),
+        ];
+        final peerKeys = item.completedKeys(uid, mine: false);
+        await ref.update({
+          boolField: mine,
+          mineField: mine ? allKeys : <String>[],
+          'updatedAt': DateTime.now().millisecondsSinceEpoch,
+        });
+        return peerDone ||
+            (allKeys.isNotEmpty && allKeys.every(peerKeys.contains));
+      }
       final useDates = item.days.length > 1 ||
           item.fromCompletedDates != null ||
           item.toCompletedDates != null;
       if (!useDates || day == null) {
-        final field = uid == item.fromUid ? 'fromCompleted' : 'toCompleted';
         await ref.update({
-          field: mine,
+          boolField: mine,
           'updatedAt': DateTime.now().millisecondsSinceEpoch,
         });
-        return uid == item.fromUid ? item.toCompleted : item.fromCompleted;
+        return peerDone;
       }
       final key = TodoRequestItem.dateKey(day);
-      final mineField =
-          uid == item.fromUid ? 'fromCompletedDates' : 'toCompletedDates';
-      final boolField = uid == item.fromUid ? 'fromCompleted' : 'toCompleted';
       final mineKeys = item.completedKeys(uid, mine: true);
       final peerKeys = item.completedKeys(uid, mine: false);
       if (mine) {
@@ -2272,6 +2285,9 @@ class FriendService {
       'visibility': 'title',
       'updatedAt': updatedAt,
       if (event.isJob) 'isJob': true,
+      if (event.isShared) 'shared': true,
+      if (event.isShared && event.sharedMine) 'sharedMine': true,
+      if (event.isShared && event.sharedPeer) 'sharedPeer': true,
     };
   }
 
@@ -2282,6 +2298,10 @@ class FriendService {
     final dateRaw = '${data['date'] ?? ''}';
     final parsed = DateTime.tryParse(dateRaw) ?? DateTime.now();
     final category = '${data['categoryName'] ?? ''}'.trim();
+    final sharedId = '${data['sharedId'] ?? ''}'.trim();
+    final shared = data['shared'] == true ||
+        sharedId.isNotEmpty ||
+        id.startsWith('shared_');
     return CalendarEvent(
       id: id,
       title: title,
@@ -2296,6 +2316,9 @@ class FriendService {
       startMinutes: (data['startMinutes'] as num?)?.toInt(),
       endMinutes: (data['endMinutes'] as num?)?.toInt(),
       isJob: data['isJob'] == true || id.startsWith('job:'),
+      sharedId: shared ? (sharedId.isNotEmpty ? sharedId : id) : null,
+      sharedMine: data['sharedMine'] == true,
+      sharedPeer: data['sharedPeer'] == true,
     );
   }
 

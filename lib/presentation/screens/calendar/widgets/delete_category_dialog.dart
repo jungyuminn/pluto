@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:pluto/core/constants/app_fonts.dart';
 import 'package:pluto/core/constants/app_strings.dart';
+import 'package:pluto/core/layout/pc_layout.dart';
 import 'package:pluto/core/theme/app_colors.dart';
 import 'package:pluto/core/utils/press_bounce.dart';
 import 'package:pluto/domain/entities/event_category.dart';
@@ -43,6 +44,9 @@ class DeleteCategoryDialog extends StatelessWidget {
       backgroundColor: colors.card,
       surfaceTintColor: Colors.transparent,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      constraints: PcLayout.isPc
+          ? const BoxConstraints.tightFor(width: PcLayout.pcDayDialogWidth)
+          : const BoxConstraints(minWidth: 280, maxWidth: 560),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(28, 28, 28, 24),
         child: Column(

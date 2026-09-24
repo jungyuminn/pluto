@@ -17,6 +17,16 @@ class ReleaseNote {
 abstract final class ReleaseNotes {
   static const all = [
     ReleaseNote(
+      version: '1.4.13',
+      items: [
+        '친구 캘린더에서도 같이 할 일 아이콘이 보여요',
+      ],
+      fixes: [
+        '기간으로 만든 같이 할 일이 날짜마다 따로 끝나던 점을 고쳤어요',
+        'PC에서 카테고리 삭제 창 너비가 들쭉날쭉하던 점을 고쳤어요',
+      ],
+    ),
+    ReleaseNote(
       version: '1.4.12',
       items: [
         'PC에서 시간을 굴려 바꿀 수 있어요',

@@ -109,6 +109,8 @@ class CalendarEventRepositoryImpl implements CalendarEventRepository {
             categoryName: patch.categoryName,
             categoryColor: patch.categoryColor,
             completed: patch.completed,
+            sharedMine: patch.sharedMine,
+            sharedPeer: patch.sharedPeer,
             startMinutes: patch.startMinutes,
             endMinutes: patch.endMinutes,
             clearTime: !patch.hasTime,

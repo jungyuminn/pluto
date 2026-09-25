@@ -245,7 +245,20 @@ class CloudSyncSnapshot {
   static bool isFoundation(SharedPreferences prefs) => isFoundationDump(dump(prefs));
 
   static bool hasUserContent(Map<String, dynamic> dump) {
-    return !isFoundationDump(dump);
+    return hasUserRecords(dump);
+  }
+
+  /// 튜토리얼 할 일·설정·친구 플래그만 있으면 빈 기기로 본다.
+  static bool hasUserRecords(Map<String, dynamic> dump) {
+    if (_hasListItems(dump, jobsKey)) return true;
+    if (_hasListItems(dump, licensesKey)) return true;
+    if (_hasListItems(dump, diariesKey)) return true;
+    if (_hasListItems(dump, ledgersKey)) return true;
+    if (_hasListItems(dump, goalsKey)) return true;
+    if (_hasListItems(dump, goalLogsKey)) return true;
+    if (_hasListItems(dump, memosKey)) return true;
+    if (_hasEmojiItems(_stringOf(dump, emojisKey))) return true;
+    return !_eventsAreStarter(_stringOf(dump, eventsKey));
   }
 
   static bool hasLocalItems(Map<String, dynamic> dump) {

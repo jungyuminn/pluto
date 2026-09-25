@@ -130,6 +130,8 @@ enum ReleaseDemo {
   settingsFollow,
   loginPaint,
   featureIntroStay,
+  lighterApp,
+  cloudKeep,
   feature,
   fix,
 }
@@ -203,6 +205,9 @@ ReleaseDemo releaseDemoFor(String text, {required bool isFix}) {
     if (text.contains('구글 계정') || text.contains('자동저장')) {
       return ReleaseDemo.autoSave;
     }
+    if (text.contains('로그아웃했다가') || text.contains('할 일이 지워지던')) {
+      return ReleaseDemo.cloudKeep;
+    }
     if (text.contains('기능 안내')) return ReleaseDemo.featureIntroStay;
     if (text.contains('스티커 팩')) return ReleaseDemo.stickers;
     return ReleaseDemo.fix;
@@ -259,6 +264,9 @@ ReleaseDemo releaseDemoFor(String text, {required bool isFix}) {
       text.contains('새 이름을 집어') ||
       text.contains('저장하면 칸')) {
     return ReleaseDemo.categoryAi;
+  }
+  if (text.contains('가볍게') || text.contains('더 작아')) {
+    return ReleaseDemo.lighterApp;
   }
   if (text.contains('더 많은 기능')) return ReleaseDemo.featureIntro;
   if (text.contains('계정을 따라')) return ReleaseDemo.settingsFollow;
@@ -566,9 +574,254 @@ class ReleaseDemoView extends StatelessWidget {
       ReleaseDemo.settingsFollow => const _SettingsFollowDemo(),
       ReleaseDemo.loginPaint => const _LoginPaintDemo(),
       ReleaseDemo.featureIntroStay => const _FeatureIntroStayDemo(),
+      ReleaseDemo.lighterApp => const _LighterAppDemo(),
+      ReleaseDemo.cloudKeep => const _CloudKeepDemo(),
       ReleaseDemo.feature => const _FeatureDemo(),
       ReleaseDemo.fix => const _FixDemo(),
     };
+  }
+}
+
+class _LighterAppDemo extends StatelessWidget {
+  const _LighterAppDemo();
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 3600,
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final font = AppFonts.of(context);
+        final squeeze = Curves.easeInOutCubic.transform(_gate(t, 0.18, 0.72));
+        final mb = (271 - 178 * squeeze).round();
+        final pop = Curves.elasticOut.transform(_gate(t, 0.08, 0.28));
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+          child: _Card(
+            padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+            child: Column(
+              children: [
+                Expanded(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      Transform.scale(
+                        scale: pop,
+                        child: Image.asset(
+                          'assets/themes/band/mini_drum_kit_light.webp',
+                          height: 72,
+                          fit: BoxFit.contain,
+                        ),
+                      ),
+                      Transform.scale(
+                        scale: pop,
+                        child: Image.asset(
+                          'assets/stickers/daily_dog/01_thank_you.webp',
+                          width: 52,
+                          height: 52,
+                        ),
+                      ),
+                      Transform.scale(
+                        scale: pop,
+                        child: Image.asset(
+                          'assets/themes/band/puppy_guitarist_light.webp',
+                          height: 72,
+                          fit: BoxFit.contain,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Stack(
+                          children: [
+                            ColoredBox(
+                              color: colors.groupedBackground,
+                              child: const SizedBox(height: 10, width: double.infinity),
+                            ),
+                            FractionallySizedBox(
+                              widthFactor: (1 - 0.64 * squeeze).clamp(0.22, 1),
+                              child: ColoredBox(
+                                color: Color.lerp(
+                                  colors.danger,
+                                  colors.accent,
+                                  squeeze,
+                                )!,
+                                child: const SizedBox(height: 10, width: double.infinity),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    SizedBox(
+                      width: 58,
+                      child: Text(
+                        '${mb}MB',
+                        textAlign: TextAlign.right,
+                        style: TextStyle(
+                          fontFamily: font,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w800,
+                          color: colors.text,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _CloudKeepDemo extends StatelessWidget {
+  const _CloudKeepDemo();
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 4200,
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final font = AppFonts.of(context);
+        final add = _gate(t, 0.10, 0.22);
+        final out = _pulse(t, 0.34, 0.44, 0.58);
+        final back = _gate(t, 0.62, 0.74);
+        final keep = t >= 0.22;
+        final dim = t >= 0.40 && t < 0.62 ? 0.28 : 1.0;
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
+          child: _Card(
+            padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      t < 0.40
+                          ? '로그인됨'
+                          : t < 0.62
+                              ? '로그아웃'
+                              : '다시 로그인',
+                      style: TextStyle(
+                        fontFamily: font,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                        color: colors.accent,
+                      ),
+                    ),
+                    const Spacer(),
+                    if (out > 0)
+                      Opacity(
+                        opacity: out,
+                        child: const _Finger(pressed: 1),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Opacity(
+                  opacity: dim,
+                  child: Column(
+                    children: [
+                      _KeepTodo(
+                        title: '헬스장',
+                        color: const Color(0xFF3B82F6),
+                        font: font,
+                        colors: colors,
+                      ),
+                      const SizedBox(height: 6),
+                      Opacity(
+                        opacity: keep ? Curves.easeOutBack.transform(add).clamp(0.0, 1.0) : 0,
+                        child: Transform.translate(
+                          offset: Offset(0, 8 * (1 - add)),
+                          child: _KeepTodo(
+                            title: '축구하기',
+                            color: const Color(0xFF10B981),
+                            font: font,
+                            colors: colors,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Opacity(
+                  opacity: back,
+                  child: Text(
+                    '할 일이 그대로예요',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontFamily: font,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: colors.secondary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _KeepTodo extends StatelessWidget {
+  const _KeepTodo({
+    required this.title,
+    required this.color,
+    required this.font,
+    required this.colors,
+  });
+
+  final String title;
+  final Color color;
+  final String font;
+  final AppColors colors;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: colors.groupedBackground,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
+        child: Row(
+          children: [
+            Container(
+              width: 8,
+              height: 8,
+              decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              title,
+              style: TextStyle(
+                fontFamily: font,
+                fontSize: 14,
+                fontWeight: FontWeight.w800,
+                color: colors.text,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 
@@ -1136,9 +1389,9 @@ class _StickerDemo extends StatelessWidget {
   const _StickerDemo();
 
   static const _assets = [
-    'assets/stickers/company_rabbit/07_salary.png',
-    'assets/stickers/university_rabbit/02_exam.png',
-    'assets/stickers/daily_dog/01_thank_you.png',
+    'assets/stickers/company_rabbit/07_salary.webp',
+    'assets/stickers/university_rabbit/02_exam.webp',
+    'assets/stickers/daily_dog/01_thank_you.webp',
   ];
 
   @override
@@ -2322,7 +2575,7 @@ class _StickerBtnDemo extends StatelessWidget {
                         child: Transform.scale(
                           scale: shown,
                           child: Image.asset(
-                            'assets/stickers/daily_dog/01_thank_you.png',
+                            'assets/stickers/daily_dog/01_thank_you.webp',
                             width: 42,
                             height: 42,
                           ),
@@ -3755,9 +4008,9 @@ class _StickerByModeDemo extends StatelessWidget {
 
   static const _modes = ['할 일', '가계부', '일기'];
   static const _stickers = [
-    'assets/stickers/company_cat/07_fighting.png',
-    'assets/stickers/daily_dog/12_snack.png',
-    'assets/stickers/daily_rabbit/05_good_morning.png',
+    'assets/stickers/company_cat/07_fighting.webp',
+    'assets/stickers/daily_dog/12_snack.webp',
+    'assets/stickers/daily_rabbit/05_good_morning.webp',
   ];
 
   @override

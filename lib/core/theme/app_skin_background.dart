@@ -13,250 +13,250 @@ class AppSkinAssets {
   AppSkinAssets._();
 
   static const petal90Light =
-      'assets/themes/blossom/petal_single_light_90deg.png';
+      'assets/themes/blossom/petal_single_light_90deg.webp';
   static const petal180Light =
-      'assets/themes/blossom/petal_single_light_180deg.png';
+      'assets/themes/blossom/petal_single_light_180deg.webp';
   static const petal270Light =
-      'assets/themes/blossom/petal_single_light_270deg.png';
+      'assets/themes/blossom/petal_single_light_270deg.webp';
   static const petal90Dark =
-      'assets/themes/blossom/petal_single_dark_90deg.png';
+      'assets/themes/blossom/petal_single_dark_90deg.webp';
   static const petal180Dark =
-      'assets/themes/blossom/petal_single_dark_180deg.png';
+      'assets/themes/blossom/petal_single_dark_180deg.webp';
   static const petal270Dark =
-      'assets/themes/blossom/petal_single_dark_270deg.png';
+      'assets/themes/blossom/petal_single_dark_270deg.webp';
   static const hillsLight =
-      'assets/themes/blossom/blossom_bottom_hills_light.png';
+      'assets/themes/blossom/blossom_bottom_hills_light.webp';
   static const hillsDark =
-      'assets/themes/blossom/blossom_bottom_hills_dark.png';
+      'assets/themes/blossom/blossom_bottom_hills_dark.webp';
 
   static const cloverDecorationLight =
-      'assets/themes/clover/clover_decoration_light.png';
+      'assets/themes/clover/clover_decoration_light.webp';
   static const cloverDecorationDark =
-      'assets/themes/clover/clover_decoration_dark.png';
+      'assets/themes/clover/clover_decoration_dark.webp';
   static const cloverBottomLight =
-      'assets/themes/clover/clover_bottom_light.png';
+      'assets/themes/clover/clover_bottom_light.webp';
   static const cloverBottomDark =
-      'assets/themes/clover/clover_bottom_dark.png';
+      'assets/themes/clover/clover_bottom_dark.webp';
 
   static const fluffyBearFaceLight =
-      'assets/themes/fluffy_bear/bear_face_decoration_light.png';
+      'assets/themes/fluffy_bear/bear_face_decoration_light.webp';
   static const fluffyBearFaceDark =
-      'assets/themes/fluffy_bear/bear_face_decoration_dark.png';
+      'assets/themes/fluffy_bear/bear_face_decoration_dark.webp';
   static const fluffyBearBottomLight =
-      'assets/themes/fluffy_bear/bear_face_bottom_light.png';
+      'assets/themes/fluffy_bear/bear_face_bottom_light.webp';
   static const fluffyBearBottomDark =
-      'assets/themes/fluffy_bear/bear_face_bottom_dark.png';
+      'assets/themes/fluffy_bear/bear_face_bottom_dark.webp';
 
   static const fluffyRabbitFaceLight =
-      'assets/themes/fluffy_rabbit/bunny_face_decoration_light.png';
+      'assets/themes/fluffy_rabbit/bunny_face_decoration_light.webp';
   static const fluffyRabbitFaceDark =
-      'assets/themes/fluffy_rabbit/bunny_face_decoration_dark.png';
+      'assets/themes/fluffy_rabbit/bunny_face_decoration_dark.webp';
   static const fluffyRabbitBottomLight =
-      'assets/themes/fluffy_rabbit/bunny_face_bottom_light.png';
+      'assets/themes/fluffy_rabbit/bunny_face_bottom_light.webp';
   static const fluffyRabbitBottomDark =
-      'assets/themes/fluffy_rabbit/bunny_face_bottom_dark.png';
+      'assets/themes/fluffy_rabbit/bunny_face_bottom_dark.webp';
 
   static const pinkHeartFaceLight =
-      'assets/themes/pink_heart/heart_decoration_light.png';
+      'assets/themes/pink_heart/heart_decoration_light.webp';
   static const pinkHeartFaceDark =
-      'assets/themes/pink_heart/heart_decoration_dark.png';
+      'assets/themes/pink_heart/heart_decoration_dark.webp';
   static const pinkHeartBottomLight =
-      'assets/themes/pink_heart/heart_bottom_light.png';
+      'assets/themes/pink_heart/heart_bottom_light.webp';
   static const pinkHeartBottomDark =
-      'assets/themes/pink_heart/heart_bottom_dark.png';
+      'assets/themes/pink_heart/heart_bottom_dark.webp';
 
-  static const sunLight = 'assets/themes/summer_beach/summer_sun_light.png';
-  static const sunDark = 'assets/themes/summer_beach/summer_sun_dark.png';
-  static const duckLight = 'assets/themes/summer_beach/duck_ring_light.png';
-  static const duckDark = 'assets/themes/summer_beach/duck_ring_dark.png';
-  static const shellLight = 'assets/themes/summer_beach/shell_star_light.png';
-  static const shellDark = 'assets/themes/summer_beach/shell_star_dark.png';
+  static const sunLight = 'assets/themes/summer_beach/summer_sun_light.webp';
+  static const sunDark = 'assets/themes/summer_beach/summer_sun_dark.webp';
+  static const duckLight = 'assets/themes/summer_beach/duck_ring_light.webp';
+  static const duckDark = 'assets/themes/summer_beach/duck_ring_dark.webp';
+  static const shellLight = 'assets/themes/summer_beach/shell_star_light.webp';
+  static const shellDark = 'assets/themes/summer_beach/shell_star_dark.webp';
   static const waveLight =
-      'assets/themes/summer_beach/sea_wave_bottom_light.png';
+      'assets/themes/summer_beach/sea_wave_bottom_light.webp';
   static const waveDark =
-      'assets/themes/summer_beach/sea_wave_bottom_dark.png';
+      'assets/themes/summer_beach/sea_wave_bottom_dark.webp';
 
-  static const snowmanLight = 'assets/themes/snowy_winter/snowman_light.png';
-  static const snowmanDark = 'assets/themes/snowy_winter/snowman_dark.png';
+  static const snowmanLight = 'assets/themes/snowy_winter/snowman_light.webp';
+  static const snowmanDark = 'assets/themes/snowy_winter/snowman_dark.webp';
   static const snowflakeLight =
-      'assets/themes/snowy_winter/snowflake_light.png';
-  static const snowflakeDark = 'assets/themes/snowy_winter/snowflake_dark.png';
+      'assets/themes/snowy_winter/snowflake_light.webp';
+  static const snowflakeDark = 'assets/themes/snowy_winter/snowflake_dark.webp';
   static const snowCloudLight =
-      'assets/themes/snowy_winter/snow_cloud_light.png';
-  static const snowCloudDark = 'assets/themes/snowy_winter/snow_cloud_dark.png';
+      'assets/themes/snowy_winter/snow_cloud_light.webp';
+  static const snowCloudDark = 'assets/themes/snowy_winter/snow_cloud_dark.webp';
   static const snowGroundLight =
-      'assets/themes/snowy_winter/snow_ground_light.png';
+      'assets/themes/snowy_winter/snow_ground_light.webp';
   static const snowGroundDark =
-      'assets/themes/snowy_winter/snow_ground_dark.png';
+      'assets/themes/snowy_winter/snow_ground_dark.webp';
 
   static const squishyBearLight =
-      'assets/themes/squishy_bear/squishy_bear_light.png';
+      'assets/themes/squishy_bear/squishy_bear_light.webp';
   static const squishyBearDark =
-      'assets/themes/squishy_bear/squishy_bear_dark.png';
-  static const bearPawLight = 'assets/themes/squishy_bear/bear_paw_light.png';
-  static const bearPawDark = 'assets/themes/squishy_bear/bear_paw_dark.png';
+      'assets/themes/squishy_bear/squishy_bear_dark.webp';
+  static const bearPawLight = 'assets/themes/squishy_bear/bear_paw_light.webp';
+  static const bearPawDark = 'assets/themes/squishy_bear/bear_paw_dark.webp';
   static const softHillsLight =
-      'assets/themes/squishy_bear/soft_hills_light.png';
+      'assets/themes/squishy_bear/soft_hills_light.webp';
   static const softHillsDark =
-      'assets/themes/squishy_bear/soft_hills_dark.png';
+      'assets/themes/squishy_bear/soft_hills_dark.webp';
 
   static const strawberryLight =
-      'assets/themes/strawberry_milk/strawberry_light.png';
+      'assets/themes/strawberry_milk/strawberry_light.webp';
   static const strawberryDark =
-      'assets/themes/strawberry_milk/strawberry_dark.png';
+      'assets/themes/strawberry_milk/strawberry_dark.webp';
   static const milkCartonLight =
-      'assets/themes/strawberry_milk/milk_carton_light.png';
+      'assets/themes/strawberry_milk/milk_carton_light.webp';
   static const milkCartonDark =
-      'assets/themes/strawberry_milk/milk_carton_dark.png';
-  static const strawLight = 'assets/themes/strawberry_milk/straw_light.png';
-  static const strawDark = 'assets/themes/strawberry_milk/straw_dark.png';
+      'assets/themes/strawberry_milk/milk_carton_dark.webp';
+  static const strawLight = 'assets/themes/strawberry_milk/straw_light.webp';
+  static const strawDark = 'assets/themes/strawberry_milk/straw_dark.webp';
   static const milkFoamLight =
-      'assets/themes/strawberry_milk/milk_foam_ground_light.png';
+      'assets/themes/strawberry_milk/milk_foam_ground_light.webp';
   static const milkFoamDark =
-      'assets/themes/strawberry_milk/milk_foam_ground_dark.png';
+      'assets/themes/strawberry_milk/milk_foam_ground_dark.webp';
 
   static const heartBearLight =
-      'assets/themes/lovely_bear/heart_bear_light.png';
+      'assets/themes/lovely_bear/heart_bear_light.webp';
   static const heartBearDark =
-      'assets/themes/lovely_bear/heart_bear_dark.png';
+      'assets/themes/lovely_bear/heart_bear_dark.webp';
   static const heartBalloonsLight =
-      'assets/themes/lovely_bear/heart_balloons_light.png';
+      'assets/themes/lovely_bear/heart_balloons_light.webp';
   static const heartBalloonsDark =
-      'assets/themes/lovely_bear/heart_balloons_dark.png';
+      'assets/themes/lovely_bear/heart_balloons_dark.webp';
   static const loveLetterLight =
-      'assets/themes/lovely_bear/love_letter_light.png';
+      'assets/themes/lovely_bear/love_letter_light.webp';
   static const loveLetterDark =
-      'assets/themes/lovely_bear/love_letter_dark.png';
+      'assets/themes/lovely_bear/love_letter_dark.webp';
   static const loveVillageGroundLight =
-      'assets/themes/lovely_bear/love_village_ground_light.png';
+      'assets/themes/lovely_bear/love_village_ground_light.webp';
   static const loveVillageGroundDark =
-      'assets/themes/lovely_bear/love_village_ground_dark.png';
+      'assets/themes/lovely_bear/love_village_ground_dark.webp';
 
   static const puddlePuppyLight =
-      'assets/themes/rainy_day/puddle_jump_puppy_light.png';
+      'assets/themes/rainy_day/puddle_jump_puppy_light.webp';
   static const puddlePuppyDark =
-      'assets/themes/rainy_day/puddle_jump_puppy_dark.png';
+      'assets/themes/rainy_day/puddle_jump_puppy_dark.webp';
   static const rainyUmbrellaLight =
-      'assets/themes/rainy_day/rainy_umbrella_light.png';
+      'assets/themes/rainy_day/rainy_umbrella_light.webp';
   static const rainyUmbrellaDark =
-      'assets/themes/rainy_day/rainy_umbrella_dark.png';
+      'assets/themes/rainy_day/rainy_umbrella_dark.webp';
   static const rainyGroundLight =
-      'assets/themes/rainy_day/rainy_ground_light.png';
+      'assets/themes/rainy_day/rainy_ground_light.webp';
   static const rainyGroundDark =
-      'assets/themes/rainy_day/rainy_ground_dark.png';
+      'assets/themes/rainy_day/rainy_ground_dark.webp';
 
   static const puppyGuitaristLight =
-      'assets/themes/band/puppy_guitarist_light.png';
+      'assets/themes/band/puppy_guitarist_light.webp';
   static const puppyGuitaristDark =
-      'assets/themes/band/puppy_guitarist_dark.png';
+      'assets/themes/band/puppy_guitarist_dark.webp';
   static const miniDrumKitLight =
-      'assets/themes/band/mini_drum_kit_light.png';
+      'assets/themes/band/mini_drum_kit_light.webp';
   static const miniDrumKitDark =
-      'assets/themes/band/mini_drum_kit_dark.png';
+      'assets/themes/band/mini_drum_kit_dark.webp';
   static const stickerAmpLight =
-      'assets/themes/band/sticker_amp_light.png';
+      'assets/themes/band/sticker_amp_light.webp';
   static const stickerAmpDark =
-      'assets/themes/band/sticker_amp_dark.png';
+      'assets/themes/band/sticker_amp_dark.webp';
   static const bandStageGroundLight =
-      'assets/themes/band/band_stage_ground_light.png';
+      'assets/themes/band/band_stage_ground_light.webp';
   static const bandStageGroundDark =
-      'assets/themes/band/band_stage_ground_dark.png';
+      'assets/themes/band/band_stage_ground_dark.webp';
 
   static const cloudHouseLight =
-      'assets/themes/cloud/cloud_house_light.png';
+      'assets/themes/cloud/cloud_house_light.webp';
   static const cloudHouseDark =
-      'assets/themes/cloud/cloud_house_dark.png';
+      'assets/themes/cloud/cloud_house_dark.webp';
   static const cloudSheepLight =
-      'assets/themes/cloud/cloud_sheep_light.png';
+      'assets/themes/cloud/cloud_sheep_light.webp';
   static const cloudSheepDark =
-      'assets/themes/cloud/cloud_sheep_dark.png';
+      'assets/themes/cloud/cloud_sheep_dark.webp';
   static const sleepyMoonLight =
-      'assets/themes/cloud/sleepy_moon_light.png';
+      'assets/themes/cloud/sleepy_moon_light.webp';
   static const sleepyMoonDark =
-      'assets/themes/cloud/sleepy_moon_dark.png';
+      'assets/themes/cloud/sleepy_moon_dark.webp';
   static const cloudVillageGroundLight =
-      'assets/themes/cloud/cloud_village_ground_light.png';
+      'assets/themes/cloud/cloud_village_ground_light.webp';
   static const cloudVillageGroundDark =
-      'assets/themes/cloud/cloud_village_ground_dark.png';
+      'assets/themes/cloud/cloud_village_ground_dark.webp';
 
-  static const catPileLight = 'assets/themes/cat_village/cat_pile_light.png';
-  static const catPileDark = 'assets/themes/cat_village/cat_pile_dark.png';
-  static const catBoxLight = 'assets/themes/cat_village/cat_box_light.png';
-  static const catBoxDark = 'assets/themes/cat_village/cat_box_dark.png';
-  static const catToysLight = 'assets/themes/cat_village/cat_toys_light.png';
-  static const catToysDark = 'assets/themes/cat_village/cat_toys_dark.png';
+  static const catPileLight = 'assets/themes/cat_village/cat_pile_light.webp';
+  static const catPileDark = 'assets/themes/cat_village/cat_pile_dark.webp';
+  static const catBoxLight = 'assets/themes/cat_village/cat_box_light.webp';
+  static const catBoxDark = 'assets/themes/cat_village/cat_box_dark.webp';
+  static const catToysLight = 'assets/themes/cat_village/cat_toys_light.webp';
+  static const catToysDark = 'assets/themes/cat_village/cat_toys_dark.webp';
   static const catTownGroundLight =
-      'assets/themes/cat_village/cat_town_ground_light.png';
+      'assets/themes/cat_village/cat_town_ground_light.webp';
   static const catTownGroundDark =
-      'assets/themes/cat_village/cat_town_ground_dark.png';
+      'assets/themes/cat_village/cat_town_ground_dark.webp';
 
   static const bakerHamstersLight =
-      'assets/themes/hamster_bakery/baker_hamsters_light.png';
+      'assets/themes/hamster_bakery/baker_hamsters_light.webp';
   static const bakerHamstersDark =
-      'assets/themes/hamster_bakery/baker_hamsters_dark.png';
+      'assets/themes/hamster_bakery/baker_hamsters_dark.webp';
   static const cuteBreadsLight =
-      'assets/themes/hamster_bakery/cute_breads_light.png';
+      'assets/themes/hamster_bakery/cute_breads_light.webp';
   static const cuteBreadsDark =
-      'assets/themes/hamster_bakery/cute_breads_dark.png';
+      'assets/themes/hamster_bakery/cute_breads_dark.webp';
   static const hamsterBreadBasketLight =
-      'assets/themes/hamster_bakery/hamster_bread_basket_light.png';
+      'assets/themes/hamster_bakery/hamster_bread_basket_light.webp';
   static const hamsterBreadBasketDark =
-      'assets/themes/hamster_bakery/hamster_bread_basket_dark.png';
+      'assets/themes/hamster_bakery/hamster_bread_basket_dark.webp';
   static const hamsterBakeryGroundLight =
-      'assets/themes/hamster_bakery/hamster_bakery_ground_light.png';
+      'assets/themes/hamster_bakery/hamster_bakery_ground_light.webp';
   static const hamsterBakeryGroundDark =
-      'assets/themes/hamster_bakery/hamster_bakery_ground_dark.png';
+      'assets/themes/hamster_bakery/hamster_bakery_ground_dark.webp';
 
   static const ottersInTubLight =
-      'assets/themes/otter_bathhouse/light/otters-in-tub.png';
+      'assets/themes/otter_bathhouse/light/otters-in-tub.webp';
   static const ottersInTubDark =
-      'assets/themes/otter_bathhouse/dark/otters-in-tub.png';
+      'assets/themes/otter_bathhouse/dark/otters-in-tub.webp';
   static const bathToysLight =
-      'assets/themes/otter_bathhouse/light/bath-toys.png';
+      'assets/themes/otter_bathhouse/light/bath-toys.webp';
   static const bathToysDark =
-      'assets/themes/otter_bathhouse/dark/bath-toys.png';
+      'assets/themes/otter_bathhouse/dark/bath-toys.webp';
   static const bubbleOttersLight =
-      'assets/themes/otter_bathhouse/light/bubble-otters.png';
+      'assets/themes/otter_bathhouse/light/bubble-otters.webp';
   static const bubbleOttersDark =
-      'assets/themes/otter_bathhouse/dark/bubble-otters.png';
+      'assets/themes/otter_bathhouse/dark/bubble-otters.webp';
   static const bottomBathhouseLight =
-      'assets/themes/otter_bathhouse/light/bottom-bathhouse.png';
+      'assets/themes/otter_bathhouse/light/bottom-bathhouse.webp';
   static const bottomBathhouseDark =
-      'assets/themes/otter_bathhouse/dark/bottom-bathhouse.png';
+      'assets/themes/otter_bathhouse/dark/bottom-bathhouse.webp';
 
   static const rabbitFlowerStallLight =
-      'assets/themes/rabbit_flower_market/light/rabbit-flower-stall.png';
+      'assets/themes/rabbit_flower_market/light/rabbit-flower-stall.webp';
   static const rabbitFlowerStallDark =
-      'assets/themes/rabbit_flower_market/dark/rabbit-flower-stall.png';
+      'assets/themes/rabbit_flower_market/dark/rabbit-flower-stall.webp';
   static const flowerMarketSuppliesLight =
-      'assets/themes/rabbit_flower_market/light/flower-market-supplies.png';
+      'assets/themes/rabbit_flower_market/light/flower-market-supplies.webp';
   static const flowerMarketSuppliesDark =
-      'assets/themes/rabbit_flower_market/dark/flower-market-supplies.png';
+      'assets/themes/rabbit_flower_market/dark/flower-market-supplies.webp';
   static const rabbitsInFlowerBasketLight =
-      'assets/themes/rabbit_flower_market/light/rabbits-in-flower-basket.png';
+      'assets/themes/rabbit_flower_market/light/rabbits-in-flower-basket.webp';
   static const rabbitsInFlowerBasketDark =
-      'assets/themes/rabbit_flower_market/dark/rabbits-in-flower-basket.png';
+      'assets/themes/rabbit_flower_market/dark/rabbits-in-flower-basket.webp';
   static const bottomFlowerMarketLight =
-      'assets/themes/rabbit_flower_market/light/bottom-flower-market.png';
+      'assets/themes/rabbit_flower_market/light/bottom-flower-market.webp';
   static const bottomFlowerMarketDark =
-      'assets/themes/rabbit_flower_market/dark/bottom-flower-market.png';
+      'assets/themes/rabbit_flower_market/dark/bottom-flower-market.webp';
 
   static const bearPancakeCounterLight =
-      'assets/themes/bear_pancake_cafe/light/bear-pancake-counter.png';
+      'assets/themes/bear_pancake_cafe/light/bear-pancake-counter.webp';
   static const bearPancakeCounterDark =
-      'assets/themes/bear_pancake_cafe/dark/bear-pancake-counter.png';
+      'assets/themes/bear_pancake_cafe/dark/bear-pancake-counter.webp';
   static const pancakeCafeSuppliesLight =
-      'assets/themes/bear_pancake_cafe/light/pancake-cafe-supplies.png';
+      'assets/themes/bear_pancake_cafe/light/pancake-cafe-supplies.webp';
   static const pancakeCafeSuppliesDark =
-      'assets/themes/bear_pancake_cafe/dark/pancake-cafe-supplies.png';
+      'assets/themes/bear_pancake_cafe/dark/pancake-cafe-supplies.webp';
   static const bearsAndPancakeStackLight =
-      'assets/themes/bear_pancake_cafe/light/bears-and-pancake-stack.png';
+      'assets/themes/bear_pancake_cafe/light/bears-and-pancake-stack.webp';
   static const bearsAndPancakeStackDark =
-      'assets/themes/bear_pancake_cafe/dark/bears-and-pancake-stack.png';
+      'assets/themes/bear_pancake_cafe/dark/bears-and-pancake-stack.webp';
   static const bottomPancakeCafeLight =
-      'assets/themes/bear_pancake_cafe/light/bottom-pancake-cafe.png';
+      'assets/themes/bear_pancake_cafe/light/bottom-pancake-cafe.webp';
   static const bottomPancakeCafeDark =
-      'assets/themes/bear_pancake_cafe/dark/bottom-pancake-cafe.png';
+      'assets/themes/bear_pancake_cafe/dark/bottom-pancake-cafe.webp';
 
   static const precacheDecorations = [
     petal90Light,

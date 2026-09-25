@@ -64,6 +64,16 @@ class DayStickers {
     return _stickerFile.hasMatch(path.split('/').last);
   }
 
+  /// 예전에 저장된 `.png` 경로를 지금 번들 파일로 맞춘다.
+  static String resolve(String path) {
+    final trimmed = path.trim();
+    if (!trimmed.startsWith(prefix)) return trimmed;
+    if (trimmed.toLowerCase().endsWith('.png')) {
+      return '${trimmed.substring(0, trimmed.length - 4)}.webp';
+    }
+    return trimmed;
+  }
+
   static Future<List<String>> load() async {
     final manifest = await AssetManifest.loadFromAssetBundle(rootBundle);
     return [
@@ -156,8 +166,9 @@ class _DayEmojiSheetState extends State<DayEmojiSheet> {
     final current = widget.selected?.trim();
     var packIndex = 0;
     if (DayStickers.isAsset(current)) {
+      final resolved = DayStickers.resolve(current!);
       final found =
-          ordered.indexWhere((pack) => pack.assets.contains(current));
+          ordered.indexWhere((pack) => pack.assets.contains(resolved));
       if (found >= 0) packIndex = found;
     }
     setState(() {

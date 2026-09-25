@@ -17,6 +17,15 @@ class ReleaseNote {
 abstract final class ReleaseNotes {
   static const all = [
     ReleaseNote(
+      version: '1.4.15',
+      items: [
+        '테마와 스티커를 가볍게 바꿔 앱이 더 작아졌어요',
+      ],
+      fixes: [
+        '로그아웃했다가 다시 들어오면 할 일이 지워지던 점을 고쳤어요',
+      ],
+    ),
+    ReleaseNote(
       version: '1.4.14',
       items: [
         '맞는 칸이 없으면 새 이름을 집어 두고, 저장하면 칸이 생겨요',

@@ -187,14 +187,15 @@ class CloudSyncService {
             _vaultProvider ??
             _currentProvider();
         final dump = await _localDump();
-        await _upload(
-          user.uid,
-          dump,
-          allowEmpty: true,
-          pruneFiles: false,
-          waitForFiles: true,
-          ignoreEpoch: true,
-        );
+        if (CloudSyncSnapshot.hasUserRecords(dump)) {
+          await _upload(
+            user.uid,
+            dump,
+            pruneFiles: false,
+            waitForFiles: true,
+            ignoreEpoch: true,
+          );
+        }
       }
       await AppAuthService.instance.signOut();
       FriendService.instance.reset();
@@ -375,7 +376,7 @@ class CloudSyncService {
     final hash = await _hash(prefs, dump);
     if (epoch != _epoch || !_ready || _busy) return;
     if (hash == _uploadedHash) return;
-    if (CloudSyncSnapshot.isFoundationDump(dump)) return;
+    if (!CloudSyncSnapshot.hasUserRecords(dump)) return;
     try {
       await _upload(user.uid, dump, waitForFiles: true);
     } catch (error) {
@@ -500,7 +501,7 @@ class CloudSyncService {
     bool waitForFiles = true,
     bool ignoreEpoch = false,
   }) async {
-    if (!allowEmpty && CloudSyncSnapshot.isFoundationDump(dump)) return;
+    if (!allowEmpty && !CloudSyncSnapshot.hasUserRecords(dump)) return;
     final epoch = _epoch;
     bool alive() => ignoreEpoch || epoch == _epoch;
     final previous = _inflight ?? Future<void>.value();
@@ -632,8 +633,12 @@ class CloudSyncService {
           final parsed = _parseVault(sub.data());
           if (parsed.hasContent) return parsed;
         }
+      } on AppAuthException {
+        rethrow;
+      } on FirebaseException catch (error) {
+        throw AppAuthException('sync', error.code);
       } catch (error) {
-        debugPrint('Cloud vault doc fetch skipped: $error');
+        throw AppAuthException('sync', _code(error));
       }
       final snap = await ref
           .get(const GetOptions(source: Source.server))
@@ -666,9 +671,7 @@ class CloudSyncService {
     } else if (payload is Map) {
       dump = CloudSyncSnapshot.normalizeDump(payload);
     }
-    final flagged = data['hasContent'] == true;
-    final hasContent = CloudSyncSnapshot.hasUserContent(dump) ||
-        (flagged && dump.isNotEmpty && !CloudSyncSnapshot.isFoundationDump(dump));
+    final hasContent = CloudSyncSnapshot.hasUserRecords(dump);
     return _RemoteSnapshot(
       hasContent: hasContent,
       dump: dump,

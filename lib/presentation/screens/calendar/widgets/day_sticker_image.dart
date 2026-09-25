@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:pluto/presentation/screens/calendar/widgets/day_emoji_sheet.dart';
 
 class DayStickerImage extends StatefulWidget {
   const DayStickerImage({
@@ -50,7 +51,7 @@ class _DayStickerImageState extends State<DayStickerImage> {
         curve: Curves.easeOutBack,
         scale: _scale,
         child: Image.asset(
-          widget.asset,
+          DayStickers.resolve(widget.asset),
           width: widget.width,
           height: widget.height,
           fit: BoxFit.contain,

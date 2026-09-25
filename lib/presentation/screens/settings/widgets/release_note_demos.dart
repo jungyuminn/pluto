@@ -789,7 +789,7 @@ class _KeepTodo extends StatelessWidget {
 
   final String title;
   final Color color;
-  final String font;
+  final String? font;
   final AppColors colors;
 
   @override

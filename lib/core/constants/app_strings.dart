@@ -250,7 +250,7 @@ class AppStrings {
   static const featureIntroFriendDecline = '거절';
   static const featureIntroFriendAccept = '수락';
   static const featureIntroFriendDone = '친구가 되었어요';
-  static const webLoginBrand = '플루토';
+  static const webLoginBrand = 'Pluto';
   static const webLoginTagline = '오직 나만의 캘린더';
   static const webLoginPcLabel = 'PC버전';
   static const accountLoginWebUrl = 'pluto.day';

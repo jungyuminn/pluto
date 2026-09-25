@@ -87,6 +87,7 @@ class _WebLoginScreenState extends State<WebLoginScreen> {
   Widget build(BuildContext context) {
     return AppSkinBackground(
       skin: AppSkin.classic,
+      color: Colors.white,
       liftForNav: false,
       child: SafeArea(
         child: _WebLoginIntro(
@@ -270,8 +271,8 @@ class _WebLoginIntro extends StatelessWidget {
       child: LayoutBuilder(
         builder: (context, constraints) {
           const designHeight = 900.0;
-          const logoSize = 208.0;
-          const brandSize = 46.0;
+          const logoSize = 192.0;
+          const brandSize = 38.0;
           const taglineSize = 22.0;
           const buttonSize = 64.0;
           const buttonGap = 44.0;
@@ -331,9 +332,9 @@ class _WebLoginIntro extends StatelessWidget {
                     AppStrings.webLoginTagline,
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      fontFamily: font,
+                      fontFamily: AppFonts.pretendard,
                       fontSize: taglineSize,
-                      fontWeight: FontWeight.w500,
+                      fontWeight: FontWeight.w400,
                       height: 1.45,
                       color: colors.text,
                       decoration: TextDecoration.none,

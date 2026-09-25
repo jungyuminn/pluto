@@ -114,7 +114,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   var _todoSize = FontSizeLevel.medium;
   var _calendarSize = FontSizeLevel.medium;
   var _calendarLabelSize = FontSizeLevel.medium;
-  var _autoBackupInterval = AutoBackupInterval.daily;
+  var _autoBackupInterval = AutoBackupInterval.off;
   var _ready = false;
   var _contactHintVisible = false;
   Timer? _contactHintTimer;

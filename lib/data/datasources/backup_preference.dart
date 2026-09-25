@@ -28,7 +28,7 @@ class BackupPreference {
         _interval = prefs == null
             ? interval
             : AutoBackupInterval.fromDays(
-                prefs.getInt(_intervalKey) ?? AutoBackupInterval.daily.days,
+                prefs.getInt(_intervalKey) ?? AutoBackupInterval.off.days,
               ),
         _lastBackupAt = DateTime.tryParse(
           prefs?.getString(_lastAtKey) ?? '',

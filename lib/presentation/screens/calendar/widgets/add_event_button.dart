@@ -24,7 +24,7 @@ class AddEventButton extends StatelessWidget {
         child: Text(
           label ?? AppStrings.addEvent,
           style: TextStyle(
-            color: colors.hint,
+            color: Color.lerp(colors.muted, colors.hint, 0.4),
             fontWeight: FontWeight.w600,
           ),
         ),

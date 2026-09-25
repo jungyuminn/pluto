@@ -240,20 +240,15 @@ class _LedgerFormState extends State<LedgerForm> with TickerProviderStateMixin {
     final entries = await scope.getLedgers();
     final categories = await scope.fetchCategories(CategoryKind.ledger);
     if (!mounted) return;
-    final fallback = EventCategory(
-      id: _categoryId ?? EventCategory.ledgerPresets.first.id,
-      name: _categoryName ?? EventCategory.ledgerPresets.first.name,
-      color: _categoryColor ?? EventCategory.ledgerPresets.first.color,
-    );
     _suggest?.dispose();
     _suggest = CategorySuggestSession(
+      kind: CategoryKind.ledger,
       categories: categories,
       records: [
         for (final entry in entries)
           if ((entry.categoryId ?? '').isNotEmpty)
             CategoryHistoryRecord(entry.title, entry.categoryId!),
       ],
-      fallback: fallback,
       onUpdate: _applySuggest,
     );
     setState(() => _suggestOn = true);
@@ -531,9 +526,20 @@ class _LedgerFormState extends State<LedgerForm> with TickerProviderStateMixin {
     LedgerSalaryDetails? salary,
   }) async {
     setState(() => _saving = true);
+    final scope = AppScope.of(context);
+    final savedCategory = await scope.ensureCategory(
+      CategoryKind.ledger,
+      id: _categoryId,
+      name: _categoryName ?? '',
+      color: _categoryColor ?? 0,
+    );
+    if (!mounted) return;
+    _categoryId = savedCategory.id;
+    _categoryName = savedCategory.name;
+    _categoryColor = savedCategory.color;
     final initial = widget.initial;
     final now = DateTime.now().millisecondsSinceEpoch;
-    await AppScope.of(context).saveLedger(
+    await scope.saveLedger(
       LedgerEntry(
         id: initial?.id ?? '$now',
         date: _date,
@@ -543,9 +549,9 @@ class _LedgerFormState extends State<LedgerForm> with TickerProviderStateMixin {
         memo: initial?.memo ?? '',
         sortOrder: initial?.sortOrder ?? now,
         salary: _isWage ? salary : null,
-        categoryId: _categoryId,
-        categoryName: _categoryName ?? '',
-        categoryColor: _categoryColor ?? 0,
+        categoryId: savedCategory.id,
+        categoryName: savedCategory.name,
+        categoryColor: savedCategory.color,
       ),
     );
     if (!mounted) return;

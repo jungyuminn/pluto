@@ -213,7 +213,6 @@ class _AddEventFormState extends State<AddEventForm>
                 if ((event.categoryId ?? '').isNotEmpty)
                   CategoryHistoryRecord(event.title, event.categoryId!),
             ],
-            fallback: selected,
             onUpdate: _applySuggest,
           )
         : null;
@@ -237,17 +236,9 @@ class _AddEventFormState extends State<AddEventForm>
     if (widget.initial != null) return;
     if (_suggest != null) return;
     if (!CategorySuggestSession.isOn(context, editing: false)) return;
-    var fallback = EventCategory.presets.first;
-    for (final category in EventCategory.presets) {
-      if (category.id == _categoryId) {
-        fallback = category;
-        break;
-      }
-    }
     _suggest = CategorySuggestSession(
       categories: EventCategory.presets,
       records: const [],
-      fallback: fallback,
       onUpdate: _applySuggest,
     );
     setState(() => _suggestOn = true);
@@ -550,6 +541,16 @@ class _AddEventFormState extends State<AddEventForm>
     }
     if (_saving) return;
     setState(() => _saving = true);
+    final savedCategory = await AppScope.of(context).ensureCategory(
+      CategoryKind.event,
+      id: _categoryId,
+      name: _categoryName!,
+      color: _categoryColor!,
+    );
+    if (!mounted) return;
+    _categoryId = savedCategory.id;
+    _categoryName = savedCategory.name;
+    _categoryColor = savedCategory.color;
     if (widget.shareWith != null) {
       await _sendShared(title, memo: _memo.text.trim());
       return;

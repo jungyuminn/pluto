@@ -212,7 +212,6 @@ class _LongGoalEditSheetState extends State<LongGoalEditSheet>
                 if ((event.categoryId ?? '').isNotEmpty)
                   CategoryHistoryRecord(event.title, event.categoryId!),
             ],
-            fallback: picked,
             onUpdate: _applySuggest,
           )
         : null;
@@ -355,16 +354,27 @@ class _LongGoalEditSheetState extends State<LongGoalEditSheet>
     }
     if (_saving) return;
     setState(() => _saving = true);
+    final scope = AppScope.of(context);
+    final savedCategory = await scope.ensureCategory(
+      CategoryKind.event,
+      id: _categoryId,
+      name: _categoryName ?? '',
+      color: _color,
+    );
+    if (!mounted) return;
+    _categoryId = savedCategory.id;
+    _categoryName = savedCategory.name;
+    _color = savedCategory.color;
     final initial = widget.initial;
     final goal = LongGoal(
       id: initial?.id ?? '${DateTime.now().microsecondsSinceEpoch}',
       title: title,
-      color: _color,
+      color: savedCategory.color,
       kind: _kind,
       target: target,
       unit: _unit.text.trim(),
       memo: _memo.text.trim(),
-      categoryId: _categoryId,
+      categoryId: savedCategory.id,
       sortOrder: initial?.sortOrder ?? DateTime.now().millisecondsSinceEpoch,
       startedAt: initial?.startedAt.isNotEmpty == true
           ? initial!.startedAt

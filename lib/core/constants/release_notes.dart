@@ -17,6 +17,15 @@ class ReleaseNote {
 abstract final class ReleaseNotes {
   static const all = [
     ReleaseNote(
+      version: '1.4.14',
+      items: [
+        '맞는 칸이 없으면 새 이름을 집어 두고, 저장하면 칸이 생겨요',
+      ],
+      fixes: [
+        '처음 설치하면 구글 계정 창이 뜨던 점을 고쳤어요',
+      ],
+    ),
+    ReleaseNote(
       version: '1.4.13',
       items: [
         '친구 캘린더에서도 같이 할 일 아이콘이 보여요',

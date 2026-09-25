@@ -148,13 +148,13 @@ class _AddLicenseFormState extends State<AddLicenseForm>
     _suggest?.dispose();
     _suggest = suggestOn
         ? CategorySuggestSession(
+            kind: CategoryKind.license,
             categories: categories,
             records: [
               for (final license in licenses)
                 if (license.hasCategory)
                   CategoryHistoryRecord(license.name, license.categoryId!),
             ],
-            fallback: selected,
             onUpdate: _applySuggest,
           )
         : null;
@@ -250,6 +250,17 @@ class _AddLicenseFormState extends State<AddLicenseForm>
     }
     if (_saving) return;
     setState(() => _saving = true);
+    final scope = AppScope.of(context);
+    final savedCategory = await scope.ensureCategory(
+      CategoryKind.license,
+      id: _categoryId,
+      name: _categoryName ?? '',
+      color: _categoryColor ?? 0,
+    );
+    if (!mounted) return;
+    _categoryId = savedCategory.id;
+    _categoryName = savedCategory.name;
+    _categoryColor = savedCategory.color;
     final initial = widget.initial;
     final license = License(
       id: initial?.id ?? DateTime.now().microsecondsSinceEpoch.toString(),
@@ -263,11 +274,10 @@ class _AddLicenseFormState extends State<AddLicenseForm>
       filePath: _filePath,
       fileName: _fileName,
       sortOrder: initial?.sortOrder ?? 0,
-      categoryId: _categoryId,
-      categoryName: _categoryName ?? '',
-      categoryColor: _categoryColor,
+      categoryId: savedCategory.id,
+      categoryName: savedCategory.name,
+      categoryColor: savedCategory.color,
     );
-    final scope = AppScope.of(context);
     if (initial == null) {
       await scope.addLicense(license);
     } else {

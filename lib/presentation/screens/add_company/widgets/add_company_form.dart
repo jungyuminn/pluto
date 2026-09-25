@@ -179,13 +179,13 @@ class _AddCompanyFormViewState extends State<AddCompanyForm>
     _suggest?.dispose();
     _suggest = suggestOn
         ? CategorySuggestSession(
+            kind: CategoryKind.company,
             categories: categories,
             records: [
               for (final job in jobs)
                 if (job.hasCategory)
                   CategoryHistoryRecord(job.companyName, job.categoryId!),
             ],
-            fallback: selected,
             onUpdate: _applySuggest,
           )
         : null;
@@ -248,6 +248,17 @@ class _AddCompanyFormViewState extends State<AddCompanyForm>
     if (_saving) return;
 
     setState(() => _saving = true);
+    final scope = AppScope.of(context);
+    final savedCategory = await scope.ensureCategory(
+      CategoryKind.company,
+      id: _categoryId,
+      name: _categoryName ?? '',
+      color: _categoryColor ?? 0,
+    );
+    if (!mounted) return;
+    _categoryId = savedCategory.id;
+    _categoryName = savedCategory.name;
+    _categoryColor = savedCategory.color;
     final initial = widget.initial;
     final application = JobApplication(
       id: initial?.id ?? DateTime.now().microsecondsSinceEpoch.toString(),
@@ -261,12 +272,10 @@ class _AddCompanyFormViewState extends State<AddCompanyForm>
       coverLetterPath: _coverLetterPath,
       coverLetterFileName: _coverLetterFileName,
       sortOrder: initial?.sortOrder ?? 0,
-      categoryId: _hasCategory ? _categoryId : null,
-      categoryName: _hasCategory ? (_categoryName ?? '') : '',
-      categoryColor: _hasCategory ? _categoryColor : null,
+      categoryId: savedCategory.id,
+      categoryName: savedCategory.name,
+      categoryColor: savedCategory.color,
     );
-
-    final scope = AppScope.of(context);
     if (initial == null) {
       await scope.addJobApplication(application);
     } else {

@@ -18,6 +18,27 @@ class EventCategory {
   });
 
   static const defaultId = 'default';
+  static const draftPrefix = 'draft_';
+
+  static bool isDraftId(String? id) {
+    return id != null && id.startsWith(draftPrefix);
+  }
+
+  static EventCategory draft({required String name, required int color}) {
+    return EventCategory(
+      id: '$draftPrefix${DateTime.now().microsecondsSinceEpoch}',
+      name: name,
+      color: color,
+    );
+  }
+
+  static int unusedColor(Iterable<int> used) {
+    final taken = {for (final color in used) color};
+    for (final color in palette) {
+      if (!taken.contains(color)) return color;
+    }
+    return palette[taken.length % palette.length];
+  }
 
   static const basicPalette = [
     0xFFE53935,

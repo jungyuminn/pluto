@@ -200,6 +200,9 @@ ReleaseDemo releaseDemoFor(String text, {required bool isFix}) {
     if (text.contains('카테고리 삭제 창') || text.contains('너비가 들쭉날쭉')) {
       return ReleaseDemo.pcDeleteCategory;
     }
+    if (text.contains('구글 계정') || text.contains('자동저장')) {
+      return ReleaseDemo.autoSave;
+    }
     if (text.contains('기능 안내')) return ReleaseDemo.featureIntroStay;
     if (text.contains('스티커 팩')) return ReleaseDemo.stickers;
     return ReleaseDemo.fix;
@@ -251,7 +254,10 @@ ReleaseDemo releaseDemoFor(String text, {required bool isFix}) {
   if (text.contains('카테고리별로') || text.contains('칸이 부드럽게')) {
     return ReleaseDemo.jobCategorySlide;
   }
-  if (text.contains('AI가 카테고리') || text.contains('카테고리를 미리')) {
+  if (text.contains('AI가 카테고리') ||
+      text.contains('카테고리를 미리') ||
+      text.contains('새 이름을 집어') ||
+      text.contains('저장하면 칸')) {
     return ReleaseDemo.categoryAi;
   }
   if (text.contains('더 많은 기능')) return ReleaseDemo.featureIntro;

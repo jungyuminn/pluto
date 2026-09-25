@@ -228,7 +228,6 @@ class _DiaryFormState extends State<DiaryForm> {
                 if ((diary.categoryId ?? '').isNotEmpty)
                   CategoryHistoryRecord(diary.title, diary.categoryId!),
             ],
-            fallback: selected,
             onUpdate: _applySuggest,
           )
         : null;
@@ -338,6 +337,16 @@ class _DiaryFormState extends State<DiaryForm> {
     required List<DateTime> days,
   }) async {
     final scope = AppScope.of(context);
+    final savedCategory = await scope.ensureCategory(
+      CategoryKind.event,
+      id: _categoryId,
+      name: _categoryName!,
+      color: _categoryColor!,
+    );
+    if (!mounted) return;
+    _categoryId = savedCategory.id;
+    _categoryName = savedCategory.name;
+    _categoryColor = savedCategory.color;
     final initial = widget.initial;
     final previous = await scope.getDiaries();
     final editing = <DiaryEntry>[];

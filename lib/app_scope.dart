@@ -244,6 +244,31 @@ class AppScope extends InheritedWidget {
     };
   }
 
+  Future<EventCategory> ensureCategory(
+    CategoryKind kind, {
+    required String? id,
+    required String name,
+    required int color,
+  }) async {
+    final trimmed = name.trim();
+    final categories = await fetchCategories(kind);
+    if (id != null && id.isNotEmpty && !EventCategory.isDraftId(id)) {
+      for (final category in categories) {
+        if (category.id == id) return category;
+      }
+    }
+    for (final category in categories) {
+      if (category.name.trim() == trimmed) return category;
+    }
+    final category = EventCategory(
+      id: '${DateTime.now().microsecondsSinceEpoch}',
+      name: trimmed,
+      color: color,
+    );
+    await addCategory(kind, category);
+    return category;
+  }
+
   Future<void> addCategory(CategoryKind kind, EventCategory category) {
     return switch (kind) {
       CategoryKind.event => addEventCategory(category),

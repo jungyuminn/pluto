@@ -22,14 +22,14 @@ class CategorySuggestSession {
   CategorySuggestSession({
     required this.categories,
     required this.records,
-    required this.fallback,
     required this.onUpdate,
+    this.kind = CategoryKind.event,
   });
 
   final List<EventCategory> categories;
   final List<CategoryHistoryRecord> records;
-  final EventCategory fallback;
   final CategorySuggestUpdate onUpdate;
+  final CategoryKind kind;
 
   var _locked = false;
   var _gen = 0;
@@ -79,10 +79,11 @@ class CategorySuggestSession {
     final picked = await CategoryAiClient.pick(
       title: title,
       categories: categories,
+      kind: kind,
     );
     spinner.cancel();
     if (_locked || gen != _gen) return;
-    onUpdate(picked ?? fallback, loading: false);
+    onUpdate(picked, loading: false);
   }
 
   void dispose() {

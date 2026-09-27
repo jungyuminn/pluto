@@ -665,26 +665,7 @@ class _TutorialCard extends StatelessWidget {
                         ),
                       ),
                     const Spacer(),
-                    if (!isLast)
-                      PressBounce(
-                        onPressed: onSkip,
-                        pressedColor: Colors.transparent,
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 4,
-                            vertical: 4,
-                          ),
-                          child: Text(
-                            AppStrings.tutorialSkip,
-                            style: TextStyle(
-                              fontFamily: font,
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: colors.muted,
-                            ),
-                          ),
-                        ),
-                      ),
+                    if (!isLast) _TutorialSkip(onPressed: onSkip),
                   ],
                 ),
                 const SizedBox(height: 10),
@@ -760,49 +741,58 @@ class _TutorialCard extends StatelessWidget {
                 ),
               ),
               SizedBox(height: isFirst ? 22 : 16),
-              if (isFirst) ...[
-                PressBounce(
-                  onPressed: onNext,
-                  color: colors.tint(colors.accent, 0.16),
-                  pressedColor: colors.tint(colors.accent, 0.26),
-                  borderRadius: BorderRadius.circular(999),
-                  child: SizedBox(
-                    height: 48,
-                    child: Center(
-                      child: Text(
-                        AppStrings.tutorialStart,
-                        style: TextStyle(
-                          fontFamily: font,
-                          fontSize: 15,
-                          fontWeight: FontWeight.w800,
-                          color: colors.accent,
+              if (isFirst)
+                Row(
+                  children: [
+                    Expanded(
+                      child: PressBounce(
+                        onPressed: onSkip,
+                        color: colors.pressed,
+                        pressedColor:
+                            Color.lerp(colors.pressed, Colors.black, 0.08)!,
+                        borderRadius: BorderRadius.circular(999),
+                        child: SizedBox(
+                          height: 48,
+                          child: Center(
+                            child: Text(
+                              AppStrings.tutorialSkip,
+                              style: TextStyle(
+                                fontFamily: font,
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                                color: colors.muted,
+                              ),
+                            ),
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                PressBounce(
-                  onPressed: onSkip,
-                  color: colors.pressed,
-                  pressedColor: Color.lerp(colors.pressed, Colors.black, 0.08)!,
-                  borderRadius: BorderRadius.circular(999),
-                  child: SizedBox(
-                    height: 48,
-                    child: Center(
-                      child: Text(
-                        AppStrings.tutorialSkip,
-                        style: TextStyle(
-                          fontFamily: font,
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                          color: colors.danger,
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: PressBounce(
+                        onPressed: onNext,
+                        color: colors.tint(colors.accent, 0.16),
+                        pressedColor: colors.tint(colors.accent, 0.26),
+                        borderRadius: BorderRadius.circular(999),
+                        child: SizedBox(
+                          height: 48,
+                          child: Center(
+                            child: Text(
+                              AppStrings.tutorialStart,
+                              style: TextStyle(
+                                fontFamily: font,
+                                fontSize: 15,
+                                fontWeight: FontWeight.w800,
+                                color: colors.accent,
+                              ),
+                            ),
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ),
-              ] else
+                  ],
+                )
+              else
                 Row(
                   children: [
                     if (showPrev)
@@ -874,6 +864,33 @@ class _TutorialCard extends StatelessWidget {
             ],
           ),
         ),
+        ),
+      ),
+    );
+  }
+}
+
+class _TutorialSkip extends StatelessWidget {
+  const _TutorialSkip({required this.onPressed});
+
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    return PressBounce(
+      onPressed: onPressed,
+      pressedColor: Colors.transparent,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+        child: Text(
+          AppStrings.tutorialSkip,
+          style: TextStyle(
+            fontFamily: AppFonts.of(context),
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: colors.muted,
+          ),
         ),
       ),
     );

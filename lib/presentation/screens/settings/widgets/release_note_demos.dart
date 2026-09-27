@@ -132,6 +132,10 @@ enum ReleaseDemo {
   featureIntroStay,
   lighterApp,
   cloudKeep,
+  profileSaved,
+  tutorialSplit,
+  friendHomeSeed,
+  friendRename,
   feature,
   fix,
 }
@@ -208,6 +212,12 @@ ReleaseDemo releaseDemoFor(String text, {required bool isFix}) {
     if (text.contains('로그아웃했다가') || text.contains('할 일이 지워지던')) {
       return ReleaseDemo.cloudKeep;
     }
+    if (text.contains('홈에 안 올라가') || text.contains('처음 친추')) {
+      return ReleaseDemo.friendHomeSeed;
+    }
+    if (text.contains('이름을 바꿔도') || text.contains('목록이 그대로')) {
+      return ReleaseDemo.friendRename;
+    }
     if (text.contains('기능 안내')) return ReleaseDemo.featureIntroStay;
     if (text.contains('스티커 팩')) return ReleaseDemo.stickers;
     return ReleaseDemo.fix;
@@ -267,6 +277,12 @@ ReleaseDemo releaseDemoFor(String text, {required bool isFix}) {
   }
   if (text.contains('가볍게') || text.contains('더 작아')) {
     return ReleaseDemo.lighterApp;
+  }
+  if (text.contains('저장하면 알려') || text.contains('아이디를 저장')) {
+    return ReleaseDemo.profileSaved;
+  }
+  if (text.contains('좌우로 나눴') || text.contains('시작하기와 건너뛰')) {
+    return ReleaseDemo.tutorialSplit;
   }
   if (text.contains('더 많은 기능')) return ReleaseDemo.featureIntro;
   if (text.contains('계정을 따라')) return ReleaseDemo.settingsFollow;
@@ -576,6 +592,10 @@ class ReleaseDemoView extends StatelessWidget {
       ReleaseDemo.featureIntroStay => const _FeatureIntroStayDemo(),
       ReleaseDemo.lighterApp => const _LighterAppDemo(),
       ReleaseDemo.cloudKeep => const _CloudKeepDemo(),
+      ReleaseDemo.profileSaved => const _ProfileSavedDemo(),
+      ReleaseDemo.tutorialSplit => const _TutorialSplitDemo(),
+      ReleaseDemo.friendHomeSeed => const _FriendHomeSeedDemo(),
+      ReleaseDemo.friendRename => const _FriendRenameDemo(),
       ReleaseDemo.feature => const _FeatureDemo(),
       ReleaseDemo.fix => const _FixDemo(),
     };
@@ -821,6 +841,488 @@ class _KeepTodo extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _ProfileSavedDemo extends StatelessWidget {
+  const _ProfileSavedDemo();
+
+  static const _name = '유안';
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 3800,
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final font = AppFonts.of(context);
+        final typed = (_name.length * _gate(t, 0.08, 0.32)).round();
+        final shown = _name.substring(0, typed);
+        final caretOn = typed < _name.length && (t * 14).floor().isEven;
+        final toast = Curves.easeOutBack.transform(_gate(t, 0.42, 0.58));
+        final toastOut = Curves.easeInCubic.transform(_gate(t, 0.84, 0.98));
+        final show = (toast - toastOut).clamp(0.0, 1.0);
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+          child: Stack(
+            alignment: Alignment.bottomCenter,
+            children: [
+              _Card(
+                padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      AppStrings.friendsMyName,
+                      style: TextStyle(
+                        fontFamily: font,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: colors.muted,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text.rich(
+                      TextSpan(
+                        children: [
+                          TextSpan(
+                            text: shown.isEmpty
+                                ? AppStrings.friendsNameEditHint
+                                : shown,
+                            style: TextStyle(
+                              fontFamily: font,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w800,
+                              color: shown.isEmpty ? colors.hint : colors.text,
+                            ),
+                          ),
+                          if (shown.isNotEmpty && caretOn)
+                            TextSpan(
+                              text: '|',
+                              style: TextStyle(
+                                fontFamily: font,
+                                fontSize: 16,
+                                color: colors.accent,
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Divider(height: 1, color: colors.border),
+                    const SizedBox(height: 8),
+                    Text(
+                      AppStrings.friendsMyCode,
+                      style: TextStyle(
+                        fontFamily: font,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: colors.muted,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'yuan',
+                      style: TextStyle(
+                        fontFamily: font,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: colors.text,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (show > 0)
+                Opacity(
+                  opacity: show.clamp(0.0, 1.0),
+                  child: Transform.translate(
+                    offset: Offset(0, 12 * (1 - show)),
+                    child: Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: colors.card,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: colors.shadow,
+                              blurRadius: 12,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 9,
+                          ),
+                          child: Text(
+                            AppStrings.friendsNameChanged,
+                            style: TextStyle(
+                              fontFamily: font,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                              color: colors.text,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _TutorialSplitDemo extends StatelessWidget {
+  const _TutorialSplitDemo();
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 3200,
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final font = AppFonts.of(context);
+        final rise = Curves.easeOutCubic.transform(_gate(t, 0.06, 0.22));
+        final tap = _pulse(t, 0.48, 0.58, 0.70);
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(16, 18, 16, 14),
+          child: Opacity(
+            opacity: rise,
+            child: Transform.translate(
+              offset: Offset(0, 10 * (1 - rise)),
+              child: _Card(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
+                child: Column(
+                  children: [
+                    AppAssetImage(
+                      asset: AppIcons.plutoLogo,
+                      width: 36,
+                      height: 36,
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      '플루토와 함께 시작해요',
+                      style: TextStyle(
+                        fontFamily: font,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w800,
+                        color: colors.text,
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _SplitPill(
+                            label: AppStrings.tutorialSkip,
+                            fill: colors.pressed,
+                            text: colors.muted,
+                            font: font,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Transform.scale(
+                            scale: 1 - tap * 0.06,
+                            child: _SplitPill(
+                              label: AppStrings.tutorialStart,
+                              fill: colors.tint(colors.accent, 0.16 + tap * 0.1),
+                              text: colors.accent,
+                              font: font,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _SplitPill extends StatelessWidget {
+  const _SplitPill({
+    required this.label,
+    required this.fill,
+    required this.text,
+    required this.font,
+  });
+
+  final String label;
+  final Color fill;
+  final Color text;
+  final String? font;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: fill,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: SizedBox(
+        height: 34,
+        child: Center(
+          child: Text(
+            label,
+            style: TextStyle(
+              fontFamily: font,
+              fontSize: 12,
+              fontWeight: FontWeight.w800,
+              color: text,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _FriendHomeSeedDemo extends StatelessWidget {
+  const _FriendHomeSeedDemo();
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 3600,
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final font = AppFonts.of(context);
+        final pop = Curves.easeOutBack.transform(_gate(t, 0.28, 0.52));
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(16, 20, 16, 14),
+          child: _Card(
+            padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '홈',
+                  style: TextStyle(
+                    fontFamily: font,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w800,
+                    color: colors.accent,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    _HomeFace(
+                      label: '나',
+                      color: const Color(0xFF94A3B8),
+                      font: font,
+                      colors: colors,
+                    ),
+                    const SizedBox(width: 12),
+                    Opacity(
+                      opacity: pop.clamp(0.0, 1.0),
+                      child: Transform.scale(
+                        scale: 0.72 + 0.28 * pop,
+                        child: _HomeFace(
+                          label: '민지',
+                          color: const Color(0xFF38BDF8),
+                          font: font,
+                          colors: colors,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _HomeFace extends StatelessWidget {
+  const _HomeFace({
+    required this.label,
+    required this.color,
+    required this.font,
+    required this.colors,
+  });
+
+  final String label;
+  final Color color;
+  final String? font;
+  final AppColors colors;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Container(
+          width: 36,
+          height: 36,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          child: Center(
+            child: Text(
+              label.characters.first,
+              style: TextStyle(
+                fontFamily: font,
+                fontSize: 14,
+                fontWeight: FontWeight.w800,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          label,
+          style: TextStyle(
+            fontFamily: font,
+            fontSize: 11,
+            fontWeight: FontWeight.w700,
+            color: colors.text,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _FriendRenameDemo extends StatelessWidget {
+  const _FriendRenameDemo();
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 3800,
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final font = AppFonts.of(context);
+        final swap = Curves.easeInOutCubic.transform(_gate(t, 0.34, 0.52));
+        final flash = _pulse(t, 0.36, 0.46, 0.62);
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(16, 22, 16, 14),
+          child: _Card(
+            padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: Color.lerp(
+                  colors.groupedBackground,
+                  colors.tint(colors.accent, 0.16),
+                  flash * 0.7,
+                ),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 32,
+                      height: 32,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFF818CF8),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Center(
+                        child: Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            Opacity(
+                              opacity: 1 - swap,
+                              child: Text(
+                                '민',
+                                style: TextStyle(
+                                  fontFamily: font,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w800,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                            Opacity(
+                              opacity: swap,
+                              child: Text(
+                                '준',
+                                style: TextStyle(
+                                  fontFamily: font,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w800,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SizedBox(
+                            height: 20,
+                            child: Stack(
+                              alignment: Alignment.centerLeft,
+                              children: [
+                                Opacity(
+                                  opacity: 1 - swap,
+                                  child: Text(
+                                    '민수',
+                                    style: TextStyle(
+                                      fontFamily: font,
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w800,
+                                      color: colors.text,
+                                    ),
+                                  ),
+                                ),
+                                Opacity(
+                                  opacity: swap,
+                                  child: Text(
+                                    '준호',
+                                    style: TextStyle(
+                                      fontFamily: font,
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w800,
+                                      color: colors.text,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Text(
+                            'junho',
+                            style: TextStyle(
+                              fontFamily: font,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: colors.muted,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }

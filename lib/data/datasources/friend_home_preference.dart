@@ -50,12 +50,17 @@ class FriendHomePreference {
     try {
       final friends = _clean(friendUids);
       if (!_seeded) {
+        if (friends.isEmpty) return;
         await _write(uids: friends, seen: friends, seeded: true);
         return;
       }
       if (friends.isEmpty) return;
       if (_seen.isEmpty) {
-        await _write(uids: uids, seen: friends, seeded: true);
+        await _write(
+          uids: uids.isEmpty ? friends : uids,
+          seen: friends,
+          seeded: true,
+        );
         return;
       }
       final friendSet = {for (final id in friends) id};

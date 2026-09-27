@@ -17,6 +17,17 @@ class ReleaseNote {
 abstract final class ReleaseNotes {
   static const all = [
     ReleaseNote(
+      version: '1.4.16',
+      items: [
+        '이름과 아이디를 저장하면 알려 줘요',
+        '튜토리얼 첫 화면에서 시작하기와 건너뛰기를 좌우로 나눴어요',
+      ],
+      fixes: [
+        '처음 친추한 친구가 홈에 안 올라가던 점을 고쳤어요',
+        '친구가 이름을 바꿔도 목록이 그대로이던 점을 고쳤어요',
+      ],
+    ),
+    ReleaseNote(
       version: '1.4.15',
       items: [
         '테마와 스티커를 가볍게 바꿔 앱이 더 작아졌어요',

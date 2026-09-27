@@ -464,12 +464,14 @@ class _FriendsScreenState extends State<FriendsScreen> {
   var _shownFavorites = const <FriendProfile>[];
   var _shownRegulars = const <FriendProfile>[];
   Timer? _hintTimer;
+  final _toastOverlay = OverlayPortalController();
 
   @override
   void initState() {
     super.initState();
     _nameFocus.addListener(_onNameFocus);
     _codeFocus.addListener(_onCodeFocus);
+    if (PcLayout.isPc) _toastOverlay.show();
     unawaited(_bootstrap());
   }
 
@@ -584,7 +586,11 @@ class _FriendsScreenState extends State<FriendsScreen> {
     final colors = AppColors.of(context);
     final top = MediaQuery.paddingOf(context).top;
     final bottom = MediaQuery.paddingOf(context).bottom;
-    return Scaffold(
+    final toast = AnimatedFriendsToast(
+      text: _hint,
+      visible: _hintVisible,
+    );
+    final page = Scaffold(
       backgroundColor: colors.groupedBackground,
       resizeToAvoidBottomInset: false,
       extendBodyBehindAppBar: true,
@@ -611,15 +617,27 @@ class _FriendsScreenState extends State<FriendsScreen> {
               ],
             ),
           ),
-          PcLayout.pinBottomToast(
-            bottom: 20 + bottom,
-            child: AnimatedFriendsToast(
-              text: _hint,
-              visible: _hintVisible,
+          if (!PcLayout.isPc)
+            PcLayout.pinBottomToast(
+              bottom: 20 + bottom,
+              child: toast,
             ),
-          ),
         ],
       ),
+    );
+    if (!PcLayout.isPc) return page;
+    return OverlayPortal(
+      controller: _toastOverlay,
+      overlayChildBuilder: (context) {
+        return PcLayout.pinBottomToast(
+          bottom: 20 + MediaQuery.paddingOf(context).bottom,
+          child: AnimatedFriendsToast(
+            text: _hint,
+            visible: _hintVisible,
+          ),
+        );
+      },
+      child: page,
     );
   }
 
@@ -1417,6 +1435,8 @@ class _FriendsScreenState extends State<FriendsScreen> {
     _savingName = true;
     try {
       await _service.setDisplayName(name);
+      if (!mounted) return;
+      _toast(AppStrings.friendsNameChanged);
     } catch (error) {
       if (!mounted) return;
       _myName.text = current;
@@ -1443,6 +1463,8 @@ class _FriendsScreenState extends State<FriendsScreen> {
     _savingCode = true;
     try {
       await _service.setFriendCode(code);
+      if (!mounted) return;
+      _toast(AppStrings.friendsCodeChanged);
     } catch (error) {
       if (!mounted) return;
       _myCode.text = current;

@@ -283,13 +283,18 @@ class FriendService {
     }
     _pushingName = true;
     try {
-      final next = kIsWeb
-          ? await _renameViaStore(name)
-          : FriendProfile.fromMap(
-              await _call('updateFriendDisplayName', {
-                'displayName': name,
-              }),
-            );
+      FriendProfile next;
+      try {
+        next = FriendProfile.fromMap(
+          await _call('updateFriendDisplayName', {
+            'displayName': name,
+          }),
+        );
+      } catch (error) {
+        debugPrint('Friend rename function failed: $error');
+        if (!kIsWeb) rethrow;
+        next = await _renameViaStore(name);
+      }
       profile.value = next;
       await _clearPendingName();
       await _writeCachedProfile();

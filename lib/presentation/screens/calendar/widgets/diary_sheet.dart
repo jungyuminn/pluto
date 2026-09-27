@@ -36,20 +36,13 @@ class DiarySheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final viewInsets = MediaQuery.viewInsetsOf(context);
-    final safeBottom = MediaQuery.paddingOf(context).bottom;
-    final bottom = viewInsets.bottom > 0 ? viewInsets.bottom : safeBottom;
-
-    return Padding(
-      padding: EdgeInsets.only(bottom: bottom),
-      child: SizedBox(
-        width: double.infinity,
-        child: SingleChildScrollView(
-          child: DiaryForm(
-            date: date,
-            rangeEnd: rangeEnd,
-            initial: initial,
-          ),
+    return SizedBox(
+      width: double.infinity,
+      child: SingleChildScrollView(
+        child: DiaryForm(
+          date: date,
+          rangeEnd: rangeEnd,
+          initial: initial,
         ),
       ),
     );

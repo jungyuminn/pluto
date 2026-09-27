@@ -39,17 +39,13 @@ class LedgerSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final viewInsets = MediaQuery.viewInsetsOf(context);
-    return Padding(
-      padding: EdgeInsets.only(bottom: viewInsets.bottom),
-      child: SizedBox(
-        width: double.infinity,
-        child: SingleChildScrollView(
-          child: LedgerForm(
-            date: date,
-            initial: initial,
-            lastCategory: lastCategory,
-          ),
+    return SizedBox(
+      width: double.infinity,
+      child: SingleChildScrollView(
+        child: LedgerForm(
+          date: date,
+          initial: initial,
+          lastCategory: lastCategory,
         ),
       ),
     );

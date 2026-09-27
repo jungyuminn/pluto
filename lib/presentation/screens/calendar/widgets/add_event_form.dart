@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:pluto/app_scope.dart';
 import 'package:pluto/core/constants/app_icons.dart';
 import 'package:pluto/core/constants/app_strings.dart';
+import 'package:pluto/core/layout/compose_sheet.dart';
 import 'package:pluto/core/layout/pc_layout.dart';
 import 'package:pluto/core/utils/category_history.dart';
 import 'package:pluto/core/utils/focused_ime_text.dart';
@@ -710,7 +711,12 @@ class _AddEventFormState extends State<AddEventForm>
         boxShadow: PcLayout.sheetLift(),
       ),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
+        padding: EdgeInsets.fromLTRB(
+          20,
+          16,
+          20,
+          16 + composeSheetBottomOf(context, covered: 16),
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,

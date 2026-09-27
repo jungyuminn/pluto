@@ -47,19 +47,14 @@ class AddEventSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final viewInsets = MediaQuery.viewInsetsOf(context);
-
-    return Padding(
-      padding: EdgeInsets.only(bottom: viewInsets.bottom),
-      child: SizedBox(
-        width: double.infinity,
-        child: AddEventForm(
-          date: date,
-          rangeEnd: rangeEnd,
-          initial: event,
-          someday: someday,
-          shareWith: shareWith,
-        ),
+    return SizedBox(
+      width: double.infinity,
+      child: AddEventForm(
+        date: date,
+        rangeEnd: rangeEnd,
+        initial: event,
+        someday: someday,
+        shareWith: shareWith,
       ),
     );
   }

@@ -3,6 +3,7 @@ import 'package:pluto/app_scope.dart';
 import 'package:pluto/core/constants/app_fonts.dart';
 import 'package:pluto/core/constants/app_icons.dart';
 import 'package:pluto/core/constants/app_strings.dart';
+import 'package:pluto/core/layout/compose_sheet.dart';
 import 'package:pluto/core/layout/pc_layout.dart';
 import 'package:pluto/core/theme/app_colors.dart';
 import 'package:pluto/core/theme/app_theme.dart';
@@ -573,8 +574,15 @@ class _LedgerFormState extends State<LedgerForm> with TickerProviderStateMixin {
         borderRadius: PcLayout.sheetRadius(),
         boxShadow: PcLayout.sheetLift(),
       ),
-      padding: EdgeInsets.fromLTRB(20, 16, 20, _isWage ? 24 : 28),
-      child: Column(
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(
+          20,
+          16,
+          20,
+          (_isWage ? 24 : 28) +
+              composeSheetBottomOf(context, covered: _isWage ? 24 : 28),
+        ),
+        child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -704,6 +712,7 @@ class _LedgerFormState extends State<LedgerForm> with TickerProviderStateMixin {
             ),
           ),
         ],
+      ),
       ),
       ),
     );

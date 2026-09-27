@@ -3,6 +3,13 @@ import 'dart:ui' show lerpDouble;
 import 'package:flutter/material.dart';
 import 'package:pluto/core/layout/pc_layout.dart';
 
+double composeSheetBottomOf(BuildContext context, {double covered = 16}) {
+  final insets = MediaQuery.viewInsetsOf(context).bottom;
+  final extra = (MediaQuery.viewPaddingOf(context).bottom - covered)
+      .clamp(0.0, double.infinity);
+  return insets > extra ? insets : extra;
+}
+
 Future<T?> showComposeSheet<T>(
   BuildContext context, {
   required WidgetBuilder builder,

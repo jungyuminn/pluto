@@ -104,7 +104,8 @@ class AppTheme {
       statusBarColor: colors.background,
       statusBarBrightness: brightness,
       statusBarIconBrightness: lightBar ? Brightness.dark : Brightness.light,
-      systemNavigationBarColor: colors.background,
+      systemNavigationBarColor: Colors.transparent,
+      systemNavigationBarContrastEnforced: false,
       systemNavigationBarIconBrightness:
           lightBar ? Brightness.dark : Brightness.light,
       systemNavigationBarDividerColor: Colors.transparent,

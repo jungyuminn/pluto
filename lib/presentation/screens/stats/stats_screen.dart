@@ -416,7 +416,7 @@ class _MonthPlay {
     required this.exp,
     required this.need,
     required this.rank,
-    required this.categoriesUsed,
+    required this.busyDay,
     required this.done,
     required this.total,
     required this.left,
@@ -424,14 +424,14 @@ class _MonthPlay {
     required this.hasTodos,
     required this.month,
     required this.today,
-    required this.doneDays,
+    required this.doneCounts,
   });
 
   final int level;
   final int exp;
   final int need;
   final String rank;
-  final int categoriesUsed;
+  final DateTime? busyDay;
   final int done;
   final int total;
   final int left;
@@ -439,7 +439,7 @@ class _MonthPlay {
   final bool hasTodos;
   final DateTime month;
   final DateTime today;
-  final Set<int> doneDays;
+  final Map<int, int> doneCounts;
 
   static _MonthPlay of({
     required MonthlyStats stats,
@@ -462,7 +462,7 @@ class _MonthPlay {
           ? PlanetStage.maxNeed
           : math.max(end - start, 1),
       rank: PlanetStage.nameOf(level, empty: total == 0),
-      categoriesUsed: stats.categories.length,
+      busyDay: stats.busyDay?.date,
       done: done,
       total: total,
       left: stats.incompleteTodos,
@@ -470,17 +470,17 @@ class _MonthPlay {
       hasTodos: total > 0,
       month: month,
       today: today,
-      doneDays: _doneDays(events, month),
+      doneCounts: _doneCounts(events, month),
     );
   }
 
-  static Set<int> _doneDays(List<CalendarEvent> events, DateTime month) {
-    final days = <int>{};
+  static Map<int, int> _doneCounts(List<CalendarEvent> events, DateTime month) {
+    final days = <int, int>{};
     for (final event in events) {
       if (event.isJob || event.someday || !event.completed) continue;
       final day = event.day;
       if (day.year != month.year || day.month != month.month) continue;
-      days.add(day.day);
+      days[day.day] = (days[day.day] ?? 0) + 1;
     }
     return days;
   }
@@ -1161,8 +1161,10 @@ class _StatCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 10),
                       _StatLine(
-                        label: AppStrings.statsCategoriesUsed,
-                        value: play.categoriesUsed,
+                        label: AppStrings.monthlyStatsBusyDaySection,
+                        text: play.busyDay == null
+                            ? '—'
+                            : '${play.busyDay!.day}${AppStrings.daySuffix}',
                       ),
                     ],
                   ),
@@ -1187,16 +1189,25 @@ class _StatCard extends StatelessWidget {
 class _StatLine extends StatelessWidget {
   const _StatLine({
     required this.label,
-    required this.value,
+    this.value,
+    this.text,
   });
 
   final String label;
-  final int value;
+  final int? value;
+  final String? text;
 
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
     final font = AppFonts.of(context);
+    final style = TextStyle(
+      fontFamily: font,
+      fontSize: 15,
+      fontWeight: FontWeight.w800,
+      height: 1,
+      color: colors.text,
+    );
     return Row(
       children: [
         Expanded(
@@ -1210,23 +1221,17 @@ class _StatLine extends StatelessWidget {
             ),
           ),
         ),
-        TweenAnimationBuilder<double>(
-          duration: const Duration(milliseconds: 480),
-          curve: Curves.easeOutCubic,
-          tween: Tween(end: value.toDouble()),
-          builder: (context, n, _) {
-            return Text(
-              '${n.round()}',
-              style: TextStyle(
-                fontFamily: font,
-                fontSize: 15,
-                fontWeight: FontWeight.w800,
-                height: 1,
-                color: colors.text,
-              ),
-            );
-          },
-        ),
+        if (text != null)
+          Text(text!, style: style)
+        else
+          TweenAnimationBuilder<double>(
+            duration: const Duration(milliseconds: 480),
+            curve: Curves.easeOutCubic,
+            tween: Tween(end: (value ?? 0).toDouble()),
+            builder: (context, n, _) {
+              return Text('${n.round()}', style: style);
+            },
+          ),
       ],
     );
   }
@@ -1424,7 +1429,7 @@ class _MonthDots extends StatelessWidget {
       for (var day = 1; day <= last; day++)
         _DayDot(
           date: DateTime(play.month.year, play.month.month, day),
-          done: play.doneDays.contains(day),
+          count: play.doneCounts[day] ?? 0,
           future: isCurrent && day > play.today.day,
           onPressed: onDayPressed,
         ),
@@ -1491,13 +1496,13 @@ class _MonthDots extends StatelessWidget {
 class _DayDot extends StatelessWidget {
   const _DayDot({
     required this.date,
-    required this.done,
+    required this.count,
     required this.future,
     required this.onPressed,
   });
 
   final DateTime date;
-  final bool done;
+  final int count;
   final bool future;
   final void Function(DateTime date, Rect origin) onPressed;
 
@@ -1515,6 +1520,13 @@ class _DayDot extends StatelessWidget {
     final colors = AppColors.of(context);
     final font = AppFonts.of(context);
     final accent = colors.accentBright;
+    final done = count > 0;
+    final fill = switch (count) {
+      0 => Colors.transparent,
+      1 => accent.withValues(alpha: 0.14),
+      <= 3 => accent.withValues(alpha: 0.30),
+      _ => accent.withValues(alpha: 0.40),
+    };
     return PressBounce(
       onPressed: () => onPressed(date, _originOf(context)),
       pressedScale: 0.9,
@@ -1523,7 +1535,7 @@ class _DayDot extends StatelessWidget {
       child: DecoratedBox(
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: done ? accent.withValues(alpha: 0.18) : Colors.transparent,
+          color: fill,
         ),
         child: Center(
           child: Text(

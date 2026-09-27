@@ -136,6 +136,9 @@ enum ReleaseDemo {
   tutorialSplit,
   friendHomeSeed,
   friendRename,
+  statsHeat,
+  statsBusyDay,
+  navSheetLift,
   feature,
   fix,
 }
@@ -218,6 +221,9 @@ ReleaseDemo releaseDemoFor(String text, {required bool isFix}) {
     if (text.contains('이름을 바꿔도') || text.contains('목록이 그대로')) {
       return ReleaseDemo.friendRename;
     }
+    if (text.contains('아래 바가 시트') || text.contains('시트를 가리던')) {
+      return ReleaseDemo.navSheetLift;
+    }
     if (text.contains('기능 안내')) return ReleaseDemo.featureIntroStay;
     if (text.contains('스티커 팩')) return ReleaseDemo.stickers;
     return ReleaseDemo.fix;
@@ -283,6 +289,12 @@ ReleaseDemo releaseDemoFor(String text, {required bool isFix}) {
   }
   if (text.contains('좌우로 나눴') || text.contains('시작하기와 건너뛰')) {
     return ReleaseDemo.tutorialSplit;
+  }
+  if (text.contains('점이 진해') || text.contains('끝낸 할 일 수만큼')) {
+    return ReleaseDemo.statsHeat;
+  }
+  if (text.contains('가장 바빴던') || text.contains('사용한 카테고리 대신')) {
+    return ReleaseDemo.statsBusyDay;
   }
   if (text.contains('더 많은 기능')) return ReleaseDemo.featureIntro;
   if (text.contains('계정을 따라')) return ReleaseDemo.settingsFollow;
@@ -596,6 +608,9 @@ class ReleaseDemoView extends StatelessWidget {
       ReleaseDemo.tutorialSplit => const _TutorialSplitDemo(),
       ReleaseDemo.friendHomeSeed => const _FriendHomeSeedDemo(),
       ReleaseDemo.friendRename => const _FriendRenameDemo(),
+      ReleaseDemo.statsHeat => const _StatsHeatDemo(),
+      ReleaseDemo.statsBusyDay => const _StatsBusyDayDemo(),
+      ReleaseDemo.navSheetLift => const _NavSheetLiftDemo(),
       ReleaseDemo.feature => const _FeatureDemo(),
       ReleaseDemo.fix => const _FixDemo(),
     };
@@ -1323,6 +1338,470 @@ class _FriendRenameDemo extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+class _StatsHeatDemo extends StatelessWidget {
+  const _StatsHeatDemo();
+
+  static const _targets = [
+    0, 1, 0, 2, 4, 1, 0,
+    1, 3, 0, 1, 2, 4, 1,
+    0, 1, 4, 3, 1, 0, 2,
+    1, 0, 2, 1, 4, 3, 0,
+  ];
+
+  static int _shown(int target, double t) {
+    if (target == 0) return 0;
+    final p = Curves.easeInOutCubic.transform(_gate(t, 0.10, 0.78));
+    if (p < 0.22) return 0;
+    if (p < 0.46) return 1;
+    if (p < 0.70) return math.min(target, 3);
+    return target;
+  }
+
+  static Color _fill(Color accent, int count) {
+    return switch (count) {
+      0 => Colors.transparent,
+      1 => accent.withValues(alpha: 0.14),
+      <= 3 => accent.withValues(alpha: 0.30),
+      _ => accent.withValues(alpha: 0.40),
+    };
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 4200,
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final font = AppFonts.of(context);
+        final accent = colors.accentBright;
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+          child: _Card(
+            padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    for (final label in AppStrings.weekdays)
+                      Expanded(
+                        child: Center(
+                          child: Text(
+                            label,
+                            style: TextStyle(
+                              fontFamily: font,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              height: 1,
+                              color: colors.muted,
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                for (var row = 0; row < 4; row++) ...[
+                  if (row > 0) const SizedBox(height: 6),
+                  Expanded(
+                    child: Row(
+                      children: [
+                        for (var col = 0; col < 7; col++)
+                          Expanded(
+                            child: _HeatDot(
+                              day: row * 7 + col + 1,
+                              count: _shown(_targets[row * 7 + col], t),
+                              accent: accent,
+                              font: font,
+                              fillOf: _fill,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _HeatDot extends StatelessWidget {
+  const _HeatDot({
+    required this.day,
+    required this.count,
+    required this.accent,
+    required this.font,
+    required this.fillOf,
+  });
+
+  final int day;
+  final int count;
+  final Color accent;
+  final String? font;
+  final Color Function(Color accent, int count) fillOf;
+
+  @override
+  Widget build(BuildContext context) {
+    final done = count > 0;
+    return Center(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 280),
+        curve: Curves.easeOutCubic,
+        width: 22,
+        height: 22,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: fillOf(accent, count),
+        ),
+        child: Center(
+          child: Text(
+            '$day',
+            style: TextStyle(
+              fontFamily: font,
+              fontSize: 10,
+              fontWeight: done ? FontWeight.w800 : FontWeight.w600,
+              height: 1,
+              color: done ? accent : AppColors.of(context).hint,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _StatsBusyDayDemo extends StatelessWidget {
+  const _StatsBusyDayDemo();
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 4000,
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final font = AppFonts.of(context);
+        final accent = colors.accentBright;
+        final swap = Curves.easeInOutCubic.transform(_gate(t, 0.28, 0.50));
+        final pulse = _pulse(t, 0.48, 0.58, 0.78);
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+          child: _Card(
+            padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+            child: Column(
+              children: [
+                _BusyLine(
+                  label: AppStrings.monthlyStatsCompletedLabel,
+                  value: '12',
+                  font: font,
+                  colors: colors,
+                ),
+                const SizedBox(height: 8),
+                _BusyLine(
+                  label: AppStrings.monthlyStatsIncompleteLabel,
+                  value: '5',
+                  font: font,
+                  colors: colors,
+                ),
+                const SizedBox(height: 8),
+                SizedBox(
+                  height: 18,
+                  child: Stack(
+                    children: [
+                      Opacity(
+                        opacity: 1 - swap,
+                        child: _BusyLine(
+                          label: AppStrings.monthlyStatsCategorySection,
+                          value: '4',
+                          font: font,
+                          colors: colors,
+                        ),
+                      ),
+                      Opacity(
+                        opacity: swap,
+                        child: _BusyLine(
+                          label: AppStrings.monthlyStatsBusyDaySection,
+                          value: '18${AppStrings.daySuffix}',
+                          font: font,
+                          colors: colors,
+                          accent: true,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Expanded(
+                  child: Row(
+                    children: [
+                      for (final day in const [15, 16, 17, 18, 19, 20, 21])
+                        Expanded(
+                          child: Transform.scale(
+                            scale: day == 18 ? 1 + pulse * 0.18 : 1,
+                            child: Center(
+                              child: DecoratedBox(
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: day == 18
+                                      ? accent.withValues(
+                                          alpha: 0.22 + pulse * 0.18,
+                                        )
+                                      : day == 16 || day == 20
+                                          ? accent.withValues(alpha: 0.14)
+                                          : Colors.transparent,
+                                ),
+                                child: SizedBox(
+                                  width: 24,
+                                  height: 24,
+                                  child: Center(
+                                    child: Text(
+                                      '$day',
+                                      style: TextStyle(
+                                        fontFamily: font,
+                                        fontSize: 11,
+                                        fontWeight: day == 18
+                                            ? FontWeight.w800
+                                            : FontWeight.w600,
+                                        color: day == 18
+                                            ? accent
+                                            : colors.hint,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _BusyLine extends StatelessWidget {
+  const _BusyLine({
+    required this.label,
+    required this.value,
+    required this.font,
+    required this.colors,
+    this.accent = false,
+  });
+
+  final String label;
+  final String value;
+  final String? font;
+  final AppColors colors;
+  final bool accent;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: Text(
+            label,
+            style: TextStyle(
+              fontFamily: font,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: colors.muted,
+            ),
+          ),
+        ),
+        Text(
+          value,
+          style: TextStyle(
+            fontFamily: font,
+            fontSize: 14,
+            fontWeight: FontWeight.w800,
+            height: 1,
+            color: accent ? colors.accent : colors.text,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _NavSheetLiftDemo extends StatelessWidget {
+  const _NavSheetLiftDemo();
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 4400,
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final font = AppFonts.of(context);
+        final clear = Curves.easeInOutCubic.transform(_gate(t, 0.16, 0.38));
+        final lift = Curves.easeOutCubic.transform(_gate(t, 0.40, 0.64));
+        return ColoredBox(
+          color: colors.groupedBackground,
+          child: Stack(
+            children: [
+              Positioned(
+                left: 18,
+                right: 18,
+                top: 14,
+                child: Opacity(
+                  opacity: 0.45,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: 54,
+                        height: 8,
+                        decoration: BoxDecoration(
+                          color: colors.card,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
+                        height: 28,
+                        decoration: BoxDecoration(
+                          color: colors.card,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Transform.translate(
+                      offset: Offset(0, 22 * (1 - lift)),
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: colors.card,
+                          borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(20),
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: colors.shadow,
+                              blurRadius: 10,
+                              offset: const Offset(0, -2),
+                            ),
+                          ],
+                        ),
+                        child: Padding(
+                          padding: EdgeInsets.fromLTRB(14, 12, 14, 10 + 18 * lift),
+                          child: Row(
+                            children: [
+                              _SheetChip(
+                                label: '시간',
+                                font: font,
+                                colors: colors,
+                              ),
+                              const SizedBox(width: 8),
+                              _SheetChip(
+                                label: '칸',
+                                font: font,
+                                colors: colors,
+                                filled: true,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    ColoredBox(
+                      color: Color.lerp(
+                        colors.background,
+                        Colors.transparent,
+                        clear,
+                      )!,
+                      child: SizedBox(
+                        height: 28,
+                        child: Row(
+                          children: [
+                            for (final icon in const [
+                              Icons.arrow_back_ios_new_rounded,
+                              Icons.circle_outlined,
+                              Icons.crop_square_rounded,
+                            ])
+                              Expanded(
+                                child: Center(
+                                  child: Icon(
+                                    icon,
+                                    size: icon == Icons.circle_outlined
+                                        ? 14
+                                        : 12,
+                                    color: colors.text.withValues(
+                                      alpha: 0.55 + clear * 0.25,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _SheetChip extends StatelessWidget {
+  const _SheetChip({
+    required this.label,
+    required this.font,
+    required this.colors,
+    this.filled = false,
+  });
+
+  final String label;
+  final String? font;
+  final AppColors colors;
+  final bool filled;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: filled
+            ? colors.tint(colors.accent, 0.16)
+            : colors.pressed,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontFamily: font,
+            fontSize: 12,
+            fontWeight: FontWeight.w800,
+            color: filled ? colors.accent : colors.muted,
+          ),
+        ),
+      ),
     );
   }
 }

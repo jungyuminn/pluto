@@ -17,6 +17,16 @@ class ReleaseNote {
 abstract final class ReleaseNotes {
   static const all = [
     ReleaseNote(
+      version: '1.4.17',
+      items: [
+        '통계에서 끝낸 할 일 수만큼 점이 진해져요',
+        '사용한 카테고리 대신 가장 바빴던 날을 보여 줘요',
+      ],
+      fixes: [
+        '안드로이드 아래 바가 시트를 가리던 점을 고쳤어요',
+      ],
+    ),
+    ReleaseNote(
       version: '1.4.16',
       items: [
         '이름과 아이디를 저장하면 알려 줘요',

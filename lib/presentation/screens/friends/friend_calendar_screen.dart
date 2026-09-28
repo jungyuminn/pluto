@@ -466,28 +466,19 @@ class _FriendCalendarScreenState extends State<FriendCalendarScreen> {
                                           month: month,
                                           tutorial: false,
                                           startMonday: startMonday,
-                                          eventsOf: (date) =>
-                                              _eventsOn(month, date),
-                                          emojisOf: (date) =>
-                                              _emojiOn(month, date),
+                                          eventsOf: _eventsOn,
+                                          emojisOf: _emojiOn,
                                           onDayPressed: (date, origin) {
                                             showDayEventsDialog(
                                               context,
                                               date: date,
-                                              events: _eventsOn(month, date),
+                                              events: _eventsOn(date),
                                               origin: origin,
                                               readOnly: true,
-                                              sticker: _emojiOn(month, date),
+                                              sticker: _emojiOn(date),
                                               eventsForDate: (day) async =>
-                                                  _eventsOn(
-                                                DateTime(day.year, day.month),
-                                                day,
-                                              ),
-                                              stickerForDate: (day) =>
-                                                  _emojiOn(
-                                                DateTime(day.year, day.month),
-                                                day,
-                                              ),
+                                                  _eventsOn(day),
+                                              stickerForDate: _emojiOn,
                                             );
                                           },
                                         );
@@ -744,12 +735,12 @@ class _FriendCalendarScreenState extends State<FriendCalendarScreen> {
     );
   }
 
-  String? _emojiOn(DateTime month, DateTime date) {
-    return _stickersByMonth[_monthKey(month)]?[DayEmojiStore.stampOf(date)];
+  String? _emojiOn(DateTime date) {
+    return _stickersByMonth[_monthKey(date)]?[DayEmojiStore.stampOf(date)];
   }
 
-  List<CalendarEvent> _eventsOn(DateTime month, DateTime date) {
-    final events = _eventsByMonth[_monthKey(month)] ?? const [];
+  List<CalendarEvent> _eventsOn(DateTime date) {
+    final events = _eventsByMonth[_monthKey(date)] ?? const [];
     return [
       for (final event in events)
         if (event.day.year == date.year &&

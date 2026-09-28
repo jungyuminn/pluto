@@ -2955,7 +2955,7 @@ class _LoginLottieDemo extends StatelessWidget {
       borderRadius: BorderRadius.circular(18),
       child: ColoredBox(
         color: colors.groupedBackground,
-        child: const SizedBox(
+        child: SizedBox(
           height: 188,
           width: double.infinity,
           child: Center(

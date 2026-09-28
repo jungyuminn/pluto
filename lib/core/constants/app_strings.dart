@@ -562,8 +562,21 @@ class AppStrings {
   }
 
   static const todayTitle = '오늘';
+  static const yesterdayTitle = '어제';
   static const tomorrowTitle = '내일';
   static const todayTomorrowTitle = '오늘과 내일';
+
+  static String nearbyDayLabel(DateTime date) {
+    final day = DateTime(date.year, date.month, date.day);
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final diff = day.difference(today).inDays;
+    if (diff == 0) return todayTitle;
+    if (diff == -1) return yesterdayTitle;
+    if (diff == 1) return tomorrowTitle;
+    final weekday = weekdays[date.weekday % 7];
+    return '${date.month}. ${date.day}. ($weekday)';
+  }
   static const dayAfterTomorrowTitle = '모레';
   static const weekTitle = '이번 주';
   static const monthTitle = '이번 달';
@@ -830,7 +843,7 @@ class AppStrings {
   static const timeSortView = '시간 순으로 보기';
   static const timeDisplay = '시간 표시';
   static const timeHour24 = '24시간으로 표시';
-  static const parseTitleTime = '자동 시간 입력';
+  static const parseTitleTime = '시간 자동 인식';
   static const timeSortLockTitle = '순서를 바꿀 수 없어요';
   static const timeSortLockBody = '시간 순으로 보기가 켜져 있어요!';
   static const dateSortAction = '날짜순 정리';

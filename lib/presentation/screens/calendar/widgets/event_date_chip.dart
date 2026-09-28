@@ -25,8 +25,7 @@ class EventDateChip extends StatelessWidget {
 
   String get _label {
     if (label != null) return label!;
-    final weekday = AppStrings.weekdays[date.weekday % 7];
-    return '${date.month}. ${date.day}. ($weekday)';
+    return AppStrings.nearbyDayLabel(date);
   }
 
   @override

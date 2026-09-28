@@ -15,7 +15,7 @@ class CalendarEventLabel extends StatelessWidget {
     this.isJob = false,
     this.height = 18,
     this.fontSize = 11,
-    this.fontWeight = FontWeight.w700,
+    this.fontWeight = FontWeight.w600,
     this.applyCalendarScale = true,
   });
 
@@ -33,6 +33,41 @@ class CalendarEventLabel extends StatelessWidget {
     return text.startsWith('+') || text.startsWith('-');
   }
 
+  static String _wholeCharsThatFit(
+    String text,
+    TextStyle style,
+    double maxWidth,
+  ) {
+    if (text.isEmpty || maxWidth <= 0) return '';
+    final painter = TextPainter(
+      text: TextSpan(text: text, style: style),
+      textDirection: TextDirection.ltr,
+      maxLines: 1,
+    )..layout();
+    if (painter.width <= maxWidth) {
+      painter.dispose();
+      return text;
+    }
+    final chars = text.characters;
+    var low = 0;
+    var high = chars.length;
+    var best = 0;
+    while (low <= high) {
+      final mid = (low + high) >> 1;
+      painter
+        ..text = TextSpan(text: chars.take(mid).toString(), style: style)
+        ..layout();
+      if (painter.width <= maxWidth) {
+        best = mid;
+        low = mid + 1;
+      } else {
+        high = mid - 1;
+      }
+    }
+    painter.dispose();
+    return chars.take(best).toString();
+  }
+
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
@@ -47,6 +82,7 @@ class CalendarEventLabel extends StatelessWidget {
     return AnimatedAccent(
       color: color,
       builder: (context, accent) {
+        final hasBar = showAccent && !completed;
         final background = colors.tint(accent, 0.14);
         final style = TextStyle(
           fontFamily: AppFonts.of(context),
@@ -71,13 +107,15 @@ class CalendarEventLabel extends StatelessWidget {
                   AnimatedContainer(
                     duration: const Duration(milliseconds: 240),
                     curve: Curves.easeOutCubic,
-                    width: (showAccent && !completed) ? 3 : 0,
+                    width: hasBar ? 3 : 0,
                     height: labelHeight,
                     child: ColoredBox(color: accent),
                   ),
                   Expanded(
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 3),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: hasBar ? 1 : 0,
+                      ),
                       child: AnimatedSwitcher(
                         duration: const Duration(milliseconds: 280),
                         switchInCurve: Curves.easeOutCubic,
@@ -112,13 +150,21 @@ class CalendarEventLabel extends StatelessWidget {
                         child: Align(
                           key: ValueKey(title),
                           alignment: Alignment.center,
-                          child: Text(
-                            title,
-                            maxLines: 1,
-                            softWrap: false,
-                            overflow: TextOverflow.ellipsis,
-                            textAlign: TextAlign.center,
-                            style: style,
+                          child: LayoutBuilder(
+                            builder: (context, constraints) {
+                              return Text(
+                                _wholeCharsThatFit(
+                                  title,
+                                  style,
+                                  constraints.maxWidth,
+                                ),
+                                maxLines: 1,
+                                softWrap: false,
+                                overflow: TextOverflow.clip,
+                                textAlign: TextAlign.center,
+                                style: style,
+                              );
+                            },
                           ),
                         ),
                       ),

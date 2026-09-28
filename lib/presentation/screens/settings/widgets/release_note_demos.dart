@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:lottie/lottie.dart';
 import 'package:pluto/core/constants/app_fonts.dart';
 import 'package:pluto/core/constants/app_icons.dart';
 import 'package:pluto/core/constants/app_strings.dart';
@@ -147,6 +148,9 @@ enum ReleaseDemo {
   categoryLiveApply,
   jobTabRefresh,
   homeHideRejected,
+  loginLottie,
+  friendsWheel,
+  friendsMeLeft,
   feature,
   fix,
 }
@@ -248,6 +252,9 @@ ReleaseDemo releaseDemoFor(String text, {required bool isFix}) {
     if (text.contains('홈에도 나오던')) {
       return ReleaseDemo.homeHideRejected;
     }
+    if (text.contains('가운데로 가던') || text.contains('친구가 없을 때 내 프로필')) {
+      return ReleaseDemo.friendsMeLeft;
+    }
     if (text.contains('기능 안내')) return ReleaseDemo.featureIntroStay;
     if (text.contains('스티커 팩')) return ReleaseDemo.stickers;
     return ReleaseDemo.fix;
@@ -331,6 +338,12 @@ ReleaseDemo releaseDemoFor(String text, {required bool isFix}) {
   }
   if (text.contains('쓰던 일정도 같이') || text.contains('카테고리 이름과 색을 바꾸면')) {
     return ReleaseDemo.categoryLiveApply;
+  }
+  if (text.contains('로그인 로고가 움직') || text.contains('로고가 움직여요')) {
+    return ReleaseDemo.loginLottie;
+  }
+  if (text.contains('친구 줄') || text.contains('휠을 굴리면 옆으로')) {
+    return ReleaseDemo.friendsWheel;
   }
   if (text.contains('더 많은 기능')) return ReleaseDemo.featureIntro;
   if (text.contains('계정을 따라')) return ReleaseDemo.settingsFollow;
@@ -655,6 +668,9 @@ class ReleaseDemoView extends StatelessWidget {
       ReleaseDemo.categoryLiveApply => const _CategoryLiveApplyDemo(),
       ReleaseDemo.jobTabRefresh => const _JobTabRefreshDemo(),
       ReleaseDemo.homeHideRejected => const _HomeHideRejectedDemo(),
+      ReleaseDemo.loginLottie => const _LoginLottieDemo(),
+      ReleaseDemo.friendsWheel => const _FriendsWheelDemo(),
+      ReleaseDemo.friendsMeLeft => const _FriendsMeLeftDemo(),
       ReleaseDemo.feature => const _FeatureDemo(),
       ReleaseDemo.fix => const _FixDemo(),
     };
@@ -2924,6 +2940,211 @@ class _RejectedJobRow extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _LoginLottieDemo extends StatelessWidget {
+  const _LoginLottieDemo();
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(18),
+      child: ColoredBox(
+        color: colors.groupedBackground,
+        child: const SizedBox(
+          height: 188,
+          width: double.infinity,
+          child: Center(
+            child: Lottie.asset(
+              AppIcons.plutoLogoLottie,
+              width: 128,
+              height: 128,
+              repeat: true,
+              fit: BoxFit.contain,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _FriendsWheelDemo extends StatelessWidget {
+  const _FriendsWheelDemo();
+
+  static const _names = ['나', '가현', '준혁', '민수', '수아', '태우'];
+  static const _tones = [
+    Color(0xFF7CB7FE),
+    Color(0xFFF9A8D4),
+    Color(0xFFFBBF24),
+    Color(0xFF34D399),
+    Color(0xFFA78BFA),
+    Color(0xFFFB7185),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 4200,
+      boxHeight: 168,
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final font = AppFonts.of(context);
+        final slide = Curves.easeInOutCubic.transform(_gate(t, 0.12, 0.78));
+        final wheel = _pulse(t, 0.10, 0.22, 0.86);
+        return Stack(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 28, 16, 16),
+              child: ClipRect(
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Transform.translate(
+                    offset: Offset(-86.0 * slide, 0),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        for (var i = 0; i < _names.length; i++) ...[
+                          if (i > 0) const SizedBox(width: 12),
+                          _DemoFriendDot(
+                            name: _names[i],
+                            color: _tones[i],
+                            font: font,
+                            colors: colors,
+                            mine: i == 0,
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            if (wheel > 0)
+              Positioned(
+                right: 22,
+                top: 18,
+                child: Opacity(
+                  opacity: 0.25 + 0.75 * wheel,
+                  child: Transform.rotate(
+                    angle: -0.6 * slide,
+                    child: Icon(
+                      Icons.mouse_outlined,
+                      size: 22,
+                      color: colors.accent,
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _FriendsMeLeftDemo extends StatelessWidget {
+  const _FriendsMeLeftDemo();
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 3800,
+      boxHeight: 168,
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final font = AppFonts.of(context);
+        final toLeft = Curves.easeInOutCubic.transform(_gate(t, 0.22, 0.55));
+        return LayoutBuilder(
+          builder: (context, box) {
+            final travel = ((box.maxWidth - 32) / 2) - 28;
+            return Padding(
+              padding: const EdgeInsets.fromLTRB(16, 36, 16, 16),
+              child: Align(
+                alignment: Alignment.topLeft,
+                child: Transform.translate(
+                  offset: Offset(travel * (1 - toLeft), 0),
+                  child: _DemoFriendDot(
+                    name: '나',
+                    color: const Color(0xFF7CB7FE),
+                    font: font,
+                    colors: colors,
+                    mine: true,
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+}
+
+class _DemoFriendDot extends StatelessWidget {
+  const _DemoFriendDot({
+    required this.name,
+    required this.color,
+    required this.font,
+    required this.colors,
+    this.mine = false,
+  });
+
+  final String name;
+  final Color color;
+  final String? font;
+  final AppColors colors;
+  final bool mine;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 56,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          DecoratedBox(
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: color.withValues(alpha: 0.22),
+              border: Border.all(color: color, width: mine ? 2 : 0),
+            ),
+            child: SizedBox(
+              width: 44,
+              height: 44,
+              child: Center(
+                child: Text(
+                  name.characters.first,
+                  style: TextStyle(
+                    fontFamily: font,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                    height: 1,
+                    color: color,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            name,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontFamily: font,
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              height: 1,
+              color: colors.secondary,
+            ),
+          ),
+        ],
       ),
     );
   }

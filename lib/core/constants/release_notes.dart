@@ -17,6 +17,16 @@ class ReleaseNote {
 abstract final class ReleaseNotes {
   static const all = [
     ReleaseNote(
+      version: '1.4.20',
+      items: [
+        '로그인 로고가 움직여요',
+        'PC에서 친구 줄 위에 두고 휠을 굴리면 옆으로 가요',
+      ],
+      fixes: [
+        '친구가 없을 때 내 프로필이 가운데로 가던 점을 고쳤어요',
+      ],
+    ),
+    ReleaseNote(
       version: '1.4.19',
       items: [
         '카테고리 이름과 색을 바꾸면 쓰던 일정도 같이 바뀌어요',

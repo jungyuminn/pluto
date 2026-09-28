@@ -155,7 +155,7 @@ class MouseDragScrollBehavior extends ScrollBehavior {
       };
 }
 
-class HorizontalWheelScroll extends StatelessWidget {
+class HorizontalWheelScroll extends StatefulWidget {
   const HorizontalWheelScroll({
     super.key,
     required this.controller,
@@ -166,29 +166,53 @@ class HorizontalWheelScroll extends StatelessWidget {
   final Widget child;
 
   @override
+  State<HorizontalWheelScroll> createState() => _HorizontalWheelScrollState();
+}
+
+class _HorizontalWheelScrollState extends State<HorizontalWheelScroll> {
+  double? _target;
+
+  void _onSignal(PointerSignalEvent event) {
+    if (event is! PointerScrollEvent) return;
+    final controller = widget.controller;
+    if (!controller.hasClients) return;
+    final pos = controller.position;
+    if (pos.maxScrollExtent <= pos.minScrollExtent) return;
+    GestureBinding.instance.pointerSignalResolver.register(event, (resolved) {
+      if (resolved is! PointerScrollEvent) return;
+      if (!controller.hasClients) return;
+      final current = controller.position;
+      final delta = resolved.scrollDelta.dx.abs() >=
+              resolved.scrollDelta.dy.abs()
+          ? resolved.scrollDelta.dx
+          : resolved.scrollDelta.dy;
+      final next = ((_target ?? current.pixels) + delta).clamp(
+        current.minScrollExtent,
+        current.maxScrollExtent,
+      );
+      if (next == current.pixels && _target == null) return;
+      _target = next;
+      controller
+          .animateTo(
+            next,
+            duration: const Duration(milliseconds: 220),
+            curve: Curves.easeOutCubic,
+          )
+          .whenComplete(() {
+        if (!controller.hasClients) return;
+        if (_target != null &&
+            (controller.position.pixels - _target!).abs() < 0.5) {
+          _target = null;
+        }
+      });
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Listener(
-      onPointerSignal: (event) {
-        if (event is! PointerScrollEvent) return;
-        if (!controller.hasClients) return;
-        final pos = controller.position;
-        if (pos.maxScrollExtent <= pos.minScrollExtent) return;
-        GestureBinding.instance.pointerSignalResolver.register(event, (resolved) {
-          if (resolved is! PointerScrollEvent) return;
-          if (!controller.hasClients) return;
-          final current = controller.position;
-          final delta = resolved.scrollDelta.dx.abs() >=
-                  resolved.scrollDelta.dy.abs()
-              ? resolved.scrollDelta.dx
-              : resolved.scrollDelta.dy;
-          final next = (current.pixels + delta).clamp(
-            current.minScrollExtent,
-            current.maxScrollExtent,
-          );
-          if (next != current.pixels) controller.jumpTo(next);
-        });
-      },
-      child: child,
+      onPointerSignal: _onSignal,
+      child: widget.child,
     );
   }
 }

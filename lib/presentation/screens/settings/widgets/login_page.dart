@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:lottie/lottie.dart';
 import 'package:pluto/core/constants/app_fonts.dart';
 import 'package:pluto/core/constants/app_icons.dart';
 import 'package:pluto/core/constants/app_strings.dart';
@@ -302,10 +303,19 @@ class _WebLoginIntro extends StatelessWidget {
                 fade(
                   40,
                   Center(
-                    child: SvgPicture.asset(
-                      AppIcons.plutoLogo,
+                    child: Lottie.asset(
+                      AppIcons.plutoLogoLottie,
                       width: logoSize,
                       height: logoSize,
+                      repeat: true,
+                      fit: BoxFit.contain,
+                      errorBuilder: (context, error, stackTrace) {
+                        return SvgPicture.asset(
+                          AppIcons.plutoLogo,
+                          width: logoSize,
+                          height: logoSize,
+                        );
+                      },
                     ),
                   ),
                 ),

@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:pluto/core/constants/app_fonts.dart';
 import 'package:pluto/core/constants/app_strings.dart';
 import 'package:pluto/core/theme/app_colors.dart';
+import 'package:pluto/core/utils/mouse_drag_scroll.dart';
 import 'package:pluto/core/utils/press_bounce.dart';
 import 'package:pluto/data/datasources/app_auth_service.dart';
 import 'package:pluto/data/datasources/friend_favorite_preference.dart';
@@ -29,10 +30,18 @@ class HomeFriendsRow extends StatefulWidget {
 }
 
 class _HomeFriendsRowState extends State<HomeFriendsRow> {
+  final _scroll = ScrollController();
+
   @override
   void initState() {
     super.initState();
     unawaited(FriendService.instance.bootstrap());
+  }
+
+  @override
+  void dispose() {
+    _scroll.dispose();
+    super.dispose();
   }
 
   @override
@@ -121,47 +130,54 @@ class _HomeFriendsRowState extends State<HomeFriendsRow> {
         width: double.infinity,
         height: _rowHeight,
         child: homeFriends.isEmpty
-            ? meCell
-            : ReorderableListView(
-                scrollDirection: Axis.horizontal,
-                buildDefaultDragHandles: false,
-                padding: EdgeInsets.zero,
-                header: meCell,
-                proxyDecorator: (child, index, animation) {
-                  return AnimatedBuilder(
-                    animation: animation,
-                    builder: (context, child) {
-                      final t = Curves.easeOutBack.transform(animation.value);
-                      return Transform.scale(
-                        scale: 1 + 0.06 * t,
-                        child: child,
-                      );
-                    },
-                    child: child,
-                  );
-                },
-                onReorderStart: (_) => HapticFeedback.mediumImpact(),
-                onReorder: (oldIndex, newIndex) {
-                  unawaited(
-                    FriendService.instance.reorderHomeFriends(
-                      homeFriends,
-                      oldIndex: oldIndex,
-                      newIndex: newIndex,
-                    ),
-                  );
-                },
-                children: [
-                  for (var i = 0; i < homeFriends.length; i++)
-                    ReorderableDelayedDragStartListener(
-                      key: ValueKey(homeFriends[i].uid),
-                      index: i,
-                      child: _FriendCell(
-                        friend: homeFriends[i],
-                        onPressed: () =>
-                            _openCalendar(context, homeFriends[i]),
+            ? Align(
+                alignment: Alignment.centerLeft,
+                child: meCell,
+              )
+            : HorizontalWheelScroll(
+                controller: _scroll,
+                child: ReorderableListView(
+                  scrollController: _scroll,
+                  scrollDirection: Axis.horizontal,
+                  buildDefaultDragHandles: false,
+                  padding: EdgeInsets.zero,
+                  header: meCell,
+                  proxyDecorator: (child, index, animation) {
+                    return AnimatedBuilder(
+                      animation: animation,
+                      builder: (context, child) {
+                        final t = Curves.easeOutBack.transform(animation.value);
+                        return Transform.scale(
+                          scale: 1 + 0.06 * t,
+                          child: child,
+                        );
+                      },
+                      child: child,
+                    );
+                  },
+                  onReorderStart: (_) => HapticFeedback.mediumImpact(),
+                  onReorder: (oldIndex, newIndex) {
+                    unawaited(
+                      FriendService.instance.reorderHomeFriends(
+                        homeFriends,
+                        oldIndex: oldIndex,
+                        newIndex: newIndex,
                       ),
-                    ),
-                ],
+                    );
+                  },
+                  children: [
+                    for (var i = 0; i < homeFriends.length; i++)
+                      ReorderableDelayedDragStartListener(
+                        key: ValueKey(homeFriends[i].uid),
+                        index: i,
+                        child: _FriendCell(
+                          friend: homeFriends[i],
+                          onPressed: () =>
+                              _openCalendar(context, homeFriends[i]),
+                        ),
+                      ),
+                  ],
+                ),
               ),
       ),
     );

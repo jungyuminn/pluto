@@ -17,6 +17,17 @@ class ReleaseNote {
 abstract final class ReleaseNotes {
   static const all = [
     ReleaseNote(
+      version: '1.4.21',
+      items: [
+        '패드에서 홈이 가운데로 모이고 날짜 창이 커요',
+        '언젠가 할 일을 끝내면 오늘로 들어가요',
+      ],
+      fixes: [
+        '친구 달력 맨 끝 날짜에 할 일이 안 나오던 점을 고쳤어요',
+        '로그인 복구 때 친구 홈 줄이 바뀌던 점을 고쳤어요',
+      ],
+    ),
+    ReleaseNote(
       version: '1.4.20',
       items: [
         '로그인 로고가 움직여요',

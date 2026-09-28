@@ -16,6 +16,7 @@ import 'package:pluto/core/home_widget/week_timetable_card.dart';
 import 'package:pluto/core/theme/app_colors.dart';
 import 'package:pluto/core/theme/app_skin_background.dart';
 import 'package:pluto/core/theme/app_theme.dart';
+import 'package:pluto/data/datasources/calendar_complete.dart';
 import 'package:pluto/data/datasources/calendar_event_local_datasource.dart';
 import 'package:pluto/data/datasources/friend_service.dart';
 import 'package:pluto/data/datasources/calendar_preference.dart';
@@ -152,7 +153,8 @@ class HomeScreenWidgetService {
       }
     }
     if (match == null || match.isJob) return;
-    final toggled = await FriendService.instance.toggleComplete(match);
+    final source = pinSomedayCompleteToToday(match);
+    final toggled = await FriendService.instance.toggleComplete(source);
     final groupId = match.isRepeat ? null : match.groupId;
     await events.saveAll([
       for (final event in current)
@@ -161,6 +163,8 @@ class HomeScreenWidgetService {
             completed: toggled.completed,
             sharedMine: toggled.sharedMine,
             sharedPeer: toggled.sharedPeer,
+            date: toggled.date,
+            someday: toggled.someday,
           )
         else
           event,

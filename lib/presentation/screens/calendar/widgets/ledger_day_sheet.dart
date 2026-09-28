@@ -61,8 +61,8 @@ Future<void> showLedgerDaySheet(
         );
       } else {
         final size = MediaQuery.sizeOf(context);
-        final dialogWidth = PcLayout.dayDialogWidthOf();
-        final dialogHeight = PcLayout.dayDialogHeightOf(size.height);
+        final dialogWidth = PcLayout.dayDialogWidthOf(context);
+        final dialogHeight = PcLayout.dayDialogHeightOf(context, size.height);
         final beginScale =
             ((source.width / dialogWidth + source.height / dialogHeight) / 2)
                 .clamp(0.12, 0.38);
@@ -688,7 +688,10 @@ class _LedgerDaySheetState extends State<LedgerDaySheet>
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
-    final height = PcLayout.dayDialogHeightOf(MediaQuery.sizeOf(context).height);
+    final height = PcLayout.dayDialogHeightOf(
+      context,
+      MediaQuery.sizeOf(context).height,
+    );
 
     return MediaQuery.removeViewInsets(
       context: context,
@@ -709,7 +712,7 @@ class _LedgerDaySheetState extends State<LedgerDaySheet>
               child: SizedBox(
                 key: _dialogKey,
                 height: height,
-                width: PcLayout.dayDialogWidthOf(),
+                width: PcLayout.dayDialogWidthOf(context),
                 child: AppSkinBackground(
                   color: colors.card,
                   liftForNav: false,

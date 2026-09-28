@@ -445,7 +445,6 @@ class HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           ),
       ],
     );
-    if (!PcLayout.isPc) return list;
     return PcLayout.constrainWidth(list);
   }
 

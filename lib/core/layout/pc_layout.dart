@@ -19,6 +19,12 @@ class PcLayout {
   static const dayLabelHeight = 52.0;
   static const pcDayLabelHeight = 56.0;
   static const compactWidth = 720.0;
+  static const tabletShortestSide = 600.0;
+
+  static bool isWideOf(BuildContext context) {
+    if (isPc) return true;
+    return MediaQuery.sizeOf(context).shortestSide >= tabletShortestSide;
+  }
 
   static BorderRadius sheetRadius() => isPc
       ? BorderRadius.circular(24)
@@ -37,10 +43,11 @@ class PcLayout {
   static bool showCalendarArrowsOf(double width) =>
       isPc && width >= compactWidth;
 
-  static double dayDialogWidthOf() => isPc ? pcDayDialogWidth : dayDialogWidth;
+  static double dayDialogWidthOf(BuildContext context) =>
+      isWideOf(context) ? pcDayDialogWidth : dayDialogWidth;
 
-  static double dayDialogHeightOf(double screenHeight) {
-    if (isPc) {
+  static double dayDialogHeightOf(BuildContext context, double screenHeight) {
+    if (isWideOf(context)) {
       final maxH = math.min(640.0, screenHeight * 0.82);
       final minH = math.min(520.0, screenHeight * 0.62);
       return (screenHeight * 0.68).clamp(minH, maxH).toDouble();
@@ -56,15 +63,21 @@ class PcLayout {
   static double dayLabelExtentOf() => dayLabelHeightOf() + 10;
 
   static Widget constrainWidth(Widget child) {
-    if (!isPc) return child;
-    return _PcGutterScroll(
-      child: Align(
-        alignment: Alignment.topCenter,
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: contentMaxWidth),
-          child: child,
-        ),
-      ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (!isWideOf(context)) return child;
+        final aligned = Align(
+          alignment: Alignment.topCenter,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: contentMaxWidth),
+            child: child,
+          ),
+        );
+        if (isPc) return _PcGutterScroll(child: aligned);
+        final side =
+            ((constraints.maxWidth - contentMaxWidth) / 2).clamp(0.0, double.infinity);
+        return _PadGutterScroll(side: side, child: aligned);
+      },
     );
   }
 
@@ -152,6 +165,111 @@ class _PcGutterScroll extends StatelessWidget {
 
     context.visitChildElements(visit);
     found?.position.pointerScroll(delta);
+  }
+}
+
+class _PadGutterScroll extends StatefulWidget {
+  const _PadGutterScroll({required this.child, required this.side});
+
+  final Widget child;
+  final double side;
+
+  @override
+  State<_PadGutterScroll> createState() => _PadGutterScrollState();
+}
+
+class _PadGutterScrollState extends State<_PadGutterScroll> {
+  Drag? _drag;
+  ScrollHoldController? _hold;
+
+  ScrollPosition? _position() {
+    ScrollPosition? found;
+    void visit(Element element) {
+      if (found != null) return;
+      if (element is StatefulElement && element.state is ScrollableState) {
+        final position = (element.state as ScrollableState).position;
+        if (position.axis == Axis.vertical &&
+            position.hasPixels &&
+            position.maxScrollExtent > position.minScrollExtent) {
+          found = position;
+          return;
+        }
+      }
+      element.visitChildren(visit);
+    }
+
+    context.visitChildElements(visit);
+    return found;
+  }
+
+  void _dragStart(DragStartDetails details) {
+    final position = _position();
+    if (position == null) return;
+    _hold?.cancel();
+    _drag?.cancel();
+    _hold = position.hold(() {});
+    _drag = position.drag(details, () {
+      _drag = null;
+      _hold = null;
+    });
+  }
+
+  void _dragUpdate(DragUpdateDetails details) {
+    _drag?.update(details);
+  }
+
+  void _dragEnd(DragEndDetails details) {
+    _drag?.end(details);
+    _drag = null;
+    _hold = null;
+  }
+
+  void _dragCancel() {
+    _drag?.cancel();
+    _hold?.cancel();
+    _drag = null;
+    _hold = null;
+  }
+
+  @override
+  void dispose() {
+    _dragCancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    Widget gutter() {
+      return GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onVerticalDragStart: _dragStart,
+        onVerticalDragUpdate: _dragUpdate,
+        onVerticalDragEnd: _dragEnd,
+        onVerticalDragCancel: _dragCancel,
+      );
+    }
+
+    return Stack(
+      children: [
+        widget.child,
+        if (widget.side > 0) ...[
+          Positioned(
+            left: 0,
+            top: 0,
+            bottom: 0,
+            width: widget.side,
+            child: gutter(),
+          ),
+          Positioned(
+            right: 0,
+            top: 0,
+            bottom: 0,
+            width: widget.side,
+            child: gutter(),
+          ),
+        ],
+      ],
+    );
   }
 }
 

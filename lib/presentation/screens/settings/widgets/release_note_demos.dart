@@ -151,12 +151,22 @@ enum ReleaseDemo {
   loginLottie,
   friendsWheel,
   friendsMeLeft,
+  padWide,
+  somedayToToday,
+  friendEdgeDay,
+  restoreKeepFriends,
   feature,
   fix,
 }
 
 ReleaseDemo releaseDemoFor(String text, {required bool isFix}) {
   if (isFix) {
+    if (text.contains('맨 끝 날짜') || text.contains('친구 달력 맨 끝')) {
+      return ReleaseDemo.friendEdgeDay;
+    }
+    if (text.contains('친구 홈 줄') || text.contains('로그인 복구 때')) {
+      return ReleaseDemo.restoreKeepFriends;
+    }
     if (text.contains('취준 일정') || text.contains('친구 캘린더에 안 보이')) {
       return ReleaseDemo.friendsMiniCal;
     }
@@ -338,6 +348,12 @@ ReleaseDemo releaseDemoFor(String text, {required bool isFix}) {
   }
   if (text.contains('쓰던 일정도 같이') || text.contains('카테고리 이름과 색을 바꾸면')) {
     return ReleaseDemo.categoryLiveApply;
+  }
+  if (text.contains('패드에서 홈') || text.contains('날짜 창이 커요')) {
+    return ReleaseDemo.padWide;
+  }
+  if (text.contains('언젠가 할 일을 끝내면') || text.contains('오늘로 들어가요')) {
+    return ReleaseDemo.somedayToToday;
   }
   if (text.contains('로그인 로고가 움직') || text.contains('로고가 움직여요')) {
     return ReleaseDemo.loginLottie;
@@ -671,6 +687,10 @@ class ReleaseDemoView extends StatelessWidget {
       ReleaseDemo.loginLottie => const _LoginLottieDemo(),
       ReleaseDemo.friendsWheel => const _FriendsWheelDemo(),
       ReleaseDemo.friendsMeLeft => const _FriendsMeLeftDemo(),
+      ReleaseDemo.padWide => const _PadWideDemo(),
+      ReleaseDemo.somedayToToday => const _SomedayToTodayDemo(),
+      ReleaseDemo.friendEdgeDay => const _FriendEdgeDayDemo(),
+      ReleaseDemo.restoreKeepFriends => const _RestoreKeepFriendsDemo(),
       ReleaseDemo.feature => const _FeatureDemo(),
       ReleaseDemo.fix => const _FixDemo(),
     };
@@ -3079,6 +3099,539 @@ class _FriendsMeLeftDemo extends StatelessWidget {
               ),
             );
           },
+        );
+      },
+    );
+  }
+}
+
+class _PadWideDemo extends StatelessWidget {
+  const _PadWideDemo();
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 4600,
+      boxHeight: 196,
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final font = AppFonts.of(context);
+        final pinch = Curves.easeInOutCubic.transform(_gate(t, 0.12, 0.48));
+        final dialog = Curves.easeOutBack.transform(_gate(t, 0.52, 0.72));
+        final width = 1.0 - 0.38 * pinch;
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(12, 14, 12, 12),
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: colors.card.withValues(alpha: 0.35),
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(
+                color: colors.muted.withValues(alpha: 0.28),
+              ),
+            ),
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                Align(
+                  alignment: Alignment.topCenter,
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(10, 12, 10, 12),
+                    child: FractionallySizedBox(
+                      widthFactor: width,
+                      child: Column(
+                        children: [
+                          _PadHomeRow(
+                            title: AppStrings.homeShowToday,
+                            item: '헬스장',
+                            color: const Color(0xFF3B82F6),
+                            font: font,
+                            colors: colors,
+                          ),
+                          const SizedBox(height: 8),
+                          _PadHomeRow(
+                            title: AppStrings.somedayTitle,
+                            item: '여행 가방',
+                            color: const Color(0xFF10B981),
+                            font: font,
+                            colors: colors,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                if (dialog > 0)
+                  Opacity(
+                    opacity: dialog.clamp(0.0, 1.0),
+                    child: Transform.scale(
+                      scale: 0.72 + 0.28 * dialog,
+                      child: SizedBox(
+                        width: 92 + 36 * dialog,
+                        child: _Card(
+                          padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '10월 1일',
+                                style: TextStyle(
+                                  fontFamily: font,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w800,
+                                  color: colors.text,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              _KeepTodo(
+                                title: '회의',
+                                color: const Color(0xFFF97316),
+                                font: font,
+                                colors: colors,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _PadHomeRow extends StatelessWidget {
+  const _PadHomeRow({
+    required this.title,
+    required this.item,
+    required this.color,
+    required this.font,
+    required this.colors,
+  });
+
+  final String title;
+  final String item;
+  final Color color;
+  final String? font;
+  final AppColors colors;
+
+  @override
+  Widget build(BuildContext context) {
+    return _Card(
+      padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
+      child: Row(
+        children: [
+          Text(
+            title,
+            style: TextStyle(
+              fontFamily: font,
+              fontSize: 12,
+              fontWeight: FontWeight.w800,
+              color: colors.text,
+            ),
+          ),
+          const Spacer(),
+          Container(
+            width: 7,
+            height: 7,
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            item,
+            style: TextStyle(
+              fontFamily: font,
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              color: colors.muted,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SomedayToTodayDemo extends StatelessWidget {
+  const _SomedayToTodayDemo();
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 4400,
+      boxHeight: 196,
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final font = AppFonts.of(context);
+        final press = _pulse(t, 0.16, 0.26, 0.38);
+        final done = t >= 0.26;
+        final fly = Curves.easeInOutCubic.transform(_gate(t, 0.28, 0.58));
+        return Stack(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
+              child: Column(
+                children: [
+                  _Card(
+                    padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+                    child: SizedBox(
+                      height: 54,
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          AppStrings.homeShowToday,
+                          style: TextStyle(
+                            fontFamily: font,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w800,
+                            color: colors.text,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  _Card(
+                    padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+                    child: Row(
+                      children: [
+                        Text(
+                          AppStrings.somedayTitle,
+                          style: TextStyle(
+                            fontFamily: font,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w800,
+                            color: colors.text,
+                          ),
+                        ),
+                        const Spacer(),
+                        Opacity(
+                          opacity: 1 - fly,
+                          child: _DemoTodoChip(
+                            title: '여행 가방',
+                            color: const Color(0xFF10B981),
+                            done: done,
+                            font: font,
+                            colors: colors,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (fly > 0)
+              Positioned(
+                left: 28,
+                top: 28 + 72 * (1 - fly),
+                right: 28,
+                child: Opacity(
+                  opacity: fly,
+                  child: _DemoTodoChip(
+                    title: '여행 가방',
+                    color: const Color(0xFF10B981),
+                    done: true,
+                    font: font,
+                    colors: colors,
+                  ),
+                ),
+              ),
+            if (press > 0)
+              Positioned(
+                right: 34,
+                top: 118,
+                child: _Finger(pressed: press),
+              ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _DemoTodoChip extends StatelessWidget {
+  const _DemoTodoChip({
+    required this.title,
+    required this.color,
+    required this.done,
+    required this.font,
+    required this.colors,
+  });
+
+  final String title;
+  final Color color;
+  final bool done;
+  final String? font;
+  final AppColors colors;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: colors.groupedBackground,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(10, 7, 8, 7),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              title,
+              style: TextStyle(
+                fontFamily: font,
+                fontSize: 13,
+                fontWeight: FontWeight.w800,
+                color: colors.text,
+                decoration: done ? TextDecoration.lineThrough : null,
+                decorationColor: colors.muted,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Container(
+              width: 16,
+              height: 16,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: done ? color : Colors.transparent,
+                border: Border.all(color: color, width: 1.6),
+              ),
+              child: done
+                  ? const Icon(Icons.check, size: 11, color: Colors.white)
+                  : null,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _FriendEdgeDayDemo extends StatelessWidget {
+  const _FriendEdgeDayDemo();
+
+  static const _days = ['28', '29', '30', '1', '2', '3', '4'];
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 4000,
+      boxHeight: 176,
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final font = AppFonts.of(context);
+        final show = Curves.easeOutBack.transform(_gate(t, 0.28, 0.52));
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(14, 16, 14, 12),
+          child: _Card(
+            padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
+            child: Column(
+              children: [
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    '9월',
+                    style: TextStyle(
+                      fontFamily: font,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                      color: colors.text,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    for (var i = 0; i < _days.length; i++)
+                      Expanded(
+                        child: _EdgeDayCell(
+                          day: _days[i],
+                          muted: i >= 3,
+                          label: i == 3 ? '회의' : null,
+                          reveal: i == 3 ? show : 0,
+                          font: font,
+                          colors: colors,
+                        ),
+                      ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _EdgeDayCell extends StatelessWidget {
+  const _EdgeDayCell({
+    required this.day,
+    required this.muted,
+    required this.label,
+    required this.reveal,
+    required this.font,
+    required this.colors,
+  });
+
+  final String day;
+  final bool muted;
+  final String? label;
+  final double reveal;
+  final String? font;
+  final AppColors colors;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 72,
+      child: Column(
+        children: [
+          Text(
+            day,
+            style: TextStyle(
+              fontFamily: font,
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              color: muted ? colors.muted : colors.text,
+            ),
+          ),
+          const SizedBox(height: 6),
+          if (label != null && reveal > 0)
+            Opacity(
+              opacity: reveal.clamp(0.0, 1.0),
+              child: Transform.translate(
+                offset: Offset(0, 8 * (1 - reveal.clamp(0.0, 1.0))),
+                child: Transform.scale(
+                  scale: 0.86 + 0.14 * reveal.clamp(0.0, 1.0),
+                  child: Container(
+                    width: 28,
+                    height: 14,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF3B82F6),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      label!,
+                      style: TextStyle(
+                        fontFamily: font,
+                        fontSize: 8,
+                        fontWeight: FontWeight.w800,
+                        height: 1,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RestoreKeepFriendsDemo extends StatelessWidget {
+  const _RestoreKeepFriendsDemo();
+
+  static const _names = ['나', '가현', '준혁'];
+  static const _tones = [
+    Color(0xFF7CB7FE),
+    Color(0xFFF9A8D4),
+    Color(0xFFFBBF24),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 4200,
+      boxHeight: 176,
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final font = AppFonts.of(context);
+        final wipe = _pulse(t, 0.28, 0.40, 0.62);
+        final kept = Curves.easeOutCubic.transform(_gate(t, 0.58, 0.74));
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(16, 18, 16, 12),
+          child: Stack(
+            children: [
+              Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      for (var i = 0; i < _names.length; i++)
+                        Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            _DemoFriendDot(
+                              name: _names[i],
+                              color: _tones[i],
+                              font: font,
+                              colors: colors,
+                              mine: i == 0,
+                            ),
+                            if (i > 0)
+                              const Positioned(
+                                right: 6,
+                                top: -2,
+                                child: Icon(
+                                  Icons.star_rounded,
+                                  size: 14,
+                                  color: Color(0xFFFBBF24),
+                                ),
+                              ),
+                          ],
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Opacity(
+                    opacity: kept,
+                    child: Text(
+                      '친구 줄은 그대로예요',
+                      style: TextStyle(
+                        fontFamily: font,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: colors.secondary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              if (wipe > 0)
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: ColoredBox(
+                      color: colors.groupedBackground.withValues(
+                        alpha: 0.72 * wipe,
+                      ),
+                      child: Center(
+                        child: Opacity(
+                          opacity: wipe,
+                          child: Text(
+                            '복구',
+                            style: TextStyle(
+                              fontFamily: font,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w800,
+                              color: colors.accent,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
         );
       },
     );

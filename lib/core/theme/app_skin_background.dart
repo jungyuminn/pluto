@@ -599,7 +599,7 @@ class AppSkinBackground extends StatelessWidget {
             color ?? colors.background,
           )
         : custom.fillColorFor(dark);
-    final sparse = simple || PcLayout.isPc;
+    final sparse = simple || PcLayout.isWideOf(context);
     final Widget? decorations = custom == null
         ? switch (skin) {
       AppSkin.classic => null,

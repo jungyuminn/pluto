@@ -61,22 +61,29 @@ struct FillImageView: View {
   var entry: ImageEntry
 
   var body: some View {
-    if let path = pathForFamily, let image = UIImage(contentsOfFile: path) {
-      Image(uiImage: image)
-        .resizable()
-        .interpolation(.high)
-        .scaledToFill()
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .clipped()
-        .widgetEdgeFill(isDark: entry.isDark)
-    } else {
-      Text(entry.empty)
-        .font(.system(size: 14))
-        .foregroundStyle(Color(red: 0.580, green: 0.639, blue: 0.722))
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .padding(16)
-        .widgetEdgeFill(isDark: entry.isDark)
+    Link(destination: appOpenURL) {
+      Group {
+        if let path = pathForFamily, let image = UIImage(contentsOfFile: path) {
+          Image(uiImage: image)
+            .resizable()
+            .interpolation(.high)
+            .scaledToFill()
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .clipped()
+            .widgetEdgeFill(isDark: entry.isDark)
+        } else {
+          Text(entry.empty)
+            .font(.system(size: 14))
+            .foregroundStyle(Color(red: 0.580, green: 0.639, blue: 0.722))
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            .padding(16)
+            .widgetEdgeFill(isDark: entry.isDark)
+        }
+      }
+      .frame(maxWidth: .infinity, maxHeight: .infinity)
+      .contentShape(ContainerRelativeShape())
     }
+    .buttonStyle(WidgetPressStyle())
   }
 
   private var pathForFamily: String? {
@@ -97,7 +104,6 @@ struct TodayWidget: Widget {
   var body: some WidgetConfiguration {
     StaticConfiguration(kind: kind, provider: TodayProvider()) { entry in
       TodayWidgetView(entry: entry)
-        .widgetURL(URL(string: "jobplanner://home"))
     }
     .configurationDisplayName("오늘")
     .description("오늘의 일정을 보여줘요")
@@ -196,18 +202,22 @@ struct TodayWidgetView: View {
         .containerBackground(for: .widget) {
           AccessoryWidgetBackground()
         }
+        .widgetURL(appOpenURL)
     case .accessoryInline:
       LockInlineView(entry: entry.lock)
+        .widgetURL(appOpenURL)
     case .accessoryRectangular:
       LockRectangularView(entry: entry.lock)
         .containerBackground(for: .widget) {
           AccessoryWidgetBackground()
         }
+        .widgetURL(appOpenURL)
     default:
       LockRectangularView(entry: entry.lock)
         .containerBackground(for: .widget) {
           AccessoryWidgetBackground()
         }
+        .widgetURL(appOpenURL)
     }
   }
 }
@@ -228,7 +238,6 @@ struct TomorrowWidget: Widget {
       )
     ) { entry in
       FillImageView(entry: entry)
-        .widgetURL(URL(string: "jobplanner://home"))
     }
     .configurationDisplayName("내일")
     .description("내일의 일정을 보여줘요")
@@ -253,7 +262,6 @@ struct TodayTomorrowWidget: Widget {
       )
     ) { entry in
       FillImageView(entry: entry)
-        .widgetURL(URL(string: "jobplanner://home"))
     }
     .configurationDisplayName("오늘과 내일")
     .description("오늘과 내일의 일정을 보여줘요")
@@ -278,7 +286,6 @@ struct WeekTimetableWidget: Widget {
       )
     ) { entry in
       FillImageView(entry: entry)
-        .widgetURL(URL(string: "jobplanner://home"))
     }
     .configurationDisplayName("이번 주")
     .description("이번 주 일정을 보여줘요")
@@ -303,7 +310,6 @@ struct MonthCalendarWidget: Widget {
       )
     ) { entry in
       FillImageView(entry: entry)
-        .widgetURL(URL(string: "jobplanner://home"))
     }
     .configurationDisplayName("이번 달")
     .description("이번 달 일정을 보여줘요")
@@ -328,7 +334,6 @@ struct CompactTodayWidget: Widget {
       )
     ) { entry in
       FillImageView(entry: entry)
-        .widgetURL(URL(string: "jobplanner://home"))
     }
     .configurationDisplayName("오늘")
     .description("오늘의 일정을 간단히 보여줘요")
@@ -353,7 +358,6 @@ struct CompactTomorrowWidget: Widget {
       )
     ) { entry in
       FillImageView(entry: entry)
-        .widgetURL(URL(string: "jobplanner://home"))
     }
     .configurationDisplayName("내일")
     .description("내일의 일정을 간단히 보여줘요")
@@ -493,6 +497,18 @@ struct HomeWidgetsBundle: WidgetBundle {
     TodayTomorrowWidget()
     WeekTimetableWidget()
     MonthCalendarWidget()
+  }
+}
+
+private let appOpenURL = URL(string: "jobplanner://home")!
+
+private struct WidgetPressStyle: ButtonStyle {
+  func makeBody(configuration: Configuration) -> some View {
+    configuration.label
+      .overlay {
+        ContainerRelativeShape()
+          .fill(.black.opacity(configuration.isPressed ? 0.12 : 0))
+      }
   }
 }
 

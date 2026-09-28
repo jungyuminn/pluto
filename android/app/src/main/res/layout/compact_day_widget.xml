@@ -3,7 +3,10 @@
     android:id="@+id/widget_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/widget_card_light">
+    android:background="@drawable/widget_card_light"
+    android:clickable="true"
+    android:focusable="true"
+    android:foreground="@drawable/widget_ripple">
 
     <ImageView
         android:id="@+id/widget_skin_bg"

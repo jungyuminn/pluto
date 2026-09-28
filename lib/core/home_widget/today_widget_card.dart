@@ -70,8 +70,8 @@ class TodayWidgetCard extends StatelessWidget {
   static const cardRadius = 24.0;
   static const shadowPad = EdgeInsets.fromLTRB(4, 2, 4, 8);
   static const _pad = EdgeInsets.fromLTRB(16, 14, 16, 12);
-  static const eventExtent = 62.0;
-  static const eventLabelHeight = 52.0;
+  static const eventExtent = 70.0;
+  static const eventLabelHeight = 60.0;
   static const headerExtent = 24.0;
   static const headerGap = 6.0;
   static const moreExtent = 18.0;
@@ -441,7 +441,7 @@ class _WidgetEventLabel extends StatelessWidget {
     this.officeIcon,
   });
 
-  static const _height = 52.0;
+  static const _height = 60.0;
 
   final CalendarEvent event;
   final String? timeText;
@@ -466,7 +466,10 @@ class _WidgetEventLabel extends StatelessWidget {
           child: Row(
             children: [
               Container(
-                width: (event.completed || event.isJob) ? 0 : 4,
+                width: (event.completed ||
+                        (event.isJob && event.isBeforeToday))
+                    ? 0
+                    : 4,
                 height: height,
                 color: event.color,
               ),
@@ -530,16 +533,23 @@ class _WidgetEventLabel extends StatelessWidget {
               ),
               if (event.isJob && officeIcon != null)
                 Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: ColorFiltered(
-                    colorFilter: ColorFilter.mode(
-                      ink,
-                      BlendMode.srcIn,
-                    ),
-                    child: RawImage(
-                      image: officeIcon,
-                      width: 20,
-                      height: 20,
+                  padding: const EdgeInsets.only(right: 6),
+                  child: SizedBox(
+                    width: 28,
+                    height: 28,
+                    child: Center(
+                      child: ColorFiltered(
+                        colorFilter: ColorFilter.mode(
+                          ink,
+                          BlendMode.srcIn,
+                        ),
+                        child: RawImage(
+                          image: officeIcon,
+                          width: 22,
+                          height: 22,
+                          fit: BoxFit.contain,
+                        ),
+                      ),
                     ),
                   ),
                 ),

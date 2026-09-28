@@ -79,7 +79,7 @@ class AppCalendarRepeatPanel extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
       ),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 14, 12, 16),
+        padding: const EdgeInsets.fromLTRB(16, 8, 12, 8),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -130,7 +130,7 @@ class AppCalendarRepeatPanel extends StatelessWidget {
                       monthRule == RepeatMonthRule.weekday
                   ? const SizedBox(width: double.infinity)
                   : _RepeatRow(
-                      iconAsset: AppIcons.calendar,
+                      iconAsset: AppIcons.calendarOutlined,
                       label: AppStrings.repeatStartLabel,
                       child: _ChevronButton(
                         label: RepeatDates.format(start),
@@ -139,7 +139,7 @@ class AppCalendarRepeatPanel extends StatelessWidget {
                     ),
             ),
             _RepeatRow(
-              iconAsset: AppIcons.calendar,
+              iconAsset: AppIcons.calendarOutlined,
               label: AppStrings.repeatEndLabel,
               child: _ChevronMenu<DateTime?>(
                 label: end == null
@@ -253,7 +253,7 @@ class _RepeatRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 16),
+      padding: const EdgeInsets.symmetric(vertical: 14),
       child: Row(
         children: [
           SizedBox(

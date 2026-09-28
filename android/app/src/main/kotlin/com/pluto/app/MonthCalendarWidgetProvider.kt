@@ -2,6 +2,7 @@ package com.pluto.app
 
 import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
@@ -19,6 +20,7 @@ class MonthCalendarWidgetProvider : HomeWidgetProvider() {
         appWidgetIds: IntArray,
         widgetData: SharedPreferences,
     ) {
+        WidgetResizeRefresh.saveMonthSizes(context, appWidgetManager, appWidgetIds)
         appWidgetIds.forEach { widgetId ->
             try {
                 WidgetMidnightScheduler.schedule(context)
@@ -26,7 +28,8 @@ class MonthCalendarWidgetProvider : HomeWidgetProvider() {
                 val mutedColor = Color.parseColor("#94A3B8")
                 val empty = widgetData.getString("month_calendar_empty", "이번 달 일정이 없어요")
                     ?: "이번 달 일정이 없어요"
-                val path = widgetData.getString("month_calendar_image", null)
+                val path = widgetData.getString("month_calendar_image_$widgetId", null)
+                    ?: widgetData.getString("month_calendar_image", null)
                 val bitmap = WidgetSkin.decodeUnscaled(path)
                     ?: WidgetSkin.decode(context, path)
 
@@ -82,11 +85,21 @@ class MonthCalendarWidgetProvider : HomeWidgetProvider() {
         appWidgetId: Int,
         newOptions: android.os.Bundle,
     ) {
+        val ids = appWidgetManager.getAppWidgetIds(
+            ComponentName(context, MonthCalendarWidgetProvider::class.java),
+        )
+        WidgetResizeRefresh.saveMonthSizes(context, appWidgetManager, ids)
+        WidgetResizeRefresh.schedule(context)
         onUpdate(
             context,
             appWidgetManager,
             intArrayOf(appWidgetId),
             HomeWidgetPlugin.getData(context),
         )
+    }
+
+    override fun onDeleted(context: Context, appWidgetIds: IntArray) {
+        super.onDeleted(context, appWidgetIds)
+        WidgetResizeRefresh.removeMonthSizes(context, appWidgetIds)
     }
 }

@@ -817,7 +817,15 @@ class HomeScreenWidgetService {
     if (Platform.isIOS) {
       await render(_iosLargeSize, 'month_calendar_image_large');
     }
-    await render(MonthCalendarCard.logicalSize, MonthCalendarCard.imageKey);
+    final androidSizes = await _androidMonthWidgetSizes();
+    if (androidSizes.isEmpty) {
+      await render(MonthCalendarCard.logicalSize, MonthCalendarCard.imageKey);
+    } else {
+      for (final item in androidSizes) {
+        await render(item.size, MonthCalendarCard.imageKeyOf(item.id));
+      }
+      await render(androidSizes.first.size, MonthCalendarCard.imageKey);
+    }
     await HomeWidget.saveWidgetData<String>(
       MonthCalendarCard.emptyKey,
       AppStrings.monthNotificationEmpty,
@@ -1080,6 +1088,38 @@ class HomeScreenWidgetService {
   Color? get _widgetCustomAccent =>
       _followTheme ? _theme?.customTheme?.accentColor : null;
 
+  Future<List<({int id, Size size})>> _androidMonthWidgetSizes() async {
+    if (!Platform.isAndroid) return const [];
+    final raw =
+        await HomeWidget.getWidgetData<String>(MonthCalendarCard.idsKey);
+    if (raw == null || raw.trim().isEmpty) return const [];
+    final items = <({int id, Size size})>[];
+    for (final part in raw.split(',')) {
+      final id = int.tryParse(part.trim());
+      if (id == null) continue;
+      final width = await _widgetInt(MonthCalendarCard.widthKeyOf(id));
+      final height = await _widgetInt(MonthCalendarCard.heightKeyOf(id));
+      if (width == null || height == null) continue;
+      items.add(
+        (
+          id: id,
+          size: Size(
+            width.clamp(180, 900).toDouble(),
+            height.clamp(180, 900).toDouble(),
+          ),
+        ),
+      );
+    }
+    return items;
+  }
+
+  Future<int?> _widgetInt(String key) async {
+    final asInt = await HomeWidget.getWidgetData<int>(key);
+    if (asInt != null) return asInt;
+    final asText = await HomeWidget.getWidgetData<String>(key);
+    return int.tryParse(asText ?? '');
+  }
+
   Future<ui.Image?> _loadOfficeIcon() async {
     try {
       final pictureInfo = await vg.loadPicture(
@@ -1087,7 +1127,14 @@ class HomeScreenWidgetService {
         null,
       );
       try {
-        return await pictureInfo.picture.toImage(40, 40);
+        const pixels = 80;
+        final side = pictureInfo.size.shortestSide;
+        final logical = side > 0 ? side : 24.0;
+        final recorder = ui.PictureRecorder();
+        final canvas = Canvas(recorder);
+        canvas.scale(pixels / logical);
+        canvas.drawPicture(pictureInfo.picture);
+        return recorder.endRecording().toImage(pixels, pixels);
       } finally {
         pictureInfo.picture.dispose();
       }

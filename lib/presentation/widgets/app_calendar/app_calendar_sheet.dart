@@ -345,12 +345,14 @@ class _AppCalendarSheetState extends State<AppCalendarSheet> {
                 controller: _pages,
                 initialPage: _initialPage,
                 monthAt: _monthAt,
-                hideCurrentYear: false,
+                hideCurrentYear: true,
                 onPressed: _onTitlePressed,
+                fontSize: 20,
               )
             : CalendarZoomTitle(
                 text: CalendarZoom.title(_zoom, _visibleMonth),
                 onPressed: _onTitlePressed,
+                fontSize: 20,
               ),
       ),
     );

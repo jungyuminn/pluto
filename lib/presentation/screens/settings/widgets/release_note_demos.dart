@@ -155,12 +155,24 @@ enum ReleaseDemo {
   somedayToToday,
   friendEdgeDay,
   restoreKeepFriends,
+  widgetPress,
+  monthResize,
+  tabletDecor,
   feature,
   fix,
 }
 
 ReleaseDemo releaseDemoFor(String text, {required bool isFix}) {
   if (isFix) {
+    if (text.contains('지원서 아이콘') || text.contains('점처럼')) {
+      return ReleaseDemo.widgetPress;
+    }
+    if (text.contains('지원서 앞에') || text.contains('색 라벨이 빠지')) {
+      return ReleaseDemo.homeWidget;
+    }
+    if (text.contains('제목이 벌어져') || text.contains('1 0월')) {
+      return ReleaseDemo.monthWidget;
+    }
     if (text.contains('맨 끝 날짜') || text.contains('친구 달력 맨 끝')) {
       return ReleaseDemo.friendEdgeDay;
     }
@@ -430,8 +442,25 @@ ReleaseDemo releaseDemoFor(String text, {required bool isFix}) {
   }
   if (text.contains('그날 소비')) return ReleaseDemo.ledgerDay;
   if (text.contains('반복해서 넣을')) return ReleaseDemo.ledgerRepeat;
-  if (text.contains('여행 햄스터') || text.contains('스티커 팩')) {
+  if (text.contains('햄스터 스티커') ||
+      text.contains('여행 햄스터') ||
+      text.contains('스티커 팩')) {
     return ReleaseDemo.stickers;
+  }
+  if (text.contains('위젯을 누르면') || text.contains('살짝 어두워')) {
+    return ReleaseDemo.widgetPress;
+  }
+  if (text.contains('위젯 라벨') || text.contains('오늘·내일 위젯')) {
+    return ReleaseDemo.homeWidget;
+  }
+  if (text.contains('위젯을 늘리면') || text.contains('달력이 다시 맞춰')) {
+    return ReleaseDemo.monthResize;
+  }
+  if (text.contains('태블릿 테마') || text.contains('장식이 PC')) {
+    return ReleaseDemo.tabletDecor;
+  }
+  if (text.contains('올해면 월만') || text.contains('날짜 고르는 달력')) {
+    return ReleaseDemo.calendarTitle;
   }
   if (text.contains('내역 또는 금액')) return ReleaseDemo.ledgerLabel;
   if (text.contains('따라 하면') || text.contains('화면을 둘러')) {
@@ -691,6 +720,9 @@ class ReleaseDemoView extends StatelessWidget {
       ReleaseDemo.somedayToToday => const _SomedayToTodayDemo(),
       ReleaseDemo.friendEdgeDay => const _FriendEdgeDayDemo(),
       ReleaseDemo.restoreKeepFriends => const _RestoreKeepFriendsDemo(),
+      ReleaseDemo.widgetPress => const _WidgetPressDemo(),
+      ReleaseDemo.monthResize => const _MonthResizeDemo(),
+      ReleaseDemo.tabletDecor => const _TabletDecorDemo(),
       ReleaseDemo.feature => const _FeatureDemo(),
       ReleaseDemo.fix => const _FixDemo(),
     };
@@ -3638,6 +3670,222 @@ class _RestoreKeepFriendsDemo extends StatelessWidget {
   }
 }
 
+class _WidgetPressDemo extends StatelessWidget {
+  const _WidgetPressDemo();
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 3200,
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final font = AppFonts.of(context);
+        final press = _pulse(t, 0.28, 0.44, 0.62);
+        return Center(
+          child: SizedBox(
+            width: 168,
+            height: 118,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: colors.card,
+                borderRadius: BorderRadius.circular(24),
+                boxShadow: [
+                  BoxShadow(
+                    color: colors.shadow,
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(24),
+                child: Stack(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            AppStrings.todayTitle,
+                            style: TextStyle(
+                              fontFamily: font,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w800,
+                              color: colors.text,
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          _KeepTodo(
+                            title: '헬스장',
+                            color: const Color(0xFF3B82F6),
+                            font: font,
+                            colors: colors,
+                          ),
+                        ],
+                      ),
+                    ),
+                    Positioned.fill(
+                      child: IgnorePointer(
+                        child: ColoredBox(
+                          color: Colors.black.withValues(alpha: 0.12 * press),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _MonthResizeDemo extends StatelessWidget {
+  const _MonthResizeDemo();
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 4200,
+      boxHeight: 196,
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final font = AppFonts.of(context);
+        final grow = Curves.easeInOutCubic.transform(_gate(t, 0.16, 0.48));
+        final snap = Curves.easeOutBack.transform(_gate(t, 0.52, 0.72));
+        final height = 118 + 46 * grow;
+        return Center(
+          child: SizedBox(
+            width: 148,
+            height: height,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: colors.card,
+                borderRadius: BorderRadius.circular(22),
+                boxShadow: [
+                  BoxShadow(
+                    color: colors.shadow,
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(10, 10, 10, 8),
+                child: Column(
+                  children: [
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        '10월',
+                        style: TextStyle(
+                          fontFamily: font,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w800,
+                          height: 1.1,
+                          color: colors.text,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    for (var row = 0; row < 4; row++)
+                      Expanded(
+                        child: Opacity(
+                          opacity: 0.55 + 0.45 * snap,
+                          child: Row(
+                            children: [
+                              for (var col = 0; col < 7; col++)
+                                Expanded(
+                                  child: Center(
+                                    child: Container(
+                                      width: 7,
+                                      height: 7,
+                                      decoration: BoxDecoration(
+                                        color: (row + col).isEven
+                                            ? const Color(0xFF60A5FA)
+                                                .withValues(alpha: 0.55)
+                                            : colors.muted
+                                                .withValues(alpha: 0.28),
+                                        borderRadius: BorderRadius.circular(2),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _TabletDecorDemo extends StatelessWidget {
+  const _TabletDecorDemo();
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 4000,
+      boxHeight: 176,
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final sparse = Curves.easeInOutCubic.transform(_gate(t, 0.22, 0.58));
+        final spots = <(double, double, double)>[
+          (0.12, 0.18, 18),
+          (0.78, 0.14, 16),
+          (0.22, 0.62, 14),
+          (0.84, 0.58, 15),
+          (0.48, 0.28, 12),
+          (0.62, 0.72, 13),
+        ];
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(18, 16, 18, 12),
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: colors.groupedBackground,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Stack(
+              children: [
+                for (var i = 0; i < spots.length; i++)
+                  Positioned(
+                    left: 16 + spots[i].$1 * 200,
+                    top: 14 + spots[i].$2 * 110,
+                    child: Opacity(
+                      opacity: i < 3 ? 1 : 1 - sparse,
+                      child: Transform.scale(
+                        scale: i < 3 ? 1 : 1 - 0.35 * sparse,
+                        child: Container(
+                          width: spots[i].$3,
+                          height: spots[i].$3,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF9A8D4)
+                                .withValues(alpha: 0.85),
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
 class _DemoFriendDot extends StatelessWidget {
   const _DemoFriendDot({
     required this.name,
@@ -4267,9 +4515,9 @@ class _StickerDemo extends StatelessWidget {
   const _StickerDemo();
 
   static const _assets = [
-    'assets/stickers/company_rabbit/07_salary.webp',
-    'assets/stickers/university_rabbit/02_exam.webp',
-    'assets/stickers/daily_dog/01_thank_you.webp',
+    'assets/stickers/fat_hamster/01_watering.webp',
+    'assets/stickers/white_hamster/01_socks.webp',
+    'assets/stickers/travel_hamster/01_arrive.webp',
   ];
 
   @override

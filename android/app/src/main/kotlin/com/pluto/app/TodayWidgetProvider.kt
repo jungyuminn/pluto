@@ -87,6 +87,7 @@ abstract class ScheduleWidgetProvider : HomeWidgetProvider() {
                     openApp,
                     PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
                 )
+                setOnClickPendingIntent(R.id.widget_root, openAppPending)
                 setOnClickPendingIntent(R.id.widget_header, openAppPending)
                 setOnClickPendingIntent(R.id.widget_title, openAppPending)
                 setOnClickPendingIntent(R.id.widget_date, openAppPending)

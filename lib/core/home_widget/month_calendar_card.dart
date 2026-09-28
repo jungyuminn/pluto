@@ -20,7 +20,11 @@ class MonthCalendarCard extends StatelessWidget {
 
   static const logicalSize = Size(380, 430);
   static const imageKey = 'month_calendar_image';
+  static const idsKey = 'month_widget_ids';
   static const emptyKey = 'month_calendar_empty';
+  static String imageKeyOf(int id) => 'month_calendar_image_$id';
+  static String widthKeyOf(int id) => 'month_widget_${id}_w';
+  static String heightKeyOf(int id) => 'month_widget_${id}_h';
   static const androidName = 'MonthCalendarWidgetProvider';
   static const iOSName = 'MonthCalendarWidget';
   static const qualifiedAndroidName =
@@ -41,7 +45,7 @@ class MonthCalendarCard extends StatelessWidget {
       todoScale: scope?.todoScale ?? 1,
       labelScale: scope?.labelScale ?? 1,
             calendarScale: math.min(scope?.calendarScale ?? 1, 0.82),
-      calendarLabelScale: math.min(scope?.calendarLabelScale ?? 1, 0.8),
+      calendarLabelScale: math.min(scope?.calendarLabelScale ?? 1, 0.86),
       calendarDateScale: math.min(scope?.calendarDateScale ?? 1, 0.82),
       child: Builder(builder: _buildBody),
     );
@@ -70,6 +74,8 @@ class MonthCalendarCard extends StatelessWidget {
                 fontSize: 22,
                 fontWeight: FontWeight.w800,
                 height: 1.1,
+                letterSpacing: 0,
+                fontFeatures: const [FontFeature.proportionalFigures()],
                 color: colors.text,
               ),
             ),

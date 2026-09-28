@@ -645,7 +645,7 @@ class CalendarScreenState extends State<CalendarScreen>
     final bottomGap =
         72 +
         (PcLayout.isPc ? PcLayout.navLift : 0) +
-        MediaQuery.paddingOf(context).bottom;
+        MediaQuery.viewPaddingOf(context).bottom;
 
     return AppSkinBackground(
       child: Scaffold(

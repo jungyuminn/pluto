@@ -41,7 +41,7 @@ Future<void> showLedgerDaySheet(
     barrierColor: const Color(0x00000000),
     transitionDuration: const Duration(milliseconds: 150),
     pageBuilder: (context, animation, secondaryAnimation) {
-      return LedgerDaySheet(
+      return _LedgerCardPager(
         date: date,
         initial: entries,
         onLedgersChanged: onLedgersChanged,
@@ -196,6 +196,7 @@ class _LedgerDaySheetState extends State<LedgerDaySheet>
     _entries.sort(_compare);
     _items = _itemsForView;
     _loadCategories();
+    if (widget.initial.isEmpty) unawaited(_reload(animate: false));
   }
 
   Future<void> _loadCategories() async {
@@ -1000,6 +1001,96 @@ class _LedgerDaySheetState extends State<LedgerDaySheet>
             ),
           ),
           child: body,
+        );
+      },
+    );
+  }
+}
+
+class _LedgerCardPager extends StatefulWidget {
+  const _LedgerCardPager({
+    required this.date,
+    required this.initial,
+    this.onLedgersChanged,
+  });
+
+  final DateTime date;
+  final List<LedgerEntry> initial;
+  final VoidCallback? onLedgersChanged;
+
+  @override
+  State<_LedgerCardPager> createState() => _LedgerCardPagerState();
+}
+
+class _LedgerCardPagerState extends State<_LedgerCardPager> {
+  static const _origin = 10000;
+
+  late final PageController _pager;
+  late final DateTime _base;
+
+  @override
+  void initState() {
+    super.initState();
+    _base = DateTime(widget.date.year, widget.date.month, widget.date.day);
+    _pager = PageController(initialPage: _origin);
+  }
+
+  @override
+  void dispose() {
+    _pager.dispose();
+    super.dispose();
+  }
+
+  DateTime _dateAt(int page) => _base.add(Duration(days: page - _origin));
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<bool>(
+      valueListenable: CalendarDayDropTarget.hidingScrim,
+      builder: (context, hiding, _) {
+        return PageView.builder(
+          controller: _pager,
+          physics: hiding
+              ? const NeverScrollableScrollPhysics()
+              : const PageScrollPhysics(),
+          onPageChanged: (_) => HapticFeedback.selectionClick(),
+          itemBuilder: (context, page) {
+            final date = _dateAt(page);
+            final first = date.year == _base.year &&
+                date.month == _base.month &&
+                date.day == _base.day;
+            return AnimatedBuilder(
+              animation: _pager,
+              builder: (context, child) {
+                final current = _pager.hasClients
+                    ? (_pager.page ?? page.toDouble())
+                    : page.toDouble();
+                final t = (1 - (current - page).abs()).clamp(0.0, 1.0);
+                return Opacity(
+                  opacity: Curves.easeOut.transform(t),
+                  child: Transform.scale(
+                    scale: 0.94 + 0.06 * t,
+                    child: child,
+                  ),
+                );
+              },
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () => Navigator.of(context).maybePop(),
+                  ),
+                  LedgerDaySheet(
+                    key: ValueKey('${date.year}-${date.month}-${date.day}'),
+                    date: date,
+                    initial: first ? widget.initial : const [],
+                    onLedgersChanged: widget.onLedgersChanged,
+                  ),
+                ],
+              ),
+            );
+          },
         );
       },
     );

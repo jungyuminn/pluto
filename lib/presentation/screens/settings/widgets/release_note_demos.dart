@@ -139,6 +139,11 @@ enum ReleaseDemo {
   statsHeat,
   statsBusyDay,
   navSheetLift,
+  dayCardSwipe,
+  ledgerCardSwipe,
+  monthTitleSlide,
+  keyboardInset,
+  photoSync,
   feature,
   fix,
 }
@@ -224,6 +229,16 @@ ReleaseDemo releaseDemoFor(String text, {required bool isFix}) {
     if (text.contains('아래 바가 시트') || text.contains('시트를 가리던')) {
       return ReleaseDemo.navSheetLift;
     }
+    if (text.contains('키보드를 닫아도') || text.contains('아래 바와 달력이 어긋')) {
+      return ReleaseDemo.keyboardInset;
+    }
+    if (text.contains('폰과 PC에서 친구 사진') ||
+        text.contains('친구 사진이 안 바뀌')) {
+      return ReleaseDemo.photoSync;
+    }
+    if (text.contains('친구 목록이 비어')) {
+      return ReleaseDemo.friendHomeSeed;
+    }
     if (text.contains('기능 안내')) return ReleaseDemo.featureIntroStay;
     if (text.contains('스티커 팩')) return ReleaseDemo.stickers;
     return ReleaseDemo.fix;
@@ -295,6 +310,15 @@ ReleaseDemo releaseDemoFor(String text, {required bool isFix}) {
   }
   if (text.contains('가장 바빴던') || text.contains('사용한 카테고리 대신')) {
     return ReleaseDemo.statsBusyDay;
+  }
+  if (text.contains('다른 날로 넘기') || text.contains('날짜 창을 밀어')) {
+    return ReleaseDemo.dayCardSwipe;
+  }
+  if (text.contains('가계부 날짜 창도')) {
+    return ReleaseDemo.ledgerCardSwipe;
+  }
+  if (text.contains('달이 화면과 같이') || text.contains('달력 위 달')) {
+    return ReleaseDemo.monthTitleSlide;
   }
   if (text.contains('더 많은 기능')) return ReleaseDemo.featureIntro;
   if (text.contains('계정을 따라')) return ReleaseDemo.settingsFollow;
@@ -611,6 +635,11 @@ class ReleaseDemoView extends StatelessWidget {
       ReleaseDemo.statsHeat => const _StatsHeatDemo(),
       ReleaseDemo.statsBusyDay => const _StatsBusyDayDemo(),
       ReleaseDemo.navSheetLift => const _NavSheetLiftDemo(),
+      ReleaseDemo.dayCardSwipe => const _DayCardSwipeDemo(),
+      ReleaseDemo.ledgerCardSwipe => const _LedgerCardSwipeDemo(),
+      ReleaseDemo.monthTitleSlide => const _MonthTitleSlideDemo(),
+      ReleaseDemo.keyboardInset => const _KeyboardInsetDemo(),
+      ReleaseDemo.photoSync => const _PhotoSyncDemo(),
       ReleaseDemo.feature => const _FeatureDemo(),
       ReleaseDemo.fix => const _FixDemo(),
     };
@@ -1764,6 +1793,626 @@ class _NavSheetLiftDemo extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+class _DayCardSwipeDemo extends StatelessWidget {
+  const _DayCardSwipeDemo();
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 4400,
+      boxHeight: 196,
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final font = AppFonts.of(context);
+        final p = Curves.easeInOutCubic.transform(_gate(t, 0.26, 0.68));
+        final press = _pulse(t, 0.14, 0.24, 0.70);
+        final left = 1 - p;
+        return ColoredBox(
+          color: Color.fromRGBO(0, 0, 0, 0.28),
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              _SwipeDayCard(
+                date: '9월 28일 (월)',
+                rows: const ['회의', '헬스'],
+                shift: -1,
+                amount: p,
+                visible: left,
+                font: font,
+                colors: colors,
+              ),
+              _SwipeDayCard(
+                date: '9월 29일 (화)',
+                rows: const ['장보기'],
+                shift: 1,
+                amount: 1 - p,
+                visible: p,
+                font: font,
+                colors: colors,
+              ),
+              if (press > 0)
+                Positioned(
+                  left: 118 - 72 * p,
+                  top: 86,
+                  child: _Finger(pressed: press),
+                ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _LedgerCardSwipeDemo extends StatelessWidget {
+  const _LedgerCardSwipeDemo();
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 4400,
+      boxHeight: 196,
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final font = AppFonts.of(context);
+        final p = Curves.easeInOutCubic.transform(_gate(t, 0.26, 0.68));
+        final press = _pulse(t, 0.14, 0.24, 0.70);
+        return ColoredBox(
+          color: Color.fromRGBO(0, 0, 0, 0.28),
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              _SwipeDayCard(
+                date: '9월 28일 (월)',
+                rows: const ['식비  -12,400', '용돈  +20,000'],
+                money: true,
+                shift: -1,
+                amount: p,
+                visible: 1 - p,
+                font: font,
+                colors: colors,
+              ),
+              _SwipeDayCard(
+                date: '9월 29일 (화)',
+                rows: const ['교통  -1,500'],
+                money: true,
+                shift: 1,
+                amount: 1 - p,
+                visible: p,
+                font: font,
+                colors: colors,
+              ),
+              if (press > 0)
+                Positioned(
+                  left: 118 - 72 * p,
+                  top: 86,
+                  child: _Finger(pressed: press),
+                ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _SwipeDayCard extends StatelessWidget {
+  const _SwipeDayCard({
+    required this.date,
+    required this.rows,
+    required this.shift,
+    required this.amount,
+    required this.visible,
+    required this.font,
+    required this.colors,
+    this.money = false,
+  });
+
+  final String date;
+  final List<String> rows;
+  final int shift;
+  final double amount;
+  final double visible;
+  final String? font;
+  final AppColors colors;
+  final bool money;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = Curves.easeOut.transform(visible.clamp(0.0, 1.0));
+    if (t <= 0) return const SizedBox.shrink();
+    return Opacity(
+      opacity: t,
+      child: Transform.translate(
+        offset: Offset(86 * shift * amount, 0),
+        child: Transform.scale(
+          scale: 0.94 + 0.06 * t,
+          child: SizedBox(
+            width: 196,
+            child: _Card(
+              padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    date,
+                    style: TextStyle(
+                      fontFamily: font,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                      height: 1.1,
+                      color: colors.text,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  for (var i = 0; i < rows.length; i++) ...[
+                    if (i > 0) const SizedBox(height: 6),
+                    _SwipeRow(
+                      text: rows[i],
+                      font: font,
+                      colors: colors,
+                      money: money,
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SwipeRow extends StatelessWidget {
+  const _SwipeRow({
+    required this.text,
+    required this.font,
+    required this.colors,
+    required this.money,
+  });
+
+  final String text;
+  final String? font;
+  final AppColors colors;
+  final bool money;
+
+  @override
+  Widget build(BuildContext context) {
+    final accent = money
+        ? (text.contains('+')
+              ? const Color(0xFF16A34A)
+              : LedgerEntry.consumptionColor)
+        : colors.accent;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: accent.withValues(alpha: 0.14),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+        child: Text(
+          text,
+          style: TextStyle(
+            fontFamily: font,
+            fontSize: 11,
+            fontWeight: FontWeight.w700,
+            height: 1,
+            color: accent,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _MonthTitleSlideDemo extends StatelessWidget {
+  const _MonthTitleSlideDemo();
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 4200,
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final font = AppFonts.of(context);
+        final p = Curves.easeInOutCubic.transform(_gate(t, 0.18, 0.72));
+        final outT = Curves.easeIn.transform(_gate(p, 0.18, 0.74));
+        final inT = Curves.easeOut.transform(_gate(p, 0.68, 0.86));
+        final press = _pulse(t, 0.10, 0.20, 0.74);
+        return Stack(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(
+                    height: 26,
+                    child: ClipRect(
+                      child: Stack(
+                        children: [
+                          Transform.translate(
+                            offset: Offset(-36 * p, 0),
+                            child: Opacity(
+                              opacity: 1 - outT,
+                              child: Text(
+                                '9월',
+                                style: TextStyle(
+                                  fontFamily: font,
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.w800,
+                                  height: 1.1,
+                                  color: colors.text,
+                                ),
+                              ),
+                            ),
+                          ),
+                          Transform.translate(
+                            offset: Offset(16 * (1 - inT), 0),
+                            child: Opacity(
+                              opacity: inT,
+                              child: Text(
+                                '10월',
+                                style: TextStyle(
+                                  fontFamily: font,
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.w800,
+                                  height: 1.1,
+                                  color: colors.text,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Expanded(
+                    child: ClipRect(
+                      child: Stack(
+                        children: [
+                          Transform.translate(
+                            offset: Offset(-140 * p, 0),
+                            child: _MiniMonthGrid(
+                              start: 1,
+                              accentDay: 28,
+                              colors: colors,
+                              font: font,
+                            ),
+                          ),
+                          Transform.translate(
+                            offset: Offset(140 * (1 - p), 0),
+                            child: _MiniMonthGrid(
+                              start: 1,
+                              accentDay: 3,
+                              colors: colors,
+                              font: font,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (press > 0)
+              Positioned(
+                left: 120 - 70 * p,
+                top: 88,
+                child: _Finger(pressed: press),
+              ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _MiniMonthGrid extends StatelessWidget {
+  const _MiniMonthGrid({
+    required this.start,
+    required this.accentDay,
+    required this.colors,
+    required this.font,
+  });
+
+  final int start;
+  final int accentDay;
+  final AppColors colors;
+  final String? font;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        for (var row = 0; row < 3; row++)
+          Expanded(
+            child: Row(
+              children: [
+                for (var col = 0; col < 7; col++)
+                  Expanded(
+                    child: Center(
+                      child: Text(
+                        '${start + row * 7 + col}',
+                        style: TextStyle(
+                          fontFamily: font,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          color: start + row * 7 + col == accentDay
+                              ? colors.accent
+                              : colors.hint,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class _KeyboardInsetDemo extends StatelessWidget {
+  const _KeyboardInsetDemo();
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 4600,
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final font = AppFonts.of(context);
+        final up = Curves.easeInOutCubic.transform(_gate(t, 0.14, 0.34));
+        final down = 1 - Curves.easeInOutCubic.transform(_gate(t, 0.58, 0.78));
+        final kb = math.min(up, down);
+        return Stack(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 10, 16, 46),
+              child: Column(
+                children: [
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      '9월',
+                      style: TextStyle(
+                        fontFamily: font,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                        color: colors.text,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Expanded(
+                    child: _MiniMonthGrid(
+                      start: 1,
+                      accentDay: 28,
+                      colors: colors,
+                      font: font,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Positioned(
+              left: 18,
+              right: 18,
+              bottom: 10,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: colors.card,
+                  borderRadius: BorderRadius.circular(18),
+                  boxShadow: [
+                    BoxShadow(
+                      color: colors.shadow,
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: SizedBox(
+                  height: 28,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      for (final icon in const [
+                        Icons.home_rounded,
+                        Icons.calendar_month_rounded,
+                        Icons.public_rounded,
+                      ])
+                        Icon(icon, size: 14, color: colors.muted),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: Transform.translate(
+                offset: Offset(0, 64 * (1 - kb)),
+                child: ColoredBox(
+                  color: colors.pressed,
+                  child: SizedBox(
+                    height: 56,
+                    width: double.infinity,
+                    child: Center(
+                      child: Text(
+                        '가  나  다  라  마',
+                        style: TextStyle(
+                          fontFamily: font,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 2,
+                          color: colors.muted,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _PhotoSyncDemo extends StatelessWidget {
+  const _PhotoSyncDemo();
+
+  static const _before = Color(0xFF94A3B8);
+  static const _after = Color(0xFF7CB7FE);
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 4200,
+      boxHeight: 188,
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final font = AppFonts.of(context);
+        final change = Curves.easeOutCubic.transform(_gate(t, 0.22, 0.40));
+        final follow = Curves.easeOutCubic.transform(_gate(t, 0.48, 0.66));
+        final tap = _pulse(t, 0.12, 0.20, 0.36);
+        final cloud = _pulse(t, 0.36, 0.48, 0.64);
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(14, 16, 14, 12),
+          child: Row(
+            children: [
+              Expanded(
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    _SyncDevice(
+                      title: '폰',
+                      color: Color.lerp(_before, _after, change)!,
+                      colors: colors,
+                      font: font,
+                    ),
+                    if (tap > 0)
+                      const Positioned(
+                        left: 0,
+                        right: 0,
+                        top: 42,
+                        child: Center(child: _Finger(pressed: 1)),
+                      ),
+                  ],
+                ),
+              ),
+              SizedBox(
+                width: 30,
+                child: Opacity(
+                  opacity: 0.28 + 0.72 * cloud,
+                  child: Transform.scale(
+                    scale: 0.86 + 0.18 * cloud,
+                    child: Icon(
+                      Icons.sync_rounded,
+                      size: 18,
+                      color: colors.accent,
+                    ),
+                  ),
+                ),
+              ),
+              Expanded(
+                child: _SyncDevice(
+                  title: 'PC',
+                  color: Color.lerp(_before, _after, follow)!,
+                  colors: colors,
+                  font: font,
+                  pc: true,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _SyncDevice extends StatelessWidget {
+  const _SyncDevice({
+    required this.title,
+    required this.color,
+    required this.colors,
+    required this.font,
+    this.pc = false,
+  });
+
+  final String title;
+  final Color color;
+  final AppColors colors;
+  final String? font;
+  final bool pc;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: colors.card,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: colors.border),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(8, 8, 8, 10),
+        child: Column(
+          children: [
+            if (pc)
+              const Padding(
+                padding: EdgeInsets.only(bottom: 6),
+                child: Row(
+                  children: [
+                    _WindowDot(Color(0xFFFF5F57)),
+                    SizedBox(width: 3),
+                    _WindowDot(Color(0xFFFEBC2E)),
+                    SizedBox(width: 3),
+                    _WindowDot(Color(0xFF28C840)),
+                  ],
+                ),
+              ),
+            Text(
+              title,
+              style: TextStyle(
+                fontFamily: font,
+                fontSize: 11,
+                fontWeight: FontWeight.w800,
+                color: colors.muted,
+              ),
+            ),
+            const Spacer(),
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: color,
+                border: Border.all(color: colors.border),
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              '민지',
+              style: TextStyle(
+                fontFamily: font,
+                fontSize: 12,
+                fontWeight: FontWeight.w800,
+                color: colors.text,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

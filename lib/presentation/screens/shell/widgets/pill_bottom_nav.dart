@@ -140,7 +140,7 @@ class _PillBottomNavState extends State<PillBottomNav> {
     final colors = AppColors.of(context);
     final bottomInset = widget.embedded
         ? 0.0
-        : MediaQuery.paddingOf(context).bottom;
+        : MediaQuery.viewPaddingOf(context).bottom;
     final theme = AppScope.of(context).themePreference;
 
     return ListenableBuilder(

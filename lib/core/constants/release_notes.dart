@@ -17,6 +17,19 @@ class ReleaseNote {
 abstract final class ReleaseNotes {
   static const all = [
     ReleaseNote(
+      version: '1.4.18',
+      items: [
+        '날짜 창을 밀어 다른 날로 넘길 수 있어요',
+        '가계부 날짜 창도 밀어 넘길 수 있어요',
+        '달력 위 달이 화면과 같이 넘어가요',
+      ],
+      fixes: [
+        '키보드를 닫아도 아래 바와 달력이 어긋나던 점을 고쳤어요',
+        '폰과 PC에서 친구 사진이 안 바뀌던 점을 고쳤어요',
+        '친구 목록이 비어 보이던 점을 고쳤어요',
+      ],
+    ),
+    ReleaseNote(
       version: '1.4.17',
       items: [
         '통계에서 끝낸 할 일 수만큼 점이 진해져요',

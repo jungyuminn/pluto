@@ -44,6 +44,8 @@ Future<void> showDayEventsDialog(
   Rect? origin,
   bool readOnly = false,
   String? sticker,
+  Future<List<CalendarEvent>> Function(DateTime date)? eventsForDate,
+  String? Function(DateTime date)? stickerForDate,
 }) async {
   CalendarDayDropTarget.reset();
   final tutorial = TutorialController.find(context);
@@ -56,12 +58,14 @@ Future<void> showDayEventsDialog(
     barrierColor: const Color(0x00000000),
     transitionDuration: const Duration(milliseconds: 150),
     pageBuilder: (context, animation, secondaryAnimation) {
-      Widget dialog = DayEventsDialog(
+      Widget dialog = _DayCardPager(
         date: date,
         initialEvents: events,
         onEventsChanged: onEventsChanged,
         readOnly: readOnly,
         sticker: sticker,
+        eventsForDate: eventsForDate,
+        stickerForDate: stickerForDate,
       );
       if (readOnly) {
         dialog = Theme(
@@ -167,6 +171,8 @@ class DayEventsDialog extends StatefulWidget {
     this.onEventsChanged,
     this.readOnly = false,
     this.sticker,
+    this.eventsForDate,
+    this.stickerForDate,
   });
 
   final DateTime date;
@@ -174,6 +180,8 @@ class DayEventsDialog extends StatefulWidget {
   final VoidCallback? onEventsChanged;
   final bool readOnly;
   final String? sticker;
+  final Future<List<CalendarEvent>> Function(DateTime date)? eventsForDate;
+  final String? Function(DateTime date)? stickerForDate;
 
   @override
   State<DayEventsDialog> createState() => _DayEventsDialogState();
@@ -237,6 +245,10 @@ class _DayEventsDialogState extends State<DayEventsDialog> {
     }
     _items = _itemsForView;
     _loadCategories();
+    if (_events.isEmpty &&
+        (widget.eventsForDate != null || !widget.readOnly)) {
+      unawaited(_hydrate());
+    }
   }
 
   @override
@@ -268,6 +280,32 @@ class _DayEventsDialogState extends State<DayEventsDialog> {
 
   Color _dDayColor(AppColors colors) {
     return _daysFromToday < 0 ? colors.accent : colors.danger;
+  }
+
+  Future<void> _hydrate() async {
+    if (widget.eventsForDate != null) {
+      final events = await widget.eventsForDate!(widget.date);
+      if (!mounted) return;
+      _events
+        ..clear()
+        ..addAll(events);
+      if (widget.stickerForDate != null) {
+        final sticker = widget.stickerForDate!(widget.date);
+        _emoji = DayStickers.isAsset(sticker) ? sticker : null;
+      }
+      _syncItems(_itemsForView, animate: false);
+      return;
+    }
+    if (widget.readOnly) return;
+    await _reload(animate: false);
+    if (!mounted) return;
+    final sticker = AppScope.of(context).dayEmojiStore.on(
+      widget.date,
+      layer: DayStickerLayer.event,
+    );
+    setState(() {
+      _emoji = DayStickers.isAsset(sticker) ? sticker : null;
+    });
   }
 
   String? _timeText(CalendarEvent event) {
@@ -869,97 +907,97 @@ class _DayEventsDialogState extends State<DayEventsDialog> {
                   skin: widget.readOnly ? AppSkin.classic : null,
                   liftForNav: false,
                   child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 20, 16, 20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    padding: const EdgeInsets.fromLTRB(20, 20, 16, 20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        if (_emoji != null || _animateEmojiSlot)
-                          ClipRect(
-                            child: AnimatedContainer(
-                              duration: _animateEmojiSlot
-                                  ? DayStickerImage.popDuration
-                                  : Duration.zero,
-                              curve: Curves.easeOutCubic,
-                              width: _emoji == null ? 0 : 50,
-                              height: _emoji == null ? 0 : 43,
-                              alignment: Alignment.centerLeft,
-                              child: _emoji == null
-                                  ? null
-                                  : Padding(
-                                      padding: const EdgeInsets.only(
-                                        right: 8,
-                                        top: 1,
-                                      ),
-                                      child: PressBounce(
-                                        onPressed: _pickEmoji,
-                                        pressedScale: 0.92,
-                                        child: DayStickerImage(
-                                          key: ValueKey(_emoji),
-                                          asset: _emoji!,
-                                          width: 42,
-                                          height: 42,
-                                          pop: _emojiPop,
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (_emoji != null || _animateEmojiSlot)
+                              ClipRect(
+                                child: AnimatedContainer(
+                                  duration: _animateEmojiSlot
+                                      ? DayStickerImage.popDuration
+                                      : Duration.zero,
+                                  curve: Curves.easeOutCubic,
+                                  width: _emoji == null ? 0 : 50,
+                                  height: _emoji == null ? 0 : 43,
+                                  alignment: Alignment.centerLeft,
+                                  child: _emoji == null
+                                      ? null
+                                      : Padding(
+                                          padding: const EdgeInsets.only(
+                                            right: 8,
+                                            top: 1,
+                                          ),
+                                          child: PressBounce(
+                                            onPressed: _pickEmoji,
+                                            pressedScale: 0.92,
+                                            child: DayStickerImage(
+                                              key: ValueKey(_emoji),
+                                              asset: _emoji!,
+                                              width: 42,
+                                              height: 42,
+                                              pop: _emojiPop,
+                                            ),
+                                          ),
                                         ),
-                                      ),
+                                ),
+                              ),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    _title,
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w800,
+                                      color: colors.text,
                                     ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    _dDayLabel,
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w700,
+                                      height: 1,
+                                      color: _dDayColor(colors),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                _title,
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w800,
-                                  color: colors.text,
-                                ),
+                            if (!widget.readOnly)
+                              AppBarPill(
+                                asset: AppIcons.emoji,
+                                label: AppStrings.emojiAction,
+                                onPressed: _pickEmoji,
                               ),
-                              const SizedBox(height: 4),
-                              Text(
-                                _dDayLabel,
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w700,
-                                  height: 1,
-                                  color: _dDayColor(colors),
-                                ),
-                              ),
-                            ],
-                          ),
+                          ],
                         ),
-                        if (!widget.readOnly)
-                          AppBarPill(
-                            asset: AppIcons.emoji,
-                            label: AppStrings.emojiAction,
-                            onPressed: _pickEmoji,
+                        const SizedBox(height: 15),
+                        Expanded(
+                          child: _buildList(),
+                        ),
+                        if (!widget.readOnly) ...[
+                          const SizedBox(height: 16),
+                          Padding(
+                            padding: const EdgeInsets.only(right: 8),
+                            child: AddEventButton(onPressed: _add),
                           ),
+                        ],
                       ],
                     ),
-                    const SizedBox(height: 15),
-                    Expanded(
-                      child: _buildList(),
-                    ),
-                    if (!widget.readOnly) ...[
-                      const SizedBox(height: 16),
-                      Padding(
-                        padding: const EdgeInsets.only(right: 8),
-                        child: AddEventButton(onPressed: _add),
-                      ),
-                    ],
-                  ],
+                  ),
                 ),
               ),
             ),
           ),
         ),
       ),
-    ),
-    ),
     );
   }
 
@@ -1170,6 +1208,116 @@ class _DayEventsDialogState extends State<DayEventsDialog> {
             ),
           ),
           child: body,
+        );
+      },
+    );
+  }
+}
+
+class _DayCardPager extends StatefulWidget {
+  const _DayCardPager({
+    required this.date,
+    required this.initialEvents,
+    this.onEventsChanged,
+    this.readOnly = false,
+    this.sticker,
+    this.eventsForDate,
+    this.stickerForDate,
+  });
+
+  final DateTime date;
+  final List<CalendarEvent> initialEvents;
+  final VoidCallback? onEventsChanged;
+  final bool readOnly;
+  final String? sticker;
+  final Future<List<CalendarEvent>> Function(DateTime date)? eventsForDate;
+  final String? Function(DateTime date)? stickerForDate;
+
+  @override
+  State<_DayCardPager> createState() => _DayCardPagerState();
+}
+
+class _DayCardPagerState extends State<_DayCardPager> {
+  static const _origin = 10000;
+
+  late final PageController _pager;
+  late final DateTime _base;
+
+  @override
+  void initState() {
+    super.initState();
+    _base = DateTime(widget.date.year, widget.date.month, widget.date.day);
+    _pager = PageController(initialPage: _origin);
+  }
+
+  @override
+  void dispose() {
+    _pager.dispose();
+    super.dispose();
+  }
+
+  DateTime _dateAt(int page) => _base.add(Duration(days: page - _origin));
+
+  @override
+  Widget build(BuildContext context) {
+    final locked = TutorialController.maybeOf(context)?.active == true;
+    return ValueListenableBuilder<bool>(
+      valueListenable: CalendarDayDropTarget.hidingScrim,
+      builder: (context, hiding, _) {
+        return PageView.builder(
+          controller: _pager,
+          physics: hiding || locked
+              ? const NeverScrollableScrollPhysics()
+              : const PageScrollPhysics(),
+          onPageChanged: (_) => HapticFeedback.selectionClick(),
+          itemBuilder: (context, page) {
+            final date = _dateAt(page);
+            final first = date.year == _base.year &&
+                date.month == _base.month &&
+                date.day == _base.day;
+            final handle =
+                TutorialController.maybeOf(context)?.step.action ==
+                    TutorialAction.handleEvent;
+            return AnimatedBuilder(
+              animation: _pager,
+              builder: (context, child) {
+                final current = _pager.hasClients
+                    ? (_pager.page ?? page.toDouble())
+                    : page.toDouble();
+                final t = (1 - (current - page).abs()).clamp(0.0, 1.0);
+                return Opacity(
+                  opacity: Curves.easeOut.transform(t),
+                  child: Transform.scale(
+                    scale: 0.94 + 0.06 * t,
+                    child: child,
+                  ),
+                );
+              },
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: handle
+                        ? null
+                        : () => Navigator.of(context).maybePop(),
+                  ),
+                  DayEventsDialog(
+                    key: ValueKey('${date.year}-${date.month}-${date.day}'),
+                    date: date,
+                    initialEvents: first ? widget.initialEvents : const [],
+                    onEventsChanged: widget.onEventsChanged,
+                    readOnly: widget.readOnly,
+                    sticker: first
+                        ? widget.sticker
+                        : widget.stickerForDate?.call(date),
+                    eventsForDate: widget.eventsForDate,
+                    stickerForDate: widget.stickerForDate,
+                  ),
+                ],
+              ),
+            );
+          },
         );
       },
     );

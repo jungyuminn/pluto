@@ -478,6 +478,16 @@ class _FriendCalendarScreenState extends State<FriendCalendarScreen> {
                                               origin: origin,
                                               readOnly: true,
                                               sticker: _emojiOn(month, date),
+                                              eventsForDate: (day) async =>
+                                                  _eventsOn(
+                                                DateTime(day.year, day.month),
+                                                day,
+                                              ),
+                                              stickerForDate: (day) =>
+                                                  _emojiOn(
+                                                DateTime(day.year, day.month),
+                                                day,
+                                              ),
                                             );
                                           },
                                         );

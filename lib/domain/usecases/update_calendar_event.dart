@@ -1,4 +1,5 @@
 import 'package:pluto/domain/entities/calendar_event.dart';
+import 'package:pluto/domain/entities/event_category.dart';
 import 'package:pluto/domain/repositories/calendar_event_repository.dart';
 
 class UpdateCalendarEvent {
@@ -44,5 +45,34 @@ class UpdateCalendarEvent {
 
   Future<void> repeatTitles(String repeatId, String title) {
     return _repository.updateRepeatTitles(repeatId, title);
+  }
+
+  Future<void> applyCategory(
+    EventCategory category, {
+    EventCategory? previous,
+  }) async {
+    final current = await _repository.getAll();
+    var changed = false;
+    final next = <CalendarEvent>[];
+    for (final event in current) {
+      if (!EventCategory.refersTo(
+        category,
+        id: event.categoryId,
+        name: event.categoryName,
+        previous: previous,
+      )) {
+        next.add(event);
+        continue;
+      }
+      changed = true;
+      next.add(
+        event.copyWith(
+          categoryId: category.id,
+          categoryName: category.name,
+          categoryColor: category.color,
+        ),
+      );
+    }
+    if (changed) await _repository.replaceAll(next);
   }
 }

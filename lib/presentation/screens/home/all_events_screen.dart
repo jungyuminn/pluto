@@ -103,14 +103,20 @@ class _AllEventsScreenState extends State<AllEventsScreen> {
   @override
   void initState() {
     super.initState();
+    AppBackupService.revision.addListener(_onRevision);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _reload();
       _searchFocus.requestFocus();
     });
   }
 
+  void _onRevision() {
+    if (mounted) _reload();
+  }
+
   @override
   void dispose() {
+    AppBackupService.revision.removeListener(_onRevision);
     _searchFocus.dispose();
     _search.dispose();
     super.dispose();
@@ -127,7 +133,8 @@ class _AllEventsScreenState extends State<AllEventsScreen> {
     final todos = _uniqueTodos(events);
     final jobs = [
       for (final application in applications)
-        _jobItem(application, companyCategories),
+        if (!application.isRejected)
+          _jobItem(application, companyCategories),
     ];
     setState(() {
       _rawEvents = events;

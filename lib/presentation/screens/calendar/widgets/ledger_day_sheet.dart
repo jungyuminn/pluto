@@ -13,6 +13,7 @@ import 'package:pluto/core/utils/drop_in.dart';
 import 'package:pluto/core/utils/mouse_drag_scroll.dart';
 import 'package:pluto/core/utils/press_bounce.dart';
 import 'package:pluto/core/utils/swipe_to_delete.dart';
+import 'package:pluto/data/datasources/app_backup_service.dart';
 import 'package:pluto/data/datasources/day_emoji_store.dart';
 import 'package:pluto/domain/entities/event_category.dart';
 import 'package:pluto/domain/entities/ledger_entry.dart';
@@ -178,6 +179,12 @@ class _LedgerDaySheetState extends State<LedgerDaySheet>
       curve: Curves.easeOutCubic,
       reverseCurve: Curves.easeInCubic,
     );
+    AppBackupService.revision.addListener(_onCategoryChanged);
+  }
+
+  void _onCategoryChanged() {
+    if (!mounted) return;
+    unawaited(_reload(animate: false));
   }
 
   @override
@@ -227,6 +234,7 @@ class _LedgerDaySheetState extends State<LedgerDaySheet>
 
   @override
   void dispose() {
+    AppBackupService.revision.removeListener(_onCategoryChanged);
     CalendarDayDropTarget.clear();
     _statsFade.dispose();
     _statsAnimation.dispose();

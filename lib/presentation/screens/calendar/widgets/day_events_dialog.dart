@@ -11,6 +11,7 @@ import 'package:pluto/core/layout/pc_layout.dart';
 import 'package:pluto/core/theme/app_colors.dart';
 import 'package:pluto/core/theme/app_skin_background.dart';
 import 'package:pluto/core/theme/app_theme.dart';
+import 'package:pluto/data/datasources/app_backup_service.dart';
 import 'package:pluto/data/datasources/calendar_complete.dart';
 import 'package:pluto/data/datasources/friend_service.dart';
 import 'package:pluto/data/datasources/theme_preference.dart';
@@ -223,6 +224,7 @@ class _DayEventsDialogState extends State<DayEventsDialog> {
     super.initState();
     _events = List.of(widget.initialEvents);
     _items = _itemsForView;
+    AppBackupService.revision.addListener(_onCategoryChanged);
   }
 
   @override
@@ -252,8 +254,14 @@ class _DayEventsDialogState extends State<DayEventsDialog> {
     }
   }
 
+  void _onCategoryChanged() {
+    if (!mounted || widget.readOnly) return;
+    unawaited(_reload(animate: false));
+  }
+
   @override
   void dispose() {
+    AppBackupService.revision.removeListener(_onCategoryChanged);
     CalendarDayDropTarget.clear();
     _listController.dispose();
     super.dispose();

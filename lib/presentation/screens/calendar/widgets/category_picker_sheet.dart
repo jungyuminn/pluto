@@ -193,6 +193,16 @@ class _CategoryPickerSheetState extends State<CategoryPickerSheet>
     _enterEdit(null);
   }
 
+  EventCategory? _selectedCategory() {
+    if (!widget.selectable) return null;
+    final id = _selectedId;
+    if (id == null || id.isEmpty) return null;
+    for (final category in _categories) {
+      if (category.id == id) return category;
+    }
+    return null;
+  }
+
   void _onTap(EventCategory category) {
     if (_editing) {
       setState(() {
@@ -573,10 +583,14 @@ class _CategoryPickerSheetState extends State<CategoryPickerSheet>
     final colors = AppColors.of(context);
 
     return PopScope(
-      canPop: !_editing || widget.startModifying,
+      canPop: false,
       onPopInvokedWithResult: (didPop, result) {
         if (didPop) return;
-        if (_editing) _exitEdit();
+        if (_editing && !widget.startModifying) {
+          _exitEdit();
+          return;
+        }
+        Navigator.of(context).pop(_selectedCategory());
       },
       child: Padding(
         padding: EdgeInsets.only(

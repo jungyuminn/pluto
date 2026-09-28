@@ -114,57 +114,7 @@ class _AddCategorySheetState extends State<AddCategorySheet> {
       final prefs = await SharedPreferences.getInstance();
       await LastCategoryColorPreference(prefs: prefs).setColor(_color);
     } else {
-      await scope.saveCategory(widget.kind, category);
-      if (widget.kind == CategoryKind.event) {
-        final events = await scope.getCalendarEvents();
-        for (final event in events) {
-          if (event.categoryId != category.id) continue;
-          await scope.updateCalendarEvent.instance(
-            event.copyWith(
-              categoryName: category.name,
-              categoryColor: category.color,
-            ),
-          );
-        }
-        final store = scope.longGoalStore;
-        for (final goal in store.goals) {
-          if (goal.categoryId != category.id) continue;
-          await store.upsertGoal(goal.copyWith(color: category.color));
-        }
-      } else if (widget.kind == CategoryKind.company) {
-        final jobs = await scope.getJobApplications();
-        for (final job in jobs) {
-          if (job.categoryId != category.id) continue;
-          await scope.updateJobApplication(
-            job.copyWith(
-              categoryName: category.name,
-              categoryColor: category.color,
-            ),
-          );
-        }
-      } else if (widget.kind == CategoryKind.license) {
-        final licenses = await scope.getLicenses();
-        for (final license in licenses) {
-          if (license.categoryId != category.id) continue;
-          await scope.updateLicense(
-            license.copyWith(
-              categoryName: category.name,
-              categoryColor: category.color,
-            ),
-          );
-        }
-      } else {
-        final ledgers = await scope.getLedgers();
-        for (final entry in ledgers) {
-          if (entry.categoryId != category.id) continue;
-          await scope.saveLedger(
-            entry.copyWith(
-              categoryName: category.name,
-              categoryColor: category.color,
-            ),
-          );
-        }
-      }
+      await scope.saveCategory(widget.kind, category, previous: initial);
     }
     if (!mounted) return;
     Navigator.of(context).pop(true);

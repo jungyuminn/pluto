@@ -17,6 +17,16 @@ class ReleaseNote {
 abstract final class ReleaseNotes {
   static const all = [
     ReleaseNote(
+      version: '1.4.19',
+      items: [
+        '카테고리 이름과 색을 바꾸면 쓰던 일정도 같이 바뀌어요',
+      ],
+      fixes: [
+        '홈이나 캘린더에서 고친 지원서가 지원서 탭에 안 보이던 점을 고쳤어요',
+        '탈락한 지원서가 홈에도 나오던 점을 고쳤어요',
+      ],
+    ),
+    ReleaseNote(
       version: '1.4.18',
       items: [
         '날짜 창을 밀어 다른 날로 넘길 수 있어요',

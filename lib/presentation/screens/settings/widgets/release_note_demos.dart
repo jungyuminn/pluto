@@ -144,6 +144,9 @@ enum ReleaseDemo {
   monthTitleSlide,
   keyboardInset,
   photoSync,
+  categoryLiveApply,
+  jobTabRefresh,
+  homeHideRejected,
   feature,
   fix,
 }
@@ -239,6 +242,12 @@ ReleaseDemo releaseDemoFor(String text, {required bool isFix}) {
     if (text.contains('친구 목록이 비어')) {
       return ReleaseDemo.friendHomeSeed;
     }
+    if (text.contains('지원서 탭에 안 보이')) {
+      return ReleaseDemo.jobTabRefresh;
+    }
+    if (text.contains('홈에도 나오던')) {
+      return ReleaseDemo.homeHideRejected;
+    }
     if (text.contains('기능 안내')) return ReleaseDemo.featureIntroStay;
     if (text.contains('스티커 팩')) return ReleaseDemo.stickers;
     return ReleaseDemo.fix;
@@ -319,6 +328,9 @@ ReleaseDemo releaseDemoFor(String text, {required bool isFix}) {
   }
   if (text.contains('달이 화면과 같이') || text.contains('달력 위 달')) {
     return ReleaseDemo.monthTitleSlide;
+  }
+  if (text.contains('쓰던 일정도 같이') || text.contains('카테고리 이름과 색을 바꾸면')) {
+    return ReleaseDemo.categoryLiveApply;
   }
   if (text.contains('더 많은 기능')) return ReleaseDemo.featureIntro;
   if (text.contains('계정을 따라')) return ReleaseDemo.settingsFollow;
@@ -640,6 +652,9 @@ class ReleaseDemoView extends StatelessWidget {
       ReleaseDemo.monthTitleSlide => const _MonthTitleSlideDemo(),
       ReleaseDemo.keyboardInset => const _KeyboardInsetDemo(),
       ReleaseDemo.photoSync => const _PhotoSyncDemo(),
+      ReleaseDemo.categoryLiveApply => const _CategoryLiveApplyDemo(),
+      ReleaseDemo.jobTabRefresh => const _JobTabRefreshDemo(),
+      ReleaseDemo.homeHideRejected => const _HomeHideRejectedDemo(),
       ReleaseDemo.feature => const _FeatureDemo(),
       ReleaseDemo.fix => const _FixDemo(),
     };
@@ -2449,6 +2464,465 @@ class _SheetChip extends StatelessWidget {
             fontWeight: FontWeight.w800,
             color: filled ? colors.accent : colors.muted,
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _CategoryLiveApplyDemo extends StatelessWidget {
+  const _CategoryLiveApplyDemo();
+
+  static const _from = Color(0xFF7CB342);
+  static const _to = Color(0xFFA855F7);
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 4600,
+      boxHeight: 188,
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final font = AppFonts.of(context);
+        final forth = Curves.easeInOutCubic.transform(_gate(t, 0.16, 0.42));
+        final back = Curves.easeInOutCubic.transform(_gate(t, 0.58, 0.84));
+        final p = t < 0.5 ? forth : 1 - back;
+        final press = t < 0.5
+            ? _pulse(t, 0.10, 0.18, 0.40)
+            : _pulse(t, 0.52, 0.60, 0.82);
+        final accent = Color.lerp(_from, _to, p)!;
+        return Stack(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+              child: _Card(
+                padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _LiveCategoryChip(
+                      fromName: '운동',
+                      toName: '헬스',
+                      amount: p,
+                      color: accent,
+                      font: font,
+                    ),
+                    const SizedBox(height: 10),
+                    _LiveTodoRow(
+                      title: '헬스장가기',
+                      color: accent,
+                      font: font,
+                    ),
+                    const SizedBox(height: 6),
+                    _LiveTodoRow(
+                      title: '축구가기',
+                      color: accent,
+                      font: font,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            if (press > 0)
+              Positioned(
+                left: 28 + 36 * p,
+                top: 22,
+                child: _Finger(pressed: press),
+              ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _LiveCategoryChip extends StatelessWidget {
+  const _LiveCategoryChip({
+    required this.fromName,
+    required this.toName,
+    required this.amount,
+    required this.color,
+    required this.font,
+  });
+
+  final String fromName;
+  final String toName;
+  final double amount;
+  final Color color;
+  final String? font;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.16),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(10, 5, 10, 5),
+        child: SizedBox(
+          height: 16,
+          child: Stack(
+            alignment: Alignment.centerLeft,
+            children: [
+              Opacity(
+                opacity: 1 - amount,
+                child: Text(
+                  fromName,
+                  style: TextStyle(
+                    fontFamily: font,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w800,
+                    height: 1,
+                    color: color,
+                  ),
+                ),
+              ),
+              Opacity(
+                opacity: amount,
+                child: Text(
+                  toName,
+                  style: TextStyle(
+                    fontFamily: font,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w800,
+                    height: 1,
+                    color: color,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _LiveTodoRow extends StatelessWidget {
+  const _LiveTodoRow({
+    required this.title,
+    required this.color,
+    required this.font,
+  });
+
+  final String title;
+  final Color color;
+  final String? font;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.14),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+        child: Row(
+          children: [
+            Container(
+              width: 7,
+              height: 7,
+              decoration: BoxDecoration(
+                color: color,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              title,
+              style: TextStyle(
+                fontFamily: font,
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                height: 1,
+                color: color,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _JobTabRefreshDemo extends StatelessWidget {
+  const _JobTabRefreshDemo();
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 4800,
+      boxHeight: 196,
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final font = AppFonts.of(context);
+        final edited = Curves.easeOutCubic.transform(_gate(t, 0.16, 0.30));
+        final tab = Curves.easeInOutCubic.transform(_gate(t, 0.40, 0.56));
+        final sync = Curves.easeOutBack.transform(_gate(t, 0.58, 0.74));
+        final pressHome = _pulse(t, 0.10, 0.18, 0.30);
+        final pressTab = _pulse(t, 0.36, 0.44, 0.56);
+        final onJob = tab > 0.55;
+        final badge = onJob
+            ? (sync > 0.5 ? '1차' : '서류')
+            : (edited > 0.5 ? '1차' : '서류');
+        final badgeColor = badge == '1차'
+            ? const Color(0xFF3B82F6)
+            : const Color(0xFFF59E0B);
+        return Stack(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      _MiniTab(
+                        label: '홈',
+                        selected: !onJob,
+                        font: font,
+                        colors: colors,
+                      ),
+                      const SizedBox(width: 14),
+                      _MiniTab(
+                        label: '지원서',
+                        selected: onJob,
+                        font: font,
+                        colors: colors,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  Transform.scale(
+                    scale: onJob ? 0.96 + 0.04 * sync : 1,
+                    child: _Card(
+                      padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              '네이버',
+                              style: TextStyle(
+                                fontFamily: font,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w800,
+                                height: 1.1,
+                                color: colors.text,
+                              ),
+                            ),
+                          ),
+                          DecoratedBox(
+                            decoration: BoxDecoration(
+                              color: badgeColor.withValues(alpha: 0.16),
+                              borderRadius: BorderRadius.circular(999),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.fromLTRB(8, 4, 8, 4),
+                              child: Text(
+                                badge,
+                                style: TextStyle(
+                                  fontFamily: font,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w800,
+                                  height: 1,
+                                  color: badgeColor,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (pressHome > 0 && !onJob)
+              Positioned(
+                right: 28,
+                top: 78,
+                child: _Finger(pressed: pressHome),
+              ),
+            if (pressTab > 0)
+              Positioned(
+                left: 78,
+                top: 16,
+                child: _Finger(pressed: pressTab),
+              ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _MiniTab extends StatelessWidget {
+  const _MiniTab({
+    required this.label,
+    required this.selected,
+    required this.font,
+    required this.colors,
+  });
+
+  final String label;
+  final bool selected;
+  final String? font;
+  final AppColors colors;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontFamily: font,
+            fontSize: 12,
+            fontWeight: FontWeight.w800,
+            height: 1,
+            color: selected ? colors.accentBright : colors.muted,
+          ),
+        ),
+        const SizedBox(height: 4),
+        AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          width: selected ? 22 : 0,
+          height: 3,
+          decoration: BoxDecoration(
+            color: colors.accentBright,
+            borderRadius: BorderRadius.circular(99),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _HomeHideRejectedDemo extends StatelessWidget {
+  const _HomeHideRejectedDemo();
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 4400,
+      boxHeight: 188,
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final font = AppFonts.of(context);
+        final reject = Curves.easeOutCubic.transform(_gate(t, 0.18, 0.34));
+        final hide = Curves.easeInCubic.transform(_gate(t, 0.38, 0.62));
+        final press = _pulse(t, 0.12, 0.20, 0.34);
+        final jobGone = hide;
+        return Stack(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
+              child: _Card(
+                padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '오늘',
+                      style: TextStyle(
+                        fontFamily: font,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w800,
+                        height: 1,
+                        color: colors.text,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    _LiveTodoRow(
+                      title: '회의',
+                      color: colors.accent,
+                      font: font,
+                    ),
+                    ClipRect(
+                      child: Align(
+                        alignment: Alignment.topCenter,
+                        heightFactor: 1 - jobGone,
+                        child: Opacity(
+                          opacity: 1 - jobGone,
+                          child: Padding(
+                            padding: const EdgeInsets.only(top: 6),
+                            child: _RejectedJobRow(
+                              badge: reject > 0.5 ? '탈락' : '면접',
+                              faded: reject,
+                              font: font,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            if (press > 0)
+              Positioned(
+                right: 36,
+                top: 92,
+                child: _Finger(pressed: press),
+              ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _RejectedJobRow extends StatelessWidget {
+  const _RejectedJobRow({
+    required this.badge,
+    required this.faded,
+    required this.font,
+  });
+
+  final String badge;
+  final double faded;
+  final String? font;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Color.lerp(
+      const Color(0xFF3B82F6),
+      const Color(0xFF94A3B8),
+      faded,
+    )!;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.14),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                '네이버',
+                style: TextStyle(
+                  fontFamily: font,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  height: 1,
+                  color: color,
+                ),
+              ),
+            ),
+            Text(
+              badge,
+              style: TextStyle(
+                fontFamily: font,
+                fontSize: 11,
+                fontWeight: FontWeight.w800,
+                height: 1,
+                color: color,
+              ),
+            ),
+          ],
         ),
       ),
     );

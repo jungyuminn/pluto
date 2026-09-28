@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:pluto/data/datasources/app_backup_service.dart';
 import 'package:pluto/data/datasources/backup_preference.dart';
 import 'package:pluto/data/datasources/calendar_preference.dart';
 import 'package:pluto/data/datasources/category_suggest_preference.dart';
@@ -278,13 +279,94 @@ class AppScope extends InheritedWidget {
     };
   }
 
-  Future<void> saveCategory(CategoryKind kind, EventCategory category) {
-    return switch (kind) {
+  Future<void> saveCategory(
+    CategoryKind kind,
+    EventCategory category, {
+    EventCategory? previous,
+  }) async {
+    await switch (kind) {
       CategoryKind.event => updateEventCategory(category),
       CategoryKind.company => updateCompanyCategory(category),
       CategoryKind.ledger => updateLedgerCategory(category),
       CategoryKind.license => updateLicenseCategory(category),
     };
+    await _applyCategory(kind, category, previous: previous);
+    AppBackupService.revision.value++;
+  }
+
+  Future<void> _applyCategory(
+    CategoryKind kind,
+    EventCategory category, {
+    EventCategory? previous,
+  }) async {
+    bool matches(String? id, String? name) {
+      return EventCategory.refersTo(
+        category,
+        id: id,
+        name: name,
+        previous: previous,
+      );
+    }
+
+    if (kind == CategoryKind.event) {
+      await updateCalendarEvent.applyCategory(category, previous: previous);
+      final diaries = await getDiaries();
+      for (final diary in diaries) {
+        if (!matches(diary.categoryId, diary.categoryName)) continue;
+        await saveDiary(
+          diary.copyWith(
+            categoryId: category.id,
+            categoryName: category.name,
+            categoryColor: category.color,
+          ),
+        );
+      }
+      final store = longGoalStore;
+      for (final goal in store.goals) {
+        if (!matches(goal.categoryId, null)) continue;
+        await store.upsertGoal(goal.copyWith(color: category.color));
+      }
+      return;
+    }
+    if (kind == CategoryKind.company) {
+      final jobs = await getJobApplications();
+      for (final job in jobs) {
+        if (!matches(job.categoryId, job.categoryName)) continue;
+        await updateJobApplication(
+          job.copyWith(
+            categoryId: category.id,
+            categoryName: category.name,
+            categoryColor: category.color,
+          ),
+        );
+      }
+      return;
+    }
+    if (kind == CategoryKind.license) {
+      final licenses = await getLicenses();
+      for (final license in licenses) {
+        if (!matches(license.categoryId, license.categoryName)) continue;
+        await updateLicense(
+          license.copyWith(
+            categoryId: category.id,
+            categoryName: category.name,
+            categoryColor: category.color,
+          ),
+        );
+      }
+      return;
+    }
+    final ledgers = await getLedgers();
+    for (final entry in ledgers) {
+      if (!matches(entry.categoryId, entry.categoryName)) continue;
+      await saveLedger(
+        entry.copyWith(
+          categoryId: category.id,
+          categoryName: category.name,
+          categoryColor: category.color,
+        ),
+      );
+    }
   }
 
   Future<void> removeCategories(CategoryKind kind, Iterable<String> ids) {

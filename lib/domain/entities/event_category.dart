@@ -179,6 +179,42 @@ class EventCategory {
 
   bool get isDefault => id == defaultId;
 
+  static EventCategory? lookup(
+    Iterable<EventCategory> categories, {
+    String? id,
+    String? name,
+  }) {
+    final trimmedId = id?.trim() ?? '';
+    if (trimmedId.isNotEmpty) {
+      for (final category in categories) {
+        if (category.id == trimmedId) return category;
+      }
+    }
+    final trimmedName = name?.trim() ?? '';
+    if (trimmedName.isEmpty) return null;
+    for (final category in categories) {
+      if (category.name.trim() == trimmedName) return category;
+    }
+    return null;
+  }
+
+  static bool refersTo(
+    EventCategory category, {
+    String? id,
+    String? name,
+    EventCategory? previous,
+  }) {
+    final trimmedId = id?.trim() ?? '';
+    if (trimmedId.isNotEmpty) {
+      return trimmedId == category.id ||
+          (previous != null && trimmedId == previous.id);
+    }
+    final trimmedName = name?.trim() ?? '';
+    if (trimmedName.isEmpty) return false;
+    return trimmedName == category.name.trim() ||
+        (previous != null && trimmedName == previous.name.trim());
+  }
+
   EventCategory copyWith({
     String? name,
     int? color,

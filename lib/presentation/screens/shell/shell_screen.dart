@@ -40,7 +40,7 @@ class _ShellScreenState extends State<ShellScreen>
       case _statsTab:
         return StatsScreen(key: _statsKey, visible: _index == _statsTab);
       default:
-        return JobScreen(key: _jobKey);
+        return JobScreen(key: _jobKey, visible: _index == _jobTab);
     }
   }
 

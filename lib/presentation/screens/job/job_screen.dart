@@ -29,7 +29,9 @@ import 'package:pluto/presentation/widgets/app_bar_wordmark.dart';
 import 'package:pluto/presentation/widgets/overlay_app_bar.dart';
 
 class JobScreen extends StatefulWidget {
-  const JobScreen({super.key});
+  const JobScreen({super.key, this.visible = true});
+
+  final bool visible;
 
   @override
   State<JobScreen> createState() => JobScreenState();
@@ -102,6 +104,12 @@ class JobScreenState extends State<JobScreen>
     _initialized = true;
     _readPrefs();
     _reload();
+  }
+
+  @override
+  void didUpdateWidget(JobScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.visible && !oldWidget.visible) _reload();
   }
 
   void scrollToTop() {

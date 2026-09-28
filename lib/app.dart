@@ -237,13 +237,14 @@ class JobPlannerApp extends StatelessWidget {
       deleteJobApplication: deleteApplication,
       reorderJobApplications: reorderJobApplications ??
           ReorderJobApplications(JobApplicationMemoryRepository()),
-      getLicenses: getLicenses ?? GetLicenses(licenseRepository),
+      getLicenses:
+          getLicenses ?? GetLicenses(licenseRepository, licenseCategoryRepository),
       addLicense: addLicense ?? AddLicense(licenseRepository),
       updateLicense: updateLicense ?? UpdateLicense(licenseRepository),
       deleteLicense: deleteLicense ?? DeleteLicense(licenseRepository),
       reorderLicenses: reorderLicenses ?? ReorderLicenses(licenseRepository),
-      getCalendarEvents:
-          getCalendarEvents ?? GetCalendarEvents(calendarRepository),
+      getCalendarEvents: getCalendarEvents ??
+          GetCalendarEvents(calendarRepository, categoryRepository),
       addCalendarEvent:
           addCalendarEvent ?? AddCalendarEvent(calendarRepository),
       updateCalendarEvent:
@@ -252,10 +253,12 @@ class JobPlannerApp extends StatelessWidget {
           deleteCalendarEvent ?? DeleteCalendarEvent(calendarRepository),
       reorderCalendarEvents:
           reorderCalendarEvents ?? ReorderCalendarEvents(calendarRepository),
-      getDiaries: getDiaries ?? GetDiaries(diaryRepository),
+      getDiaries:
+          getDiaries ?? GetDiaries(diaryRepository, categoryRepository),
       saveDiary: saveDiary ?? SaveDiary(diaryRepository),
       deleteDiary: deleteDiary ?? DeleteDiary(diaryRepository),
-      getLedgers: getLedgers ?? GetLedgers(ledgerRepository),
+      getLedgers:
+          getLedgers ?? GetLedgers(ledgerRepository, ledgerCategoryRepository),
       saveLedger: saveLedger ?? SaveLedger(ledgerRepository),
       deleteLedger: deleteLedger ?? DeleteLedger(ledgerRepository),
       getEventCategories:
@@ -471,17 +474,20 @@ class _AppBootstrapState extends State<_AppBootstrap> {
         EventCategoryRepositoryImpl(licenseCategoryDataSource);
     if (!mounted) return;
     setState(() {
-      _getJobApplications = GetJobApplications(jobRepository);
+      _getJobApplications =
+          GetJobApplications(jobRepository, companyCategoryRepository);
       _addJobApplication = AddJobApplication(jobRepository);
       _updateJobApplication = UpdateJobApplication(jobRepository);
       _deleteJobApplication = DeleteJobApplication(jobRepository);
       _reorderJobApplications = ReorderJobApplications(jobRepository);
-      _getLicenses = GetLicenses(licenseRepository);
+      _getLicenses =
+          GetLicenses(licenseRepository, licenseCategoryRepository);
       _addLicense = AddLicense(licenseRepository);
       _updateLicense = UpdateLicense(licenseRepository);
       _deleteLicense = DeleteLicense(licenseRepository);
       _reorderLicenses = ReorderLicenses(licenseRepository);
-      _getCalendarEvents = GetCalendarEvents(eventRepository);
+      _getCalendarEvents =
+          GetCalendarEvents(eventRepository, categoryRepository);
       _addCalendarEvent = AddCalendarEvent(eventRepository);
       FriendService.instance.bindCalendar(
         read: eventRepository.getAll,
@@ -493,10 +499,10 @@ class _AppBootstrapState extends State<_AppBootstrap> {
       _updateCalendarEvent = UpdateCalendarEvent(eventRepository);
       _deleteCalendarEvent = DeleteCalendarEvent(eventRepository);
       _reorderCalendarEvents = ReorderCalendarEvents(eventRepository);
-      _getDiaries = GetDiaries(diaryRepository);
+      _getDiaries = GetDiaries(diaryRepository, categoryRepository);
       _saveDiary = SaveDiary(diaryRepository);
       _deleteDiary = DeleteDiary(diaryRepository);
-      _getLedgers = GetLedgers(ledgerRepository);
+      _getLedgers = GetLedgers(ledgerRepository, ledgerCategoryRepository);
       _saveLedger = SaveLedger(ledgerRepository);
       _deleteLedger = DeleteLedger(ledgerRepository);
       _getEventCategories = GetEventCategories(categoryRepository);

@@ -644,6 +644,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
   Widget _friendsSection(AppColors colors) {
     return StreamBuilder(
       stream: _service.friends(),
+      initialData: _service.lastFriends,
       builder: (context, snapshot) {
         return ListenableBuilder(
           listenable: Listenable.merge([

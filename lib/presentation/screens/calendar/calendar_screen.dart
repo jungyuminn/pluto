@@ -43,7 +43,7 @@ class CalendarScreen extends StatefulWidget {
 }
 
 class CalendarScreenState extends State<CalendarScreen>
-    with WidgetsBindingObserver, SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin {
   static const _initialPage = 12000;
 
   late DateTime _baseMonth;
@@ -73,7 +73,6 @@ class CalendarScreenState extends State<CalendarScreen>
   var _zoomEpoch = 0;
   var _hits = <_SearchHit>[];
   var _hitIndex = 0;
-  var _pausedInBackground = false;
   DateTime? _searchDay;
   String? _searchHitKey;
   JobViewPreference? _jobView;
@@ -83,7 +82,6 @@ class CalendarScreenState extends State<CalendarScreen>
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addObserver(this);
     _showCurrentMonth();
     _daysMonth = _visibleMonth;
     _pages = PageController(initialPage: _initialPage);
@@ -189,7 +187,6 @@ class CalendarScreenState extends State<CalendarScreen>
     AppBackupService.revision.removeListener(_onBackupRestored);
     _tutorial?.removeListener(_onTutorial);
     _jobView?.removeListener(_onJobView);
-    WidgetsBinding.instance.removeObserver(this);
     _searchFade.dispose();
     _searchAnimation.dispose();
     _searchOpen.dispose();
@@ -197,24 +194,6 @@ class CalendarScreenState extends State<CalendarScreen>
     _search.dispose();
     _pages.dispose();
     super.dispose();
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.paused) {
-      _pausedInBackground = true;
-      return;
-    }
-    if (state != AppLifecycleState.resumed || !_pausedInBackground) return;
-    _pausedInBackground = false;
-    if (!_pages.hasClients) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        _showCurrentMonth(jump: true);
-      });
-      return;
-    }
-    _showCurrentMonth(jump: true);
   }
 
   Future<void> _onTitlePressed() async {
@@ -246,7 +225,7 @@ class CalendarScreenState extends State<CalendarScreen>
       await WidgetsBinding.instance.endOfFrame;
       if (!mounted) return;
     }
-    await _goToMonth(target);
+    _jumpToMonth(target);
     _daysMonth = target;
   }
 
@@ -705,6 +684,10 @@ class CalendarScreenState extends State<CalendarScreen>
                             builder: (context, searchOpen, _) {
                               return CalendarMonthHeader(
                                 month: _visibleMonth,
+                                pages: _pages,
+                                initialPage: _initialPage,
+                                monthAt: _monthAt,
+                                zoom: _zoom,
                                 title: CalendarZoom.title(
                                   _zoom,
                                   _visibleMonth,
@@ -827,7 +810,7 @@ class CalendarScreenState extends State<CalendarScreen>
                                                     physics: _rangeDragging ||
                                                             lockMonth
                                                         ? const NeverScrollableScrollPhysics()
-                                                        : null,
+                                                        : const CalendarPagePhysics(),
                                                     onPageChanged: (page) {
                                                       setState(() {
                                                         _visibleMonth =

@@ -37,6 +37,10 @@ class CalendarMonthHeader extends StatelessWidget {
     this.onSearchPressed,
     this.ledgerMonthStats,
     this.onLedgerStatsPressed,
+    this.pages,
+    this.initialPage,
+    this.monthAt,
+    this.zoom = CalendarZoomLevel.days,
     this.tutorial = true,
   });
 
@@ -58,6 +62,10 @@ class CalendarMonthHeader extends StatelessWidget {
   final VoidCallback? onSearchPressed;
   final LedgerMonthStats? ledgerMonthStats;
   final VoidCallback? onLedgerStatsPressed;
+  final PageController? pages;
+  final int? initialPage;
+  final DateTime Function(int page)? monthAt;
+  final CalendarZoomLevel zoom;
   final bool tutorial;
 
   String get _title {
@@ -79,11 +87,7 @@ class CalendarMonthHeader extends StatelessWidget {
               children: [
                 _maybeAnchor(
                   TutorialAnchorId.calendarTitle,
-                  CalendarZoomTitle(
-                    text: _title,
-                    onPressed: onTitlePressed,
-                    fontSize: 32,
-                  ),
+                  _monthTitle(),
                 ),
                 Flexible(
                   child: _LedgerMonthNet(
@@ -125,6 +129,30 @@ class CalendarMonthHeader extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _monthTitle() {
+    final pager = pages;
+    final at = monthAt;
+    final page = initialPage;
+    if (pager != null &&
+        at != null &&
+        page != null &&
+        zoom == CalendarZoomLevel.days) {
+      return CalendarPagerTitle(
+        controller: pager,
+        initialPage: page,
+        monthAt: at,
+        hideCurrentYear: true,
+        onPressed: onTitlePressed,
+        fontSize: 32,
+      );
+    }
+    return CalendarZoomTitle(
+      text: _title,
+      onPressed: onTitlePressed,
+      fontSize: 32,
     );
   }
 

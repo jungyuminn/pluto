@@ -42,13 +42,12 @@ class _HomeFriendsRowState extends State<HomeFriendsRow> {
       initialData: AppAuthService.instance.user,
       builder: (context, auth) {
         if (auth.data == null) return const SizedBox.shrink();
-        FriendService.instance.hydrateSession();
-        unawaited(FriendService.instance.bootstrap());
         return ValueListenableBuilder<FriendProfile?>(
           valueListenable: FriendService.instance.profile,
           builder: (context, me, _) {
             return StreamBuilder<List<FriendProfile>>(
               stream: FriendService.instance.friends(),
+              initialData: FriendService.instance.lastFriends,
               builder: (context, snapshot) {
                 final friends = snapshot.data ?? const <FriendProfile>[];
                 return ListenableBuilder(
@@ -108,103 +107,62 @@ class _HomeFriendsRowState extends State<HomeFriendsRow> {
       for (final friend in friends)
         if (!FriendFavoritePreference.instance.contains(friend.uid)) friend,
     ];
+    final homeFriends = [...favorites, ...regulars];
+    final meCell = _MeCell(
+      profile: me,
+      requests: requests,
+      todos: todos,
+      onPressed: () => _openFriends(context),
+      onAdd: () => _openAdd(context),
+    );
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: SizedBox(
         width: double.infinity,
         height: _rowHeight,
-        child: ClipRect(
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                _MeCell(
-                  profile: me,
-                  requests: requests,
-                  todos: todos,
-                  onPressed: () => _openFriends(context),
-                  onAdd: () => _openAdd(context),
-                ),
-                if (favorites.isNotEmpty)
-                  _homeGroup(
-                    context,
-                    friends: favorites,
-                    onReorder: (oldIndex, newIndex) {
-                      unawaited(
-                        FriendService.instance.reorderFavorites(
-                          favorites,
-                          oldIndex: oldIndex,
-                          newIndex: newIndex,
-                        ),
+        child: homeFriends.isEmpty
+            ? meCell
+            : ReorderableListView(
+                scrollDirection: Axis.horizontal,
+                buildDefaultDragHandles: false,
+                padding: EdgeInsets.zero,
+                header: meCell,
+                proxyDecorator: (child, index, animation) {
+                  return AnimatedBuilder(
+                    animation: animation,
+                    builder: (context, child) {
+                      final t = Curves.easeOutBack.transform(animation.value);
+                      return Transform.scale(
+                        scale: 1 + 0.06 * t,
+                        child: child,
                       );
                     },
-                  ),
-                if (regulars.isNotEmpty)
-                  _homeGroup(
-                    context,
-                    friends: regulars,
-                    onReorder: (oldIndex, newIndex) {
-                      unawaited(
-                        FriendService.instance.reorderRegulars(
-                          regulars,
-                          oldIndex: oldIndex,
-                          newIndex: newIndex,
-                        ),
-                      );
-                    },
-                  ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _homeGroup(
-    BuildContext context, {
-    required List<FriendProfile> friends,
-    required void Function(int oldIndex, int newIndex) onReorder,
-  }) {
-    return AnimatedSize(
-      duration: const Duration(milliseconds: 280),
-      curve: Curves.easeOutCubic,
-      alignment: Alignment.centerLeft,
-      child: SizedBox(
-      width: friends.length * _cellWidth,
-      height: _rowHeight,
-      child: ReorderableListView(
-        scrollDirection: Axis.horizontal,
-        buildDefaultDragHandles: false,
-        physics: const NeverScrollableScrollPhysics(),
-        padding: EdgeInsets.zero,
-        proxyDecorator: (child, index, animation) {
-          return AnimatedBuilder(
-            animation: animation,
-            builder: (context, child) {
-              final t = Curves.easeOutBack.transform(animation.value);
-              return Transform.scale(
-                scale: 1 + 0.06 * t,
-                child: child,
-              );
-            },
-            child: child,
-          );
-        },
-        onReorderStart: (_) => HapticFeedback.mediumImpact(),
-        onReorder: onReorder,
-        children: [
-          for (var i = 0; i < friends.length; i++)
-            ReorderableDelayedDragStartListener(
-              key: ValueKey(friends[i].uid),
-              index: i,
-              child: _FriendCell(
-                friend: friends[i],
-                onPressed: () => _openCalendar(context, friends[i]),
+                    child: child,
+                  );
+                },
+                onReorderStart: (_) => HapticFeedback.mediumImpact(),
+                onReorder: (oldIndex, newIndex) {
+                  unawaited(
+                    FriendService.instance.reorderHomeFriends(
+                      homeFriends,
+                      oldIndex: oldIndex,
+                      newIndex: newIndex,
+                    ),
+                  );
+                },
+                children: [
+                  for (var i = 0; i < homeFriends.length; i++)
+                    ReorderableDelayedDragStartListener(
+                      key: ValueKey(homeFriends[i].uid),
+                      index: i,
+                      child: _FriendCell(
+                        friend: homeFriends[i],
+                        onPressed: () =>
+                            _openCalendar(context, homeFriends[i]),
+                      ),
+                    ),
+                ],
               ),
-            ),
-        ],
-      ),
       ),
     );
   }

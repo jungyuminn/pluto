@@ -289,6 +289,7 @@ class _AppCalendarSheetState extends State<AppCalendarSheet> {
                       controller: _pages,
                       child: PageView.builder(
                         controller: _pages,
+                        physics: const CalendarPagePhysics(),
                         onPageChanged: (page) {
                           setState(() => _visibleMonth = _monthAt(page));
                         },
@@ -339,10 +340,18 @@ class _AppCalendarSheetState extends State<AppCalendarSheet> {
       alignment: Alignment.centerLeft,
       child: Padding(
         padding: const EdgeInsets.only(left: 8),
-        child: CalendarZoomTitle(
-          text: CalendarZoom.title(_zoom, _visibleMonth),
-          onPressed: _onTitlePressed,
-        ),
+        child: _zoom == CalendarZoomLevel.days
+            ? CalendarPagerTitle(
+                controller: _pages,
+                initialPage: _initialPage,
+                monthAt: _monthAt,
+                hideCurrentYear: false,
+                onPressed: _onTitlePressed,
+              )
+            : CalendarZoomTitle(
+                text: CalendarZoom.title(_zoom, _visibleMonth),
+                onPressed: _onTitlePressed,
+              ),
       ),
     );
   }

@@ -269,7 +269,12 @@ class _FriendCalendarScreenState extends State<FriendCalendarScreen> {
     });
     await WidgetsBinding.instance.endOfFrame;
     if (!mounted) return;
-    await _goToMonth(target);
+    if (_pages.hasClients) {
+      final page = _pageOf(target);
+      if ((_pages.page?.round() ?? _initialPage) != page) {
+        _pages.jumpToPage(page);
+      }
+    }
     _load(target);
     _load(DateTime(target.year, target.month - 1));
     _load(DateTime(target.year, target.month + 1));
@@ -419,15 +424,24 @@ class _FriendCalendarScreenState extends State<FriendCalendarScreen> {
                         padding: const EdgeInsets.fromLTRB(20, 16, 16, 8),
                         child: Align(
                           alignment: Alignment.centerLeft,
-                          child: CalendarZoomTitle(
-                            text: CalendarZoom.title(
-                              _zoom,
-                              _month,
-                              hideCurrentYear: true,
-                            ),
-                            fontSize: 20,
-                            onPressed: _onTitlePressed,
-                          ),
+                          child: _zoom == CalendarZoomLevel.days
+                              ? CalendarPagerTitle(
+                                  controller: _pages,
+                                  initialPage: _initialPage,
+                                  monthAt: _monthAt,
+                                  hideCurrentYear: true,
+                                  fontSize: 20,
+                                  onPressed: _onTitlePressed,
+                                )
+                              : CalendarZoomTitle(
+                                  text: CalendarZoom.title(
+                                    _zoom,
+                                    _month,
+                                    hideCurrentYear: true,
+                                  ),
+                                  fontSize: 20,
+                                  onPressed: _onTitlePressed,
+                                ),
                         ),
                       ),
                       Expanded(
@@ -444,6 +458,7 @@ class _FriendCalendarScreenState extends State<FriendCalendarScreen> {
                                     controller: _pages,
                                     child: PageView.builder(
                                       controller: _pages,
+                                      physics: const CalendarPagePhysics(),
                                       onPageChanged: _onPageChanged,
                                       itemBuilder: (context, page) {
                                         final month = _monthAt(page);

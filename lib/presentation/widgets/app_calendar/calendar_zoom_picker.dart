@@ -107,6 +107,275 @@ class CalendarZoomTitle extends StatelessWidget {
   }
 }
 
+class CalendarPagerTitle extends StatefulWidget {
+  const CalendarPagerTitle({
+    super.key,
+    required this.controller,
+    required this.initialPage,
+    required this.monthAt,
+    this.level = CalendarZoomLevel.days,
+    this.hideCurrentYear = true,
+    this.onPressed,
+    this.fontSize = 22,
+  });
+
+  final PageController controller;
+  final int initialPage;
+  final DateTime Function(int page) monthAt;
+  final CalendarZoomLevel level;
+  final bool hideCurrentYear;
+  final VoidCallback? onPressed;
+  final double fontSize;
+
+  @override
+  State<CalendarPagerTitle> createState() => _CalendarPagerTitleState();
+}
+
+class _CalendarPagerTitleState extends State<CalendarPagerTitle> {
+  static const _travel = 54.0;
+  static const _inTravel = 24.0;
+  static const _lockNear = 0.1;
+
+  late int _shown;
+  int? _restPage;
+  var _maxAway = 0.0;
+  var _wasScrolling = false;
+  var _leaveDir = 0;
+  var _leaveTicks = 0;
+  var _prevLeave = 0.0;
+
+  @override
+  void initState() {
+    super.initState();
+    _shown = widget.initialPage;
+    _restPage = widget.initialPage;
+  }
+
+  @override
+  void didUpdateWidget(covariant CalendarPagerTitle oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.controller != widget.controller) {
+      _shown = widget.controller.hasClients
+          ? (widget.controller.page?.round() ?? widget.initialPage)
+          : widget.initialPage;
+      _restPage = _shown;
+      _maxAway = 0;
+      _wasScrolling = false;
+      _leaveDir = 0;
+      _leaveTicks = 0;
+      _prevLeave = 0;
+    }
+  }
+
+  void _sync(double page) {
+    final nearest = page.round();
+    if ((page - nearest).abs() <= 0.02) {
+      _shown = nearest;
+      return;
+    }
+    if ((page - _shown).abs() >= 1) {
+      _shown = page > _shown ? page.floor() : page.ceil();
+    }
+  }
+
+  void _updateRest(double page, double away, bool scrolling) {
+    if (_restPage != null && (page - _restPage!).abs() >= 1) {
+      _restPage = page.round();
+      _maxAway = 0;
+      _leaveDir = 0;
+      _leaveTicks = 0;
+      _prevLeave = 0;
+      _wasScrolling = scrolling;
+      return;
+    }
+    if (scrolling && !_wasScrolling) {
+      _restPage = null;
+      _maxAway = 0;
+      _leaveDir = 0;
+      _leaveTicks = 0;
+      _prevLeave = 0;
+    } else if (_restPage != null) {
+      final leave = page - _restPage!;
+      final dir = leave == 0
+          ? 0
+          : leave > 0
+              ? 1
+              : -1;
+      if (dir == 0 || dir != _leaveDir) {
+        _leaveDir = dir;
+        _leaveTicks = dir == 0 ? 0 : 1;
+      } else {
+        _leaveTicks++;
+      }
+      final leaving = leave.abs() > 0.08 &&
+          _leaveTicks >= 3 &&
+          leave.abs() >= _prevLeave;
+      _prevLeave = leave.abs();
+      if (leaving) {
+        _restPage = null;
+        _maxAway = away;
+        _leaveDir = 0;
+        _leaveTicks = 0;
+        _prevLeave = 0;
+      }
+    } else {
+      if (away > _maxAway) _maxAway = away;
+      final nearest = page.round();
+      final near = (page - nearest).abs() <= _lockNear;
+      if (_maxAway >= 0.6 && near) {
+        _restPage = nearest;
+      } else if (!scrolling && near) {
+        _restPage = nearest;
+      }
+    }
+    _wasScrolling = scrolling;
+  }
+
+  static double _gate(double t, double a, double b) {
+    if (t <= a) return 0;
+    if (t >= b) return 1;
+    return ((t - a) / (b - a)).clamp(0.0, 1.0);
+  }
+
+  String _textOf(DateTime month) {
+    return CalendarZoom.title(
+      widget.level,
+      month,
+      hideCurrentYear: widget.hideCurrentYear,
+    );
+  }
+
+  double _widthOf(String text, TextStyle style) {
+    final painter = TextPainter(
+      text: TextSpan(text: text, style: style),
+      maxLines: 1,
+      textDirection: TextDirection.ltr,
+    )..layout();
+    return painter.width;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    final style = TextStyle(
+      fontFamily: AppFonts.of(context),
+      fontSize: widget.fontSize,
+      fontWeight: FontWeight.w800,
+      height: 1.1,
+      color: colors.text,
+    );
+    final height = widget.fontSize * 1.1;
+    return PressBounce(
+      onPressed: widget.onPressed,
+      pressedScale: 0.97,
+      pressedColor: colors.isDark
+          ? colors.pressed
+          : const Color(0xFFD5DCE6),
+      borderRadius: BorderRadius.circular(10),
+      child: ListenableBuilder(
+        listenable: widget.controller,
+        builder: (context, _) {
+          final page = widget.controller.hasClients
+              ? (widget.controller.page ?? widget.initialPage.toDouble())
+              : widget.initialPage.toDouble();
+          _sync(page);
+          final scrolling = widget.controller.hasClients &&
+              widget.controller.position.isScrollingNotifier.value;
+          _updateRest(page, (page - _shown).abs(), scrolling);
+          final resting = _restPage != null;
+          final base = resting ? _restPage! : _shown;
+          final delta = page - base;
+          final away = delta.abs().clamp(0.0, 1.0);
+          final dir = delta == 0
+              ? 0
+              : delta > 0
+                  ? 1
+                  : -1;
+          final outText = _textOf(widget.monthAt(base));
+          final inText = dir == 0 || resting
+              ? outText
+              : _textOf(widget.monthAt(base + dir));
+          final outOpacity = resting
+              ? 1.0
+              : 1 - Curves.easeIn.transform(_gate(away, 0.18, 0.74));
+          final inOpacity = resting
+              ? 0.0
+              : Curves.easeOut.transform(_gate(away, 0.68, 0.86));
+          final outSlide =
+              resting ? 0.0 : delta.clamp(-1.0, 1.0) * _travel;
+          final outW = _widthOf(outText, style);
+          final inW = _widthOf(inText, style);
+          final slot = outW > inW ? outW : inW;
+          final paintW = slot + _travel * 2;
+          return SizedBox(
+            width: slot,
+            height: height,
+            child: OverflowBox(
+              alignment: Alignment.center,
+              minWidth: paintW,
+              maxWidth: paintW,
+              minHeight: height,
+              maxHeight: height,
+              child: SizedBox(
+                width: paintW,
+                height: height,
+                child: Stack(
+                  children: [
+                    _line(
+                      outText,
+                      style,
+                      _travel - outSlide,
+                      outOpacity,
+                    ),
+                    _line(
+                      inText,
+                      style,
+                      _travel + dir * (1 - inOpacity) * _inTravel,
+                      inOpacity,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _line(String text, TextStyle style, double dx, double opacity) {
+    if (opacity <= 0) return const SizedBox.shrink();
+    return Opacity(
+      opacity: opacity.clamp(0.0, 1.0),
+      child: Transform.translate(
+        offset: Offset(dx, 0),
+        child: Text(
+          text,
+          maxLines: 1,
+          softWrap: false,
+          style: style,
+        ),
+      ),
+    );
+  }
+}
+
+class CalendarPagePhysics extends PageScrollPhysics {
+  const CalendarPagePhysics({super.parent});
+
+  @override
+  CalendarPagePhysics applyTo(ScrollPhysics? ancestor) {
+    return CalendarPagePhysics(parent: buildParent(ancestor));
+  }
+
+  @override
+  SpringDescription get spring => const SpringDescription(
+    mass: 0.5,
+    stiffness: 160,
+    damping: 20,
+  );
+}
+
 class CalendarZoomTransition extends StatefulWidget {
   const CalendarZoomTransition({
     super.key,

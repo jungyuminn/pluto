@@ -39,10 +39,12 @@ class FriendService {
   static const _region = 'asia-northeast3';
   static const _profileKeyPrefix = 'friend_profile_';
   static const _pendingNameKeyPrefix = 'friend_pending_name_';
+  static const _avatarUrlKeyPrefix = 'friend_avatar_url_';
 
   final profile = ValueNotifier<FriendProfile?>(null);
   final avatarTick = ValueNotifier(0);
   final _avatarMem = <String, Uint8List>{};
+  final _avatarUrl = <String, String>{};
   final _avatarGen = <String, int>{};
   FriendProfile? _sessionProfile;
   String? _sessionUid;
@@ -75,6 +77,12 @@ class FriendService {
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _outgoingTodoSub;
   var _lastIncomingTodos = const <TodoRequestItem>[];
   var _lastOutgoingTodos = const <TodoRequestItem>[];
+  String? _friendsStreamUid;
+  StreamController<List<FriendProfile>>? _friendsCtrl;
+  Stream<List<FriendProfile>>? _friendsReplay;
+  StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _friendsSub;
+  VoidCallback? _friendsOrderListener;
+  var _lastFriends = const <FriendProfile>[];
   var _incomingTodoAll = const <TodoRequestItem>[];
   var _outgoingTodoAll = const <TodoRequestItem>[];
   Future<List<CalendarEvent>> Function()? _readCalendar;
@@ -95,8 +103,12 @@ class FriendService {
   FirebaseFunctions get _fn =>
       FirebaseFunctions.instanceFor(region: _region);
 
-  Uint8List? avatarBytes(String? uid) {
+  Uint8List? avatarBytes(String? uid, {String url = ''}) {
     if (uid == null || uid.isEmpty) return null;
+    final cachedUrl = _avatarUrl[uid];
+    if (url.isNotEmpty && cachedUrl != null && cachedUrl != url) {
+      return null;
+    }
     return _avatarMem[uid];
   }
 
@@ -150,6 +162,7 @@ class FriendService {
     _bootstrapWork = null;
     _disposeRequestStreams();
     _disposeTodoStreams();
+    _disposeFriendsStream();
     profile.value = null;
   }
 
@@ -227,8 +240,15 @@ class FriendService {
         resolved = resolved.copyWith(displayName: pending);
       }
       resolved = _withoutSocialPhoto(resolved);
-      profile.value = resolved;
-      if (!resolved.hasAppPhoto) _forgetAvatar(resolved.uid);
+      final prev = profile.value;
+      final changed = prev?.uid != resolved.uid ||
+          prev?.photoURL != resolved.photoURL ||
+          prev?.displayName != resolved.displayName ||
+          prev?.friendCode != resolved.friendCode;
+      if (changed) profile.value = resolved;
+      if (!resolved.hasAppPhoto && prev?.hasAppPhoto == true) {
+        _forgetAvatar(resolved.uid);
+      }
       await _writeCachedProfile();
       return resolved;
     }
@@ -418,6 +438,7 @@ class FriendService {
     await prefs.remove('$_profileKeyPrefix$uid');
     await prefs.remove('$_pendingNameKeyPrefix$uid');
     _avatarMem.remove(uid);
+    _avatarUrl.remove(uid);
     avatarTick.value++;
     if (_sessionUid == uid) {
       _sessionUid = null;
@@ -432,9 +453,14 @@ class FriendService {
   void _forgetAvatar(String uid) {
     if (uid.isEmpty) return;
     _avatarMem.remove(uid);
+    _avatarUrl.remove(uid);
     _avatarGen[uid] = (_avatarGen[uid] ?? 0) + 1;
     avatarTick.value++;
     unawaited(() async {
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.remove('$_avatarUrlKeyPrefix$uid');
+      } catch (_) {}
       try {
         final file = await _avatarFile(uid);
         if (file != null && await file.exists()) await file.delete();
@@ -442,33 +468,60 @@ class FriendService {
     }());
   }
 
-  void _rememberAvatar(String uid, Uint8List bytes) {
+  bool _sameBytes(Uint8List? a, Uint8List? b) {
+    if (identical(a, b)) return true;
+    if (a == null || b == null || a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) return false;
+    }
+    return true;
+  }
+
+  void _rememberAvatar(String uid, Uint8List bytes, {String url = ''}) {
     if (uid.isEmpty || bytes.isEmpty) return;
+    if (_sameBytes(_avatarMem[uid], bytes) &&
+        (url.isEmpty || _avatarUrl[uid] == url)) {
+      if (url.isNotEmpty) _avatarUrl[uid] = url;
+      return;
+    }
     _avatarMem[uid] = bytes;
+    if (url.isNotEmpty) _avatarUrl[uid] = url;
     _avatarGen[uid] = (_avatarGen[uid] ?? 0) + 1;
     avatarTick.value++;
-    unawaited(_writeAvatarFile(uid, bytes));
+    unawaited(_writeAvatarCache(uid, bytes, url));
   }
 
   Future<void> _warmAvatar(FriendProfile? next) async {
     final uid = next?.uid ?? '';
     final url = next?.hasAppPhoto == true ? next!.photoURL : '';
     if (uid.isEmpty || url.isEmpty) return;
-    if (_avatarMem.containsKey(uid)) return;
+    if (_avatarMem.containsKey(uid) && _avatarUrl[uid] == url) return;
+    if (_avatarUrl[uid] != null && _avatarUrl[uid] != url) {
+      _avatarMem.remove(uid);
+    }
     final gen = _avatarGen[uid] ?? 0;
     try {
+      final prefs = await SharedPreferences.getInstance();
+      final storedUrl = prefs.getString('$_avatarUrlKeyPrefix$uid') ?? '';
       final file = await _avatarFile(uid);
-      if (file != null && await file.exists()) {
+      if (storedUrl == url && file != null && await file.exists()) {
         final bytes = await file.readAsBytes();
         if (bytes.isNotEmpty && (_avatarGen[uid] ?? 0) == gen) {
           _avatarMem[uid] = bytes;
+          _avatarUrl[uid] = url;
           avatarTick.value++;
           return;
         }
       }
     } catch (_) {}
     try {
-      final response = await http.get(Uri.parse(url));
+      final response = await http.get(
+        Uri.parse(url),
+        headers: const {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache',
+        },
+      );
       if (response.statusCode != 200 || response.bodyBytes.isEmpty) return;
       if ((_avatarGen[uid] ?? 0) != gen) return;
       final current = profile.value;
@@ -477,7 +530,7 @@ class FriendService {
           current.photoURL != url) {
         return;
       }
-      _rememberAvatar(uid, response.bodyBytes);
+      _rememberAvatar(uid, response.bodyBytes, url: url);
     } catch (_) {}
   }
 
@@ -499,6 +552,25 @@ class FriendService {
     } catch (_) {}
   }
 
+  Future<void> _writeAvatarCache(String uid, Uint8List bytes, String url) async {
+    if (url.isNotEmpty) {
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('$_avatarUrlKeyPrefix$uid', url);
+      } catch (_) {}
+    }
+    await _writeAvatarFile(uid, bytes);
+  }
+
+  String _versionedPhotoUrl(String url) {
+    final parsed = Uri.tryParse(url);
+    if (parsed == null || parsed.host.isEmpty) return url;
+    return parsed.replace(queryParameters: {
+      ...parsed.queryParameters,
+      'v': '${DateTime.now().millisecondsSinceEpoch}',
+    }).toString();
+  }
+
   Future<FriendProfile> setPhoto(Uint8List bytes, String contentType) async {
     final uid = _uid;
     if (uid == null) {
@@ -516,7 +588,8 @@ class FriendService {
             : 'jpg';
     final ref = FirebaseStorage.instance.ref('users/$uid/profile/avatar.$ext');
     await ref.putData(bytes, SettableMetadata(contentType: type));
-    final url = await ref.getDownloadURL();
+    final url = _versionedPhotoUrl(await ref.getDownloadURL());
+    _rememberAvatar(uid, bytes, url: url);
     final current = profile.value;
     if (current != null) {
       final next = current.copyWith(photoURL: url);
@@ -539,13 +612,7 @@ class FriendService {
     if (uid == null) {
       throw const FriendException('login-required');
     }
-    _avatarMem.remove(uid);
-    _avatarGen[uid] = (_avatarGen[uid] ?? 0) + 1;
-    avatarTick.value++;
-    try {
-      final file = await _avatarFile(uid);
-      if (file != null && await file.exists()) await file.delete();
-    } catch (_) {}
+    _forgetAvatar(uid);
     final current = profile.value;
     if (current != null) {
       final next = current.copyWith(photoURL: '');
@@ -1127,50 +1194,80 @@ class FriendService {
     }
   }
 
+  List<FriendProfile> get lastFriends => _lastFriends;
+
   Stream<List<FriendProfile>> friends() {
+    _bindFriendsStream();
+    return _friendsReplay ?? Stream.value(_lastFriends);
+  }
+
+  void _disposeFriendsStream() {
+    if (_friendsOrderListener != null) {
+      FriendOrderPreference.instance.listenable
+          .removeListener(_friendsOrderListener!);
+      _friendsOrderListener = null;
+    }
+    _friendsSub?.cancel();
+    _friendsSub = null;
+    _friendsCtrl?.close();
+    _friendsCtrl = null;
+    _friendsReplay = null;
+    _friendsStreamUid = null;
+    _lastFriends = const [];
+  }
+
+  void _bindFriendsStream() {
     final uid = _uid;
-    if (uid == null) return Stream.value(const []);
-    final remote = _db
+    if (uid == null) {
+      _disposeFriendsStream();
+      return;
+    }
+    if (_friendsStreamUid == uid && _friendsCtrl != null) return;
+    _disposeFriendsStream();
+    _friendsStreamUid = uid;
+    var items = const <FriendProfile>[];
+    var ready = false;
+    void emit() {
+      if (!ready || _friendsCtrl == null) return;
+      final ordered = FriendOrderPreference.instance.apply(items);
+      unawaited(
+        FriendHomePreference.instance.seedIfNeeded([
+          for (final friend in ordered) friend.uid,
+        ]),
+      );
+      _lastFriends = ordered;
+      _friendsCtrl?.add(ordered);
+      for (final friend in ordered) {
+        unawaited(_warmAvatar(friend));
+      }
+    }
+
+    _friendsOrderListener = emit;
+    FriendOrderPreference.instance.listenable.addListener(emit);
+    _friendsCtrl = StreamController<List<FriendProfile>>.broadcast();
+    _friendsReplay = _ReplayStream(_friendsCtrl!.stream, () => _lastFriends);
+    _friendsSub = _db
         .collection('friendships')
         .doc(uid)
         .collection('friends')
-        .snapshots();
-    return Stream<List<FriendProfile>>.multi((controller) {
-      var items = const <FriendProfile>[];
-      var ready = false;
-      void emit() {
-        if (!ready || controller.isClosed) return;
-        final ordered = FriendOrderPreference.instance.apply(items);
-        unawaited(
-          FriendHomePreference.instance.seedIfNeeded([
-            for (final friend in ordered) friend.uid,
-          ]),
+        .snapshots()
+        .listen(
+          (snap) {
+            final rows = [
+              for (final doc in snap.docs)
+                (
+                  profile: FriendProfile.fromMap(doc.data(), uid: doc.id),
+                  createdAt: (doc.data()['createdAt'] as num?)?.toInt() ?? 0,
+                ),
+            ]..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+            items = [for (final row in rows) row.profile];
+            ready = true;
+            emit();
+          },
+          onError: (Object error) {
+            debugPrint('Friend list stream failed: $error');
+          },
         );
-        controller.add(ordered);
-      }
-
-      final order = FriendOrderPreference.instance.listenable;
-      order.addListener(emit);
-      final sub = remote.listen(
-        (snap) {
-          final rows = [
-            for (final doc in snap.docs)
-              (
-                profile: FriendProfile.fromMap(doc.data(), uid: doc.id),
-                createdAt: (doc.data()['createdAt'] as num?)?.toInt() ?? 0,
-              ),
-          ]..sort((a, b) => a.createdAt.compareTo(b.createdAt));
-          items = [for (final row in rows) row.profile];
-          ready = true;
-          emit();
-        },
-        onError: controller.addError,
-      );
-      controller.onCancel = () {
-        order.removeListener(emit);
-        unawaited(sub.cancel());
-      };
-    });
   }
 
   Future<void> reorderFavorites(
@@ -2425,5 +2522,31 @@ class FriendService {
     } on TimeoutException {
       throw const FriendException('rate-limited');
     }
+  }
+}
+
+class _ReplayStream<T> extends Stream<T> {
+  _ReplayStream(this._source, this._current);
+
+  final Stream<T> _source;
+  final T Function() _current;
+
+  @override
+  bool get isBroadcast => true;
+
+  @override
+  StreamSubscription<T> listen(
+    void Function(T event)? onData, {
+    Function? onError,
+    void Function()? onDone,
+    bool? cancelOnError,
+  }) {
+    onData?.call(_current());
+    return _source.listen(
+      onData,
+      onError: onError,
+      onDone: onDone,
+      cancelOnError: cancelOnError,
+    );
   }
 }

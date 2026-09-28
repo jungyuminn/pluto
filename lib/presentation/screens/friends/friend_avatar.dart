@@ -11,7 +11,7 @@ import 'package:pluto/data/datasources/theme_preference.dart';
 import 'package:pluto/domain/entities/friend_profile.dart';
 import 'package:pluto/presentation/widgets/themed_asset.dart';
 
-class FriendAvatar extends StatelessWidget {
+class FriendAvatar extends StatefulWidget {
   const FriendAvatar({
     super.key,
     required this.size,
@@ -35,88 +35,146 @@ class FriendAvatar extends StatelessWidget {
   }
 
   @override
+  State<FriendAvatar> createState() => _FriendAvatarState();
+}
+
+class _FriendAvatarState extends State<FriendAvatar> {
+  String _uid = '';
+  String _url = '';
+  Uint8List? _bytes;
+  ImageProvider? _image;
+
+  @override
+  void initState() {
+    super.initState();
+    FriendService.instance.avatarTick.addListener(_onTick);
+    _sync();
+  }
+
+  @override
+  void didUpdateWidget(covariant FriendAvatar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _sync();
+  }
+
+  @override
+  void dispose() {
+    FriendService.instance.avatarTick.removeListener(_onTick);
+    super.dispose();
+  }
+
+  void _onTick() {
+    if (!mounted) return;
+    final before = _image;
+    _sync();
+    if (!identical(before, _image)) setState(() {});
+  }
+
+  void _sync() {
+    final profile = widget.profile;
+    final uid = profile?.uid.trim() ?? '';
+    final url = profile?.hasAppPhoto == true ? profile!.photoURL : '';
+    final bytes = widget.preview ??
+        (url.isEmpty
+            ? null
+            : FriendService.instance.avatarBytes(uid, url: url));
+    final personChanged = uid != _uid;
+    final photoChanged = url != _url || !_sameBytes(bytes, _bytes);
+    if (!personChanged && !photoChanged) return;
+    if (personChanged) _image = null;
+    if (_url.isNotEmpty && url != _url) {
+      imageCache.evict(NetworkImage(_url));
+    }
+    _uid = uid;
+    _url = url;
+    _bytes = bytes;
+    if (bytes != null) {
+      _image = MemoryImage(bytes);
+    } else if (url.isNotEmpty) {
+      _image = NetworkImage(url);
+    } else {
+      _image = null;
+    }
+  }
+
+  bool _sameBytes(Uint8List? a, Uint8List? b) {
+    if (identical(a, b)) return true;
+    if (a == null || b == null || a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) return false;
+    }
+    return true;
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<int>(
-      valueListenable: FriendService.instance.avatarTick,
-      builder: (context, _, __) {
-        final avatar = _body(context);
-        final uid = profile?.uid.trim() ?? '';
-        if (!showFavorite || uid.isEmpty) return avatar;
-        return ListenableBuilder(
-          listenable: FriendFavoritePreference.instance.listenable,
-          builder: (context, _) {
-            final favorited =
-                FriendFavoritePreference.instance.contains(uid);
-            final scale = size / 60;
-            return SizedBox(
-              width: size,
-              height: size,
-              child: Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  avatar,
-                  Positioned(
-                    right: -3 * scale,
-                    bottom: -3 * scale,
-                    child: IgnorePointer(
-                      child: AnimatedScale(
-                        scale: favorited ? 1 : 0.72,
-                        duration: Duration(
-                          milliseconds: favorited ? 220 : 160,
-                        ),
-                        curve: favorited
-                            ? Curves.easeOutCubic
-                            : Curves.easeInCubic,
-                        child: AnimatedOpacity(
-                          opacity: favorited ? 1 : 0,
-                          duration: Duration(
-                            milliseconds: favorited ? 180 : 140,
-                          ),
-                          curve: favorited
-                              ? Curves.easeOut
-                              : Curves.easeIn,
-                          child: _FavoriteBadge(scale: scale),
-                        ),
+    final avatar = _body(context);
+    final uid = widget.profile?.uid.trim() ?? '';
+    if (!widget.showFavorite || uid.isEmpty) return avatar;
+    return ListenableBuilder(
+      listenable: FriendFavoritePreference.instance.listenable,
+      builder: (context, _) {
+        final favorited =
+            FriendFavoritePreference.instance.contains(uid);
+        final scale = widget.size / 60;
+        return SizedBox(
+          width: widget.size,
+          height: widget.size,
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              avatar,
+              Positioned(
+                right: -3 * scale,
+                bottom: -3 * scale,
+                child: IgnorePointer(
+                  child: AnimatedScale(
+                    scale: favorited ? 1 : 0.72,
+                    duration: Duration(
+                      milliseconds: favorited ? 220 : 160,
+                    ),
+                    curve: favorited
+                        ? Curves.easeOutCubic
+                        : Curves.easeInCubic,
+                    child: AnimatedOpacity(
+                      opacity: favorited ? 1 : 0,
+                      duration: Duration(
+                        milliseconds: favorited ? 180 : 140,
                       ),
+                      curve: favorited
+                          ? Curves.easeOut
+                          : Curves.easeIn,
+                      child: _FavoriteBadge(scale: scale),
                     ),
                   ),
-                ],
+                ),
               ),
-            );
-          },
+            ],
+          ),
         );
       },
     );
   }
 
   Widget _body(BuildContext context) {
-    final url = profile?.hasAppPhoto == true ? profile!.photoURL : '';
-    final bytes = preview ??
-        (url.isEmpty ? null : FriendService.instance.avatarBytes(profile?.uid));
-    final ImageProvider? image = bytes != null
-        ? MemoryImage(bytes)
-        : (url.isEmpty ? null : NetworkImage(url));
+    final image = _image;
     return DecoratedBox(
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         border: Border.all(color: AppColors.of(context).border, width: 1),
       ),
       child: SizedBox(
-        width: size,
-        height: size,
+        width: widget.size,
+        height: widget.size,
         child: image == null
             ? _logo(context)
             : ClipOval(
                 child: Image(
                   image: image,
                   fit: BoxFit.cover,
-                  width: size,
-                  height: size,
+                  width: widget.size,
+                  height: widget.size,
                   gaplessPlayback: true,
-                  loadingBuilder: (context, child, loading) {
-                    if (loading == null) return child;
-                    return _logo(context);
-                  },
                   errorBuilder: (context, error, stack) => _logo(context),
                 ),
               ),
@@ -125,7 +183,7 @@ class FriendAvatar extends StatelessWidget {
   }
 
   Widget _logo(BuildContext context) {
-    final logoSize = size * 0.78;
+    final logoSize = widget.size * 0.78;
     return Center(
       child: AppAssetImage(
         asset: AppIcons.plutoLogo,

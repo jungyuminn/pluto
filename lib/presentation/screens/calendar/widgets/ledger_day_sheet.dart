@@ -10,6 +10,7 @@ import 'package:pluto/core/layout/pc_layout.dart';
 import 'package:pluto/core/theme/app_colors.dart';
 import 'package:pluto/core/theme/app_skin_background.dart';
 import 'package:pluto/core/utils/drop_in.dart';
+import 'package:pluto/core/utils/mouse_drag_scroll.dart';
 import 'package:pluto/core/utils/press_bounce.dart';
 import 'package:pluto/core/utils/swipe_to_delete.dart';
 import 'package:pluto/data/datasources/day_emoji_store.dart';
@@ -1048,13 +1049,16 @@ class _LedgerCardPagerState extends State<_LedgerCardPager> {
     return ValueListenableBuilder<bool>(
       valueListenable: CalendarDayDropTarget.hidingScrim,
       builder: (context, hiding, _) {
-        return PageView.builder(
+        return MouseDragScroll(
           controller: _pager,
-          physics: hiding
-              ? const NeverScrollableScrollPhysics()
-              : const PageScrollPhysics(),
-          onPageChanged: (_) => HapticFeedback.selectionClick(),
-          itemBuilder: (context, page) {
+          enabled: !hiding,
+          child: PageView.builder(
+            controller: _pager,
+            physics: hiding
+                ? const NeverScrollableScrollPhysics()
+                : const PageScrollPhysics(),
+            onPageChanged: (_) => HapticFeedback.selectionClick(),
+            itemBuilder: (context, page) {
             final date = _dateAt(page);
             final first = date.year == _base.year &&
                 date.month == _base.month &&
@@ -1090,7 +1094,8 @@ class _LedgerCardPagerState extends State<_LedgerCardPager> {
                 ],
               ),
             );
-          },
+            },
+          ),
         );
       },
     );

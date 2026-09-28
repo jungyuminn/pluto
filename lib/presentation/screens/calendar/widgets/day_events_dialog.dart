@@ -15,6 +15,7 @@ import 'package:pluto/data/datasources/calendar_complete.dart';
 import 'package:pluto/data/datasources/friend_service.dart';
 import 'package:pluto/data/datasources/theme_preference.dart';
 import 'package:pluto/core/utils/drop_in.dart';
+import 'package:pluto/core/utils/mouse_drag_scroll.dart';
 import 'package:pluto/core/utils/press_bounce.dart';
 import 'package:pluto/core/utils/swipe_to_delete.dart';
 import 'package:pluto/data/datasources/day_emoji_store.dart';
@@ -1264,13 +1265,16 @@ class _DayCardPagerState extends State<_DayCardPager> {
     return ValueListenableBuilder<bool>(
       valueListenable: CalendarDayDropTarget.hidingScrim,
       builder: (context, hiding, _) {
-        return PageView.builder(
+        return MouseDragScroll(
           controller: _pager,
-          physics: hiding || locked
-              ? const NeverScrollableScrollPhysics()
-              : const PageScrollPhysics(),
-          onPageChanged: (_) => HapticFeedback.selectionClick(),
-          itemBuilder: (context, page) {
+          enabled: !hiding && !locked,
+          child: PageView.builder(
+            controller: _pager,
+            physics: hiding || locked
+                ? const NeverScrollableScrollPhysics()
+                : const PageScrollPhysics(),
+            onPageChanged: (_) => HapticFeedback.selectionClick(),
+            itemBuilder: (context, page) {
             final date = _dateAt(page);
             final first = date.year == _base.year &&
                 date.month == _base.month &&
@@ -1317,7 +1321,8 @@ class _DayCardPagerState extends State<_DayCardPager> {
                 ],
               ),
             );
-          },
+            },
+          ),
         );
       },
     );

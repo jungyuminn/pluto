@@ -18,6 +18,7 @@ import 'package:pluto/data/datasources/diary_local_datasource.dart';
 import 'package:pluto/data/datasources/job_application_local_datasource.dart';
 import 'package:pluto/data/datasources/license_local_datasource.dart';
 import 'package:pluto/data/datasources/synced_file_store.dart';
+import 'package:pluto/data/datasources/app_auth_service.dart';
 import 'package:pluto/data/datasources/friend_favorite_preference.dart';
 import 'package:pluto/data/datasources/friend_home_preference.dart';
 import 'package:pluto/data/datasources/friend_order_preference.dart';
@@ -45,6 +46,13 @@ class AppBackupService {
   static const filePrefix = '플루토_백업_';
   static const _downloadChannel = MethodChannel('job_planner/backup_store');
   static const _icloudChannel = MethodChannel('job_planner/icloud_backup');
+  static const _keepFriendViewKeys = {
+    FriendHomePreference.uidsKey,
+    FriendHomePreference.seenKey,
+    FriendHomePreference.seededKey,
+    FriendOrderPreference.key,
+    FriendFavoritePreference.key,
+  };
 
   static String fileName([DateTime? now]) {
     final stamp = now ?? DateTime.now();
@@ -438,13 +446,18 @@ class AppBackupService {
     SharedPreferences prefs,
     Map<String, dynamic> raw,
   ) async {
+    final keep = AppAuthService.instance.user != null
+        ? _keepFriendViewKeys
+        : const <String>{};
     final incoming = raw.keys.toSet();
     for (final key in prefs.getKeys()) {
+      if (keep.contains(key)) continue;
       if (!incoming.contains(key)) {
         await prefs.remove(key);
       }
     }
     for (final entry in raw.entries) {
+      if (keep.contains(entry.key)) continue;
       final payload = entry.value;
       if (payload is! Map) continue;
       final type = payload['t'] as String?;

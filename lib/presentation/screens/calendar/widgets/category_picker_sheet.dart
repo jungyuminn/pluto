@@ -95,10 +95,10 @@ class _CategoryPickerSheetState extends State<CategoryPickerSheet>
       vsync: this,
       duration: const Duration(milliseconds: 180),
     );
+    unawaited(_reload());
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       if (widget.startModifying) _enterEdit(null);
-      _reload();
     });
   }
 
@@ -116,6 +116,7 @@ class _CategoryPickerSheetState extends State<CategoryPickerSheet>
       if (_loading) {
         setState(() {
           _categories = categories;
+          _appearIds.addAll(categories.map((item) => item.id));
           _seenIds.addAll(categories.map((item) => item.id));
           _loading = false;
         });
@@ -600,6 +601,7 @@ class _CategoryPickerSheetState extends State<CategoryPickerSheet>
           key: _sheetKey,
           duration: const Duration(milliseconds: 180),
           curve: Curves.easeOutCubic,
+          clipBehavior: Clip.antiAlias,
           decoration: BoxDecoration(
             color: _discarding.value
                 ? colors.tint(colors.danger, 0.2)
@@ -789,7 +791,10 @@ class _CategoryPickerSheetState extends State<CategoryPickerSheet>
                     child: _GridTile(
                       appear: _appearIds.contains(_categories[i].id),
                       exiting: _exiting.contains(_categories[i].id),
-                      duration: _slotAnim,
+                      duration: const Duration(milliseconds: 260),
+                      delay: _appearIds.length == _categories.length
+                          ? Duration(milliseconds: math.min(16 * i, 120))
+                          : Duration.zero,
                       child: _slot(_categories[i], cell),
                     ),
                   ),
@@ -885,12 +890,14 @@ class _GridTile extends StatefulWidget {
     required this.appear,
     required this.exiting,
     required this.duration,
+    this.delay = Duration.zero,
     required this.child,
   });
 
   final bool appear;
   final bool exiting;
   final Duration duration;
+  final Duration delay;
   final Widget child;
 
   @override
@@ -899,14 +906,27 @@ class _GridTile extends StatefulWidget {
 
 class _GridTileState extends State<_GridTile> {
   late var _shown = !widget.appear;
+  Timer? _delay;
 
   @override
   void initState() {
     super.initState();
     if (!widget.appear) return;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    void show() {
       if (mounted) setState(() => _shown = true);
-    });
+    }
+
+    if (widget.delay == Duration.zero) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => show());
+    } else {
+      _delay = Timer(widget.delay, show);
+    }
+  }
+
+  @override
+  void dispose() {
+    _delay?.cancel();
+    super.dispose();
   }
 
   @override
@@ -916,10 +936,10 @@ class _GridTileState extends State<_GridTile> {
       duration: widget.duration,
       curve: Curves.easeOutCubic,
       opacity: visible ? 1 : 0,
-      child: AnimatedScale(
+      child: AnimatedSlide(
         duration: widget.duration,
         curve: visible ? Curves.easeOutCubic : Curves.easeInCubic,
-        scale: visible ? 1 : 0.84,
+        offset: visible ? Offset.zero : const Offset(0, 1),
         child: widget.child,
       ),
     );

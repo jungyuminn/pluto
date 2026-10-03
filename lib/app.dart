@@ -850,6 +850,7 @@ class _JobPlannerMaterialAppState extends State<_JobPlannerMaterialApp>
   @override
   void didChangePlatformBrightness() {
     setState(() {});
+    unawaited(HomeScreenWidgetService.instance.sync());
   }
 
   @override

@@ -158,6 +158,7 @@ enum ReleaseDemo {
   widgetPress,
   monthResize,
   tabletDecor,
+  categoryRise,
   feature,
   fix,
 }
@@ -442,7 +443,16 @@ ReleaseDemo releaseDemoFor(String text, {required bool isFix}) {
   }
   if (text.contains('그날 소비')) return ReleaseDemo.ledgerDay;
   if (text.contains('반복해서 넣을')) return ReleaseDemo.ledgerRepeat;
-  if (text.contains('햄스터 스티커') ||
+  if (text.contains('칸이 아래에서') || text.contains('카테고리 창을 열면')) {
+    return ReleaseDemo.categoryRise;
+  }
+  if (text.contains('휴대폰 설정') || text.contains('화면 모드를')) {
+    return ReleaseDemo.appearance;
+  }
+  if (text.contains('스티커가 생겼') ||
+      text.contains('단발 소녀') ||
+      text.contains('노란 얼굴') ||
+      text.contains('햄스터 스티커') ||
       text.contains('여행 햄스터') ||
       text.contains('스티커 팩')) {
     return ReleaseDemo.stickers;
@@ -723,6 +733,7 @@ class ReleaseDemoView extends StatelessWidget {
       ReleaseDemo.widgetPress => const _WidgetPressDemo(),
       ReleaseDemo.monthResize => const _MonthResizeDemo(),
       ReleaseDemo.tabletDecor => const _TabletDecorDemo(),
+      ReleaseDemo.categoryRise => const _CategoryRiseDemo(),
       ReleaseDemo.feature => const _FeatureDemo(),
       ReleaseDemo.fix => const _FixDemo(),
     };
@@ -4515,9 +4526,9 @@ class _StickerDemo extends StatelessWidget {
   const _StickerDemo();
 
   static const _assets = [
-    'assets/stickers/fat_hamster/01_watering.webp',
-    'assets/stickers/white_hamster/01_socks.webp',
-    'assets/stickers/travel_hamster/01_arrive.webp',
+    'assets/stickers/cute_hamster/01_yay.webp',
+    'assets/stickers/cute_rabbit/01_hello.webp',
+    'assets/stickers/short_hair_girl/01_wow.webp',
   ];
 
   @override
@@ -4551,6 +4562,79 @@ class _StickerDemo extends StatelessWidget {
                       child: Image.asset(_assets[i], width: 52, height: 52),
                     ),
                   ],
+                ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _CategoryRiseDemo extends StatelessWidget {
+  const _CategoryRiseDemo();
+
+  static const _names = ['운동', '약속', '공부', '휴식', '기타'];
+  static const _tints = [
+    Color(0xFF60A5FA),
+    Color(0xFFF472B6),
+    Color(0xFFFBBF24),
+    Color(0xFF34D399),
+    Color(0xFFA78BFA),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 2400,
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final font = AppFonts.of(context);
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(16, 28, 16, 16),
+          child: Row(
+            children: [
+              for (var i = 0; i < _names.length; i++)
+                Expanded(
+                  child: Builder(
+                    builder: (context) {
+                      final shown = t < 0.78
+                          ? Curves.easeOutCubic.transform(
+                              _gate(t, 0.12 + i * 0.05, 0.34 + i * 0.05),
+                            )
+                          : 1 - Curves.easeInCubic.transform(_gate(t, 0.84, 0.96));
+                      return Opacity(
+                        opacity: shown,
+                        child: Transform.translate(
+                          offset: Offset(0, 26 * (1 - shown)),
+                          child: Column(
+                            children: [
+                              Container(
+                                width: 12,
+                                height: 12,
+                                decoration: BoxDecoration(
+                                  color: _tints[i],
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                _names[i],
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontFamily: font,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
+                                  color: colors.text,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
                 ),
             ],
           ),
@@ -6943,18 +7027,61 @@ class _AppearanceDemo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _Loop(
+      ms: 3600,
       builder: (context, t) {
-        final dark = t >= 0.46;
+        final step = t < 0.3 ? 0 : t < 0.58 ? 1 : 2;
+        final phoneDark = t >= 0.78;
+        final dark = step == 1 || (step == 2 && phoneDark);
         final bg = dark ? const Color(0xFF111827) : const Color(0xFFF3F4F6);
         final fg = dark ? Colors.white : const Color(0xFF111827);
+        final font = AppFonts.of(context);
+        const labels = [
+          AppStrings.lightMode,
+          AppStrings.darkMode,
+          AppStrings.systemMode,
+        ];
         return AnimatedContainer(
           duration: const Duration(milliseconds: 280),
           color: bg,
-          child: Center(
-            child: Icon(
-              dark ? Icons.dark_mode_rounded : Icons.light_mode_rounded,
-              size: 42,
-              color: fg,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(22, 18, 22, 14),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  dark ? Icons.dark_mode_rounded : Icons.light_mode_rounded,
+                  size: 28,
+                  color: fg,
+                ),
+                const SizedBox(height: 12),
+                for (var i = 0; i < 3; i++)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 5),
+                    child: Row(
+                      children: [
+                        Icon(
+                          step == i
+                              ? Icons.check_circle_rounded
+                              : Icons.circle_outlined,
+                          size: 16,
+                          color: step == i
+                              ? const Color(0xFF3B82F6)
+                              : fg.withValues(alpha: 0.35),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          labels[i],
+                          style: TextStyle(
+                            fontFamily: font,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: fg,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
             ),
           ),
         );

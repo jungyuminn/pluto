@@ -2582,11 +2582,29 @@ class _AppearancePreview extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _HelpSelectDemo(
-      labels: const [AppStrings.lightMode, AppStrings.darkMode],
+      labels: const [
+        AppStrings.lightMode,
+        AppStrings.darkMode,
+        AppStrings.systemMode,
+      ],
       sceneHeight: 188,
-      themeOf: (selected) => selected == 0 ? AppTheme.light : AppTheme.dark,
+      themeOf: (selected) {
+        if (selected == 0) return AppTheme.light;
+        if (selected == 1) return AppTheme.dark;
+        return WidgetsBinding.instance.platformDispatcher.platformBrightness ==
+                Brightness.dark
+            ? AppTheme.dark
+            : AppTheme.light;
+      },
       scene: (context, selected) {
-        final theme = selected == 0 ? AppTheme.light : AppTheme.dark;
+        final theme = selected == 0
+            ? AppTheme.light
+            : selected == 1
+                ? AppTheme.dark
+                : WidgetsBinding.instance.platformDispatcher.platformBrightness ==
+                        Brightness.dark
+                    ? AppTheme.dark
+                    : AppTheme.light;
         return _helpKeyedSwitch(
           switchKey: selected,
           child: Theme(

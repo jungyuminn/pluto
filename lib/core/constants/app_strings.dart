@@ -436,7 +436,8 @@ class AppStrings {
       '제목에 4시나 14시, 오후 4시처럼 적으면 저장할 때 그 글자를 빼고 시간에 넣어요';
   static const settingsNotificationHelp =
       '시간이 있는 할 일은 미리 알려주고, 매일 정해진 시간에 오늘 일정과 끝내지 않은 할 일을 알려줘요';
-  static const settingsAppearanceHelp = '화면을 밝은 테마나 어두운 테마로 바꿀 수 있어요';
+  static const settingsAppearanceHelp =
+      '화면을 밝은 테마나 어두운 테마로 바꾸거나, 휴대폰 설정을 따라가게 할 수 있어요';
   static const settingsThemeHelp = '앱의 배경 분위기와 아이콘·버튼 색을 바꿀 수 있어요';
   static const settingsBackupHelp =
       '앱의 모든 데이터를 최근 3개까지 저장해요. 앱을 지운 뒤에도 복구할 수 있어요';
@@ -452,6 +453,7 @@ class AppStrings {
       '매달 1일에는 지난달 요약을, 매주 월요일에는 지난주 요약을 보여줘요';
   static const lightMode = '라이트 모드';
   static const darkMode = '다크 모드';
+  static const systemMode = '시스템 설정';
   static const settingsNotificationSection = '알림 설정';
   static const todoNotificationSetting = '할 일 알림 설정';
   static const summaryNotificationSetting = '요약 알림 설정';

@@ -53,6 +53,7 @@ class CloudSyncSnapshot {
   static const themesKey = ThemePreference.customThemesKey;
   static const customThemeIdKey = 'app_custom_theme_id';
   static const darkKey = 'app_dark_mode';
+  static const themeModeKey = ThemePreference.modeKey;
   static const skinKey = 'app_skin';
   static const mondayKey = 'calendar_start_monday';
   static const diaryCoverOrderKey = 'diary_cover_order';
@@ -84,6 +85,7 @@ class CloudSyncSnapshot {
 
   static const settingKeys = [
     darkKey,
+    themeModeKey,
     skinKey,
     themesKey,
     customThemeIdKey,
@@ -167,6 +169,7 @@ class CloudSyncSnapshot {
 
   static Object? _settingFallback(String key) {
     if (key == darkKey || key == mondayKey) return false;
+    if (key == themeModeKey) return 'light';
     if (key == skinKey) return 'classic';
     if (key == diaryCoverOrderKey) return <String>[];
     if (key == FriendCategoryPreference.key) return <String>[];
@@ -310,6 +313,10 @@ class CloudSyncSnapshot {
       return false;
     }
     if (_boolOf(dump, darkKey) == true) return false;
+    final themeMode = _stringOf(dump, themeModeKey);
+    if (themeMode != null && themeMode.isNotEmpty && themeMode != 'light') {
+      return false;
+    }
     if (_boolOf(dump, mondayKey) == true) return false;
     if (!_viewPrefsAreDefault(dump)) return false;
     final skin = _stringOf(dump, skinKey);

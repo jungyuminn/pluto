@@ -102,7 +102,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   var _showWeeklyStats = false;
   var _startMonday = false;
   var _showLunar = false;
-  var _dark = false;
+  var _themeMode = ThemeMode.light;
   var _skin = AppSkin.classic;
   var _typeface = AppTypeface.pretendard;
   var _followWidgetTheme = true;
@@ -160,7 +160,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _showWeeklyStats = scope.homeViewPreference.showWeeklyStats;
     _startMonday = scope.calendarPreference.startMonday;
     _showLunar = scope.calendarPreference.showLunar;
-    _dark = scope.themePreference.isDark;
+    _themeMode = scope.themePreference.mode;
     _skin = scope.themePreference.skin;
     _typeface = scope.fontPreference.typeface;
     _followWidgetTheme = scope.widgetPreference.followTheme;
@@ -206,7 +206,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       _showWeeklyStats = scope.homeViewPreference.showWeeklyStats;
       _startMonday = scope.calendarPreference.startMonday;
       _showLunar = scope.calendarPreference.showLunar;
-      _dark = scope.themePreference.isDark;
+      _themeMode = scope.themePreference.mode;
       _skin = scope.themePreference.skin;
       _typeface = scope.fontPreference.typeface;
       _followWidgetTheme = scope.widgetPreference.followTheme;
@@ -620,10 +620,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Future<void> _setDark(bool value) async {
-    if (_dark == value) return;
-    setState(() => _dark = value);
-    await AppScope.of(context).themePreference.setDark(value);
+  Future<void> _setThemeMode(ThemeMode value) async {
+    if (_themeMode == value) return;
+    setState(() => _themeMode = value);
+    await AppScope.of(context).themePreference.setMode(value);
     await HomeScreenWidgetService.instance.sync();
   }
 
@@ -1183,13 +1183,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
             children: [
               _SettingsTile(
                 label: AppStrings.lightMode,
-                checked: !_dark,
-                onPressed: () => _setDark(false),
+                checked: _themeMode == ThemeMode.light,
+                onPressed: () => _setThemeMode(ThemeMode.light),
               ),
               _SettingsTile(
                 label: AppStrings.darkMode,
-                checked: _dark,
-                onPressed: () => _setDark(true),
+                checked: _themeMode == ThemeMode.dark,
+                onPressed: () => _setThemeMode(ThemeMode.dark),
+              ),
+              _SettingsTile(
+                label: AppStrings.systemMode,
+                checked: _themeMode == ThemeMode.system,
+                onPressed: () => _setThemeMode(ThemeMode.system),
               ),
             ],
           ),

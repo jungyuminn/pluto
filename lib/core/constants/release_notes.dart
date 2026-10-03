@@ -17,6 +17,14 @@ class ReleaseNote {
 abstract final class ReleaseNotes {
   static const all = [
     ReleaseNote(
+      version: '1.4.23',
+      items: [
+        '카테고리 창을 열면 칸이 아래에서 올라와요',
+        '화면 모드를 휴대폰 설정에 맞출 수 있어요',
+        '단발 소녀, 토끼, 곰, 햄스터, 노란 얼굴 스티커가 생겼어요',
+      ],
+    ),
+    ReleaseNote(
       version: '1.4.22',
       items: [
         '뚱뚱한 햄스터와 하얀 햄스터 스티커가 생겼어요',

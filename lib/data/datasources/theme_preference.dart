@@ -209,7 +209,7 @@ class ThemePreference extends ChangeNotifier {
     bool dark = false,
     AppSkin skin = AppSkin.classic,
   })  : _prefs = prefs,
-        _dark = prefs?.getBool(_darkKey) ?? dark,
+        _mode = _readMode(prefs, dark),
         _skin = AppSkin.fromId(
           prefs?.getString(_skinKey),
           fallback: skin,
@@ -271,6 +271,7 @@ class ThemePreference extends ChangeNotifier {
   }
 
   static const _darkKey = 'app_dark_mode';
+  static const modeKey = 'app_theme_mode';
   static const _skinKey = 'app_skin';
   static const _customIdKey = 'app_custom_theme_id';
   static const customThemesKey = 'app_custom_themes';
@@ -278,12 +279,18 @@ class ThemePreference extends ChangeNotifier {
 
   final SharedPreferences? _prefs;
   final _storage = const CustomThemeStorage();
-  bool _dark;
+  ThemeMode _mode;
   AppSkin _skin;
   List<UserTheme> _customThemes;
   String? _customId;
 
-  bool get isDark => _dark;
+  bool get isDark {
+    if (_mode == ThemeMode.system) {
+      return WidgetsBinding.instance.platformDispatcher.platformBrightness ==
+          Brightness.dark;
+    }
+    return _mode == ThemeMode.dark;
+  }
 
   AppSkin get skin => _skin;
 
@@ -300,13 +307,20 @@ class ThemePreference extends ChangeNotifier {
     return null;
   }
 
-  ThemeMode get mode => _dark ? ThemeMode.dark : ThemeMode.light;
+  ThemeMode get mode => _mode;
 
-  Future<void> setDark(bool value) async {
-    if (_dark == value) return;
-    _dark = value;
+  Future<void> setDark(bool value) {
+    return setMode(value ? ThemeMode.dark : ThemeMode.light);
+  }
+
+  Future<void> setMode(ThemeMode value) async {
+    if (_mode == value) return;
+    _mode = value;
     notifyListeners();
-    await _prefs?.setBool(_darkKey, value);
+    await _prefs?.setString(modeKey, value.name);
+    if (value != ThemeMode.system) {
+      await _prefs?.setBool(_darkKey, value == ThemeMode.dark);
+    }
   }
 
   Future<void> setSkin(AppSkin value) async {
@@ -471,7 +485,7 @@ class ThemePreference extends ChangeNotifier {
   void hydrate() {
     final prefs = _prefs;
     if (prefs == null) return;
-    _dark = prefs.getBool(_darkKey) ?? _dark;
+    _mode = _readMode(prefs, _mode == ThemeMode.dark);
     _skin = AppSkin.fromId(prefs.getString(_skinKey), fallback: _skin);
     _customThemes = _decodeThemes(prefs.getString(customThemesKey));
     _customId = prefs.getString(_customIdKey);
@@ -486,6 +500,19 @@ class ThemePreference extends ChangeNotifier {
         for (final theme in _customThemes) theme.toJson(),
       ]),
     );
+  }
+
+  static ThemeMode _readMode(SharedPreferences? prefs, bool darkFallback) {
+    switch (prefs?.getString(modeKey)) {
+      case 'dark':
+        return ThemeMode.dark;
+      case 'light':
+        return ThemeMode.light;
+      case 'system':
+        return ThemeMode.system;
+    }
+    if (prefs?.getBool(_darkKey) ?? darkFallback) return ThemeMode.dark;
+    return ThemeMode.light;
   }
 
   static List<UserTheme> _decodeThemes(String? raw) {

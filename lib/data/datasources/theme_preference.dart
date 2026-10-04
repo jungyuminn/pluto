@@ -56,6 +56,8 @@ enum AppSkin {
     ...sceneSkins,
   ];
 
+  bool get hasMotion => this != AppSkin.classic;
+
   static AppSkinGroup groupOf(AppSkin skin, {bool custom = false}) {
     if (custom) return AppSkinGroup.mine;
     if (patternSkins.contains(skin)) return AppSkinGroup.pattern;
@@ -214,6 +216,7 @@ class ThemePreference extends ChangeNotifier {
           prefs?.getString(_skinKey),
           fallback: skin,
         ),
+        _motion = _readMotion(prefs),
         _customThemes = _decodeThemes(prefs?.getString(customThemesKey)),
         _customId = prefs?.getString(_customIdKey) {
     if (customTheme == null) _customId = null;
@@ -273,14 +276,18 @@ class ThemePreference extends ChangeNotifier {
   static const _darkKey = 'app_dark_mode';
   static const modeKey = 'app_theme_mode';
   static const _skinKey = 'app_skin';
+  static const motionKey = 'app_theme_motion';
   static const _customIdKey = 'app_custom_theme_id';
   static const customThemesKey = 'app_custom_themes';
   static const defaultAccent = 0xFF3B82F6;
+  static const defaultMotion = 0.0;
+  static const motionOff = 0.03;
 
   final SharedPreferences? _prefs;
   final _storage = const CustomThemeStorage();
   ThemeMode _mode;
   AppSkin _skin;
+  double _motion;
   List<UserTheme> _customThemes;
   String? _customId;
 
@@ -293,6 +300,8 @@ class ThemePreference extends ChangeNotifier {
   }
 
   AppSkin get skin => _skin;
+
+  double get motion => _motion;
 
   List<UserTheme> get customThemes => List.unmodifiable(_customThemes);
 
@@ -321,6 +330,15 @@ class ThemePreference extends ChangeNotifier {
     if (value != ThemeMode.system) {
       await _prefs?.setBool(_darkKey, value == ThemeMode.dark);
     }
+  }
+
+  Future<void> setMotion(double value) async {
+    var next = value.clamp(0.0, 1.0);
+    if (next <= motionOff) next = 0;
+    if (next == _motion) return;
+    _motion = next;
+    notifyListeners();
+    await _prefs?.setDouble(motionKey, next);
   }
 
   Future<void> setSkin(AppSkin value) async {
@@ -487,6 +505,7 @@ class ThemePreference extends ChangeNotifier {
     if (prefs == null) return;
     _mode = _readMode(prefs, _mode == ThemeMode.dark);
     _skin = AppSkin.fromId(prefs.getString(_skinKey), fallback: _skin);
+    _motion = _readMotion(prefs);
     _customThemes = _decodeThemes(prefs.getString(customThemesKey));
     _customId = prefs.getString(_customIdKey);
     if (customTheme == null) _customId = null;
@@ -500,6 +519,14 @@ class ThemePreference extends ChangeNotifier {
         for (final theme in _customThemes) theme.toJson(),
       ]),
     );
+  }
+
+  static double _readMotion(SharedPreferences? prefs) {
+    final raw = prefs?.get(motionKey);
+    if (raw is! num) return defaultMotion;
+    final next = raw.toDouble().clamp(0.0, 1.0);
+    if (next <= motionOff) return 0;
+    return next;
   }
 
   static ThemeMode _readMode(SharedPreferences? prefs, bool darkFallback) {

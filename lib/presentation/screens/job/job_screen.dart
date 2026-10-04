@@ -309,6 +309,7 @@ class JobScreenState extends State<JobScreen>
     final searching = KoreanSearch.compact(_search.text).isNotEmpty;
     final barOverlap = OverlayAppBar.overlapOf(context);
     return AppSkinBackground(
+      playing: widget.visible,
       child: Scaffold(
         resizeToAvoidBottomInset: false,
         backgroundColor: Colors.transparent,

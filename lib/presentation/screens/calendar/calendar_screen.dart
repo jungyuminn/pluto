@@ -648,6 +648,7 @@ class CalendarScreenState extends State<CalendarScreen>
         MediaQuery.viewPaddingOf(context).bottom;
 
     return AppSkinBackground(
+      playing: widget.visible,
       child: Scaffold(
         resizeToAvoidBottomInset: false,
         backgroundColor: Colors.transparent,

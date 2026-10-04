@@ -2712,6 +2712,15 @@ class _ThemeSettingsPageState extends State<_ThemeSettingsPage> {
                 padding: EdgeInsets.fromLTRB(16, 0, 16, 8),
                 child: _ThemeLivePreview(),
               ),
+              _ThemeMotionSlider(
+                visible: !theme.usesCustom && theme.skin.hasMotion,
+                value: theme.motion,
+                color: colors.accent,
+                cardColor: colors.card,
+                onChanged: (value) {
+                  unawaited(theme.setMotion(value));
+                },
+              ),
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
                 child: SlidingKindBar(
@@ -3585,18 +3594,89 @@ class _CustomThemeEditorPageState extends State<_CustomThemeEditorPage> {
   }
 }
 
+class _ThemeMotionSlider extends StatelessWidget {
+  const _ThemeMotionSlider({
+    required this.visible,
+    required this.value,
+    required this.color,
+    required this.cardColor,
+    required this.onChanged,
+  });
+
+  final bool visible;
+  final double value;
+  final Color color;
+  final Color cardColor;
+  final ValueChanged<double> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 280),
+      switchInCurve: Curves.easeOutCubic,
+      switchOutCurve: Curves.easeOutCubic,
+      layoutBuilder: (current, previous) {
+        return Stack(
+          alignment: Alignment.topCenter,
+          children: [
+            ...previous,
+            if (current != null) current,
+          ],
+        );
+      },
+      transitionBuilder: (child, animation) {
+        return FadeTransition(
+          opacity: animation,
+          child: SizeTransition(
+            sizeFactor: animation,
+            axisAlignment: -1,
+            child: child,
+          ),
+        );
+      },
+      child: visible
+          ? Padding(
+              key: const ValueKey('motion'),
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: cardColor,
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                  child: _WashSlider(
+                    label: AppStrings.themeMotion,
+                    value: value,
+                    color: color,
+                    barHeight: 32,
+                    onChanged: onChanged,
+                  ),
+                ),
+              ),
+            )
+          : const SizedBox(
+              key: ValueKey('empty'),
+              width: double.infinity,
+            ),
+    );
+  }
+}
+
 class _WashSlider extends StatefulWidget {
   const _WashSlider({
     required this.label,
     required this.value,
     required this.color,
     required this.onChanged,
+    this.barHeight = 36,
   });
 
   final String label;
   final double value;
   final Color color;
   final ValueChanged<double> onChanged;
+  final double barHeight;
 
   @override
   State<_WashSlider> createState() => _WashSliderState();
@@ -3700,7 +3780,7 @@ class _WashSliderState extends State<_WashSlider>
                 onHorizontalDragCancel: _end,
                 child: SizedBox(
                   width: width,
-                  height: 36,
+                  height: widget.barHeight,
                   child: CustomPaint(
                     painter: _SteppedSliderPainter(
                       progress: _t,

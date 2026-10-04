@@ -286,6 +286,7 @@ class HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         tutorial.step.anchor == TutorialAnchorId.homeList;
 
     return AppSkinBackground(
+      playing: widget.visible,
       child: Scaffold(
       resizeToAvoidBottomInset: false,
       backgroundColor: Colors.transparent,

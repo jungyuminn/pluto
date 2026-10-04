@@ -159,6 +159,7 @@ enum ReleaseDemo {
   monthResize,
   tabletDecor,
   categoryRise,
+  themeMotion,
   feature,
   fix,
 }
@@ -281,6 +282,9 @@ ReleaseDemo releaseDemoFor(String text, {required bool isFix}) {
     if (text.contains('기능 안내')) return ReleaseDemo.featureIntroStay;
     if (text.contains('스티커 팩')) return ReleaseDemo.stickers;
     return ReleaseDemo.fix;
+  }
+  if (text.contains('장식이 움직') || text.contains('재생 속도')) {
+    return ReleaseDemo.themeMotion;
   }
   if (text.contains('시간에 넣') || text.contains('4시나')) {
     return ReleaseDemo.categoryAi;
@@ -733,6 +737,7 @@ class ReleaseDemoView extends StatelessWidget {
       ReleaseDemo.widgetPress => const _WidgetPressDemo(),
       ReleaseDemo.monthResize => const _MonthResizeDemo(),
       ReleaseDemo.tabletDecor => const _TabletDecorDemo(),
+      ReleaseDemo.themeMotion => const _ThemeMotionDemo(),
       ReleaseDemo.categoryRise => const _CategoryRiseDemo(),
       ReleaseDemo.feature => const _FeatureDemo(),
       ReleaseDemo.fix => const _FixDemo(),
@@ -3832,6 +3837,120 @@ class _MonthResizeDemo extends StatelessWidget {
                   ],
                 ),
               ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _ThemeMotionDemo extends StatelessWidget {
+  const _ThemeMotionDemo();
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 4400,
+      boxHeight: 176,
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final speed = t < 0.74
+            ? Curves.easeInOutCubic.transform(_gate(t, 0.14, 0.4))
+            : 1 - Curves.easeInOutCubic.transform(_gate(t, 0.8, 0.96));
+        final still = speed < 0.04;
+        final fill = colors.isDark
+            ? const Color(0xFF2A1820)
+            : const Color(0xFFFFF0F5);
+        const petals = <(double, double, double, double)>[
+          (0.16, 0.14, 0.00, 15),
+          (0.52, 0.10, 0.27, 13),
+          (0.78, 0.24, 0.14, 14),
+          (0.34, 0.32, 0.46, 12),
+        ];
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 10),
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: fill,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Stack(
+              children: [
+                for (final petal in petals)
+                  Positioned(
+                    left: 14 + petal.$1 * 210,
+                    top: still
+                        ? 12 + petal.$2 * 68
+                        : -18 + ((t + petal.$3) % 1.0) * 128,
+                    child: Transform.rotate(
+                      angle: still ? 0.18 : (t + petal.$3) * math.pi * 2,
+                      child: Container(
+                        width: petal.$4,
+                        height: petal.$4 * 0.68,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF9A8D4).withValues(alpha: 0.92),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                    ),
+                  ),
+                Positioned(
+                  left: 14,
+                  right: 14,
+                  bottom: 12,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        AppStrings.themeMotion,
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: colors.hint,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      SizedBox(
+                        height: 18,
+                        child: Stack(
+                          alignment: Alignment.centerLeft,
+                          children: [
+                            Container(
+                              height: 4,
+                              decoration: BoxDecoration(
+                                color: colors.hint.withValues(alpha: 0.28),
+                                borderRadius: BorderRadius.circular(99),
+                              ),
+                            ),
+                            FractionallySizedBox(
+                              widthFactor: speed.clamp(0.0, 1.0),
+                              child: Container(
+                                height: 4,
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFF472B6),
+                                  borderRadius: BorderRadius.circular(99),
+                                ),
+                              ),
+                            ),
+                            Align(
+                              alignment: Alignment(-1 + speed * 2, 0),
+                              child: Container(
+                                width: 14,
+                                height: 14,
+                                decoration: const BoxDecoration(
+                                  color: Color(0xFFF472B6),
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
         );

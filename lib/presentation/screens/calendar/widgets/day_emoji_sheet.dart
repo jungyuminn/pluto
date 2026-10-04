@@ -60,6 +60,7 @@ class DayStickers {
     'cute_bear',
     'short_hair_girl',
     'yellow_circle',
+    'cream_cat_01',
     'simple_cat',
     'simple_cat2',
     'simple_cat3',

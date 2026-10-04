@@ -367,6 +367,7 @@ class AppStrings {
   static const themeMineDeleteBody = '만든 테마가 사라져요';
   static const themeClassic = '기본';
   static const themeBlossom = '블라썸';
+  static const themeMotion = '재생 속도';
   static const themeClover = '네잎클로버';
   static const themeFluffyBear = '몽글곰도리';
   static const themeFluffyRabbit = '몽글토끼';

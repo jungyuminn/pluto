@@ -55,6 +55,7 @@ class CloudSyncSnapshot {
   static const darkKey = 'app_dark_mode';
   static const themeModeKey = ThemePreference.modeKey;
   static const skinKey = 'app_skin';
+  static const motionKey = ThemePreference.motionKey;
   static const mondayKey = 'calendar_start_monday';
   static const diaryCoverOrderKey = 'diary_cover_order';
   static const wordmarkHomeKey = WordmarkPreference.homeKey;
@@ -87,6 +88,7 @@ class CloudSyncSnapshot {
     darkKey,
     themeModeKey,
     skinKey,
+    motionKey,
     themesKey,
     customThemeIdKey,
     mondayKey,
@@ -154,6 +156,10 @@ class CloudSyncSnapshot {
   }
 
   static void _putPref(Map<String, dynamic> out, String key, Object? value) {
+    if (key == motionKey && value is num) {
+      out[key] = {'t': 'd', 'v': value.toDouble()};
+      return;
+    }
     if (value is String) {
       out[key] = {'t': 's', 'v': value};
     } else if (value is bool) {
@@ -171,6 +177,7 @@ class CloudSyncSnapshot {
     if (key == darkKey || key == mondayKey) return false;
     if (key == themeModeKey) return 'light';
     if (key == skinKey) return 'classic';
+    if (key == motionKey) return ThemePreference.defaultMotion;
     if (key == diaryCoverOrderKey) return <String>[];
     if (key == FriendCategoryPreference.key) return <String>[];
     if (key == FriendCategoryPreference.companyKey) return <String>[];
@@ -237,7 +244,11 @@ class CloudSyncSnapshot {
         case 'b':
           await prefs.setBool(key, value as bool);
         case 'i':
-          await prefs.setInt(key, (value as num).toInt());
+          if (key == motionKey) {
+            await prefs.setDouble(key, (value as num).toDouble());
+          } else {
+            await prefs.setInt(key, (value as num).toInt());
+          }
         case 'd':
           await prefs.setDouble(key, (value as num).toDouble());
         case 'l':
@@ -324,6 +335,8 @@ class CloudSyncSnapshot {
     if (!_viewPrefsAreDefault(dump)) return false;
     final skin = _stringOf(dump, skinKey);
     if (skin != null && skin.isNotEmpty && skin != 'classic') return false;
+    final motion = _doubleOf(dump, motionKey);
+    if (motion != null && motion != ThemePreference.defaultMotion) return false;
     if ((_stringOf(dump, customThemeIdKey) ?? '').isNotEmpty) return false;
     if ((_listOf(dump, stickerOrderKey) ?? const []).isNotEmpty) return false;
     if ((_listOf(dump, diaryCoverOrderKey) ?? const []).isNotEmpty) return false;
@@ -495,6 +508,14 @@ class CloudSyncSnapshot {
     if (payload['t'] != 's') return null;
     final value = payload['v'];
     return value is String ? value : null;
+  }
+
+  static double? _doubleOf(Map<String, dynamic> dump, String key) {
+    final payload = dump[key];
+    if (payload is! Map) return null;
+    if (payload['t'] != 'd') return null;
+    final value = payload['v'];
+    return value is num ? value.toDouble() : null;
   }
 
   static List<String>? _listOf(Map<String, dynamic> dump, String key) {

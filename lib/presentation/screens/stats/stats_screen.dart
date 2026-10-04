@@ -271,6 +271,7 @@ class StatsScreenState extends State<StatsScreen>
     );
 
     return AppSkinBackground(
+      playing: widget.visible,
       child: Scaffold(
         resizeToAvoidBottomInset: false,
         backgroundColor: Colors.transparent,

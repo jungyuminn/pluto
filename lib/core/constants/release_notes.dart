@@ -17,6 +17,14 @@ class ReleaseNote {
 abstract final class ReleaseNotes {
   static const all = [
     ReleaseNote(
+      version: '1.5.0',
+      items: [
+        '테마 장식이 움직여요',
+        '재생 속도로 빠르기를 맞출 수 있어요',
+        '크림냥 스티커가 생겼어요',
+      ],
+    ),
+    ReleaseNote(
       version: '1.4.23',
       items: [
         '카테고리 창을 열면 칸이 아래에서 올라와요',

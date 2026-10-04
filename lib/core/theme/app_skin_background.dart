@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:pluto/app_scope.dart';
 import 'package:pluto/core/constants/app_icons.dart';
 import 'package:pluto/core/layout/pc_layout.dart';
@@ -549,6 +550,7 @@ class AppSkinBackground extends StatelessWidget {
     this.scaleByWidth = false,
     this.animate = false,
     this.simple = false,
+    this.playing = true,
   });
 
   static const transitionDuration = Duration(milliseconds: 420);
@@ -561,6 +563,7 @@ class AppSkinBackground extends StatelessWidget {
   final bool scaleByWidth;
   final bool animate;
   final bool simple;
+  final bool playing;
 
   @override
   Widget build(BuildContext context) {
@@ -606,16 +609,20 @@ class AppSkinBackground extends StatelessWidget {
           liftForNav: liftForNav,
           scaleByWidth: scaleByWidth,
           simple: sparse,
+          playing: playing,
         ),
       AppSkin.clover => _CloverDecorations(
           liftForNav: liftForNav,
           scaleByWidth: scaleByWidth,
           simple: sparse,
+          playing: playing,
         ),
       AppSkin.fluffyBear => _FluffyMascotDecorations(
           liftForNav: liftForNav,
           scaleByWidth: scaleByWidth,
           simple: sparse,
+          playing: playing,
+          moves: true,
           faceLight: AppSkinAssets.fluffyBearFaceLight,
           faceDark: AppSkinAssets.fluffyBearFaceDark,
           bottomLight: AppSkinAssets.fluffyBearBottomLight,
@@ -629,6 +636,9 @@ class AppSkinBackground extends StatelessWidget {
           liftForNav: liftForNav,
           scaleByWidth: scaleByWidth,
           simple: sparse,
+          playing: playing,
+          moves: true,
+          hops: true,
           faceLight: AppSkinAssets.fluffyRabbitFaceLight,
           faceDark: AppSkinAssets.fluffyRabbitFaceDark,
           bottomLight: AppSkinAssets.fluffyRabbitBottomLight,
@@ -642,6 +652,9 @@ class AppSkinBackground extends StatelessWidget {
           liftForNav: liftForNav,
           scaleByWidth: scaleByWidth,
           simple: sparse,
+          playing: playing,
+          moves: true,
+          beats: true,
           faceLight: AppSkinAssets.pinkHeartFaceLight,
           faceDark: AppSkinAssets.pinkHeartFaceDark,
           bottomLight: AppSkinAssets.pinkHeartBottomLight,
@@ -655,66 +668,79 @@ class AppSkinBackground extends StatelessWidget {
           liftForNav: liftForNav,
           scaleByWidth: scaleByWidth,
           simple: sparse,
+          playing: playing,
         ),
       AppSkin.snowyWinter => _SnowyWinterDecorations(
           liftForNav: liftForNav,
           scaleByWidth: scaleByWidth,
           simple: sparse,
+          playing: playing,
         ),
       AppSkin.squishyBear => _SquishyBearDecorations(
           liftForNav: liftForNav,
           scaleByWidth: scaleByWidth,
           simple: sparse,
+          playing: playing,
         ),
       AppSkin.strawberryMilk => _StrawberryMilkDecorations(
           liftForNav: liftForNav,
           scaleByWidth: scaleByWidth,
           simple: sparse,
+          playing: playing,
         ),
       AppSkin.lovelyBear => _LovelyBearDecorations(
           liftForNav: liftForNav,
           scaleByWidth: scaleByWidth,
           simple: sparse,
+          playing: playing,
         ),
       AppSkin.rainyDay => _RainyDayDecorations(
           liftForNav: liftForNav,
           scaleByWidth: scaleByWidth,
           simple: sparse,
+          playing: playing,
         ),
       AppSkin.concertDay => _ConcertDayDecorations(
           liftForNav: liftForNav,
           scaleByWidth: scaleByWidth,
           simple: sparse,
+          playing: playing,
         ),
       AppSkin.fluffyCloud => _FluffyCloudDecorations(
           liftForNav: liftForNav,
           scaleByWidth: scaleByWidth,
           simple: sparse,
+          playing: playing,
         ),
       AppSkin.catVillage => _CatVillageDecorations(
           liftForNav: liftForNav,
           scaleByWidth: scaleByWidth,
           simple: sparse,
+          playing: playing,
         ),
       AppSkin.hamsterBakery => _HamsterBakeryDecorations(
           liftForNav: liftForNav,
           scaleByWidth: scaleByWidth,
           simple: sparse,
+          playing: playing,
         ),
       AppSkin.otterBathhouse => _OtterBathhouseDecorations(
           liftForNav: liftForNav,
           scaleByWidth: scaleByWidth,
           simple: sparse,
+          playing: playing,
         ),
       AppSkin.rabbitFlowerMarket => _RabbitFlowerMarketDecorations(
           liftForNav: liftForNav,
           scaleByWidth: scaleByWidth,
           simple: sparse,
+          playing: playing,
         ),
       AppSkin.bearPancakeCafe => _BearPancakeCafeDecorations(
           liftForNav: liftForNav,
           scaleByWidth: scaleByWidth,
           simple: sparse,
+          playing: playing,
         ),
     }
         : custom.kind == UserThemeKind.photo
@@ -989,11 +1015,10 @@ class _LogoSafe {
   final double logoBottom;
   final double actionsLeft;
 
-  Positioned topLeft({
+  ({double left, double top}) pin({
     required double left,
     required double top,
     required double width,
-    required Widget child,
   }) {
     var x = left;
     var y = top;
@@ -1005,210 +1030,493 @@ class _LogoSafe {
         y = logoBottom + 4;
       }
     }
+    return (left: x, top: y);
+  }
+
+  Positioned topLeft({
+    required double left,
+    required double top,
+    required double width,
+    required Widget child,
+  }) {
+    final at = pin(left: left, top: top, width: width);
     return Positioned(
-      left: x,
-      top: y,
+      left: at.left,
+      top: at.top,
       width: width,
       child: child,
     );
   }
 }
 
-class _BlossomDecorations extends StatelessWidget {
+class _BlossomDecorations extends StatefulWidget {
   const _BlossomDecorations({
     required this.liftForNav,
     this.scaleByWidth = false,
     this.simple = false,
+    this.playing = true,
   });
 
   final bool liftForNav;
   final bool scaleByWidth;
   final bool simple;
+  final bool playing;
+
+  @override
+  State<_BlossomDecorations> createState() => _BlossomDecorationsState();
+}
+
+class _BlossomDecorationsState extends State<_BlossomDecorations>
+    with SingleTickerProviderStateMixin {
+  Ticker? _ticker;
+  final _phase = ValueNotifier<double>(0);
+  var _last = Duration.zero;
+
+  static double _cyclesPerSecond(double motion) {
+    const slow = 1 / 16;
+    const fast = 1 / 3.2;
+    return slow + (fast - slow) * motion.clamp(0.0, 1.0);
+  }
+
+  @override
+  void dispose() {
+    _ticker?.dispose();
+    _phase.dispose();
+    super.dispose();
+  }
+
+  void _syncTicker(double motion) {
+    if (motion <= ThemePreference.motionOff) {
+      _ticker?.stop();
+      _last = Duration.zero;
+      _phase.value = 0;
+      return;
+    }
+    _ticker ??= createTicker(_onTick);
+    if (!(_ticker?.isActive ?? false)) {
+      _last = Duration.zero;
+      _ticker!.start();
+    }
+  }
+
+  void _onTick(Duration elapsed) {
+    if (!mounted) return;
+    final motion =
+        AppScope.maybeOf(context)?.themePreference.motion ??
+            ThemePreference.defaultMotion;
+    if (motion <= ThemePreference.motionOff) {
+      _ticker?.stop();
+      _last = Duration.zero;
+      _phase.value = 0;
+      return;
+    }
+    final last = _last == Duration.zero ? elapsed : _last;
+    _last = elapsed;
+    final dt = (elapsed - last).inMicroseconds / 1000000;
+    if (dt <= 0 || dt > 0.08) return;
+    _phase.value = (_phase.value + dt * _cyclesPerSecond(motion)) % 1.0;
+  }
+
+  Widget _stillPetal(String asset) {
+    return Image.asset(
+      asset,
+      fit: BoxFit.contain,
+      filterQuality: FilterQuality.medium,
+    );
+  }
+
+  Widget _fallPetal({
+    required String asset,
+    required int index,
+    required double t,
+    required double motion,
+    required double width,
+    required double height,
+    required double span,
+    required double size,
+    required double x,
+  }) {
+    final phase = (t + index * 0.27) % 1.0;
+    final travel = height + size * 2.2;
+    final top = -size * 1.1 + travel * phase;
+    final sway =
+        math.sin(phase * math.pi * 3 + index * 1.4) * span * (0.03 + motion * 0.02);
+    final angle = phase * math.pi * (1.2 + motion * 0.6) + index * 0.7;
+    return Positioned(
+      left: (x + sway).clamp(-size, width),
+      top: top,
+      width: size,
+      child: Transform.rotate(
+        angle: angle,
+        child: Image.asset(
+          asset,
+          fit: BoxFit.contain,
+          filterQuality: FilterQuality.medium,
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final dark = Theme.of(context).brightness == Brightness.dark;
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final width = constraints.maxWidth;
-        final height = constraints.maxHeight;
-        final span = scaleByWidth
-            ? width
-            : constraints.biggest.shortestSide;
-        final paddingBottom = MediaQuery.paddingOf(context).bottom;
-        final petalBottom = liftForNav ? 66 + paddingBottom : height * 0.04;
-        final petal90 = dark
-            ? AppSkinAssets.petal90Dark
-            : AppSkinAssets.petal90Light;
-        final petal180 = dark
-            ? AppSkinAssets.petal180Dark
-            : AppSkinAssets.petal180Light;
-        final petal270 = dark
-            ? AppSkinAssets.petal270Dark
-            : AppSkinAssets.petal270Light;
-        final hills = dark
-            ? AppSkinAssets.hillsDark
-            : AppSkinAssets.hillsLight;
-        final hillsHeight = _SkinGround.heightOf(
-          width,
-          height,
-          assetRatio: 600 / 2000,
-          maxFraction: 0.32,
-        );
-
-        Widget petal(String asset) {
-          return Image.asset(
-            asset,
-            fit: BoxFit.contain,
-            filterQuality: FilterQuality.medium,
+    final preference = AppScope.maybeOf(context)?.themePreference;
+    Widget body() {
+      final motion = preference?.motion ?? ThemePreference.defaultMotion;
+      _syncTicker(motion);
+      return LayoutBuilder(
+        builder: (context, constraints) {
+          final width = constraints.maxWidth;
+          final height = constraints.maxHeight;
+          final span = widget.scaleByWidth
+              ? width
+              : constraints.biggest.shortestSide;
+          final paddingBottom = MediaQuery.paddingOf(context).bottom;
+          final petalBottom =
+              widget.liftForNav ? 66 + paddingBottom : height * 0.04;
+          final petal90 =
+              dark ? AppSkinAssets.petal90Dark : AppSkinAssets.petal90Light;
+          final petal180 =
+              dark ? AppSkinAssets.petal180Dark : AppSkinAssets.petal180Light;
+          final petal270 =
+              dark ? AppSkinAssets.petal270Dark : AppSkinAssets.petal270Light;
+          final hills = dark ? AppSkinAssets.hillsDark : AppSkinAssets.hillsLight;
+          final hillsHeight = _SkinGround.heightOf(
+            width,
+            height,
+            assetRatio: 600 / 2000,
+            maxFraction: 0.32,
           );
-        }
+          final simple = widget.simple;
+          Widget petals(double t) {
+            if (motion <= ThemePreference.motionOff) {
+              return Stack(
+                children: [
+                  Positioned(
+                    top: span * 0.02,
+                    right: span * 0.02,
+                    width: span * (simple ? 0.18 : 0.26),
+                    child: _stillPetal(petal90),
+                  ),
+                  Positioned(
+                    left: span * 0.02,
+                    top: span * (simple ? 0.04 : 0.16),
+                    width: span * (simple ? 0.14 : 0.2),
+                    child: _stillPetal(petal180),
+                  ),
+                  Positioned(
+                    left: span * 0.06,
+                    bottom: petalBottom,
+                    width: span * (simple ? 0.16 : 0.22),
+                    child: _stillPetal(petal270),
+                  ),
+                  if (!simple)
+                    Positioned(
+                      right: span * 0.04,
+                      bottom: petalBottom + span * 0.08,
+                      width: span * 0.18,
+                      child: _stillPetal(petal90),
+                    ),
+                ],
+              );
+            }
+            final sizes = simple
+                ? [span * 0.18, span * 0.14, span * 0.16]
+                : [span * 0.22, span * 0.18, span * 0.2, span * 0.16];
+            final xs = simple
+                ? [width - span * 0.22, span * 0.04, span * 0.42]
+                : [
+                    width - span * 0.26,
+                    span * 0.04,
+                    span * 0.38,
+                    width - span * 0.42,
+                  ];
+            final assets = [petal90, petal180, petal270, petal90];
+            return Stack(
+              children: [
+                for (var i = 0; i < sizes.length; i++)
+                  _fallPetal(
+                    asset: assets[i],
+                    index: i,
+                    t: t,
+                    motion: motion,
+                    width: width,
+                    height: height,
+                    span: span,
+                    size: sizes[i],
+                    x: xs[i],
+                  ),
+              ],
+            );
+          }
 
-        return IgnorePointer(
-          child: Stack(
-            children: [
-              Positioned(
-                left: 0,
-                right: 0,
-                bottom: 0,
-                height: hillsHeight,
-                child: _SkinGround.cover(
-                  hills,
-                  width: width,
-                  bandHeight: hillsHeight,
-                  assetRatio: 600 / 2000,
-                ),
-              ),
-              Positioned(
-                top: span * 0.02,
-                right: span * 0.02,
-                width: span * (simple ? 0.18 : 0.26),
-                child: petal(petal90),
-              ),
-              Positioned(
-                left: span * 0.02,
-                top: span * (simple ? 0.04 : 0.16),
-                width: span * (simple ? 0.14 : 0.2),
-                child: petal(petal180),
-              ),
-              Positioned(
-                left: span * 0.06,
-                bottom: petalBottom,
-                width: span * (simple ? 0.16 : 0.22),
-                child: petal(petal270),
-              ),
-              if (!simple)
+          return IgnorePointer(
+            child: Stack(
+              children: [
                 Positioned(
-                  right: span * 0.04,
-                  bottom: petalBottom + span * 0.08,
-                  width: span * 0.18,
-                  child: petal(petal90),
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  height: hillsHeight,
+                  child: _SkinGround.cover(
+                    hills,
+                    width: width,
+                    bandHeight: hillsHeight,
+                    assetRatio: 600 / 2000,
+                  ),
                 ),
-            ],
-          ),
-        );
-      },
+                if (motion <= ThemePreference.motionOff)
+                  petals(0)
+                else
+                  RepaintBoundary(
+                    child: ValueListenableBuilder<double>(
+                      valueListenable: _phase,
+                      builder: (context, t, _) => petals(t),
+                    ),
+                  ),
+              ],
+            ),
+          );
+        },
+      );
+    }
+
+    return TickerMode(
+      enabled: widget.playing,
+      child: preference == null
+          ? body()
+          : ListenableBuilder(
+              listenable: preference,
+              builder: (context, _) => body(),
+            ),
     );
   }
 }
 
-class _CloverDecorations extends StatelessWidget {
+class _CloverDecorations extends StatefulWidget {
   const _CloverDecorations({
     required this.liftForNav,
     this.scaleByWidth = false,
     this.simple = false,
+    this.playing = true,
   });
 
   final bool liftForNav;
   final bool scaleByWidth;
   final bool simple;
+  final bool playing;
+
+  @override
+  State<_CloverDecorations> createState() => _CloverDecorationsState();
+}
+
+class _CloverDecorationsState extends State<_CloverDecorations>
+    with SingleTickerProviderStateMixin {
+  Ticker? _ticker;
+  final _phase = ValueNotifier<double>(0);
+  var _last = Duration.zero;
+
+  static double _cyclesPerSecond(double motion) {
+    const slow = 1 / 7;
+    const fast = 1 / 2.4;
+    return slow + (fast - slow) * motion.clamp(0.0, 1.0);
+  }
+
+  @override
+  void dispose() {
+    _ticker?.dispose();
+    _phase.dispose();
+    super.dispose();
+  }
+
+  void _syncTicker(double motion) {
+    if (motion <= ThemePreference.motionOff) {
+      _ticker?.stop();
+      _last = Duration.zero;
+      _phase.value = 0;
+      return;
+    }
+    _ticker ??= createTicker(_onTick);
+    if (!(_ticker?.isActive ?? false)) {
+      _last = Duration.zero;
+      _ticker!.start();
+    }
+  }
+
+  void _onTick(Duration elapsed) {
+    if (!mounted) return;
+    final motion =
+        AppScope.maybeOf(context)?.themePreference.motion ??
+            ThemePreference.defaultMotion;
+    if (motion <= ThemePreference.motionOff) {
+      _ticker?.stop();
+      _last = Duration.zero;
+      _phase.value = 0;
+      return;
+    }
+    final last = _last == Duration.zero ? elapsed : _last;
+    _last = elapsed;
+    final dt = (elapsed - last).inMicroseconds / 1000000;
+    if (dt <= 0 || dt > 0.08) return;
+    _phase.value = (_phase.value + dt * _cyclesPerSecond(motion)) % 1.0;
+  }
+
+  Widget _clover({
+    required String asset,
+    required int index,
+    required double angle,
+    required double t,
+    required double motion,
+  }) {
+    Widget child = Image.asset(
+      asset,
+      fit: BoxFit.contain,
+      filterQuality: FilterQuality.medium,
+    );
+    if (motion <= ThemePreference.motionOff) {
+      if (angle != 0) child = Transform.rotate(angle: angle, child: child);
+      return child;
+    }
+    final wave = math.sin((t + index * 0.22) * math.pi * 2);
+    final wave2 = math.cos((t + index * 0.31) * math.pi * 2);
+    final amp = 3.0 + motion * 7.0;
+    final tilt = (0.05 + motion * 0.09) * wave;
+    return Transform.translate(
+      offset: Offset(wave * amp * 0.45, wave2 * amp * 0.35),
+      child: Transform.rotate(angle: angle + tilt, child: child),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final dark = Theme.of(context).brightness == Brightness.dark;
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final width = constraints.maxWidth;
-        final height = constraints.maxHeight;
-        final span = scaleByWidth
-            ? width
-            : constraints.biggest.shortestSide;
-        final paddingBottom = MediaQuery.paddingOf(context).bottom;
-        final cloverBottomLift = liftForNav ? 66 + paddingBottom : height * 0.04;
-        final decoration = dark
-            ? AppSkinAssets.cloverDecorationDark
-            : AppSkinAssets.cloverDecorationLight;
-        final hills = dark
-            ? AppSkinAssets.cloverBottomDark
-            : AppSkinAssets.cloverBottomLight;
-        final hillsHeight = _SkinGround.heightOf(
-          width,
-          height,
-          assetRatio: 600 / 2000,
-          maxFraction: 0.32,
-        );
-
-        Widget clover({double angle = 0}) {
-          Widget child = Image.asset(
-            decoration,
-            fit: BoxFit.contain,
-            filterQuality: FilterQuality.medium,
+    final preference = AppScope.maybeOf(context)?.themePreference;
+    Widget body() {
+      final motion = preference?.motion ?? ThemePreference.defaultMotion;
+      _syncTicker(motion);
+      return LayoutBuilder(
+        builder: (context, constraints) {
+          final width = constraints.maxWidth;
+          final height = constraints.maxHeight;
+          final span = widget.scaleByWidth
+              ? width
+              : constraints.biggest.shortestSide;
+          final paddingBottom = MediaQuery.paddingOf(context).bottom;
+          final cloverBottomLift =
+              widget.liftForNav ? 66 + paddingBottom : height * 0.04;
+          final decoration = dark
+              ? AppSkinAssets.cloverDecorationDark
+              : AppSkinAssets.cloverDecorationLight;
+          final hills = dark
+              ? AppSkinAssets.cloverBottomDark
+              : AppSkinAssets.cloverBottomLight;
+          final hillsHeight = _SkinGround.heightOf(
+            width,
+            height,
+            assetRatio: 600 / 2000,
+            maxFraction: 0.32,
           );
-          if (angle != 0) {
-            child = Transform.rotate(angle: angle, child: child);
-          }
-          return child;
-        }
-
-        return IgnorePointer(
-          child: Stack(
-            children: [
-              Positioned(
-                left: 0,
-                right: 0,
-                bottom: 0,
-                height: hillsHeight,
-                child: _SkinGround.cover(
-                  hills,
-                  width: width,
-                  bandHeight: hillsHeight,
-                  assetRatio: 600 / 2000,
-                ),
-              ),
-              Positioned(
-                top: span * 0.02,
-                right: span * 0.02,
-                width: span * (simple ? 0.18 : 0.26),
-                child: clover(angle: math.pi / 8),
-              ),
-              Positioned(
-                left: span * 0.02,
-                top: span * (simple ? 0.04 : 0.16),
-                width: span * (simple ? 0.14 : 0.2),
-                child: clover(angle: -math.pi / 7),
-              ),
-              Positioned(
-                left: span * 0.06,
-                bottom: cloverBottomLift,
-                width: span * (simple ? 0.16 : 0.22),
-                child: clover(angle: math.pi / 5),
-              ),
-              if (!simple)
+          final simple = widget.simple;
+          Widget clovers(double t) {
+            return Stack(
+              children: [
                 Positioned(
-                  right: span * 0.04,
-                  bottom: cloverBottomLift + span * 0.08,
-                  width: span * 0.18,
-                  child: clover(angle: -math.pi / 10),
+                  top: span * 0.02,
+                  right: span * 0.02,
+                  width: span * (simple ? 0.18 : 0.26),
+                  child: _clover(
+                    asset: decoration,
+                    index: 0,
+                    angle: math.pi / 8,
+                    t: t,
+                    motion: motion,
+                  ),
                 ),
-            ],
-          ),
-        );
-      },
+                Positioned(
+                  left: span * 0.02,
+                  top: span * (simple ? 0.04 : 0.16),
+                  width: span * (simple ? 0.14 : 0.2),
+                  child: _clover(
+                    asset: decoration,
+                    index: 1,
+                    angle: -math.pi / 7,
+                    t: t,
+                    motion: motion,
+                  ),
+                ),
+                Positioned(
+                  left: span * 0.06,
+                  bottom: cloverBottomLift,
+                  width: span * (simple ? 0.16 : 0.22),
+                  child: _clover(
+                    asset: decoration,
+                    index: 2,
+                    angle: math.pi / 5,
+                    t: t,
+                    motion: motion,
+                  ),
+                ),
+                if (!simple)
+                  Positioned(
+                    right: span * 0.04,
+                    bottom: cloverBottomLift + span * 0.08,
+                    width: span * 0.18,
+                    child: _clover(
+                      asset: decoration,
+                      index: 3,
+                      angle: -math.pi / 10,
+                      t: t,
+                      motion: motion,
+                    ),
+                  ),
+              ],
+            );
+          }
+
+          return IgnorePointer(
+            child: Stack(
+              children: [
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  height: hillsHeight,
+                  child: _SkinGround.cover(
+                    hills,
+                    width: width,
+                    bandHeight: hillsHeight,
+                    assetRatio: 600 / 2000,
+                  ),
+                ),
+                if (motion <= ThemePreference.motionOff)
+                  clovers(0)
+                else
+                  RepaintBoundary(
+                    child: ValueListenableBuilder<double>(
+                      valueListenable: _phase,
+                      builder: (context, t, _) => clovers(t),
+                    ),
+                  ),
+              ],
+            ),
+          );
+        },
+      );
+    }
+
+    return TickerMode(
+      enabled: widget.playing,
+      child: preference == null
+          ? body()
+          : ListenableBuilder(
+              listenable: preference,
+              builder: (context, _) => body(),
+            ),
     );
   }
 }
 
-class _FluffyMascotDecorations extends StatelessWidget {
+class _FluffyMascotDecorations extends StatefulWidget {
   const _FluffyMascotDecorations({
     required this.liftForNav,
     required this.faceLight,
@@ -1221,11 +1529,19 @@ class _FluffyMascotDecorations extends StatelessWidget {
     required this.hillTintDark,
     this.scaleByWidth = false,
     this.simple = false,
+    this.playing = true,
+    this.moves = false,
+    this.hops = false,
+    this.beats = false,
   });
 
   final bool liftForNav;
   final bool scaleByWidth;
   final bool simple;
+  final bool playing;
+  final bool moves;
+  final bool hops;
+  final bool beats;
   final String faceLight;
   final String faceDark;
   final String bottomLight;
@@ -1236,133 +1552,518 @@ class _FluffyMascotDecorations extends StatelessWidget {
   final Color hillTintDark;
 
   @override
+  State<_FluffyMascotDecorations> createState() =>
+      _FluffyMascotDecorationsState();
+}
+
+class _FluffyMascotDecorationsState extends State<_FluffyMascotDecorations>
+    with SingleTickerProviderStateMixin {
+  Ticker? _ticker;
+  final _phase = ValueNotifier<double>(0);
+  var _last = Duration.zero;
+
+  static double _cyclesPerSecond(
+    double motion, {
+    required bool hops,
+    required bool beats,
+  }) {
+    final slow = beats
+        ? 1 / 2.4
+        : hops
+            ? 1 / 3.6
+            : 1 / 6;
+    final fast = beats
+        ? 1 / 1.15
+        : hops
+            ? 1 / 1.8
+            : 1 / 2.8;
+    return slow + (fast - slow) * motion.clamp(0.0, 1.0);
+  }
+
+  @override
+  void dispose() {
+    _ticker?.dispose();
+    _phase.dispose();
+    super.dispose();
+  }
+
+  void _syncTicker(double motion) {
+    if (!widget.moves || motion <= ThemePreference.motionOff) {
+      _ticker?.stop();
+      _last = Duration.zero;
+      _phase.value = 0;
+      return;
+    }
+    _ticker ??= createTicker(_onTick);
+    if (!(_ticker?.isActive ?? false)) {
+      _last = Duration.zero;
+      _ticker!.start();
+    }
+  }
+
+  void _onTick(Duration elapsed) {
+    if (!mounted) return;
+    final motion =
+        AppScope.maybeOf(context)?.themePreference.motion ??
+            ThemePreference.defaultMotion;
+    if (!widget.moves || motion <= ThemePreference.motionOff) {
+      _ticker?.stop();
+      _last = Duration.zero;
+      _phase.value = 0;
+      return;
+    }
+    final last = _last == Duration.zero ? elapsed : _last;
+    _last = elapsed;
+    final dt = (elapsed - last).inMicroseconds / 1000000;
+    if (dt <= 0 || dt > 0.08) return;
+    _phase.value = (_phase.value +
+            dt *
+                _cyclesPerSecond(
+                  motion,
+                  hops: widget.hops,
+                  beats: widget.beats,
+                )) %
+        1.0;
+  }
+
+  @override
   Widget build(BuildContext context) {
     final dark = Theme.of(context).brightness == Brightness.dark;
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final width = constraints.maxWidth;
-        final height = constraints.maxHeight;
-        final span = scaleByWidth
-            ? width
-            : constraints.biggest.shortestSide;
-        final paddingBottom = MediaQuery.paddingOf(context).bottom;
-        final faceBottomLift = liftForNav ? 66 + paddingBottom : height * 0.04;
-        final safe = _LogoSafe(
-          screenWidth: width,
-          paddingTop: MediaQuery.paddingOf(context).top,
-          enabled: !simple,
-        );
-        final decoration = dark ? faceDark : faceLight;
-        final hills = dark ? bottomDark : bottomLight;
-        final faceTint = dark ? faceTintDark : faceTintLight;
-        final hillTint = dark ? hillTintDark : hillTintLight;
-        final hillsHeight = _SkinGround.heightOf(
-          width,
-          height,
-          assetRatio: 600 / 2000,
-          maxFraction: 0.32,
-        );
-
-        Widget tinted(String asset, Color color, {BoxFit fit = BoxFit.contain}) {
-          return ColorFiltered(
-            colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
-            child: Image.asset(
-              asset,
-              fit: fit,
-              filterQuality: FilterQuality.medium,
-            ),
+    final preference = AppScope.maybeOf(context)?.themePreference;
+    Widget body() {
+      final motion = widget.moves
+          ? (preference?.motion ?? ThemePreference.defaultMotion)
+          : 0.0;
+      _syncTicker(motion);
+      return LayoutBuilder(
+        builder: (context, constraints) {
+          final width = constraints.maxWidth;
+          final height = constraints.maxHeight;
+          final span = widget.scaleByWidth
+              ? width
+              : constraints.biggest.shortestSide;
+          final paddingBottom = MediaQuery.paddingOf(context).bottom;
+          final faceBottomLift =
+              widget.liftForNav ? 66 + paddingBottom : height * 0.04;
+          final safe = _LogoSafe(
+            screenWidth: width,
+            paddingTop: MediaQuery.paddingOf(context).top,
+            enabled: !widget.simple,
           );
-        }
-
-        Widget face({double angle = 0}) {
-          Widget child = Opacity(
-            opacity: dark ? 0.55 : 0.42,
-            child: tinted(decoration, faceTint),
+          final decoration = dark ? widget.faceDark : widget.faceLight;
+          final hills = dark ? widget.bottomDark : widget.bottomLight;
+          final faceTint = dark ? widget.faceTintDark : widget.faceTintLight;
+          final hillTint = dark ? widget.hillTintDark : widget.hillTintLight;
+          final hillsHeight = _SkinGround.heightOf(
+            width,
+            height,
+            assetRatio: 600 / 2000,
+            maxFraction: 0.32,
           );
-          if (angle != 0) {
-            child = Transform.rotate(angle: angle, child: child);
+
+          Widget tinted(String asset, Color color,
+              {BoxFit fit = BoxFit.contain}) {
+            return ColorFiltered(
+              colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
+              child: Image.asset(
+                asset,
+                fit: fit,
+                filterQuality: FilterQuality.medium,
+              ),
+            );
           }
-          return child;
-        }
 
-        final compact = scaleByWidth || simple;
-        final faces = compact
-            ? <Widget>[
-                Positioned(
-                  top: height * 0.04,
-                  right: width * 0.03,
-                  width: math.min(width, height) * 0.22,
-                  child: face(angle: 0.12),
+          Widget face({
+            required int index,
+            required double t,
+            double angle = 0,
+          }) {
+            Widget child = Opacity(
+              opacity: dark ? 0.55 : 0.42,
+              child: tinted(decoration, faceTint),
+            );
+            if (angle != 0) {
+              child = Transform.rotate(angle: angle, child: child);
+            }
+            if (motion <= ThemePreference.motionOff) return child;
+            if (widget.beats) {
+              final p = (t + index * 0.07) % 1.0;
+              double beat(double start, double dur) {
+                if (p < start || p > start + dur) return 0;
+                return math.sin((p - start) / dur * math.pi);
+              }
+              final pulse = math.max(beat(0.0, 0.16), beat(0.20, 0.14));
+              final scale = 1 + pulse * (0.045 + motion * 0.09);
+              return Transform.scale(scale: scale, child: child);
+            }
+            if (widget.hops) {
+              final cycle = (t + index * 0.22) % 1.0;
+              final lift = cycle < 0.42
+                  ? math.sin(cycle / 0.42 * math.pi)
+                  : 0.0;
+              final sway = math.sin((t + index * 0.31) * math.pi * 2);
+              final amp = 3.0 + motion * 8.0;
+              return Transform.translate(
+                offset: Offset(sway * amp * 0.12, -lift * amp * 0.95),
+                child: Transform.rotate(
+                  angle: sway * (0.02 + motion * 0.04),
+                  child: child,
                 ),
-                Positioned(
-                  left: width * 0.04,
-                  bottom: height * 0.08,
-                  width: math.min(width, height) * 0.2,
-                  child: face(angle: -0.1),
-                ),
-                Positioned(
-                  right: width * 0.08,
-                  bottom: height * 0.22,
-                  width: math.min(width, height) * 0.16,
-                  child: face(angle: 0.06),
-                ),
-              ]
-            : <Widget>[
-                Positioned(
-                  top: span * 0.02,
-                  right: span * 0.02,
-                  width: span * 0.36,
-                  child: face(angle: 0.12),
-                ),
-                safe.topLeft(
-                  left: span * 0.02,
-                  top: span * 0.14,
-                  width: span * 0.3,
-                  child: face(angle: -0.14),
-                ),
-                Positioned(
-                  left: span * 0.04,
-                  bottom: faceBottomLift,
-                  width: span * 0.32,
-                  child: face(angle: 0.08),
-                ),
-                Positioned(
-                  right: span * 0.03,
-                  bottom: faceBottomLift + span * 0.06,
-                  width: span * 0.28,
-                  child: face(angle: -0.1),
-                ),
-                Positioned(
-                  top: height * 0.32,
-                  right: span * 0.06,
-                  width: span * 0.3,
-                  child: face(angle: 0.06),
-                ),
-              ];
+              );
+            }
+            final wave = math.sin((t + index * 0.18) * math.pi * 2);
+            final wave2 = math.cos((t + index * 0.27) * math.pi * 2);
+            final amp = 2.5 + motion * 6.0;
+            return Transform.translate(
+              offset: Offset(wave * amp * 0.3, wave2 * amp * 0.55),
+              child: Transform.rotate(
+                angle: wave * (0.03 + motion * 0.05),
+                child: child,
+              ),
+            );
+          }
 
-        return IgnorePointer(
-          child: Stack(
-            children: [
-              Positioned(
-                left: 0,
-                right: 0,
-                bottom: 0,
-                height: hillsHeight,
-                child: ColorFiltered(
-                  colorFilter: ColorFilter.mode(hillTint, BlendMode.srcIn),
-                  child: _SkinGround.cover(
-                    hills,
-                    width: width,
-                    bandHeight: hillsHeight,
-                    assetRatio: 600 / 2000,
+          Widget faces(double t) {
+            final compact = widget.scaleByWidth || widget.simple;
+            return Stack(
+              children: compact
+                  ? [
+                      Positioned(
+                        top: height * 0.04,
+                        right: width * 0.03,
+                        width: math.min(width, height) * 0.22,
+                        child: face(index: 0, t: t, angle: 0.12),
+                      ),
+                      Positioned(
+                        left: width * 0.04,
+                        bottom: height * 0.08,
+                        width: math.min(width, height) * 0.2,
+                        child: face(index: 1, t: t, angle: -0.1),
+                      ),
+                      Positioned(
+                        right: width * 0.08,
+                        bottom: height * 0.22,
+                        width: math.min(width, height) * 0.16,
+                        child: face(index: 2, t: t, angle: 0.06),
+                      ),
+                    ]
+                  : [
+                      Positioned(
+                        top: span * 0.02,
+                        right: span * 0.02,
+                        width: span * 0.36,
+                        child: face(index: 0, t: t, angle: 0.12),
+                      ),
+                      safe.topLeft(
+                        left: span * 0.02,
+                        top: span * 0.14,
+                        width: span * 0.3,
+                        child: face(index: 1, t: t, angle: -0.14),
+                      ),
+                      Positioned(
+                        left: span * 0.04,
+                        bottom: faceBottomLift,
+                        width: span * 0.32,
+                        child: face(index: 2, t: t, angle: 0.08),
+                      ),
+                      Positioned(
+                        right: span * 0.03,
+                        bottom: faceBottomLift + span * 0.06,
+                        width: span * 0.28,
+                        child: face(index: 3, t: t, angle: -0.1),
+                      ),
+                      Positioned(
+                        top: height * 0.32,
+                        right: span * 0.06,
+                        width: span * 0.3,
+                        child: face(index: 4, t: t, angle: 0.06),
+                      ),
+                    ],
+            );
+          }
+
+          return IgnorePointer(
+            child: Stack(
+              children: [
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  height: hillsHeight,
+                  child: ColorFiltered(
+                    colorFilter: ColorFilter.mode(hillTint, BlendMode.srcIn),
+                    child: _SkinGround.cover(
+                      hills,
+                      width: width,
+                      bandHeight: hillsHeight,
+                      assetRatio: 600 / 2000,
+                    ),
                   ),
                 ),
-              ),
-              ...faces,
-            ],
-          ),
-        );
-      },
+                if (motion <= ThemePreference.motionOff)
+                  faces(0)
+                else
+                  RepaintBoundary(
+                    child: ValueListenableBuilder<double>(
+                      valueListenable: _phase,
+                      builder: (context, t, _) => faces(t),
+                    ),
+                  ),
+              ],
+            ),
+          );
+        },
+      );
+    }
+
+    return TickerMode(
+      enabled: widget.playing,
+      child: preference == null
+          ? body()
+          : ListenableBuilder(
+              listenable: preference,
+              builder: (context, _) => body(),
+            ),
+    );
+  }
+}
+
+bool _sceneMoving(double motion) => motion > ThemePreference.motionOff;
+
+Widget _sceneShift(
+  Widget child,
+  double motion,
+  double t, {
+  int index = 0,
+}) {
+  if (!_sceneMoving(motion)) return child;
+  final wave = math.sin((t + index * 0.21) * math.pi * 2);
+  final look = math.sin((t * 0.55 + index * 0.4) * math.pi * 2);
+  return Transform.rotate(
+    alignment: Alignment.bottomCenter,
+    angle: wave * (0.035 + motion * 0.05) + look * 0.016,
+    child: Transform.scale(
+      alignment: Alignment.bottomCenter,
+      scaleX: 1 + wave * (0.014 + motion * 0.022),
+      scaleY: 1 - wave * (0.008 + motion * 0.012),
+      child: child,
+    ),
+  );
+}
+
+Widget _sceneBreathe(
+  Widget child,
+  double motion,
+  double t, {
+  int index = 0,
+}) {
+  if (!_sceneMoving(motion)) return child;
+  final wave = math.sin((t + index * 0.18) * math.pi * 2);
+  final amp = 2.0 + motion * 5.0;
+  return Transform.translate(
+    offset: Offset(wave * amp * 0.12, wave * amp * 0.45),
+    child: child,
+  );
+}
+
+Widget _sceneSway(
+  Widget child,
+  double motion,
+  double t, {
+  int index = 0,
+}) {
+  if (!_sceneMoving(motion)) return child;
+  final wave = math.sin((t + index * 0.2) * math.pi * 2);
+  final amp = 2.5 + motion * 6.0;
+  return Transform.translate(
+    offset: Offset(wave * amp * 0.7, wave.abs() * amp * 0.15),
+    child: Transform.rotate(
+      angle: wave * (0.04 + motion * 0.06),
+      child: child,
+    ),
+  );
+}
+
+Widget _sceneFloat(
+  Widget child,
+  double motion,
+  double t, {
+  int index = 0,
+}) {
+  if (!_sceneMoving(motion)) return child;
+  final wave = math.sin((t + index * 0.17) * math.pi * 2);
+  final amp = 2.5 + motion * 7.0;
+  return Transform.translate(
+    offset: Offset(wave * amp * 0.18, wave * amp * 0.85),
+    child: child,
+  );
+}
+
+Widget _sceneTilt(
+  Widget child,
+  double motion,
+  double t, {
+  int index = 0,
+}) {
+  if (!_sceneMoving(motion)) return child;
+  final wave = math.sin((t + index * 0.12) * math.pi * 2);
+  return Transform.rotate(
+    angle: wave * (0.05 + motion * 0.08),
+    child: child,
+  );
+}
+
+Widget _scenePulse(
+  Widget child,
+  double motion,
+  double t, {
+  int index = 0,
+}) {
+  if (!_sceneMoving(motion)) return child;
+  final wave = math.sin((t + index * 0.1) * math.pi * 2);
+  return Transform.scale(
+    scale: 1 + wave * (0.03 + motion * 0.05),
+    child: child,
+  );
+}
+
+Widget _sceneBob(
+  Widget child,
+  double motion,
+  double t, {
+  int index = 0,
+}) {
+  if (!_sceneMoving(motion)) return child;
+  final wave = math.sin((t + index * 0.16) * math.pi * 2);
+  final amp = 2.2 + motion * 5.5;
+  return Transform.translate(
+    offset: Offset(wave * amp * 0.18, -wave.abs() * amp * 0.55),
+    child: child,
+  );
+}
+
+Widget _sceneFall({
+  required Widget child,
+  required double motion,
+  required double t,
+  required int index,
+  required double width,
+  required double height,
+  required double size,
+  required double restLeft,
+  required double restTop,
+}) {
+  if (!_sceneMoving(motion)) {
+    return Positioned(
+      left: restLeft,
+      top: restTop,
+      width: size,
+      child: child,
+    );
+  }
+  final phase = (t + index * 0.27) % 1.0;
+  final travel = height + size * 2.2;
+  final top = -size * 1.1 + travel * phase;
+  final sway = math.sin(phase * math.pi * 3 + index * 1.3) * size * 0.4;
+  return Positioned(
+    left: (restLeft + sway).clamp(-size, width),
+    top: top,
+    width: size,
+    child: child,
+  );
+}
+
+class _SceneMotion extends StatefulWidget {
+  const _SceneMotion({
+    required this.playing,
+    required this.builder,
+    this.fall = false,
+  });
+
+  final bool playing;
+  final bool fall;
+  final Widget Function(BuildContext context, double motion, double t) builder;
+
+  @override
+  State<_SceneMotion> createState() => _SceneMotionState();
+}
+
+class _SceneMotionState extends State<_SceneMotion>
+    with SingleTickerProviderStateMixin {
+  Ticker? _ticker;
+  final _phase = ValueNotifier<double>(0);
+  var _last = Duration.zero;
+
+  static double _cyclesPerSecond(double motion, {required bool fall}) {
+    final slow = fall ? 1 / 16 : 1 / 6;
+    final fast = fall ? 1 / 3.2 : 1 / 2.8;
+    return slow + (fast - slow) * motion.clamp(0.0, 1.0);
+  }
+
+  @override
+  void dispose() {
+    _ticker?.dispose();
+    _phase.dispose();
+    super.dispose();
+  }
+
+  void _syncTicker(double motion) {
+    if (!_sceneMoving(motion)) {
+      _ticker?.stop();
+      _last = Duration.zero;
+      _phase.value = 0;
+      return;
+    }
+    _ticker ??= createTicker(_onTick);
+    if (!(_ticker?.isActive ?? false)) {
+      _last = Duration.zero;
+      _ticker!.start();
+    }
+  }
+
+  void _onTick(Duration elapsed) {
+    if (!mounted) return;
+    final motion = AppScope.maybeOf(context)?.themePreference.motion ??
+        ThemePreference.defaultMotion;
+    if (!_sceneMoving(motion)) {
+      _ticker?.stop();
+      _last = Duration.zero;
+      _phase.value = 0;
+      return;
+    }
+    final last = _last == Duration.zero ? elapsed : _last;
+    _last = elapsed;
+    final dt = (elapsed - last).inMicroseconds / 1000000;
+    if (dt <= 0 || dt > 0.08) return;
+    _phase.value =
+        (_phase.value + dt * _cyclesPerSecond(motion, fall: widget.fall)) % 1.0;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final preference = AppScope.maybeOf(context)?.themePreference;
+    Widget body() {
+      final motion = preference?.motion ?? ThemePreference.defaultMotion;
+      _syncTicker(motion);
+      if (!_sceneMoving(motion)) {
+        return widget.builder(context, motion, 0);
+      }
+      return RepaintBoundary(
+        child: ValueListenableBuilder<double>(
+          valueListenable: _phase,
+          builder: (context, t, _) => widget.builder(context, motion, t),
+        ),
+      );
+    }
+
+    return TickerMode(
+      enabled: widget.playing,
+      child: preference == null
+          ? body()
+          : ListenableBuilder(
+              listenable: preference,
+              builder: (context, _) => body(),
+            ),
     );
   }
 }
@@ -1372,84 +2073,86 @@ class _SummerBeachDecorations extends StatelessWidget {
     required this.liftForNav,
     this.scaleByWidth = false,
     this.simple = false,
+    this.playing = true,
   });
 
   final bool liftForNav;
   final bool scaleByWidth;
   final bool simple;
+  final bool playing;
 
   @override
   Widget build(BuildContext context) {
     final dark = Theme.of(context).brightness == Brightness.dark;
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final width = constraints.maxWidth;
-        final height = constraints.maxHeight;
-        final span = scaleByWidth
-            ? width
-            : constraints.biggest.shortestSide;
-        final paddingBottom = MediaQuery.paddingOf(context).bottom;
-        final groundBottom = liftForNav ? 58 + paddingBottom : height * 0.02;
-        final safe = _LogoSafe(
-          screenWidth: width,
-          paddingTop: MediaQuery.paddingOf(context).top,
-          enabled: !simple,
-        );
-        final sun = dark ? AppSkinAssets.sunDark : AppSkinAssets.sunLight;
-        final duck = dark ? AppSkinAssets.duckDark : AppSkinAssets.duckLight;
-        final shell =
-            dark ? AppSkinAssets.shellDark : AppSkinAssets.shellLight;
-        final wave = dark ? AppSkinAssets.waveDark : AppSkinAssets.waveLight;
-        final waveHeight = _SkinGround.heightOf(
-          width,
-          height,
-          assetRatio: 700 / 2000,
-        );
+    return _SceneMotion(
+      playing: playing,
+      builder: (context, motion, t) {
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            final width = constraints.maxWidth;
+            final height = constraints.maxHeight;
+            final span = scaleByWidth
+                ? width
+                : constraints.biggest.shortestSide;
+            final paddingBottom = MediaQuery.paddingOf(context).bottom;
+            final groundBottom = liftForNav ? 58 + paddingBottom : height * 0.02;
+            final sun = dark ? AppSkinAssets.sunDark : AppSkinAssets.sunLight;
+            final duck = dark ? AppSkinAssets.duckDark : AppSkinAssets.duckLight;
+            final shell =
+                dark ? AppSkinAssets.shellDark : AppSkinAssets.shellLight;
+            final wave = dark ? AppSkinAssets.waveDark : AppSkinAssets.waveLight;
+            final waveHeight = _SkinGround.heightOf(
+              width,
+              height,
+              assetRatio: 700 / 2000,
+            );
 
-        Widget sticker(String asset) {
-          return Image.asset(
-            asset,
-            fit: BoxFit.contain,
-            filterQuality: FilterQuality.medium,
-          );
-        }
+            Widget sticker(String asset) {
+              return Image.asset(
+                asset,
+                fit: BoxFit.contain,
+                filterQuality: FilterQuality.medium,
+              );
+            }
 
-        return IgnorePointer(
-          child: Stack(
-            children: [
-              Positioned(
-                left: 0,
-                right: 0,
-                bottom: 0,
-                height: waveHeight,
-                child: _SkinGround.cover(
-                  wave,
-                  width: width,
-                  bandHeight: waveHeight,
-                  assetRatio: 700 / 2000,
-                ),
+            return IgnorePointer(
+              child: Stack(
+                children: [
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    height: waveHeight,
+                    child: _SkinGround.cover(
+                      wave,
+                      width: width,
+                      bandHeight: waveHeight,
+                      assetRatio: 700 / 2000,
+                    ),
+                  ),
+                  if (!simple)
+                    Positioned(
+                      left: 0,
+                      bottom: groundBottom,
+                      width: span * 1.12,
+                      child: sticker(shell),
+                    ),
+                  Positioned(
+                    right: span * 0.05,
+                    bottom: groundBottom + span * 0.02,
+                    width: span * 0.28,
+                    child: _sceneSway(sticker(duck), motion, t),
+                  ),
+                  Positioned(
+                    top: span * 0.03,
+                    right: span * 0.03,
+                    width: span * 0.24,
+                    child: _scenePulse(sticker(sun), motion, t),
+                  ),
+                ],
               ),
-              if (!simple)
-              Positioned(
-                left: 0,
-                bottom: groundBottom,
-                width: span * 1.12,
-                child: sticker(shell),
-              ),
-              Positioned(
-                right: span * 0.05,
-                bottom: groundBottom + span * 0.02,
-                width: span * 0.28,
-                child: sticker(duck),
-              ),
-              Positioned(
-                top: span * 0.03,
-                right: span * 0.03,
-                width: span * 0.24,
-                child: sticker(sun),
-              ),
-            ],
-          ),
+            );
+          },
         );
       },
     );
@@ -1461,106 +2164,139 @@ class _SnowyWinterDecorations extends StatelessWidget {
     required this.liftForNav,
     this.scaleByWidth = false,
     this.simple = false,
+    this.playing = true,
   });
 
   final bool liftForNav;
   final bool scaleByWidth;
   final bool simple;
+  final bool playing;
 
   @override
   Widget build(BuildContext context) {
     final dark = Theme.of(context).brightness == Brightness.dark;
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final width = constraints.maxWidth;
-        final height = constraints.maxHeight;
-        final span = scaleByWidth
-            ? width
-            : constraints.biggest.shortestSide;
-        final paddingBottom = MediaQuery.paddingOf(context).bottom;
-        final groundBottom = liftForNav ? 58 + paddingBottom : height * 0.02;
-        final safe = _LogoSafe(
-          screenWidth: width,
-          paddingTop: MediaQuery.paddingOf(context).top,
-          enabled: !simple,
-        );
-        final snowman =
-            dark ? AppSkinAssets.snowmanDark : AppSkinAssets.snowmanLight;
-        final flake =
-            dark ? AppSkinAssets.snowflakeDark : AppSkinAssets.snowflakeLight;
-        final cloud =
-            dark ? AppSkinAssets.snowCloudDark : AppSkinAssets.snowCloudLight;
-        final ground = dark
-            ? AppSkinAssets.snowGroundDark
-            : AppSkinAssets.snowGroundLight;
-        final groundHeight = _SkinGround.heightOf(
-          width,
-          height,
-          maxFraction: 0.32,
-        );
+    return _SceneMotion(
+      playing: playing,
+      fall: true,
+      builder: (context, motion, t) {
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            final width = constraints.maxWidth;
+            final height = constraints.maxHeight;
+            final span = scaleByWidth
+                ? width
+                : constraints.biggest.shortestSide;
+            final paddingBottom = MediaQuery.paddingOf(context).bottom;
+            final groundBottom = liftForNav ? 58 + paddingBottom : height * 0.02;
+            final safe = _LogoSafe(
+              screenWidth: width,
+              paddingTop: MediaQuery.paddingOf(context).top,
+              enabled: !simple,
+            );
+            final snowman =
+                dark ? AppSkinAssets.snowmanDark : AppSkinAssets.snowmanLight;
+            final flake =
+                dark ? AppSkinAssets.snowflakeDark : AppSkinAssets.snowflakeLight;
+            final cloud =
+                dark ? AppSkinAssets.snowCloudDark : AppSkinAssets.snowCloudLight;
+            final ground = dark
+                ? AppSkinAssets.snowGroundDark
+                : AppSkinAssets.snowGroundLight;
+            final groundHeight = _SkinGround.heightOf(
+              width,
+              height,
+              maxFraction: 0.32,
+            );
 
-        Widget sticker(String asset) {
-          return Image.asset(
-            asset,
-            fit: BoxFit.contain,
-            filterQuality: FilterQuality.medium,
-          );
-        }
+            Widget sticker(String asset) {
+              return Image.asset(
+                asset,
+                fit: BoxFit.contain,
+                filterQuality: FilterQuality.medium,
+              );
+            }
 
-        return IgnorePointer(
-          child: Stack(
-            children: [
-              Positioned(
-                left: 0,
-                right: 0,
-                bottom: 0,
-                height: groundHeight,
-                child: _SkinGround.cover(
-                  ground,
-                  width: width,
-                  bandHeight: groundHeight,
-                ),
+            Widget flakeAt({
+              required int index,
+              required double left,
+              required double top,
+              required double size,
+              bool pin = false,
+            }) {
+              final at = pin
+                  ? safe.pin(left: left, top: top, width: size)
+                  : (left: left, top: top);
+              return _sceneFall(
+                child: sticker(flake),
+                motion: motion,
+                t: t,
+                index: index,
+                width: width,
+                height: height,
+                size: size,
+                restLeft: at.left,
+                restTop: at.top,
+              );
+            }
+
+            return IgnorePointer(
+              child: Stack(
+                children: [
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    height: groundHeight,
+                    child: _SkinGround.cover(
+                      ground,
+                      width: width,
+                      bandHeight: groundHeight,
+                    ),
+                  ),
+                  if (!simple) ...[
+                    flakeAt(
+                      index: 0,
+                      left: width - span * 0.2,
+                      top: span * 0.02,
+                      size: span * 0.16,
+                    ),
+                    flakeAt(
+                      index: 1,
+                      left: span * 0.08,
+                      top: span * 0.14,
+                      size: span * 0.12,
+                      pin: true,
+                    ),
+                    flakeAt(
+                      index: 2,
+                      left: width - span * 0.32,
+                      top: height * 0.26,
+                      size: span * 0.14,
+                    ),
+                    flakeAt(
+                      index: 3,
+                      left: width * 0.42,
+                      top: height * 0.4,
+                      size: span * 0.18,
+                      pin: true,
+                    ),
+                    safe.topLeft(
+                      left: span * 0.02,
+                      top: span * 0.02,
+                      width: span * 0.3,
+                      child: sticker(cloud),
+                    ),
+                  ],
+                  Positioned(
+                    right: span * 0.04,
+                    bottom: groundBottom,
+                    width: span * 0.28,
+                    child: sticker(snowman),
+                  ),
+                ],
               ),
-              if (!simple) ...[
-                Positioned(
-                  top: span * 0.02,
-                  right: span * 0.04,
-                  width: span * 0.16,
-                  child: sticker(flake),
-                ),
-                safe.topLeft(
-                  left: span * 0.08,
-                  top: span * 0.14,
-                  width: span * 0.12,
-                  child: sticker(flake),
-                ),
-                Positioned(
-                  top: height * 0.26,
-                  right: span * 0.18,
-                  width: span * 0.14,
-                  child: sticker(flake),
-                ),
-                safe.topLeft(
-                  left: width * 0.42,
-                  top: height * 0.4,
-                  width: span * 0.18,
-                  child: sticker(flake),
-                ),
-                safe.topLeft(
-                  left: span * 0.02,
-                  top: span * 0.02,
-                  width: span * 0.3,
-                  child: sticker(cloud),
-                ),
-              ],
-              Positioned(
-                right: span * 0.04,
-                bottom: groundBottom,
-                width: span * 0.28,
-                child: sticker(snowman),
-              ),
-            ],
-          ),
+            );
+          },
         );
       },
     );
@@ -1572,17 +2308,22 @@ class _SquishyBearDecorations extends StatelessWidget {
     required this.liftForNav,
     this.scaleByWidth = false,
     this.simple = false,
+    this.playing = true,
   });
 
   final bool liftForNav;
   final bool scaleByWidth;
   final bool simple;
+  final bool playing;
 
   @override
   Widget build(BuildContext context) {
     final dark = Theme.of(context).brightness == Brightness.dark;
-    return LayoutBuilder(
-      builder: (context, constraints) {
+    return _SceneMotion(
+      playing: playing,
+      builder: (context, motion, t) {
+        return LayoutBuilder(
+          builder: (context, constraints) {
         final width = constraints.maxWidth;
         final height = constraints.maxHeight;
         final span = scaleByWidth
@@ -1661,11 +2402,13 @@ class _SquishyBearDecorations extends StatelessWidget {
                 right: span * 0.04,
                 bottom: groundBottom,
                 width: span * 0.3,
-                child: sticker(bear),
+                child: _sceneBreathe(sticker(bear), motion, t),
               ),
             ],
           ),
         );
+      },
+    );
       },
     );
   }
@@ -1676,17 +2419,22 @@ class _StrawberryMilkDecorations extends StatelessWidget {
     required this.liftForNav,
     this.scaleByWidth = false,
     this.simple = false,
+    this.playing = true,
   });
 
   final bool liftForNav;
   final bool scaleByWidth;
   final bool simple;
+  final bool playing;
 
   @override
   Widget build(BuildContext context) {
     final dark = Theme.of(context).brightness == Brightness.dark;
-    return LayoutBuilder(
-      builder: (context, constraints) {
+    return _SceneMotion(
+      playing: playing,
+      builder: (context, motion, t) {
+        return LayoutBuilder(
+          builder: (context, constraints) {
         final width = constraints.maxWidth;
         final height = constraints.maxHeight;
         final span = scaleByWidth
@@ -1743,25 +2491,25 @@ class _StrawberryMilkDecorations extends StatelessWidget {
                   top: span * 0.03,
                   right: span * 0.04,
                   width: span * 0.16,
-                  child: sticker(berry),
+                  child: _sceneFloat(sticker(berry), motion, t, index: 0),
                 ),
                 safe.topLeft(
                   left: span * 0.06,
                   top: span * 0.14,
                   width: span * 0.13,
-                  child: sticker(berry),
+                  child: _sceneFloat(sticker(berry), motion, t, index: 1),
                 ),
                 safe.topLeft(
                   left: width * 0.44,
                   top: height * 0.34,
                   width: span * 0.15,
-                  child: sticker(berry),
+                  child: _sceneFloat(sticker(berry), motion, t, index: 2),
                 ),
                 safe.topLeft(
                   left: span * 0.1,
                   top: height * 0.5,
                   width: span * 0.12,
-                  child: sticker(berry),
+                  child: _sceneFloat(sticker(berry), motion, t, index: 3),
                 ),
                 safe.topLeft(
                   left: span * 0.28,
@@ -1774,11 +2522,13 @@ class _StrawberryMilkDecorations extends StatelessWidget {
                 right: span * 0.04,
                 bottom: groundBottom,
                 width: span * 0.28,
-                child: sticker(carton),
+                child: _sceneShift(sticker(carton), motion, t),
               ),
             ],
           ),
         );
+      },
+    );
       },
     );
   }
@@ -1789,17 +2539,22 @@ class _LovelyBearDecorations extends StatelessWidget {
     required this.liftForNav,
     this.scaleByWidth = false,
     this.simple = false,
+    this.playing = true,
   });
 
   final bool liftForNav;
   final bool scaleByWidth;
   final bool simple;
+  final bool playing;
 
   @override
   Widget build(BuildContext context) {
     final dark = Theme.of(context).brightness == Brightness.dark;
-    return LayoutBuilder(
-      builder: (context, constraints) {
+    return _SceneMotion(
+      playing: playing,
+      builder: (context, motion, t) {
+        return LayoutBuilder(
+          builder: (context, constraints) {
         final width = constraints.maxWidth;
         final height = constraints.maxHeight;
         final span = scaleByWidth
@@ -1853,7 +2608,7 @@ class _LovelyBearDecorations extends StatelessWidget {
                   left: span * 0.03,
                   top: span * 0.02,
                   width: span * 0.26,
-                  child: sticker(balloons),
+                  child: _sceneFloat(sticker(balloons), motion, t),
                 ),
                 Positioned(
                   left: span * 0.04,
@@ -1873,6 +2628,8 @@ class _LovelyBearDecorations extends StatelessWidget {
         );
       },
     );
+      },
+    );
   }
 }
 
@@ -1881,17 +2638,22 @@ class _RainyDayDecorations extends StatelessWidget {
     required this.liftForNav,
     this.scaleByWidth = false,
     this.simple = false,
+    this.playing = true,
   });
 
   final bool liftForNav;
   final bool scaleByWidth;
   final bool simple;
+  final bool playing;
 
   @override
   Widget build(BuildContext context) {
     final dark = Theme.of(context).brightness == Brightness.dark;
-    return LayoutBuilder(
-      builder: (context, constraints) {
+    return _SceneMotion(
+      playing: playing,
+      builder: (context, motion, t) {
+        return LayoutBuilder(
+          builder: (context, constraints) {
         final width = constraints.maxWidth;
         final height = constraints.maxHeight;
         final span = scaleByWidth
@@ -1942,7 +2704,7 @@ class _RainyDayDecorations extends StatelessWidget {
                   left: span * 0.03,
                   top: span * 0.02,
                   width: span * 0.24,
-                  child: sticker(umbrella),
+                  child: _sceneTilt(sticker(umbrella), motion, t),
                 ),
               Positioned(
                 right: span * 0.02,
@@ -1955,6 +2717,8 @@ class _RainyDayDecorations extends StatelessWidget {
         );
       },
     );
+      },
+    );
   }
 }
 
@@ -1963,17 +2727,22 @@ class _ConcertDayDecorations extends StatelessWidget {
     required this.liftForNav,
     this.scaleByWidth = false,
     this.simple = false,
+    this.playing = true,
   });
 
   final bool liftForNav;
   final bool scaleByWidth;
   final bool simple;
+  final bool playing;
 
   @override
   Widget build(BuildContext context) {
     final dark = Theme.of(context).brightness == Brightness.dark;
-    return LayoutBuilder(
-      builder: (context, constraints) {
+    return _SceneMotion(
+      playing: playing,
+      builder: (context, motion, t) {
+        return LayoutBuilder(
+          builder: (context, constraints) {
         final width = constraints.maxWidth;
         final height = constraints.maxHeight;
         final span = scaleByWidth
@@ -2008,15 +2777,21 @@ class _ConcertDayDecorations extends StatelessWidget {
                 left: (width - size) / 2,
                 bottom: groundBottom,
                 width: size,
-                child: Image.asset(
-                  guitarist,
-                  fit: BoxFit.contain,
-                  filterQuality: FilterQuality.medium,
+                child: _sceneBob(
+                  Image.asset(
+                    guitarist,
+                    fit: BoxFit.contain,
+                    filterQuality: FilterQuality.medium,
+                  ),
+                  motion,
+                  t,
                 ),
               ),
             ],
           ),
         );
+      },
+    );
       },
     );
   }
@@ -2027,17 +2802,22 @@ class _FluffyCloudDecorations extends StatelessWidget {
     required this.liftForNav,
     this.scaleByWidth = false,
     this.simple = false,
+    this.playing = true,
   });
 
   final bool liftForNav;
   final bool scaleByWidth;
   final bool simple;
+  final bool playing;
 
   @override
   Widget build(BuildContext context) {
     final dark = Theme.of(context).brightness == Brightness.dark;
-    return LayoutBuilder(
-      builder: (context, constraints) {
+    return _SceneMotion(
+      playing: playing,
+      builder: (context, motion, t) {
+        return LayoutBuilder(
+          builder: (context, constraints) {
         final width = constraints.maxWidth;
         final height = constraints.maxHeight;
         final span = scaleByWidth
@@ -2092,7 +2872,7 @@ class _FluffyCloudDecorations extends StatelessWidget {
                 left: span * 0.03,
                 bottom: groundBottom + span * 0.02,
                 width: span * 0.26,
-                child: sticker(sheep),
+                child: _sceneBreathe(sticker(sheep), motion, t),
               ),
               Positioned(
                 right: span * 0.03,
@@ -2105,6 +2885,8 @@ class _FluffyCloudDecorations extends StatelessWidget {
         );
       },
     );
+      },
+    );
   }
 }
 
@@ -2113,17 +2895,22 @@ class _CatVillageDecorations extends StatelessWidget {
     required this.liftForNav,
     this.scaleByWidth = false,
     this.simple = false,
+    this.playing = true,
   });
 
   final bool liftForNav;
   final bool scaleByWidth;
   final bool simple;
+  final bool playing;
 
   @override
   Widget build(BuildContext context) {
     final dark = Theme.of(context).brightness == Brightness.dark;
-    return LayoutBuilder(
-      builder: (context, constraints) {
+    return _SceneMotion(
+      playing: playing,
+      builder: (context, motion, t) {
+        return LayoutBuilder(
+          builder: (context, constraints) {
         final width = constraints.maxWidth;
         final height = constraints.maxHeight;
         final span = scaleByWidth
@@ -2180,17 +2967,19 @@ class _CatVillageDecorations extends StatelessWidget {
                 left: span * 0.02,
                 bottom: groundBottom + span * 0.02,
                 width: span * 0.28,
-                child: sticker(box),
+                child: _sceneShift(sticker(box), motion, t, index: 0),
               ),
               Positioned(
                 right: span * 0.02,
                 bottom: groundBottom,
                 width: span * 0.34,
-                child: sticker(pile),
+                child: _sceneShift(sticker(pile), motion, t, index: 1),
               ),
             ],
           ),
         );
+      },
+    );
       },
     );
   }
@@ -2201,17 +2990,22 @@ class _HamsterBakeryDecorations extends StatelessWidget {
     required this.liftForNav,
     this.scaleByWidth = false,
     this.simple = false,
+    this.playing = true,
   });
 
   final bool liftForNav;
   final bool scaleByWidth;
   final bool simple;
+  final bool playing;
 
   @override
   Widget build(BuildContext context) {
     final dark = Theme.of(context).brightness == Brightness.dark;
-    return LayoutBuilder(
-      builder: (context, constraints) {
+    return _SceneMotion(
+      playing: playing,
+      builder: (context, motion, t) {
+        return LayoutBuilder(
+          builder: (context, constraints) {
         final width = constraints.maxWidth;
         final height = constraints.maxHeight;
         final span = scaleByWidth
@@ -2277,11 +3071,13 @@ class _HamsterBakeryDecorations extends StatelessWidget {
                 right: span * 0.02,
                 bottom: groundBottom,
                 width: span * 0.34,
-                child: sticker(bakers),
+                child: _sceneBreathe(sticker(bakers), motion, t),
               ),
             ],
           ),
         );
+      },
+    );
       },
     );
   }
@@ -2292,17 +3088,22 @@ class _OtterBathhouseDecorations extends StatelessWidget {
     required this.liftForNav,
     this.scaleByWidth = false,
     this.simple = false,
+    this.playing = true,
   });
 
   final bool liftForNav;
   final bool scaleByWidth;
   final bool simple;
+  final bool playing;
 
   @override
   Widget build(BuildContext context) {
     final dark = Theme.of(context).brightness == Brightness.dark;
-    return LayoutBuilder(
-      builder: (context, constraints) {
+    return _SceneMotion(
+      playing: playing,
+      builder: (context, motion, t) {
+        return LayoutBuilder(
+          builder: (context, constraints) {
         final width = constraints.maxWidth;
         final height = constraints.maxHeight;
         final span = scaleByWidth
@@ -2368,11 +3169,13 @@ class _OtterBathhouseDecorations extends StatelessWidget {
                 right: span * 0.02,
                 bottom: groundBottom,
                 width: span * 0.34,
-                child: sticker(tub),
+                child: _sceneBreathe(sticker(tub), motion, t),
               ),
             ],
           ),
         );
+      },
+    );
       },
     );
   }
@@ -2383,17 +3186,22 @@ class _RabbitFlowerMarketDecorations extends StatelessWidget {
     required this.liftForNav,
     this.scaleByWidth = false,
     this.simple = false,
+    this.playing = true,
   });
 
   final bool liftForNav;
   final bool scaleByWidth;
   final bool simple;
+  final bool playing;
 
   @override
   Widget build(BuildContext context) {
     final dark = Theme.of(context).brightness == Brightness.dark;
-    return LayoutBuilder(
-      builder: (context, constraints) {
+    return _SceneMotion(
+      playing: playing,
+      builder: (context, motion, t) {
+        return LayoutBuilder(
+          builder: (context, constraints) {
         final width = constraints.maxWidth;
         final height = constraints.maxHeight;
         final span = scaleByWidth
@@ -2459,11 +3267,13 @@ class _RabbitFlowerMarketDecorations extends StatelessWidget {
                 right: span * 0.02,
                 bottom: groundBottom,
                 width: span * 0.34,
-                child: sticker(stall),
+                child: _sceneBreathe(sticker(stall), motion, t),
               ),
             ],
           ),
         );
+      },
+    );
       },
     );
   }
@@ -2474,17 +3284,22 @@ class _BearPancakeCafeDecorations extends StatelessWidget {
     required this.liftForNav,
     this.scaleByWidth = false,
     this.simple = false,
+    this.playing = true,
   });
 
   final bool liftForNav;
   final bool scaleByWidth;
   final bool simple;
+  final bool playing;
 
   @override
   Widget build(BuildContext context) {
     final dark = Theme.of(context).brightness == Brightness.dark;
-    return LayoutBuilder(
-      builder: (context, constraints) {
+    return _SceneMotion(
+      playing: playing,
+      builder: (context, motion, t) {
+        return LayoutBuilder(
+          builder: (context, constraints) {
         final width = constraints.maxWidth;
         final height = constraints.maxHeight;
         final span = scaleByWidth
@@ -2550,11 +3365,13 @@ class _BearPancakeCafeDecorations extends StatelessWidget {
                 right: span * 0.02,
                 bottom: groundBottom,
                 width: span * 0.34,
-                child: sticker(counter),
+                child: _sceneBreathe(sticker(counter), motion, t),
               ),
             ],
           ),
         );
+      },
+    );
       },
     );
   }

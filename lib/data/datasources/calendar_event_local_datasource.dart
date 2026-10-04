@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:pluto/core/home_widget/home_screen_widget_service.dart';
 import 'package:pluto/core/constants/app_strings.dart';
 import 'package:pluto/core/notifications/todo_reminder_service.dart';
+import 'package:pluto/data/datasources/cloud_sync_tick.dart';
 import 'package:pluto/data/datasources/friend_service.dart';
 import 'package:pluto/data/models/calendar_event_model.dart';
 import 'package:pluto/domain/entities/calendar_event.dart';
@@ -19,6 +20,7 @@ class CalendarEventLocalDataSource {
     AppStrings.starterTodoComplete,
     AppStrings.starterTodoReorder,
     AppStrings.starterTodoMove,
+    AppStrings.starterTodoSwipe,
   ];
 
   static bool isUnmodifiedStarter(Map<String, dynamic> item) {
@@ -76,9 +78,9 @@ class CalendarEventLocalDataSource {
           id: '$starterIdPrefix$i',
           title: titles[i],
           date: today,
-          categoryId: categories[i].id,
-          categoryName: categories[i].name,
-          categoryColor: categories[i].color,
+          categoryId: categories[i % categories.length].id,
+          categoryName: categories[i % categories.length].name,
+          categoryColor: categories[i % categories.length].color,
           sortOrder: i,
         ),
     ];
@@ -89,6 +91,7 @@ class CalendarEventLocalDataSource {
       events.map(CalendarEventModel.toJson).toList(),
     );
     await _prefs.setString(key, payload);
+    CloudSyncTick.mark();
     FriendService.instance.scheduleSync(events);
     unawaited(_syncSideEffects());
   }

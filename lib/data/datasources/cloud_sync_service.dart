@@ -11,6 +11,7 @@ import 'package:pluto/data/datasources/app_backup_service.dart';
 import 'package:pluto/data/datasources/calendar_event_local_datasource.dart';
 import 'package:pluto/data/datasources/cloud_sync_files.dart';
 import 'package:pluto/data/datasources/cloud_sync_snapshot.dart';
+import 'package:pluto/data/datasources/cloud_sync_tick.dart';
 import 'package:pluto/data/datasources/friend_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -28,6 +29,8 @@ class CloudSyncService {
   var _busy = false;
   var _epoch = 0;
   var _missedRemote = false;
+  var _applyingRemote = false;
+  final _remoteQueue = <_RemoteSnapshot>[];
   String? _uploadedHash;
   String? _vaultProvider;
   String? _listenKey;
@@ -43,6 +46,7 @@ class CloudSyncService {
 
   void attach(AppScope scope) {
     _scope = scope;
+    CloudSyncTick.bind(_scheduleFlush);
     _authSub ??= AppAuthService.instance.authState.listen((user) {
       if (user == null) {
         _stop();
@@ -67,6 +71,7 @@ class CloudSyncService {
     if (lastUid == user.uid &&
         (lastProvider == null || lastProvider == provider)) {
       _vaultProvider = lastProvider ?? provider;
+      await _hydrateCursor(prefs);
       _ready = true;
       _startWatch();
       unawaited(FriendService.instance.bootstrap());
@@ -139,6 +144,7 @@ class CloudSyncService {
           ? await _hash(prefs, remote.dump, remote.files)
           : await _hash(prefs);
       if (remote.writtenAt > _writtenAt) _writtenAt = remote.writtenAt;
+      await _persistCursor(prefs);
       _startWatch();
       unawaited(_flushIfDirty());
       unawaited(FriendService.instance.bootstrap());
@@ -201,6 +207,7 @@ class CloudSyncService {
     } finally {
       await prefs.remove(CloudSyncSnapshot.uidKey);
       await prefs.remove(CloudSyncSnapshot.providerKey);
+      await _clearCursor(prefs);
       _stop();
       final scope = _scope;
       if (scope != null) {
@@ -224,6 +231,7 @@ class CloudSyncService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(CloudSyncSnapshot.uidKey);
     await prefs.remove(CloudSyncSnapshot.providerKey);
+    await _clearCursor(prefs);
     try {
       final known = <CloudFileEntry>[];
       var otherVaults = false;
@@ -279,8 +287,10 @@ class CloudSyncService {
 
   Future<void> onResumed() async {
     if (!_ready || AppAuthService.instance.user == null) return;
-    await _flushIfDirty();
+    final prefs = await SharedPreferences.getInstance();
+    await _hydrateCursor(prefs);
     await _pullIfIdle();
+    await _flushIfDirty();
   }
 
   Future<void> _resumeIfBound() async {
@@ -297,14 +307,21 @@ class CloudSyncService {
     final provider = _currentProvider();
     if (lastProvider != null && lastProvider != provider) return;
     _vaultProvider = lastProvider ?? provider;
+    await _hydrateCursor(prefs);
     _ready = true;
     _startWatch();
     unawaited(FriendService.instance.bootstrap());
     unawaited(onResumed());
   }
 
+  void _scheduleFlush() {
+    if (!_ready || _applyingRemote) return;
+    unawaited(_flushIfDirty());
+  }
+
   void _startWatch() {
     _watch ??= Timer.periodic(const Duration(milliseconds: 400), (_) {
+      if (_inflight != null) return;
       unawaited(_flushIfDirty());
     });
     _listenRemote();
@@ -336,11 +353,28 @@ class CloudSyncService {
 
   void _handleRemoteSnap(_RemoteSnapshot remote) {
     if (!_ready || _busy) return;
+    _remoteQueue.add(remote);
     if (_inflight != null) {
       _missedRemote = true;
       return;
     }
-    unawaited(_onRemoteVault(remote));
+    unawaited(_drainRemote());
+  }
+
+  Future<void> _drainRemote() async {
+    if (_applyingRemote) return;
+    _applyingRemote = true;
+    try {
+      while (_remoteQueue.isNotEmpty && _ready && !_busy && _inflight == null) {
+        final remote = _remoteQueue.removeAt(0);
+        await _onRemoteVault(remote);
+      }
+    } finally {
+      _applyingRemote = false;
+      if (_remoteQueue.isNotEmpty && _ready && !_busy && _inflight == null) {
+        unawaited(_drainRemote());
+      }
+    }
   }
 
   void _stop() {
@@ -352,6 +386,8 @@ class CloudSyncService {
     _remoteParentSub = null;
     _listenKey = null;
     _missedRemote = false;
+    _applyingRemote = false;
+    _remoteQueue.clear();
     _ready = false;
     _uploadedHash = null;
     _writtenAt = 0;
@@ -363,7 +399,7 @@ class CloudSyncService {
   Future<void> _flushIfDirty() async {
     final user = AppAuthService.instance.user;
     final epoch = _epoch;
-    if (!_ready || user == null || _busy || _inflight != null) return;
+    if (!_ready || user == null || _busy || _applyingRemote) return;
     final dump = await _localDump();
     if (epoch != _epoch || !_ready || _busy || AppAuthService.instance.user?.uid != user.uid) {
       return;
@@ -372,6 +408,7 @@ class CloudSyncService {
     final hash = await _hash(prefs, dump);
     if (epoch != _epoch || !_ready || _busy) return;
     if (hash == _uploadedHash) return;
+    if (_uploadedHash == null) return;
     if (!CloudSyncSnapshot.hasUserRecords(dump)) return;
     try {
       await _upload(user.uid, dump, waitForFiles: true);
@@ -388,12 +425,12 @@ class CloudSyncService {
     final prefs = await SharedPreferences.getInstance();
     final local = CloudSyncSnapshot.dump(prefs);
     if (epoch != _epoch || !_ready || _busy) return;
-    if (await _hash(prefs, local) != _uploadedHash) {
-      await _flushIfDirty();
-      return;
-    }
     try {
       final remote = await _fetch(user.uid, _currentProvider());
+      if (!await _shouldApplyIncoming(remote, prefs, local)) {
+        if (await _hasLocalEdits(prefs, local)) await _flushIfDirty();
+        return;
+      }
       await _applyRemoteIfChanged(
         remote,
         prefs: prefs,
@@ -418,8 +455,8 @@ class CloudSyncService {
     final prefs = await SharedPreferences.getInstance();
     if (epoch != _epoch || !_ready || _busy) return;
     final local = CloudSyncSnapshot.dump(prefs);
-    if (await _hash(prefs, local) != _uploadedHash) {
-      unawaited(_flushIfDirty());
+    if (!await _shouldApplyIncoming(remote, prefs, local)) {
+      if (await _hasLocalEdits(prefs, local)) unawaited(_flushIfDirty());
       return;
     }
     try {
@@ -464,6 +501,7 @@ class CloudSyncService {
           CloudSyncFiles.fingerprint(localFiles)) {
         _uploadedHash = await _hash(prefs, local, localFiles);
         if (remote.writtenAt > _writtenAt) _writtenAt = remote.writtenAt;
+        await _persistCursor(prefs);
         return;
       }
       await CloudSyncFiles.download(uid, needed);
@@ -474,6 +512,7 @@ class CloudSyncService {
       );
       if (extras) await _flushIfDirty();
       if (remote.writtenAt > _writtenAt) _writtenAt = remote.writtenAt;
+      await _persistCursor(prefs);
       return;
     }
     await _applyDump(
@@ -486,6 +525,7 @@ class CloudSyncService {
     if (epoch != _epoch) return;
     if (remote.writtenAt > _writtenAt) _writtenAt = remote.writtenAt;
     _uploadedHash = await _hash(prefs);
+    await _persistCursor(prefs);
   }
 
   Future<void> _upload(
@@ -562,10 +602,13 @@ class CloudSyncService {
       if (!filesReady) return;
       _lastRemoteFiles = files;
       _uploadedHash = await _hash(prefs, dump, files);
+      await _persistCursor(prefs);
     } finally {
       if (!gate.isCompleted) gate.complete();
       if (identical(_inflight, gate.future)) _inflight = null;
-      if (_missedRemote) {
+      if (_remoteQueue.isNotEmpty && _ready && !_busy) {
+        unawaited(_drainRemote());
+      } else if (_missedRemote) {
         _missedRemote = false;
         if (_ready && !_busy) unawaited(_pullIfIdle());
       }
@@ -609,11 +652,19 @@ class CloudSyncService {
     } catch (error) {
       debugPrint('Cloud vault doc write skipped: $error');
     }
-    await ref.set({
-      'schema': CloudSyncSnapshot.schema,
-      'updatedAt': FieldValue.serverTimestamp(),
-    }, SetOptions(merge: true));
+    unawaited(_writeParentVault(ref, provider, vault));
+  }
+
+  Future<void> _writeParentVault(
+    DocumentReference<Map<String, dynamic>> ref,
+    String provider,
+    Map<String, dynamic> vault,
+  ) async {
     try {
+      await ref.set({
+        'schema': CloudSyncSnapshot.schema,
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
       await ref.update({
         FieldPath(['vaults', provider]): vault,
       });
@@ -718,6 +769,50 @@ class CloudSyncService {
     await CalendarEventLocalDataSource(prefs).resetToStarters();
     await scope.themePreference.resetToStarters();
     await AppBackupService.applyToApp(scope);
+  }
+
+  Future<bool> _hasLocalEdits(
+    SharedPreferences prefs,
+    Map<String, dynamic> local,
+  ) async {
+    if (_uploadedHash == null) return false;
+    return await _hash(prefs, local) != _uploadedHash;
+  }
+
+  Future<bool> _shouldApplyIncoming(
+    _RemoteSnapshot remote,
+    SharedPreferences prefs,
+    Map<String, dynamic> local,
+  ) async {
+    if (remote.writtenAt > 0 && remote.writtenAt > _writtenAt) return true;
+    return !await _hasLocalEdits(prefs, local);
+  }
+
+  Future<void> _hydrateCursor(SharedPreferences prefs) async {
+    _uploadedHash ??= prefs.getString(CloudSyncSnapshot.uploadedHashKey);
+    final writtenAt = prefs.getInt(CloudSyncSnapshot.writtenAtKey) ?? 0;
+    if (writtenAt > _writtenAt) _writtenAt = writtenAt;
+  }
+
+  Future<void> _persistCursor(SharedPreferences prefs) async {
+    final hash = _uploadedHash;
+    if (hash == null || hash.isEmpty) {
+      await prefs.remove(CloudSyncSnapshot.uploadedHashKey);
+    } else {
+      await prefs.setString(CloudSyncSnapshot.uploadedHashKey, hash);
+    }
+    if (_writtenAt <= 0) {
+      await prefs.remove(CloudSyncSnapshot.writtenAtKey);
+    } else {
+      await prefs.setInt(CloudSyncSnapshot.writtenAtKey, _writtenAt);
+    }
+  }
+
+  Future<void> _clearCursor(SharedPreferences prefs) async {
+    _uploadedHash = null;
+    _writtenAt = 0;
+    await prefs.remove(CloudSyncSnapshot.uploadedHashKey);
+    await prefs.remove(CloudSyncSnapshot.writtenAtKey);
   }
 
   Future<Map<String, dynamic>> _localDump() async {

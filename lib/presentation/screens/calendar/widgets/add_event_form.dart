@@ -60,6 +60,8 @@ class _AddEventFormState extends State<AddEventForm>
   late final PlainTextEditingController _memo;
   final _titleFocus = FocusNode();
   final _memoFocus = FocusNode();
+  var _restoreTitle = false;
+  var _restoreMemo = false;
   late final AnimationController _memoAnimation;
   late final CurvedAnimation _memoFade;
   late DateTime _date;
@@ -137,7 +139,7 @@ class _AddEventFormState extends State<AddEventForm>
       _sheetAnimation = ModalRoute.of(context)?.animation;
       final animation = _sheetAnimation;
       if (animation == null || animation.isCompleted) {
-        _titleFocus.requestFocus();
+        _focusTitle();
       } else {
         animation.addStatusListener(_onSheetOpened);
       }
@@ -156,7 +158,21 @@ class _AddEventFormState extends State<AddEventForm>
   void _onSheetOpened(AnimationStatus status) {
     if (status != AnimationStatus.completed) return;
     _sheetAnimation?.removeStatusListener(_onSheetOpened);
-    if (mounted) _titleFocus.requestFocus();
+    if (mounted) _focusTitle();
+  }
+
+  void _focusTitle() {
+    _titleFocus.requestFocus();
+    if (!PcLayout.isPc) return;
+    void placeCaret() {
+      if (!mounted || !_titleFocus.hasFocus) return;
+      _title.selection = TextSelection.collapsed(offset: _title.text.length);
+    }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      placeCaret();
+      WidgetsBinding.instance.addPostFrameCallback((_) => placeCaret());
+    });
   }
 
   @override
@@ -414,16 +430,39 @@ class _AddEventFormState extends State<AddEventForm>
     return false;
   }
 
-  Future<void> _pickCategory() async {
-    if (!_allowsAdd(TutorialAction.composeEvent)) return;
+  void _blurComposeFields() {
+    _restoreTitle = _titleFocus.hasFocus;
+    _restoreMemo = _memoFocus.hasFocus;
     _titleFocus.unfocus();
     _memoFocus.unfocus();
+  }
+
+  void _restoreComposeFields() {
+    if (!mounted) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      if (_restoreMemo && _memoOpen) {
+        _memoFocus.requestFocus();
+      } else if (_restoreTitle) {
+        _focusTitle();
+      }
+      _restoreTitle = false;
+      _restoreMemo = false;
+    });
+  }
+
+  Future<void> _pickCategory() async {
+    if (!_allowsAdd(TutorialAction.composeEvent)) return;
+    _blurComposeFields();
     final picked = await showCategoryPickerSheet(
       context,
       selectedId: _categoryId,
     );
     if (picked == null || !mounted) {
-      if (mounted) _syncTitleTimeHighlight(force: true);
+      if (mounted) {
+        _syncTitleTimeHighlight(force: true);
+        _restoreComposeFields();
+      }
       return;
     }
     _suggest?.userPicked();
@@ -435,12 +474,12 @@ class _AddEventFormState extends State<AddEventForm>
     });
     TutorialController.find(context)?.noteCategoryPicked();
     _syncTitleTimeHighlight(force: true);
+    _restoreComposeFields();
   }
 
   Future<void> _pickDate() async {
     if (!_allowsAdd(TutorialAction.pickDateMode)) return;
-    _titleFocus.unfocus();
-    _memoFocus.unfocus();
+    _blurComposeFields();
     final picked = await showAppCalendarSheet(
       context,
       date: _date,
@@ -459,12 +498,12 @@ class _AddEventFormState extends State<AddEventForm>
     if (!mounted) return;
     TutorialController.find(context)?.noteDateMode();
     _syncTitleTimeHighlight(force: true);
+    _restoreComposeFields();
   }
 
   Future<void> _pickTime() async {
     if (!_allowsAdd(TutorialAction.none)) return;
-    _titleFocus.unfocus();
-    _memoFocus.unfocus();
+    _blurComposeFields();
     final picked = await showEventTimeSheet(
       context,
       startMinutes: _startMinutes,
@@ -472,7 +511,10 @@ class _AddEventFormState extends State<AddEventForm>
       color: _accent,
     );
     if (picked == null || !mounted) {
-      if (mounted) _syncTitleTimeHighlight(force: true);
+      if (mounted) {
+        _syncTitleTimeHighlight(force: true);
+        _restoreComposeFields();
+      }
       return;
     }
     setState(() {
@@ -480,6 +522,7 @@ class _AddEventFormState extends State<AddEventForm>
       _endMinutes = picked.endMinutes;
     });
     _syncTitleTimeHighlight(force: true);
+    _restoreComposeFields();
   }
 
   Future<void> _toggleMemo() async {
@@ -487,7 +530,7 @@ class _AddEventFormState extends State<AddEventForm>
     if (_memoToggling) return;
     _memoToggling = true;
     if (_memoOpen) {
-      _titleFocus.requestFocus();
+      _focusTitle();
       setState(() => _memoOpen = false);
       await _memoAnimation.reverse();
     } else {

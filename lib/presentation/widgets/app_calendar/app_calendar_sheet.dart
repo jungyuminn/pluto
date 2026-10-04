@@ -1106,8 +1106,6 @@ class _DayCellState extends State<_DayCell> {
 
   @override
   Widget build(BuildContext context) {
-    if (!widget.day.inMonth) return const SizedBox.expand();
-
     final colors = AppColors.of(context);
     final circleSelected = widget.selected;
     final Color circleColor;
@@ -1120,7 +1118,10 @@ class _DayCellState extends State<_DayCell> {
       foreground = widget.accent;
     } else if (widget.day.isToday) {
       circleColor = colors.isDark ? colors.pressed : const Color(0xFFD7DDE6);
-      foreground = colors.text;
+      foreground = widget.day.inMonth ? colors.text : colors.muted;
+    } else if (!widget.day.inMonth) {
+      circleColor = Colors.transparent;
+      foreground = colors.muted;
     } else {
       circleColor = Colors.transparent;
       foreground = colors.text;

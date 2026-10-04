@@ -6,6 +6,7 @@ import 'package:pluto/core/constants/app_icons.dart';
 import 'package:pluto/core/constants/app_strings.dart';
 import 'package:pluto/core/theme/app_colors.dart';
 import 'package:pluto/core/utils/drop_in.dart';
+import 'package:pluto/core/utils/press_bounce.dart';
 import 'package:pluto/core/utils/swipe_to_delete.dart';
 import 'package:pluto/data/datasources/calendar_complete.dart';
 import 'package:pluto/data/datasources/day_emoji_store.dart';
@@ -707,12 +708,16 @@ class _HomeDayCardState extends State<HomeDayCard> {
                       ? null
                       : Padding(
                           padding: const EdgeInsets.only(right: 10),
-                          child: DayStickerImage(
-                            key: ValueKey(_emoji),
-                            asset: _emoji!,
-                            width: 48,
-                            height: 48,
-                            pop: _emojiPop,
+                          child: PressBounce(
+                            onPressed: () => _pickEmoji(date),
+                            pressedScale: 0.92,
+                            child: DayStickerImage(
+                              key: ValueKey(_emoji),
+                              asset: _emoji!,
+                              width: 48,
+                              height: 48,
+                              pop: _emojiPop,
+                            ),
                           ),
                         ),
                 ),

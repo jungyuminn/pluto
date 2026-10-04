@@ -129,7 +129,7 @@ class _RoundEditorSheetState extends State<RoundEditorSheet>
       child: Padding(
       padding: EdgeInsets.only(bottom: viewInsets.bottom),
       child: Material(
-        color: colors.tint(accent),
+        color: colors.tint(accent, 0.14),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         clipBehavior: Clip.antiAlias,
         elevation: 8,

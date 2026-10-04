@@ -120,6 +120,7 @@ class _CategoryPickerSheetState extends State<CategoryPickerSheet>
           _seenIds.addAll(categories.map((item) => item.id));
           _loading = false;
         });
+        _scheduleAppearClear(categories.length);
         return;
       }
       await _applyCategories(categories);
@@ -162,6 +163,16 @@ class _CategoryPickerSheetState extends State<CategoryPickerSheet>
     _seenIds
       ..removeAll(removed)
       ..addAll(added);
+    if (added.isNotEmpty) _scheduleAppearClear(added.length);
+  }
+
+  void _scheduleAppearClear(int count) {
+    final wait = const Duration(milliseconds: 300) +
+        Duration(milliseconds: math.min(16 * math.max(count - 1, 0), 120));
+    Future<void>.delayed(wait, () {
+      if (!mounted || _appearIds.isEmpty) return;
+      setState(() => _appearIds.clear());
+    });
   }
 
   void _enterEdit(EventCategory? category) {
@@ -782,19 +793,19 @@ class _CategoryPickerSheetState extends State<CategoryPickerSheet>
                   top: (i ~/ _columns) * (cell + _gap),
                   width: cell,
                   height: cell,
-                  child: _drop.wrap(
-                    itemId: _categories[i].id,
-                    onDone: () {
-                      if (!mounted || _drop.id != _categories[i].id) return;
-                      setState(_drop.clear);
-                    },
-                    child: _GridTile(
-                      appear: _appearIds.contains(_categories[i].id),
-                      exiting: _exiting.contains(_categories[i].id),
-                      duration: const Duration(milliseconds: 260),
-                      delay: _appearIds.length == _categories.length
-                          ? Duration(milliseconds: math.min(16 * i, 120))
-                          : Duration.zero,
+                  child: _GridTile(
+                    appear: _appearIds.contains(_categories[i].id),
+                    exiting: _exiting.contains(_categories[i].id),
+                    duration: const Duration(milliseconds: 260),
+                    delay: _appearIds.length == _categories.length
+                        ? Duration(milliseconds: math.min(16 * i, 120))
+                        : Duration.zero,
+                    child: _drop.wrap(
+                      itemId: _categories[i].id,
+                      onDone: () {
+                        if (!mounted || _drop.id != _categories[i].id) return;
+                        setState(_drop.clear);
+                      },
                       child: _slot(_categories[i], cell),
                     ),
                   ),

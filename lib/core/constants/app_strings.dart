@@ -212,6 +212,7 @@ class AppStrings {
   static const starterTodoComplete = '오른쪽 동그라미를 눌러 완료할 수 있어요';
   static const starterTodoReorder = '꾹 눌러서 위치를 바꿀 수 있어요';
   static const starterTodoMove = '밖으로 빼서 날짜를 옮길 수 있어요';
+  static const starterTodoSwipe = '왼쪽으로 밀어서 삭제할 수 있어요';
   static const releaseNotesTitle = '릴리즈 노트';
   static const accountTitle = '로그인하기';
   static const accountLogin = '로그인하기';

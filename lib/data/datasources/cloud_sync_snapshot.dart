@@ -35,6 +35,8 @@ class CloudSyncSnapshot {
   static const uidKey = 'cloud_sync_uid';
   static const providerKey = 'cloud_sync_provider';
   static const parkedDumpKey = 'cloud_parked_local_dump';
+  static const uploadedHashKey = 'cloud_sync_uploaded_hash';
+  static const writtenAtKey = 'cloud_sync_written_at';
 
   static const eventsKey = CalendarEventLocalDataSource.key;
   static const jobsKey = JobApplicationLocalDataSource.key;

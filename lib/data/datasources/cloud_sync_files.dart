@@ -56,6 +56,7 @@ class CloudSyncFiles {
 
   static final _tasks = <UploadTask>[];
   static final _remoteSizes = <String, int>{};
+  static final _prefetchTried = <String>{};
   static Future<void> _chain = Future.value();
 
   static const folders = [
@@ -175,7 +176,7 @@ class CloudSyncFiles {
     }
   }
 
-  static Future<void> upload(
+  static Future<bool> upload(
     String uid,
     List<CloudFileEntry> files, {
     bool prune = true,
@@ -188,11 +189,12 @@ class CloudSyncFiles {
     });
   }
 
-  static Future<void> _uploadBody(
+  static Future<bool> _uploadBody(
     String uid,
     List<CloudFileEntry> files, {
     required bool prune,
   }) async {
+    var ok = true;
     for (final file in files) {
       final ref = FirebaseStorage.instance.ref(_object(uid, file));
       try {
@@ -207,10 +209,12 @@ class CloudSyncFiles {
           _tasks.remove(task);
         }
       } catch (error) {
+        ok = false;
         debugPrint('Cloud file put failed ${file.key}: $error');
       }
     }
-    if (prune) await pruneUnused(uid, files);
+    if (prune && ok) await pruneUnused(uid, files);
+    return ok;
   }
 
   static Future<void> pruneUnused(String uid, List<CloudFileEntry> files) async {
@@ -278,6 +282,7 @@ class CloudSyncFiles {
     if (path == null || path.isEmpty) return;
     if (SyncedFileStore.instance.exists(path)) return;
     if (SyncedFileStore.parse(path) == null) return;
+    if (!_prefetchTried.add(path)) return;
     unawaited(ensureLocal(path));
   }
 

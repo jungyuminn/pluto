@@ -5,7 +5,6 @@ import 'package:pluto/app_scope.dart';
 import 'package:pluto/core/constants/app_icons.dart';
 import 'package:pluto/core/layout/pc_layout.dart';
 import 'package:pluto/core/theme/app_colors.dart';
-import 'package:pluto/core/utils/local_file.dart';
 import 'package:pluto/data/datasources/theme_preference.dart';
 import 'package:pluto/presentation/widgets/local_file_image.dart';
 
@@ -777,7 +776,7 @@ class _CustomPhotoDecorations extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (!localFileExists(path)) return const SizedBox.expand();
+    if (path.isEmpty) return const SizedBox.expand();
     final amount = wash.clamp(0.0, 1.0);
     return Stack(
       fit: StackFit.expand,
@@ -830,7 +829,7 @@ class _CustomPatternDecorations extends StatelessWidget {
         );
 
         Widget motif({double angle = 0}) {
-          if (!localFileExists(decorationPath)) {
+          if (decorationPath.isEmpty) {
             return const SizedBox.shrink();
           }
           Widget child = LocalFileImage(
@@ -939,7 +938,7 @@ abstract final class _SkinGround {
     required double bandHeight,
     double assetRatio = 887 / 1774,
   }) {
-    if (!localFileExists(path)) return const SizedBox.expand();
+    if (path.isEmpty) return const SizedBox.expand();
     return _fade(
       bandHeight: bandHeight,
       natural: width * assetRatio,

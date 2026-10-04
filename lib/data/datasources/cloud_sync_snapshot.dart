@@ -216,6 +216,9 @@ class CloudSyncSnapshot {
     for (final key in keys ?? syncedKeys) {
       final payload = dump[key];
       if (payload is! Map) {
+        if (key == themesKey) {
+          continue;
+        }
         if (contentKeys.contains(key)) {
           await prefs.remove(key);
         } else if (CategorySuggestPreference.syncedKeys.contains(key)) {

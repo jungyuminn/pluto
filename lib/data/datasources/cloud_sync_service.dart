@@ -60,10 +60,6 @@ class CloudSyncService {
       _stop();
       return;
     }
-    if (kIsWeb) {
-      await reconcileAfterLogin(context);
-      return;
-    }
     final prefs = await SharedPreferences.getInstance();
     final lastUid = prefs.getString(CloudSyncSnapshot.uidKey);
     final lastProvider = prefs.getString(CloudSyncSnapshot.providerKey);
@@ -486,7 +482,6 @@ class CloudSyncService {
       remote.dump,
       uid: uid,
       files: remote.files,
-      replaceFiles: true,
     );
     if (epoch != _epoch) return;
     if (remote.writtenAt > _writtenAt) _writtenAt = remote.writtenAt;
@@ -534,6 +529,7 @@ class CloudSyncService {
       final filesUnchanged = CloudSyncFiles.fingerprint(files) ==
               CloudSyncFiles.fingerprint(_lastRemoteFiles) &&
           (_lastRemoteFiles.isNotEmpty || files.isEmpty);
+      var filesReady = filesUnchanged;
       if (!filesUnchanged) {
         final fileWork = CloudSyncFiles.upload(
           uid,
@@ -542,8 +538,9 @@ class CloudSyncService {
         );
         if (waitForFiles) {
           try {
-            await fileWork;
+            filesReady = await fileWork;
           } catch (error) {
+            filesReady = false;
             debugPrint('Cloud sync file upload failed: $error');
           }
         } else {
@@ -553,11 +550,16 @@ class CloudSyncService {
       if (!alive()) return;
       await _writeVault(uid, provider, vault);
       if (!alive()) return;
-      if (pruneFiles && waitForFiles && !kIsWeb && !filesUnchanged) {
+      if (pruneFiles &&
+          waitForFiles &&
+          filesReady &&
+          !kIsWeb &&
+          !filesUnchanged) {
         await CloudSyncFiles.pruneUnused(uid, files);
       }
       if (!alive()) return;
       _writtenAt = writtenAt;
+      if (!filesReady) return;
       _lastRemoteFiles = files;
       _uploadedHash = await _hash(prefs, dump, files);
     } finally {

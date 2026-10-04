@@ -79,6 +79,7 @@ import 'package:pluto/domain/usecases/update_calendar_event.dart';
 import 'package:pluto/domain/usecases/update_event_category.dart';
 import 'package:pluto/domain/usecases/update_job_application.dart';
 import 'package:pluto/presentation/screens/shell/shell_screen.dart';
+import 'package:pluto/presentation/widgets/local_file_image.dart';
 import 'package:pluto/presentation/screens/settings/widgets/cloud_sync_dialogs.dart';
 import 'package:pluto/presentation/screens/settings/widgets/dots_loading_dialog.dart';
 import 'package:pluto/presentation/screens/settings/widgets/login_page.dart';
@@ -416,6 +417,7 @@ class _AppBootstrapState extends State<_AppBootstrap> {
     );
     final themePreference = ThemePreference(prefs: prefs);
     await themePreference.seedStartersIfNeeded();
+    final themePrecache = _precacheCustomTheme(themePreference);
     final backupPreference = BackupPreference(prefs: prefs);
     final categoryDataSource = EventCategoryLocalDataSource(prefs);
     final companyCategoryDataSource = EventCategoryLocalDataSource(
@@ -472,6 +474,7 @@ class _AppBootstrapState extends State<_AppBootstrap> {
         EventCategoryRepositoryImpl(ledgerCategoryDataSource);
     final licenseCategoryRepository =
         EventCategoryRepositoryImpl(licenseCategoryDataSource);
+    await themePrecache;
     if (!mounted) return;
     setState(() {
       _getJobApplications =
@@ -549,6 +552,16 @@ class _AppBootstrapState extends State<_AppBootstrap> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _afterFirstFrame(notificationPreference, backupPreference);
     });
+  }
+
+  Future<void> _precacheCustomTheme(ThemePreference theme) async {
+    final custom = theme.customTheme;
+    if (custom == null) return;
+    await Future.wait([
+      LocalFileImage.precache(custom.photoPath),
+      LocalFileImage.precache(custom.decorationPath),
+      LocalFileImage.precache(custom.bottomPath),
+    ]);
   }
 
   Future<void> _afterFirstFrame(

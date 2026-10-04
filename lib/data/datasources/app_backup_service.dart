@@ -11,6 +11,7 @@ import 'package:pluto/core/constants/app_strings.dart';
 import 'package:pluto/core/home_widget/home_screen_widget_service.dart';
 import 'package:pluto/core/notifications/todo_reminder_service.dart';
 import 'package:pluto/data/datasources/backup_preference.dart';
+import 'package:pluto/data/datasources/cloud_sync_files.dart';
 import 'package:pluto/data/datasources/cloud_sync_snapshot.dart';
 import 'package:pluto/data/datasources/google_drive_backup_client.dart';
 import 'package:pluto/data/datasources/custom_theme_storage.dart';
@@ -267,8 +268,17 @@ class AppBackupService {
     throw const FormatException('missing iCloud backup');
   }
 
+  static void prefetchCustomThemeFiles(ThemePreference theme) {
+    for (final item in theme.customThemes) {
+      CloudSyncFiles.prefetch(item.photoPath);
+      CloudSyncFiles.prefetch(item.decorationPath);
+      CloudSyncFiles.prefetch(item.bottomPath);
+    }
+  }
+
   static void hydrateSyncedSettings(AppScope scope) {
     scope.themePreference.hydrate();
+    prefetchCustomThemeFiles(scope.themePreference);
     scope.fontPreference.hydrate();
     scope.calendarPreference.hydrate();
     scope.homeViewPreference.hydrate();
@@ -285,6 +295,7 @@ class AppBackupService {
 
   static Future<void> applyToApp(AppScope scope) async {
     scope.themePreference.hydrate();
+    prefetchCustomThemeFiles(scope.themePreference);
     scope.fontPreference.hydrate();
     scope.calendarPreference.hydrate();
     scope.notificationPreference.hydrate();

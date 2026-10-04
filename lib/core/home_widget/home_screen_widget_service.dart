@@ -32,6 +32,7 @@ import 'package:pluto/domain/entities/calendar_event.dart';
 import 'package:pluto/domain/entities/event_category.dart';
 import 'package:pluto/domain/entities/job_application.dart';
 import 'package:pluto/presentation/screens/calendar/calendar_day_events.dart';
+import 'package:pluto/presentation/widgets/local_file_image.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -233,6 +234,7 @@ class HomeScreenWidgetService {
       officeIcon = await _loadOfficeIcon();
       final isDark = _widgetIsDark;
       final skin = _widgetSkin;
+      await _precacheCustomTheme(pixelRatio);
       await HomeWidget.saveWidgetData<bool>('is_dark', isDark);
       await HomeWidget.saveWidgetData<double>(
         'widget_font_scale',
@@ -887,6 +889,29 @@ class HomeScreenWidgetService {
       items.removeLast();
     }
     return TodayWidgetSnapshot(items: items, moreCount: 0);
+  }
+
+  Future<void> _precacheCustomTheme(double pixelRatio) async {
+    if (!_followTheme) return;
+    final custom = _theme?.customTheme;
+    if (custom == null) return;
+    await Future.wait([
+      LocalFileImage.precache(
+        custom.photoPath,
+        size: skinBackgroundSize,
+        pixelRatio: pixelRatio,
+      ),
+      LocalFileImage.precache(
+        custom.decorationPath,
+        size: skinBackgroundSize,
+        pixelRatio: pixelRatio,
+      ),
+      LocalFileImage.precache(
+        custom.bottomPath,
+        size: skinBackgroundSize,
+        pixelRatio: pixelRatio,
+      ),
+    ]);
   }
 
   Future<void> _renderSkinBackground({

@@ -3,6 +3,7 @@ import 'package:pluto/app_scope.dart';
 import 'package:pluto/core/constants/app_fonts.dart';
 import 'package:pluto/core/constants/app_icons.dart';
 import 'package:pluto/core/constants/app_strings.dart';
+import 'package:pluto/core/layout/pc_layout.dart';
 import 'package:pluto/core/theme/app_colors.dart';
 import 'package:pluto/core/utils/press_bounce.dart';
 import 'package:pluto/domain/entities/ledger_entry.dart';
@@ -79,7 +80,7 @@ class CalendarMonthHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final stats = ledgerMonthStats;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 20, 12),
+      padding: EdgeInsets.fromLTRB(PcLayout.isPc ? 20 : 16, 8, 20, 12),
       child: Row(
         children: [
           Expanded(

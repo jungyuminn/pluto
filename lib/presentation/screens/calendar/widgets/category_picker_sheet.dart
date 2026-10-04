@@ -95,9 +95,9 @@ class _CategoryPickerSheetState extends State<CategoryPickerSheet>
       vsync: this,
       duration: const Duration(milliseconds: 180),
     );
-    unawaited(_reload());
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
+      unawaited(_reload());
       if (widget.startModifying) _enterEdit(null);
     });
   }

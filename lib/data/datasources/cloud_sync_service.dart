@@ -692,6 +692,8 @@ class CloudSyncService {
   }) async {
     await CloudSyncSnapshot.apply(prefs, dump);
     await CloudSyncFiles.relocate();
+    await AppBackupService.applyToApp(scope);
+    unawaited(FriendService.instance.resyncSharedTodos());
     try {
       final needed = CloudSyncFiles.merge(
         files,
@@ -702,11 +704,10 @@ class CloudSyncService {
         await CloudSyncFiles.clearUnused(needed);
       }
       await CloudSyncFiles.relocate();
+      AppBackupService.prefetchCustomThemeFiles(scope.themePreference);
     } catch (error) {
       debugPrint('Cloud sync file download failed: $error');
     }
-    await AppBackupService.applyToApp(scope);
-    unawaited(FriendService.instance.resyncSharedTodos());
   }
 
   Future<void> _resetLocal(AppScope scope, SharedPreferences prefs) async {

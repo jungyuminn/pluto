@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:pluto/app_scope.dart';
 import 'package:pluto/core/constants/app_strings.dart';
+import 'package:pluto/core/layout/pc_layout.dart';
 import 'package:pluto/core/theme/app_colors.dart';
 import 'package:pluto/core/utils/fade_in.dart';
 import 'package:pluto/core/utils/mouse_drag_scroll.dart';
@@ -39,7 +40,7 @@ class DayStickers {
 
   static const prefix = 'assets/stickers/';
 
-  /// 고양이 → 토끼 → 강아지 → 심플캣, 그 안에서 데일리 → 유니버시티 → 컴패니.
+  /// 그림체가 같은 팩을 붙인다. 그 안에서 일상 → 대학 → 회사 → 리액션.
   static const defaultPackOrder = [
     'university_cat',
     'company_cat',
@@ -47,13 +48,17 @@ class DayStickers {
     'university_rabbit',
     'company_rabbit',
     'cute_rabbit',
-    'cute_bear',
-    'travel_hamster',
+    'pink_rabbit_01',
+    'pink_rabbit_02',
+    'brown_puppy_01',
+    'brown_puppy_02',
+    'daily_dog',
     'fat_hamster',
     'white_hamster',
     'cute_hamster',
+    'travel_hamster',
+    'cute_bear',
     'short_hair_girl',
-    'daily_dog',
     'yellow_circle',
     'simple_cat',
     'simple_cat2',
@@ -150,6 +155,8 @@ class _DayEmojiSheetState extends State<DayEmojiSheet> {
 
   static const _columns = 5;
   static const _tabSize = 56.0;
+  static const _pcTabSize = 72.0;
+  static const _gridGap = 6.0;
 
   @override
   void initState() {
@@ -205,6 +212,8 @@ class _DayEmojiSheetState extends State<DayEmojiSheet> {
     final bottom = MediaQuery.paddingOf(context).bottom;
     final current = widget.selected?.trim();
     final hasCurrent = DayStickers.isAsset(current);
+    final pc = PcLayout.isPc;
+    final tabSize = pc ? _pcTabSize : _tabSize;
     final height =
         (MediaQuery.sizeOf(context).height * 0.5).clamp(380.0, 540.0);
     final pack = _packs.isEmpty ? null : _packs[_packIndex.clamp(0, _packs.length - 1)];
@@ -245,12 +254,12 @@ class _DayEmojiSheetState extends State<DayEmojiSheet> {
                   )
                 else ...[
                   SizedBox(
-                    height: _tabSize,
+                    height: tabSize,
                     child: LayoutBuilder(
                       builder: (context, constraints) {
                         final n = _packs.length;
                         final contentWidth =
-                            n * _tabSize + (n > 1 ? (n - 1) * 10 : 0);
+                            n * tabSize + (n > 1 ? (n - 1) * 10 : 0);
                         final pad = ((constraints.maxWidth - contentWidth) / 2)
                             .clamp(0.0, double.infinity);
                         return SizedBox(
@@ -263,86 +272,89 @@ class _DayEmojiSheetState extends State<DayEmojiSheet> {
                                 controller: _packScroll,
                                 enabled: pad <= 0.5,
                                 child: ReorderableListView.builder(
-                          scrollDirection: Axis.horizontal,
-                          scrollController: _packScroll,
-                          primary: false,
-                          buildDefaultDragHandles: false,
-                          clipBehavior: Clip.hardEdge,
-                          physics: pad > 0.5
-                              ? const NeverScrollableScrollPhysics()
-                              : const BouncingScrollPhysics(),
-                          padding: EdgeInsets.symmetric(horizontal: pad),
-                          itemCount: _packs.length,
-                          proxyDecorator: (child, index, animation) {
-                            return AnimatedBuilder(
-                              animation: animation,
-                              builder: (context, child) {
-                                final t = Curves.easeOutBack.transform(
-                                  animation.value,
-                                );
-                                return Transform.scale(
-                                  scale: 1 + 0.06 * t,
-                                  child: child,
-                                );
-                              },
-                              child: child,
-                            );
-                          },
-                          onReorderStart: (_) {
-                            HapticFeedback.mediumImpact();
-                          },
-                          onReorderItem: _reorderPacks,
-                          itemBuilder: (context, index) {
-                            final selected = index == _packIndex;
-                            return ReorderableDelayedDragStartListener(
-                              key: ValueKey(_packs[index].id),
-                              index: index,
-                              child: Padding(
-                                padding: EdgeInsets.only(
-                                  right: index == _packs.length - 1 ? 0 : 10,
-                                ),
-                                child: PressBounce(
-                                  passthrough: true,
-                                  color: selected
-                                      ? Color.lerp(
-                                          colors.groupedBackground,
-                                          colors.accentBright,
-                                          0.15,
-                                        )!
-                                      : colors.groupedBackground,
-                                  pressedColor: selected
-                                      ? Color.lerp(
-                                          colors.groupedBackground,
-                                          colors.accentBright,
-                                          0.58,
-                                        )!
-                                      : colors.pressed,
-                                  borderRadius: BorderRadius.circular(16),
-                                  child: GestureDetector(
-                                    behavior: HitTestBehavior.opaque,
-                                    onTap: () =>
-                                        setState(() => _packIndex = index),
-                                    child: SizedBox(
-                                      width: _tabSize,
-                                      height: _tabSize,
+                                  scrollDirection: Axis.horizontal,
+                                  scrollController: _packScroll,
+                                  primary: false,
+                                  buildDefaultDragHandles: false,
+                                  clipBehavior: Clip.hardEdge,
+                                  physics: pad > 0.5
+                                      ? const NeverScrollableScrollPhysics()
+                                      : const BouncingScrollPhysics(),
+                                  padding: EdgeInsets.symmetric(horizontal: pad),
+                                  itemCount: _packs.length,
+                                  proxyDecorator: (child, index, animation) {
+                                    return AnimatedBuilder(
+                                      animation: animation,
+                                      builder: (context, child) {
+                                        final t = Curves.easeOutBack.transform(
+                                          animation.value,
+                                        );
+                                        return Transform.scale(
+                                          scale: 1 + 0.06 * t,
+                                          child: child,
+                                        );
+                                      },
+                                      child: child,
+                                    );
+                                  },
+                                  onReorderStart: (_) {
+                                    HapticFeedback.mediumImpact();
+                                  },
+                                  onReorderItem: _reorderPacks,
+                                  itemBuilder: (context, index) {
+                                    final selected = index == _packIndex;
+                                    return ReorderableDelayedDragStartListener(
+                                      key: ValueKey(_packs[index].id),
+                                      index: index,
                                       child: Padding(
-                                        padding: const EdgeInsets.all(4),
-                                        child: Image.asset(
-                                          _packs[index].cover,
-                                          fit: BoxFit.contain,
-                                          filterQuality: FilterQuality.medium,
-                                          errorBuilder:
-                                              (context, error, stack) =>
-                                                  const SizedBox.shrink(),
+                                        padding: EdgeInsets.only(
+                                          right:
+                                              index == _packs.length - 1 ? 0 : 10,
+                                        ),
+                                        child: PressBounce(
+                                          passthrough: true,
+                                          color: selected
+                                              ? Color.lerp(
+                                                  colors.groupedBackground,
+                                                  colors.accentBright,
+                                                  0.15,
+                                                )!
+                                              : colors.groupedBackground,
+                                          pressedColor: selected
+                                              ? Color.lerp(
+                                                  colors.groupedBackground,
+                                                  colors.accentBright,
+                                                  0.58,
+                                                )!
+                                              : colors.pressed,
+                                          borderRadius: BorderRadius.circular(16),
+                                          child: GestureDetector(
+                                            behavior: HitTestBehavior.opaque,
+                                            onTap: () => setState(
+                                              () => _packIndex = index,
+                                            ),
+                                            child: SizedBox(
+                                              width: tabSize,
+                                              height: tabSize,
+                                              child: Padding(
+                                                padding: const EdgeInsets.all(4),
+                                                child: Image.asset(
+                                                  _packs[index].cover,
+                                                  fit: BoxFit.contain,
+                                                  filterQuality:
+                                                      FilterQuality.medium,
+                                                  errorBuilder:
+                                                      (context, error, stack) =>
+                                                          const SizedBox.shrink(),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
                                         ),
                                       ),
-                                    ),
-                                  ),
+                                    );
+                                  },
                                 ),
-                              ),
-                            );
-                          },
-                        ),
                               ),
                             ),
                           ),
@@ -352,41 +364,10 @@ class _DayEmojiSheetState extends State<DayEmojiSheet> {
                   ),
                   const SizedBox(height: 16),
                   Expanded(
-                    child: FadeIn(
-                      key: ValueKey(pack?.id ?? 'empty'),
-                      duration: const Duration(milliseconds: 320),
-                      offset: const Offset(0, 10),
-                      child: GridView.builder(
-                        padding: EdgeInsets.zero,
-                        itemCount: stickers.length,
-                        gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: _columns,
-                          mainAxisSpacing: 6,
-                          crossAxisSpacing: 6,
-                          childAspectRatio: 1,
-                        ),
-                        itemBuilder: (context, index) {
-                          final sticker = stickers[index];
-                          return PressBounce(
-                            onPressed: () =>
-                                Navigator.of(context).pop(sticker),
-                            color: Colors.transparent,
-                            pressedColor: colors.pressed,
-                            borderRadius: BorderRadius.circular(14),
-                            child: Padding(
-                              padding: const EdgeInsets.all(2),
-                              child: Image.asset(
-                                sticker,
-                                fit: BoxFit.contain,
-                                filterQuality: FilterQuality.medium,
-                                errorBuilder: (context, error, stack) =>
-                                    const SizedBox.shrink(),
-                              ),
-                            ),
-                          );
-                        },
-                      ),
+                    child: _stickerGrid(
+                      colors: colors,
+                      packId: pack?.id,
+                      stickers: stickers,
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -418,6 +399,47 @@ class _DayEmojiSheetState extends State<DayEmojiSheet> {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _stickerGrid({
+    required AppColors colors,
+    required String? packId,
+    required List<String> stickers,
+  }) {
+    return FadeIn(
+      key: ValueKey(packId ?? 'empty'),
+      duration: const Duration(milliseconds: 320),
+      offset: const Offset(0, 10),
+      child: GridView.builder(
+        padding: EdgeInsets.zero,
+        itemCount: stickers.length,
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: _columns,
+          mainAxisSpacing: _gridGap,
+          crossAxisSpacing: _gridGap,
+          childAspectRatio: 1,
+        ),
+        itemBuilder: (context, index) {
+          final sticker = stickers[index];
+          return PressBounce(
+            onPressed: () => Navigator.of(context).pop(sticker),
+            color: Colors.transparent,
+            pressedColor: colors.pressed,
+            borderRadius: BorderRadius.circular(14),
+            child: Padding(
+              padding: const EdgeInsets.all(2),
+              child: Image.asset(
+                DayStickers.resolve(sticker),
+                fit: BoxFit.contain,
+                filterQuality: FilterQuality.medium,
+                errorBuilder: (context, error, stack) =>
+                    const SizedBox.shrink(),
+              ),
+            ),
+          );
+        },
       ),
     );
   }

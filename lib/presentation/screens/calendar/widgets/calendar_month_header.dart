@@ -80,7 +80,7 @@ class CalendarMonthHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final stats = ledgerMonthStats;
     return Padding(
-      padding: EdgeInsets.fromLTRB(PcLayout.isPc ? 20 : 16, 8, 20, 12),
+      padding: EdgeInsets.fromLTRB(PcLayout.isPc ? 18 : 16, 8, 20, 12),
       child: Row(
         children: [
           Expanded(

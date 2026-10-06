@@ -17,6 +17,21 @@ class ReleaseNote {
 abstract final class ReleaseNotes {
   static const all = [
     ReleaseNote(
+      version: '1.5.1',
+      items: [
+        '처음 깔면 밀어서 지우는 할 일이 나와요',
+        '할 일 추가에서 칸을 고르고 돌아와도 제목에 커서가 남아요',
+        '홈에서 오늘·내일 스티커를 누르면 바꿀 수 있어요',
+        '날짜 고르는 달력에 다른 달 날짜도 보여요',
+        'PC에서 한 할 일이 폰에 바로 맞춰져요',
+      ],
+      fixes: [
+        '카테고리를 놓으면 밑에서 다시 올라오던 점을 고쳤어요',
+        'PC에서 할 일을 고치면 제목이 전부 선택된 것처럼 보이던 점을 고쳤어요',
+        '테마 속도 바가 끊기던 점을 고쳤어요',
+      ],
+    ),
+    ReleaseNote(
       version: '1.5.0',
       items: [
         '테마 장식이 움직여요',

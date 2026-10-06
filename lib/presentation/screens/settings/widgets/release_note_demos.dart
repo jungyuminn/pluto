@@ -160,6 +160,12 @@ enum ReleaseDemo {
   tabletDecor,
   categoryRise,
   themeMotion,
+  todoSwipeDelete,
+  addTitleFocus,
+  homeStickerTap,
+  otherMonthDays,
+  titleCaret,
+  categoryPlace,
   feature,
   fix,
 }
@@ -281,7 +287,31 @@ ReleaseDemo releaseDemoFor(String text, {required bool isFix}) {
     }
     if (text.contains('기능 안내')) return ReleaseDemo.featureIntroStay;
     if (text.contains('스티커 팩')) return ReleaseDemo.stickers;
+    if (text.contains('밑에서 다시 올라오') || text.contains('카테고리를 놓으면')) {
+      return ReleaseDemo.categoryPlace;
+    }
+    if (text.contains('전부 선택') || text.contains('제목이 전부')) {
+      return ReleaseDemo.titleCaret;
+    }
+    if (text.contains('테마 속도 바') || text.contains('속도 바가 끊기')) {
+      return ReleaseDemo.themeMotion;
+    }
     return ReleaseDemo.fix;
+  }
+  if (text.contains('밀어서 지우')) {
+    return ReleaseDemo.todoSwipeDelete;
+  }
+  if (text.contains('제목에 커서') || text.contains('칸을 고르고 돌아와')) {
+    return ReleaseDemo.addTitleFocus;
+  }
+  if (text.contains('스티커를 누르면') || text.contains('오늘·내일 스티커')) {
+    return ReleaseDemo.homeStickerTap;
+  }
+  if (text.contains('다른 달 날짜')) {
+    return ReleaseDemo.otherMonthDays;
+  }
+  if (text.contains('폰에 바로 맞춰')) {
+    return ReleaseDemo.accountSync;
   }
   if (text.contains('장식이 움직') || text.contains('재생 속도')) {
     return ReleaseDemo.themeMotion;
@@ -739,6 +769,12 @@ class ReleaseDemoView extends StatelessWidget {
       ReleaseDemo.tabletDecor => const _TabletDecorDemo(),
       ReleaseDemo.themeMotion => const _ThemeMotionDemo(),
       ReleaseDemo.categoryRise => const _CategoryRiseDemo(),
+      ReleaseDemo.todoSwipeDelete => const _TodoSwipeDeleteDemo(),
+      ReleaseDemo.addTitleFocus => const _AddTitleFocusDemo(),
+      ReleaseDemo.homeStickerTap => const _HomeStickerTapDemo(),
+      ReleaseDemo.otherMonthDays => const _OtherMonthDaysDemo(),
+      ReleaseDemo.titleCaret => const _TitleCaretDemo(),
+      ReleaseDemo.categoryPlace => const _CategoryPlaceDemo(),
       ReleaseDemo.feature => const _FeatureDemo(),
       ReleaseDemo.fix => const _FixDemo(),
     };
@@ -13326,6 +13362,561 @@ class _FeatureDemo extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+class _TodoSwipeDeleteDemo extends StatelessWidget {
+  const _TodoSwipeDeleteDemo();
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 3600,
+      boxHeight: 176,
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final font = AppFonts.of(context);
+        final swipe = Curves.easeInOutCubic.transform(_gate(t, 0.18, 0.52));
+        final press = _pulse(t, 0.12, 0.22, 0.62);
+        return Stack(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(18, 36, 18, 28),
+              child: _Card(
+                padding: EdgeInsets.zero,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: SizedBox(
+                    height: 56,
+                    child: Stack(
+                      children: [
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: Container(
+                            width: 72,
+                            height: 56,
+                            color: const Color(0xFFEF4444),
+                            alignment: Alignment.center,
+                            child: Opacity(
+                              opacity: swipe,
+                              child: Text(
+                                '삭제',
+                                style: TextStyle(
+                                  fontFamily: font,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w800,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        Transform.translate(
+                          offset: Offset(-72 * swipe, 0),
+                          child: ColoredBox(
+                            color: colors.card,
+                            child: Padding(
+                              padding: const EdgeInsets.fromLTRB(14, 0, 14, 0),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    width: 10,
+                                    height: 10,
+                                    decoration: const BoxDecoration(
+                                      color: Color(0xFF3B82F6),
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: Text(
+                                      '왼쪽으로 밀어서 삭제할 수 있어요',
+                                      style: TextStyle(
+                                        fontFamily: font,
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w700,
+                                        color: colors.text,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            if (press > 0)
+              Positioned(
+                left: 168 - 72 * swipe,
+                top: 78,
+                child: _Finger(pressed: press),
+              ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _AddTitleFocusDemo extends StatelessWidget {
+  const _AddTitleFocusDemo();
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 4200,
+      boxHeight: 196,
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final font = AppFonts.of(context);
+        final sheet = Curves.easeInOutCubic.transform(
+          t < 0.62 ? _gate(t, 0.22, 0.38) : 1 - _gate(t, 0.68, 0.84),
+        );
+        final press = _pulse(t, 0.16, 0.24, 0.36);
+        final blink = ((t * 8) % 1) < 0.55 ? 1.0 : 0.0;
+        return Stack(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+              child: _Card(
+                padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Text(
+                          '회의하기',
+                          style: TextStyle(
+                            fontFamily: font,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
+                            color: colors.text,
+                          ),
+                        ),
+                        Opacity(
+                          opacity: blink,
+                          child: Container(
+                            width: 1.6,
+                            height: 16,
+                            margin: const EdgeInsets.only(left: 2),
+                            color: const Color(0xFF3B82F6),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        _demoChip('운동', const Color(0xFF7CB342), font),
+                        const SizedBox(width: 6),
+                        _demoChip('10월 7일', const Color(0xFF3B82F6), font),
+                        const SizedBox(width: 6),
+                        _demoChip('오후 3시', const Color(0xFF3B82F6), font),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            if (sheet > 0)
+              Align(
+                alignment: Alignment.bottomCenter,
+                child: Transform.translate(
+                  offset: Offset(0, 72 * (1 - sheet)),
+                  child: Opacity(
+                    opacity: sheet,
+                    child: Container(
+                      width: double.infinity,
+                      height: 88,
+                      decoration: BoxDecoration(
+                        color: colors.card,
+                        borderRadius: const BorderRadius.vertical(
+                          top: Radius.circular(18),
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: colors.shadow,
+                            blurRadius: 12,
+                            offset: const Offset(0, -2),
+                          ),
+                        ],
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        '10월 7일',
+                        style: TextStyle(
+                          fontFamily: font,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w800,
+                          color: const Color(0xFF3B82F6),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            if (press > 0)
+              Positioned(
+                left: 118,
+                top: 78,
+                child: _Finger(pressed: press),
+              ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _demoChip(String label, Color color, String font) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.14),
+        borderRadius: BorderRadius.circular(99),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontFamily: font,
+          fontSize: 11,
+          fontWeight: FontWeight.w700,
+          color: color,
+        ),
+      ),
+    );
+  }
+}
+
+class _HomeStickerTapDemo extends StatelessWidget {
+  const _HomeStickerTapDemo();
+
+  static const _open = 'assets/stickers/cute_hamster/01_yay.webp';
+  static const _picked = 'assets/stickers/cute_rabbit/01_hello.webp';
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 3800,
+      boxHeight: 188,
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final font = AppFonts.of(context);
+        final press = _pulse(t, 0.16, 0.24, 0.34);
+        final sheet = Curves.easeOutCubic.transform(
+          t < 0.7 ? _gate(t, 0.26, 0.4) : 1 - _gate(t, 0.78, 0.92),
+        );
+        final picked = t >= 0.58;
+        return Stack(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(18, 18, 18, 14),
+              child: _Card(
+                padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '오늘',
+                            style: TextStyle(
+                              fontFamily: font,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: colors.muted,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            '회의하기',
+                            style: TextStyle(
+                              fontFamily: font,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w800,
+                              color: colors.text,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Transform.scale(
+                      scale: 1 - press * 0.08,
+                      child: Image.asset(
+                        picked ? _picked : _open,
+                        width: 48,
+                        height: 48,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            if (sheet > 0)
+              Align(
+                alignment: Alignment.bottomCenter,
+                child: Opacity(
+                  opacity: sheet,
+                  child: Transform.translate(
+                    offset: Offset(0, 36 * (1 - sheet)),
+                    child: Container(
+                      margin: const EdgeInsets.fromLTRB(28, 0, 28, 12),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 10,
+                      ),
+                      decoration: BoxDecoration(
+                        color: colors.card,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: colors.shadow,
+                            blurRadius: 10,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          Image.asset(_open, width: 36, height: 36),
+                          Transform.scale(
+                            scale: picked ? 1.12 : 1,
+                            child: Image.asset(_picked, width: 36, height: 36),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            if (press > 0)
+              Positioned(
+                right: 36,
+                top: 48,
+                child: _Finger(pressed: press),
+              ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _OtherMonthDaysDemo extends StatelessWidget {
+  const _OtherMonthDaysDemo();
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 2800,
+      boxHeight: 176,
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final font = AppFonts.of(context);
+        final days = [29, 30, 1, 2, 3, 4, 5];
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+          child: _Card(
+            padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+            child: Row(
+              children: [
+                for (var i = 0; i < days.length; i++)
+                  Expanded(
+                    child: Opacity(
+                      opacity: i < 2 ? 0.72 + 0.28 * _gate(t, 0.2, 0.5) : 1,
+                      child: Column(
+                        children: [
+                          if (i == 2)
+                            Container(
+                              width: 26,
+                              height: 26,
+                              alignment: Alignment.center,
+                              decoration: const BoxDecoration(
+                                color: Color(0xFF3B82F6),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Text(
+                                '1',
+                                style: TextStyle(
+                                  fontFamily: font,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w800,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            )
+                          else
+                            SizedBox(
+                              height: 26,
+                              child: Center(
+                                child: Text(
+                                  days[i].toString(),
+                                  style: TextStyle(
+                                    fontFamily: font,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w800,
+                                    color: i < 2 ? colors.muted : colors.text,
+                                  ),
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _TitleCaretDemo extends StatelessWidget {
+  const _TitleCaretDemo();
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 2400,
+      boxHeight: 168,
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final font = AppFonts.of(context);
+        final selected = t < 0.42;
+        final blink = ((t * 6) % 1) < 0.55 ? 1.0 : 0.0;
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(22, 44, 22, 36),
+          child: _Card(
+            padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
+            child: Row(
+              children: [
+                Container(
+                  decoration: BoxDecoration(
+                    color: selected
+                        ? const Color(0xFF3B82F6).withValues(alpha: 0.28)
+                        : Colors.transparent,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    '회의하기',
+                    style: TextStyle(
+                      fontFamily: font,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                      color: colors.text,
+                    ),
+                  ),
+                ),
+                if (!selected)
+                  Opacity(
+                    opacity: blink,
+                    child: Container(
+                      width: 1.8,
+                      height: 18,
+                      margin: const EdgeInsets.only(left: 2),
+                      color: const Color(0xFF3B82F6),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _CategoryPlaceDemo extends StatelessWidget {
+  const _CategoryPlaceDemo();
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 3800,
+      boxHeight: 176,
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final font = AppFonts.of(context);
+        final press = _pulse(t, 0.10, 0.18, 0.58);
+        final drag = Curves.easeInOutCubic.transform(_gate(t, 0.18, 0.48));
+        final settle = Curves.easeOutCubic.transform(_gate(t, 0.48, 0.66));
+        const from = Offset(0, 0);
+        const to = Offset(72, 0);
+        final held = settle > 0
+            ? Offset.lerp(to + const Offset(10, -6), to, settle)!
+            : Offset.lerp(from, to + const Offset(10, -6), drag)!;
+        final other = Offset.lerp(to, from, drag)!;
+        return Stack(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(28, 40, 28, 28),
+              child: SizedBox(
+                height: 64,
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Positioned(
+                      left: other.dx,
+                      top: 8,
+                      child: _catTile('운동', const Color(0xFF7CB342), font, colors),
+                    ),
+                    Positioned(
+                      left: held.dx,
+                      top: 8 + held.dy,
+                      child: Transform.scale(
+                        scale: 1 + press * 0.06 * (1 - settle),
+                        child: _catTile(
+                          '여행',
+                          const Color(0xFF00ACC1),
+                          font,
+                          colors,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            if (press > 0)
+              Positioned(
+                left: 44 + held.dx,
+                top: 56 + held.dy,
+                child: _Finger(pressed: press),
+              ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _catTile(String name, Color color, String font, AppColors colors) {
+    return Container(
+      width: 64,
+      height: 48,
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.16),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      alignment: Alignment.center,
+      child: Text(
+        name,
+        style: TextStyle(
+          fontFamily: font,
+          fontSize: 12,
+          fontWeight: FontWeight.w800,
+          color: color,
+        ),
+      ),
     );
   }
 }

@@ -2718,6 +2718,9 @@ class _ThemeSettingsPageState extends State<_ThemeSettingsPage> {
                 color: colors.accent,
                 cardColor: colors.card,
                 onChanged: (value) {
+                  unawaited(theme.setMotion(value, persist: false));
+                },
+                onChangeEnd: (value) {
                   unawaited(theme.setMotion(value));
                 },
               ),
@@ -3601,6 +3604,7 @@ class _ThemeMotionSlider extends StatelessWidget {
     required this.color,
     required this.cardColor,
     required this.onChanged,
+    this.onChangeEnd,
   });
 
   final bool visible;
@@ -3608,6 +3612,7 @@ class _ThemeMotionSlider extends StatelessWidget {
   final Color color;
   final Color cardColor;
   final ValueChanged<double> onChanged;
+  final ValueChanged<double>? onChangeEnd;
 
   @override
   Widget build(BuildContext context) {
@@ -3651,6 +3656,7 @@ class _ThemeMotionSlider extends StatelessWidget {
                     color: color,
                     barHeight: 32,
                     onChanged: onChanged,
+                    onChangeEnd: onChangeEnd,
                   ),
                 ),
               ),
@@ -3669,6 +3675,7 @@ class _WashSlider extends StatefulWidget {
     required this.value,
     required this.color,
     required this.onChanged,
+    this.onChangeEnd,
     this.barHeight = 36,
   });
 
@@ -3676,6 +3683,7 @@ class _WashSlider extends StatefulWidget {
   final double value;
   final Color color;
   final ValueChanged<double> onChanged;
+  final ValueChanged<double>? onChangeEnd;
   final double barHeight;
 
   @override
@@ -3740,6 +3748,7 @@ class _WashSliderState extends State<_WashSlider>
     if (!_dragging) return;
     _dragging = false;
     _press.reverse();
+    widget.onChangeEnd?.call(_t);
   }
 
   void _emit(double t) {

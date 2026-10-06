@@ -332,13 +332,19 @@ class ThemePreference extends ChangeNotifier {
     }
   }
 
-  Future<void> setMotion(double value) async {
+  Future<void> setMotion(double value, {bool persist = true}) async {
     var next = value.clamp(0.0, 1.0);
     if (next <= motionOff) next = 0;
-    if (next == _motion) return;
-    _motion = next;
-    notifyListeners();
-    await _prefs?.setDouble(motionKey, next);
+    if (next != _motion) {
+      final crossed = (_motion <= motionOff) != (next <= motionOff);
+      _motion = next;
+      if (persist || crossed) notifyListeners();
+    } else if (!persist) {
+      return;
+    }
+    if (persist) {
+      await _prefs?.setDouble(motionKey, next);
+    }
   }
 
   Future<void> setSkin(AppSkin value) async {

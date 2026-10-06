@@ -166,6 +166,9 @@ enum ReleaseDemo {
   otherMonthDays,
   titleCaret,
   categoryPlace,
+  addChipSize,
+  saveButtonSize,
+  categoryDotMatch,
   feature,
   fix,
 }
@@ -287,6 +290,9 @@ ReleaseDemo releaseDemoFor(String text, {required bool isFix}) {
     }
     if (text.contains('기능 안내')) return ReleaseDemo.featureIntroStay;
     if (text.contains('스티커 팩')) return ReleaseDemo.stickers;
+    if (text.contains('카테고리 점')) {
+      return ReleaseDemo.categoryDotMatch;
+    }
     if (text.contains('밑에서 다시 올라오') || text.contains('카테고리를 놓으면')) {
       return ReleaseDemo.categoryPlace;
     }
@@ -298,7 +304,13 @@ ReleaseDemo releaseDemoFor(String text, {required bool isFix}) {
     }
     return ReleaseDemo.fix;
   }
-  if (text.contains('밀어서 지우')) {
+  if (text.contains('알약 글씨') || text.contains('알약 글씨와 아이콘')) {
+    return ReleaseDemo.addChipSize;
+  }
+  if (text.contains('저장 버튼이 조금')) {
+    return ReleaseDemo.saveButtonSize;
+  }
+  if (text.contains('밀어서 지우') || text.contains('밀어서 삭제')) {
     return ReleaseDemo.todoSwipeDelete;
   }
   if (text.contains('제목에 커서') || text.contains('칸을 고르고 돌아와')) {
@@ -775,6 +787,9 @@ class ReleaseDemoView extends StatelessWidget {
       ReleaseDemo.otherMonthDays => const _OtherMonthDaysDemo(),
       ReleaseDemo.titleCaret => const _TitleCaretDemo(),
       ReleaseDemo.categoryPlace => const _CategoryPlaceDemo(),
+      ReleaseDemo.addChipSize => const _AddChipSizeDemo(),
+      ReleaseDemo.saveButtonSize => const _SaveButtonSizeDemo(),
+      ReleaseDemo.categoryDotMatch => const _CategoryDotMatchDemo(),
       ReleaseDemo.feature => const _FeatureDemo(),
       ReleaseDemo.fix => const _FixDemo(),
     };
@@ -13369,92 +13384,72 @@ class _FeatureDemo extends StatelessWidget {
 class _TodoSwipeDeleteDemo extends StatelessWidget {
   const _TodoSwipeDeleteDemo();
 
+  static const _accent = Color(0xFF3B82F6);
+
   @override
   Widget build(BuildContext context) {
     return _Loop(
-      ms: 3600,
-      boxHeight: 176,
+      ms: 4000,
+      boxHeight: 196,
       builder: (context, t) {
         final colors = AppColors.of(context);
         final font = AppFonts.of(context);
-        final swipe = Curves.easeInOutCubic.transform(_gate(t, 0.18, 0.52));
-        final press = _pulse(t, 0.12, 0.22, 0.62);
+        final swipe = Curves.easeInOutCubic.transform(_gate(t, 0.2, 0.52));
+        final press = _pulse(t, 0.14, 0.24, 0.64);
         return Stack(
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(18, 36, 18, 28),
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
               child: _Card(
-                padding: EdgeInsets.zero,
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(16),
-                  child: SizedBox(
-                    height: 56,
-                    child: Stack(
-                      children: [
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: Container(
-                            width: 72,
-                            height: 56,
-                            color: const Color(0xFFEF4444),
-                            alignment: Alignment.center,
-                            child: Opacity(
-                              opacity: swipe,
-                              child: Text(
-                                '삭제',
-                                style: TextStyle(
-                                  fontFamily: font,
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w800,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                        Transform.translate(
-                          offset: Offset(-72 * swipe, 0),
-                          child: ColoredBox(
-                            color: colors.card,
-                            child: Padding(
-                              padding: const EdgeInsets.fromLTRB(14, 0, 14, 0),
-                              child: Row(
-                                children: [
-                                  Container(
-                                    width: 10,
-                                    height: 10,
-                                    decoration: const BoxDecoration(
-                                      color: Color(0xFF3B82F6),
-                                      shape: BoxShape.circle,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 10),
-                                  Expanded(
-                                    child: Text(
-                                      '왼쪽으로 밀어서 삭제할 수 있어요',
-                                      style: TextStyle(
-                                        fontFamily: font,
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w700,
-                                        color: colors.text,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
+                padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '오늘',
+                      style: TextStyle(
+                        fontFamily: font,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w800,
+                        color: colors.text,
+                      ),
                     ),
-                  ),
+                    const SizedBox(height: 8),
+                    DayEventLabel(
+                      title: '회의하기',
+                      categoryName: '업무',
+                      color: _accent,
+                      showComplete: true,
+                      height: 46,
+                    ),
+                    const SizedBox(height: 4),
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        return SizedBox(
+                          height: 46,
+                          child: ClipRect(
+                            child: Transform.translate(
+                              offset: Offset(-constraints.maxWidth * swipe, 0),
+                              child: DayEventLabel(
+                                title: '왼쪽으로 밀어서 삭제할 수 있어요',
+                                categoryName: '안내',
+                                color: const Color(0xFF00ACC1),
+                                showComplete: true,
+                                height: 46,
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ],
                 ),
               ),
             ),
             if (press > 0)
               Positioned(
-                left: 168 - 72 * swipe,
-                top: 78,
+                left: 148 - 90 * swipe,
+                top: 122,
                 child: _Finger(pressed: press),
               ),
           ],
@@ -13467,95 +13462,133 @@ class _TodoSwipeDeleteDemo extends StatelessWidget {
 class _AddTitleFocusDemo extends StatelessWidget {
   const _AddTitleFocusDemo();
 
+  static const _accent = Color(0xFF3B82F6);
+  static final _date = DateTime(2026, 10, 7);
+
   @override
   Widget build(BuildContext context) {
     return _Loop(
-      ms: 4200,
-      boxHeight: 196,
+      ms: 4800,
+      boxHeight: 220,
       builder: (context, t) {
         final colors = AppColors.of(context);
         final font = AppFonts.of(context);
         final sheet = Curves.easeInOutCubic.transform(
-          t < 0.62 ? _gate(t, 0.22, 0.38) : 1 - _gate(t, 0.68, 0.84),
+          t < 0.58 ? _gate(t, 0.22, 0.38) : 1 - _gate(t, 0.7, 0.86),
         );
         final press = _pulse(t, 0.16, 0.24, 0.36);
-        final blink = ((t * 8) % 1) < 0.55 ? 1.0 : 0.0;
+        final caretOn = (t * 10).floor().isEven;
+        void noop() {}
         return Stack(
+          alignment: Alignment.bottomCenter,
           children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
-              child: _Card(
-                padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Text(
-                          '회의하기',
-                          style: TextStyle(
-                            fontFamily: font,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w800,
-                            color: colors.text,
-                          ),
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: colors.tint(_accent, 0.14),
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(24),
+                  ),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text.rich(
+                        TextSpan(
+                          children: [
+                            TextSpan(
+                              text: '회의하기',
+                              style: TextStyle(
+                                fontFamily: font,
+                                fontSize: 20,
+                                fontWeight: FontWeight.w700,
+                                color: colors.text,
+                              ),
+                            ),
+                            if (caretOn)
+                              TextSpan(
+                                text: '|',
+                                style: TextStyle(
+                                  fontFamily: font,
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w400,
+                                  color: _accent,
+                                ),
+                              ),
+                          ],
                         ),
-                        Opacity(
-                          opacity: blink,
-                          child: Container(
-                            width: 1.6,
-                            height: 16,
-                            margin: const EdgeInsets.only(left: 2),
-                            color: const Color(0xFF3B82F6),
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              physics: const NeverScrollableScrollPhysics(),
+                              child: Row(
+                                children: [
+                                  EventCategoryChip(
+                                    name: '업무',
+                                    color: _accent,
+                                    onPressed: noop,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  EventDateChip(
+                                    date: _date,
+                                    color: _accent,
+                                    onPressed: noop,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  EventTimeChip(
+                                    color: _accent,
+                                    onPressed: noop,
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        _demoChip('운동', const Color(0xFF7CB342), font),
-                        const SizedBox(width: 6),
-                        _demoChip('10월 7일', const Color(0xFF3B82F6), font),
-                        const SizedBox(width: 6),
-                        _demoChip('오후 3시', const Color(0xFF3B82F6), font),
-                      ],
-                    ),
-                  ],
+                          const SizedBox(width: 8),
+                          SaveCompanyButton(onPressed: noop, color: _accent),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
             if (sheet > 0)
               Align(
                 alignment: Alignment.bottomCenter,
-                child: Transform.translate(
-                  offset: Offset(0, 72 * (1 - sheet)),
-                  child: Opacity(
-                    opacity: sheet,
-                    child: Container(
-                      width: double.infinity,
-                      height: 88,
+                child: Opacity(
+                  opacity: sheet,
+                  child: Transform.translate(
+                    offset: Offset(0, 90 * (1 - sheet)),
+                    child: DecoratedBox(
                       decoration: BoxDecoration(
                         color: colors.card,
                         borderRadius: const BorderRadius.vertical(
-                          top: Radius.circular(18),
+                          top: Radius.circular(20),
                         ),
-                        boxShadow: [
+                        boxShadow: const [
                           BoxShadow(
-                            color: colors.shadow,
+                            color: Color(0x33000000),
                             blurRadius: 12,
-                            offset: const Offset(0, -2),
+                            offset: Offset(0, -2),
                           ),
                         ],
                       ),
-                      alignment: Alignment.center,
-                      child: Text(
-                        '10월 7일',
-                        style: TextStyle(
-                          fontFamily: font,
-                          fontSize: 15,
-                          fontWeight: FontWeight.w800,
-                          color: const Color(0xFF3B82F6),
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+                        child: _MiniMonth(
+                          font: font,
+                          colors: colors,
+                          accent: _accent,
+                          title: '10월',
+                          selected: 7,
                         ),
                       ),
                     ),
@@ -13564,32 +13597,13 @@ class _AddTitleFocusDemo extends StatelessWidget {
               ),
             if (press > 0)
               Positioned(
-                left: 118,
-                top: 78,
+                left: 108,
+                bottom: 28,
                 child: _Finger(pressed: press),
               ),
           ],
         );
       },
-    );
-  }
-
-  Widget _demoChip(String label, Color color, String? font) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.14),
-        borderRadius: BorderRadius.circular(99),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          fontFamily: font,
-          fontSize: 11,
-          fontWeight: FontWeight.w700,
-          color: color,
-        ),
-      ),
     );
   }
 }
@@ -13599,61 +13613,67 @@ class _HomeStickerTapDemo extends StatelessWidget {
 
   static const _open = 'assets/stickers/cute_hamster/01_yay.webp';
   static const _picked = 'assets/stickers/cute_rabbit/01_hello.webp';
+  static const _accent = Color(0xFF3B82F6);
 
   @override
   Widget build(BuildContext context) {
     return _Loop(
-      ms: 3800,
-      boxHeight: 188,
+      ms: 4200,
+      boxHeight: 200,
       builder: (context, t) {
         final colors = AppColors.of(context);
         final font = AppFonts.of(context);
-        final press = _pulse(t, 0.16, 0.24, 0.34);
+        final press = _pulse(t, 0.14, 0.22, 0.32);
         final sheet = Curves.easeOutCubic.transform(
-          t < 0.7 ? _gate(t, 0.26, 0.4) : 1 - _gate(t, 0.78, 0.92),
+          t < 0.68 ? _gate(t, 0.24, 0.4) : 1 - _gate(t, 0.8, 0.94),
         );
-        final picked = t >= 0.58;
+        final picked = t >= 0.56;
         return Stack(
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(18, 18, 18, 14),
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
               child: _Card(
-                padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
-                child: Row(
+                padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '오늘',
-                            style: TextStyle(
-                              fontFamily: font,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700,
-                              color: colors.muted,
-                            ),
+                    Row(
+                      children: [
+                        Transform.scale(
+                          scale: 1 - press * 0.08,
+                          child: Image.asset(
+                            picked ? _picked : _open,
+                            width: 44,
+                            height: 44,
                           ),
-                          const SizedBox(height: 6),
-                          Text(
-                            '회의하기',
-                            style: TextStyle(
-                              fontFamily: font,
-                              fontSize: 15,
-                              fontWeight: FontWeight.w800,
-                              color: colors.text,
-                            ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          '오늘',
+                          style: TextStyle(
+                            fontFamily: font,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: colors.text,
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-                    Transform.scale(
-                      scale: 1 - press * 0.08,
-                      child: Image.asset(
-                        picked ? _picked : _open,
-                        width: 48,
-                        height: 48,
-                      ),
+                    const SizedBox(height: 8),
+                    DayEventLabel(
+                      title: '회의하기',
+                      categoryName: '업무',
+                      color: _accent,
+                      showComplete: true,
+                      height: 44,
+                    ),
+                    const SizedBox(height: 4),
+                    DayEventLabel(
+                      title: '장보기',
+                      categoryName: '장보기',
+                      color: const Color(0xFF7CB342),
+                      showComplete: true,
+                      height: 44,
                     ),
                   ],
                 ),
@@ -13665,33 +13685,36 @@ class _HomeStickerTapDemo extends StatelessWidget {
                 child: Opacity(
                   opacity: sheet,
                   child: Transform.translate(
-                    offset: Offset(0, 36 * (1 - sheet)),
-                    child: Container(
-                      margin: const EdgeInsets.fromLTRB(28, 0, 28, 12),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 10,
-                      ),
+                    offset: Offset(0, 48 * (1 - sheet)),
+                    child: DecoratedBox(
                       decoration: BoxDecoration(
                         color: colors.card,
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
+                        borderRadius: const BorderRadius.vertical(
+                          top: Radius.circular(20),
+                        ),
+                        boxShadow: const [
                           BoxShadow(
-                            color: colors.shadow,
-                            blurRadius: 10,
-                            offset: const Offset(0, 2),
+                            color: Color(0x33000000),
+                            blurRadius: 12,
+                            offset: Offset(0, -2),
                           ),
                         ],
                       ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          Image.asset(_open, width: 36, height: 36),
-                          Transform.scale(
-                            scale: picked ? 1.12 : 1,
-                            child: Image.asset(_picked, width: 36, height: 36),
-                          ),
-                        ],
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(28, 16, 28, 18),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            Opacity(
+                              opacity: picked ? 0.45 : 1,
+                              child: Image.asset(_open, width: 44, height: 44),
+                            ),
+                            Transform.scale(
+                              scale: picked ? 1.12 : 1,
+                              child: Image.asset(_picked, width: 44, height: 44),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -13699,8 +13722,8 @@ class _HomeStickerTapDemo extends StatelessWidget {
               ),
             if (press > 0)
               Positioned(
-                right: 36,
-                top: 48,
+                left: 28,
+                top: 28,
                 child: _Finger(pressed: press),
               ),
           ],
@@ -13713,66 +13736,33 @@ class _HomeStickerTapDemo extends StatelessWidget {
 class _OtherMonthDaysDemo extends StatelessWidget {
   const _OtherMonthDaysDemo();
 
+  static const _accent = Color(0xFF3B82F6);
+
   @override
   Widget build(BuildContext context) {
     return _Loop(
-      ms: 2800,
-      boxHeight: 176,
+      ms: 3600,
+      boxHeight: 196,
       builder: (context, t) {
         final colors = AppColors.of(context);
         final font = AppFonts.of(context);
-        final days = [29, 30, 1, 2, 3, 4, 5];
+        final fade = Curves.easeOutCubic.transform(_gate(t, 0.2, 0.46));
         return Padding(
-          padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+          padding: const EdgeInsets.fromLTRB(18, 14, 18, 12),
           child: _Card(
             padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
-            child: Row(
-              children: [
-                for (var i = 0; i < days.length; i++)
-                  Expanded(
-                    child: Opacity(
-                      opacity: i < 2 ? 0.72 + 0.28 * _gate(t, 0.2, 0.5) : 1,
-                      child: Column(
-                        children: [
-                          if (i == 2)
-                            Container(
-                              width: 26,
-                              height: 26,
-                              alignment: Alignment.center,
-                              decoration: const BoxDecoration(
-                                color: Color(0xFF3B82F6),
-                                shape: BoxShape.circle,
-                              ),
-                              child: Text(
-                                '1',
-                                style: TextStyle(
-                                  fontFamily: font,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w800,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            )
-                          else
-                            SizedBox(
-                              height: 26,
-                              child: Center(
-                                child: Text(
-                                  days[i].toString(),
-                                  style: TextStyle(
-                                    fontFamily: font,
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w800,
-                                    color: i < 2 ? colors.muted : colors.text,
-                                  ),
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                  ),
+            child: _MiniMonth(
+              font: font,
+              colors: colors,
+              accent: _accent,
+              title: '10월',
+              selected: 1,
+              weeks: const [
+                [28, 29, 30, 1, 2, 3, 4],
+                [5, 6, 7, 8, 9, 10, 11],
               ],
+              otherDays: const {28, 29, 30},
+              otherFade: fade,
             ),
           ),
         );
@@ -13784,50 +13774,106 @@ class _OtherMonthDaysDemo extends StatelessWidget {
 class _TitleCaretDemo extends StatelessWidget {
   const _TitleCaretDemo();
 
+  static const _accent = Color(0xFF3B82F6);
+  static final _date = DateTime(2026, 10, 7);
+
   @override
   Widget build(BuildContext context) {
     return _Loop(
-      ms: 2400,
-      boxHeight: 168,
+      ms: 3200,
+      boxHeight: 196,
       builder: (context, t) {
         final colors = AppColors.of(context);
         final font = AppFonts.of(context);
-        final selected = t < 0.42;
-        final blink = ((t * 6) % 1) < 0.55 ? 1.0 : 0.0;
-        return Padding(
-          padding: const EdgeInsets.fromLTRB(22, 44, 22, 36),
-          child: _Card(
-            padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
-            child: Row(
-              children: [
-                Container(
-                  decoration: BoxDecoration(
-                    color: selected
-                        ? const Color(0xFF3B82F6).withValues(alpha: 0.28)
-                        : Colors.transparent,
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: Text(
-                    '회의하기',
-                    style: TextStyle(
-                      fontFamily: font,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w800,
-                      color: colors.text,
+        final selected = t < 0.38;
+        final caretOn = !selected && (t * 10).floor().isEven;
+        void noop() {}
+        return Align(
+          alignment: Alignment.bottomCenter,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: colors.tint(_accent, 0.14),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(24),
+              ),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: selected
+                            ? _accent.withValues(alpha: 0.28)
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.circular(3),
+                      ),
+                      child: Text.rich(
+                        TextSpan(
+                          children: [
+                            TextSpan(
+                              text: '회의하기',
+                              style: TextStyle(
+                                fontFamily: font,
+                                fontSize: 20,
+                                fontWeight: FontWeight.w700,
+                                color: colors.text,
+                              ),
+                            ),
+                            if (caretOn)
+                              TextSpan(
+                                text: '|',
+                                style: TextStyle(
+                                  fontFamily: font,
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w400,
+                                  color: _accent,
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
-                ),
-                if (!selected)
-                  Opacity(
-                    opacity: blink,
-                    child: Container(
-                      width: 1.8,
-                      height: 18,
-                      margin: const EdgeInsets.only(left: 2),
-                      color: const Color(0xFF3B82F6),
-                    ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          physics: const NeverScrollableScrollPhysics(),
+                          child: Row(
+                            children: [
+                              EventCategoryChip(
+                                name: '업무',
+                                color: _accent,
+                                onPressed: noop,
+                              ),
+                              const SizedBox(width: 4),
+                              EventDateChip(
+                                date: _date,
+                                color: _accent,
+                                onPressed: noop,
+                              ),
+                              const SizedBox(width: 4),
+                              EventTimeChip(
+                                color: _accent,
+                                onPressed: noop,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      SaveCompanyButton(onPressed: noop, color: _accent),
+                    ],
                   ),
-              ],
+                ],
+              ),
             ),
           ),
         );
@@ -13839,58 +13885,440 @@ class _TitleCaretDemo extends StatelessWidget {
 class _CategoryPlaceDemo extends StatelessWidget {
   const _CategoryPlaceDemo();
 
+  static const _names = ['운동', '약속', '여행', '공부', '휴식'];
+  static const _tints = [
+    Color(0xFF7CB342),
+    Color(0xFFF472B6),
+    Color(0xFF00ACC1),
+    Color(0xFFFBBF24),
+    Color(0xFFA78BFA),
+  ];
+
   @override
   Widget build(BuildContext context) {
     return _Loop(
-      ms: 3800,
-      boxHeight: 176,
+      ms: 4000,
+      boxHeight: 188,
       builder: (context, t) {
         final colors = AppColors.of(context);
         final font = AppFonts.of(context);
         final press = _pulse(t, 0.10, 0.18, 0.58);
-        final drag = Curves.easeInOutCubic.transform(_gate(t, 0.18, 0.48));
-        final settle = Curves.easeOutCubic.transform(_gate(t, 0.48, 0.66));
-        const from = Offset(0, 0);
-        const to = Offset(72, 0);
-        final held = settle > 0
-            ? Offset.lerp(to + const Offset(10, -6), to, settle)!
-            : Offset.lerp(from, to + const Offset(10, -6), drag)!;
-        final other = Offset.lerp(to, from, drag)!;
-        return Stack(
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(28, 40, 28, 28),
-              child: SizedBox(
-                height: 64,
-                child: Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    Positioned(
-                      left: other.dx,
-                      top: 8,
-                      child: _catTile('운동', const Color(0xFF7CB342), font, colors),
+        final move = Curves.easeInOutCubic.transform(_gate(t, 0.18, 0.5));
+        final settle = Curves.easeOutCubic.transform(_gate(t, 0.5, 0.68));
+        final lift = (press * (1 - settle)).clamp(0.0, 1.0);
+        return Align(
+          alignment: Alignment.bottomCenter,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: colors.card,
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(24),
+              ),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x33000000),
+                  blurRadius: 16,
+                  offset: Offset(0, -2),
+                ),
+              ],
+            ),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(12, 18, 12, 20),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final slot = constraints.maxWidth / _names.length;
+                  final starts = [0, 1, 2, 3, 4];
+                  final ends = [1, 2, 0, 3, 4];
+                  return SizedBox(
+                    height: 64,
+                    child: Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        for (var i = 0; i < _names.length; i++)
+                          Builder(
+                            builder: (context) {
+                              final held = i == 2;
+                              final x =
+                                  (starts[i] + (ends[i] - starts[i]) * move) *
+                                  slot;
+                              final y = held ? -8 * lift : 0.0;
+                              return Positioned(
+                                left: x,
+                                top: 8 + y,
+                                width: slot,
+                                child: Transform.scale(
+                                  scale: 1 + (held ? lift * 0.06 : 0),
+                                  child: DecoratedBox(
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(8),
+                                      boxShadow: [
+                                        if (held)
+                                          BoxShadow(
+                                            color: Colors.black.withValues(
+                                              alpha: 0.14 * lift,
+                                            ),
+                                            blurRadius: 10 * lift,
+                                            offset: Offset(0, 4 * lift),
+                                          ),
+                                      ],
+                                    ),
+                                    child: _catTile(
+                                      _names[i],
+                                      _tints[i],
+                                      font,
+                                      colors,
+                                      selected: held,
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        if (press > 0)
+                          Positioned(
+                            left:
+                                (starts[2] + (ends[2] - starts[2]) * move) *
+                                    slot +
+                                slot / 2 -
+                                14,
+                            top: 36 - 8 * lift,
+                            child: _Finger(pressed: press),
+                          ),
+                      ],
                     ),
-                    Positioned(
-                      left: held.dx,
-                      top: 8 + held.dy,
-                      child: Transform.scale(
-                        scale: 1 + press * 0.06 * (1 - settle),
-                        child: _catTile(
-                          '여행',
-                          const Color(0xFF00ACC1),
-                          font,
-                          colors,
+                  );
+                },
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _catTile(
+    String name,
+    Color color,
+    String? font,
+    AppColors colors, {
+    bool selected = false,
+  }) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: selected ? color.withValues(alpha: 0.16) : colors.background,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 14,
+              height: 14,
+              decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              name,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontFamily: font,
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                height: 1,
+                color: colors.text,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _MiniMonth extends StatelessWidget {
+  const _MiniMonth({
+    required this.font,
+    required this.colors,
+    required this.accent,
+    required this.selected,
+    this.title,
+    this.weeks = const [
+      [4, 5, 6, 7, 8, 9, 10],
+    ],
+    this.otherDays = const <int>{},
+    this.otherFade = 1,
+  });
+
+  final String? font;
+  final AppColors colors;
+  final Color accent;
+  final int selected;
+  final String? title;
+  final List<List<int>> weeks;
+  final Set<int> otherDays;
+  final double otherFade;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (title != null) ...[
+          Text(
+            title!,
+            style: TextStyle(
+              fontFamily: font,
+              fontSize: 14,
+              fontWeight: FontWeight.w800,
+              color: colors.text,
+            ),
+          ),
+          const SizedBox(height: 8),
+        ],
+        Row(
+          children: [
+            for (final day in const ['일', '월', '화', '수', '목', '금', '토'])
+              Expanded(
+                child: Text(
+                  day,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontFamily: font,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    color: colors.muted,
+                  ),
+                ),
+              ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        for (final week in weeks) ...[
+          Row(
+            children: [
+              for (final n in week)
+                Expanded(
+                  child: Opacity(
+                    opacity: otherDays.contains(n) ? otherFade : 1,
+                    child: Center(
+                      child: Container(
+                        width: 26,
+                        height: 26,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: n == selected ? accent : Colors.transparent,
+                        ),
+                        child: Text(
+                          '$n',
+                          style: TextStyle(
+                            fontFamily: font,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            height: 1,
+                            color: n == selected
+                                ? Colors.white
+                                : otherDays.contains(n)
+                                ? colors.muted
+                                : colors.text,
+                          ),
                         ),
                       ),
                     ),
-                  ],
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 2),
+        ],
+      ],
+    );
+  }
+}
+
+class _AddChipSizeDemo extends StatelessWidget {
+  const _AddChipSizeDemo();
+
+  static const _accent = Color(0xFF3B82F6);
+  static final _date = DateTime(2026, 10, 7);
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 2800,
+      boxHeight: 196,
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final font = AppFonts.of(context);
+        final shown = Curves.easeOutCubic.transform(_gate(t, 0.08, 0.32));
+        void noop() {}
+        return Align(
+          alignment: Alignment.bottomCenter,
+          child: Opacity(
+            opacity: shown,
+            child: Transform.translate(
+              offset: Offset(0, 16 * (1 - shown)),
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: colors.tint(_accent, 0.14),
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(24),
+                  ),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text(
+                        '회의하기',
+                        style: TextStyle(
+                          fontFamily: font,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w700,
+                          color: colors.text,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              physics: const NeverScrollableScrollPhysics(),
+                              child: Row(
+                                children: [
+                                  EventCategoryChip(
+                                    name: '업무',
+                                    color: _accent,
+                                    onPressed: noop,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  EventDateChip(
+                                    date: _date,
+                                    color: _accent,
+                                    onPressed: noop,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  EventTimeChip(
+                                    color: _accent,
+                                    onPressed: noop,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          SaveCompanyButton(onPressed: noop, color: _accent),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _SaveButtonSizeDemo extends StatelessWidget {
+  const _SaveButtonSizeDemo();
+
+  static const _accent = Color(0xFF3B82F6);
+  static final _date = DateTime(2026, 10, 7);
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 3200,
+      boxHeight: 196,
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final font = AppFonts.of(context);
+        final press = _pulse(t, 0.38, 0.5, 0.66);
+        void noop() {}
+        return Stack(
+          alignment: Alignment.bottomCenter,
+          children: [
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: colors.tint(_accent, 0.14),
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(24),
+                  ),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text(
+                        '회의하기',
+                        style: TextStyle(
+                          fontFamily: font,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w700,
+                          color: colors.text,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              physics: const NeverScrollableScrollPhysics(),
+                              child: Row(
+                                children: [
+                                  EventCategoryChip(
+                                    name: '업무',
+                                    color: _accent,
+                                    onPressed: noop,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  EventDateChip(
+                                    date: _date,
+                                    color: _accent,
+                                    onPressed: noop,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  EventTimeChip(
+                                    color: _accent,
+                                    onPressed: noop,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Transform.scale(
+                            scale: 1 - press * 0.08,
+                            child: SaveCompanyButton(
+                              onPressed: noop,
+                              color: _accent,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
             if (press > 0)
               Positioned(
-                left: 44 + held.dx,
-                top: 56 + held.dy,
+                right: 28,
+                bottom: 22,
                 child: _Finger(pressed: press),
               ),
           ],
@@ -13898,25 +14326,90 @@ class _CategoryPlaceDemo extends StatelessWidget {
       },
     );
   }
+}
 
-  Widget _catTile(String name, Color color, String? font, AppColors colors) {
-    return Container(
-      width: 64,
-      height: 48,
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.16),
-        borderRadius: BorderRadius.circular(10),
-      ),
-      alignment: Alignment.center,
-      child: Text(
-        name,
-        style: TextStyle(
-          fontFamily: font,
-          fontSize: 12,
-          fontWeight: FontWeight.w800,
-          color: color,
-        ),
-      ),
+class _CategoryDotMatchDemo extends StatelessWidget {
+  const _CategoryDotMatchDemo();
+
+  static const _pastel = Color(0xFFF5E07A);
+  static final _date = DateTime(2026, 10, 7);
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 2800,
+      boxHeight: 196,
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final font = AppFonts.of(context);
+        final shown = Curves.easeOutCubic.transform(_gate(t, 0.1, 0.34));
+        void noop() {}
+        return Align(
+          alignment: Alignment.bottomCenter,
+          child: Opacity(
+            opacity: shown,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: colors.tint(_pastel, 0.14),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(24),
+                ),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      '회의하기',
+                      style: TextStyle(
+                        fontFamily: font,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                        color: colors.text,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            physics: const NeverScrollableScrollPhysics(),
+                            child: Row(
+                              children: [
+                                EventCategoryChip(
+                                  name: '공부',
+                                  color: _pastel,
+                                  onPressed: noop,
+                                ),
+                                const SizedBox(width: 4),
+                                EventDateChip(
+                                  date: _date,
+                                  color: _pastel,
+                                  onPressed: noop,
+                                ),
+                                const SizedBox(width: 4),
+                                EventTimeChip(
+                                  color: _pastel,
+                                  onPressed: noop,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        SaveCompanyButton(onPressed: noop, color: _pastel),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }

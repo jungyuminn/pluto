@@ -15,8 +15,8 @@ class SaveCompanyButton extends StatefulWidget {
   final VoidCallback onPressed;
   final Color color;
 
-  static const size = 44.0;
-  static const _iconSize = 22.0;
+  static const size = 40.0;
+  static const _iconSize = 20.0;
 
   @override
   State<SaveCompanyButton> createState() => _SaveCompanyButtonState();

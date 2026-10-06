@@ -17,9 +17,19 @@ class ReleaseNote {
 abstract final class ReleaseNotes {
   static const all = [
     ReleaseNote(
+      version: '1.5.2',
+      items: [
+        '할 일 추가 알약 글씨와 아이콘이 조금 커졌어요',
+        '저장 버튼이 조금 작아졌어요',
+      ],
+      fixes: [
+        '카테고리 점이 다른 아이콘과 색이 다르던 점을 고쳤어요',
+      ],
+    ),
+    ReleaseNote(
       version: '1.5.1',
       items: [
-        '처음 깔면 밀어서 지우는 할 일이 나와요',
+        '처음 할 일에 밀어서 삭제하는 안내가 생겼어요',
         '할 일 추가에서 칸을 고르고 돌아와도 제목에 커서가 남아요',
         '홈에서 오늘·내일 스티커를 누르면 바꿀 수 있어요',
         '날짜 고르는 달력에 다른 달 날짜도 보여요',

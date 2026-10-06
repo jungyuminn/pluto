@@ -14,7 +14,7 @@ class EventDateChip extends StatelessWidget {
     required this.color,
     this.onPressed,
     this.label,
-    this.iconSize = 20,
+    this.iconSize = 21,
   });
 
   final DateTime date;
@@ -38,7 +38,7 @@ class EventDateChip extends StatelessWidget {
       pressedColor: colors.pressed,
       borderRadius: BorderRadius.circular(999),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(8, 5, 10, 5),
+        padding: const EdgeInsets.fromLTRB(6, 5, 8, 5),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -55,7 +55,7 @@ class EventDateChip extends StatelessWidget {
               _label,
               style: TextStyle(
                 fontFamily: AppFonts.of(context),
-                fontSize: 15,
+                fontSize: 16,
                 fontWeight: FontWeight.w700,
                 color: ink,
               ),

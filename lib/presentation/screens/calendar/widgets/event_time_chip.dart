@@ -44,7 +44,7 @@ class EventTimeChip extends StatelessWidget {
       pressedColor: colors.pressed,
       borderRadius: BorderRadius.circular(999),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(8, 5, 10, 5),
+        padding: const EdgeInsets.fromLTRB(6, 5, 8, 5),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -52,8 +52,8 @@ class EventTimeChip extends StatelessWidget {
               colorFilter: ColorFilter.mode(ink, BlendMode.srcIn),
               child: AppAssetImage(
                 asset: AppIcons.clock,
-                width: 20,
-                height: 20,
+                width: 21,
+                height: 21,
                 semanticLabel: AppStrings.timeAction,
               ),
             ),
@@ -62,7 +62,7 @@ class EventTimeChip extends StatelessWidget {
               _label,
               style: TextStyle(
                 fontFamily: AppFonts.of(context),
-                fontSize: 15,
+                fontSize: 16,
                 fontWeight: FontWeight.w700,
                 color: ink,
               ),

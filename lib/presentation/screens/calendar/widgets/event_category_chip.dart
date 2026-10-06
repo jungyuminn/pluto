@@ -33,20 +33,20 @@ class EventCategoryChip extends StatelessWidget {
         pressedColor: AppColors.of(context).pressed,
         borderRadius: BorderRadius.circular(999),
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(8, 5, 10, 5),
+          padding: const EdgeInsets.fromLTRB(6, 5, 8, 5),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               mark ??
                   Container(
-                    width: 12,
-                    height: 12,
+                    width: 13,
+                    height: 13,
                     decoration: BoxDecoration(
-                      color: selected ? color : Colors.transparent,
+                      color: selected ? ink : Colors.transparent,
                       shape: BoxShape.circle,
                       border: selected
                           ? null
-                          : Border.all(color: color, width: 1.4),
+                          : Border.all(color: ink, width: 1.4),
                     ),
                   ),
               const SizedBox(width: 6),
@@ -59,7 +59,7 @@ class EventCategoryChip extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         fontFamily: AppFonts.of(context),
-                        fontSize: 15,
+                        fontSize: 16,
                         fontWeight: FontWeight.w700,
                         color: ink,
                       ),

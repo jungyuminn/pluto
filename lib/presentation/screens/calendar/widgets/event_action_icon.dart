@@ -13,7 +13,7 @@ class EventActionIcon extends StatelessWidget {
     this.label,
     this.text,
     this.selected = false,
-    this.size = 20,
+    this.size = 21,
   });
 
   final VoidCallback onPressed;
@@ -40,7 +40,7 @@ class EventActionIcon extends StatelessWidget {
         pressedColor: selected || hasText ? colors.pressed : Colors.transparent,
         borderRadius: BorderRadius.circular(999),
         child: Padding(
-          padding: EdgeInsets.fromLTRB(hasIcon ? 8 : 10, 5, 10, 5),
+          padding: EdgeInsets.fromLTRB(hasIcon ? 6 : 8, 5, 8, 5),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -62,7 +62,7 @@ class EventActionIcon extends StatelessWidget {
                   caption,
                   style: TextStyle(
                     fontFamily: AppFonts.of(context),
-                    fontSize: 15,
+                    fontSize: 16,
                     fontWeight: FontWeight.w700,
                     color: ink,
                   ),

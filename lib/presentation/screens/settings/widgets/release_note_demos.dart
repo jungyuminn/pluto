@@ -13574,7 +13574,7 @@ class _AddTitleFocusDemo extends StatelessWidget {
     );
   }
 
-  Widget _demoChip(String label, Color color, String font) {
+  Widget _demoChip(String label, Color color, String? font) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
       decoration: BoxDecoration(
@@ -13899,7 +13899,7 @@ class _CategoryPlaceDemo extends StatelessWidget {
     );
   }
 
-  Widget _catTile(String name, Color color, String font, AppColors colors) {
+  Widget _catTile(String name, Color color, String? font, AppColors colors) {
     return Container(
       width: 64,
       height: 48,

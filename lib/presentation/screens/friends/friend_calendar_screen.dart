@@ -415,9 +415,10 @@ class _FriendCalendarScreenState extends State<FriendCalendarScreen> {
               Expanded(
                 child: _card(
                   colors,
-                  child: Stack(
-                    children: [
-                      Column(
+                  child: WebCalendarArrowHost(
+                    onPrevious: () => _stepCalendar(-1),
+                    onNext: () => _stepCalendar(1),
+                    child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       Padding(
@@ -509,37 +510,6 @@ class _FriendCalendarScreenState extends State<FriendCalendarScreen> {
                       ),
                     ],
                       ),
-                      if (PcLayout.isPc) ...[
-                        Positioned(
-                          left: 16,
-                          top: 0,
-                          bottom: 0,
-                          child: Center(
-                            child: WebCalendarArrow(
-                              left: true,
-                              visible: PcLayout.showCalendarArrowsOf(
-                                MediaQuery.sizeOf(context).width,
-                              ),
-                              onPressed: () => _stepCalendar(-1),
-                            ),
-                          ),
-                        ),
-                        Positioned(
-                          right: 16,
-                          top: 0,
-                          bottom: 0,
-                          child: Center(
-                            child: WebCalendarArrow(
-                              left: false,
-                              visible: PcLayout.showCalendarArrowsOf(
-                                MediaQuery.sizeOf(context).width,
-                              ),
-                              onPressed: () => _stepCalendar(1),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ],
                   ),
                 ),
               ),

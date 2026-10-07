@@ -171,12 +171,23 @@ class _PillBottomNavState extends State<PillBottomNav> {
                   final indicatorLeft = _dragging
                       ? _dragLeft
                       : _indicatorLeftFor(widget.currentIndex, statsT, jobT);
-                  return Material(
-                    color: colors.navBar,
-                    elevation: widget.embedded ? 0 : 8,
-                    shadowColor: colors.shadow,
-                    shape: const StadiumBorder(),
-                    clipBehavior: Clip.antiAlias,
+                  return DecoratedBox(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(999),
+                      boxShadow: [
+                        if (!widget.embedded)
+                          BoxShadow(
+                            color: colors.shadow,
+                            blurRadius: 18,
+                            offset: const Offset(0, 4),
+                          ),
+                      ],
+                    ),
+                    child: Material(
+                      color: colors.navBar,
+                      elevation: 0,
+                      shape: const StadiumBorder(),
+                      clipBehavior: Clip.antiAlias,
                     child: SizedBox(
                       width: barWidth,
                       height: PillBottomNav.barHeight,
@@ -309,6 +320,7 @@ class _PillBottomNavState extends State<PillBottomNav> {
                           ),
                         ),
                       ),
+                    ),
                     ),
                   );
                 },

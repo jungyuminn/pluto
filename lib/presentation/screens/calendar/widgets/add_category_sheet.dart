@@ -58,7 +58,7 @@ class _AddCategorySheetState extends State<AddCategorySheet> {
     super.initState();
     final initial = widget.initial;
     _name = PlainTextEditingController(text: initial?.name ?? '');
-    _color = initial?.color ?? EventCategory.fallback.color;
+    _color = initial?.color ?? EventCategory.pastelPalette.first;
     WidgetsBinding.instance.addPostFrameCallback((_) => _load());
   }
 
@@ -173,11 +173,13 @@ class _AddCategorySheetState extends State<AddCategorySheet> {
                   TweenAnimationBuilder<Color?>(
                     duration: const Duration(milliseconds: 280),
                     curve: Curves.easeOutCubic,
-                    tween: ColorTween(end: accent),
+                    tween: ColorTween(
+                      end: EventCategory.labelOf(accent, 0.1),
+                    ),
                     builder: (context, color, child) {
                       return SaveCompanyButton(
                         onPressed: _saving ? () {} : _save,
-                        color: color ?? accent,
+                        color: color ?? EventCategory.labelOf(accent, 0.1),
                       );
                     },
                   ),

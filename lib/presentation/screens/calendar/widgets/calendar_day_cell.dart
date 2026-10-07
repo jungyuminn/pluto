@@ -33,7 +33,7 @@ class CalendarDayCell extends StatelessWidget {
   static const lunarAnim = Duration(milliseconds: 280);
   static const eventsTopGap = 2.0;
   static const labelHeight = 18.0;
-  static const labelGap = 2.0;
+  static const labelGap = 4.0;
   static const emojiHeight = 56.0;
 
   static double emojiHeightFor(double scale) => emojiHeight * scale;

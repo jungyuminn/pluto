@@ -109,15 +109,15 @@ class EventCategory {
   ];
 
   static const palette = [
-    ...basicPalette,
     ...pastelPalette,
+    ...basicPalette,
     ...dustyPalette,
     ...deepPalette,
   ];
 
   static const colorPacks = [
-    CategoryColorPack(id: 'basic', colors: basicPalette),
     CategoryColorPack(id: 'pastel', colors: pastelPalette),
+    CategoryColorPack(id: 'basic', colors: basicPalette),
     CategoryColorPack(id: 'dusty', colors: dustyPalette),
     CategoryColorPack(id: 'deep', colors: deepPalette),
   ];
@@ -129,16 +129,14 @@ class EventCategory {
     return 0;
   }
 
-  /// 파스텔 3~6번은 배경이 연해서 라벨 글씨만 살짝 진하게.
-  static Color labelOf(Color color) {
+  /// 파스텔·노란 기본색은 배경이 연해서 글씨·아이콘만 살짝 진하게.
+  static Color labelOf(Color color, [double amount = 0.3]) {
     final value = color.toARGB32();
-    if (value != pastelPalette[2] &&
-        value != pastelPalette[3] &&
-        value != pastelPalette[4] &&
-        value != pastelPalette[5]) {
+    if (amount <= 0) return color;
+    if (!pastelPalette.contains(value) && value != 0xFFF6C000) {
       return color;
     }
-    return Color.lerp(color, const Color(0xFF1C1910), 0.2)!;
+    return Color.lerp(color, const Color(0xFF1C1910), amount)!;
   }
 
   static const presets = [

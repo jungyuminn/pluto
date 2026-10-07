@@ -647,8 +647,10 @@ class CalendarScreenState extends State<CalendarScreen>
         (PcLayout.isPc ? PcLayout.navLift : 0) +
         MediaQuery.viewPaddingOf(context).bottom;
 
+    final colors = AppColors.of(context);
     return AppSkinBackground(
       playing: widget.visible,
+      color: colors.isDark ? null : const Color(0xFFFFFFFF),
       child: Scaffold(
         resizeToAvoidBottomInset: false,
         backgroundColor: Colors.transparent,
@@ -784,11 +786,10 @@ class CalendarScreenState extends State<CalendarScreen>
                             ),
                           ),
                           Expanded(
-                            child: Stack(
-                              fit: StackFit.expand,
-                              children: [
-                                Positioned.fill(
-                                  child: _SearchStableViewport(
+                            child: WebCalendarArrowHost(
+                              onPrevious: () => _stepCalendar(-1),
+                              onNext: () => _stepCalendar(1),
+                              child: _SearchStableViewport(
                                   animation: _searchAnimation,
                                   child: TutorialAnchor(
                                     id: TutorialAnchorId.calendarGrid,
@@ -926,38 +927,6 @@ class CalendarScreenState extends State<CalendarScreen>
                                     ),
                                   ),
                                 ),
-                                ),
-                                if (PcLayout.isPc) ...[
-                                  Positioned(
-                                    left: 16,
-                                    top: 0,
-                                    bottom: 0,
-                                    child: Center(
-                                      child: WebCalendarArrow(
-                                        left: true,
-                                        visible: PcLayout.showCalendarArrowsOf(
-                                          MediaQuery.sizeOf(context).width,
-                                        ),
-                                        onPressed: () => _stepCalendar(-1),
-                                      ),
-                                    ),
-                                  ),
-                                  Positioned(
-                                    right: 16,
-                                    top: 0,
-                                    bottom: 0,
-                                    child: Center(
-                                      child: WebCalendarArrow(
-                                        left: false,
-                                        visible: PcLayout.showCalendarArrowsOf(
-                                          MediaQuery.sizeOf(context).width,
-                                        ),
-                                        onPressed: () => _stepCalendar(1),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ],
                             ),
                           ),
                         ],

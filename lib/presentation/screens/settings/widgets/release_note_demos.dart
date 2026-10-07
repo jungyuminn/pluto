@@ -6,9 +6,16 @@ import 'package:pluto/core/constants/app_fonts.dart';
 import 'package:pluto/core/constants/app_icons.dart';
 import 'package:pluto/core/constants/app_strings.dart';
 import 'package:pluto/core/theme/app_colors.dart';
+import 'package:pluto/core/theme/app_skin_background.dart';
+import 'package:pluto/data/datasources/theme_preference.dart';
+import 'package:pluto/domain/entities/event_category.dart';
 import 'package:pluto/domain/entities/friend_profile.dart';
 import 'package:pluto/domain/entities/ledger_entry.dart';
 import 'package:pluto/presentation/screens/add_company/widgets/save_company_button.dart';
+import 'package:pluto/presentation/screens/calendar/widgets/calendar_day_cell.dart';
+import 'package:pluto/presentation/screens/calendar/widgets/category_color_picker.dart';
+import 'package:pluto/presentation/screens/shell/widgets/pill_bottom_nav.dart';
+import 'package:pluto/presentation/widgets/app_calendar/web_calendar_arrow.dart';
 import 'package:pluto/presentation/screens/friends/friend_avatar.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/calendar_event_label.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/day_event_label.dart';
@@ -169,6 +176,17 @@ enum ReleaseDemo {
   addChipSize,
   saveButtonSize,
   categoryDotMatch,
+  pastelFirst,
+  labelGap,
+  webArrowHover,
+  pastelLabel,
+  rainyHop,
+  dayDialogOpen,
+  navShadow,
+  calendarWhite,
+  sceneDecor,
+  yellowLabel,
+  pastelSaveFlash,
   feature,
   fix,
 }
@@ -290,6 +308,15 @@ ReleaseDemo releaseDemoFor(String text, {required bool isFix}) {
     }
     if (text.contains('기능 안내')) return ReleaseDemo.featureIntroStay;
     if (text.contains('스티커 팩')) return ReleaseDemo.stickers;
+    if (text.contains('이미지 테마 장식')) {
+      return ReleaseDemo.sceneDecor;
+    }
+    if (text.contains('노란 카테고리')) {
+      return ReleaseDemo.yellowLabel;
+    }
+    if (text.contains('저장 버튼이 잠깐')) {
+      return ReleaseDemo.pastelSaveFlash;
+    }
     if (text.contains('카테고리 점')) {
       return ReleaseDemo.categoryDotMatch;
     }
@@ -304,7 +331,31 @@ ReleaseDemo releaseDemoFor(String text, {required bool isFix}) {
     }
     return ReleaseDemo.fix;
   }
-  if (text.contains('알약 글씨') || text.contains('알약 글씨와 아이콘')) {
+  if (text.contains('파스텔이 먼저')) {
+    return ReleaseDemo.pastelFirst;
+  }
+  if (text.contains('할 일 사이')) {
+    return ReleaseDemo.labelGap;
+  }
+  if (text.contains('달력 화살표')) {
+    return ReleaseDemo.webArrowHover;
+  }
+  if (text.contains('파스텔 카테고리 글씨')) {
+    return ReleaseDemo.pastelLabel;
+  }
+  if (text.contains('강아지가 움직') || text.contains('비와 같이 폴짝')) {
+    return ReleaseDemo.rainyHop;
+  }
+  if (text.contains('창이 조금 더 부드럽게')) {
+    return ReleaseDemo.dayDialogOpen;
+  }
+  if (text.contains('그림자가 생겼')) {
+    return ReleaseDemo.navShadow;
+  }
+  if (text.contains('배경이 하얘')) {
+    return ReleaseDemo.calendarWhite;
+  }
+  if (text.contains('카테고리·날짜 글씨') || text.contains('글씨와 아이콘이 조금')) {
     return ReleaseDemo.addChipSize;
   }
   if (text.contains('저장 버튼이 조금')) {
@@ -790,6 +841,17 @@ class ReleaseDemoView extends StatelessWidget {
       ReleaseDemo.addChipSize => const _AddChipSizeDemo(),
       ReleaseDemo.saveButtonSize => const _SaveButtonSizeDemo(),
       ReleaseDemo.categoryDotMatch => const _CategoryDotMatchDemo(),
+      ReleaseDemo.pastelFirst => const _PastelFirstDemo(),
+      ReleaseDemo.labelGap => const _LabelGapDemo(),
+      ReleaseDemo.webArrowHover => const _WebArrowHoverDemo(),
+      ReleaseDemo.pastelLabel => const _PastelLabelDemo(),
+      ReleaseDemo.rainyHop => const _RainyHopDemo(),
+      ReleaseDemo.dayDialogOpen => const _DayDialogOpenDemo(),
+      ReleaseDemo.navShadow => const _NavShadowDemo(),
+      ReleaseDemo.calendarWhite => const _CalendarWhiteDemo(),
+      ReleaseDemo.sceneDecor => const _SceneDecorDemo(),
+      ReleaseDemo.yellowLabel => const _YellowLabelDemo(),
+      ReleaseDemo.pastelSaveFlash => const _PastelSaveFlashDemo(),
       ReleaseDemo.feature => const _FeatureDemo(),
       ReleaseDemo.fix => const _FixDemo(),
     };
@@ -14405,6 +14467,502 @@ class _CategoryDotMatchDemo extends StatelessWidget {
                     ),
                   ],
                 ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _PastelFirstDemo extends StatefulWidget {
+  const _PastelFirstDemo();
+
+  @override
+  State<_PastelFirstDemo> createState() => _PastelFirstDemoState();
+}
+
+class _PastelFirstDemoState extends State<_PastelFirstDemo>
+    with SingleTickerProviderStateMixin {
+  static const _picks = [0, 6, 2];
+  late final AnimationController _loop;
+  var _index = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _loop = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 3600),
+    )..repeat();
+    _loop.addListener(() {
+      final next = _loop.value < 0.34
+          ? 0
+          : _loop.value < 0.67
+          ? 1
+          : 2;
+      if (next == _index) return;
+      setState(() => _index = next);
+    });
+  }
+
+  @override
+  void dispose() {
+    _loop.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    final selected = EventCategory.pastelPalette[_picks[_index]];
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(18),
+      child: ColoredBox(
+        color: colors.groupedBackground,
+        child: SizedBox(
+          height: 196,
+          width: double.infinity,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+            child: CategoryColorPicker(
+              selected: selected,
+              onSelected: (_) {},
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _LabelGapDemo extends StatelessWidget {
+  const _LabelGapDemo();
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 2800,
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final font = AppFonts.of(context);
+        final shown = Curves.easeOutCubic.transform(_gate(t, 0.12, 0.36));
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(22, 18, 22, 16),
+          child: _Card(
+            padding: const EdgeInsets.fromLTRB(10, 10, 10, 12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '16',
+                  style: TextStyle(
+                    fontFamily: font,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: colors.text,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Opacity(
+                  opacity: shown,
+                  child: Column(
+                    children: [
+                      const CalendarEventLabel(
+                        title: '회의',
+                        color: Color(0xFFFFAAA0),
+                        applyCalendarScale: false,
+                      ),
+                      const SizedBox(height: CalendarDayCell.labelGap),
+                      const CalendarEventLabel(
+                        title: '운동',
+                        color: Color(0xFF7AE8D4),
+                        applyCalendarScale: false,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _WebArrowHoverDemo extends StatelessWidget {
+  const _WebArrowHoverDemo();
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 3200,
+      builder: (context, t) {
+        final hoverLeft = t >= 0.16 && t < 0.48;
+        final hoverRight = t >= 0.58 && t < 0.9;
+        return Stack(
+          children: [
+            Center(
+              child: Text(
+                '10월',
+                style: TextStyle(
+                  fontFamily: AppFonts.of(context),
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.of(context).text,
+                ),
+              ),
+            ),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Padding(
+                padding: const EdgeInsets.only(left: 16),
+                child: WebCalendarArrow(
+                  left: true,
+                  visible: true,
+                  hovered: hoverLeft,
+                  onPressed: () {},
+                ),
+              ),
+            ),
+            Align(
+              alignment: Alignment.centerRight,
+              child: Padding(
+                padding: const EdgeInsets.only(right: 16),
+                child: WebCalendarArrow(
+                  left: false,
+                  visible: true,
+                  hovered: hoverRight,
+                  onPressed: () {},
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _PastelLabelDemo extends StatelessWidget {
+  const _PastelLabelDemo();
+
+  static const _colors = [
+    Color(0xFFF5E07A),
+    Color(0xFF9FDCFF),
+    Color(0xFFFF9AD8),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 3200,
+      builder: (context, t) {
+        final i = t < 0.34 ? 0 : (t < 0.67 ? 1 : 2);
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(28, 36, 28, 28),
+          child: CalendarEventLabel(
+            title: '할 일',
+            color: _colors[i],
+            height: 28,
+            fontSize: 15,
+            applyCalendarScale: false,
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _RainyHopDemo extends StatelessWidget {
+  const _RainyHopDemo();
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(18),
+      child: SizedBox(
+        height: 176,
+        width: double.infinity,
+        child: AppSkinBackground(
+          skin: AppSkin.rainyDay,
+          liftForNav: false,
+          simple: false,
+          playing: true,
+          child: const SizedBox.expand(),
+        ),
+      ),
+    );
+  }
+}
+
+class _DayDialogOpenDemo extends StatelessWidget {
+  const _DayDialogOpenDemo();
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 2800,
+      boxHeight: 196,
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final font = AppFonts.of(context);
+        final open = Curves.easeOutCubic.transform(_gate(t, 0.12, 0.32));
+        return Stack(
+          children: [
+            Opacity(
+              opacity: 0.28 * open,
+              child: const ColoredBox(
+                color: Color(0x66000000),
+                child: SizedBox.expand(),
+              ),
+            ),
+            Align(
+              alignment: Alignment.center,
+              child: Opacity(
+                opacity: open,
+                child: Transform.scale(
+                  scale: 0.86 + 0.14 * open,
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: colors.card,
+                      borderRadius: BorderRadius.circular(24),
+                    ),
+                    child: SizedBox(
+                      width: 220,
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '10월 16일(금)',
+                              style: TextStyle(
+                                fontFamily: font,
+                                fontSize: 15,
+                                fontWeight: FontWeight.w800,
+                                color: colors.text,
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            const DayEventLabel(
+                              title: '회의하기',
+                              categoryName: '업무',
+                              color: Color(0xFF3B82F6),
+                              timeText: '하루종일',
+                              showComplete: true,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _NavShadowDemo extends StatelessWidget {
+  const _NavShadowDemo();
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 2600,
+      builder: (context, t) {
+        final shown = Curves.easeOutCubic.transform(_gate(t, 0.1, 0.34));
+        return Align(
+          alignment: Alignment.bottomCenter,
+          child: Opacity(
+            opacity: shown,
+            child: Transform.translate(
+              offset: Offset(0, 10 * (1 - shown)),
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 18),
+                child: PillBottomNav(
+                  currentIndex: 1,
+                  onChanged: (_) {},
+                  showStats: false,
+                  showJob: false,
+                  tutorial: false,
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _CalendarWhiteDemo extends StatelessWidget {
+  const _CalendarWhiteDemo();
+
+  static const _accent = Color(0xFF3B82F6);
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 2400,
+      boxHeight: 196,
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final font = AppFonts.of(context);
+        return ColoredBox(
+          color: const Color(0xFFFFFFFF),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(18, 14, 18, 12),
+            child: _MiniMonth(
+              font: font,
+              colors: colors,
+              accent: _accent,
+              title: '10월',
+              selected: 16,
+              weeks: const [
+                [12, 13, 14, 15, 16, 17, 18],
+                [19, 20, 21, 22, 23, 24, 25],
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _SceneDecorDemo extends StatelessWidget {
+  const _SceneDecorDemo();
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(18),
+      child: SizedBox(
+        height: 176,
+        width: double.infinity,
+        child: AppSkinBackground(
+          skin: AppSkin.summerBeach,
+          liftForNav: false,
+          simple: false,
+          playing: true,
+          child: const SizedBox.expand(),
+        ),
+      ),
+    );
+  }
+}
+
+class _YellowLabelDemo extends StatelessWidget {
+  const _YellowLabelDemo();
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 2600,
+      builder: (context, t) {
+        final shown = Curves.easeOutCubic.transform(_gate(t, 0.12, 0.34));
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(28, 40, 28, 28),
+          child: Opacity(
+            opacity: shown,
+            child: const CalendarEventLabel(
+              title: '할 일',
+              color: Color(0xFFF6C000),
+              height: 28,
+              fontSize: 15,
+              applyCalendarScale: false,
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _PastelSaveFlashDemo extends StatelessWidget {
+  const _PastelSaveFlashDemo();
+
+  static const _colors = [
+    Color(0xFFFFAAA0),
+    Color(0xFFF5E07A),
+    Color(0xFF7A9FFF),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 3200,
+      boxHeight: 196,
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final font = AppFonts.of(context);
+        final i = t < 0.34 ? 0 : (t < 0.67 ? 1 : 2);
+        final accent = _colors[i];
+        void noop() {}
+        return Align(
+          alignment: Alignment.bottomCenter,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: colors.tint(accent, 0.14),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(24),
+              ),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    '할 일',
+                    style: TextStyle(
+                      fontFamily: font,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                      color: colors.text,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          physics: const NeverScrollableScrollPhysics(),
+                          child: Row(
+                            children: [
+                              EventCategoryChip(
+                                name: '공부',
+                                color: accent,
+                                onPressed: noop,
+                              ),
+                              const SizedBox(width: 4),
+                              EventDateChip(
+                                date: DateTime(2026, 10, 7),
+                                color: accent,
+                                onPressed: noop,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      SaveCompanyButton(
+                        onPressed: noop,
+                        color: EventCategory.labelOf(accent, 0.1),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
           ),

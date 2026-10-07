@@ -136,10 +136,6 @@ class AppSkinAssets {
       'assets/themes/rainy_day/puddle_jump_puppy_light.webp';
   static const puddlePuppyDark =
       'assets/themes/rainy_day/puddle_jump_puppy_dark.webp';
-  static const rainyUmbrellaLight =
-      'assets/themes/rainy_day/rainy_umbrella_light.webp';
-  static const rainyUmbrellaDark =
-      'assets/themes/rainy_day/rainy_umbrella_dark.webp';
   static const rainyGroundLight =
       'assets/themes/rainy_day/rainy_ground_light.webp';
   static const rainyGroundDark =
@@ -323,8 +319,6 @@ class AppSkinAssets {
     loveVillageGroundDark,
     puddlePuppyLight,
     puddlePuppyDark,
-    rainyUmbrellaLight,
-    rainyUmbrellaDark,
     rainyGroundLight,
     rainyGroundDark,
     puppyGuitaristLight,
@@ -602,25 +596,27 @@ class AppSkinBackground extends StatelessWidget {
           )
         : custom.fillColorFor(dark);
     final sparse = simple || PcLayout.isWideOf(context);
+    final compact = simple ||
+        (PcLayout.isWideOf(context) && AppSkin.patternSkins.contains(skin));
     final Widget? decorations = custom == null
         ? switch (skin) {
       AppSkin.classic => null,
       AppSkin.blossom => _BlossomDecorations(
           liftForNav: liftForNav,
           scaleByWidth: scaleByWidth,
-          simple: sparse,
+          simple: compact,
           playing: playing,
         ),
       AppSkin.clover => _CloverDecorations(
           liftForNav: liftForNav,
           scaleByWidth: scaleByWidth,
-          simple: sparse,
+          simple: compact,
           playing: playing,
         ),
       AppSkin.fluffyBear => _FluffyMascotDecorations(
           liftForNav: liftForNav,
           scaleByWidth: scaleByWidth,
-          simple: sparse,
+          simple: compact,
           playing: playing,
           moves: true,
           faceLight: AppSkinAssets.fluffyBearFaceLight,
@@ -635,7 +631,7 @@ class AppSkinBackground extends StatelessWidget {
       AppSkin.fluffyRabbit => _FluffyMascotDecorations(
           liftForNav: liftForNav,
           scaleByWidth: scaleByWidth,
-          simple: sparse,
+          simple: compact,
           playing: playing,
           moves: true,
           hops: true,
@@ -651,7 +647,7 @@ class AppSkinBackground extends StatelessWidget {
       AppSkin.pinkHeart => _FluffyMascotDecorations(
           liftForNav: liftForNav,
           scaleByWidth: scaleByWidth,
-          simple: sparse,
+          simple: compact,
           playing: playing,
           moves: true,
           beats: true,
@@ -667,79 +663,79 @@ class AppSkinBackground extends StatelessWidget {
       AppSkin.summerBeach => _SummerBeachDecorations(
           liftForNav: liftForNav,
           scaleByWidth: scaleByWidth,
-          simple: sparse,
+          simple: compact,
           playing: playing,
         ),
       AppSkin.snowyWinter => _SnowyWinterDecorations(
           liftForNav: liftForNav,
           scaleByWidth: scaleByWidth,
-          simple: sparse,
+          simple: compact,
           playing: playing,
         ),
       AppSkin.squishyBear => _SquishyBearDecorations(
           liftForNav: liftForNav,
           scaleByWidth: scaleByWidth,
-          simple: sparse,
+          simple: compact,
           playing: playing,
         ),
       AppSkin.strawberryMilk => _StrawberryMilkDecorations(
           liftForNav: liftForNav,
           scaleByWidth: scaleByWidth,
-          simple: sparse,
+          simple: compact,
           playing: playing,
         ),
       AppSkin.lovelyBear => _LovelyBearDecorations(
           liftForNav: liftForNav,
           scaleByWidth: scaleByWidth,
-          simple: sparse,
+          simple: compact,
           playing: playing,
         ),
       AppSkin.rainyDay => _RainyDayDecorations(
           liftForNav: liftForNav,
           scaleByWidth: scaleByWidth,
-          simple: sparse,
+          simple: compact,
           playing: playing,
         ),
       AppSkin.concertDay => _ConcertDayDecorations(
           liftForNav: liftForNav,
           scaleByWidth: scaleByWidth,
-          simple: sparse,
+          simple: compact,
           playing: playing,
         ),
       AppSkin.fluffyCloud => _FluffyCloudDecorations(
           liftForNav: liftForNav,
           scaleByWidth: scaleByWidth,
-          simple: sparse,
+          simple: compact,
           playing: playing,
         ),
       AppSkin.catVillage => _CatVillageDecorations(
           liftForNav: liftForNav,
           scaleByWidth: scaleByWidth,
-          simple: sparse,
+          simple: compact,
           playing: playing,
         ),
       AppSkin.hamsterBakery => _HamsterBakeryDecorations(
           liftForNav: liftForNav,
           scaleByWidth: scaleByWidth,
-          simple: sparse,
+          simple: compact,
           playing: playing,
         ),
       AppSkin.otterBathhouse => _OtterBathhouseDecorations(
           liftForNav: liftForNav,
           scaleByWidth: scaleByWidth,
-          simple: sparse,
+          simple: compact,
           playing: playing,
         ),
       AppSkin.rabbitFlowerMarket => _RabbitFlowerMarketDecorations(
           liftForNav: liftForNav,
           scaleByWidth: scaleByWidth,
-          simple: sparse,
+          simple: compact,
           playing: playing,
         ),
       AppSkin.bearPancakeCafe => _BearPancakeCafeDecorations(
           liftForNav: liftForNav,
           scaleByWidth: scaleByWidth,
-          simple: sparse,
+          simple: compact,
           playing: playing,
         ),
     }
@@ -1942,6 +1938,34 @@ Widget _sceneBob(
   );
 }
 
+Widget _sceneHop(
+  Widget child,
+  double motion,
+  double t, {
+  int index = 0,
+}) {
+  if (!_sceneMoving(motion)) return child;
+  final phase = (t + index * 0.2) % 1;
+  final hop = phase < 0.42 ? math.sin(phase / 0.42 * math.pi) : 0.0;
+  final rest = 1 - hop;
+  final sway = math.sin((t + index * 0.3) * math.pi * 2);
+  final amp = 7 + motion * 16;
+  final idle = (1.6 + motion * 2.8) * rest;
+  return Transform.translate(
+    offset: Offset(sway * idle * 0.45, -hop * amp + sway * idle * 0.55),
+    child: Transform.rotate(
+      angle: sway * rest * (0.035 + motion * 0.045),
+      alignment: Alignment.bottomCenter,
+      child: Transform.scale(
+        scaleX: 1 + rest * 0.03 + sway * rest * 0.02,
+        scaleY: 1 - rest * 0.03 - sway * rest * 0.02,
+        alignment: Alignment.bottomCenter,
+        child: child,
+      ),
+    ),
+  );
+}
+
 Widget _sceneFall({
   required Widget child,
   required double motion,
@@ -2661,17 +2685,9 @@ class _RainyDayDecorations extends StatelessWidget {
             : constraints.biggest.shortestSide;
         final paddingBottom = MediaQuery.paddingOf(context).bottom;
         final groundBottom = liftForNav ? 58 + paddingBottom : height * 0.02;
-        final safe = _LogoSafe(
-          screenWidth: width,
-          paddingTop: MediaQuery.paddingOf(context).top,
-          enabled: !simple,
-        );
         final puppy = dark
             ? AppSkinAssets.puddlePuppyDark
             : AppSkinAssets.puddlePuppyLight;
-        final umbrella = dark
-            ? AppSkinAssets.rainyUmbrellaDark
-            : AppSkinAssets.rainyUmbrellaLight;
         final ground = dark
             ? AppSkinAssets.rainyGroundDark
             : AppSkinAssets.rainyGroundLight;
@@ -2699,18 +2715,11 @@ class _RainyDayDecorations extends StatelessWidget {
                   bandHeight: groundHeight,
                 ),
               ),
-              if (!simple)
-                safe.topLeft(
-                  left: span * 0.03,
-                  top: span * 0.02,
-                  width: span * 0.24,
-                  child: _sceneTilt(sticker(umbrella), motion, t),
-                ),
               Positioned(
                 right: span * 0.02,
                 bottom: groundBottom,
                 width: span * 0.34,
-                child: sticker(puppy),
+                child: _sceneHop(sticker(puppy), motion, t),
               ),
             ],
           ),

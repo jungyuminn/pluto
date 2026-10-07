@@ -41,7 +41,7 @@ Future<void> showLedgerDaySheet(
     barrierDismissible: false,
     barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
     barrierColor: const Color(0x00000000),
-    transitionDuration: const Duration(milliseconds: 150),
+    transitionDuration: const Duration(milliseconds: 200),
     pageBuilder: (context, animation, secondaryAnimation) {
       return _LedgerCardPager(
         date: date,
@@ -51,7 +51,7 @@ Future<void> showLedgerDaySheet(
     },
     transitionBuilder: (context, animation, secondaryAnimation, child) {
       final t = Curves.easeOutCubic.transform(animation.value);
-      final fade = (0.25 + animation.value * 1.5).clamp(0.0, 1.0);
+      final fade = t;
       final source = origin;
       Widget dialog = child;
       if (source == null || source.isEmpty) {

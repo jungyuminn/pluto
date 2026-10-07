@@ -26,7 +26,7 @@ class AiCategoryChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ink = EventCategory.labelOf(color);
+    final ink = EventCategory.labelOf(color, 0.1);
     return EventCategoryChip(
       name: name,
       color: color,

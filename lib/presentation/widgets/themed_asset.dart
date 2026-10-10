@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:pluto/app_scope.dart';
 import 'package:pluto/core/theme/app_colors.dart';
+import 'package:pluto/core/theme/app_skin_background.dart';
 import 'package:pluto/data/datasources/theme_preference.dart';
 
 class AppAssetImage extends StatelessWidget {
@@ -63,17 +64,32 @@ class ThemedAsset extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final image = AppAssetImage(
-      asset: asset,
-      width: width,
-      height: height,
-      semanticLabel: semanticLabel,
-    );
     final dark = Theme.of(context).brightness == Brightness.dark;
     final skin =
         AppScope.maybeOf(context)?.themePreference.skin ?? AppSkin.classic;
     final custom =
         AppScope.maybeOf(context)?.themePreference.usesCustom ?? false;
+    final resolved = AppSkinAssets.resolveIcon(asset, skin, dark);
+    final painted = AppSkinAssets.keepsPaint(resolved);
+    final scale = painted ? AppSkinAssets.paintedIconScale : 1.0;
+    final image = AppAssetImage(
+      asset: resolved,
+      width: width == null ? null : width! * scale,
+      height: height == null ? null : height! * scale,
+      semanticLabel: semanticLabel,
+    );
+    if (painted) {
+      if (width == null || height == null) return image;
+      return SizedBox(
+        width: width,
+        height: height,
+        child: OverflowBox(
+          maxWidth: width! * scale,
+          maxHeight: height! * scale,
+          child: image,
+        ),
+      );
+    }
     if (!dark &&
         !forceTint &&
         skin == AppSkin.classic &&

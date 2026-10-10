@@ -89,7 +89,7 @@ class CalendarEventLabel extends StatelessWidget {
           fontSize: baseFont * scale,
           fontWeight: fontWeight,
           height: 1,
-          color: EventCategory.labelOf(accent),
+          color: EventCategory.labelOf(color),
         );
 
         return SizedBox(

@@ -761,6 +761,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
         return AppStrings.themeFluffyBear;
       case AppSkin.fluffyRabbit:
         return AppStrings.themeFluffyRabbit;
+      case AppSkin.fluffyCat:
+        return AppStrings.themeFluffyCat;
+      case AppSkin.fluffyDog:
+        return AppStrings.themeFluffyDog;
       case AppSkin.pinkHeart:
         return AppStrings.themePinkHeart;
       case AppSkin.summerBeach:
@@ -917,54 +921,54 @@ class _SettingsScreenState extends State<SettingsScreen> {
             initialData: AppAuthService.instance.user,
             builder: (context, snapshot) {
               return _SettingsCard(
-                children: [
+            children: [
                   if (snapshot.data != null)
                     _SettingsSwitchTile(
                       label: AppStrings.homeShowFriends,
                       value: _showFriends,
                       onChanged: _setShowFriends,
                     ),
-                  _SettingsSwitchTile(
-                    label: AppStrings.homeShowLeftover,
-                    value: _showLeftover,
-                    onChanged: _setShowLeftover,
-                  ),
+              _SettingsSwitchTile(
+                label: AppStrings.homeShowLeftover,
+                value: _showLeftover,
+                onChanged: _setShowLeftover,
+              ),
                   _SettingsSwitchTile(
                     label: AppStrings.homeShowMemo,
                     value: _showMemo,
                     onChanged: _setShowMemo,
                   ),
-                  _SettingsSwitchTile(
-                    label: AppStrings.homeShowToday,
-                    value: _showToday,
-                    onChanged: _setShowToday,
-                  ),
-                  _SettingsSwitchTile(
-                    label: AppStrings.homeShowTomorrow,
-                    value: _showTomorrow,
-                    onChanged: _setShowTomorrow,
-                  ),
-                  _SettingsSwitchTile(
-                    label: AppStrings.homeShowWeek,
-                    value: _showWeek,
-                    onChanged: _setShowWeek,
-                  ),
-                  _SettingsSwitchTile(
-                    label: AppStrings.homeShowMonth,
-                    value: _showMonth,
-                    onChanged: _setShowMonth,
-                  ),
+              _SettingsSwitchTile(
+                label: AppStrings.homeShowToday,
+                value: _showToday,
+                onChanged: _setShowToday,
+              ),
+              _SettingsSwitchTile(
+                label: AppStrings.homeShowTomorrow,
+                value: _showTomorrow,
+                onChanged: _setShowTomorrow,
+              ),
+              _SettingsSwitchTile(
+                label: AppStrings.homeShowWeek,
+                value: _showWeek,
+                onChanged: _setShowWeek,
+              ),
+              _SettingsSwitchTile(
+                label: AppStrings.homeShowMonth,
+                value: _showMonth,
+                onChanged: _setShowMonth,
+              ),
                   _SettingsSwitchTile(
                     label: AppStrings.homeShowSomeday,
                     value: _showSomeday,
                     onChanged: _setShowSomeday,
                   ),
-                  _SettingsSwitchTile(
-                    label: AppStrings.homeShowLongGoal,
-                    value: _showLongGoal,
-                    onChanged: _setShowLongGoal,
-                  ),
-                ],
+              _SettingsSwitchTile(
+                label: AppStrings.homeShowLongGoal,
+                value: _showLongGoal,
+                onChanged: _setShowLongGoal,
+              ),
+            ],
               );
             },
           ),
@@ -1045,7 +1049,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   _SettingsSwitchTile(
-                    label: AppStrings.timeDisplay,
+                label: AppStrings.timeDisplay,
                     value: _showTime,
                     onChanged: _setShowTime,
                   ),
@@ -1066,9 +1070,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           label: AppStrings.timeHour24,
                           value: _hour24,
                           onChanged: _setHour24,
-                        ),
-                      ],
-                    ),
+              ),
+            ],
+          ),
                   ),
                 ],
               ),
@@ -1114,40 +1118,40 @@ class _SettingsScreenState extends State<SettingsScreen> {
             },
           ),
           if (!PcLayout.isPc) ...[
-            const SizedBox(height: 24),
-            _SectionLabel(
-              AppStrings.settingsNotificationSection,
-              onHelp: () => showSettingsSectionHelp(
-                context,
-                SettingsHelpSection.notification,
+          const SizedBox(height: 24),
+          _SectionLabel(
+            AppStrings.settingsNotificationSection,
+            onHelp: () => showSettingsSectionHelp(
+              context,
+              SettingsHelpSection.notification,
+            ),
+          ),
+          _SettingsCard(
+            children: [
+              _SettingsTile(
+                label: AppStrings.todoNotificationSetting,
+                value: _leadLabel(_todoReminderLead),
+                chevron: true,
+                onPressed: _openTodoNotificationSettings,
               ),
-            ),
-            _SettingsCard(
-              children: [
-                _SettingsTile(
-                  label: AppStrings.todoNotificationSetting,
-                  value: _leadLabel(_todoReminderLead),
-                  chevron: true,
-                  onPressed: _openTodoNotificationSettings,
-                ),
-                _SettingsTile(
-                  label: AppStrings.summaryNotificationSetting,
-                  value: _summaryEnabled
-                      ? AppStrings.summaryTimeLabel(_summaryHour)
-                      : AppStrings.notifyOff,
-                  chevron: true,
-                  onPressed: _openSummaryNotificationSettings,
-                ),
-                _SettingsTile(
-                  label: AppStrings.leftoverNotificationSetting,
-                  value: _leftoverEnabled
-                      ? AppStrings.summaryTimeLabel(_leftoverMinutes)
-                      : AppStrings.notifyOff,
-                  chevron: true,
-                  onPressed: _openLeftoverNotificationSettings,
-                ),
-              ],
-            ),
+              _SettingsTile(
+                label: AppStrings.summaryNotificationSetting,
+                value: _summaryEnabled
+                    ? AppStrings.summaryTimeLabel(_summaryHour)
+                    : AppStrings.notifyOff,
+                chevron: true,
+                onPressed: _openSummaryNotificationSettings,
+              ),
+              _SettingsTile(
+                label: AppStrings.leftoverNotificationSetting,
+                value: _leftoverEnabled
+                    ? AppStrings.summaryTimeLabel(_leftoverMinutes)
+                    : AppStrings.notifyOff,
+                chevron: true,
+                onPressed: _openLeftoverNotificationSettings,
+              ),
+            ],
+          ),
           ],
           const SizedBox(height: 24),
           _SectionLabel(
@@ -1199,54 +1203,54 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ],
           ),
           if (!PcLayout.isPc) ...[
-            const SizedBox(height: 24),
-            _SectionLabel(
-              AppStrings.settingsBackupSection,
-              onHelp: () =>
-                  showSettingsSectionHelp(context, SettingsHelpSection.backup),
-            ),
-            _SettingsCard(
-              children: [
-                _SettingsTile(
-                  label: AppStrings.backupData,
-                  chevron: true,
-                  onPressed: _backup,
-                ),
-                _SettingsTile(
-                  label: AppStrings.restoreData,
-                  chevron: true,
-                  onPressed: _restore,
-                ),
-                _SettingsTile(
-                  label: AppStrings.autoBackupSetting,
-                  value: _autoBackupLabel(_autoBackupInterval),
-                  chevron: true,
-                  onPressed: _openAutoBackupSettings,
-                ),
-              ],
-            ),
-            const SizedBox(height: 24),
-            _SectionLabel(
-              AppStrings.settingsCalendarSyncSection,
-              onHelp: () => showSettingsSectionHelp(
-                context,
-                SettingsHelpSection.calendarSync,
+          const SizedBox(height: 24),
+          _SectionLabel(
+            AppStrings.settingsBackupSection,
+            onHelp: () =>
+                showSettingsSectionHelp(context, SettingsHelpSection.backup),
+          ),
+          _SettingsCard(
+            children: [
+              _SettingsTile(
+                label: AppStrings.backupData,
+                chevron: true,
+                onPressed: _backup,
               ),
+              _SettingsTile(
+                label: AppStrings.restoreData,
+                chevron: true,
+                onPressed: _restore,
+              ),
+              _SettingsTile(
+                label: AppStrings.autoBackupSetting,
+                value: _autoBackupLabel(_autoBackupInterval),
+                chevron: true,
+                onPressed: _openAutoBackupSettings,
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          _SectionLabel(
+            AppStrings.settingsCalendarSyncSection,
+            onHelp: () => showSettingsSectionHelp(
+              context,
+              SettingsHelpSection.calendarSync,
             ),
-            _SettingsCard(
-              children: [
-                _SettingsTile(
-                  label: AppStrings.importSamsungCalendar,
-                  chevron: true,
-                  onPressed: _importSamsungCalendar,
-                ),
-                _SettingsTile(
-                  label: AppStrings.importIosCalendar,
-                  chevron: true,
-                  onPressed: _importIosCalendar,
-                ),
-              ],
-            ),
+          ),
+          _SettingsCard(
+            children: [
+              _SettingsTile(
+                label: AppStrings.importSamsungCalendar,
+                chevron: true,
+                onPressed: _importSamsungCalendar,
+              ),
+              _SettingsTile(
+                label: AppStrings.importIosCalendar,
+                chevron: true,
+                onPressed: _importIosCalendar,
+              ),
+            ],
+          ),
             const SizedBox(height: 24),
             _SectionLabel(
               AppStrings.settingsWidgetSection,
@@ -1439,51 +1443,51 @@ class _FontLivePreview extends StatelessWidget {
     return ListenableBuilder(
       listenable: calendar,
       builder: (context, _) {
-        final colors = AppColors.of(context);
+    final colors = AppColors.of(context);
         final showLunar = calendar.showLunar;
         final dateScale = AppFonts.calendarDateScaleOf(context);
         final now = DateTime.now();
-        return DecoratedBox(
-          decoration: BoxDecoration(
-            color: colors.card,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: colors.border),
-          ),
-          child: SizedBox(
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: colors.card,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: colors.border),
+      ),
+      child: SizedBox(
             height: 52 * FontPreference.maxScale +
                 18 * FontPreference.maxScale +
                 98 +
                 (showLunar ? 16 * FontPreference.maxScale : 0),
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const DayEventLabel(
+                title: '자기소개서 제출',
+                categoryName: '서류',
+                color: Color(0xFF3B82F6),
+                timeText: '14:00',
+              ),
+              const SizedBox(height: 12),
+              Row(
                 children: [
-                  const DayEventLabel(
-                    title: '자기소개서 제출',
-                    categoryName: '서류',
-                    color: Color(0xFF3B82F6),
-                    timeText: '14:00',
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      for (final label in AppStrings.weekdays)
-                        Expanded(
-                          child: Text(
-                            label,
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontFamily: AppFonts.of(context),
-                              fontSize: 13,
-                              fontWeight: FontWeight.w500,
-                              color: colors.muted,
-                            ),
-                          ),
+                  for (final label in AppStrings.weekdays)
+                    Expanded(
+                      child: Text(
+                        label,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontFamily: AppFonts.of(context),
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          color: colors.muted,
                         ),
-                    ],
-                  ),
+                      ),
+                    ),
+                ],
+              ),
                   const SizedBox(height: 8),
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -1527,15 +1531,15 @@ class _FontLivePreview extends StatelessWidget {
                         ),
                     ],
                   ),
-                  const SizedBox(height: 8),
-                  const CalendarEventLabel(
-                    title: '면접 연습',
-                    color: Color(0xFF22C55E),
-                  ),
-                ],
+              const SizedBox(height: 8),
+              const CalendarEventLabel(
+                title: '면접 연습',
+                color: Color(0xFF22C55E),
               ),
-            ),
+            ],
           ),
+        ),
+      ),
         );
       },
     );
@@ -1854,9 +1858,9 @@ class _ThemeLivePreviewState extends State<_ThemeLivePreview> {
     final colors = AppColors.of(context);
     final custom = widget.customTheme;
     Widget preview = AppSkinBackground(
-      liftForNav: false,
-      scaleByWidth: true,
-      animate: true,
+            liftForNav: false,
+            scaleByWidth: true,
+            animate: true,
       skin: custom == null ? null : AppSkin.classic,
       customTheme: custom,
       child: Stack(
@@ -1941,55 +1945,55 @@ class _ThemeHomePreviewPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
     final card = DecoratedBox(
-      decoration: BoxDecoration(
-        color: colors.card,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: colors.shadow,
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              AppStrings.todayTitle,
-              style: TextStyle(
-                fontFamily: AppFonts.of(context),
+            decoration: BoxDecoration(
+              color: colors.card,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: colors.shadow,
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    AppStrings.todayTitle,
+                    style: TextStyle(
+                      fontFamily: AppFonts.of(context),
                 fontSize: full ? 17 : 15,
-                fontWeight: FontWeight.w800,
-                color: colors.text,
-              ),
-            ),
-            Text(
-              '8. 21. (금)',
-              style: TextStyle(
-                fontFamily: AppFonts.of(context),
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                color: colors.muted,
-              ),
-            ),
-            const SizedBox(height: 8),
-            const DayEventLabel(
+                      fontWeight: FontWeight.w800,
+                      color: colors.text,
+                    ),
+                  ),
+                  Text(
+                    '8. 21. (금)',
+                    style: TextStyle(
+                      fontFamily: AppFonts.of(context),
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: colors.muted,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  const DayEventLabel(
               title: '헬스장',
               categoryName: '운동',
               color: Color(0xFF7CB342),
               timeText: '07:00',
-            ),
-            const SizedBox(height: 6),
-            const CalendarEventLabel(
+                  ),
+                  const SizedBox(height: 6),
+                  const CalendarEventLabel(
               title: '제주도',
               color: Color(0xFF00ACC1),
+                  ),
+                ],
+              ),
             ),
-          ],
-        ),
-      ),
     );
     if (!full) {
       return Padding(
@@ -2212,14 +2216,14 @@ class _ThemeJobPreviewPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cards = [
-      _ThemePreviewCompanyCard(
+          _ThemePreviewCompanyCard(
         name: AppStrings.appName,
-        dDay: 'D-3',
-        status: '서류제출',
+            dDay: 'D-3',
+            status: '서류제출',
         color: const Color(0xFF3B82F6),
-      ),
+          ),
       const SizedBox(height: 8),
-      _ThemePreviewCompanyCard(
+          _ThemePreviewCompanyCard(
         name: AppStrings.appName,
         dDay: 'D-5',
         status: '최종합격',
@@ -2335,15 +2339,15 @@ class _ThemePreviewCompanyCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (dDay != null)
-              Text(
+            Text(
                 dDay!,
-                style: TextStyle(
-                  fontFamily: AppFonts.of(context),
-                  fontSize: 16,
-                  fontWeight: FontWeight.w800,
-                  color: colors.danger,
-                ),
+              style: TextStyle(
+                fontFamily: AppFonts.of(context),
+                fontSize: 16,
+                fontWeight: FontWeight.w800,
+                color: colors.danger,
               ),
+            ),
             Row(
               children: [
                 Expanded(
@@ -2470,12 +2474,12 @@ class _ThemePreviewNav extends StatelessWidget {
                         pressedScale: 0.88,
                         pressedColor: Colors.transparent,
                         child: Center(
-                          child: ThemedAsset(
-                            asset: i == selected
+                            child: ThemedAsset(
+                              asset: i == selected
                                 ? previewItems[i].filled
                                 : previewItems[i].outlined,
-                            width: 20,
-                            height: 20,
+                              width: 20,
+                              height: 20,
                           ),
                         ),
                       ),
@@ -3481,9 +3485,9 @@ class _CustomThemeEditorPageState extends State<_CustomThemeEditorPage> {
                             child: SlideTransition(
                               position: offset,
                               child: child,
-                            ),
-                          );
-                        },
+          ),
+        );
+      },
                         child: KeyedSubtree(
                           key: ValueKey(_kind),
                           child: _kind == UserThemeKind.photo
@@ -5535,7 +5539,7 @@ class _SettingsTile extends StatelessWidget {
                   child: Icon(
                     CupertinoIcons.chevron_forward,
                     size: 16,
-                    color: colors.muted,
+                  color: colors.muted,
                   ),
                 ),
             ],

@@ -15,6 +15,7 @@ import 'package:pluto/presentation/screens/add_company/widgets/save_company_butt
 import 'package:pluto/presentation/screens/calendar/widgets/calendar_day_cell.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/category_color_picker.dart';
 import 'package:pluto/presentation/screens/shell/widgets/pill_bottom_nav.dart';
+import 'package:pluto/presentation/screens/shell/widgets/pill_nav_item.dart';
 import 'package:pluto/presentation/widgets/app_calendar/web_calendar_arrow.dart';
 import 'package:pluto/presentation/screens/friends/friend_avatar.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/calendar_event_label.dart';
@@ -181,6 +182,9 @@ enum ReleaseDemo {
   webArrowHover,
   pastelLabel,
   rainyHop,
+  fluffyCat,
+  fluffyDog,
+  fluffyNavIcons,
   dayDialogOpen,
   navShadow,
   calendarWhite,
@@ -345,6 +349,15 @@ ReleaseDemo releaseDemoFor(String text, {required bool isFix}) {
   }
   if (text.contains('강아지가 움직') || text.contains('비와 같이 폴짝')) {
     return ReleaseDemo.rainyHop;
+  }
+  if (text.contains('몽글고양이')) {
+    return ReleaseDemo.fluffyCat;
+  }
+  if (text.contains('몽글강아지')) {
+    return ReleaseDemo.fluffyDog;
+  }
+  if (text.contains('아래 아이콘이 테마')) {
+    return ReleaseDemo.fluffyNavIcons;
   }
   if (text.contains('창이 조금 더 부드럽게')) {
     return ReleaseDemo.dayDialogOpen;
@@ -846,6 +859,9 @@ class ReleaseDemoView extends StatelessWidget {
       ReleaseDemo.webArrowHover => const _WebArrowHoverDemo(),
       ReleaseDemo.pastelLabel => const _PastelLabelDemo(),
       ReleaseDemo.rainyHop => const _RainyHopDemo(),
+      ReleaseDemo.fluffyCat => const _FluffyCatDemo(),
+      ReleaseDemo.fluffyDog => const _FluffyDogDemo(),
+      ReleaseDemo.fluffyNavIcons => const _FluffyNavIconsDemo(),
       ReleaseDemo.dayDialogOpen => const _DayDialogOpenDemo(),
       ReleaseDemo.navShadow => const _NavShadowDemo(),
       ReleaseDemo.calendarWhite => const _CalendarWhiteDemo(),
@@ -14694,6 +14710,128 @@ class _RainyHopDemo extends StatelessWidget {
           child: const SizedBox.expand(),
         ),
       ),
+    );
+  }
+}
+
+class _FluffyCatDemo extends StatelessWidget {
+  const _FluffyCatDemo();
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(18),
+      child: SizedBox(
+        height: 176,
+        width: double.infinity,
+        child: AppSkinBackground(
+          skin: AppSkin.fluffyCat,
+          liftForNav: false,
+          simple: false,
+          playing: true,
+          child: const SizedBox.expand(),
+        ),
+      ),
+    );
+  }
+}
+
+class _FluffyDogDemo extends StatelessWidget {
+  const _FluffyDogDemo();
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(18),
+      child: SizedBox(
+        height: 176,
+        width: double.infinity,
+        child: AppSkinBackground(
+          skin: AppSkin.fluffyDog,
+          liftForNav: false,
+          simple: false,
+          playing: true,
+          child: const SizedBox.expand(),
+        ),
+      ),
+    );
+  }
+}
+
+class _FluffyNavIconsDemo extends StatelessWidget {
+  const _FluffyNavIconsDemo();
+
+  static const _skins = [
+    AppSkin.fluffyBear,
+    AppSkin.fluffyRabbit,
+    AppSkin.fluffyCat,
+    AppSkin.fluffyDog,
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 4800,
+      builder: (context, t) {
+        final skin = _skins[(t * _skins.length).floor().clamp(0, 3)];
+        final dark = Theme.of(context).brightness == Brightness.dark;
+        final colors = AppColors.of(context);
+        String icon(String asset) =>
+            AppSkinAssets.resolveIcon(asset, skin, dark);
+        return AppSkinBackground(
+          skin: skin,
+          liftForNav: false,
+          simple: false,
+          playing: true,
+          child: Align(
+            alignment: Alignment.bottomCenter,
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 18),
+              child: Material(
+                color: colors.navBar,
+                elevation: 0,
+                shape: const StadiumBorder(),
+                clipBehavior: Clip.antiAlias,
+                child: SizedBox(
+                  height: PillBottomNav.barHeight,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SizedBox(
+                        width: PillBottomNav.itemWidth,
+                        child: PillNavItem(
+                          selected: true,
+                          onTap: () {},
+                          filledAsset: icon(AppIcons.home),
+                          outlinedAsset: icon(AppIcons.homeOutlined),
+                        ),
+                      ),
+                      SizedBox(
+                        width: PillBottomNav.itemWidth,
+                        child: PillNavItem(
+                          selected: false,
+                          onTap: () {},
+                          filledAsset: icon(AppIcons.calendar),
+                          outlinedAsset: icon(AppIcons.calendarOutlined),
+                        ),
+                      ),
+                      SizedBox(
+                        width: PillBottomNav.itemWidth,
+                        child: PillNavItem(
+                          selected: false,
+                          onTap: () {},
+                          filledAsset: icon(AppIcons.planet),
+                          outlinedAsset: icon(AppIcons.planetOutlined),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }

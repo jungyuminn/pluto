@@ -372,6 +372,8 @@ class AppStrings {
   static const themeClover = '네잎클로버';
   static const themeFluffyBear = '몽글곰도리';
   static const themeFluffyRabbit = '몽글토끼';
+  static const themeFluffyCat = '몽글고양이';
+  static const themeFluffyDog = '몽글강아지';
   static const themePinkHeart = '핑크하트';
   static const themeSummerBeach = '한여름 바닷가';
   static const themeSnowyWinter = '눈 내리는 겨울';

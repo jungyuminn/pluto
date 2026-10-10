@@ -170,18 +170,9 @@ class _AddCategorySheetState extends State<AddCategorySheet> {
                     ),
                   ),
                   const SizedBox(width: 12),
-                  TweenAnimationBuilder<Color?>(
-                    duration: const Duration(milliseconds: 280),
-                    curve: Curves.easeOutCubic,
-                    tween: ColorTween(
-                      end: EventCategory.labelOf(accent, 0.1),
-                    ),
-                    builder: (context, color, child) {
-                      return SaveCompanyButton(
-                        onPressed: _saving ? () {} : _save,
-                        color: color ?? EventCategory.labelOf(accent, 0.1),
-                      );
-                    },
+                  SaveCompanyButton(
+                    onPressed: _saving ? () {} : _save,
+                    color: accent,
                   ),
                 ],
               ),

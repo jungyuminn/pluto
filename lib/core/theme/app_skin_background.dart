@@ -56,6 +56,24 @@ class AppSkinAssets {
   static const fluffyRabbitBottomDark =
       'assets/themes/fluffy_rabbit/bunny_face_bottom_dark.webp';
 
+  static const fluffyCatFaceLight =
+      'assets/themes/fluffy_cat/cat_face_decoration_light.webp';
+  static const fluffyCatFaceDark =
+      'assets/themes/fluffy_cat/cat_face_decoration_dark.webp';
+  static const fluffyCatBottomLight =
+      'assets/themes/fluffy_cat/cat_face_bottom_light.webp';
+  static const fluffyCatBottomDark =
+      'assets/themes/fluffy_cat/cat_face_bottom_dark.webp';
+
+  static const fluffyDogFaceLight =
+      'assets/themes/fluffy_dog/dog_face_decoration_light.webp';
+  static const fluffyDogFaceDark =
+      'assets/themes/fluffy_dog/dog_face_decoration_dark.webp';
+  static const fluffyDogBottomLight =
+      'assets/themes/fluffy_dog/dog_face_bottom_light.webp';
+  static const fluffyDogBottomDark =
+      'assets/themes/fluffy_dog/dog_face_bottom_dark.webp';
+
   static const pinkHeartFaceLight =
       'assets/themes/pink_heart/heart_decoration_light.webp';
   static const pinkHeartFaceDark =
@@ -275,6 +293,14 @@ class AppSkinAssets {
     fluffyRabbitFaceDark,
     fluffyRabbitBottomLight,
     fluffyRabbitBottomDark,
+    fluffyCatFaceLight,
+    fluffyCatFaceDark,
+    fluffyCatBottomLight,
+    fluffyCatBottomDark,
+    fluffyDogFaceLight,
+    fluffyDogFaceDark,
+    fluffyDogBottomLight,
+    fluffyDogBottomDark,
     pinkHeartFaceLight,
     pinkHeartFaceDark,
     pinkHeartBottomLight,
@@ -387,6 +413,10 @@ class AppSkinAssets {
   static const fluffyBearDarkFill = Color(0xFF101820);
   static const fluffyRabbitLightFill = Color(0xFFFFF2F6);
   static const fluffyRabbitDarkFill = Color(0xFF1A1014);
+  static const fluffyCatLightFill = Color(0xFFFFF4F7);
+  static const fluffyCatDarkFill = Color(0xFF181214);
+  static const fluffyDogLightFill = Color(0xFFEEF6FA);
+  static const fluffyDogDarkFill = Color(0xFF10161C);
   static const pinkHeartLightFill = Color(0xFFFFF5F8);
   static const pinkHeartDarkFill = Color(0xFF161014);
   static const summerLightFill = Color(0xFFEAF6FB);
@@ -428,6 +458,10 @@ class AppSkinAssets {
         return dark ? const Color(0xFF8BB8D0) : const Color(0xFF6AA8C8);
       case AppSkin.fluffyRabbit:
         return dark ? const Color(0xFFE09BB0) : const Color(0xFFD47A96);
+      case AppSkin.fluffyCat:
+        return dark ? const Color(0xFFE0A0B4) : const Color(0xFFC87A94);
+      case AppSkin.fluffyDog:
+        return dark ? const Color(0xFF8AB4C8) : const Color(0xFF5A96B0);
       case AppSkin.pinkHeart:
         return dark ? const Color(0xFFDC9EB5) : const Color(0xFFE86B88);
       case AppSkin.summerBeach:
@@ -471,6 +505,10 @@ class AppSkinAssets {
         return dark ? fluffyBearDarkFill : fluffyBearLightFill;
       case AppSkin.fluffyRabbit:
         return dark ? fluffyRabbitDarkFill : fluffyRabbitLightFill;
+      case AppSkin.fluffyCat:
+        return dark ? fluffyCatDarkFill : fluffyCatLightFill;
+      case AppSkin.fluffyDog:
+        return dark ? fluffyDogDarkFill : fluffyDogLightFill;
       case AppSkin.pinkHeart:
         return dark ? pinkHeartDarkFill : pinkHeartLightFill;
       case AppSkin.summerBeach:
@@ -509,6 +547,8 @@ class AppSkinAssets {
       case AppSkin.clover:
       case AppSkin.fluffyBear:
       case AppSkin.fluffyRabbit:
+      case AppSkin.fluffyCat:
+      case AppSkin.fluffyDog:
       case AppSkin.pinkHeart:
       case AppSkin.summerBeach:
       case AppSkin.snowyWinter:
@@ -530,6 +570,39 @@ class AppSkinAssets {
           (filled: AppIcons.office, outlined: AppIcons.officeOutlined),
         ];
     }
+  }
+
+  static const _fluffyBearIcons = 'assets/themes/fluffy_bear/icons';
+  static const _fluffyRabbitIcons = 'assets/themes/fluffy_rabbit/icons';
+  static const _fluffyCatIcons = 'assets/themes/fluffy_cat/icons';
+  static const _fluffyDogIcons = 'assets/themes/fluffy_dog/icons';
+  static const paintedIconScale = 1.2;
+
+  static bool keepsPaint(String asset) => asset.startsWith('assets/themes/');
+
+  static String resolveIcon(String asset, AppSkin skin, bool dark) {
+    final folder = switch (skin) {
+      AppSkin.fluffyBear => _fluffyBearIcons,
+      AppSkin.fluffyRabbit => _fluffyRabbitIcons,
+      AppSkin.fluffyCat => _fluffyCatIcons,
+      AppSkin.fluffyDog => _fluffyDogIcons,
+      _ => null,
+    };
+    if (folder == null) return asset;
+    final slot = switch (asset) {
+      AppIcons.home || AppIcons.homeOutlined => '01_home',
+      AppIcons.calendar || AppIcons.calendarOutlined => '02_calendar',
+      AppIcons.office || AppIcons.officeOutlined => '03_application',
+      AppIcons.planet || AppIcons.planetOutlined => '04_planet',
+      AppIcons.search => '05_search',
+      AppIcons.setting => '06_settings',
+      AppIcons.more => '07_more',
+      _ => null,
+    };
+    if (slot == null) return asset;
+    final name =
+        dark && skin == AppSkin.fluffyBear ? '${slot}_dark.svg' : '$slot.svg';
+    return '$folder/${dark ? 'dark' : 'light'}/$name';
   }
 }
 
@@ -643,6 +716,37 @@ class AppSkinBackground extends StatelessWidget {
           faceTintDark: const Color(0xFF885A6E),
           hillTintLight: const Color(0xFFFADDE6),
           hillTintDark: const Color(0xFF36202A),
+        ),
+      AppSkin.fluffyCat => _FluffyMascotDecorations(
+          liftForNav: liftForNav,
+          scaleByWidth: scaleByWidth,
+          simple: compact,
+          playing: playing,
+          moves: true,
+          faceLight: AppSkinAssets.fluffyCatFaceLight,
+          faceDark: AppSkinAssets.fluffyCatFaceDark,
+          bottomLight: AppSkinAssets.fluffyCatBottomLight,
+          bottomDark: AppSkinAssets.fluffyCatBottomDark,
+          faceTintLight: const Color(0xFFE0A8B8),
+          faceTintDark: const Color(0xFF7A5060),
+          hillTintLight: const Color(0xFFF8E0E8),
+          hillTintDark: const Color(0xFF2E1C20),
+        ),
+      AppSkin.fluffyDog => _FluffyMascotDecorations(
+          liftForNav: liftForNav,
+          scaleByWidth: scaleByWidth,
+          simple: compact,
+          playing: playing,
+          moves: true,
+          hops: true,
+          faceLight: AppSkinAssets.fluffyDogFaceLight,
+          faceDark: AppSkinAssets.fluffyDogFaceDark,
+          bottomLight: AppSkinAssets.fluffyDogBottomLight,
+          bottomDark: AppSkinAssets.fluffyDogBottomDark,
+          faceTintLight: const Color(0xFFB0D0E0),
+          faceTintDark: const Color(0xFF587088),
+          hillTintLight: const Color(0xFFD0E8F0),
+          hillTintDark: const Color(0xFF1A2630),
         ),
       AppSkin.pinkHeart => _FluffyMascotDecorations(
           liftForNav: liftForNav,
@@ -1184,6 +1288,7 @@ class _BlossomDecorationsState extends State<_BlossomDecorations>
             maxFraction: 0.32,
           );
           final simple = widget.simple;
+          final preview = widget.scaleByWidth;
           Widget petals(double t) {
             if (motion <= ThemePreference.motionOff) {
               return Stack(
@@ -1191,34 +1296,36 @@ class _BlossomDecorationsState extends State<_BlossomDecorations>
                   Positioned(
                     top: span * 0.02,
                     right: span * 0.02,
-                    width: span * (simple ? 0.18 : 0.26),
+                    width: span * (preview ? 0.18 : (simple ? 0.24 : 0.34)),
                     child: _stillPetal(petal90),
                   ),
                   Positioned(
                     left: span * 0.02,
                     top: span * (simple ? 0.04 : 0.16),
-                    width: span * (simple ? 0.14 : 0.2),
+                    width: span * (preview ? 0.14 : (simple ? 0.18 : 0.26)),
                     child: _stillPetal(petal180),
                   ),
                   Positioned(
                     left: span * 0.06,
                     bottom: petalBottom,
-                    width: span * (simple ? 0.16 : 0.22),
+                    width: span * (preview ? 0.16 : (simple ? 0.22 : 0.28)),
                     child: _stillPetal(petal270),
                   ),
                   if (!simple)
                     Positioned(
                       right: span * 0.04,
                       bottom: petalBottom + span * 0.08,
-                      width: span * 0.18,
+                      width: span * 0.24,
                       child: _stillPetal(petal90),
                     ),
                 ],
               );
             }
-            final sizes = simple
+            final sizes = preview
                 ? [span * 0.18, span * 0.14, span * 0.16]
-                : [span * 0.22, span * 0.18, span * 0.2, span * 0.16];
+                : simple
+                    ? [span * 0.24, span * 0.18, span * 0.22]
+                    : [span * 0.28, span * 0.24, span * 0.26, span * 0.22];
             final xs = simple
                 ? [width - span * 0.22, span * 0.04, span * 0.42]
                 : [
@@ -1413,13 +1520,14 @@ class _CloverDecorationsState extends State<_CloverDecorations>
             maxFraction: 0.32,
           );
           final simple = widget.simple;
+          final preview = widget.scaleByWidth;
           Widget clovers(double t) {
             return Stack(
               children: [
                 Positioned(
                   top: span * 0.02,
                   right: span * 0.02,
-                  width: span * (simple ? 0.18 : 0.26),
+                  width: span * (preview ? 0.18 : (simple ? 0.24 : 0.34)),
                   child: _clover(
                     asset: decoration,
                     index: 0,
@@ -1431,7 +1539,7 @@ class _CloverDecorationsState extends State<_CloverDecorations>
                 Positioned(
                   left: span * 0.02,
                   top: span * (simple ? 0.04 : 0.16),
-                  width: span * (simple ? 0.14 : 0.2),
+                  width: span * (preview ? 0.14 : (simple ? 0.18 : 0.26)),
                   child: _clover(
                     asset: decoration,
                     index: 1,
@@ -1443,7 +1551,7 @@ class _CloverDecorationsState extends State<_CloverDecorations>
                 Positioned(
                   left: span * 0.06,
                   bottom: cloverBottomLift,
-                  width: span * (simple ? 0.16 : 0.22),
+                  width: span * (preview ? 0.16 : (simple ? 0.22 : 0.28)),
                   child: _clover(
                     asset: decoration,
                     index: 2,
@@ -1456,7 +1564,7 @@ class _CloverDecorationsState extends State<_CloverDecorations>
                   Positioned(
                     right: span * 0.04,
                     bottom: cloverBottomLift + span * 0.08,
-                    width: span * 0.18,
+                    width: span * 0.24,
                     child: _clover(
                       asset: decoration,
                       index: 3,
@@ -1635,17 +1743,9 @@ class _FluffyMascotDecorationsState extends State<_FluffyMascotDecorations>
         builder: (context, constraints) {
           final width = constraints.maxWidth;
           final height = constraints.maxHeight;
-          final span = widget.scaleByWidth
-              ? width
-              : constraints.biggest.shortestSide;
           final paddingBottom = MediaQuery.paddingOf(context).bottom;
           final faceBottomLift =
-              widget.liftForNav ? 66 + paddingBottom : height * 0.04;
-          final safe = _LogoSafe(
-            screenWidth: width,
-            paddingTop: MediaQuery.paddingOf(context).top,
-            enabled: !widget.simple,
-          );
+              widget.liftForNav ? 66 + paddingBottom : height * 0.08;
           final decoration = dark ? widget.faceDark : widget.faceLight;
           final hills = dark ? widget.bottomDark : widget.bottomLight;
           final faceTint = dark ? widget.faceTintDark : widget.faceTintLight;
@@ -1720,61 +1820,38 @@ class _FluffyMascotDecorationsState extends State<_FluffyMascotDecorations>
           }
 
           Widget faces(double t) {
-            final compact = widget.scaleByWidth || widget.simple;
+            final size = math.min(width, height);
+            final preview = widget.scaleByWidth;
+            final wide = widget.simple && !preview;
             return Stack(
-              children: compact
-                  ? [
-                      Positioned(
-                        top: height * 0.04,
-                        right: width * 0.03,
-                        width: math.min(width, height) * 0.22,
-                        child: face(index: 0, t: t, angle: 0.12),
-                      ),
-                      Positioned(
-                        left: width * 0.04,
-                        bottom: height * 0.08,
-                        width: math.min(width, height) * 0.2,
-                        child: face(index: 1, t: t, angle: -0.1),
-                      ),
-                      Positioned(
-                        right: width * 0.08,
-                        bottom: height * 0.22,
-                        width: math.min(width, height) * 0.16,
-                        child: face(index: 2, t: t, angle: 0.06),
-                      ),
-                    ]
-                  : [
-                      Positioned(
-                        top: span * 0.02,
-                        right: span * 0.02,
-                        width: span * 0.36,
-                        child: face(index: 0, t: t, angle: 0.12),
-                      ),
-                      safe.topLeft(
-                        left: span * 0.02,
-                        top: span * 0.14,
-                        width: span * 0.3,
-                        child: face(index: 1, t: t, angle: -0.14),
-                      ),
-                      Positioned(
-                        left: span * 0.04,
-                        bottom: faceBottomLift,
-                        width: span * 0.32,
-                        child: face(index: 2, t: t, angle: 0.08),
-                      ),
-                      Positioned(
-                        right: span * 0.03,
-                        bottom: faceBottomLift + span * 0.06,
-                        width: span * 0.28,
-                        child: face(index: 3, t: t, angle: -0.1),
-                      ),
-                      Positioned(
-                        top: height * 0.32,
-                        right: span * 0.06,
-                        width: span * 0.3,
-                        child: face(index: 4, t: t, angle: 0.06),
-                      ),
-                    ],
+              children: [
+                Positioned(
+                  top: height * (wide ? 0.02 : 0.04),
+                  right: width * 0.03,
+                  width: size * (preview ? 0.22 : 0.34),
+                  child: face(index: 0, t: t, angle: 0.12),
+                ),
+                Positioned(
+                  left: width * 0.04,
+                  bottom: wide
+                      ? faceBottomLift
+                      : faceBottomLift + height * 0.06,
+                  width: size * (preview ? 0.20 : 0.32),
+                  child: face(index: 1, t: t, angle: -0.1),
+                ),
+                Positioned(
+                  right: width * 0.04,
+                  bottom: height * (wide ? 0.14 : 0.32),
+                  width: size * (preview ? 0.16 : 0.28),
+                  child: face(index: 2, t: t, angle: 0.06),
+                ),
+                Positioned(
+                  left: width * 0.05,
+                  top: height * (wide ? 0.16 : 0.30),
+                  width: size * (preview ? 0.18 : 0.30),
+                  child: face(index: 3, t: t, angle: -0.12),
+                ),
+              ],
             );
           }
 

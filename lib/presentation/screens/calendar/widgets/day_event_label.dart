@@ -122,7 +122,7 @@ class _DayEventLabelState extends State<DayEventLabel> {
       builder: (context, accent) {
         final background =
             colors.tint(accent, widget.disabled ? 0.11 : 0.14);
-        final ink = EventCategory.labelOf(accent);
+        final ink = EventCategory.labelOf(target);
         return AnimatedOpacity(
       duration: const Duration(milliseconds: 420),
       curve: Curves.easeOutCubic,

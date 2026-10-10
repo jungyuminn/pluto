@@ -148,8 +148,8 @@ class _BannerBody extends StatelessWidget {
     final colors = AppColors.of(context);
     final defaultTheme = _classicDefault(context);
     final fill = defaultTheme
-        ? colors.selected
-        : colors.tint(colors.accent, 0.16);
+        ? Color.lerp(colors.selected, Colors.white, 0.4)!
+        : colors.tint(colors.accent, 0.11);
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
       child: DecoratedBox(
@@ -208,7 +208,7 @@ class _BannerBody extends StatelessWidget {
                 right: Radius.circular(18),
               ),
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(4, 18, 12, 18),
+                padding: const EdgeInsets.fromLTRB(4, 18, 16, 18),
                 child: Icon(
                   Icons.close_rounded,
                   size: 16,

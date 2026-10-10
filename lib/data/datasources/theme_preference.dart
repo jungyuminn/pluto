@@ -7,11 +7,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 enum AppSkin {
   classic,
-  blossom,
-  clover,
   fluffyBear,
   fluffyRabbit,
+  fluffyCat,
+  fluffyDog,
   pinkHeart,
+  blossom,
+  clover,
   summerBeach,
   snowyWinter,
   squishyBear,
@@ -28,11 +30,13 @@ enum AppSkin {
 
   static const patternSkins = [
     classic,
-    blossom,
-    clover,
     fluffyBear,
     fluffyRabbit,
+    fluffyCat,
+    fluffyDog,
     pinkHeart,
+    blossom,
+    clover,
   ];
 
   static const sceneSkins = [

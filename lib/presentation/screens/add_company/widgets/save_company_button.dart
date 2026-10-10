@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:pluto/core/constants/app_icons.dart';
 import 'package:pluto/core/layout/pc_layout.dart';
+import 'package:pluto/core/utils/animated_accent.dart';
 import 'package:pluto/core/utils/press_bounce.dart';
 import 'package:pluto/domain/entities/event_category.dart';
 import 'package:pluto/presentation/widgets/themed_asset.dart';
@@ -89,41 +90,46 @@ class _SaveCompanyButtonState extends State<SaveCompanyButton> {
 
   @override
   Widget build(BuildContext context) {
-    final ink = EventCategory.labelOf(widget.color, 0.1);
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        boxShadow: [
-          BoxShadow(
-            color: ink.withValues(alpha: 0.26),
-            blurRadius: 7,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: PressBounce(
-        onPressed: widget.onPressed,
-        color: ink,
-        pressedColor: Color.lerp(ink, Colors.black, 0.16)!,
-        borderRadius: BorderRadius.circular(999),
-        child: SizedBox(
-          width: SaveCompanyButton.size,
-          height: SaveCompanyButton.size,
-          child: Center(
-            child: ColorFiltered(
-              colorFilter: const ColorFilter.mode(
-                Colors.white,
-                BlendMode.srcIn,
+    return AnimatedAccent(
+      color: EventCategory.labelOf(widget.color, 0.1),
+      builder: (context, ink) {
+        return DecoratedBox(
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: ink,
+            boxShadow: [
+              BoxShadow(
+                color: ink.withValues(alpha: 0.26),
+                blurRadius: 7,
+                offset: const Offset(0, 2),
               ),
-              child: AppAssetImage(
-                asset: AppIcons.cursor,
-                width: SaveCompanyButton._iconSize,
-                height: SaveCompanyButton._iconSize,
+            ],
+          ),
+          child: PressBounce(
+            onPressed: widget.onPressed,
+            color: Colors.transparent,
+            pressedColor: Color.lerp(ink, Colors.black, 0.16)!,
+            borderRadius: BorderRadius.circular(999),
+            child: SizedBox(
+              width: SaveCompanyButton.size,
+              height: SaveCompanyButton.size,
+              child: Center(
+                child: ColorFiltered(
+                  colorFilter: const ColorFilter.mode(
+                    Colors.white,
+                    BlendMode.srcIn,
+                  ),
+                  child: AppAssetImage(
+                    asset: AppIcons.cursor,
+                    width: SaveCompanyButton._iconSize,
+                    height: SaveCompanyButton._iconSize,
+                  ),
+                ),
               ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }

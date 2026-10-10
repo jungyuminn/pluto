@@ -188,29 +188,29 @@ class SettingsSectionHelpSheet extends StatelessWidget {
                   ),
                   const SizedBox(height: 10),
                   if (section.body.isNotEmpty) ...[
-                    Text(
-                      section.body,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontFamily: AppFonts.of(context),
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        height: 1.45,
-                        color: colors.secondary,
-                      ),
+                  Text(
+                    section.body,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontFamily: AppFonts.of(context),
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      height: 1.45,
+                      color: colors.secondary,
                     ),
-                    const SizedBox(height: 18),
+                  ),
+                  const SizedBox(height: 18),
                   ],
                   if (section.wrapsPreview)
-                    DecoratedBox(
-                      decoration: BoxDecoration(
-                        color: colors.groupedBackground,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(12, 14, 12, 14),
-                        child: section.preview,
-                      ),
+                  DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: colors.groupedBackground,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(12, 14, 12, 14),
+                      child: section.preview,
+                    ),
                     )
                   else
                     section.preview,
@@ -1291,7 +1291,7 @@ class _FontPreview extends StatelessWidget {
         const _PreviewFrame(
           caption: AppStrings.fontCalendarChipScale,
           child: _FontScaleDemo(kind: _FontScaleKind.calendar),
-        ),
+          ),
         const _PreviewFrame(
           caption: AppStrings.fontCalendarDateScale,
           child: _FontScaleDemo(kind: _FontScaleKind.date),
@@ -2036,6 +2036,10 @@ String _themeCaption(AppSkin skin) {
       return AppStrings.themeFluffyBear;
     case AppSkin.fluffyRabbit:
       return AppStrings.themeFluffyRabbit;
+    case AppSkin.fluffyCat:
+      return AppStrings.themeFluffyCat;
+    case AppSkin.fluffyDog:
+      return AppStrings.themeFluffyDog;
     case AppSkin.pinkHeart:
       return AppStrings.themePinkHeart;
       case AppSkin.summerBeach:
@@ -2708,101 +2712,101 @@ class _CyclingPreviewState extends State<_CyclingPreview> {
     final description = frame.description ?? '';
 
     final preview = Column(
-      children: [
-        Row(
-          children: [
-            if (_canCycle)
-              _PreviewNavButton(
-                icon: Icons.chevron_left_rounded,
-                onPressed: () => _goTo(_index - 1, fromUser: true),
-              )
-            else
-              const SizedBox(width: 32),
-            Expanded(
-              child: Center(
-                child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 420),
-                  child: DecoratedBox(
-                    key: ValueKey(frame.caption),
-                    decoration: BoxDecoration(
-                      color: colors.tint(colors.accentBright, 0.18),
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 4,
+        children: [
+          Row(
+            children: [
+              if (_canCycle)
+                _PreviewNavButton(
+                  icon: Icons.chevron_left_rounded,
+                  onPressed: () => _goTo(_index - 1, fromUser: true),
+                )
+              else
+                const SizedBox(width: 32),
+              Expanded(
+                child: Center(
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 420),
+                    child: DecoratedBox(
+                      key: ValueKey(frame.caption),
+                      decoration: BoxDecoration(
+                        color: colors.tint(colors.accentBright, 0.18),
+                        borderRadius: BorderRadius.circular(999),
                       ),
-                      child: Text(
-                        frame.caption,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontFamily: AppFonts.of(context),
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: colors.accentBright,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
+                        child: Text(
+                          frame.caption,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontFamily: AppFonts.of(context),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: colors.accentBright,
+                          ),
                         ),
                       ),
                     ),
                   ),
                 ),
               ),
-            ),
-            if (_canCycle)
-              _PreviewNavButton(
-                icon: Icons.chevron_right_rounded,
-                onPressed: () => _goTo(_index + 1, fromUser: true),
-              )
-            else
-              const SizedBox(width: 32),
-          ],
-        ),
-        const SizedBox(height: 10),
-        AnimatedSize(
-          duration: const Duration(milliseconds: 280),
-          curve: Curves.easeOutCubic,
-          alignment: Alignment.topCenter,
-          child: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 480),
-            switchInCurve: Curves.easeOutCubic,
-            switchOutCurve: Curves.easeInCubic,
-            child: KeyedSubtree(
-              key: ValueKey(frame.caption),
-              child: IgnorePointer(child: frame.child),
+              if (_canCycle)
+                _PreviewNavButton(
+                  icon: Icons.chevron_right_rounded,
+                  onPressed: () => _goTo(_index + 1, fromUser: true),
+                )
+              else
+                const SizedBox(width: 32),
+            ],
+          ),
+          const SizedBox(height: 10),
+          AnimatedSize(
+            duration: const Duration(milliseconds: 280),
+            curve: Curves.easeOutCubic,
+            alignment: Alignment.topCenter,
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 480),
+              switchInCurve: Curves.easeOutCubic,
+              switchOutCurve: Curves.easeInCubic,
+              child: KeyedSubtree(
+                key: ValueKey(frame.caption),
+                child: IgnorePointer(child: frame.child),
+              ),
             ),
           ),
-        ),
-        if (_canCycle) ...[
-          const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              for (var i = 0; i < widget.frames.length; i++)
-                PressBounce(
-                  onPressed: () => _goTo(i, fromUser: true),
-                  pressedScale: 0.9,
-                  pressedColor: Colors.transparent,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 4,
-                      vertical: 6,
-                    ),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 220),
-                      width: i == _index ? 16 : 6,
-                      height: 6,
-                      decoration: BoxDecoration(
-                        color: i == _index
-                            ? colors.accentBright
-                            : colors.border,
-                        borderRadius: BorderRadius.circular(999),
+          if (_canCycle) ...[
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                for (var i = 0; i < widget.frames.length; i++)
+                  PressBounce(
+                    onPressed: () => _goTo(i, fromUser: true),
+                    pressedScale: 0.9,
+                    pressedColor: Colors.transparent,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 4,
+                        vertical: 6,
+                      ),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 220),
+                        width: i == _index ? 16 : 6,
+                        height: 6,
+                        decoration: BoxDecoration(
+                          color: i == _index
+                              ? colors.accentBright
+                              : colors.border,
+                          borderRadius: BorderRadius.circular(999),
+                        ),
                       ),
                     ),
                   ),
-                ),
-            ],
-          ),
-        ],
+              ],
+            ),
+          ],
       ],
     );
 
@@ -2855,8 +2859,8 @@ class _CyclingPreviewState extends State<_CyclingPreview> {
                     ),
                   ),
                 ),
-              ],
-            ),
+        ],
+      ),
     );
   }
 }
@@ -4055,15 +4059,15 @@ class _TodoSettingsDemoState extends State<_TodoSettingsDemo>
                     ),
                     TextSpan(
                       text: title.substring(markAt),
-                      style: TextStyle(
+                    style: TextStyle(
                         fontFamily: font,
                         fontSize: 20,
-                        fontWeight: FontWeight.w700,
-                        color: colors.text,
+                      fontWeight: FontWeight.w700,
+                      color: colors.text,
                         backgroundColor: color.withValues(alpha: 0.28),
-                      ),
                     ),
-                  ],
+                  ),
+                ],
                   if (title.isNotEmpty && caretOn)
                     TextSpan(
                       text: '|',
@@ -4197,7 +4201,7 @@ class _HomeReorderDemoState extends State<_HomeReorderDemo>
                   height: 168,
                   width: double.infinity,
                   child: Stack(
-                    children: [
+            children: [
                       Padding(
                         padding: const EdgeInsets.fromLTRB(12, 18, 12, 12),
                         child: Stack(
@@ -4211,9 +4215,9 @@ class _HomeReorderDemoState extends State<_HomeReorderDemo>
                               title: AppStrings.homeShowTomorrow,
                               top: 8 + travel - travel * move,
                               lifted: move > 0.04 && move < 0.96,
-                            ),
-                          ],
-                        ),
+              ),
+            ],
+          ),
                       ),
                       if (finger > 0)
                         Positioned(
@@ -4560,22 +4564,22 @@ class _FakeLeftoverPeek extends StatelessWidget {
                   fontSize: 16,
                   fontWeight: FontWeight.w800,
                   height: 1.25,
-                  color: colors.text,
-                ),
+                    color: colors.text,
+                  ),
                 children: [
                   const TextSpan(text: '${AppStrings.leftoverHeadline}\n'),
                   TextSpan(
                     text: AppStrings.leftoverCount(2),
                     style: TextStyle(color: colors.accent),
-                  ),
+                ),
                   const TextSpan(text: ' ${AppStrings.leftoverTail}'),
                 ],
               ),
             ),
             const SizedBox(height: 10),
-            Text(
+              Text(
               'D + 2',
-              style: TextStyle(
+                style: TextStyle(
                 fontFamily: font,
                 fontSize: 16,
                 fontWeight: FontWeight.w800,
@@ -4588,7 +4592,7 @@ class _FakeLeftoverPeek extends StatelessWidget {
               '8. 17. (월)',
               style: TextStyle(
                 fontFamily: font,
-                fontSize: 12,
+                  fontSize: 12,
                 fontWeight: FontWeight.w600,
                 color: colors.muted,
               ),

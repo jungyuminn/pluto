@@ -17,6 +17,14 @@ class ReleaseNote {
 abstract final class ReleaseNotes {
   static const all = [
     ReleaseNote(
+      version: '1.5.4',
+      items: [
+        '몽글고양이 테마가 생겼어요',
+        '몽글강아지 테마가 생겼어요',
+        '몽글 테마에서 아래 아이콘이 테마에 맞춰요',
+      ],
+    ),
+    ReleaseNote(
       version: '1.5.3',
       items: [
         '카테고리 색을 고르면 파스텔이 먼저 나와요',

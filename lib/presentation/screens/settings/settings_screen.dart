@@ -765,6 +765,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
         return AppStrings.themeFluffyCat;
       case AppSkin.fluffyDog:
         return AppStrings.themeFluffyDog;
+      case AppSkin.fluffyChick:
+        return AppStrings.themeFluffyChick;
+      case AppSkin.fluffyHamster:
+        return AppStrings.themeFluffyHamster;
       case AppSkin.pinkHeart:
         return AppStrings.themePinkHeart;
       case AppSkin.summerBeach:
@@ -937,7 +941,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     label: AppStrings.homeShowMemo,
                     value: _showMemo,
                     onChanged: _setShowMemo,
-                  ),
+              ),
               _SettingsSwitchTile(
                 label: AppStrings.homeShowToday,
                 value: _showToday,
@@ -962,7 +966,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     label: AppStrings.homeShowSomeday,
                     value: _showSomeday,
                     onChanged: _setShowSomeday,
-                  ),
+              ),
               _SettingsSwitchTile(
                 label: AppStrings.homeShowLongGoal,
                 value: _showLongGoal,
@@ -1527,10 +1531,10 @@ class _FontLivePreview extends StatelessWidget {
                                 ),
                               ],
                             ],
-                          ),
-                        ),
-                    ],
-                  ),
+                      ),
+                    ),
+                ],
+              ),
               const SizedBox(height: 8),
               const CalendarEventLabel(
                 title: '면접 연습',

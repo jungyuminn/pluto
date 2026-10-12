@@ -231,7 +231,10 @@ class CloudSyncSnapshot {
         if (contentKeys.contains(key)) {
           await prefs.remove(key);
         } else if (CategorySuggestPreference.syncedKeys.contains(key)) {
-          await prefs.setBool(key, false);
+          await prefs.setBool(
+            key,
+            CategorySuggestPreference.defaultBools[key] ?? true,
+          );
         } else if (LastCategoryColorPreference.syncedKeys.contains(key) ||
             LastEventCategoryPreference.syncedKeys.contains(key)) {
           await prefs.remove(key);

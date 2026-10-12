@@ -5,6 +5,7 @@ const {onCall, onRequest, HttpsError} = require("firebase-functions/v2/https");
 
 initializeApp();
 Object.assign(exports, require("./friends"));
+Object.assign(exports, require("./category"));
 
 const syncedFolders = new Set([
   "cover_letters",

@@ -3,13 +3,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 class CategorySuggestPreference {
   CategorySuggestPreference({
     SharedPreferences? prefs,
-    bool enabled = false,
+    bool enabled = true,
   })  : _prefs = prefs,
         _enabled = prefs?.getBool(_enabledKey) ?? enabled;
 
   static const _enabledKey = 'category_suggest_enabled';
   static const syncedKeys = [_enabledKey];
-  static const defaultBools = {_enabledKey: false};
+  static const defaultBools = {_enabledKey: true};
 
   final SharedPreferences? _prefs;
   bool _enabled;

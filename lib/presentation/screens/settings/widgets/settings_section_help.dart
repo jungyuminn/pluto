@@ -108,9 +108,23 @@ class SettingsHelpTutorialReel extends StatelessWidget {
             child: SettingsHelpPreview(section: SettingsHelpSection.homeLayout),
           ),
         ),
+        _PreviewFrame(
+          caption: AppStrings.accountLogin,
+          child: _TutorialFitScene(child: _LoginPreview()),
+        ),
       ],
     );
   }
+}
+
+class _HideInnerCaption extends InheritedWidget {
+  const _HideInnerCaption({required super.child});
+
+  static bool of(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<_HideInnerCaption>() != null;
+
+  @override
+  bool updateShouldNotify(_HideInnerCaption oldWidget) => false;
 }
 
 class _TutorialFitScene extends StatelessWidget {
@@ -120,14 +134,16 @@ class _TutorialFitScene extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 300,
-      width: double.infinity,
-      child: ClipRect(
-        child: FittedBox(
-          fit: BoxFit.contain,
-          alignment: Alignment.topCenter,
-          child: SizedBox(width: 320, child: child),
+    return _HideInnerCaption(
+      child: SizedBox(
+        height: 300,
+        width: double.infinity,
+        child: ClipRect(
+          child: FittedBox(
+            fit: BoxFit.contain,
+            alignment: Alignment.topCenter,
+            child: SizedBox(width: 320, child: child),
+          ),
         ),
       ),
     );
@@ -916,18 +932,253 @@ class _AccountHelpDemo extends StatelessWidget {
   }
 }
 
+class _LoginPreview extends StatefulWidget {
+  const _LoginPreview();
+
+  @override
+  State<_LoginPreview> createState() => _LoginPreviewState();
+}
+
+class _LoginPreviewState extends State<_LoginPreview>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _loop;
+
+  @override
+  void initState() {
+    super.initState();
+    _loop = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 6400),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _loop.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    return AnimatedBuilder(
+      animation: _loop,
+      builder: (context, _) {
+        final t = _loop.value;
+        final device = Curves.easeInOutCubic.transform(_helpGate(t, 0.20, 0.38));
+        final tap = _helpPulse(t, 0.56, 0.64, 0.78);
+        return DecoratedBox(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: colors.border),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(17),
+            child: ColoredBox(
+              color: colors.card,
+              child: SizedBox(
+                height: 300,
+                width: 320,
+                child: Stack(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 10, 16, 14),
+                      child: Column(
+                        children: [
+                          Center(
+                            child: DecoratedBox(
+                              decoration: BoxDecoration(
+                                color: colors.border,
+                                borderRadius: BorderRadius.circular(2),
+                              ),
+                              child: const SizedBox(width: 36, height: 4),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Expanded(
+                            child: Stack(
+                              alignment: Alignment.center,
+                              children: [
+                                Opacity(
+                                  opacity: 1 - device,
+                                  child: const _LoginDeviceShot(
+                                    asset: AppIcons.notebook,
+                                  ),
+                                ),
+                                Opacity(
+                                  opacity: device,
+                                  child: const _LoginDeviceShot(
+                                    asset: AppIcons.tablet,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              _LoginDot(on: device < 0.5, colors: colors),
+                              const SizedBox(width: 6),
+                              _LoginDot(on: device >= 0.5, colors: colors),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            AppStrings.accountLoginBody,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontFamily: AppFonts.of(context),
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              height: 1.4,
+                              color: colors.text,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            AppStrings.accountLoginPcHint,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontFamily: AppFonts.of(context),
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              height: 1.35,
+                              color: colors.muted,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              _HelpBrandCircle(
+                                asset: AppIcons.kakaoLogo,
+                                background: const Color(0xFFFEE500),
+                                size: 40,
+                                iconSize: 20,
+                              ),
+                              const SizedBox(width: 18),
+                              _HelpBrandCircle(
+                                asset: AppIcons.googleLogo,
+                                background: Colors.white,
+                                border: colors.border,
+                                size: 40,
+                                iconSize: 20,
+                              ),
+                              const SizedBox(width: 18),
+                              _HelpBrandCircle(
+                                asset: AppIcons.appleLogo,
+                                background: const Color(0xFF111111),
+                                tint: Colors.white,
+                                size: 40,
+                                iconSize: 20,
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 6),
+                        ],
+                      ),
+                    ),
+                    if (tap > 0)
+                      Positioned(
+                        left: 0,
+                        right: 0,
+                        bottom: 20,
+                        child: Center(
+                          child: _HelpFinger(pressed: tap, opacity: 1),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _LoginDeviceShot extends StatelessWidget {
+  const _LoginDeviceShot({required this.asset});
+
+  final String asset;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        DecoratedBox(
+          decoration: BoxDecoration(
+            color: colors.accent.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(999),
+          ),
+          child: const SizedBox(width: 196, height: 96),
+        ),
+        DecoratedBox(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(18),
+            boxShadow: [
+              BoxShadow(
+                color: colors.shadow,
+                blurRadius: 14,
+                offset: const Offset(0, 6),
+              ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(18),
+            child: Image.asset(
+              asset,
+              fit: BoxFit.contain,
+              filterQuality: FilterQuality.high,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _LoginDot extends StatelessWidget {
+  const _LoginDot({required this.on, required this.colors});
+
+  final bool on;
+  final AppColors colors;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 220),
+      curve: Curves.easeOutCubic,
+      width: 6,
+      height: 6,
+      decoration: BoxDecoration(
+        color: on ? colors.accentBright : colors.border,
+        shape: BoxShape.circle,
+      ),
+    );
+  }
+}
+
 class _HelpBrandCircle extends StatelessWidget {
   const _HelpBrandCircle({
     required this.asset,
     required this.background,
     this.border,
     this.tint,
+    this.size = 22,
+    this.iconSize = 12,
   });
 
   final String asset;
   final Color background;
   final Color? border;
   final Color? tint;
+  final double size;
+  final double iconSize;
 
   @override
   Widget build(BuildContext context) {
@@ -935,16 +1186,16 @@ class _HelpBrandCircle extends StatelessWidget {
     final image = asset.endsWith('.svg')
         ? SvgPicture.asset(
             asset,
-            width: 12,
-            height: 12,
+            width: iconSize,
+            height: iconSize,
             colorFilter: tintColor == null
                 ? null
                 : ColorFilter.mode(tintColor, BlendMode.srcIn),
           )
         : Image.asset(
             asset,
-            width: 12,
-            height: 12,
+            width: iconSize,
+            height: iconSize,
             color: tint,
             colorBlendMode: BlendMode.srcIn,
           );
@@ -955,8 +1206,8 @@ class _HelpBrandCircle extends StatelessWidget {
         border: border == null ? null : Border.all(color: border!),
       ),
       child: SizedBox(
-        width: 22,
-        height: 22,
+        width: size,
+        height: size,
         child: Center(child: image),
       ),
     );
@@ -1755,7 +2006,7 @@ class _FontPreviewCard extends StatelessWidget {
 class _ThemePreview extends StatelessWidget {
   const _ThemePreview();
 
-  static const _skins = [AppSkin.classic, AppSkin.blossom, AppSkin.catVillage];
+  static const _skins = [AppSkin.classic, AppSkin.fluffyBear, AppSkin.catVillage];
 
   @override
   Widget build(BuildContext context) {
@@ -2040,6 +2291,10 @@ String _themeCaption(AppSkin skin) {
       return AppStrings.themeFluffyCat;
     case AppSkin.fluffyDog:
       return AppStrings.themeFluffyDog;
+    case AppSkin.fluffyChick:
+      return AppStrings.themeFluffyChick;
+    case AppSkin.fluffyHamster:
+      return AppStrings.themeFluffyHamster;
     case AppSkin.pinkHeart:
       return AppStrings.themePinkHeart;
       case AppSkin.summerBeach:
@@ -2266,9 +2521,11 @@ class _HelpSelectDemoState extends State<_HelpSelectDemo>
                   },
                 ),
               );
+        final showCaption =
+            widget.showCaption && !_HideInnerCaption.of(context);
         return Column(
           children: [
-            if (widget.showCaption) ...[
+            if (showCaption) ...[
               AnimatedSwitcher(
                 duration: const Duration(milliseconds: 280),
                 child: DecoratedBox(
@@ -2710,9 +2967,11 @@ class _CyclingPreviewState extends State<_CyclingPreview> {
     final frame = widget.frames[_index];
     final colors = AppColors.of(context);
     final description = frame.description ?? '';
+    final hideChrome = _HideInnerCaption.of(context);
 
     final preview = Column(
         children: [
+          if (!hideChrome)
           Row(
             children: [
               if (_canCycle)
@@ -2761,7 +3020,7 @@ class _CyclingPreviewState extends State<_CyclingPreview> {
                 const SizedBox(width: 32),
             ],
           ),
-          const SizedBox(height: 10),
+          if (!hideChrome) const SizedBox(height: 10),
           AnimatedSize(
             duration: const Duration(milliseconds: 280),
             curve: Curves.easeOutCubic,
@@ -2776,7 +3035,7 @@ class _CyclingPreviewState extends State<_CyclingPreview> {
               ),
             ),
           ),
-          if (_canCycle) ...[
+          if (_canCycle && !hideChrome) ...[
             const SizedBox(height: 12),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,

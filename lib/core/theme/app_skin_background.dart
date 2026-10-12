@@ -74,6 +74,24 @@ class AppSkinAssets {
   static const fluffyDogBottomDark =
       'assets/themes/fluffy_dog/dog_face_bottom_dark.webp';
 
+  static const fluffyChickFaceLight =
+      'assets/themes/fluffy_chick/chick_face_decoration_light.webp';
+  static const fluffyChickFaceDark =
+      'assets/themes/fluffy_chick/chick_face_decoration_dark.webp';
+  static const fluffyChickBottomLight =
+      'assets/themes/fluffy_chick/chick_face_bottom_light.webp';
+  static const fluffyChickBottomDark =
+      'assets/themes/fluffy_chick/chick_face_bottom_dark.webp';
+
+  static const fluffyHamsterFaceLight =
+      'assets/themes/fluffy_hamster/hamster_face_decoration_light.webp';
+  static const fluffyHamsterFaceDark =
+      'assets/themes/fluffy_hamster/hamster_face_decoration_dark.webp';
+  static const fluffyHamsterBottomLight =
+      'assets/themes/fluffy_hamster/hamster_face_bottom_light.webp';
+  static const fluffyHamsterBottomDark =
+      'assets/themes/fluffy_hamster/hamster_face_bottom_dark.webp';
+
   static const pinkHeartFaceLight =
       'assets/themes/pink_heart/heart_decoration_light.webp';
   static const pinkHeartFaceDark =
@@ -301,6 +319,14 @@ class AppSkinAssets {
     fluffyDogFaceDark,
     fluffyDogBottomLight,
     fluffyDogBottomDark,
+    fluffyChickFaceLight,
+    fluffyChickFaceDark,
+    fluffyChickBottomLight,
+    fluffyChickBottomDark,
+    fluffyHamsterFaceLight,
+    fluffyHamsterFaceDark,
+    fluffyHamsterBottomLight,
+    fluffyHamsterBottomDark,
     pinkHeartFaceLight,
     pinkHeartFaceDark,
     pinkHeartBottomLight,
@@ -417,6 +443,10 @@ class AppSkinAssets {
   static const fluffyCatDarkFill = Color(0xFF181214);
   static const fluffyDogLightFill = Color(0xFFEEF6FA);
   static const fluffyDogDarkFill = Color(0xFF10161C);
+  static const fluffyChickLightFill = Color(0xFFFFF8E4);
+  static const fluffyChickDarkFill = Color(0xFF1A1610);
+  static const fluffyHamsterLightFill = Color(0xFFFFF1E4);
+  static const fluffyHamsterDarkFill = Color(0xFF1A1410);
   static const pinkHeartLightFill = Color(0xFFFFF5F8);
   static const pinkHeartDarkFill = Color(0xFF161014);
   static const summerLightFill = Color(0xFFEAF6FB);
@@ -462,6 +492,10 @@ class AppSkinAssets {
         return dark ? const Color(0xFFE0A0B4) : const Color(0xFFC87A94);
       case AppSkin.fluffyDog:
         return dark ? const Color(0xFF8AB4C8) : const Color(0xFF5A96B0);
+      case AppSkin.fluffyChick:
+        return dark ? const Color(0xFFE0B04A) : const Color(0xFFE8A825);
+      case AppSkin.fluffyHamster:
+        return dark ? const Color(0xFFE0A078) : const Color(0xFFE88858);
       case AppSkin.pinkHeart:
         return dark ? const Color(0xFFDC9EB5) : const Color(0xFFE86B88);
       case AppSkin.summerBeach:
@@ -509,6 +543,10 @@ class AppSkinAssets {
         return dark ? fluffyCatDarkFill : fluffyCatLightFill;
       case AppSkin.fluffyDog:
         return dark ? fluffyDogDarkFill : fluffyDogLightFill;
+      case AppSkin.fluffyChick:
+        return dark ? fluffyChickDarkFill : fluffyChickLightFill;
+      case AppSkin.fluffyHamster:
+        return dark ? fluffyHamsterDarkFill : fluffyHamsterLightFill;
       case AppSkin.pinkHeart:
         return dark ? pinkHeartDarkFill : pinkHeartLightFill;
       case AppSkin.summerBeach:
@@ -549,6 +587,8 @@ class AppSkinAssets {
       case AppSkin.fluffyRabbit:
       case AppSkin.fluffyCat:
       case AppSkin.fluffyDog:
+      case AppSkin.fluffyChick:
+      case AppSkin.fluffyHamster:
       case AppSkin.pinkHeart:
       case AppSkin.summerBeach:
       case AppSkin.snowyWinter:
@@ -572,20 +612,28 @@ class AppSkinAssets {
     }
   }
 
+  static const _blossomIcons = 'assets/themes/blossom/icons';
+  static const _cloverIcons = 'assets/themes/clover/icons';
   static const _fluffyBearIcons = 'assets/themes/fluffy_bear/icons';
   static const _fluffyRabbitIcons = 'assets/themes/fluffy_rabbit/icons';
   static const _fluffyCatIcons = 'assets/themes/fluffy_cat/icons';
   static const _fluffyDogIcons = 'assets/themes/fluffy_dog/icons';
+  static const _fluffyChickIcons = 'assets/themes/fluffy_chick/icons';
+  static const _fluffyHamsterIcons = 'assets/themes/fluffy_hamster/icons';
   static const paintedIconScale = 1.2;
 
   static bool keepsPaint(String asset) => asset.startsWith('assets/themes/');
 
   static String resolveIcon(String asset, AppSkin skin, bool dark) {
     final folder = switch (skin) {
+      AppSkin.blossom => _blossomIcons,
+      AppSkin.clover => _cloverIcons,
       AppSkin.fluffyBear => _fluffyBearIcons,
       AppSkin.fluffyRabbit => _fluffyRabbitIcons,
       AppSkin.fluffyCat => _fluffyCatIcons,
       AppSkin.fluffyDog => _fluffyDogIcons,
+      AppSkin.fluffyChick => _fluffyChickIcons,
+      AppSkin.fluffyHamster => _fluffyHamsterIcons,
       _ => null,
     };
     if (folder == null) return asset;
@@ -707,7 +755,6 @@ class AppSkinBackground extends StatelessWidget {
           simple: compact,
           playing: playing,
           moves: true,
-          hops: true,
           faceLight: AppSkinAssets.fluffyRabbitFaceLight,
           faceDark: AppSkinAssets.fluffyRabbitFaceDark,
           bottomLight: AppSkinAssets.fluffyRabbitBottomLight,
@@ -738,7 +785,6 @@ class AppSkinBackground extends StatelessWidget {
           simple: compact,
           playing: playing,
           moves: true,
-          hops: true,
           faceLight: AppSkinAssets.fluffyDogFaceLight,
           faceDark: AppSkinAssets.fluffyDogFaceDark,
           bottomLight: AppSkinAssets.fluffyDogBottomLight,
@@ -747,6 +793,36 @@ class AppSkinBackground extends StatelessWidget {
           faceTintDark: const Color(0xFF587088),
           hillTintLight: const Color(0xFFD0E8F0),
           hillTintDark: const Color(0xFF1A2630),
+        ),
+      AppSkin.fluffyChick => _FluffyMascotDecorations(
+          liftForNav: liftForNav,
+          scaleByWidth: scaleByWidth,
+          simple: compact,
+          playing: playing,
+          moves: true,
+          faceLight: AppSkinAssets.fluffyChickFaceLight,
+          faceDark: AppSkinAssets.fluffyChickFaceDark,
+          bottomLight: AppSkinAssets.fluffyChickBottomLight,
+          bottomDark: AppSkinAssets.fluffyChickBottomDark,
+          faceTintLight: const Color(0xFFF5D060),
+          faceTintDark: const Color(0xFF8A7030),
+          hillTintLight: const Color(0xFFFFF4C2),
+          hillTintDark: const Color(0xFF2A2410),
+        ),
+      AppSkin.fluffyHamster => _FluffyMascotDecorations(
+          liftForNav: liftForNav,
+          scaleByWidth: scaleByWidth,
+          simple: compact,
+          playing: playing,
+          moves: true,
+          faceLight: AppSkinAssets.fluffyHamsterFaceLight,
+          faceDark: AppSkinAssets.fluffyHamsterFaceDark,
+          bottomLight: AppSkinAssets.fluffyHamsterBottomLight,
+          bottomDark: AppSkinAssets.fluffyHamsterBottomDark,
+          faceTintLight: const Color(0xFFFED19D),
+          faceTintDark: const Color(0xFF8A6040),
+          hillTintLight: const Color(0xFFFFF0DC),
+          hillTintDark: const Color(0xFF2A2018),
         ),
       AppSkin.pinkHeart => _FluffyMascotDecorations(
           liftForNav: liftForNav,

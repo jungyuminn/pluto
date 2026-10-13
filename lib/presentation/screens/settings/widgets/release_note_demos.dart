@@ -191,11 +191,10 @@ enum ReleaseDemo {
   sceneDecor,
   yellowLabel,
   pastelSaveFlash,
+  polarBear,
+  starPenguin,
+  bubblesPuppy,
   notifyDots,
-  planetMonth,
-  bubblesPuppyName,
-  sceneOrder,
-  appleCalendar,
   themePhotoStay,
   customThemeNav,
   feature,
@@ -351,17 +350,14 @@ ReleaseDemo releaseDemoFor(String text, {required bool isFix}) {
   if (text.contains('앞에 점') || text.contains('여러 할 일')) {
     return ReleaseDemo.notifyDots;
   }
-  if (text.contains('날짜 숫자') || text.contains('주 사이가')) {
-    return ReleaseDemo.planetMonth;
+  if (text.contains('새하얀 북극곰')) {
+    return ReleaseDemo.polarBear;
   }
-  if (text.contains('비눗방울 강아지 이름')) {
-    return ReleaseDemo.bubblesPuppyName;
+  if (text.contains('별을 만난 펭귄')) {
+    return ReleaseDemo.starPenguin;
   }
-  if (text.contains('장면 테마') || text.contains('겨울 다음')) {
-    return ReleaseDemo.sceneOrder;
-  }
-  if (text.contains('애플 캘린더')) {
-    return ReleaseDemo.appleCalendar;
+  if (text.contains('비눗방울 강아지')) {
+    return ReleaseDemo.bubblesPuppy;
   }
   if (text.contains('파스텔이 먼저')) {
     return ReleaseDemo.pastelFirst;
@@ -896,11 +892,11 @@ class ReleaseDemoView extends StatelessWidget {
       ReleaseDemo.sceneDecor => const _SceneDecorDemo(),
       ReleaseDemo.yellowLabel => const _YellowLabelDemo(),
       ReleaseDemo.pastelSaveFlash => const _PastelSaveFlashDemo(),
+      ReleaseDemo.polarBear =>
+        const _SkinDemo(skin: AppSkin.lovelyPolarBear),
+      ReleaseDemo.starPenguin => const _SkinDemo(skin: AppSkin.starPenguin),
+      ReleaseDemo.bubblesPuppy => const _SkinDemo(skin: AppSkin.bubblesPuppy),
       ReleaseDemo.notifyDots => const _NotifyDotsDemo(),
-      ReleaseDemo.planetMonth => const _PlanetMonthDemo(),
-      ReleaseDemo.bubblesPuppyName => const _BubblesPuppyNameDemo(),
-      ReleaseDemo.sceneOrder => const _SceneOrderDemo(),
-      ReleaseDemo.appleCalendar => const _AppleCalendarDemo(),
       ReleaseDemo.themePhotoStay => const _ThemePhotoStayDemo(),
       ReleaseDemo.customThemeNav => const _CustomThemeNavDemo(),
       ReleaseDemo.feature => const _FeatureDemo(),
@@ -15284,370 +15280,26 @@ class _NotifyDotsDemo extends StatelessWidget {
   }
 }
 
-class _PlanetMonthDemo extends StatelessWidget {
-  const _PlanetMonthDemo();
+class _SkinDemo extends StatelessWidget {
+  const _SkinDemo({required this.skin});
 
-  static const _counts = [
-    0, 1, 0, 2, 4, 1, 0,
-    1, 3, 0, 1, 2, 4, 1,
-    0, 1, 4, 3, 1, 0, 2,
-    1, 0, 2, 1, 4, 3, 0,
-  ];
-
-  static Color _fill(Color accent, int count) {
-    return switch (count) {
-      0 => Colors.transparent,
-      1 => accent.withValues(alpha: 0.14),
-      <= 3 => accent.withValues(alpha: 0.30),
-      _ => accent.withValues(alpha: 0.40),
-    };
-  }
+  final AppSkin skin;
 
   @override
   Widget build(BuildContext context) {
-    return _Loop(
-      ms: 4000,
-      builder: (context, t) {
-        final colors = AppColors.of(context);
-        final font = AppFonts.of(context);
-        final accent = colors.accentBright;
-        final grow = Curves.easeInOutCubic.transform(_gate(t, 0.18, 0.48));
-        final gap = 20 - 6 * grow;
-        final size = 11.0 + 2 * grow;
-        return Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 10),
-          child: _Card(
-            padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    for (final label in AppStrings.weekdays)
-                      Expanded(
-                        child: Center(
-                          child: Text(
-                            label,
-                            style: TextStyle(
-                              fontFamily: font,
-                              fontSize: 11,
-                              fontWeight: FontWeight.w700,
-                              height: 1,
-                              color: colors.muted,
-                            ),
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-                const SizedBox(height: 2),
-                for (var row = 0; row < 4; row++) ...[
-                  if (row > 0) SizedBox(height: gap),
-                  SizedBox(
-                    height: 28,
-                    child: Row(
-                      children: [
-                        for (var col = 0; col < 7; col++)
-                          Expanded(
-                            child: Center(
-                              child: DecoratedBox(
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: _fill(
-                                    accent,
-                                    _counts[row * 7 + col],
-                                  ),
-                                ),
-                                child: SizedBox(
-                                  width: 26,
-                                  height: 26,
-                                  child: Center(
-                                    child: Text(
-                                      '${row * 7 + col + 1}',
-                                      style: TextStyle(
-                                        fontFamily: font,
-                                        fontSize: size,
-                                        fontWeight: _counts[row * 7 + col] > 0
-                                            ? FontWeight.w800
-                                            : FontWeight.w600,
-                                        height: 1,
-                                        color: _counts[row * 7 + col] > 0
-                                            ? accent
-                                            : colors.secondary,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _BubblesPuppyNameDemo extends StatelessWidget {
-  const _BubblesPuppyNameDemo();
-
-  @override
-  Widget build(BuildContext context) {
-    return _Loop(
-      ms: 3800,
-      builder: (context, t) {
-        final colors = AppColors.of(context);
-        final font = AppFonts.of(context);
-        final swap = Curves.easeInOutCubic.transform(_gate(t, 0.28, 0.52));
-        return AppSkinBackground(
-          skin: AppSkin.bubblesPuppy,
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(18),
+      child: SizedBox(
+        height: 176,
+        width: double.infinity,
+        child: AppSkinBackground(
+          skin: skin,
           liftForNav: false,
           simple: false,
           playing: true,
-          child: Align(
-            alignment: Alignment.center,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: _Card(
-                padding: const EdgeInsets.fromLTRB(20, 16, 16, 16),
-                child: SizedBox(
-                  height: 24,
-                  width: double.infinity,
-                  child: Stack(
-                    alignment: Alignment.centerLeft,
-                    children: [
-                      Opacity(
-                        opacity: 1 - swap,
-                        child: Transform.translate(
-                          offset: Offset(0, -8 * swap),
-                          child: Text(
-                            '비눗방울 부는 강아지',
-                            style: TextStyle(
-                              fontFamily: font,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w400,
-                              color: colors.text,
-                            ),
-                          ),
-                        ),
-                      ),
-                      Opacity(
-                        opacity: swap,
-                        child: Transform.translate(
-                          offset: Offset(0, 8 * (1 - swap)),
-                          child: Text(
-                            AppStrings.themeBubblesPuppy,
-                            style: TextStyle(
-                              fontFamily: font,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w400,
-                              color: colors.text,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _SceneOrderDemo extends StatelessWidget {
-  const _SceneOrderDemo();
-
-  static const _skins = [
-    AppSkin.snowyWinter,
-    AppSkin.squishyBear,
-    AppSkin.strawberryMilk,
-    AppSkin.lovelyPolarBear,
-    AppSkin.starPenguin,
-    AppSkin.bubblesPuppy,
-  ];
-
-  static const _from = [0.0, 1.0, 2.0, 3.0, 4.0, 5.0];
-  static const _to = [0.0, 5.0, 4.0, 1.0, 2.0, 3.0];
-
-  static String _label(AppSkin skin) {
-    return switch (skin) {
-      AppSkin.snowyWinter => AppStrings.themeSnowyWinter,
-      AppSkin.squishyBear => AppStrings.themeSquishyBear,
-      AppSkin.strawberryMilk => AppStrings.themeStrawberryMilk,
-      AppSkin.lovelyPolarBear => AppStrings.themeLovelyPolarBear,
-      AppSkin.starPenguin => AppStrings.themeStarPenguin,
-      AppSkin.bubblesPuppy => AppStrings.themeBubblesPuppy,
-      _ => '',
-    };
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return _Loop(
-      ms: 4800,
-      builder: (context, t) {
-        final colors = AppColors.of(context);
-        final font = AppFonts.of(context);
-        final move = Curves.easeInOutCubic.transform(_gate(t, 0.22, 0.62));
-        const rowH = 26.0;
-        return Padding(
-          padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
-          child: _Card(
-            padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
-            child: SizedBox(
-              height: rowH * 4,
-              child: ClipRect(
-                child: Stack(
-                children: [
-                  for (var i = 0; i < _skins.length; i++)
-                    Builder(
-                      builder: (context) {
-                        final y = (_from[i] + (_to[i] - _from[i]) * move) * rowH;
-                        final hidden = y >= rowH * 4 - 2;
-                        return Positioned(
-                          left: 0,
-                          right: 0,
-                          top: y,
-                          height: rowH,
-                          child: Opacity(
-                            opacity: hidden ? 0 : 1,
-                            child: Row(
-                              children: [
-                                ClipRRect(
-                                  borderRadius: BorderRadius.circular(7),
-                                  child: SizedBox(
-                                    width: 20,
-                                    height: 20,
-                                    child: AppSkinBackground(
-                                      skin: _skins[i],
-                                      liftForNav: false,
-                                      simple: true,
-                                      playing: true,
-                                      child: const SizedBox.expand(),
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: Text(
-                                    _label(_skins[i]),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(
-                                      fontFamily: font,
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w600,
-                                      color: colors.text,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                ],
-                ),
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _AppleCalendarDemo extends StatelessWidget {
-  const _AppleCalendarDemo();
-
-  @override
-  Widget build(BuildContext context) {
-    return _Loop(
-      ms: 3600,
-      builder: (context, t) {
-        final colors = AppColors.of(context);
-        final font = AppFonts.of(context);
-        final swap = Curves.easeInOutCubic.transform(_gate(t, 0.30, 0.52));
-        return Padding(
-          padding: const EdgeInsets.fromLTRB(16, 28, 16, 20),
-          child: _Card(
-            padding: EdgeInsets.zero,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 16, 16, 16),
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      AppStrings.importSamsungCalendar,
-                      style: TextStyle(
-                        fontFamily: font,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w400,
-                        color: colors.text,
-                      ),
-                    ),
-                  ),
-                ),
-                Divider(height: 1, color: colors.border),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 16, 16, 16),
-                  child: SizedBox(
-                    height: 22,
-                    width: double.infinity,
-                    child: Stack(
-                      alignment: Alignment.centerLeft,
-                      children: [
-                        Opacity(
-                          opacity: 1 - swap,
-                          child: Transform.translate(
-                            offset: Offset(0, -8 * swap),
-                            child: Text(
-                              'iOS 캘린더',
-                              style: TextStyle(
-                                fontFamily: font,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w400,
-                                color: colors.text,
-                              ),
-                            ),
-                          ),
-                        ),
-                        Opacity(
-                          opacity: swap,
-                          child: Transform.translate(
-                            offset: Offset(0, 8 * (1 - swap)),
-                            child: Text(
-                              AppStrings.importIosCalendar,
-                              style: TextStyle(
-                                fontFamily: font,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w400,
-                                color: colors.text,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
+          child: const SizedBox.expand(),
+        ),
+      ),
     );
   }
 }

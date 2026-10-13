@@ -409,6 +409,7 @@ class AppBackupService {
   }
 
   static Future<void> relocateSyncedPaths() async {
+    await SyncedFileStore.instance.prepare();
     final documents = kIsWeb
         ? null
         : await getApplicationDocumentsDirectory();

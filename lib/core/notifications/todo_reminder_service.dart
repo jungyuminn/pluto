@@ -262,14 +262,14 @@ class TodoReminderService {
       final lines = [
         for (final event in items.take(12)) _summaryLine(event),
       ];
-      if (items.length > 12) {
-        lines.add('외 ${items.length - 12}개');
-      }
       final id = _summaryIdBase + i;
       final ok = await _schedule(
         id: id,
         title: AppStrings.summaryNotificationTitle(items.length),
-        body: lines.join('\n'),
+        body: _notificationBody(
+          lines,
+          extra: items.length > 12 ? '외 ${items.length - 12}개' : null,
+        ),
         at: at,
         channelId: _summaryChannelId,
         channelName: AppStrings.summaryReminderChannelName,
@@ -327,14 +327,14 @@ class TodoReminderService {
       final lines = [
         for (final event in items.take(12)) event.title,
       ];
-      if (items.length > 12) {
-        lines.add('외 ${items.length - 12}개');
-      }
       final id = _leftoverIdBase + i;
       final ok = await _schedule(
         id: id,
         title: AppStrings.leftoverNotificationTitle(items.length),
-        body: lines.join('\n'),
+        body: _notificationBody(
+          lines,
+          extra: items.length > 12 ? '외 ${items.length - 12}개' : null,
+        ),
         at: at,
         channelId: _leftoverChannelId,
         channelName: AppStrings.leftoverReminderChannelName,
@@ -405,6 +405,15 @@ class TodoReminderService {
         return false;
       }
     }
+  }
+
+  String _notificationBody(List<String> lines, {String? extra}) {
+    final body = lines.length > 1
+        ? [for (final line in lines) '• $line'].join('\n')
+        : lines.join('\n');
+    if (extra == null || extra.isEmpty) return body;
+    if (body.isEmpty) return extra;
+    return '$body\n$extra';
   }
 
   String _summaryLine(CalendarEvent event) {

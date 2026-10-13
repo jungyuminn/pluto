@@ -65,10 +65,9 @@ class ThemedAsset extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dark = Theme.of(context).brightness == Brightness.dark;
-    final skin =
-        AppScope.maybeOf(context)?.themePreference.skin ?? AppSkin.classic;
-    final custom =
-        AppScope.maybeOf(context)?.themePreference.usesCustom ?? false;
+    final theme = AppScope.maybeOf(context)?.themePreference;
+    final custom = theme?.usesCustom ?? false;
+    final skin = theme?.paintedSkin ?? AppSkin.classic;
     final resolved = AppSkinAssets.resolveIcon(asset, skin, dark);
     final painted = AppSkinAssets.keepsPaint(resolved);
     final scale = painted ? AppSkinAssets.paintedIconScale : 1.0;

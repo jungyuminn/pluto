@@ -33,7 +33,9 @@ class LocalFileImage extends StatelessWidget {
   }) async {
     if (kIsWeb || path.isEmpty) return;
     try {
-      final file = File(path);
+      await SyncedFileStore.instance.prepare();
+      final resolved = SyncedFileStore.instance.resolve(path) ?? path;
+      final file = File(resolved);
       if (!file.existsSync()) return;
       final stream = FileImage(file).resolve(
         ImageConfiguration(
@@ -58,10 +60,14 @@ class LocalFileImage extends StatelessWidget {
     } catch (_) {}
   }
 
+  String get _resolvedPath => SyncedFileStore.instance.resolve(path) ?? path;
+
   bool get _fileReady {
     if (kIsWeb || path.isEmpty) return false;
+    final resolved = _resolvedPath;
+    if (resolved.startsWith('pending::')) return false;
     try {
-      return File(path).existsSync();
+      return File(resolved).existsSync();
     } catch (_) {
       return false;
     }
@@ -88,7 +94,7 @@ class LocalFileImage extends StatelessWidget {
 
   Widget _fileImage() {
     return Image.file(
-      File(path),
+      File(_resolvedPath),
       fit: fit,
       alignment: alignment,
       width: width,

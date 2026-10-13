@@ -14,6 +14,7 @@ import 'package:pluto/core/theme/app_theme.dart';
 import 'package:pluto/core/theme/web_theme_color.dart';
 import 'package:pluto/data/datasources/app_auth_service.dart';
 import 'package:pluto/data/datasources/app_backup_service.dart';
+import 'package:pluto/data/datasources/cloud_sync_files.dart';
 import 'package:pluto/data/datasources/cloud_sync_service.dart';
 import 'package:pluto/data/datasources/backup_preference.dart';
 import 'package:pluto/data/datasources/calendar_preference.dart';
@@ -403,6 +404,7 @@ class _AppBootstrapState extends State<_AppBootstrap> {
 
   Future<void> _load() async {
     final prefs = await SharedPreferences.getInstance();
+    await CloudSyncFiles.relocate();
     final eventDataSource = CalendarEventLocalDataSource(prefs);
     await eventDataSource.seedStartersIfNeeded();
     final diaryDataSource = DiaryLocalDataSource(prefs);
@@ -879,7 +881,7 @@ class _JobPlannerMaterialAppState extends State<_JobPlannerMaterialApp>
           builder: (context, auth) {
             final guest = kIsWeb && auth.data == null;
             final typeface = guest ? AppTypeface.pretendard : font.typeface;
-            final skin = guest ? AppSkin.classic : theme.skin;
+            final skin = guest ? AppSkin.classic : theme.paintedSkin;
             final accent = guest ? null : theme.customTheme?.accentColor;
             final lightTheme = AppTheme.themed(
               dark: false,

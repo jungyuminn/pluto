@@ -16,6 +16,7 @@ import 'package:pluto/core/home_widget/week_timetable_card.dart';
 import 'package:pluto/core/theme/app_colors.dart';
 import 'package:pluto/core/theme/app_skin_background.dart';
 import 'package:pluto/core/theme/app_theme.dart';
+import 'package:pluto/data/datasources/cloud_sync_files.dart';
 import 'package:pluto/data/datasources/calendar_complete.dart';
 import 'package:pluto/data/datasources/calendar_event_local_datasource.dart';
 import 'package:pluto/data/datasources/friend_service.dart';
@@ -128,6 +129,7 @@ class HomeScreenWidgetService {
   static Future<void> _prepareFromPrefs() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.reload();
+    await CloudSyncFiles.relocate();
     await HomeScreenWidgetService.instance.init(
       events: CalendarEventLocalDataSource(prefs),
       jobs: JobApplicationLocalDataSource(prefs),
@@ -1104,7 +1106,7 @@ class HomeScreenWidgetService {
   bool get _widgetIsDark => _theme?.isDark ?? false;
 
   AppSkin get _widgetSkin =>
-      _followTheme ? (_theme?.skin ?? AppSkin.classic) : AppSkin.classic;
+      _followTheme ? (_theme?.paintedSkin ?? AppSkin.classic) : AppSkin.classic;
 
   AppTypeface get _widgetTypeface => _followFont
       ? (_font?.typeface ?? AppTypeface.pretendard)

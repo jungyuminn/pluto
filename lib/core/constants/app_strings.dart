@@ -14,13 +14,13 @@ class AppStrings {
   static const settingsBackupSection = '데이터 설정';
   static const settingsCalendarSyncSection = '캘린더 연동';
   static const importSamsungCalendar = '삼성 캘린더';
-  static const importIosCalendar = 'iOS 캘린더';
+  static const importIosCalendar = '애플 캘린더';
   static const importComingLaterTitle = '아직 준비 중이에요';
-  static const importComingLaterBody = 'iOS 캘린더 연동은 곧 추가될 예정이에요';
+  static const importComingLaterBody = '애플 캘린더 연동은 곧 추가될 예정이에요';
   static const importAndroidOnlyTitle = '안드로이드에서 가져올 수 있어요';
   static const importAndroidOnlyBody = '삼성 캘린더 가져오기는 안드로이드 폰에서 사용할 수 있어요';
   static const importIosOnlyTitle = '아이폰에서 가져올 수 있어요';
-  static const importIosOnlyBody = 'iOS 캘린더 가져오기는 아이폰에서 사용할 수 있어요';
+  static const importIosOnlyBody = '애플 캘린더 가져오기는 아이폰에서 사용할 수 있어요';
   static const importPermissionTitle = '캘린더 권한이 필요해요';
   static const importPermissionBody = '기본 캘린더에 있는 일정을 플루토로 가져오려면 권한이 필요해요';
   static const importPermissionSettings = '설정으로 이동';
@@ -389,7 +389,7 @@ class AppStrings {
   static const themeOtterBathhouse = '아기 수달 목욕탕';
   static const themeRabbitFlowerMarket = '꽃집 토끼들';
   static const themeStarPenguin = '별을 만난 펭귄';
-  static const themeBubblesPuppy = '비눗방울 부는 강아지';
+  static const themeBubblesPuppy = '비눗방울 강아지';
   static const settingsFontSection = '폰트 설정';
   static const settingsWidgetSection = '위젯 설정';
   static const widgetFollowTheme = '테마 동기화';

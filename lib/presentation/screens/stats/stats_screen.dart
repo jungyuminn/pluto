@@ -1483,7 +1483,7 @@ class _MonthDots extends StatelessWidget {
             key: ValueKey('${play.month.year}-${play.month.month}'),
             children: [
               for (var i = 0; i < rows.length; i++) ...[
-                if (i > 0) SizedBox(height: PcLayout.isPc ? 26 : 20),
+                if (i > 0) SizedBox(height: PcLayout.isPc ? 18 : 14),
                 rows[i],
               ],
             ],
@@ -1543,7 +1543,7 @@ class _DayDot extends StatelessWidget {
             '${date.day}',
             style: TextStyle(
               fontFamily: font,
-              fontSize: PcLayout.isPc ? 13 : 11,
+              fontSize: PcLayout.isPc ? 15 : 13,
               fontWeight: done ? FontWeight.w800 : FontWeight.w600,
               color: done
                   ? accent

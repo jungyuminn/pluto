@@ -25,6 +25,7 @@ class SyncedFileStore extends ChangeNotifier {
   var _parkedBytes = <String, Uint8List>{};
   var _parkedUrls = <String, String>{};
   var _parkedSizes = <String, int>{};
+  String? _documentsPath;
 
   static String keyOf(String folder, String name) => '$folder/$name';
 
@@ -44,6 +45,26 @@ class SyncedFileStore extends ChangeNotifier {
     return null;
   }
 
+  Future<void> prepare() async {
+    if (kIsWeb) return;
+    _documentsPath ??= (await getApplicationDocumentsDirectory()).path;
+  }
+
+  String? resolve(String? path) {
+    if (path == null || path.isEmpty) return null;
+    if (path.startsWith('pending::')) return path;
+    try {
+      if (File(path).existsSync()) return path;
+    } on Object {
+      // iOS container UUID can change after an update.
+    }
+    final parsed = parse(path);
+    if (parsed == null) return null;
+    final root = _documentsPath;
+    if (root == null) return null;
+    return p.join(root, parsed.folder, parsed.name);
+  }
+
   bool exists(String? path) {
     if (path == null || path.isEmpty) return false;
     if (_bytes.containsKey(path) || _urls.containsKey(path)) return true;
@@ -53,8 +74,10 @@ class SyncedFileStore extends ChangeNotifier {
       if (_bytes.containsKey(key) || _urls.containsKey(key)) return true;
     }
     if (kIsWeb) return false;
+    final resolved = resolve(path);
+    if (resolved == null || resolved.startsWith('pending::')) return false;
     try {
-      return File(path).existsSync();
+      return File(resolved).existsSync();
     } on Object {
       return false;
     }
@@ -80,8 +103,11 @@ class SyncedFileStore extends ChangeNotifier {
     final cached = bytesFor(path);
     if (cached != null) return cached;
     if (kIsWeb) return null;
+    await prepare();
     try {
-      final file = File(path);
+      final resolved = resolve(path);
+      if (resolved == null || resolved.startsWith('pending::')) return null;
+      final file = File(resolved);
       if (!file.existsSync()) return null;
       return file.readAsBytes();
     } on Object {
@@ -97,8 +123,11 @@ class SyncedFileStore extends ChangeNotifier {
       notifyListeners();
       return logicalPath(folder, name);
     }
-    final documents = await getApplicationDocumentsDirectory();
-    final dir = Directory(p.join(documents.path, folder));
+    await prepare();
+    final documents = _documentsPath ??
+        (await getApplicationDocumentsDirectory()).path;
+    _documentsPath = documents;
+    final dir = Directory(p.join(documents, folder));
     if (!dir.existsSync()) {
       await dir.create(recursive: true);
     }
@@ -155,7 +184,9 @@ class SyncedFileStore extends ChangeNotifier {
     notifyListeners();
     if (kIsWeb) return;
     try {
-      final file = File(path);
+      final resolved = resolve(path) ?? path;
+      if (resolved.startsWith('pending::')) return;
+      final file = File(resolved);
       if (file.existsSync()) await file.delete();
     } on Object {
       // Native temp picks can vanish after import.
@@ -280,7 +311,12 @@ class SyncedFileStore extends ChangeNotifier {
       if (cached != null) return Uint8List.fromList(cached);
     }
     if (!kIsWeb) {
-      return File(sourcePath).readAsBytes();
+      await prepare();
+      final resolved = resolve(sourcePath);
+      if (resolved == null || resolved.startsWith('pending::')) {
+        throw StateError('missing-file-bytes');
+      }
+      return File(resolved).readAsBytes();
     }
     throw StateError('missing-file-bytes');
   }

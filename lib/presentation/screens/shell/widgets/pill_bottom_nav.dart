@@ -146,7 +146,7 @@ class _PillBottomNavState extends State<PillBottomNav> {
     return ListenableBuilder(
       listenable: theme,
       builder: (context, _) {
-        final items = AppSkinAssets.navIcons(theme.skin);
+        final items = AppSkinAssets.navIcons(theme.paintedSkin);
         Widget nav = Padding(
           padding: EdgeInsets.only(
             bottom: widget.embedded

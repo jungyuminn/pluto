@@ -47,16 +47,16 @@ enum AppSkin {
   static const sceneSkins = [
     summerBeach,
     snowyWinter,
-    squishyBear,
-    strawberryMilk,
     lovelyPolarBear,
+    starPenguin,
+    bubblesPuppy,
+    strawberryMilk,
+    squishyBear,
     fluffyCloud,
     catVillage,
     hamsterBakery,
     otterBathhouse,
     rabbitFlowerMarket,
-    starPenguin,
-    bubblesPuppy,
   ];
 
   static const selectable = [
@@ -314,6 +314,8 @@ class ThemePreference extends ChangeNotifier {
   List<UserTheme> get customThemes => List.unmodifiable(_customThemes);
 
   bool get usesCustom => customTheme != null;
+
+  AppSkin get paintedSkin => usesCustom ? AppSkin.classic : _skin;
 
   UserTheme? get customTheme {
     final id = _customId;

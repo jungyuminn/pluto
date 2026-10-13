@@ -2449,7 +2449,7 @@ class _ThemePreviewNav extends StatelessWidget {
     return ListenableBuilder(
       listenable: theme,
       builder: (context, _) {
-        final items = AppSkinAssets.navIcons(theme.skin);
+        final items = AppSkinAssets.navIcons(theme.paintedSkin);
         final previewItems = [
           items[0],
           items[1],

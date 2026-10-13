@@ -17,6 +17,21 @@ class ReleaseNote {
 abstract final class ReleaseNotes {
   static const all = [
     ReleaseNote(
+      version: '1.5.5',
+      items: [
+        '요약·미완료 알림에 여러 할 일이 있으면 앞에 점이 생겨요',
+        '행성에서 날짜 숫자가 조금 커졌어요',
+        '행성에서 주 사이가 조금 좁아졌어요',
+        '비눗방울 강아지 이름이 짧아졌어요',
+        '장면 테마가 겨울 다음으로 북극곰부터 이어져요',
+        'iOS 캘린더 이름이 애플 캘린더로 바뀌었어요',
+      ],
+      fixes: [
+        '업데이트 뒤에 만든 테마 사진이 빠지던 점을 고쳤어요',
+        '만든 테마를 고르면 아래 아이콘이 남던 점을 고쳤어요',
+      ],
+    ),
+    ReleaseNote(
       version: '1.5.4',
       items: [
         '몽글고양이 테마가 생겼어요',

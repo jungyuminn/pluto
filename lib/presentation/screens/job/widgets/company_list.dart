@@ -48,20 +48,22 @@ class CompanyList extends StatefulWidget {
 }
 
 class CompanyListState extends State<CompanyList>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   final _scroll = ScrollController();
   final _listBoxKey = GlobalKey();
-  final _rejectedBoxKey = GlobalKey();
   final _heights = <String, double>{};
   late final _items = List.of(widget.applications);
   late final AnimationController _rejectedReveal;
   late final CurvedAnimation _rejectedFade;
+  late final AnimationController _hole;
   final _headerReveal = <String, double>{};
   final _entering = <String>{};
   String? _draggingId;
   final _drop = DropSettle();
   var _dragY = 0.0;
   double? _grabOffset;
+  var _holeExtent = 0.0;
+  var _holeFrom = 0.0;
 
   static const _slotAnim = Duration(milliseconds: 280);
   static const _headerLabel = 16.0;
@@ -84,6 +86,7 @@ class CompanyListState extends State<CompanyList>
       curve: Curves.easeOutCubic,
       reverseCurve: Curves.easeInCubic,
     );
+    _hole = AnimationController(vsync: this, duration: _slotAnim);
   }
 
   @override
@@ -104,6 +107,7 @@ class CompanyListState extends State<CompanyList>
   void dispose() {
     _rejectedFade.dispose();
     _rejectedReveal.dispose();
+    _hole.dispose();
     _scroll.dispose();
     super.dispose();
   }
@@ -119,6 +123,8 @@ class CompanyListState extends State<CompanyList>
 
   void _sync(List<JobApplication> next) {
     if (_draggingId != null) return;
+    final oldActive = [for (final item in _items) if (!item.isRejected) item];
+    final oldRejected = [for (final item in _items) if (item.isRejected) item];
     final oldIds = [for (final item in _items) item.id];
     final arriving = [
       for (final item in next)
@@ -127,10 +133,31 @@ class CompanyListState extends State<CompanyList>
     final inserted = arriving.isNotEmpty;
     final active = [for (final item in next) if (!item.isRejected) item];
     final rejected = [for (final item in next) if (item.isRejected) item];
+    JobApplication? removed;
+    if (!inserted && oldIds.length == next.length + 1) {
+      for (final item in _items) {
+        if (next.every((nextItem) => nextItem.id != item.id)) {
+          removed = item;
+          break;
+        }
+      }
+    }
     _entering.addAll(arriving);
     _items
       ..clear()
       ..addAll([...active, ...rejected]);
+    if (removed != null) {
+      _holeFrom = removed.isRejected
+          ? _laidHeight(oldActive, grouped: widget.categoryView) +
+              _topAmong(oldRejected, removed.id)
+          : _removedActiveFrom(removed, oldActive);
+      _holeExtent = removed.isRejected
+          ? _blockHeight(removed)
+          : _removedActiveExtent(removed, oldActive);
+      _hole
+        ..value = 0
+        ..forward();
+    }
     setState(() {});
     if (!inserted) return;
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -213,9 +240,58 @@ class CompanyListState extends State<CompanyList>
   }
 
   void _setHeight(String id, double height) {
+    if (height < 1) return;
     final current = _heights[id];
     if (current != null && (current - height).abs() < 0.5) return;
     setState(() => _heights[id] = height);
+  }
+
+  double _laidHeight(List<JobApplication> items, {required bool grouped}) {
+    if (!grouped) return _sectionHeight(items);
+    var y = 0.0;
+    for (final slot in _slotsOf(items)) {
+      y += _slotHeight(slot);
+    }
+    return y;
+  }
+
+  double _removedActiveFrom(
+    JobApplication removed,
+    List<JobApplication> oldActive,
+  ) {
+    if (!widget.categoryView) return _topAmong(oldActive, removed.id);
+    final dropHeader = oldActive.every(
+      (item) => item.id == removed.id || item.categoryKey != removed.categoryKey,
+    );
+    var y = 0.0;
+    for (final slot in _slotsOf(oldActive)) {
+      if (dropHeader && slot.header?.key == removed.categoryKey) return y;
+      if (slot.item?.id == removed.id) return y;
+      y += _slotHeight(slot);
+    }
+    return y;
+  }
+
+  double _removedActiveExtent(
+    JobApplication removed,
+    List<JobApplication> oldActive,
+  ) {
+    var extent = _blockHeight(removed);
+    if (!widget.categoryView) return extent;
+    if (oldActive.any(
+      (item) => item.id != removed.id && item.categoryKey == removed.categoryKey,
+    )) {
+      return extent;
+    }
+    final sections = _sectionsOf(oldActive);
+    final index = sections.indexWhere((item) => item.key == removed.categoryKey);
+    if (index < 0) return extent;
+    return extent + _headerLabel + _headerBottom + (index == 0 ? 0 : _headerTopGap);
+  }
+
+  double get _holeNow {
+    if (_holeExtent <= 0 || _hole.value >= 1) return 0;
+    return _holeExtent * (1 - Curves.easeOutCubic.transform(_hole.value));
   }
 
   List<JobApplication> get _activeItems {
@@ -282,11 +358,13 @@ class CompanyListState extends State<CompanyList>
     if (dragged == null) return;
     final rejected = dragged.isRejected;
     final group = rejected ? _rejectedItems : _activeItems;
-    final boxKey = rejected ? _rejectedBoxKey : _listBoxKey;
-    final box = boxKey.currentContext?.findRenderObject() as RenderBox?;
+    final box = _listBoxKey.currentContext?.findRenderObject() as RenderBox?;
     if (box == null || !box.hasSize) return;
 
-    final localY = box.globalToLocal(global).dy;
+    final origin = rejected
+        ? _laidHeight(_activeItems, grouped: widget.categoryView)
+        : 0.0;
+    final localY = box.globalToLocal(global).dy - origin;
     _grabOffset ??= localY - _dragY;
     final height = _heightOf(dragged);
     final maxTop = math.max(0.0, _sectionHeight(group) - height);
@@ -403,59 +481,58 @@ class CompanyListState extends State<CompanyList>
   }
 
   Widget _buildList() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        _stack(
-          items: _activeItems,
-          boxKey: _listBoxKey,
-          clip: true,
-          grouped: widget.categoryView,
-        ),
-        SizeTransition(
-          sizeFactor: _rejectedFade,
-          axisAlignment: -1,
-          child: FadeTransition(
-            opacity: _rejectedFade,
-            child: IgnorePointer(
-              ignoring: !widget.showRejected,
-              child: _stack(
-                items: _rejectedItems,
-                boxKey: _rejectedBoxKey,
-                clip: false,
-              ),
-            ),
-          ),
-        ),
-      ],
+    return AnimatedBuilder(
+      animation: Listenable.merge([_rejectedFade, _hole]),
+      builder: (context, _) => _stack(),
     );
   }
 
-  Widget _stack({
-    required List<JobApplication> items,
-    Key? boxKey,
-    required bool clip,
-    bool grouped = false,
-  }) {
-    final slots = grouped
-        ? _slotsOf(items)
-        : [for (final item in items) _JobSlot.card(item)];
+  Widget _stack() {
+    final reveal = _rejectedFade.value;
+    final hole = _holeNow;
+    final activeSlots = widget.categoryView
+        ? _slotsOf(_activeItems)
+        : [for (final item in _activeItems) _JobSlot.card(item)];
+    final rejectedSlots = [
+      for (final item in _rejectedItems) _JobSlot.card(item),
+    ];
+    final slots = [...activeSlots, ...rejectedSlots];
+    final origins = <double>[];
     final tops = <double>[];
     var height = 0.0;
-    for (final slot in slots) {
+    var holeLeft = hole;
+    void insertHoleIfDue() {
+      if (holeLeft <= 0 || height + 0.5 < _holeFrom) return;
+      height += holeLeft;
+      holeLeft = 0;
+    }
+    for (final slot in activeSlots) {
+      insertHoleIfDue();
+      origins.add(0);
       tops.add(height);
       height += _slotHeight(slot);
     }
-    final animate = _allMeasured;
+    insertHoleIfDue();
+    final activeHeight = height;
+    for (final slot in rejectedSlots) {
+      insertHoleIfDue();
+      origins.add(activeHeight);
+      tops.add(height);
+      height += _slotHeight(slot) * reveal;
+    }
+    insertHoleIfDue();
+    final animate = _allMeasured && hole <= 0;
     return AnimatedSize(
       duration: animate ? _slotAnim : Duration.zero,
       curve: Curves.easeOutCubic,
       alignment: Alignment.topCenter,
       child: SizedBox(
-        key: boxKey,
+        key: _listBoxKey,
         height: height,
         child: Stack(
-          clipBehavior: clip && _drop.id == null ? Clip.hardEdge : Clip.none,
+          clipBehavior: _drop.id == null && _draggingId == null && reveal >= 1
+              ? Clip.hardEdge
+              : Clip.none,
           children: [
             for (var i = 0; i < slots.length; i++)
               if (slots[i].header != null)
@@ -465,11 +542,21 @@ class CompanyListState extends State<CompanyList>
                   first: slots[i].firstHeader,
                 )
               else if (slots[i].item?.id != _draggingId)
-                _positioned(slots[i].item!, tops[i]),
+                _positioned(
+                  slots[i].item!,
+                  tops[i],
+                  origin: origins[i],
+                  fade: i < activeSlots.length ? 1 : reveal,
+                ),
             if (_draggingId != null)
               for (var i = 0; i < slots.length; i++)
                 if (slots[i].item?.id == _draggingId)
-                  _positioned(slots[i].item!, tops[i]),
+                  _positioned(
+                    slots[i].item!,
+                    tops[i],
+                    origin: origins[i],
+                    fade: i < activeSlots.length ? 1 : reveal,
+                  ),
           ],
         ),
       ),
@@ -499,7 +586,7 @@ class CompanyListState extends State<CompanyList>
     final gap = first ? 0.0 : _headerTopGap;
     return AnimatedPositioned(
       key: ValueKey('header-${section.key}'),
-      duration: _allMeasured ? _slotAnim : Duration.zero,
+      duration: _allMeasured && _holeNow <= 0 ? _slotAnim : Duration.zero,
       curve: Curves.easeOutCubic,
       top: top,
       left: 0,
@@ -548,13 +635,20 @@ class CompanyListState extends State<CompanyList>
     );
   }
 
-  Widget _positioned(JobApplication application, double slotTop) {
+  Widget _positioned(
+    JobApplication application,
+    double slotTop, {
+    double origin = 0,
+    double fade = 1,
+  }) {
     final dragging = _draggingId == application.id;
     return AnimatedPositioned(
       key: ValueKey(application.id),
-      duration: dragging || !_allMeasured ? Duration.zero : _slotAnim,
+      duration: dragging || !_allMeasured || (fade > 0 && fade < 1) || _holeNow > 0
+          ? Duration.zero
+          : _slotAnim,
       curve: Curves.easeOutCubic,
-      top: dragging ? _dragY : slotTop,
+      top: dragging ? origin + _dragY : slotTop,
       left: 0,
       right: 0,
       child: _drop.wrap(
@@ -565,9 +659,15 @@ class CompanyListState extends State<CompanyList>
         },
         child: _MeasureHeight(
           onHeight: (height) => _setHeight(application.id, height),
-          child: Transform.scale(
-            scale: dragging ? 1.03 : 1,
-            child: _tile(application),
+          child: IgnorePointer(
+            ignoring: fade <= 0,
+            child: Opacity(
+              opacity: fade.clamp(0.0, 1.0),
+              child: Transform.scale(
+                scale: dragging ? 1.03 : 1,
+                child: _tile(application),
+              ),
+            ),
           ),
         ),
       ),

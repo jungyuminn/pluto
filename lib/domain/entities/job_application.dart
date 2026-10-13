@@ -65,7 +65,7 @@ class JobApplication {
     return List.unmodifiable(next);
   }
 
-  /// 오늘부터 5일 안에 있는 가장 가까운 전형까지 남은 일수. 없으면 null.
+  /// 오늘부터 3일 안에 있는 가장 가까운 전형까지 남은 일수. 없으면 null.
   int? upcomingDDay([DateTime? now]) {
     final current = now ?? DateTime.now();
     final today = DateTime(current.year, current.month, current.day);
@@ -75,7 +75,7 @@ class JobApplication {
       if (date == null) continue;
       final target = DateTime(date.year, date.month, date.day);
       final days = target.difference(today).inDays;
-      if (days < 0 || days > 5) continue;
+      if (days < 0 || days > 3) continue;
       if (nearest == null || days < nearest) nearest = days;
     }
     return nearest;
@@ -131,6 +131,16 @@ class JobApplication {
   static int compareHomeOrder(JobApplication a, JobApplication b) {
     final rejected = _compareRejected(a, b);
     if (rejected != 0) return rejected;
+    return compareDateOrder(a, b);
+  }
+
+  /// 탈락은 맨 아래, 그다음 전형 단계가 앞선 순. 같으면 가까운 날짜 순.
+  static int compareStatusOrder(JobApplication a, JobApplication b) {
+    final rejected = _compareRejected(a, b);
+    if (rejected != 0) return rejected;
+    final byStage = ApplyStatus.stageRank(b.applyStatus)
+        .compareTo(ApplyStatus.stageRank(a.applyStatus));
+    if (byStage != 0) return byStage;
     return compareDateOrder(a, b);
   }
 

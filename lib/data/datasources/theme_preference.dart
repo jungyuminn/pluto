@@ -13,6 +13,7 @@ enum AppSkin {
   fluffyDog,
   fluffyChick,
   fluffyHamster,
+  mongleCloud,
   pinkHeart,
   blossom,
   clover,
@@ -20,15 +21,14 @@ enum AppSkin {
   snowyWinter,
   squishyBear,
   strawberryMilk,
-  lovelyBear,
-  rainyDay,
-  concertDay,
+  lovelyPolarBear,
   fluffyCloud,
   catVillage,
   hamsterBakery,
   otterBathhouse,
   rabbitFlowerMarket,
-  bearPancakeCafe;
+  starPenguin,
+  bubblesPuppy;
 
   static const patternSkins = [
     classic,
@@ -38,6 +38,7 @@ enum AppSkin {
     fluffyDog,
     fluffyChick,
     fluffyHamster,
+    mongleCloud,
     pinkHeart,
     blossom,
     clover,
@@ -48,15 +49,14 @@ enum AppSkin {
     snowyWinter,
     squishyBear,
     strawberryMilk,
-    lovelyBear,
-    rainyDay,
-    concertDay,
+    lovelyPolarBear,
     fluffyCloud,
     catVillage,
     hamsterBakery,
     otterBathhouse,
     rabbitFlowerMarket,
-    bearPancakeCafe,
+    starPenguin,
+    bubblesPuppy,
   ];
 
   static const selectable = [

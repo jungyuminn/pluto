@@ -369,6 +369,7 @@ class _DayEmojiSheetState extends State<DayEmojiSheet> {
                       colors: colors,
                       packId: pack?.id,
                       stickers: stickers,
+                      compact: pc,
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -408,7 +409,9 @@ class _DayEmojiSheetState extends State<DayEmojiSheet> {
     required AppColors colors,
     required String? packId,
     required List<String> stickers,
+    required bool compact,
   }) {
+    final gap = compact ? 10.0 : _gridGap;
     return FadeIn(
       key: ValueKey(packId ?? 'empty'),
       duration: const Duration(milliseconds: 320),
@@ -416,10 +419,10 @@ class _DayEmojiSheetState extends State<DayEmojiSheet> {
       child: GridView.builder(
         padding: EdgeInsets.zero,
         itemCount: stickers.length,
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: _columns,
-          mainAxisSpacing: _gridGap,
-          crossAxisSpacing: _gridGap,
+          mainAxisSpacing: gap,
+          crossAxisSpacing: gap,
           childAspectRatio: 1,
         ),
         itemBuilder: (context, index) {
@@ -430,7 +433,7 @@ class _DayEmojiSheetState extends State<DayEmojiSheet> {
             pressedColor: colors.pressed,
             borderRadius: BorderRadius.circular(14),
             child: Padding(
-              padding: const EdgeInsets.all(2),
+              padding: EdgeInsets.all(compact ? 8 : 2),
               child: Image.asset(
                 DayStickers.resolve(sticker),
                 fit: BoxFit.contain,

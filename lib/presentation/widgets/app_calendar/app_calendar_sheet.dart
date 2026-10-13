@@ -1106,6 +1106,7 @@ class _DayCellState extends State<_DayCell> {
 
   @override
   Widget build(BuildContext context) {
+    if (!widget.day.inMonth) return const SizedBox.expand();
     final colors = AppColors.of(context);
     final circleSelected = widget.selected;
     final Color circleColor;

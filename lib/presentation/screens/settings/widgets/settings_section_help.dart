@@ -2295,6 +2295,8 @@ String _themeCaption(AppSkin skin) {
       return AppStrings.themeFluffyChick;
     case AppSkin.fluffyHamster:
       return AppStrings.themeFluffyHamster;
+    case AppSkin.mongleCloud:
+      return AppStrings.themeMongleCloud;
     case AppSkin.pinkHeart:
       return AppStrings.themePinkHeart;
       case AppSkin.summerBeach:
@@ -2305,12 +2307,8 @@ String _themeCaption(AppSkin skin) {
         return AppStrings.themeSquishyBear;
       case AppSkin.strawberryMilk:
         return AppStrings.themeStrawberryMilk;
-      case AppSkin.lovelyBear:
-        return AppStrings.themeLovelyBear;
-      case AppSkin.rainyDay:
-        return AppStrings.themeRainyDay;
-      case AppSkin.concertDay:
-        return AppStrings.themeConcertDay;
+      case AppSkin.lovelyPolarBear:
+        return AppStrings.themeLovelyPolarBear;
       case AppSkin.fluffyCloud:
         return AppStrings.themeFluffyCloud;
       case AppSkin.catVillage:
@@ -2321,8 +2319,10 @@ String _themeCaption(AppSkin skin) {
       return AppStrings.themeOtterBathhouse;
     case AppSkin.rabbitFlowerMarket:
       return AppStrings.themeRabbitFlowerMarket;
-    case AppSkin.bearPancakeCafe:
-      return AppStrings.themeBearPancakeCafe;
+    case AppSkin.starPenguin:
+      return AppStrings.themeStarPenguin;
+    case AppSkin.bubblesPuppy:
+      return AppStrings.themeBubblesPuppy;
   }
 }
 

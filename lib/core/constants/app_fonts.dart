@@ -40,7 +40,7 @@ class AppFonts {
 
   static const pretendard = 'Pretendard';
   static const jalnan = 'Jalnan2';
-  static const wordmarkSize = 24.0;
+  static const wordmarkSize = 22.0;
   static const wordmarkColor = Color(0xFF8F9095);
   static const wordmarkLeftInset = 12.0;
 

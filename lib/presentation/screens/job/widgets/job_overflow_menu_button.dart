@@ -15,6 +15,8 @@ class JobOverflowMenuButton extends StatefulWidget {
     required this.onShowRejectedChanged,
     required this.sortByTime,
     required this.onSortByTimeChanged,
+    required this.sortByStatus,
+    required this.onSortByStatusChanged,
     required this.categoryView,
     required this.onCategoryViewChanged,
     required this.showLicense,
@@ -36,6 +38,8 @@ class JobOverflowMenuButton extends StatefulWidget {
   final ValueChanged<bool> onShowRejectedChanged;
   final bool sortByTime;
   final ValueChanged<bool> onSortByTimeChanged;
+  final bool sortByStatus;
+  final ValueChanged<bool> onSortByStatusChanged;
   final bool categoryView;
   final ValueChanged<bool> onCategoryViewChanged;
   final bool showLicense;
@@ -71,15 +75,15 @@ class _JobOverflowMenuButtonState extends State<JobOverflowMenuButton>
     super.initState();
     _animation = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 200),
-      reverseDuration: const Duration(milliseconds: 140),
+      duration: const Duration(milliseconds: 280),
+      reverseDuration: const Duration(milliseconds: 180),
     );
     _fade = CurvedAnimation(
       parent: _animation,
       curve: Curves.easeOutCubic,
       reverseCurve: Curves.easeInCubic,
     );
-    _scale = Tween<double>(begin: 0.92, end: 1).animate(_fade);
+    _scale = Tween<double>(begin: 0.88, end: 1).animate(_fade);
   }
 
   @override
@@ -154,6 +158,9 @@ class _JobOverflowMenuButtonState extends State<JobOverflowMenuButton>
             ? widget.onLicenseSortByTimeChanged
             : widget.onSortByTimeChanged,
         onShowTimeChanged: (_) {},
+        showStatusSortOption: !widget.showLicense,
+        sortByStatus: widget.sortByStatus,
+        onSortByStatusChanged: widget.onSortByStatusChanged,
         showCategoryOption: true,
         categoryView: widget.showLicense
             ? widget.licenseCategoryView

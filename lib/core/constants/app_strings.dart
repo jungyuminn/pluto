@@ -376,20 +376,20 @@ class AppStrings {
   static const themeFluffyDog = '몽글강아지';
   static const themeFluffyChick = '몽글삐약이';
   static const themeFluffyHamster = '몽글햄찌';
+  static const themeMongleCloud = '몽글구름';
   static const themePinkHeart = '핑크하트';
   static const themeSummerBeach = '한여름 바닷가';
   static const themeSnowyWinter = '눈 내리는 겨울';
   static const themeSquishyBear = '말랑곰탱이';
   static const themeStrawberryMilk = '딸기우유';
-  static const themeLovelyBear = '러블리베어';
-  static const themeRainyDay = '비와 같이 폴짝';
-  static const themeConcertDay = '공연하는 날';
+  static const themeLovelyPolarBear = '새하얀 북극곰';
   static const themeFluffyCloud = '몽실구름';
-  static const themeCatVillage = '고양이 마을';
+  static const themeCatVillage = '고양이 가족';
   static const themeHamsterBakery = '햄스터 빵집';
   static const themeOtterBathhouse = '아기 수달 목욕탕';
   static const themeRabbitFlowerMarket = '꽃집 토끼들';
-  static const themeBearPancakeCafe = '곰돌이 팬케이크';
+  static const themeStarPenguin = '별을 만난 펭귄';
+  static const themeBubblesPuppy = '비눗방울 부는 강아지';
   static const settingsFontSection = '폰트 설정';
   static const settingsWidgetSection = '위젯 설정';
   static const widgetFollowTheme = '테마 동기화';
@@ -694,7 +694,9 @@ class AppStrings {
   static const jobVisibleItems = '지원서에 표시할 항목';
   static const jobShowRejected = '탈락한 지원서';
   static String jobRejectedCalendarToast(String name) =>
-      '$name의 일정이 더 이상 캘린더와 홈에 나오지 않아요';
+      '$name의 일정이 더 이상 캘린더에 나오지 않아요';
+  static String jobAddedCalendarToast(String name) =>
+      '$name의 일정이 캘린더에 나와요';
   static const calendarSortMode = '정렬 방식';
   static const calendarDiaryMode = '일기 전환';
   static const calendarLedgerMode = '가계부 전환';
@@ -849,6 +851,7 @@ class AppStrings {
   static const roundAction = '전형';
   static const timeAction = '시간';
   static const timeSortView = '시간 순으로 보기';
+  static const statusSortView = '단계 순으로 보기';
   static const timeDisplay = '시간 표시';
   static const timeHour24 = '24시간으로 표시';
   static const parseTitleTime = '시간 자동 인식';
@@ -856,6 +859,7 @@ class AppStrings {
   static const timeSortLockBody = '시간 순으로 보기가 켜져 있어요!';
   static const dateSortAction = '날짜순 정리';
   static const dateSortLockBody = '날짜 순으로 보기가 켜져 있어요!';
+  static const statusSortLockBody = '단계 순으로 보기가 켜져 있어요!';
   static const rejectedReorderLockBody = '탈락한 지원서는 순서를 바꿀 수 없어요';
   static const timeStartLabel = '시작';
   static const timeEndLabel = '종료';

@@ -160,8 +160,8 @@ class CalendarEvent {
     if (aStart == null && bStart == null) {
       return a.sortOrder.compareTo(b.sortOrder);
     }
-    if (aStart == null) return 1;
-    if (bStart == null) return -1;
+    if (aStart == null) return -1;
+    if (bStart == null) return 1;
     final byStart = aStart.compareTo(bStart);
     if (byStart != 0) return byStart;
     final byEnd = (a.endMinutes ?? aStart).compareTo(b.endMinutes ?? bStart);

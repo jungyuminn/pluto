@@ -35,6 +35,7 @@ class CloudSyncService {
   String? _vaultProvider;
   String? _listenKey;
   Future<void>? _inflight;
+  Future<void>? _pullInflight;
   var _writtenAt = 0;
   var _lastRemoteFiles = const <CloudFileEntry>[];
 
@@ -73,9 +74,9 @@ class CloudSyncService {
       _vaultProvider = lastProvider ?? provider;
       await _hydrateCursor(prefs);
       _ready = true;
-      _startWatch();
       unawaited(FriendService.instance.bootstrap());
-      unawaited(onResumed());
+      await onResumed();
+      _startWatch();
       return;
     }
     if (!context.mounted) return;
@@ -309,9 +310,9 @@ class CloudSyncService {
     _vaultProvider = lastProvider ?? provider;
     await _hydrateCursor(prefs);
     _ready = true;
-    _startWatch();
     unawaited(FriendService.instance.bootstrap());
-    unawaited(onResumed());
+    await onResumed();
+    _startWatch();
   }
 
   void _scheduleFlush() {
@@ -399,7 +400,13 @@ class CloudSyncService {
   Future<void> _flushIfDirty() async {
     final user = AppAuthService.instance.user;
     final epoch = _epoch;
-    if (!_ready || user == null || _busy || _applyingRemote) return;
+    if (!_ready ||
+        user == null ||
+        _busy ||
+        _applyingRemote ||
+        _pullInflight != null) {
+      return;
+    }
     final dump = await _localDump();
     if (epoch != _epoch || !_ready || _busy || AppAuthService.instance.user?.uid != user.uid) {
       return;
@@ -417,7 +424,13 @@ class CloudSyncService {
     }
   }
 
-  Future<void> _pullIfIdle() async {
+  Future<void> _pullIfIdle() {
+    return _pullInflight ??= _pullOnce().whenComplete(() {
+      _pullInflight = null;
+    });
+  }
+
+  Future<void> _pullOnce() async {
     final user = AppAuthService.instance.user;
     final scope = _scope;
     final epoch = _epoch;
@@ -427,10 +440,7 @@ class CloudSyncService {
     if (epoch != _epoch || !_ready || _busy) return;
     try {
       final remote = await _fetch(user.uid, _currentProvider());
-      if (!await _shouldApplyIncoming(remote, prefs, local)) {
-        if (await _hasLocalEdits(prefs, local)) await _flushIfDirty();
-        return;
-      }
+      if (!await _shouldApplyIncoming(remote, prefs, local)) return;
       await _applyRemoteIfChanged(
         remote,
         prefs: prefs,

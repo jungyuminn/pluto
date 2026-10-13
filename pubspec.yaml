@@ -136,13 +136,16 @@ flutter:
     - assets/themes/fluffy_hamster/icons/light/
     - assets/themes/fluffy_hamster/icons/dark/
     - assets/themes/pink_heart/
+    - assets/themes/pink_heart/icons/light/
+    - assets/themes/pink_heart/icons/dark/
+    - assets/themes/fluffy_cloud/
+    - assets/themes/fluffy_cloud/icons/light/
+    - assets/themes/fluffy_cloud/icons/dark/
     - assets/themes/summer_beach/
     - assets/themes/snowy_winter/
     - assets/themes/squishy_bear/
     - assets/themes/strawberry_milk/
-    - assets/themes/lovely_bear/
-    - assets/themes/rainy_day/
-    - assets/themes/band/
+    - assets/themes/lovely_polar_bear/
     - assets/themes/cloud/
     - assets/themes/cat_village/
     - assets/themes/hamster_bakery/
@@ -150,8 +153,8 @@ flutter:
     - assets/themes/otter_bathhouse/dark/
     - assets/themes/rabbit_flower_market/light/
     - assets/themes/rabbit_flower_market/dark/
-    - assets/themes/bear_pancake_cafe/light/
-    - assets/themes/bear_pancake_cafe/dark/
+    - assets/themes/star_penguin/
+    - assets/themes/bubbles_puppy/
     - assets/stickers/company_cat/
     - assets/stickers/university_cat/
     - assets/stickers/company_rabbit/

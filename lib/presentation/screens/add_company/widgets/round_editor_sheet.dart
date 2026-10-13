@@ -168,35 +168,36 @@ class _RoundEditorSheetState extends State<RoundEditorSheet>
                 const SizedBox(height: 5),
                 Row(
                   children: [
-                    if (_date != null)
-                      Flexible(
-                        child: RoundDateField(
-                          date: _date,
-                          color: accent,
-                          onPicked: (value) => setState(() => _date = value),
+                    Expanded(
+                      child: SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children: [
+                            RoundDateField(
+                              date: _date,
+                              color: accent,
+                              onPicked: (value) =>
+                                  setState(() => _date = value),
+                            ),
+                            const SizedBox(width: 4),
+                            EventActionIcon(
+                              label: AppStrings.memoAction,
+                              color: accent,
+                              selected: _noteOpen,
+                              onPressed: _toggleNote,
+                              child: AppAssetImage(
+                                asset: _noteOpen
+                                    ? AppIcons.memo
+                                    : AppIcons.memoOutlined,
+                                width: 20,
+                                height: 20,
+                              ),
+                            ),
+                          ],
                         ),
-                      )
-                    else
-                      RoundDateField(
-                        date: _date,
-                        color: accent,
-                        onPicked: (value) => setState(() => _date = value),
-                      ),
-                    const SizedBox(width: 4),
-                    EventActionIcon(
-                      label: AppStrings.memoAction,
-                      color: accent,
-                      selected: _noteOpen,
-                      onPressed: _toggleNote,
-                      child: AppAssetImage(
-                        asset: _noteOpen
-                            ? AppIcons.memo
-                            : AppIcons.memoOutlined,
-                        width: 20,
-                        height: 20,
                       ),
                     ),
-                    const Spacer(),
+                    const SizedBox(width: 8),
                     SaveCompanyButton(onPressed: _save, color: accent),
                   ],
                 ),

@@ -182,6 +182,9 @@ class CalendarSortMenu extends StatelessWidget {
     this.onHour24Changed,
     this.showTimeOption = true,
     this.showTimeSortOption = true,
+    this.sortByStatus = false,
+    this.onSortByStatusChanged,
+    this.showStatusSortOption = false,
     this.categoryView = false,
     this.onCategoryViewChanged,
     this.showCategoryOption = false,
@@ -199,6 +202,9 @@ class CalendarSortMenu extends StatelessWidget {
   final ValueChanged<bool>? onHour24Changed;
   final bool showTimeOption;
   final bool showTimeSortOption;
+  final bool sortByStatus;
+  final ValueChanged<bool>? onSortByStatusChanged;
+  final bool showStatusSortOption;
   final bool categoryView;
   final ValueChanged<bool>? onCategoryViewChanged;
   final bool showCategoryOption;
@@ -223,6 +229,14 @@ class CalendarSortMenu extends StatelessWidget {
             label: AppStrings.timeSortView,
             checked: sortByTime,
             onChanged: onSortByTimeChanged,
+          ),
+        ),
+        _MenuReveal(
+          visible: showStatusSortOption && onSortByStatusChanged != null,
+          child: _FilterItem(
+            label: AppStrings.statusSortView,
+            checked: sortByStatus,
+            onChanged: onSortByStatusChanged ?? (_) {},
           ),
         ),
         _MenuReveal(
@@ -568,15 +582,15 @@ class _AllEventsFilterMenuButtonState extends State<AllEventsFilterMenuButton>
     super.initState();
     _animation = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 200),
-      reverseDuration: const Duration(milliseconds: 140),
+      duration: const Duration(milliseconds: 280),
+      reverseDuration: const Duration(milliseconds: 180),
     );
     _fade = CurvedAnimation(
       parent: _animation,
       curve: Curves.easeOutCubic,
       reverseCurve: Curves.easeInCubic,
     );
-    _scale = Tween<double>(begin: 0.92, end: 1).animate(_fade);
+    _scale = Tween<double>(begin: 0.88, end: 1).animate(_fade);
   }
 
   @override
@@ -826,7 +840,7 @@ class _FilterItem extends StatelessWidget {
     return SizedBox(
       width: double.infinity,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(14, 10, 12, 10),
+        padding: const EdgeInsets.fromLTRB(14, 9, 12, 9),
         child: Row(
           children: [
             Expanded(

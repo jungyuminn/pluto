@@ -289,6 +289,12 @@ class _AddCompanyFormViewState extends State<AddCompanyForm>
         context,
         AppStrings.jobRejectedCalendarToast(name),
       );
+    } else if (initial == null &&
+        application.rounds.any((round) => round.date != null)) {
+      showFriendsToast(
+        context,
+        AppStrings.jobAddedCalendarToast(name),
+      );
     }
     Navigator.of(context).pop(true);
   }

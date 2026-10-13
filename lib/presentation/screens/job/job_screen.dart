@@ -54,6 +54,7 @@ class JobScreenState extends State<JobScreen>
   var _compact = false;
   var _searchOpen = false;
   var _sortByDate = false;
+  var _sortByStatus = false;
   var _showRejected = true;
   var _categoryView = false;
   var _showLicense = false;
@@ -82,6 +83,7 @@ class JobScreenState extends State<JobScreen>
     final scope = AppScope.of(context);
     _compact = scope.jobViewPreference.isCompact;
     _sortByDate = scope.jobViewPreference.sortByDate;
+    _sortByStatus = scope.jobViewPreference.sortByStatus;
     _showRejected = scope.jobViewPreference.showRejected;
     _categoryView = scope.jobViewPreference.categoryView;
     _showLicense = scope.jobViewPreference.showLicense;
@@ -131,6 +133,9 @@ class JobScreenState extends State<JobScreen>
   }
 
   List<JobApplication> get _orderedJobs {
+    if (_sortByStatus) {
+      return List.of(_items)..sort(JobApplication.compareStatusOrder);
+    }
     if (!_sortByDate) return _items;
     return List.of(_items)..sort(JobApplication.compareHomeOrder);
   }
@@ -254,7 +259,7 @@ class JobScreenState extends State<JobScreen>
   }
 
   Future<void> _onJobsReordered(List<JobApplication> ordered) async {
-    if (_sortByDate || _categoryView) return;
+    if (_sortByDate || _sortByStatus || _categoryView) return;
     final next = [
       for (var i = 0; i < ordered.length; i++)
         ordered[i].copyWith(sortOrder: i),
@@ -276,15 +281,18 @@ class JobScreenState extends State<JobScreen>
   Future<void> _explainReorderLock({required bool license}) {
     HapticFeedback.lightImpact();
     final categoryView = license ? _licenseCategoryView : _categoryView;
+    final sortByStatus = !license && _sortByStatus;
     final sortByDate = license ? _licenseSortByDate : _sortByDate;
     return showMissingFieldsDialog(
       context,
       title: AppStrings.timeSortLockTitle,
       body: categoryView
           ? AppStrings.categoryViewLockBody
-          : (sortByDate
-              ? AppStrings.timeSortLockBody
-              : AppStrings.timeSortLockBody),
+          : sortByStatus
+              ? AppStrings.statusSortLockBody
+              : (sortByDate
+                  ? AppStrings.timeSortLockBody
+                  : AppStrings.timeSortLockBody),
     );
   }
 
@@ -353,10 +361,25 @@ class JobScreenState extends State<JobScreen>
                   onSortByTimeChanged: (value) async {
                     if (value == _sortByDate) return;
                     HapticFeedback.selectionClick();
-                    setState(() => _sortByDate = value);
+                    setState(() {
+                      _sortByDate = value;
+                      if (value) _sortByStatus = false;
+                    });
                     await AppScope.of(context)
                         .jobViewPreference
                         .setSortByDate(value);
+                  },
+                  sortByStatus: _sortByStatus,
+                  onSortByStatusChanged: (value) async {
+                    if (value == _sortByStatus) return;
+                    HapticFeedback.selectionClick();
+                    setState(() {
+                      _sortByStatus = value;
+                      if (value) _sortByDate = false;
+                    });
+                    await AppScope.of(context)
+                        .jobViewPreference
+                        .setSortByStatus(value);
                   },
                   categoryView: _categoryView,
                   onCategoryViewChanged: (value) async {
@@ -510,11 +533,14 @@ class JobScreenState extends State<JobScreen>
                                     onDelete: _confirmDeleteJob,
                                     onReordered: _onJobsReordered,
                                     onReorderLocked:
-                                        (_sortByDate || _categoryView)
+                                        (_sortByDate ||
+                                                _sortByStatus ||
+                                                _categoryView)
                                             ? () => _explainReorderLock(
                                                 license: false)
                                             : null,
                                     canReorder: !_sortByDate &&
+                                        !_sortByStatus &&
                                         !_categoryView &&
                                         !searching,
                                     compact: _compact,

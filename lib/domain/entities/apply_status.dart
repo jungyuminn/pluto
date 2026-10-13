@@ -18,6 +18,18 @@ class ApplyStatus {
 
   static bool isRejected(String status) => rejectedValues.contains(status);
 
+  /// 진행이 앞선 단계일수록 큰 값. 서류제출 < 서류합격 < 필기합격 < 면접합격 < 최종합격.
+  static int stageRank(String status) {
+    return switch (status) {
+      finalPassed => 4,
+      interviewPassed => 3,
+      writtenPassed => 2,
+      documentPassed => 1,
+      documentSubmitted => 0,
+      _ => -1,
+    };
+  }
+
   static const values = [
     documentSubmitted,
     documentPassed,

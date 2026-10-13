@@ -383,11 +383,11 @@ class HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         if (homePrefs.showFriends) const HomeFriendsRow(),
         if (stats.isNotEmpty)
           Padding(
-            padding: const EdgeInsets.only(bottom: 12),
+            padding: const EdgeInsets.only(bottom: 16),
             child: Column(
               children: [
                 for (var i = 0; i < stats.length; i++) ...[
-                  if (i > 0) const SizedBox(height: 12),
+                  if (i > 0) const SizedBox(height: 16),
                   stats[i],
                 ],
               ],
@@ -435,7 +435,7 @@ class HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             key: ValueKey(kinds[i].name),
             index: i,
             child: Padding(
-              padding: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.only(bottom: 16),
               child: _layoutCard(
                 kinds[i],
                 leftover: leftover,

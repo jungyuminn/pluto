@@ -900,7 +900,7 @@ class _LighterAppDemo extends StatelessWidget {
                       Transform.scale(
                         scale: pop,
                         child: Image.asset(
-                          'assets/themes/band/mini_drum_kit_light.webp',
+                          'assets/themes/squishy_bear/squishy_bear_light.webp',
                           height: 72,
                           fit: BoxFit.contain,
                         ),
@@ -916,7 +916,7 @@ class _LighterAppDemo extends StatelessWidget {
                       Transform.scale(
                         scale: pop,
                         child: Image.asset(
-                          'assets/themes/band/puppy_guitarist_light.webp',
+                          'assets/themes/fluffy_dog/dog_face_decoration_light.webp',
                           height: 72,
                           fit: BoxFit.contain,
                         ),
@@ -14703,7 +14703,7 @@ class _RainyHopDemo extends StatelessWidget {
         height: 176,
         width: double.infinity,
         child: AppSkinBackground(
-          skin: AppSkin.rainyDay,
+          skin: AppSkin.fluffyDog,
           liftForNav: false,
           simple: false,
           playing: true,

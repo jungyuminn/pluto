@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:pluto/core/layout/pc_layout.dart';
 import 'package:pluto/core/theme/app_colors.dart';
 import 'package:pluto/core/utils/press_bounce.dart';
@@ -22,6 +23,40 @@ class WebCalendarArrowHost extends StatefulWidget {
 class _WebCalendarArrowHostState extends State<WebCalendarArrowHost> {
   var _left = false;
   var _right = false;
+
+  @override
+  void initState() {
+    super.initState();
+    HardwareKeyboard.instance.addHandler(_onKey);
+  }
+
+  @override
+  void dispose() {
+    HardwareKeyboard.instance.removeHandler(_onKey);
+    super.dispose();
+  }
+
+  bool _onKey(KeyEvent event) {
+    if (!mounted || !PcLayout.isPc) return false;
+    if (event is! KeyDownEvent && event is! KeyRepeatEvent) return false;
+    if (!TickerMode.of(context)) return false;
+    if (_isTyping()) return false;
+    if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
+      widget.onPrevious();
+      return true;
+    }
+    if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
+      widget.onNext();
+      return true;
+    }
+    return false;
+  }
+
+  bool _isTyping() {
+    final focus = FocusManager.instance.primaryFocus;
+    if (focus == null) return false;
+    return focus.context?.findAncestorStateOfType<EditableTextState>() != null;
+  }
 
   void _update(Offset local, Size size) {
     final left = local.dx <= WebCalendarArrow.stripWidth;
@@ -187,16 +222,55 @@ class _WebCalendarArrowState extends State<WebCalendarArrow>
           child: SizedBox(
             width: 48,
             height: 48,
-            child: Icon(
-              widget.left
-                  ? Icons.chevron_left_rounded
-                  : Icons.chevron_right_rounded,
-              size: 28,
-              color: colors.icon,
+            child: Center(
+              child: CustomPaint(
+                size: const Size.square(18),
+                painter: _ThinChevronPainter(
+                  left: widget.left,
+                  color: colors.icon,
+                ),
+              ),
             ),
           ),
         ),
       ),
     );
+  }
+}
+
+class _ThinChevronPainter extends CustomPainter {
+  const _ThinChevronPainter({required this.left, required this.color});
+
+  final bool left;
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.4
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+    final w = size.width;
+    final h = size.height;
+    final path = Path();
+    if (left) {
+      path
+        ..moveTo(w * 0.64, h * 0.12)
+        ..lineTo(w * 0.28, h * 0.50)
+        ..lineTo(w * 0.64, h * 0.88);
+    } else {
+      path
+        ..moveTo(w * 0.36, h * 0.12)
+        ..lineTo(w * 0.72, h * 0.50)
+        ..lineTo(w * 0.36, h * 0.88);
+    }
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _ThinChevronPainter oldDelegate) {
+    return oldDelegate.left != left || oldDelegate.color != color;
   }
 }

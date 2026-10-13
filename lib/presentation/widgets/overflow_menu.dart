@@ -39,9 +39,10 @@ class OverflowMenuCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: AppColors.of(context).card,
+      color: AppColors.of(context).card.withValues(alpha: 0.94),
       elevation: 8,
       shadowColor: const Color(0x33000000),
+      surfaceTintColor: Colors.transparent,
       borderRadius: BorderRadius.circular(32),
       clipBehavior: Clip.antiAlias,
       child: ConstrainedBox(
@@ -99,7 +100,7 @@ class OverflowMenuItem extends StatelessWidget {
     final row = SizedBox(
       width: double.infinity,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(14, 14, 12, 14),
+        padding: const EdgeInsets.fromLTRB(14, 12, 12, 12),
         child: Row(
           children: [
             if (leading != null) ...[
@@ -220,15 +221,15 @@ class _OverflowMenuButtonState extends State<OverflowMenuButton>
     super.initState();
     _animation = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 200),
-      reverseDuration: const Duration(milliseconds: 140),
+      duration: const Duration(milliseconds: 280),
+      reverseDuration: const Duration(milliseconds: 180),
     );
     _fade = CurvedAnimation(
       parent: _animation,
       curve: Curves.easeOutCubic,
       reverseCurve: Curves.easeInCubic,
     );
-    _scale = Tween<double>(begin: 0.92, end: 1).animate(_fade);
+    _scale = Tween<double>(begin: 0.88, end: 1).animate(_fade);
   }
 
   @override
@@ -238,7 +239,7 @@ class _OverflowMenuButtonState extends State<OverflowMenuButton>
     super.dispose();
   }
 
-  double _menuHeight() => 16 + widget.actions.length * 50;
+  double _menuHeight() => 16 + widget.actions.length * 46;
 
   bool _shouldOpenUp() {
     final box = _targetKey.currentContext?.findRenderObject() as RenderBox?;

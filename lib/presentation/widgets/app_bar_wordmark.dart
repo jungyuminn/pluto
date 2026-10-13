@@ -97,8 +97,8 @@ class AppBarWordmark extends StatelessWidget {
                       child: _PopLogo(
                         child: AppAssetImage(
                           asset: AppIcons.plutoLogoWordmark,
-                          width: 34,
-                          height: 34,
+                          width: 32,
+                          height: 32,
                         ),
                       ),
                     ),

@@ -769,6 +769,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
         return AppStrings.themeFluffyChick;
       case AppSkin.fluffyHamster:
         return AppStrings.themeFluffyHamster;
+      case AppSkin.mongleCloud:
+        return AppStrings.themeMongleCloud;
       case AppSkin.pinkHeart:
         return AppStrings.themePinkHeart;
       case AppSkin.summerBeach:
@@ -779,12 +781,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
         return AppStrings.themeSquishyBear;
       case AppSkin.strawberryMilk:
         return AppStrings.themeStrawberryMilk;
-      case AppSkin.lovelyBear:
-        return AppStrings.themeLovelyBear;
-      case AppSkin.rainyDay:
-        return AppStrings.themeRainyDay;
-      case AppSkin.concertDay:
-        return AppStrings.themeConcertDay;
+      case AppSkin.lovelyPolarBear:
+        return AppStrings.themeLovelyPolarBear;
       case AppSkin.fluffyCloud:
         return AppStrings.themeFluffyCloud;
       case AppSkin.catVillage:
@@ -795,8 +793,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
         return AppStrings.themeOtterBathhouse;
       case AppSkin.rabbitFlowerMarket:
         return AppStrings.themeRabbitFlowerMarket;
-      case AppSkin.bearPancakeCafe:
-        return AppStrings.themeBearPancakeCafe;
+      case AppSkin.starPenguin:
+        return AppStrings.themeStarPenguin;
+      case AppSkin.bubblesPuppy:
+        return AppStrings.themeBubblesPuppy;
     }
   }
 
@@ -2273,6 +2273,8 @@ class _ThemeJobPreviewPage extends StatelessWidget {
               onShowRejectedChanged: (_) {},
               sortByTime: false,
               onSortByTimeChanged: (_) {},
+              sortByStatus: false,
+              onSortByStatusChanged: (_) {},
               categoryView: false,
               onCategoryViewChanged: (_) {},
               showLicense: false,

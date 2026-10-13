@@ -306,15 +306,15 @@ class _CalendarMonthMenuButtonState extends State<CalendarMonthMenuButton>
     super.initState();
     _animation = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 200),
-      reverseDuration: const Duration(milliseconds: 140),
+      duration: const Duration(milliseconds: 280),
+      reverseDuration: const Duration(milliseconds: 180),
     );
     _fade = CurvedAnimation(
       parent: _animation,
       curve: Curves.easeOutCubic,
       reverseCurve: Curves.easeInCubic,
     );
-    _scale = Tween<double>(begin: 0.92, end: 1).animate(_fade);
+    _scale = Tween<double>(begin: 0.88, end: 1).animate(_fade);
   }
 
   @override

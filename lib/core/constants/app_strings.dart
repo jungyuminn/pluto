@@ -380,7 +380,7 @@ class AppStrings {
   static const themePinkHeart = '핑크하트';
   static const themeSummerBeach = '한여름 바닷가';
   static const themeSnowyWinter = '눈 내리는 겨울';
-  static const themeSquishyBear = '말랑곰탱이';
+  static const themeSquishyBear = '아기곰도리';
   static const themeStrawberryMilk = '딸기우유';
   static const themeLovelyPolarBear = '새하얀 북극곰';
   static const themeFluffyCloud = '몽실구름';
@@ -390,6 +390,7 @@ class AppStrings {
   static const themeRabbitFlowerMarket = '꽃집 토끼들';
   static const themeStarPenguin = '별을 만난 펭귄';
   static const themeBubblesPuppy = '비눗방울 강아지';
+  static const themeCottonCandy = '말랑솜사탕';
   static const settingsFontSection = '폰트 설정';
   static const settingsWidgetSection = '위젯 설정';
   static const widgetFollowTheme = '테마 동기화';

@@ -28,7 +28,8 @@ enum AppSkin {
   otterBathhouse,
   rabbitFlowerMarket,
   starPenguin,
-  bubblesPuppy;
+  bubblesPuppy,
+  cottonCandy;
 
   static const patternSkins = [
     classic,
@@ -50,6 +51,7 @@ enum AppSkin {
     lovelyPolarBear,
     starPenguin,
     bubblesPuppy,
+    cottonCandy,
     strawberryMilk,
     squishyBear,
     fluffyCloud,

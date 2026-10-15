@@ -644,9 +644,10 @@ class _CalendarSyncPreview extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _HelpSelectDemo(
-      labels: const [
-        AppStrings.importSamsungCalendar,
-        AppStrings.importIosCalendar,
+      labels: [
+        Theme.of(context).platform == TargetPlatform.iOS
+            ? AppStrings.importIosCalendar
+            : AppStrings.importSamsungCalendar,
       ],
       chevron: true,
       sceneHeight: 176,
@@ -2323,6 +2324,8 @@ String _themeCaption(AppSkin skin) {
       return AppStrings.themeStarPenguin;
     case AppSkin.bubblesPuppy:
       return AppStrings.themeBubblesPuppy;
+    case AppSkin.cottonCandy:
+      return AppStrings.themeCottonCandy;
   }
 }
 

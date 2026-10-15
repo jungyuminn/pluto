@@ -194,6 +194,10 @@ enum ReleaseDemo {
   polarBear,
   starPenguin,
   bubblesPuppy,
+  cottonCandy,
+  squishyBearRename,
+  calendarOsOnly,
+  systemTextScale,
   notifyDots,
   themePhotoStay,
   customThemeNav,
@@ -203,6 +207,9 @@ enum ReleaseDemo {
 
 ReleaseDemo releaseDemoFor(String text, {required bool isFix}) {
   if (isFix) {
+    if (text.contains('기기 글자 크기')) {
+      return ReleaseDemo.systemTextScale;
+    }
     if (text.contains('테마 사진이 빠지') || text.contains('만든 테마 사진')) {
       return ReleaseDemo.themePhotoStay;
     }
@@ -358,6 +365,15 @@ ReleaseDemo releaseDemoFor(String text, {required bool isFix}) {
   }
   if (text.contains('비눗방울 강아지')) {
     return ReleaseDemo.bubblesPuppy;
+  }
+  if (text.contains('말랑솜사탕')) {
+    return ReleaseDemo.cottonCandy;
+  }
+  if (text.contains('아기곰도리')) {
+    return ReleaseDemo.squishyBearRename;
+  }
+  if (text.contains('아이폰에는 애플 캘린더만')) {
+    return ReleaseDemo.calendarOsOnly;
   }
   if (text.contains('파스텔이 먼저')) {
     return ReleaseDemo.pastelFirst;
@@ -896,6 +912,11 @@ class ReleaseDemoView extends StatelessWidget {
         const _SkinDemo(skin: AppSkin.lovelyPolarBear),
       ReleaseDemo.starPenguin => const _SkinDemo(skin: AppSkin.starPenguin),
       ReleaseDemo.bubblesPuppy => const _SkinDemo(skin: AppSkin.bubblesPuppy),
+      ReleaseDemo.cottonCandy => const _SkinDemo(skin: AppSkin.cottonCandy),
+      ReleaseDemo.squishyBearRename =>
+        const _SkinDemo(skin: AppSkin.squishyBear),
+      ReleaseDemo.calendarOsOnly => const _CalendarOsDemo(),
+      ReleaseDemo.systemTextScale => const _SystemTextScaleDemo(),
       ReleaseDemo.notifyDots => const _NotifyDotsDemo(),
       ReleaseDemo.themePhotoStay => const _ThemePhotoStayDemo(),
       ReleaseDemo.customThemeNav => const _CustomThemeNavDemo(),
@@ -15300,6 +15321,116 @@ class _SkinDemo extends StatelessWidget {
           child: const SizedBox.expand(),
         ),
       ),
+    );
+  }
+}
+
+class _CalendarOsDemo extends StatelessWidget {
+  const _CalendarOsDemo();
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 4200,
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final font = AppFonts.of(context);
+        final label = t < 0.5
+            ? AppStrings.importIosCalendar
+            : AppStrings.importSamsungCalendar;
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(16, 36, 16, 36),
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: colors.card,
+              borderRadius: BorderRadius.circular(24),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 16, 16),
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 280),
+                switchInCurve: Curves.easeOutCubic,
+                switchOutCurve: Curves.easeInCubic,
+                child: Row(
+                  key: ValueKey(label),
+                  children: [
+                    Expanded(
+                      child: Text(
+                        label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontFamily: font,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w400,
+                          color: colors.text,
+                        ),
+                      ),
+                    ),
+                    Icon(
+                      Icons.chevron_right_rounded,
+                      size: 16,
+                      color: colors.muted,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _SystemTextScaleDemo extends StatelessWidget {
+  const _SystemTextScaleDemo();
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 3600,
+      builder: (context, t) {
+        final grow =
+            1.0 + 0.85 * Curves.easeInOut.transform(_gate(t, 0.16, 0.62));
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(16, 28, 16, 20),
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              IgnorePointer(
+                child: Opacity(
+                  opacity: ((grow - 1) * 0.35).clamp(0.0, 0.28),
+                  child: MediaQuery(
+                    data: MediaQuery.of(context).copyWith(
+                      textScaler: TextScaler.linear(grow),
+                    ),
+                    child: const DayEventLabel(
+                      title: '회의',
+                      categoryName: '회사',
+                      color: Color(0xFFFFAAA0),
+                      showComplete: true,
+                      height: 48,
+                    ),
+                  ),
+                ),
+              ),
+              MediaQuery(
+                data: MediaQuery.of(context).copyWith(
+                  textScaler: TextScaler.noScaling,
+                ),
+                child: const DayEventLabel(
+                  title: '회의',
+                  categoryName: '회사',
+                  color: Color(0xFFFFAAA0),
+                  showComplete: true,
+                  height: 48,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

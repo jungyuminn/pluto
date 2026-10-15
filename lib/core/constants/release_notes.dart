@@ -17,6 +17,17 @@ class ReleaseNote {
 abstract final class ReleaseNotes {
   static const all = [
     ReleaseNote(
+      version: '1.5.6',
+      items: [
+        '말랑솜사탕 테마가 생겼어요',
+        '말랑곰탱이 이름이 아기곰도리로 바뀌었어요',
+        '아이폰에는 애플 캘린더만, 안드로이드에는 삼성 캘린더만 나와요',
+      ],
+      fixes: [
+        '기기 글자 크기에 영향을 받지 않게 고쳤어요',
+      ],
+    ),
+    ReleaseNote(
       version: '1.5.5',
       items: [
         '새하얀 북극곰 테마가 생겼어요',

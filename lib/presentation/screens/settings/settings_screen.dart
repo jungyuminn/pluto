@@ -797,6 +797,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
         return AppStrings.themeStarPenguin;
       case AppSkin.bubblesPuppy:
         return AppStrings.themeBubblesPuppy;
+      case AppSkin.cottonCandy:
+        return AppStrings.themeCottonCandy;
     }
   }
 
@@ -1243,16 +1245,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           _SettingsCard(
             children: [
-              _SettingsTile(
-                label: AppStrings.importSamsungCalendar,
-                chevron: true,
-                onPressed: _importSamsungCalendar,
-              ),
-              _SettingsTile(
-                label: AppStrings.importIosCalendar,
-                chevron: true,
-                onPressed: _importIosCalendar,
-              ),
+              if (defaultTargetPlatform == TargetPlatform.iOS)
+                _SettingsTile(
+                  label: AppStrings.importIosCalendar,
+                  chevron: true,
+                  onPressed: _importIosCalendar,
+                )
+              else
+                _SettingsTile(
+                  label: AppStrings.importSamsungCalendar,
+                  chevron: true,
+                  onPressed: _importSamsungCalendar,
+                ),
             ],
           ),
             const SizedBox(height: 24),

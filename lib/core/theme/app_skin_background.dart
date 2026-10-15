@@ -257,6 +257,19 @@ class AppSkinAssets {
   static const bubblesPuppyGroundDark =
       'assets/themes/bubbles_puppy/04_bottom_dark.webp';
 
+  static const cottonCandyBearLight =
+      'assets/themes/cotton_candy/cotton_candy_bear_light.webp';
+  static const cottonCandyBearDark =
+      'assets/themes/cotton_candy/cotton_candy_bear_dark.webp';
+  static const cottonCandyPuffLight =
+      'assets/themes/cotton_candy/cotton_candy_decoration_light.webp';
+  static const cottonCandyPuffDark =
+      'assets/themes/cotton_candy/cotton_candy_decoration_dark.webp';
+  static const cottonCandyGroundLight =
+      'assets/themes/cotton_candy/cotton_candy_bottom_light.webp';
+  static const cottonCandyGroundDark =
+      'assets/themes/cotton_candy/cotton_candy_bottom_dark.webp';
+
   static const precacheDecorations = [
     petal90Light,
     petal180Light,
@@ -376,6 +389,12 @@ class AppSkinAssets {
     bubblesPuppyBubbleDark,
     bubblesPuppyGroundLight,
     bubblesPuppyGroundDark,
+    cottonCandyBearLight,
+    cottonCandyBearDark,
+    cottonCandyPuffLight,
+    cottonCandyPuffDark,
+    cottonCandyGroundLight,
+    cottonCandyGroundDark,
   ];
 
   static const blossomLightFill = Color(0xFFF8E8ED);
@@ -422,6 +441,8 @@ class AppSkinAssets {
   static const starPenguinDarkFill = Color(0xFF10141C);
   static const bubblesPuppyLightFill = Color(0xFFF3F8FC);
   static const bubblesPuppyDarkFill = Color(0xFF10161C);
+  static const cottonCandyLightFill = Color(0xFFFFF4F7);
+  static const cottonCandyDarkFill = Color(0xFF181214);
 
   static Color accentColor(AppSkin skin, bool dark, Color fallback) {
     switch (skin) {
@@ -471,6 +492,8 @@ class AppSkinAssets {
         return dark ? const Color(0xFF7AB8E0) : const Color(0xFF6A9ED0);
       case AppSkin.bubblesPuppy:
         return dark ? const Color(0xFF7AC4F0) : const Color(0xFF5AA8E8);
+      case AppSkin.cottonCandy:
+        return dark ? const Color(0xFFF0A8C0) : const Color(0xFFEE8AA8);
     }
   }
 
@@ -522,6 +545,8 @@ class AppSkinAssets {
         return dark ? starPenguinDarkFill : starPenguinLightFill;
       case AppSkin.bubblesPuppy:
         return dark ? bubblesPuppyDarkFill : bubblesPuppyLightFill;
+      case AppSkin.cottonCandy:
+        return dark ? cottonCandyDarkFill : cottonCandyLightFill;
     }
   }
 
@@ -550,6 +575,7 @@ class AppSkinAssets {
       case AppSkin.rabbitFlowerMarket:
       case AppSkin.starPenguin:
       case AppSkin.bubblesPuppy:
+      case AppSkin.cottonCandy:
         return const [
           (filled: AppIcons.home, outlined: AppIcons.homeOutlined),
           (filled: AppIcons.calendar, outlined: AppIcons.calendarOutlined),
@@ -873,6 +899,12 @@ class AppSkinBackground extends StatelessWidget {
           playing: playing,
         ),
       AppSkin.bubblesPuppy => _BubblesPuppyDecorations(
+          liftForNav: liftForNav,
+          scaleByWidth: scaleByWidth,
+          simple: compact,
+          playing: playing,
+        ),
+      AppSkin.cottonCandy => _CottonCandyDecorations(
           liftForNav: liftForNav,
           scaleByWidth: scaleByWidth,
           simple: compact,
@@ -3544,6 +3576,148 @@ class _BubblesPuppyDecorations extends StatelessWidget {
                     bottom: groundBottom,
                     width: span * 0.32,
                     child: _sceneBreathe(sticker(puppy), motion, t),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+}
+
+class _CottonCandyDecorations extends StatelessWidget {
+  const _CottonCandyDecorations({
+    required this.liftForNav,
+    this.scaleByWidth = false,
+    this.simple = false,
+    this.playing = true,
+  });
+
+  final bool liftForNav;
+  final bool scaleByWidth;
+  final bool simple;
+  final bool playing;
+
+  @override
+  Widget build(BuildContext context) {
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    return _SceneMotion(
+      playing: playing,
+      fall: true,
+      builder: (context, motion, t) {
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            final width = constraints.maxWidth;
+            final height = constraints.maxHeight;
+            final span = scaleByWidth
+                ? width
+                : constraints.biggest.shortestSide;
+            final paddingBottom = MediaQuery.viewPaddingOf(context).bottom;
+            final groundBottom =
+                liftForNav ? 58 + paddingBottom : height * 0.02;
+            final bear = dark
+                ? AppSkinAssets.cottonCandyBearDark
+                : AppSkinAssets.cottonCandyBearLight;
+            final puff = dark
+                ? AppSkinAssets.cottonCandyPuffDark
+                : AppSkinAssets.cottonCandyPuffLight;
+            final ground = dark
+                ? AppSkinAssets.cottonCandyGroundDark
+                : AppSkinAssets.cottonCandyGroundLight;
+            final groundHeight = _SkinGround.heightOf(
+              width,
+              height,
+              maxFraction: 0.32,
+            );
+
+            Widget sticker(String asset) {
+              return Image.asset(
+                asset,
+                fit: BoxFit.contain,
+                filterQuality: FilterQuality.medium,
+              );
+            }
+
+            Widget puffAt({
+              required int index,
+              required double left,
+              required double top,
+              required double size,
+            }) {
+              return _sceneFall(
+                child: sticker(puff),
+                motion: motion,
+                t: t,
+                index: index,
+                width: width,
+                height: height,
+                size: size,
+                restLeft: left,
+                restTop: top,
+              );
+            }
+
+            return IgnorePointer(
+              child: Stack(
+                children: [
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    height: groundHeight,
+                    child: _SkinGround.cover(
+                      ground,
+                      width: width,
+                      bandHeight: groundHeight,
+                    ),
+                  ),
+                  if (!simple) ...[
+                    puffAt(
+                      index: 0,
+                      left: width - span * 0.22,
+                      top: span * 0.08,
+                      size: span * 0.14,
+                    ),
+                    puffAt(
+                      index: 1,
+                      left: span * 0.06,
+                      top: span * 0.20,
+                      size: span * 0.11,
+                    ),
+                    puffAt(
+                      index: 2,
+                      left: width - span * 0.38,
+                      top: height * 0.52,
+                      size: span * 0.12,
+                    ),
+                    puffAt(
+                      index: 3,
+                      left: width * 0.14,
+                      top: height * 0.70,
+                      size: span * 0.15,
+                    ),
+                    if (_sceneMoving(motion)) ...[
+                      puffAt(
+                        index: 4,
+                        left: width * 0.44,
+                        top: height * 0.32,
+                        size: span * 0.09,
+                      ),
+                      puffAt(
+                        index: 5,
+                        left: width * 0.70,
+                        top: height * 0.18,
+                        size: span * 0.10,
+                      ),
+                    ],
+                  ],
+                  Positioned(
+                    right: span * 0.02,
+                    bottom: groundBottom,
+                    width: span * 0.36,
+                    child: _sceneBreathe(sticker(bear), motion, t),
                   ),
                 ],
               ),

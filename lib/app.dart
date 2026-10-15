@@ -930,24 +930,30 @@ class _JobPlannerMaterialAppState extends State<_JobPlannerMaterialApp>
                 syncWebThemeColor(background);
               });
             }
-            return ListenableBuilder(
-              listenable: font,
-              builder: (context, _) {
-                return FontScope(
-                  typeface: typeface,
-                  todoScale: guest ? 1 : font.todoScale,
-                  labelScale: guest ? 1 : font.labelScale,
-                  calendarScale: guest ? 1 : font.calendarScale,
-                  calendarLabelScale: guest ? 1 : font.calendarLabelScale,
-                  calendarDateScale: guest ? 1 : font.calendarDateScale,
-                  child: overlay == null
-                      ? (child ?? const SizedBox.shrink())
-                      : AnnotatedRegion<SystemUiOverlayStyle>(
-                          value: overlay,
-                          child: child ?? const SizedBox.shrink(),
-                        ),
-                );
-              },
+            return MediaQuery(
+              data: MediaQuery.of(context).copyWith(
+                textScaler: TextScaler.noScaling,
+                boldText: false,
+              ),
+              child: ListenableBuilder(
+                listenable: font,
+                builder: (context, _) {
+                  return FontScope(
+                    typeface: typeface,
+                    todoScale: guest ? 1 : font.todoScale,
+                    labelScale: guest ? 1 : font.labelScale,
+                    calendarScale: guest ? 1 : font.calendarScale,
+                    calendarLabelScale: guest ? 1 : font.calendarLabelScale,
+                    calendarDateScale: guest ? 1 : font.calendarDateScale,
+                    child: overlay == null
+                        ? (child ?? const SizedBox.shrink())
+                        : AnnotatedRegion<SystemUiOverlayStyle>(
+                            value: overlay,
+                            child: child ?? const SizedBox.shrink(),
+                          ),
+                  );
+                },
+              ),
             );
           },
           home: kIsWeb ? const WebAuthGate() : const ShellScreen(),

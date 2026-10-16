@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 1.5.6+79
+version: 1.5.6+80
 
 environment:
   sdk: ^3.12.2
@@ -191,134 +191,34 @@ flutter:
           weight: 700
         - asset: assets/fonts/Pretendard-ExtraBold.otf
           weight: 800
-    - family: Paperlogy
-      fonts:
-        - asset: assets/fonts/Paperlogy-4Regular.ttf
-          weight: 400
-        - asset: assets/fonts/Paperlogy-5Medium.ttf
-          weight: 500
-        - asset: assets/fonts/Paperlogy-6SemiBold.ttf
-          weight: 600
-        - asset: assets/fonts/Paperlogy-7Bold.ttf
-          weight: 700
-        - asset: assets/fonts/Paperlogy-8ExtraBold.ttf
-          weight: 800
     - family: Ownglyph
       fonts:
         - asset: assets/fonts/park_dahyun.ttf
           weight: 400
-        - asset: assets/fonts/park_dahyun.ttf
-          weight: 500
-        - asset: assets/fonts/park_dahyun.ttf
-          weight: 600
-        - asset: assets/fonts/park_dahyun.ttf
-          weight: 700
-        - asset: assets/fonts/park_dahyun.ttf
-          weight: 800
     - family: Meetme
       fonts:
         - asset: assets/fonts/meetme.ttf
           weight: 400
-        - asset: assets/fonts/meetme.ttf
-          weight: 500
-        - asset: assets/fonts/meetme.ttf
-          weight: 600
-        - asset: assets/fonts/meetme.ttf
-          weight: 700
-        - asset: assets/fonts/meetme.ttf
-          weight: 800
     - family: LeeSeoyoon
       fonts:
         - asset: assets/fonts/lee_seoyoon.ttf
           weight: 400
-        - asset: assets/fonts/lee_seoyoon.ttf
-          weight: 500
-        - asset: assets/fonts/lee_seoyoon.ttf
-          weight: 600
-        - asset: assets/fonts/lee_seoyoon.ttf
-          weight: 700
-        - asset: assets/fonts/lee_seoyoon.ttf
-          weight: 800
     - family: Bandal
       fonts:
         - asset: assets/fonts/bandal.otf
           weight: 400
-        - asset: assets/fonts/bandal.otf
-          weight: 500
-        - asset: assets/fonts/bandal.otf
-          weight: 600
-        - asset: assets/fonts/bandal.otf
-          weight: 700
-        - asset: assets/fonts/bandal.otf
-          weight: 800
-    - family: MonaS
-      fonts:
-        - asset: assets/fonts/MonaS12.otf
-          weight: 400
-        - asset: assets/fonts/MonaS12.otf
-          weight: 500
-        - asset: assets/fonts/MonaS12.otf
-          weight: 600
-        - asset: assets/fonts/MonaS12-Bold.otf
-          weight: 700
-        - asset: assets/fonts/MonaS12-Bold.otf
-          weight: 800
-    - family: Omyu
-      fonts:
-        - asset: assets/fonts/omyu.ttf
-          weight: 400
-        - asset: assets/fonts/omyu.ttf
-          weight: 500
-        - asset: assets/fonts/omyu.ttf
-          weight: 600
-        - asset: assets/fonts/omyu.ttf
-          weight: 700
-        - asset: assets/fonts/omyu.ttf
-          weight: 800
     - family: Bazzi
       fonts:
         - asset: assets/fonts/Bazzi.ttf
           weight: 400
-        - asset: assets/fonts/Bazzi.ttf
-          weight: 500
-        - asset: assets/fonts/Bazzi.ttf
-          weight: 600
-        - asset: assets/fonts/Bazzi.ttf
-          weight: 700
-        - asset: assets/fonts/Bazzi.ttf
-          weight: 800
     - family: Mabinogi
       fonts:
         - asset: assets/fonts/Mabinogi_Classic_TTF.ttf
           weight: 400
-        - asset: assets/fonts/Mabinogi_Classic_TTF.ttf
-          weight: 500
-        - asset: assets/fonts/Mabinogi_Classic_TTF.ttf
-          weight: 600
-        - asset: assets/fonts/Mabinogi_Classic_TTF.ttf
-          weight: 700
-        - asset: assets/fonts/Mabinogi_Classic_TTF.ttf
-          weight: 800
-    - family: BabyShark
-      fonts:
-        - asset: "assets/fonts/Pinkfong Baby Shark Font_ Light.ttf"
-          weight: 400
-        - asset: "assets/fonts/Pinkfong Baby Shark Font_ Regular.ttf"
-          weight: 500
-        - asset: "assets/fonts/Pinkfong Baby Shark Font_ Regular.ttf"
-          weight: 600
-        - asset: "assets/fonts/Pinkfong Baby Shark Font_ Bold.ttf"
-          weight: 700
-        - asset: "assets/fonts/Pinkfong Baby Shark Font_ Bold.ttf"
-          weight: 800
     - family: CookieRun
       fonts:
         - asset: "assets/fonts/CookieRun Regular.otf"
           weight: 400
-        - asset: "assets/fonts/CookieRun Regular.otf"
-          weight: 500
-        - asset: "assets/fonts/CookieRun Bold.otf"
-          weight: 600
         - asset: "assets/fonts/CookieRun Bold.otf"
           weight: 700
         - asset: "assets/fonts/CookieRun Black.otf"
@@ -335,26 +235,10 @@ flutter:
           weight: 700
         - asset: assets/fonts/SUIT-ExtraBold.otf
           weight: 800
-    - family: TheJamsil
-      fonts:
-        - asset: "assets/fonts/The Jamsil OTF 3 Regular.otf"
-          weight: 400
-        - asset: "assets/fonts/The Jamsil OTF 4 Medium.otf"
-          weight: 500
-        - asset: "assets/fonts/The Jamsil OTF 4 Medium.otf"
-          weight: 600
-        - asset: "assets/fonts/The Jamsil OTF 5 Bold.otf"
-          weight: 700
-        - asset: "assets/fonts/The Jamsil OTF 6 ExtraBold.otf"
-          weight: 800
     - family: Jalnan2
       fonts:
         - asset: assets/fonts/Jalnan2TTF.ttf
           weight: 400
-        - asset: assets/fonts/Jalnan2TTF.ttf
-          weight: 700
-        - asset: assets/fonts/Jalnan2TTF.ttf
-          weight: 800
 
   # To add assets to your application, add an assets section, like this:
   # assets:

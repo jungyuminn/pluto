@@ -72,7 +72,7 @@
         "headers": [
           {
             "key": "Cache-Control",
-            "value": "no-cache, no-store, must-revalidate"
+            "value": "public, no-cache, must-revalidate"
           }
         ]
       },
@@ -190,6 +190,60 @@
           {
             "key": "Cache-Control",
             "value": "no-cache, no-store, must-revalidate"
+          }
+        ]
+      },
+      {
+        "source": "/canvaskit/**",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "public, max-age=2592000, must-revalidate"
+          }
+        ]
+      },
+      {
+        "source": "**/*.wasm",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "public, max-age=2592000, must-revalidate"
+          }
+        ]
+      },
+      {
+        "source": "**/*.ttf",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "public, max-age=2592000, must-revalidate"
+          }
+        ]
+      },
+      {
+        "source": "**/*.otf",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "public, max-age=2592000, must-revalidate"
+          }
+        ]
+      },
+      {
+        "source": "**/*.woff",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "public, max-age=2592000, must-revalidate"
+          }
+        ]
+      },
+      {
+        "source": "**/*.woff2",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "public, max-age=2592000, must-revalidate"
           }
         ]
       }

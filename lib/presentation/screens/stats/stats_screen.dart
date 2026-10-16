@@ -630,13 +630,11 @@ class _LevelBlock extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
     final font = AppFonts.of(context);
-    final remain = play.hasTodos && !play.isMax ? play.need - play.exp : null;
+    final remain = play.isMax ? 0 : play.need - play.exp;
     final level = play.isMax ? PlanetStage.maxLevel : play.level;
-    final label = !play.hasTodos
-        ? AppStrings.statsPlanetEmpty
-        : play.isMax
-            ? AppStrings.statsPlanetFull
-            : AppStrings.statsNextPlanetTodos(remain ?? 0);
+    final label = play.isMax
+        ? AppStrings.statsPlanetFull
+        : AppStrings.statsNextPlanetTodos(remain);
     return PressBounce(
       onPressed: () {
         HapticFeedback.selectionClick();
@@ -1205,7 +1203,7 @@ class _StatLine extends StatelessWidget {
     final style = TextStyle(
       fontFamily: font,
       fontSize: 15,
-      fontWeight: FontWeight.w800,
+      fontWeight: FontWeight.w500,
       height: 1,
       color: colors.text,
     );
@@ -1230,7 +1228,7 @@ class _StatLine extends StatelessWidget {
             curve: Curves.easeOutCubic,
             tween: Tween(end: (value ?? 0).toDouble()),
             builder: (context, n, _) {
-              return Text('${n.round()}', style: style);
+              return Text('${n.round()}개', style: style);
             },
           ),
       ],
@@ -1453,6 +1451,7 @@ class _MonthDots extends StatelessWidget {
         ),
       );
     }
+    final weekGap = PcLayout.isPc ? 18.0 : 14.0;
     return Column(
       children: [
         Row(
@@ -1474,7 +1473,7 @@ class _MonthDots extends StatelessWidget {
               ),
           ],
         ),
-        const SizedBox(height: 2),
+        SizedBox(height: weekGap),
         AnimatedSize(
           duration: const Duration(milliseconds: 340),
           curve: Curves.easeOutCubic,
@@ -1483,7 +1482,7 @@ class _MonthDots extends StatelessWidget {
             key: ValueKey('${play.month.year}-${play.month.month}'),
             children: [
               for (var i = 0; i < rows.length; i++) ...[
-                if (i > 0) SizedBox(height: PcLayout.isPc ? 18 : 14),
+                if (i > 0) SizedBox(height: weekGap),
                 rows[i],
               ],
             ],
@@ -1533,26 +1532,37 @@ class _DayDot extends StatelessWidget {
       pressedScale: 0.9,
       pressedColor: colors.pressed,
       borderRadius: BorderRadius.circular(999),
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: fill,
-        ),
-        child: Center(
-          child: Text(
-            '${date.day}',
-            style: TextStyle(
-              fontFamily: font,
-              fontSize: PcLayout.isPc ? 15 : 13,
-              fontWeight: done ? FontWeight.w800 : FontWeight.w600,
-              color: done
-                  ? accent
-                  : future
-                      ? colors.muted.withValues(alpha: 0.45)
-                      : colors.secondary,
+      child: LayoutBuilder(
+        builder: (context, c) {
+          final side = math.min(c.maxWidth, c.maxHeight);
+          return Center(
+            child: SizedBox.square(
+              dimension: side,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: fill,
+                ),
+                child: Center(
+                  child: Text(
+                    '${date.day}',
+                    style: TextStyle(
+                      fontFamily: font,
+                      fontSize: PcLayout.isPc ? 15 : 13,
+                      fontWeight: FontWeight.w600,
+                      height: 1,
+                      color: done
+                          ? accent
+                          : future
+                              ? colors.muted.withValues(alpha: 0.45)
+                              : colors.secondary,
+                    ),
+                  ),
+                ),
+              ),
             ),
-          ),
-        ),
+          );
+        },
       ),
     );
   }

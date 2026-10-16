@@ -714,12 +714,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     switch (typeface) {
       case AppTypeface.pretendard:
         return AppStrings.fontPretendard;
-      case AppTypeface.paperlogy:
-        return AppStrings.fontPaperlogy;
       case AppTypeface.suit:
         return AppStrings.fontSuit;
-      case AppTypeface.theJamsil:
-        return AppStrings.fontTheJamsil;
       case AppTypeface.system:
         return AppStrings.fontSystem;
       case AppTypeface.gothic:
@@ -734,16 +730,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
         return AppStrings.fontLeeSeoyoon;
       case AppTypeface.bandal:
         return AppStrings.fontBandal;
-      case AppTypeface.mona:
-        return AppStrings.fontMona;
-      case AppTypeface.omyu:
-        return AppStrings.fontOmyu;
       case AppTypeface.bazzi:
         return AppStrings.fontBazzi;
       case AppTypeface.mabinogi:
         return AppStrings.fontMabinogi;
-      case AppTypeface.babyShark:
-        return AppStrings.fontBabyShark;
       case AppTypeface.cookieRun:
         return AppStrings.fontCookieRun;
     }

@@ -406,9 +406,7 @@ class AppStrings {
   static const fontCalendarDateScale = '날짜 폰트 크기';
   static const fontCalendarChipScale = '캘린더 폰트 크기';
   static const fontPretendard = '프리텐다드';
-  static const fontPaperlogy = '페이퍼로지';
   static const fontSuit = '수트';
-  static const fontTheJamsil = '더잠실체';
   static const fontSystem = '기기 기본';
   static const fontGothic = '고딕';
   static const fontSerif = '명조';
@@ -416,11 +414,8 @@ class AppStrings {
   static const fontMeetme = '밑미';
   static const fontLeeSeoyoon = '이서윤체';
   static const fontBandal = '반달체';
-  static const fontMona = '모나체';
-  static const fontOmyu = '오뮤체';
   static const fontBazzi = '배찌체';
   static const fontMabinogi = '마비노기체';
-  static const fontBabyShark = '아기상어체';
   static const fontCookieRun = '쿠키런체';
   static const fontSizeSmall = '작게';
   static const fontSizeMedium = '보통';
@@ -618,7 +613,6 @@ class AppStrings {
   static const monthlyStatsRoundsTail = '가 있었어요';
   static const monthlyStatsAnd = '와';
   static const monthlyStatsEmptyTail = '기록이 없어요';
-  static const statsPlanetEmpty = '할 일을 완료하면 경험치가 쌓여요';
   static const statsPlanetFilling = '할 일을 끝낼수록 행성이 채워져요';
   static const statsPlanetFull = '이번 달, 플루토가 됐어요';
   static String statsPlanetLeft(int count) => '$count개 남았어요';

@@ -1517,7 +1517,7 @@ class _FontPreview extends StatelessWidget {
 
   static const _faces = [
     AppTypeface.pretendard,
-    AppTypeface.theJamsil,
+    AppTypeface.suit,
     AppTypeface.bazzi,
   ];
 
@@ -1556,7 +1556,7 @@ class _FontPreview extends StatelessWidget {
 String _typefaceCaption(AppTypeface typeface) {
   return switch (typeface) {
     AppTypeface.pretendard => AppStrings.fontPretendard,
-    AppTypeface.theJamsil => AppStrings.fontTheJamsil,
+    AppTypeface.suit => AppStrings.fontSuit,
     AppTypeface.bazzi => AppStrings.fontBazzi,
     _ => AppStrings.fontFamily,
   };

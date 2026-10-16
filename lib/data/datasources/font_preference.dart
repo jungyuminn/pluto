@@ -6,7 +6,6 @@ const showFontSizeSettings = false;
 
 enum AppTypeface {
   pretendard,
-  paperlogy,
   system,
   gothic,
   serif,
@@ -14,14 +13,10 @@ enum AppTypeface {
   meetme,
   leeSeoyoon,
   bandal,
-  mona,
-  omyu,
   bazzi,
   mabinogi,
-  babyShark,
   cookieRun,
-  suit,
-  theJamsil;
+  suit;
 
   static AppTypeface fromId(
     String? id, {
@@ -37,8 +32,6 @@ enum AppTypeface {
     switch (this) {
       case AppTypeface.pretendard:
         return 'Pretendard';
-      case AppTypeface.paperlogy:
-        return 'Paperlogy';
       case AppTypeface.system:
         return null;
       case AppTypeface.gothic:
@@ -57,56 +50,37 @@ enum AppTypeface {
         return 'LeeSeoyoon';
       case AppTypeface.bandal:
         return 'Bandal';
-      case AppTypeface.mona:
-        return 'MonaS';
-      case AppTypeface.omyu:
-        return 'Omyu';
       case AppTypeface.bazzi:
         return 'Bazzi';
       case AppTypeface.mabinogi:
         return 'Mabinogi';
-      case AppTypeface.babyShark:
-        return 'BabyShark';
       case AppTypeface.cookieRun:
         return 'CookieRun';
       case AppTypeface.suit:
         return 'SUIT';
-      case AppTypeface.theJamsil:
-        return 'TheJamsil';
     }
   }
 
   bool get isSelectable =>
       this == AppTypeface.pretendard ||
-      this == AppTypeface.paperlogy ||
       this == AppTypeface.suit ||
-      this == AppTypeface.theJamsil ||
       this == AppTypeface.ownglyph ||
       this == AppTypeface.meetme ||
       this == AppTypeface.leeSeoyoon ||
       this == AppTypeface.bandal ||
-      this == AppTypeface.mona ||
-      this == AppTypeface.omyu ||
       this == AppTypeface.bazzi ||
       this == AppTypeface.mabinogi ||
-      this == AppTypeface.babyShark ||
       this == AppTypeface.cookieRun;
 
   String? get widgetRegularAsset => switch (this) {
         AppTypeface.pretendard => 'assets/fonts/Pretendard-Regular.otf',
-        AppTypeface.paperlogy => 'assets/fonts/Paperlogy-4Regular.ttf',
         AppTypeface.suit => 'assets/fonts/SUIT-Regular.otf',
-        AppTypeface.theJamsil => 'assets/fonts/The Jamsil OTF 3 Regular.otf',
         AppTypeface.ownglyph => 'assets/fonts/park_dahyun.ttf',
         AppTypeface.meetme => 'assets/fonts/meetme.ttf',
         AppTypeface.leeSeoyoon => 'assets/fonts/lee_seoyoon.ttf',
         AppTypeface.bandal => 'assets/fonts/bandal.otf',
-        AppTypeface.mona => 'assets/fonts/MonaS12.otf',
-        AppTypeface.omyu => 'assets/fonts/omyu.ttf',
         AppTypeface.bazzi => 'assets/fonts/Bazzi.ttf',
         AppTypeface.mabinogi => 'assets/fonts/Mabinogi_Classic_TTF.ttf',
-        AppTypeface.babyShark =>
-          'assets/fonts/Pinkfong Baby Shark Font_ Regular.ttf',
         AppTypeface.cookieRun => 'assets/fonts/CookieRun Regular.otf',
         AppTypeface.system ||
         AppTypeface.gothic ||
@@ -115,30 +89,20 @@ enum AppTypeface {
 
   String? get widgetBoldAsset => switch (this) {
         AppTypeface.pretendard => 'assets/fonts/Pretendard-ExtraBold.otf',
-        AppTypeface.paperlogy => 'assets/fonts/Paperlogy-8ExtraBold.ttf',
         AppTypeface.suit => 'assets/fonts/SUIT-ExtraBold.otf',
-        AppTypeface.theJamsil => 'assets/fonts/The Jamsil OTF 6 ExtraBold.otf',
-        AppTypeface.mona => 'assets/fonts/MonaS12-Bold.otf',
-        AppTypeface.babyShark =>
-          'assets/fonts/Pinkfong Baby Shark Font_ Bold.ttf',
         AppTypeface.cookieRun => 'assets/fonts/CookieRun Black.otf',
         _ => widgetRegularAsset,
       };
 
   static const selectable = [
     AppTypeface.pretendard,
-    AppTypeface.theJamsil,
     AppTypeface.suit,
-    AppTypeface.paperlogy,
-    AppTypeface.mona,
     AppTypeface.meetme,
     AppTypeface.ownglyph,
     AppTypeface.bandal,
-    AppTypeface.omyu,
     AppTypeface.leeSeoyoon,
     AppTypeface.mabinogi,
     AppTypeface.bazzi,
-    AppTypeface.babyShark,
     AppTypeface.cookieRun,
   ];
 }
@@ -191,7 +155,9 @@ class FontPreference extends ChangeNotifier {
           prefs?.getString(_calendarLabelKey),
           fallback: calendarLabelSize,
         ) {
-    if (!_typeface.isSelectable) {
+    final storedFamily = prefs?.getString(_familyKey);
+    if (!_typeface.isSelectable ||
+        (storedFamily != null && storedFamily != _typeface.name)) {
       _typeface = AppTypeface.pretendard;
       _prefs?.setString(_familyKey, _typeface.name);
     }
@@ -334,12 +300,15 @@ class FontPreference extends ChangeNotifier {
   void hydrate() {
     final prefs = _prefs;
     if (prefs == null) return;
+    final storedFamily = prefs.getString(_familyKey);
     _typeface = AppTypeface.fromId(
-      prefs.getString(_familyKey),
+      storedFamily,
       fallback: _typeface,
     );
-    if (!_typeface.isSelectable) {
+    if (!_typeface.isSelectable ||
+        (storedFamily != null && storedFamily != _typeface.name)) {
       _typeface = AppTypeface.pretendard;
+      prefs.setString(_familyKey, _typeface.name);
     }
     _todoSize = FontSizeLevel.fromId(
       prefs.getString(_todoKey),

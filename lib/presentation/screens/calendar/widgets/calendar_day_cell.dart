@@ -32,7 +32,7 @@ class CalendarDayCell extends StatelessWidget {
   static const lunarHeight = 11.0;
   static const lunarAnim = Duration(milliseconds: 280);
   static const eventsTopGap = 2.0;
-  static const labelHeight = 18.0;
+  static const labelHeight = 19.0;
   static const labelGap = 4.0;
   static const emojiHeight = 56.0;
 
@@ -44,7 +44,7 @@ class CalendarDayCell extends StatelessWidget {
   static double holidayHeightFor(double scale) => holidayHeight * scale;
 
   static double labelHeightFor(double scale) =>
-      (PcLayout.isPc ? 22.0 : labelHeight) * scale;
+      (PcLayout.isPc ? 23.0 : labelHeight) * scale;
 
   static double lunarHeightFor(double scale) => lunarHeight * scale;
 

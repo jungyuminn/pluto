@@ -12,12 +12,14 @@ class CategoryColorPicker extends StatefulWidget {
     required this.onSelected,
     this.usedColors = const {},
     this.trailing,
+    this.pageInset = 0,
   });
 
   final int selected;
   final ValueChanged<int> onSelected;
   final Set<int> usedColors;
   final Widget? trailing;
+  final double pageInset;
 
   @override
   State<CategoryColorPicker> createState() => _CategoryColorPickerState();
@@ -119,6 +121,10 @@ class _CategoryColorPickerState extends State<CategoryColorPicker> {
               child: LayoutBuilder(
                 builder: (context, constraints) {
                   final pack = packs[_pack.clamp(0, packs.length - 1)];
+                  final inset = widget.pageInset;
+                  final inner = (constraints.maxWidth - inset * 2)
+                      .clamp(0.0, _gridWidth)
+                      .toDouble();
                   return AnimatedSize(
                     duration: const Duration(milliseconds: 220),
                     curve: Curves.easeOutCubic,
@@ -134,13 +140,14 @@ class _CategoryColorPickerState extends State<CategoryColorPicker> {
                               setState(() => _pack = index),
                           itemCount: packs.length,
                           itemBuilder: (context, index) {
-                            return Align(
-                              alignment: Alignment.topCenter,
-                              child: SizedBox(
-                                width: constraints.maxWidth
-                                    .clamp(0.0, _gridWidth)
-                                    .toDouble(),
-                                child: _packGrid(packs[index].colors),
+                            return Padding(
+                              padding: EdgeInsets.symmetric(horizontal: inset),
+                              child: Align(
+                                alignment: Alignment.topCenter,
+                                child: SizedBox(
+                                  width: inner,
+                                  child: _packGrid(packs[index].colors),
+                                ),
                               ),
                             );
                           },

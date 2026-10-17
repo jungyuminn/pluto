@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:pluto/app_scope.dart';
 import 'package:pluto/core/calendar/lunar_date.dart';
 import 'package:pluto/core/calendar/month_grid.dart';
 import 'package:pluto/core/constants/app_fonts.dart';
 import 'package:pluto/core/layout/pc_layout.dart';
 import 'package:pluto/core/theme/app_colors.dart';
 import 'package:pluto/core/utils/press_bounce.dart';
+import 'package:pluto/data/datasources/theme_preference.dart';
 
 class CalendarDayCell extends StatelessWidget {
   const CalendarDayCell({
@@ -63,7 +65,6 @@ class CalendarDayCell extends StatelessWidget {
   static const _sunday = Color(0xFFEF4444);
   static const _saturday = Color(0xFF60A5FA);
   static const _outsideHoliday = Color(0xFFF0A0A0);
-  static const _today = Color(0xFF4AA3FF);
 
   Color _colorOf(AppColors colors) {
     if (!day.inMonth) {
@@ -89,6 +90,12 @@ class CalendarDayCell extends StatelessWidget {
     final color = _colorOf(colors);
     final holiday = day.holidayName;
     final today = day.isToday;
+    final theme = AppScope.maybeOf(context)?.themePreference;
+    final classic = (theme?.skin ?? AppSkin.classic) == AppSkin.classic &&
+        !(theme?.usesCustom ?? false);
+    final todayFill = classic
+        ? colors.accentBright
+        : Color.lerp(colors.accentBright, Colors.white, 0.36);
     final scale = AppFonts.calendarScaleOf(context);
     final dateScale = AppFonts.calendarDateScaleOf(context);
     final dateBox = dateSizeFor(scale);
@@ -109,8 +116,8 @@ class CalendarDayCell extends StatelessWidget {
               height: dateBox,
               alignment: Alignment.center,
               decoration: today
-                  ? const BoxDecoration(
-                      color: _today,
+                  ? BoxDecoration(
+                      color: todayFill,
                       shape: BoxShape.circle,
                     )
                   : null,

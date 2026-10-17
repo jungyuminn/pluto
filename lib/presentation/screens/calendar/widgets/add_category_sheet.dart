@@ -137,13 +137,13 @@ class _AddCategorySheetState extends State<AddCategorySheet> {
           color: colors.tint(accent, 0.14),
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         ),
-        child: Padding(
-          padding: EdgeInsets.fromLTRB(20, 16, 20, 16 + bottom),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+              child: Row(
                 children: [
                   Expanded(
                     child: TextField(
@@ -176,14 +176,16 @@ class _AddCategorySheetState extends State<AddCategorySheet> {
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
-              CategoryColorPicker(
-                selected: _color,
-                usedColors: _usedColors,
-                onSelected: (value) => setState(() => _color = value),
-              ),
-            ],
-          ),
+            ),
+            const SizedBox(height: 16),
+            CategoryColorPicker(
+              selected: _color,
+              usedColors: _usedColors,
+              onSelected: (value) => setState(() => _color = value),
+              pageInset: 20,
+            ),
+            SizedBox(height: 16 + bottom),
+          ],
         ),
       ),
       ),

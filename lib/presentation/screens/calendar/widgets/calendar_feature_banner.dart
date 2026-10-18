@@ -170,13 +170,13 @@ class _BannerBody extends StatelessWidget {
                   left: Radius.circular(18),
                 ),
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 18, 8, 18),
+                  padding: const EdgeInsets.fromLTRB(16, 15, 8, 15),
                   child: Row(
                     children: [
                       AppAssetImage(
                         asset: AppIcons.plutoLogo,
-                        width: 22,
-                        height: 22,
+                        width: 28,
+                        height: 28,
                         color: defaultTheme ? null : colors.accent,
                       ),
                       const SizedBox(width: 8),

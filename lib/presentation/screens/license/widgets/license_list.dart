@@ -109,8 +109,12 @@ class LicenseListState extends State<LicenseList>
     super.dispose();
   }
 
-  void scrollToTop() {
+  void scrollToTop({bool animate = true}) {
     if (!_scroll.hasClients) return;
+    if (!animate) {
+      _scroll.jumpTo(0);
+      return;
+    }
     _scroll.animateTo(
       0,
       duration: const Duration(milliseconds: 280),

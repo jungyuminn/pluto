@@ -143,8 +143,12 @@ class HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     _reload();
   }
 
-  void scrollToTop() {
+  void scrollToTop({bool animate = true}) {
     if (!_scroll.hasClients) return;
+    if (!animate) {
+      _scroll.jumpTo(0);
+      return;
+    }
     _scroll.animateTo(
       0,
       duration: const Duration(milliseconds: 280),
@@ -383,7 +387,7 @@ class HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         if (homePrefs.showFriends) const HomeFriendsRow(),
         if (stats.isNotEmpty)
           Padding(
-            padding: const EdgeInsets.only(bottom: 16),
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
             child: Column(
               children: [
                 for (var i = 0; i < stats.length; i++) ...[
@@ -399,9 +403,9 @@ class HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     final list = ReorderableListView(
       scrollController: _scroll,
       padding: EdgeInsets.fromLTRB(
-        16,
+        0,
         OverlayAppBar.overlapOf(context) + 8,
-        16,
+        0,
         bottomGap,
       ),
       buildDefaultDragHandles: false,
@@ -435,7 +439,7 @@ class HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             key: ValueKey(kinds[i].name),
             index: i,
             child: Padding(
-              padding: const EdgeInsets.only(bottom: 16),
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
               child: _layoutCard(
                 kinds[i],
                 leftover: leftover,

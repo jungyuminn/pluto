@@ -233,7 +233,7 @@ class AppStrings {
   static const accountSignedIn = '로그인됨';
   static const accountLoginBody =
       '언제 어디서든 다른 기기와 연동할 수 있어요';
-  static const accountLoginPcHint = 'PC에서는 pluto.day 로 열 수 있어요';
+  static const accountLoginPcHint = 'PC에서는 플루토.com으로 열 수 있어요';
   static const featureIntroBanner = '로그인하고 더 많은 기능 보기';
   static const featureIntroTitle = '로그인하면 쓸 수 있어요';
   static const featureIntroClose = '닫기';
@@ -254,7 +254,7 @@ class AppStrings {
   static const webLoginBrand = 'Pluto';
   static const webLoginTagline = '오직 나만의 캘린더';
   static const webLoginPcLabel = 'PC버전';
-  static const accountLoginWebUrl = 'pluto.day';
+  static const accountLoginWebUrl = '플루토.com';
   static const accountLoginSocialHint = '소셜 계정으로 로그인';
   static const accountKakaoShort = '카카오톡';
   static const accountGoogleShort = 'Google';
@@ -903,7 +903,7 @@ class AppStrings {
   static const friendsMyNameHint = '친구에게 보이는 이름이에요';
   static const friendsNameEditHint = '이름을 입력하세요';
   static const friendsNameChange = '바꾸기';
-  static const friendsNameChanged = '이름을 저장했어요';
+  static const friendsNameChanged = '이름을 변경했어요';
   static const friendsNameBad = '1~16자로 적어 주세요. #과 @는 쓸 수 없어요';
   static const friendsMyCode = '아이디';
   static const friendsMyCodeHint = '친구를 찾을 때 이 아이디를 알려 주세요';
@@ -942,7 +942,7 @@ class AppStrings {
   static const friendsNotFriends = '친구가 아니에요';
   static const friendsList = '내 친구';
   static const friendsEmpty = '아직 친구가 없어요';
-  static const friendsEmptyHint = '아이디를 알려 주고 요청을 보내 보세요';
+  static const friendsEmptyHint = '친구를 추가하고 일정을 공유할 수 있어요';
   static const friendsAccept = '수락';
   static const friendsDecline = '거절';
   static const friendsCancel = '취소';

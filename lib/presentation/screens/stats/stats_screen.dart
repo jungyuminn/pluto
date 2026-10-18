@@ -86,7 +86,7 @@ class StatsScreenState extends State<StatsScreen>
     if (widget.visible && !oldWidget.visible) _reload();
   }
 
-  void scrollToTop() {
+  void scrollToTop({bool animate = true}) {
     final now = _nowMonth;
     if (_zoom != CalendarZoomLevel.days ||
         _month.year != now.year ||
@@ -104,6 +104,10 @@ class StatsScreenState extends State<StatsScreen>
     }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || !_scroll.hasClients) return;
+      if (!animate) {
+        _scroll.jumpTo(0);
+        return;
+      }
       _scroll.animateTo(
         0,
         duration: const Duration(milliseconds: 280),

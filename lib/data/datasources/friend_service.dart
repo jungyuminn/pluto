@@ -2431,7 +2431,7 @@ class FriendService {
     return '$year-$month-$day';
   }
 
-  static const _codeCooldownMs = 30 * 24 * 60 * 60 * 1000;
+  static const _codeCooldownMs = 7 * 24 * 60 * 60 * 1000;
   static const _reservedCodes = {
     'pluto',
     '플루토',

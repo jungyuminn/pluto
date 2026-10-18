@@ -132,7 +132,10 @@ class _HomeFriendsRowState extends State<HomeFriendsRow> {
         child: homeFriends.isEmpty
             ? Align(
                 alignment: Alignment.centerLeft,
-                child: meCell,
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 16),
+                  child: meCell,
+                ),
               )
             : HorizontalWheelScroll(
                 controller: _scroll,
@@ -140,7 +143,7 @@ class _HomeFriendsRowState extends State<HomeFriendsRow> {
                   scrollController: _scroll,
                   scrollDirection: Axis.horizontal,
                   buildDefaultDragHandles: false,
-                  padding: EdgeInsets.zero,
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
                   header: meCell,
                   proxyDecorator: (child, index, animation) {
                     return AnimatedBuilder(

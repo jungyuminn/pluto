@@ -143,6 +143,7 @@ class EventCategory {
     EventCategory(id: 'travel', name: '여행', color: 0xFF00ACC1),
     EventCategory(id: 'exercise', name: '운동', color: 0xFF7CB342),
     EventCategory(id: 'hobby', name: '취미', color: 0xFFA855F7),
+    EventCategory(id: 'study', name: '공부', color: 0xFFF6C000),
   ];
 
   static const companyPresets = [

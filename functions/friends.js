@@ -20,7 +20,7 @@ function requireUid(request) {
   return uid;
 }
 
-const CODE_COOLDOWN_MS = 30 * 24 * 60 * 60 * 1000;
+const CODE_COOLDOWN_MS = 7 * 24 * 60 * 60 * 1000;
 
 const RESERVED_CODES = new Set([
   "pluto",

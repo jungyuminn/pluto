@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:pluto/core/constants/app_icons.dart';
 import 'package:pluto/core/constants/app_strings.dart';
+import 'package:pluto/core/layout/compose_sheet.dart';
+import 'package:pluto/core/layout/pc_layout.dart';
 import 'package:pluto/core/utils/plain_text_editing_controller.dart';
 import 'package:pluto/domain/entities/application_round.dart';
 import 'package:pluto/presentation/screens/add_company/widgets/round_date_field.dart';
@@ -18,12 +20,8 @@ Future<ApplicationRound?> showRoundEditor(
   required ApplicationRound initial,
   required Color accent,
 }) {
-  return showModalBottomSheet<ApplicationRound>(
-    context: context,
-    isScrollControlled: true,
-    backgroundColor: Colors.transparent,
-    barrierColor: const Color(0x33000000),
-    elevation: 0,
+  return showComposeSheet<ApplicationRound>(
+    context,
     builder: (context) => RoundEditorSheet(
       title: title,
       initial: initial,
@@ -121,91 +119,98 @@ class _RoundEditorSheetState extends State<RoundEditorSheet>
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
-    final viewInsets = MediaQuery.viewInsetsOf(context);
     final accent = widget.accent;
 
     return AccentSelectionTheme(
       color: accent,
-      child: Padding(
-      padding: EdgeInsets.only(bottom: viewInsets.bottom),
-      child: Material(
-        color: colors.tint(accent, 0.14),
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-        clipBehavior: Clip.antiAlias,
-        elevation: 8,
-        shadowColor: const Color(0x33000000),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
-          child: Semantics(
-            label: widget.title,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                RoundNameField(
-                  controller: _name,
-                  focusNode: _nameFocus,
-                ),
-                ClipRect(
-                  child: SizeTransition(
-                    sizeFactor: _noteFade,
-                    alignment: Alignment.topCenter,
-                    child: FadeTransition(
-                      opacity: _noteFade,
-                      child: Padding(
-                        padding: const EdgeInsets.only(top: 6),
-                        child: IgnorePointer(
-                          ignoring: !_noteOpen,
-                          child: RoundNoteField(
-                            controller: _note,
-                            focusNode: _noteFocus,
+      child: SizedBox(
+        width: double.infinity,
+        child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: colors.tint(accent, 0.14),
+          borderRadius: PcLayout.sheetRadius(),
+          boxShadow: PcLayout.sheetLift(),
+        ),
+        child: ClipRRect(
+          borderRadius: PcLayout.sheetRadius(),
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(
+              20,
+              16,
+              20,
+              16 + composeSheetBottomOf(context, covered: 16),
+            ),
+            child: Semantics(
+              label: widget.title,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  RoundNameField(
+                    controller: _name,
+                    focusNode: _nameFocus,
+                  ),
+                  ClipRect(
+                    child: SizeTransition(
+                      sizeFactor: _noteFade,
+                      alignment: Alignment.topCenter,
+                      child: FadeTransition(
+                        opacity: _noteFade,
+                        child: Padding(
+                          padding: const EdgeInsets.only(top: 6),
+                          child: IgnorePointer(
+                            ignoring: !_noteOpen,
+                            child: RoundNoteField(
+                              controller: _note,
+                              focusNode: _noteFocus,
+                            ),
                           ),
                         ),
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 5),
-                Row(
-                  children: [
-                    Expanded(
-                      child: SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: Row(
-                          children: [
-                            RoundDateField(
-                              date: _date,
-                              color: accent,
-                              onPicked: (value) =>
-                                  setState(() => _date = value),
-                            ),
-                            const SizedBox(width: 4),
-                            EventActionIcon(
-                              label: AppStrings.memoAction,
-                              color: accent,
-                              selected: _noteOpen,
-                              onPressed: _toggleNote,
-                              child: AppAssetImage(
-                                asset: _noteOpen
-                                    ? AppIcons.memo
-                                    : AppIcons.memoOutlined,
-                                width: 20,
-                                height: 20,
+                  const SizedBox(height: 5),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            children: [
+                              RoundDateField(
+                                date: _date,
+                                color: accent,
+                                onPicked: (value) =>
+                                    setState(() => _date = value),
                               ),
-                            ),
-                          ],
+                              const SizedBox(width: 4),
+                              EventActionIcon(
+                                label: AppStrings.memoAction,
+                                color: accent,
+                                selected: _noteOpen,
+                                onPressed: _toggleNote,
+                                child: AppAssetImage(
+                                  asset: _noteOpen
+                                      ? AppIcons.memo
+                                      : AppIcons.memoOutlined,
+                                  width: 20,
+                                  height: 20,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    SaveCompanyButton(onPressed: _save, color: accent),
-                  ],
-                ),
-              ],
+                      const SizedBox(width: 8),
+                      SaveCompanyButton(onPressed: _save, color: accent),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         ),
-      ),
+        ),
       ),
     );
   }

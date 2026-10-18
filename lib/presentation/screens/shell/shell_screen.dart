@@ -178,9 +178,10 @@ class _ShellScreenState extends State<ShellScreen>
     }
     if (index == _index) {
       if (_tutorial?.active == true) return;
-      _resetCurrentTab();
+      _resetTab(_index);
       return;
     }
+    _resetTab(index, animate: false);
     final fromLeft = _visualOrder(index) < _visualOrder(_index);
     final dx = fromLeft ? -0.18 : 0.18;
     final curve = CurvedAnimation(
@@ -215,16 +216,16 @@ class _ShellScreenState extends State<ShellScreen>
     _tutorial?.noteTab(index);
   }
 
-  void _resetCurrentTab() {
-    switch (_index) {
+  void _resetTab(int index, {bool animate = true}) {
+    switch (index) {
       case 0:
-        _homeKey.currentState?.scrollToTop();
+        _homeKey.currentState?.scrollToTop(animate: animate);
       case _calendarTab:
         _calendarKey.currentState?.goToToday();
       case _statsTab:
-        _statsKey.currentState?.scrollToTop();
+        _statsKey.currentState?.scrollToTop(animate: animate);
       case _jobTab:
-        _jobKey.currentState?.scrollToTop();
+        _jobKey.currentState?.scrollToTop(animate: animate);
     }
   }
 

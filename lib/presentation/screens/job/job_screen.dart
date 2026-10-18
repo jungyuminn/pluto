@@ -114,12 +114,12 @@ class JobScreenState extends State<JobScreen>
     if (widget.visible && !oldWidget.visible) _reload();
   }
 
-  void scrollToTop() {
+  void scrollToTop({bool animate = true}) {
     if (_showLicense) {
-      _licensesKey.currentState?.scrollToTop();
+      _licensesKey.currentState?.scrollToTop(animate: animate);
       return;
     }
-    _jobsKey.currentState?.scrollToTop();
+    _jobsKey.currentState?.scrollToTop(animate: animate);
   }
 
   @override

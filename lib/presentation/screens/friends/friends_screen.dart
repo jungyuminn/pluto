@@ -48,7 +48,12 @@ Future<void> showAddFriendSheet(BuildContext context) async {
   if (!context.mounted) return;
   final me = FriendService.instance.profile.value;
   if (me == null || !me.hasIdentity) {
-    showFriendsToast(context, AppStrings.friendsProfileNeed);
+    showFriendsToast(context, AppStrings.friendsProfileNeed, top: true);
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (context) => const FriendsScreen(focusId: true),
+      ),
+    );
     return;
   }
   return showComposeSheet<void>(
@@ -437,7 +442,9 @@ class _AddFriendSheetState extends State<AddFriendSheet> {
 }
 
 class FriendsScreen extends StatefulWidget {
-  const FriendsScreen({super.key});
+  const FriendsScreen({super.key, this.focusId = false});
+
+  final bool focusId;
 
   @override
   State<FriendsScreen> createState() => _FriendsScreenState();
@@ -465,6 +472,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
   var _shownRegulars = const <FriendProfile>[];
   Timer? _hintTimer;
   final _toastOverlay = OverlayPortalController();
+  var _didFocusId = false;
 
   @override
   void initState() {
@@ -472,6 +480,11 @@ class _FriendsScreenState extends State<FriendsScreen> {
     _nameFocus.addListener(_onNameFocus);
     _codeFocus.addListener(_onCodeFocus);
     if (PcLayout.isPc) _toastOverlay.show();
+    if (widget.focusId) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _focusIdIfNeeded();
+      });
+    }
     unawaited(_bootstrap());
   }
 
@@ -481,7 +494,23 @@ class _FriendsScreenState extends State<FriendsScreen> {
     } catch (error) {
       if (!mounted) return;
       _toast(_service.messageOf(error));
+      return;
     }
+    if (!mounted) return;
+    _focusIdIfNeeded();
+  }
+
+  void _focusIdIfNeeded() {
+    if (_didFocusId || !mounted || !widget.focusId) return;
+    final profile = _service.profile.value;
+    if (profile == null) return;
+    if (profile.hasIdentity) return;
+    _didFocusId = true;
+    if (profile.friendCode.trim().isEmpty) {
+      _codeFocus.requestFocus();
+      return;
+    }
+    _nameFocus.requestFocus();
   }
 
   @override
@@ -827,7 +856,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
     if (profile != null && !profile.canChangeCode && _codeFocus.hasFocus) {
       _codeFocus.unfocus();
     }
-    if (_codeFocus.hasFocus) return;
+    if (_codeFocus.hasFocus || _savingCode) return;
     final code = profile?.friendCode.trim() ?? '';
     if (_myCode.text == code) return;
     _myCode.text = code;
@@ -836,22 +865,26 @@ class _FriendsScreenState extends State<FriendsScreen> {
   Widget _photoButton(AppColors colors, FriendProfile? profile) {
     final hasPhoto = _hasPhoto(profile);
     final open = hasPhoto && _photoMenuOpen;
-    return SizedBox(
-      width: 84,
-      height: 84,
-      child: Stack(
+    return TapRegion(
+      onTapOutside: (_) {
+        if (!_photoMenuOpen) return;
+        setState(() => _photoMenuOpen = false);
+      },
+      child: SizedBox(
+        width: 84,
+        height: 84,
+        child: Stack(
         clipBehavior: Clip.none,
         children: [
           PressBounce(
-            onPressed: _savingPhoto || open
-                ? null
-                : () {
-                    if (!hasPhoto) {
-                      unawaited(_pickPhoto());
-                      return;
-                    }
-                    setState(() => _photoMenuOpen = true);
-                  },
+            onPressed: () {
+              if (!hasPhoto) {
+                if (_savingPhoto) return;
+                unawaited(_pickPhoto());
+                return;
+              }
+              setState(() => _photoMenuOpen = !_photoMenuOpen);
+            },
             pressedScale: 0.96,
             pressedColor: Colors.transparent,
             child: FriendAvatar(
@@ -902,52 +935,9 @@ class _FriendsScreenState extends State<FriendsScreen> {
               ),
             ),
           ),
-          Positioned(
-            right: -2,
-            bottom: -2,
-            child: PressBounce(
-              onPressed: _savingPhoto
-                  ? null
-                  : () {
-                      if (!hasPhoto) {
-                        unawaited(_pickPhoto());
-                        return;
-                      }
-                      setState(() => _photoMenuOpen = !_photoMenuOpen);
-                    },
-              pressedScale: 0.92,
-              pressedColor: Colors.transparent,
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  color: open
-                      ? colors.text
-                      : FriendAvatar.accentOf(context),
-                  shape: BoxShape.circle,
-                  border: Border.all(color: colors.card, width: 2),
-                ),
-                child: SizedBox(
-                  width: 22,
-                  height: 22,
-                  child: Center(
-                    child: open
-                        ? Icon(
-                            Icons.close_rounded,
-                            size: 12,
-                            color: colors.card,
-                          )
-                        : const AppAssetImage(
-                            asset: AppIcons.edit,
-                            width: 11,
-                            height: 11,
-                            color: Colors.white,
-                          ),
-                  ),
-                ),
-              ),
-            ),
-          ),
         ],
       ),
+    ),
     );
   }
 
@@ -1356,30 +1346,12 @@ class _FriendsScreenState extends State<FriendsScreen> {
                                   },
                                 ),
                               ),
-                              PressBounce(
-                                onPressed: _copyMyCode,
-                                pressedScale: 0.94,
-                                pressedColor: colors.pressed,
-                                borderRadius: BorderRadius.circular(18),
-                                child: Tooltip(
-                                  message: AppStrings.friendsCopy,
-                                  child: Semantics(
-                                    button: true,
-                                    label: AppStrings.friendsCopy,
-                                    child: SizedBox(
-                                      width: 36,
-                                      height: 36,
-                                      child: Center(
-                                        child: AppAssetImage(
-                                          asset: AppIcons.copy,
-                                          width: 20,
-                                          height: 20,
-                                          color: colors.muted,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
+                              _copyButton(
+                                colors,
+                                visible: (profile?.friendCode.trim().isNotEmpty ??
+                                        false) ||
+                                    (_savingCode &&
+                                        _myCode.text.trim().isNotEmpty),
                               ),
                             ],
                           ),
@@ -1411,6 +1383,50 @@ class _FriendsScreenState extends State<FriendsScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _copyButton(AppColors colors, {required bool visible}) {
+    return ClipRect(
+      child: AnimatedAlign(
+        duration: const Duration(milliseconds: 240),
+        curve: Curves.easeOutCubic,
+        alignment: Alignment.centerRight,
+        widthFactor: visible ? 1 : 0,
+        child: AnimatedOpacity(
+          duration: const Duration(milliseconds: 220),
+          curve: Curves.easeOutCubic,
+          opacity: visible ? 1 : 0,
+          child: IgnorePointer(
+            ignoring: !visible,
+            child: PressBounce(
+              onPressed: _copyMyCode,
+              pressedScale: 0.94,
+              pressedColor: colors.pressed,
+              borderRadius: BorderRadius.circular(18),
+              child: Tooltip(
+                message: AppStrings.friendsCopy,
+                child: Semantics(
+                  button: true,
+                  label: AppStrings.friendsCopy,
+                  child: SizedBox(
+                    width: 36,
+                    height: 36,
+                    child: Center(
+                      child: AppAssetImage(
+                        asset: AppIcons.copy,
+                        width: 20,
+                        height: 20,
+                        color: colors.muted,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 
@@ -1461,7 +1477,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
       _toastCodeCooldownIfLocked();
       return;
     }
-    _savingCode = true;
+    setState(() => _savingCode = true);
     try {
       await _service.setFriendCode(code);
       if (!mounted) return;
@@ -1471,7 +1487,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
       _myCode.text = current;
       _toast(_service.messageOf(error));
     } finally {
-      _savingCode = false;
+      if (mounted) setState(() => _savingCode = false);
     }
   }
 

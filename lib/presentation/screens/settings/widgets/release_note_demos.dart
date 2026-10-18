@@ -9902,7 +9902,7 @@ Widget _eventLabel({
 class _PcLaunchDemo extends StatelessWidget {
   const _PcLaunchDemo();
 
-  static const _url = 'pluto.day';
+  static const _url = '플루토.com';
 
   @override
   Widget build(BuildContext context) {

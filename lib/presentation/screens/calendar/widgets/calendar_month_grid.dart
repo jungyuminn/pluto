@@ -79,6 +79,7 @@ class CalendarMonthGrid extends StatefulWidget {
     this.searchDay,
     this.searchHitKey,
     this.tutorial = true,
+    this.bottomPadding = 0,
   });
 
   final DateTime month;
@@ -101,6 +102,7 @@ class CalendarMonthGrid extends StatefulWidget {
   final DateTime? searchDay;
   final String? searchHitKey;
   final bool tutorial;
+  final double bottomPadding;
 
   @override
   State<CalendarMonthGrid> createState() => _CalendarMonthGridState();
@@ -391,13 +393,58 @@ class _CalendarMonthGridState extends State<CalendarMonthGrid>
           padding: const EdgeInsets.symmetric(horizontal: 8),
           child: LayoutBuilder(
             builder: (context, constraints) {
-              final minWeekHeight = constraints.maxHeight / weekCount;
+              final fitHeight =
+                  (constraints.maxHeight - widget.bottomPadding)
+                      .clamp(0.0, double.infinity);
+              final minWeekHeight =
+                  weekCount == 0 ? 0.0 : fitHeight / weekCount;
               final cellWidth = constraints.maxWidth / 7;
               final calendarScale = AppFonts.calendarScaleOf(context);
               final labelScale = AppFonts.calendarLabelScaleOf(context);
               final dateScale = AppFonts.calendarDateScaleOf(context);
               final allowRange =
                   widget.onRangeSelected != null && !widget.showLedger;
+              var contentHeight = 0.0;
+              for (var week = 0; week < weekCount; week++) {
+                final weekDays = days.sublist(week * 7, week * 7 + 7);
+                final eventHeight = CalendarWeekEvents.heightFor(
+                  days: weekDays,
+                  eventsOf: widget.eventsOf ?? (_) => const [],
+                  emojisOf: widget.emojisOf,
+                  minHeight: minWeekHeight,
+                  calendarScale: calendarScale,
+                  labelScale: labelScale,
+                  dateScale: dateScale,
+                  showLunar: _showLunar,
+                );
+                final diaryHeight = CalendarWeekDiaries.heightFor(
+                  days: weekDays,
+                  diariesOf: widget.diariesOf ?? (_) => const [],
+                  minHeight: minWeekHeight,
+                  calendarScale: calendarScale,
+                  labelScale: labelScale,
+                  dateScale: dateScale,
+                  showLunar: _showLunar,
+                  cellWidth: cellWidth,
+                );
+                final ledgerHeight = CalendarWeekEvents.heightFor(
+                  days: weekDays,
+                  eventsOf: _ledgerEventsOn,
+                  emojisOf: widget.emojisOf,
+                  minHeight: minWeekHeight,
+                  calendarScale: calendarScale,
+                  labelScale: labelScale,
+                  dateScale: dateScale,
+                  showLunar: _showLunar,
+                );
+                final altHeight =
+                    widget.showLedger ? ledgerHeight : diaryHeight;
+                contentHeight += (widget.showDiary || widget.showLedger)
+                    ? altHeight
+                    : eventHeight;
+              }
+              final overflow = contentHeight > fitHeight + 0.5;
+              final listBottom = overflow ? widget.bottomPadding : 0.0;
               return GestureDetector(
                 behavior: HitTestBehavior.translucent,
                 onLongPressStart: allowRange ? _onLongPressStart : null,
@@ -427,9 +474,9 @@ class _CalendarMonthGridState extends State<CalendarMonthGrid>
                         ),
                       ),
                     ListView.builder(
-                  padding: EdgeInsets.zero,
+                  padding: EdgeInsets.only(bottom: listBottom),
                   primary: false,
-                  physics: _dragging
+                  physics: _dragging || !overflow
                       ? const NeverScrollableScrollPhysics()
                       : const ClampingScrollPhysics(),
                   itemCount: weekCount,

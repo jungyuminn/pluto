@@ -656,9 +656,7 @@ class CalendarScreenState extends State<CalendarScreen>
         backgroundColor: Colors.transparent,
         body: SafeArea(
           bottom: false,
-          child: Padding(
-            padding: EdgeInsets.only(bottom: bottomGap),
-            child: Column(
+          child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Expanded(
@@ -833,6 +831,8 @@ class CalendarScreenState extends State<CalendarScreen>
                                                             month: _monthAt(
                                                               page,
                                                             ),
+                                                            bottomPadding:
+                                                                bottomGap,
                                                             startMonday:
                                                                 startMonday,
                                                             showLunar:
@@ -896,8 +896,11 @@ class CalendarScreenState extends State<CalendarScreen>
                                               ],
                                             ),
                                           ),
-                                          CalendarZoomLevel.months =>
-                                            CalendarMonthZoomView(
+                                          CalendarZoomLevel.months => Padding(
+                                            padding: EdgeInsets.only(
+                                              bottom: bottomGap,
+                                            ),
+                                            child: CalendarMonthZoomView(
                                               focused: _visibleMonth,
                                               accent: AppColors.of(
                                                 context,
@@ -909,8 +912,12 @@ class CalendarScreenState extends State<CalendarScreen>
                                               },
                                               onMonthPressed: _pickMonth,
                                             ),
-                                          CalendarZoomLevel.years =>
-                                            CalendarYearZoomView(
+                                          ),
+                                          CalendarZoomLevel.years => Padding(
+                                            padding: EdgeInsets.only(
+                                              bottom: bottomGap,
+                                            ),
+                                            child: CalendarYearZoomView(
                                               focused: _visibleMonth,
                                               accent: AppColors.of(
                                                 context,
@@ -922,6 +929,7 @@ class CalendarScreenState extends State<CalendarScreen>
                                               },
                                               onYearPressed: _pickYear,
                                             ),
+                                          ),
                                         },
                                       ),
                                     ),
@@ -936,7 +944,6 @@ class CalendarScreenState extends State<CalendarScreen>
                 ),
               ],
             ),
-          ),
         ),
       ),
     );

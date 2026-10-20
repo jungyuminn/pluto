@@ -307,15 +307,17 @@ class TodoReminderService {
     for (var i = 0; i < _summaryDays && scheduled.length < max; i++) {
       final at = next.add(Duration(days: i));
       final day = DateTime(at.year, at.month, at.day);
-      final leftover = leftoverTodosBefore(day, allEvents)
-          .where((event) => !event.isJob && !event.completed)
-          .toList();
+      final leftover = leftoverTodosBefore(
+        day,
+        allEvents,
+        applications: applications,
+      ).where((event) => !event.completed).toList();
       final todayOpen = CalendarEvent.withLockedThenStartTime(
         calendarEventsOn(
           date: day,
           events: allEvents,
           applications: applications,
-        ).where((event) => !event.isJob && !event.completed && !event.someday),
+        ).where((event) => !event.completed && !event.someday),
       );
       final seen = {for (final event in leftover) event.id};
       final items = [

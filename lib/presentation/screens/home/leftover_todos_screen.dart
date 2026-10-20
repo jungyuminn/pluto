@@ -7,6 +7,9 @@ import 'package:pluto/core/theme/app_colors.dart';
 import 'package:pluto/core/utils/press_bounce.dart';
 import 'package:pluto/data/datasources/calendar_complete.dart';
 import 'package:pluto/domain/entities/calendar_event.dart';
+import 'package:pluto/domain/entities/event_category.dart';
+import 'package:pluto/domain/entities/job_application.dart';
+import 'package:pluto/presentation/screens/add_company/widgets/add_company_sheet.dart';
 import 'package:pluto/presentation/screens/calendar/calendar_day_events.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/add_event_sheet.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/delete_event_dialog.dart';
@@ -38,9 +41,22 @@ class _LeftoverTodosScreenState extends State<LeftoverTodosScreen> {
   }
 
   Future<void> _reload({bool popIfEmpty = false}) async {
-    final events = await AppScope.of(context).getCalendarEvents();
+    final scope = AppScope.of(context);
+    final events = await scope.getCalendarEvents();
+    final showJobs = scope.navPreference.showJobTab;
+    final applications = showJobs
+        ? await scope.getJobApplications()
+        : const <JobApplication>[];
+    final companyCategories = showJobs
+        ? await scope.fetchCategories(CategoryKind.company)
+        : const <EventCategory>[];
     if (!mounted) return;
-    final next = leftoverTodosBefore(_today, events);
+    final next = leftoverTodosBefore(
+      _today,
+      events,
+      applications: applications,
+      companyCategories: companyCategories,
+    );
     if (_loading) {
       setState(() {
         _events = next;
@@ -84,6 +100,24 @@ class _LeftoverTodosScreenState extends State<LeftoverTodosScreen> {
   }
 
   Future<void> _edit(CalendarEvent event) async {
+    if (event.isJob) {
+      final scope = AppScope.of(context);
+      final applications = await scope.getJobApplications();
+      JobApplication? application;
+      for (final item in applications) {
+        if (item.id == event.jobApplicationId) {
+          application = item;
+          break;
+        }
+      }
+      if (application == null || !mounted) return;
+      final saved = await showAddCompanySheet(
+        context,
+        application: application,
+      );
+      if (saved && mounted) await _reload(popIfEmpty: true);
+      return;
+    }
     final saved = await showAddEventSheet(
       context,
       date: event.date,
@@ -93,26 +127,70 @@ class _LeftoverTodosScreenState extends State<LeftoverTodosScreen> {
   }
 
   Future<void> _postpone(CalendarEvent event) async {
+    if (event.isJob) {
+      await _postponeJob(event);
+      if (mounted) await _reload(popIfEmpty: true);
+      return;
+    }
     await AppScope.of(context).updateCalendarEvent.instance(
       event.copyWith(date: _today),
     );
     if (mounted) await _reload(popIfEmpty: true);
   }
 
+  Future<void> _postponeJob(CalendarEvent event) async {
+    final scope = AppScope.of(context);
+    final index = jobRoundIndexOf(event);
+    final appId = event.jobApplicationId;
+    if (index == null || appId == null) return;
+    final applications = await scope.getJobApplications();
+    JobApplication? application;
+    for (final item in applications) {
+      if (item.id == appId) {
+        application = item;
+        break;
+      }
+    }
+    if (application == null ||
+        index < 0 ||
+        index >= application.rounds.length) {
+      return;
+    }
+    final rounds = [...application.rounds];
+    rounds[index] = rounds[index].copyWith(date: _today);
+    await scope.updateJobApplication(application.copyWith(rounds: rounds));
+  }
+
   Future<void> _toggleComplete(CalendarEvent event) async {
-    await saveCompleteToggle(
-      updater: AppScope.of(context).updateCalendarEvent,
-      event: event,
-    );
+    final scope = AppScope.of(context);
+    if (event.isJob) {
+      await saveJobCompleteToggle(
+        getApplications: scope.getJobApplications,
+        updater: scope.updateJobApplication,
+        event: event,
+      );
+    } else {
+      await saveCompleteToggle(
+        updater: scope.updateCalendarEvent,
+        event: event,
+      );
+    }
     if (mounted) await _reload(popIfEmpty: true);
   }
 
   Future<void> _completeAll() async {
-    final updater = AppScope.of(context).updateCalendarEvent;
+    final scope = AppScope.of(context);
+    final updater = scope.updateCalendarEvent;
     final events = List.of(_events);
     final done = <String>{};
     for (final event in events) {
-      final next = await saveCompleteToggle(updater: updater, event: event);
+      final next = event.isJob
+          ? await saveJobCompleteToggle(
+              getApplications: scope.getJobApplications,
+              updater: scope.updateJobApplication,
+              event: event,
+            )
+          : await saveCompleteToggle(updater: updater, event: event);
       if (next.completed) done.add(event.id);
     }
     if (!mounted) return;

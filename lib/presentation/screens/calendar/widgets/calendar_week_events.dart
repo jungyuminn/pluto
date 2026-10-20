@@ -357,7 +357,7 @@ class _FadingLabelState extends State<_FadingLabel> {
         completed: block.event.completed,
         showAccent: widget.showAccent &&
             block.showAccent &&
-            (!block.event.isJob || !block.event.isBeforeToday),
+            !block.event.completed,
         isJob: block.event.isJob,
       ),
     );

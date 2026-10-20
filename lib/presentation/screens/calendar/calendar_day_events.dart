@@ -50,6 +50,7 @@ List<CalendarEvent> jobEventsOn(
           categoryColor: jobCategoryColor(application, companyCategories),
           isJob: true,
           jobApplicationId: application.id,
+          completed: round.completed,
         ),
       );
     }
@@ -214,8 +215,10 @@ String calendarRangeLabel(DateTime start, DateTime end) {
 
 List<CalendarEvent> leftoverTodosBefore(
   DateTime date,
-  List<CalendarEvent> events,
-) {
+  List<CalendarEvent> events, {
+  List<JobApplication> applications = const [],
+  List<EventCategory> companyCategories = const [],
+}) {
   final today = DateTime(date.year, date.month, date.day);
   final rangeEnd = <String, DateTime>{};
   for (final event in events) {
@@ -245,6 +248,13 @@ List<CalendarEvent> leftoverTodosBefore(
     leftover.add(event);
   }
   leftover.addAll(rangeByGroup.values);
+  leftover.addAll([
+    for (final event in jobEventsAll(
+      applications,
+      companyCategories: companyCategories,
+    ))
+      if (!event.completed && event.day.isBefore(today)) event,
+  ]);
   leftover.sort((a, b) => a.day.compareTo(b.day));
   return CalendarEvent.withRangesFirst(leftover, all: events);
 }

@@ -72,6 +72,7 @@ class JobApplicationModel {
         name: value['name'] as String? ?? '',
         date: _date(value['date']),
         note: value['note'] as String? ?? '',
+        completed: value['completed'] == true,
       );
     }
     return const ApplicationRound();
@@ -82,6 +83,7 @@ class JobApplicationModel {
       'name': round.name,
       'date': round.date?.toIso8601String(),
       'note': round.note,
+      'completed': round.completed,
     };
   }
 

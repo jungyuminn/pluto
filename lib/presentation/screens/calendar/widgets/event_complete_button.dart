@@ -45,7 +45,7 @@ class _EventCompleteButtonState extends State<EventCompleteButton>
     if (!oldWidget.completed && widget.completed) {
       _burst.forward();
     } else if (oldWidget.completed && !widget.completed) {
-      _burst.value = 0;
+      _burst.reverse();
     }
   }
 
@@ -62,16 +62,7 @@ class _EventCompleteButtonState extends State<EventCompleteButton>
       behavior: HitTestBehavior.opaque,
       onTap: widget.onPressed == null
           ? null
-          : () {
-              if (widget.completed) {
-                _burst.value = 0;
-              } else if (widget.waiting && !widget.shared) {
-                _burst.value = 0;
-              } else {
-                _burst.forward(from: widget.waiting ? 0.45 : 0);
-              }
-              widget.onPressed!();
-            },
+          : () => widget.onPressed!(),
       child: SizedBox(
         width: 28,
         height: widget.shared ? 52 : 28,

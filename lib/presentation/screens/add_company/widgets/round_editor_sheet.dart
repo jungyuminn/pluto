@@ -112,6 +112,7 @@ class _RoundEditorSheetState extends State<RoundEditorSheet>
         name: _name.text.trim(),
         date: _date,
         note: _note.text.trim(),
+        completed: widget.initial.completed,
       ),
     );
   }

@@ -203,8 +203,21 @@ class MonthlyStats {
         final roundDay = DateTime(date.year, date.month, date.day);
         busyScore[roundDay] = (busyScore[roundDay] ?? 0) + 1;
         final name = round.name.trim();
-        if (name.isEmpty) continue;
-        roundTypeCounts[name] = (roundTypeCounts[name] ?? 0) + 1;
+        if (name.isNotEmpty) {
+          roundTypeCounts[name] = (roundTypeCounts[name] ?? 0) + 1;
+        }
+        totalTodos++;
+        final category = application.hasCategory
+            ? application.categoryName
+            : application.companyName;
+        categoryTotals[category] = (categoryTotals[category] ?? 0) + 1;
+        categoryColors[category] =
+            application.categoryColor ?? CalendarEvent.defaultCategoryColor;
+        if (round.completed) {
+          completedTodos++;
+          categoryCompleted[category] =
+              (categoryCompleted[category] ?? 0) + 1;
+        }
       }
       if (hadRound) companyIds.add(application.id);
     }
@@ -382,6 +395,7 @@ class MonthlyStats {
             color:
                 application.categoryColor ?? CalendarEvent.defaultCategoryColor,
             kind: MonthlyBusyDayKind.job,
+            completed: round.completed,
           ),
         );
       }

@@ -7,7 +7,7 @@ class DayEventsViewPreference {
   DayEventsViewPreference({
     SharedPreferences? prefs,
     bool sortByTime = false,
-    bool showTime = false,
+    bool showTime = true,
     bool hour24 = true,
     bool parseTitleTime = true,
     bool categoryView = false,
@@ -58,7 +58,7 @@ class DayEventsViewPreference {
   ];
   static const defaultBools = {
     _sortKey: false,
-    _showTimeKey: false,
+    _showTimeKey: true,
     _hour24Key: true,
     _parseTitleTimeKey: true,
     _categoryViewKey: false,

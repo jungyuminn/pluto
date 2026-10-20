@@ -218,7 +218,12 @@ class HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       _monthLabel = homePrefs.showMonth
           ? calendarRangeLabel(_today, monthEnd)
           : null;
-      _leftoverEvents = leftoverTodosBefore(_today, events);
+      _leftoverEvents = leftoverTodosBefore(
+        _today,
+        events,
+        applications: applications,
+        companyCategories: companyCategories,
+      );
       _somedayEvents = [
         for (final event in events)
           if (event.someday && !event.isJob) event,
@@ -387,7 +392,7 @@ class HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         if (homePrefs.showFriends) const HomeFriendsRow(),
         if (stats.isNotEmpty)
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
             child: Column(
               children: [
                 for (var i = 0; i < stats.length; i++) ...[
@@ -439,7 +444,7 @@ class HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             key: ValueKey(kinds[i].name),
             index: i,
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
               child: _layoutCard(
                 kinds[i],
                 leftover: leftover,

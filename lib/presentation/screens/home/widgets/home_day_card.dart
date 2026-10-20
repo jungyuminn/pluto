@@ -426,10 +426,17 @@ class _HomeDayCardState extends State<HomeDayCard> {
 
   Future<void> _toggleComplete(CalendarEvent event) async {
     final tutorial = TutorialController.find(context);
-    final next = await saveCompleteToggle(
-      updater: AppScope.of(context).updateCalendarEvent,
-      event: event,
-    );
+    final scope = AppScope.of(context);
+    final next = event.isJob
+        ? await saveJobCompleteToggle(
+            getApplications: scope.getJobApplications,
+            updater: scope.updateJobApplication,
+            event: event,
+          )
+        : await saveCompleteToggle(
+            updater: scope.updateCalendarEvent,
+            event: event,
+          );
     tutorial?.noteCompleted(completed: next.completed);
     widget.onEventsChanged();
   }
@@ -655,9 +662,9 @@ class _HomeDayCardState extends State<HomeDayCard> {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: colors.shadow,
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+            color: colors.shadow.withValues(alpha: colors.shadow.a * 0.55),
+            blurRadius: 6,
+            offset: const Offset(0, 1),
           ),
         ],
       ),
@@ -892,11 +899,12 @@ class _HomeDayCardState extends State<HomeDayCard> {
             title: event.title,
             categoryName: event.categoryName,
             color: event.color,
+            completed: event.completed,
             isJob: true,
-            showAccent: !event.isBeforeToday,
             memo: event.memo,
             timeText: timeText,
             onPressed: () => _edit(event),
+            onCompletePressed: () => _toggleComplete(event),
           )
         : DayEventLabel(
             title: event.title,

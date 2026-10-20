@@ -309,7 +309,7 @@ class _CollectedPlanetTile extends StatelessWidget {
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontFamily: font,
-                    fontSize: 11,
+                    fontSize: 12,
                     fontWeight: FontWeight.w700,
                     height: 1,
                     color: colors.muted,

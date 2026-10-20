@@ -580,10 +580,17 @@ class _DayEventsDialogState extends State<DayEventsDialog> {
   Future<void> _toggleComplete(CalendarEvent event) async {
     if (widget.readOnly) return;
     final tutorial = TutorialController.find(context);
-    final next = await saveCompleteToggle(
-      updater: AppScope.of(context).updateCalendarEvent,
-      event: event,
-    );
+    final scope = AppScope.of(context);
+    final next = event.isJob
+        ? await saveJobCompleteToggle(
+            getApplications: scope.getJobApplications,
+            updater: scope.updateJobApplication,
+            event: event,
+          )
+        : await saveCompleteToggle(
+            updater: scope.updateCalendarEvent,
+            event: event,
+          );
     tutorial?.noteCompleted(completed: next.completed);
     if (mounted) await _reload(animate: false);
     widget.onEventsChanged?.call();
@@ -1122,12 +1129,15 @@ class _DayEventsDialogState extends State<DayEventsDialog> {
             title: event.title,
             categoryName: event.categoryName,
             color: event.color,
+            completed: event.completed,
             isJob: true,
-            showAccent: !event.isBeforeToday,
             memo: event.memo,
             timeText: timeText,
             height: _labelHeight,
             onPressed: readOnly ? null : () => _edit(event),
+            showComplete: true,
+            onCompletePressed:
+                readOnly ? null : () => _toggleComplete(event),
           )
         : DayEventLabel(
             title: event.title,

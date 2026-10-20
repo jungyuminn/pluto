@@ -78,24 +78,24 @@ class _DayEventLabelState extends State<DayEventLabel> {
   late var _waiting = widget.waiting;
   late var _mine = widget.waiting || (widget.shared && widget.completed);
   late var _peer = widget.peerCompleted;
+  var _taps = 0;
+  var _echoes = 0;
 
   static const _baseHeight = 52.0;
 
   @override
   void didUpdateWidget(DayEventLabel oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.completed != widget.completed) {
-      _completed = widget.completed;
-    }
-    if (oldWidget.waiting != widget.waiting) {
-      _waiting = widget.waiting;
-    }
-    if (oldWidget.peerCompleted != widget.peerCompleted) {
-      _peer = widget.peerCompleted;
-    }
-    if (widget.shared &&
-        (oldWidget.waiting != widget.waiting ||
-            oldWidget.completed != widget.completed)) {
+    final doneChanged = oldWidget.completed != widget.completed;
+    final waitChanged = oldWidget.waiting != widget.waiting;
+    final peerChanged = oldWidget.peerCompleted != widget.peerCompleted;
+    if (!doneChanged && !waitChanged && !peerChanged) return;
+    _echoes++;
+    if (_echoes < _taps) return;
+    if (doneChanged) _completed = widget.completed;
+    if (waitChanged) _waiting = widget.waiting;
+    if (peerChanged) _peer = widget.peerCompleted;
+    if (widget.shared && (waitChanged || doneChanged)) {
       _mine = widget.waiting || widget.completed;
     }
   }
@@ -187,8 +187,8 @@ class _DayEventLabelState extends State<DayEventLabel> {
             child: Row(
               children: [
                 AnimatedContainer(
-                  duration: const Duration(milliseconds: 240),
-                  curve: Curves.easeOutCubic,
+                  duration: const Duration(milliseconds: 360),
+                  curve: Curves.easeInOutCubic,
                   width: (widget.showAccent && !_completed) ? 4 : 0,
                 ),
                 Expanded(
@@ -323,8 +323,8 @@ class _DayEventLabelState extends State<DayEventLabel> {
                             asset: widget.isJob
                                 ? AppIcons.officeOutlined
                                 : AppIcons.linkOutlined,
-                            width: widget.isJob ? 22 : 18,
-                            height: widget.isJob ? 22 : 18,
+                            width: 18,
+                            height: 18,
                           ),
                         ),
                       ),
@@ -375,6 +375,7 @@ class _DayEventLabelState extends State<DayEventLabel> {
                             ? null
                             : () {
                                 _skipLabelTap = true;
+                                _taps++;
                                 setState(() {
                                   if (widget.shared) {
                                     _mine = !_mine;
@@ -405,8 +406,8 @@ class _DayEventLabelState extends State<DayEventLabel> {
               top: 0,
               bottom: 0,
               child: AnimatedContainer(
-                duration: const Duration(milliseconds: 240),
-                curve: Curves.easeOutCubic,
+                duration: const Duration(milliseconds: 360),
+                curve: Curves.easeInOutCubic,
                 width: (widget.showAccent && !_completed) ? 4 : 0,
                 color: accent,
               ),

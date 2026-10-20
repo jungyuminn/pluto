@@ -123,27 +123,39 @@ class LeftoverTodoCard extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 8),
-            SwipeToDelete(
-              onSwipeLeft: onDelete,
-              child: DayEventLabel(
-                title: event.title,
-                categoryName: event.categoryName,
-                color: event.color,
-                completed: event.completed,
-                waiting: event.isSharedWaiting,
-                shared: event.isShared,
-                peerCompleted: event.sharedPeer,
-                isRepeat: event.isRepeat,
-                isRange: event.isRange,
-                memo: event.memo,
-                showCategory: false,
-                onPressed: onEdit,
-                onLongPressed: () {
-                  onDelete();
-                },
-                onCompletePressed: onComplete,
-              ),
-            ),
+            event.isJob
+                ? DayEventLabel(
+                    title: event.title,
+                    categoryName: event.categoryName,
+                    color: event.color,
+                    completed: event.completed,
+                    isJob: true,
+                    memo: event.memo,
+                    showCategory: false,
+                    onPressed: onEdit,
+                    onCompletePressed: onComplete,
+                  )
+                : SwipeToDelete(
+                    onSwipeLeft: onDelete,
+                    child: DayEventLabel(
+                      title: event.title,
+                      categoryName: event.categoryName,
+                      color: event.color,
+                      completed: event.completed,
+                      waiting: event.isSharedWaiting,
+                      shared: event.isShared,
+                      peerCompleted: event.sharedPeer,
+                      isRepeat: event.isRepeat,
+                      isRange: event.isRange,
+                      memo: event.memo,
+                      showCategory: false,
+                      onPressed: onEdit,
+                      onLongPressed: () {
+                        onDelete();
+                      },
+                      onCompletePressed: onComplete,
+                    ),
+                  ),
           ],
         ),
       ),

@@ -721,7 +721,6 @@ class _AllEventsScreenState extends State<AllEventsScreen> {
                                               isRepeat: event.isRepeat,
                                               isRange: event.isRange,
                                               isJob: true,
-                                              showAccent: !event.isBeforeToday,
                                               memo: event.memo,
                                               timeText: _timeText(event),
                                               onPressed: () => _edit(event),

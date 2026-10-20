@@ -1,4 +1,3 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:pluto/core/constants/app_strings.dart';
 import 'package:pluto/core/theme/app_colors.dart';
@@ -6,12 +5,6 @@ import 'package:pluto/core/utils/press_bounce.dart';
 import 'package:pluto/data/datasources/app_auth_service.dart';
 import 'package:pluto/presentation/screens/settings/widgets/backup_dialogs.dart';
 import 'package:pluto/presentation/screens/settings/widgets/dots_loading_dialog.dart';
-
-String _shortError(Object error) {
-  if (error is FirebaseAuthException) return error.code;
-  final text = error.toString();
-  return text.length > 80 ? text.substring(0, 80) : text;
-}
 
 Future<bool> runAccountAction(
   BuildContext context,
@@ -71,9 +64,12 @@ Future<bool> runAccountAction(
         'kakao_misconfigured' => error.detail == null || error.detail!.isEmpty
             ? AppStrings.accountKakaoMisconfiguredBody
             : '${AppStrings.accountKakaoMisconfiguredBody}\n(${error.detail})',
-        'kakao_oidc' => error.detail == null || error.detail!.isEmpty
-            ? AppStrings.accountKakaoOidcBody
-            : '${AppStrings.accountKakaoOidcBody}\n${error.detail}',
+        'kakao_oidc' => AppAuthService.isNetworkFailure(error)
+            ? AppStrings.accountNetworkBody
+            : error.detail == null || error.detail!.isEmpty
+                ? AppStrings.accountKakaoOidcBody
+                : '${AppStrings.accountKakaoOidcBody}\n${error.detail}',
+        'network' => AppStrings.accountNetworkBody,
         'unavailable' => AppStrings.accountUnavailableBody,
         'account_delete' => error.detail == null || error.detail!.isEmpty
             ? AppStrings.accountFailedBody
@@ -95,7 +91,9 @@ Future<bool> runAccountAction(
     await showBackupMessageDialog(
       context,
       title: AppStrings.accountFailedTitle,
-      body: '${AppStrings.accountFailedBody}\n(${_shortError(error)})',
+      body: AppAuthService.isNetworkFailure(error)
+          ? AppStrings.accountNetworkBody
+          : AppStrings.accountFailedBody,
     );
     return false;
   }

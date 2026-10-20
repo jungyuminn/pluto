@@ -247,7 +247,8 @@ class CalendarScreenState extends State<CalendarScreen>
     });
   }
 
-  void goToToday() {
+  void goToToday({bool animate = true}) {
+    CalendarDayDropTarget.scrollToTop(animate: animate);
     final now = DateTime.now();
     final current = DateTime(now.year, now.month);
     final onToday = _zoom == CalendarZoomLevel.days &&
@@ -256,6 +257,10 @@ class CalendarScreenState extends State<CalendarScreen>
     if (onToday) return;
     if (_zoom != CalendarZoomLevel.days) {
       _showCurrentMonth(jump: true);
+      return;
+    }
+    if (!animate) {
+      _jumpToMonth(current);
       return;
     }
     _goToMonth(current);

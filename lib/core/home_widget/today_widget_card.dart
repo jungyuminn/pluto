@@ -466,10 +466,7 @@ class _WidgetEventLabel extends StatelessWidget {
           child: Row(
             children: [
               Container(
-                width: (event.completed ||
-                        (event.isJob && event.isBeforeToday))
-                    ? 0
-                    : 4,
+                width: event.completed ? 0 : 4,
                 height: height,
                 color: event.color,
               ),

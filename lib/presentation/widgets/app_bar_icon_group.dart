@@ -40,9 +40,9 @@ class AppBarIconGroup extends StatelessWidget {
             ? null
             : [
                 BoxShadow(
-                  color: colors.shadow,
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
+                  color: colors.shadow.withValues(alpha: colors.shadow.a * 0.55),
+                  blurRadius: 6,
+                  offset: const Offset(0, 1),
                 ),
               ],
       ),

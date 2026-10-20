@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/physics.dart';
 import 'package:flutter/services.dart';
 import 'package:pluto/app_scope.dart';
 import 'package:pluto/core/calendar/month_grid.dart';
@@ -43,6 +44,7 @@ class StatsScreenState extends State<StatsScreen>
   var _zoom = CalendarZoomLevel.days;
   MonthlyStats? _stats;
   var _events = const <CalendarEvent>[];
+  var _applications = const <JobApplication>[];
   var _loading = true;
   var _initialized = false;
   late final AnimationController _wave;
@@ -95,11 +97,7 @@ class StatsScreenState extends State<StatsScreen>
         _zoom = CalendarZoomLevel.days;
         _zoomFocus = now;
         _month = now;
-        _stats = MonthlyStats.of(
-          month: now,
-          events: _events,
-          applications: const [],
-        );
+        _stats = _statsOf(now);
       });
     }
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -126,15 +124,16 @@ class StatsScreenState extends State<StatsScreen>
 
   Future<void> _reload() async {
     if (!mounted) return;
-    final events = await AppScope.of(context).getCalendarEvents();
+    final scope = AppScope.of(context);
+    final events = await scope.getCalendarEvents();
+    final applications = scope.navPreference.showJobTab
+        ? await scope.getJobApplications()
+        : const <JobApplication>[];
     if (!mounted) return;
     setState(() {
       _events = events;
-      _stats = MonthlyStats.of(
-        month: _month,
-        events: events,
-        applications: const [],
-      );
+      _applications = applications;
+      _stats = _statsOf(_month);
       _loading = false;
     });
   }
@@ -152,11 +151,7 @@ class StatsScreenState extends State<StatsScreen>
     if (target.year == _month.year && target.month == _month.month) return;
     setState(() {
       _month = target;
-      _stats = MonthlyStats.of(
-        month: target,
-        events: _events,
-        applications: const [],
-      );
+      _stats = _statsOf(target);
     });
   }
 
@@ -180,12 +175,16 @@ class StatsScreenState extends State<StatsScreen>
       _zoom = CalendarZoomLevel.days;
       if (target.year == _month.year && target.month == _month.month) return;
       _month = target;
-      _stats = MonthlyStats.of(
-        month: target,
-        events: _events,
-        applications: const [],
-      );
+      _stats = _statsOf(target);
     });
+  }
+
+  MonthlyStats _statsOf(DateTime month) {
+    return MonthlyStats.of(
+      month: month,
+      events: _events,
+      applications: _applications,
+    );
   }
 
   void _pickZoomYear(int year) {
@@ -263,6 +262,7 @@ class StatsScreenState extends State<StatsScreen>
         : _MonthPlay.of(
             stats: stats,
             events: _events,
+            applications: _applications,
             month: _month,
             today: _today,
           );
@@ -272,6 +272,7 @@ class StatsScreenState extends State<StatsScreen>
     final collected = CollectedPlanet.fromEvents(
       _events,
       nowMonth: _nowMonth,
+      applications: _applications,
     );
 
     return AppSkinBackground(
@@ -449,6 +450,7 @@ class _MonthPlay {
   static _MonthPlay of({
     required MonthlyStats stats,
     required List<CalendarEvent> events,
+    required List<JobApplication> applications,
     required DateTime month,
     required DateTime today,
   }) {
@@ -475,17 +477,30 @@ class _MonthPlay {
       hasTodos: total > 0,
       month: month,
       today: today,
-      doneCounts: _doneCounts(events, month),
+      doneCounts: _doneCounts(events, applications, month),
     );
   }
 
-  static Map<int, int> _doneCounts(List<CalendarEvent> events, DateTime month) {
+  static Map<int, int> _doneCounts(
+    List<CalendarEvent> events,
+    List<JobApplication> applications,
+    DateTime month,
+  ) {
     final days = <int, int>{};
     for (final event in events) {
       if (event.isJob || event.someday || !event.completed) continue;
       final day = event.day;
       if (day.year != month.year || day.month != month.month) continue;
       days[day.day] = (days[day.day] ?? 0) + 1;
+    }
+    for (final application in applications) {
+      if (application.isRejected) continue;
+      for (final round in application.rounds) {
+        final date = round.date;
+        if (date == null || !round.completed) continue;
+        if (date.year != month.year || date.month != month.month) continue;
+        days[date.day] = (days[date.day] ?? 0) + 1;
+      }
     }
     return days;
   }
@@ -589,12 +604,11 @@ class _RankBadge extends StatelessWidget {
         decoration: BoxDecoration(
           color: colors.card,
           borderRadius: BorderRadius.circular(999),
-          border: Border.all(color: colors.border),
           boxShadow: [
             BoxShadow(
-              color: colors.shadow,
-              blurRadius: 8,
-              offset: const Offset(0, 2),
+              color: colors.shadow.withValues(alpha: colors.shadow.a * 0.55),
+              blurRadius: 6,
+              offset: const Offset(0, 1),
             ),
           ],
         ),
@@ -657,9 +671,9 @@ class _LevelBlock extends StatelessWidget {
           borderRadius: BorderRadius.circular(18),
           boxShadow: [
             BoxShadow(
-              color: colors.shadow,
-              blurRadius: 8,
-              offset: const Offset(0, 2),
+              color: colors.shadow.withValues(alpha: colors.shadow.a * 0.55),
+              blurRadius: 6,
+              offset: const Offset(0, 1),
             ),
           ],
         ),
@@ -1012,9 +1026,9 @@ class _CollectedCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(18),
           boxShadow: [
             BoxShadow(
-              color: colors.shadow,
-              blurRadius: 8,
-              offset: const Offset(0, 2),
+              color: colors.shadow.withValues(alpha: colors.shadow.a * 0.55),
+              blurRadius: 6,
+              offset: const Offset(0, 1),
             ),
           ],
         ),
@@ -1097,7 +1111,7 @@ class _CollectedCard extends StatelessWidget {
                                 overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
                                   fontFamily: font,
-                                  fontSize: 11,
+                                  fontSize: 12,
                                   fontWeight: FontWeight.w700,
                                   color: colors.muted,
                                 ),
@@ -1136,14 +1150,14 @@ class _StatCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(22),
         boxShadow: [
           BoxShadow(
-            color: colors.shadow,
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+            color: colors.shadow.withValues(alpha: colors.shadow.a * 0.55),
+            blurRadius: 6,
+            offset: const Offset(0, 1),
           ),
         ],
       ),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
+        padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
         child: Column(
           children: [
             Row(
@@ -1207,7 +1221,7 @@ class _StatLine extends StatelessWidget {
     final style = TextStyle(
       fontFamily: font,
       fontSize: 15,
-      fontWeight: FontWeight.w500,
+      fontWeight: FontWeight.w800,
       height: 1,
       color: colors.text,
     );
@@ -1467,7 +1481,7 @@ class _MonthDots extends StatelessWidget {
                     label,
                     style: TextStyle(
                       fontFamily: font,
-                      fontSize: PcLayout.isPc ? 12 : 11,
+                      fontSize: PcLayout.isPc ? 13 : 12,
                       fontWeight: FontWeight.w700,
                       height: 1,
                       color: colors.muted,
@@ -1497,8 +1511,9 @@ class _MonthDots extends StatelessWidget {
   }
 }
 
-class _DayDot extends StatelessWidget {
+class _DayDot extends StatefulWidget {
   const _DayDot({
+    super.key,
     required this.date,
     required this.count,
     required this.future,
@@ -1509,6 +1524,63 @@ class _DayDot extends StatelessWidget {
   final int count;
   final bool future;
   final void Function(DateTime date, Rect origin) onPressed;
+
+  @override
+  State<_DayDot> createState() => _DayDotState();
+}
+
+class _DayDotState extends State<_DayDot> with SingleTickerProviderStateMixin {
+  static const _spring = SpringDescription(
+    mass: 0.7,
+    stiffness: 380,
+    damping: 22,
+  );
+
+  late final AnimationController _bloom;
+  late var _tone = widget.count;
+  var _toneMs = 280;
+
+  @override
+  void initState() {
+    super.initState();
+    _bloom = AnimationController.unbounded(vsync: this)
+      ..value = widget.count > 0 ? 1 : 0;
+  }
+
+  @override
+  void didUpdateWidget(_DayDot oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.count > 0) _tone = widget.count;
+    if (oldWidget.date != widget.date) {
+      _tone = widget.count;
+      _toneMs = 0;
+      _bloom
+        ..stop()
+        ..value = widget.count > 0 ? 1 : 0;
+      return;
+    }
+    _toneMs = 280;
+    final was = oldWidget.count > 0;
+    final now = widget.count > 0;
+    if (was == now) return;
+    if (now) {
+      _bloom.animateWith(
+        SpringSimulation(_spring, _bloom.value, 1, _bloom.velocity),
+      );
+    } else {
+      _bloom.animateTo(
+        0,
+        duration: const Duration(milliseconds: 280),
+        curve: Curves.easeInCubic,
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _bloom.dispose();
+    super.dispose();
+  }
 
   Rect _originOf(BuildContext context) {
     final box = context.findRenderObject() as RenderBox?;
@@ -1524,15 +1596,16 @@ class _DayDot extends StatelessWidget {
     final colors = AppColors.of(context);
     final font = AppFonts.of(context);
     final accent = colors.accentBright;
-    final done = count > 0;
-    final fill = switch (count) {
-      0 => Colors.transparent,
-      1 => accent.withValues(alpha: 0.14),
-      <= 3 => accent.withValues(alpha: 0.30),
-      _ => accent.withValues(alpha: 0.40),
+    final idle = widget.future
+        ? colors.muted.withValues(alpha: 0.45)
+        : colors.secondary;
+    final fill = switch (_tone) {
+      <= 2 => accent.withValues(alpha: 0.10),
+      <= 4 => accent.withValues(alpha: 0.16),
+      _ => accent.withValues(alpha: 0.22),
     };
     return PressBounce(
-      onPressed: () => onPressed(date, _originOf(context)),
+      onPressed: () => widget.onPressed(widget.date, _originOf(context)),
       pressedScale: 0.9,
       pressedColor: colors.pressed,
       borderRadius: BorderRadius.circular(999),
@@ -1542,27 +1615,44 @@ class _DayDot extends StatelessWidget {
           return Center(
             child: SizedBox.square(
               dimension: side,
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: fill,
-                ),
-                child: Center(
-                  child: Text(
-                    '${date.day}',
-                    style: TextStyle(
-                      fontFamily: font,
-                      fontSize: PcLayout.isPc ? 15 : 13,
-                      fontWeight: FontWeight.w600,
-                      height: 1,
-                      color: done
-                          ? accent
-                          : future
-                              ? colors.muted.withValues(alpha: 0.45)
-                              : colors.secondary,
-                    ),
-                  ),
-                ),
+              child: AnimatedBuilder(
+                animation: _bloom,
+                builder: (context, _) {
+                  final t = _bloom.value;
+                  final shown = t.clamp(0.0, 1.0);
+                  return Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      Transform.scale(
+                        scale: t.clamp(0.0, 1.18),
+                        child: Opacity(
+                          opacity: shown,
+                          child: SizedBox.square(
+                            dimension: side,
+                            child: AnimatedContainer(
+                              duration: Duration(milliseconds: _toneMs),
+                              curve: Curves.easeInOutCubic,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: fill,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      Text(
+                        '${widget.date.day}',
+                        style: TextStyle(
+                          fontFamily: font,
+                          fontSize: PcLayout.isPc ? 16 : 14,
+                          fontWeight: FontWeight.w600,
+                          height: 1,
+                          color: Color.lerp(idle, accent, shown),
+                        ),
+                      ),
+                    ],
+                  );
+                },
               ),
             ),
           );

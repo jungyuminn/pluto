@@ -1,5 +1,6 @@
 import 'package:pluto/core/constants/app_strings.dart';
 import 'package:pluto/domain/entities/calendar_event.dart';
+import 'package:pluto/domain/entities/job_application.dart';
 
 class PlanetStage {
   const PlanetStage({
@@ -70,6 +71,7 @@ class CollectedPlanet {
   static List<CollectedPlanet> fromEvents(
     List<CalendarEvent> events, {
     required DateTime nowMonth,
+    List<JobApplication> applications = const [],
   }) {
     final months = <DateTime, ({int done, int total})>{};
     for (final event in events) {
@@ -81,6 +83,20 @@ class CollectedPlanet {
         done: (prev?.done ?? 0) + (event.completed ? 1 : 0),
         total: (prev?.total ?? 0) + 1,
       );
+    }
+    for (final application in applications) {
+      if (application.isRejected) continue;
+      for (final round in application.rounds) {
+        final date = round.date;
+        if (date == null) continue;
+        final month = DateTime(date.year, date.month);
+        if (month.isAfter(nowMonth)) continue;
+        final prev = months[month];
+        months[month] = (
+          done: (prev?.done ?? 0) + (round.completed ? 1 : 0),
+          total: (prev?.total ?? 0) + 1,
+        );
+      }
     }
     final keys = months.keys.toList()
       ..sort((a, b) => b.compareTo(a));

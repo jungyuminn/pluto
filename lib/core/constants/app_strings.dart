@@ -261,6 +261,7 @@ class AppStrings {
   static const accountAppleShort = 'Apple';
   static const accountFailedTitle = '로그인하지 못했어요';
   static const accountFailedBody = '잠시 후 다시 시도해 주세요';
+  static const accountNetworkBody = '인터넷 연결을 확인해 주세요';
   static const accountKakaoKeyBody = '카카오 로그인은 아직 준비 중이에요';
   static const accountKakaoWebKeyBody =
       '카카오 디벨로퍼스 앱 키에서 JavaScript 키를 넣어 주세요';

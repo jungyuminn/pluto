@@ -221,7 +221,7 @@ class _ShellScreenState extends State<ShellScreen>
       case 0:
         _homeKey.currentState?.scrollToTop(animate: animate);
       case _calendarTab:
-        _calendarKey.currentState?.goToToday();
+        _calendarKey.currentState?.goToToday(animate: animate);
       case _statsTab:
         _statsKey.currentState?.scrollToTop(animate: animate);
       case _jobTab:

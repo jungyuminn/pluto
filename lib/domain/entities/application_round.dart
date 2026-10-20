@@ -3,11 +3,13 @@ class ApplicationRound {
     this.name = '',
     this.date,
     this.note = '',
+    this.completed = false,
   });
 
   final String name;
   final DateTime? date;
   final String note;
+  final bool completed;
 
   bool get isEmpty => name.isEmpty && date == null && note.isEmpty;
 
@@ -30,5 +32,20 @@ class ApplicationRound {
     if (name.isNotEmpty && dateLabel != null) return '$name - $dateLabel';
     if (name.isNotEmpty) return name;
     return dateLabel;
+  }
+
+  ApplicationRound copyWith({
+    String? name,
+    DateTime? date,
+    String? note,
+    bool? completed,
+    bool clearDate = false,
+  }) {
+    return ApplicationRound(
+      name: name ?? this.name,
+      date: clearDate ? null : (date ?? this.date),
+      note: note ?? this.note,
+      completed: completed ?? this.completed,
+    );
   }
 }

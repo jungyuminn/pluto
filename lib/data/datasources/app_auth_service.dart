@@ -159,6 +159,39 @@ class AppAuthService {
     return '소셜';
   }
 
+  static bool isNetworkFailure(Object error) {
+    if (error is AppAuthException) {
+      if (error.code == 'network') return true;
+      return _looksNetwork('${error.code} ${error.detail ?? ''}');
+    }
+    if (error is FirebaseAuthException) {
+      return error.code == 'network-request-failed' ||
+          _looksNetwork(error.message ?? '');
+    }
+    if (error is PlatformException) {
+      return _looksNetwork(
+        '${error.code} ${error.message ?? ''} ${error.details ?? ''}',
+      );
+    }
+    return _looksNetwork(error.toString());
+  }
+
+  static bool _looksNetwork(String text) {
+    final lower = text.toLowerCase();
+    return lower.contains('err_name_not_resolved') ||
+        lower.contains('err_internet_disconnected') ||
+        lower.contains('err_network') ||
+        lower.contains('err_connection') ||
+        lower.contains('err_address_unreachable') ||
+        lower.contains('err_timed_out') ||
+        lower.contains('failed host lookup') ||
+        lower.contains('socketexception') ||
+        lower.contains('clientexception') ||
+        lower.contains('network_error') ||
+        lower.contains('network-request-failed') ||
+        lower.contains('protocolerror');
+  }
+
   static bool isUserCanceled(Object error) {
     if (error is AppAuthException) return error.code == 'canceled';
     if (error is GoogleSignInException) {
@@ -300,7 +333,18 @@ class AppAuthService {
       if (error.reason == kakao.ClientErrorCause.cancelled) {
         throw const AppAuthException('canceled');
       }
+      if (isNetworkFailure(error)) {
+        throw const AppAuthException('network');
+      }
       throw AppAuthException('kakao_oidc', error.reason.toString());
+    } catch (error) {
+      if (isUserCanceled(error)) {
+        throw const AppAuthException('canceled');
+      }
+      if (isNetworkFailure(error)) {
+        throw const AppAuthException('network');
+      }
+      throw AppAuthException('kakao_oidc', _authErrorCode(error));
     }
     final idToken = token.idToken;
     if (idToken == null || idToken.isEmpty) {
@@ -330,6 +374,9 @@ class AppAuthService {
       await _applyKakaoProfile(force: true);
     } catch (error) {
       debugPrint('Kakao Firebase auth failed: $error');
+      if (isNetworkFailure(error)) {
+        throw const AppAuthException('network');
+      }
       throw AppAuthException(
         'kakao_oidc',
         '${_authErrorCode(error)} aud=$aud nonce=$hasNonce',
@@ -357,6 +404,9 @@ class AppAuthService {
     } catch (error) {
       if (isUserCanceled(error)) {
         throw const AppAuthException('canceled');
+      }
+      if (isNetworkFailure(error)) {
+        throw const AppAuthException('network');
       }
       throw AppAuthException('kakao_oidc', _authErrorCode(error));
     }

@@ -51,6 +51,12 @@ class CalendarDayDropTarget {
     setScrimHidden(false);
   }
 
+  static void scrollToTop({bool animate = true}) {
+    for (final grid in _grids) {
+      grid.scrollToTop(animate: animate);
+    }
+  }
+
   static bool isSameDay(DateTime a, DateTime b) {
     return a.year == b.year && a.month == b.month && a.day == b.day;
   }
@@ -115,6 +121,7 @@ class _CalendarMonthGridState extends State<CalendarMonthGrid>
   final _keys = <DateTime, GlobalKey>{};
   final _weekKeys = <int, GlobalKey>{};
   final _stackKey = GlobalKey();
+  final _scroll = ScrollController();
   DateTime? _rangeStart;
   DateTime? _rangeEnd;
   Rect? _searchRect;
@@ -218,11 +225,25 @@ class _CalendarMonthGridState extends State<CalendarMonthGrid>
   @override
   void dispose() {
     CalendarDayDropTarget._grids.remove(this);
+    _scroll.dispose();
     _ease.dispose();
     _altEase.dispose();
     _mode.dispose();
     _alt.dispose();
     super.dispose();
+  }
+
+  void scrollToTop({bool animate = true}) {
+    if (!_scroll.hasClients) return;
+    if (!animate) {
+      _scroll.jumpTo(0);
+      return;
+    }
+    _scroll.animateTo(
+      0,
+      duration: const Duration(milliseconds: 280),
+      curve: Curves.easeOutCubic,
+    );
   }
 
   DateTime _dateOnly(DateTime date) =>
@@ -474,6 +495,7 @@ class _CalendarMonthGridState extends State<CalendarMonthGrid>
                         ),
                       ),
                     ListView.builder(
+                  controller: _scroll,
                   padding: EdgeInsets.only(bottom: listBottom),
                   primary: false,
                   physics: _dragging || !overflow

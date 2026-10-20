@@ -32,6 +32,7 @@ class CalendarEventLocalDataSource {
     }
     if ((item['title'] as String? ?? '') != starterTitles[index]) return false;
     if ((item['memo'] as String? ?? '').trim().isNotEmpty) return false;
+    if ((item['checklist'] as List?)?.isNotEmpty == true) return false;
     if (item['completed'] == true) return false;
     if (index < EventCategory.presets.length) {
       if ((item['categoryId'] as String? ?? '') !=

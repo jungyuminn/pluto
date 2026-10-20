@@ -14,6 +14,7 @@ import 'package:pluto/data/datasources/last_event_category_preference.dart';
 import 'package:pluto/data/datasources/friend_service.dart';
 import 'package:pluto/domain/entities/calendar_event.dart';
 import 'package:pluto/domain/entities/event_category.dart';
+import 'package:pluto/domain/entities/event_checklist_item.dart';
 import 'package:pluto/domain/entities/friend_profile.dart';
 import 'package:pluto/domain/entities/todo_request.dart';
 import 'package:pluto/presentation/screens/add_company/widgets/missing_fields_dialog.dart';
@@ -23,6 +24,7 @@ import 'package:pluto/presentation/screens/calendar/widgets/event_date_chip.dart
 import 'package:pluto/presentation/screens/calendar/widgets/event_time_chip.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/event_time_sheet.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/event_action_icon.dart';
+import 'package:pluto/presentation/screens/calendar/widgets/event_checklist_editor.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/event_memo_field.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/event_title_field.dart';
 import 'package:pluto/presentation/widgets/ai_category_chip.dart';
@@ -55,7 +57,7 @@ class AddEventForm extends StatefulWidget {
 }
 
 class _AddEventFormState extends State<AddEventForm>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late final PlainTextEditingController _title;
   late final PlainTextEditingController _memo;
   final _titleFocus = FocusNode();
@@ -64,11 +66,16 @@ class _AddEventFormState extends State<AddEventForm>
   var _restoreMemo = false;
   late final AnimationController _memoAnimation;
   late final CurvedAnimation _memoFade;
+  late final AnimationController _checklistAnimation;
+  late final CurvedAnimation _checklistFade;
+  final _checklistKey = GlobalKey<EventChecklistEditorState>();
   late DateTime _date;
   var _dateMode = AppCalendarMode.single;
   var _dates = <DateTime>[];
   var _memoOpen = false;
   var _memoToggling = false;
+  var _checklistOpen = false;
+  var _checklistToggling = false;
   var _saving = false;
   late String? _categoryId;
   String? _categoryName;
@@ -123,6 +130,7 @@ class _AddEventFormState extends State<AddEventForm>
     _title.addListener(_onTitleChanged);
     _titleFocus.addListener(_onTitleFocus);
     _memoOpen = initial?.memo.trim().isNotEmpty ?? false;
+    _checklistOpen = initial?.hasChecklist ?? false;
     _memoAnimation = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 260),
@@ -131,6 +139,17 @@ class _AddEventFormState extends State<AddEventForm>
     );
     _memoFade = CurvedAnimation(
       parent: _memoAnimation,
+      curve: Curves.easeOutCubic,
+      reverseCurve: Curves.easeInCubic,
+    );
+    _checklistAnimation = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 260),
+      reverseDuration: const Duration(milliseconds: 220),
+      value: _checklistOpen ? 1 : 0,
+    );
+    _checklistFade = CurvedAnimation(
+      parent: _checklistAnimation,
       curve: Curves.easeOutCubic,
       reverseCurve: Curves.easeInCubic,
     );
@@ -180,6 +199,8 @@ class _AddEventFormState extends State<AddEventForm>
     _sheetAnimation?.removeStatusListener(_onSheetOpened);
     _memoFade.dispose();
     _memoAnimation.dispose();
+    _checklistFade.dispose();
+    _checklistAnimation.dispose();
     _suggest?.dispose();
     _title.removeListener(_onTitleChanged);
     _titleFocus.removeListener(_onTitleFocus);
@@ -543,6 +564,28 @@ class _AddEventFormState extends State<AddEventForm>
     _memoToggling = false;
   }
 
+  Future<void> _toggleChecklist() async {
+    if (!_allowsAdd(TutorialAction.none)) return;
+    if (_checklistToggling) return;
+    _checklistToggling = true;
+    if (_checklistOpen) {
+      _focusTitle();
+      setState(() => _checklistOpen = false);
+      await _checklistAnimation.reverse();
+    } else {
+      setState(() => _checklistOpen = true);
+      await _checklistAnimation.forward();
+    }
+    if (!mounted) return;
+    _checklistToggling = false;
+  }
+
+  List<EventChecklistItem> _checklistOf() {
+    return _checklistKey.currentState?.cleaned() ??
+        widget.initial?.checklist ??
+        const [];
+  }
+
   Future<void> _sendShared(String title, {required String memo}) async {
     final friend = widget.shareWith;
     if (friend == null) return;
@@ -552,6 +595,7 @@ class _AddEventFormState extends State<AddEventForm>
         title: title,
         date: _date,
         memo: memo,
+        checklist: _checklistOf(),
         categoryName: _categoryName ?? CalendarEvent.defaultCategoryName,
         categoryColor: _categoryColor ?? CalendarEvent.defaultCategoryColor,
         startMinutes: _startMinutes,
@@ -611,6 +655,7 @@ class _AddEventFormState extends State<AddEventForm>
         title: title,
         date: days.first,
         memo: _memo.text.trim(),
+        checklist: _checklistOf(),
         categoryId: categoryId,
         categoryName: _categoryName,
         categoryColor: _categoryColor,
@@ -630,6 +675,7 @@ class _AddEventFormState extends State<AddEventForm>
     }
     final initial = widget.initial;
     final memo = _memo.text.trim();
+    final checklist = _checklistOf();
     final categoryId = _categoryId;
     final categoryName = _categoryName!;
     final categoryColor = _categoryColor!;
@@ -653,6 +699,7 @@ class _AddEventFormState extends State<AddEventForm>
           title: title,
           date: days.first,
           memo: memo,
+          checklist: checklist,
           categoryId: categoryId,
           categoryName: categoryName,
           categoryColor: categoryColor,
@@ -702,6 +749,7 @@ class _AddEventFormState extends State<AddEventForm>
           title: title,
           date: day,
           memo: memo,
+          checklist: checklist,
           categoryId: categoryId,
           categoryName: categoryName,
           categoryColor: categoryColor,
@@ -800,6 +848,27 @@ class _AddEventFormState extends State<AddEventForm>
                 ),
               ),
             ),
+            ClipRect(
+              child: SizeTransition(
+                sizeFactor: _checklistFade,
+                alignment: Alignment.topCenter,
+                child: FadeTransition(
+                  opacity: _checklistFade,
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 6),
+                    child: IgnorePointer(
+                      ignoring: !_checklistOpen,
+                      child: EventChecklistEditor(
+                        key: _checklistKey,
+                        initial: widget.initial?.checklist ?? const [],
+                        color: _accent,
+                        readOnly: !allowExtra,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
             const SizedBox(height: 5),
             Row(
               children: [
@@ -865,6 +934,20 @@ class _AddEventFormState extends State<AddEventForm>
                             asset: _memoOpen
                                 ? AppIcons.memo
                                 : AppIcons.memoOutlined,
+                            width: 20,
+                            height: 20,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        EventActionIcon(
+                          label: AppStrings.checklistAction,
+                          color: _accent,
+                          selected: _checklistOpen,
+                          onPressed: _toggleChecklist,
+                          child: AppAssetImage(
+                            asset: _checklistOpen
+                                ? AppIcons.checklist
+                                : AppIcons.checklistOutlined,
                             width: 20,
                             height: 20,
                           ),

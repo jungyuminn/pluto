@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:pluto/domain/entities/event_checklist_item.dart';
 
 class CalendarEvent {
   const CalendarEvent({
@@ -6,6 +7,7 @@ class CalendarEvent {
     required this.title,
     required this.date,
     this.memo = '',
+    this.checklist = const [],
     this.categoryId,
     this.categoryName = defaultCategoryName,
     this.categoryColor = defaultCategoryColor,
@@ -30,6 +32,7 @@ class CalendarEvent {
   final String title;
   final DateTime date;
   final String memo;
+  final List<EventChecklistItem> checklist;
   final String? categoryId;
   final String categoryName;
   final int categoryColor;
@@ -67,6 +70,9 @@ class CalendarEvent {
   }
 
   bool get hasTime => startMinutes != null;
+
+  bool get hasChecklist =>
+      checklist.any((item) => item.text.trim().isNotEmpty);
 
   String? get timeLabel => labelTime();
 
@@ -174,6 +180,7 @@ class CalendarEvent {
     String? title,
     DateTime? date,
     String? memo,
+    List<EventChecklistItem>? checklist,
     String? categoryId,
     String? categoryName,
     int? categoryColor,
@@ -197,6 +204,7 @@ class CalendarEvent {
       title: title ?? this.title,
       date: date ?? this.date,
       memo: memo ?? this.memo,
+      checklist: checklist ?? this.checklist,
       categoryId: categoryId ?? this.categoryId,
       categoryName: categoryName ?? this.categoryName,
       categoryColor: categoryColor ?? this.categoryColor,

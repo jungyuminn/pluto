@@ -105,6 +105,7 @@ class CalendarEventRepositoryImpl implements CalendarEventRepository {
           item.copyWith(
             title: patch.title,
             memo: patch.memo,
+            checklist: patch.checklist,
             categoryId: patch.categoryId,
             categoryName: patch.categoryName,
             categoryColor: patch.categoryColor,

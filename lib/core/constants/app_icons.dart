@@ -10,6 +10,8 @@ class AppIcons {
   static const cursor = 'assets/icons/cursor.svg';
   static const memo = 'assets/icons/memo.svg';
   static const memoOutlined = 'assets/icons/memo_outlined.svg';
+  static const checklist = 'assets/icons/checklist.svg';
+  static const checklistOutlined = 'assets/icons/checklist_outlined.svg';
   static const wallet = 'assets/icons/wallet.svg';
   static const walletOutlined = 'assets/icons/wallet_outlined.svg';
   static const quickView = 'assets/icons/quick_view.svg';

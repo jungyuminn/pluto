@@ -1242,11 +1242,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   onPressed: _importIosCalendar,
                 )
               else
-                _SettingsTile(
-                  label: AppStrings.importSamsungCalendar,
-                  chevron: true,
-                  onPressed: _importSamsungCalendar,
-                ),
+              _SettingsTile(
+                label: AppStrings.importSamsungCalendar,
+                chevron: true,
+                onPressed: _importSamsungCalendar,
+              ),
             ],
           ),
             const SizedBox(height: 24),
@@ -1270,9 +1270,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    _SettingsTile(
+              _SettingsTile(
                       label: AppStrings.widgetFontSize,
-                      chevron: true,
+                chevron: true,
                       expanded: _widgetFontSliderOpen,
                       onPressed: () => setState(
                         () => _widgetFontSliderOpen = !_widgetFontSliderOpen,
@@ -1295,9 +1295,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               onChanged: _setWidgetFontScale,
                               onChangeEnd: _commitWidgetFontScale,
                               smoothPreview: true,
-                            ),
-                          ],
-                        ),
+              ),
+            ],
+          ),
                       ),
                     ),
                   ],
@@ -2861,20 +2861,103 @@ class _MineThemesPanel extends StatefulWidget {
   State<_MineThemesPanel> createState() => _MineThemesPanelState();
 }
 
-class _MineThemesPanelState extends State<_MineThemesPanel> {
+class _MineThemesPanelState extends State<_MineThemesPanel>
+    with TickerProviderStateMixin {
   final _openId = ValueNotifier<String?>(null);
+  final _reveals = <String, AnimationController>{};
+  final _hiding = <String>{};
+  final _items = <UserTheme>[];
+  ThemePreference? _theme;
+  var _bootstrapped = false;
+  static const _shift = Duration(milliseconds: 340);
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final theme = AppScope.of(context).themePreference;
+    if (_theme != theme) {
+      _theme?.removeListener(_onTheme);
+      _theme = theme;
+      theme.addListener(_onTheme);
+    }
+    if (_bootstrapped) return;
+    _bootstrapped = true;
+    _items
+      ..clear()
+      ..addAll(theme.customThemes);
+    for (final item in _items) {
+      _reveals[item.id] = AnimationController(
+        vsync: this,
+        duration: _shift,
+      )..value = 1;
+    }
+  }
 
   @override
   void dispose() {
+    _theme?.removeListener(_onTheme);
+    for (final reveal in _reveals.values) {
+      reveal.dispose();
+    }
     _openId.dispose();
     super.dispose();
+  }
+
+  void _onTheme() {
+    if (!mounted) return;
+    final next = _theme?.customThemes ?? const <UserTheme>[];
+    final nextById = {for (final item in next) item.id: item};
+    final shown = {for (final item in _items) item.id};
+    final added = [
+      for (final item in next)
+        if (!shown.contains(item.id)) item,
+    ];
+    final removed = [
+      for (final item in _items)
+        if (!nextById.containsKey(item.id) && !_hiding.contains(item.id))
+          item.id,
+    ];
+    for (final item in added) {
+      final index = next.indexWhere((theme) => theme.id == item.id);
+      _items.insert(index.clamp(0, _items.length), item);
+      _reveals[item.id] = AnimationController(
+        vsync: this,
+        duration: _shift,
+      )..forward();
+    }
+    for (final id in removed) {
+      unawaited(_collapse(id));
+    }
+    for (var i = 0; i < _items.length; i++) {
+      final fresh = nextById[_items[i].id];
+      if (fresh != null) _items[i] = fresh;
+    }
+    if (added.isEmpty && removed.isEmpty && _hiding.isEmpty) {
+      _items
+        ..clear()
+        ..addAll(next);
+    }
+    setState(() {});
+  }
+
+  Future<void> _collapse(String id) async {
+    if (!_hiding.add(id)) return;
+    final reveal = _reveals[id];
+    if (reveal != null) {
+      await reveal.reverse();
+    }
+    if (!mounted) return;
+    _items.removeWhere((item) => item.id == id);
+    _reveals.remove(id)?.dispose();
+    _hiding.remove(id);
+    setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = AppScope.of(context).themePreference;
     final colors = AppColors.of(context);
-    final items = theme.customThemes;
+    final items = _items;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -2931,6 +3014,7 @@ class _MineThemesPanelState extends State<_MineThemesPanel> {
                       HapticFeedback.mediumImpact();
                     },
                     onReorder: (oldIndex, newIndex) {
+                      if (_hiding.isNotEmpty) return;
                       if (newIndex > oldIndex) newIndex -= 1;
                       final next = [...items];
                       final moved = next.removeAt(oldIndex);
@@ -2940,10 +3024,24 @@ class _MineThemesPanelState extends State<_MineThemesPanel> {
                     itemBuilder: (context, index) {
                       final item = items[index];
                       final selected = theme.customTheme?.id == item.id;
+                      final reveal = _reveals[item.id];
+                      final shift = reveal == null
+                          ? const AlwaysStoppedAnimation(1.0)
+                          : CurvedAnimation(
+                              parent: reveal,
+                              curve: Curves.easeInOutCubic,
+                              reverseCurve: Curves.easeInOutCubic,
+                            );
                       return ReorderableDelayedDragStartListener(
                         key: ValueKey(item.id),
                         index: index,
-                        child: Column(
+                        child: ClipRect(
+                          child: SizeTransition(
+                            sizeFactor: shift,
+                            axisAlignment: -1,
+                            child: FadeTransition(
+                              opacity: shift,
+                              child: Column(
                           children: [
                             if (index > 0)
                               Padding(
@@ -2990,6 +3088,9 @@ class _MineThemesPanelState extends State<_MineThemesPanel> {
                             ),
                           ],
                         ),
+                            ),
+                          ),
+                        ),
                       );
                     },
                   ),
@@ -3008,8 +3109,10 @@ class _MineThemesPanelState extends State<_MineThemesPanel> {
       builder: (context) => _DeleteCustomThemeDialog(name: item.name),
     );
     if (confirmed != true || !context.mounted) return;
+    await _collapse(item.id);
+    if (!context.mounted) return;
     await AppScope.of(context).themePreference.deleteCustomTheme(item.id);
-                              await HomeScreenWidgetService.instance.sync();
+    await HomeScreenWidgetService.instance.sync();
   }
 }
 

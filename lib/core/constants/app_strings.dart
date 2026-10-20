@@ -842,6 +842,7 @@ class AppStrings {
   static const missingCategoryBody = '카테고리명은 필수사항이에요!';
   static const dateAction = '날짜';
   static const memoAction = '메모';
+  static const checklistAction = '체크리스트';
   static const emojiAction = '스티커';
   static const emojiClear = '스티커 떼어내기';
   static const roundAction = '전형';

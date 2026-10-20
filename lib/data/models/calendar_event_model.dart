@@ -1,4 +1,5 @@
 import 'package:pluto/domain/entities/calendar_event.dart';
+import 'package:pluto/domain/entities/event_checklist_item.dart';
 
 class CalendarEventModel {
   CalendarEventModel._();
@@ -9,6 +10,7 @@ class CalendarEventModel {
       title: json['title'] as String,
       date: _parseDate(json['date'] as String),
       memo: json['memo'] as String? ?? '',
+      checklist: EventChecklistItem.listFrom(json['checklist']),
       categoryId: json['categoryId'] as String?,
       categoryName: json['categoryName'] as String? ??
           CalendarEvent.defaultCategoryName,
@@ -36,6 +38,8 @@ class CalendarEventModel {
       'title': event.title,
       'date': _formatDate(event.day),
       'memo': event.memo,
+      if (event.hasChecklist)
+        'checklist': EventChecklistItem.listToJson(event.checklist),
       'categoryId': event.categoryId,
       'categoryName': event.categoryName,
       'categoryColor': event.categoryColor,

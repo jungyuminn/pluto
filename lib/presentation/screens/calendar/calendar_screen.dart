@@ -173,13 +173,9 @@ class CalendarScreenState extends State<CalendarScreen>
   void didUpdateWidget(CalendarScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.visible && !oldWidget.visible) {
-      _restoreVisibleMonth();
+      goToToday(animate: false);
       _reload();
     }
-  }
-
-  void _restoreVisibleMonth() {
-    _showDays(_visibleMonth);
   }
 
   @override
@@ -216,7 +212,7 @@ class CalendarScreenState extends State<CalendarScreen>
       (month ?? _visibleMonth).year,
       (month ?? _visibleMonth).month,
     );
-    _attachPagesAt(_daysMonth);
+    _attachPagesAt(target);
     if (!mounted) return;
     setState(() => _zoom = CalendarZoomLevel.days);
     await WidgetsBinding.instance.endOfFrame;
@@ -251,15 +247,17 @@ class CalendarScreenState extends State<CalendarScreen>
     CalendarDayDropTarget.scrollToTop(animate: animate);
     final now = DateTime.now();
     final current = DateTime(now.year, now.month);
-    final onToday = _zoom == CalendarZoomLevel.days &&
-        _visibleMonth.year == current.year &&
-        _visibleMonth.month == current.month;
-    if (onToday) return;
+    _daysMonth = current;
     if (_zoom != CalendarZoomLevel.days) {
       _showCurrentMonth(jump: true);
       return;
     }
     if (!animate) {
+      _jumpToMonth(current);
+      return;
+    }
+    if (_visibleMonth.year == current.year &&
+        _visibleMonth.month == current.month) {
       _jumpToMonth(current);
       return;
     }
@@ -327,8 +325,10 @@ class CalendarScreenState extends State<CalendarScreen>
     }
     if (_visibleMonth.year == target.year &&
         _visibleMonth.month == target.month) {
+      _daysMonth = target;
       return;
     }
+    _daysMonth = target;
     if (mounted) setState(() => _visibleMonth = target);
   }
 

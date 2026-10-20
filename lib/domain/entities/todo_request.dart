@@ -1,5 +1,6 @@
 import 'package:pluto/domain/entities/calendar_event.dart';
 import 'package:pluto/domain/entities/event_category.dart';
+import 'package:pluto/domain/entities/event_checklist_item.dart';
 import 'package:pluto/domain/entities/friend_profile.dart';
 
 class TodoRequestItem {
@@ -18,6 +19,7 @@ class TodoRequestItem {
     this.fromPhotoURL = '',
     this.toPhotoURL = '',
     this.memo = '',
+    this.checklist = const [],
     this.categoryName = CalendarEvent.defaultCategoryName,
     this.categoryColor = CalendarEvent.defaultCategoryColor,
     this.startMinutes,
@@ -44,6 +46,7 @@ class TodoRequestItem {
   final String title;
   final DateTime date;
   final String memo;
+  final List<EventChecklistItem> checklist;
   final String categoryName;
   final int categoryColor;
   final int? startMinutes;
@@ -188,6 +191,7 @@ class TodoRequestItem {
       title: title,
       date: date,
       memo: memo,
+      checklist: checklist,
       categoryName: categoryName,
       categoryColor: categoryColor,
       startMinutes: startMinutes,
@@ -243,6 +247,9 @@ class TodoRequestItem {
           title: title,
           date: day,
           memo: memo,
+          checklist: checklist.isNotEmpty
+              ? checklist
+              : (prev?.checklist ?? const []),
           categoryId: prev?.categoryId ?? fallback.id,
           categoryName: prev?.categoryName ?? fallback.name,
           categoryColor: prev?.categoryColor ?? fallback.color,
@@ -276,6 +283,7 @@ class TodoRequestItem {
       title: '${data['title'] ?? ''}'.trim(),
       date: days.first,
       memo: '${data['memo'] ?? ''}',
+      checklist: EventChecklistItem.listFrom(data['checklist']),
       categoryName: '${data['categoryName'] ?? ''}'.trim().isEmpty
           ? CalendarEvent.defaultCategoryName
           : '${data['categoryName']}'.trim(),

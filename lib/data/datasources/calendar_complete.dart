@@ -1,6 +1,7 @@
 import 'package:pluto/core/constants/app_strings.dart';
 import 'package:pluto/data/datasources/friend_service.dart';
 import 'package:pluto/domain/entities/calendar_event.dart';
+import 'package:pluto/domain/entities/event_checklist_item.dart';
 import 'package:pluto/domain/entities/job_application.dart';
 import 'package:pluto/domain/usecases/update_calendar_event.dart';
 import 'package:pluto/domain/usecases/update_job_application.dart';
@@ -127,6 +128,54 @@ Future<CalendarEvent> _writeJobCompleteToggle({
   rounds[index] = round.copyWith(completed: nextCompleted);
   await updater(application.copyWith(rounds: rounds));
   return event.copyWith(completed: nextCompleted);
+}
+
+Future<CalendarEvent> saveChecklistToggle({
+  required UpdateCalendarEvent updater,
+  required CalendarEvent event,
+  required String itemId,
+}) {
+  final key = _toggleKey(event);
+  final previous = _toggleChain[key];
+  late final Future<CalendarEvent> run;
+  run = _writeChecklistToggle(
+    updater: updater,
+    event: event,
+    itemId: itemId,
+    previous: previous,
+  );
+  _toggleChain[key] = run;
+  return run.whenComplete(() {
+    if (identical(_toggleChain[key], run)) _toggleChain.remove(key);
+  });
+}
+
+Future<CalendarEvent> _writeChecklistToggle({
+  required UpdateCalendarEvent updater,
+  required CalendarEvent event,
+  required String itemId,
+  required Future<CalendarEvent>? previous,
+}) async {
+  var source = event;
+  if (previous != null) {
+    try {
+      source = await previous;
+    } catch (_) {}
+  }
+  final items = <EventChecklistItem>[
+    for (final item in source.checklist)
+      if (item.id == itemId)
+        item.copyWith(completed: !item.completed)
+      else
+        item,
+  ];
+  final next = source.copyWith(checklist: items);
+  if (source.isRepeat || (source.isShared && !source.isRange)) {
+    await updater.instance(next);
+  } else {
+    await updater(next);
+  }
+  return next;
 }
 
 String? sharedCompleteToast(CalendarEvent before, CalendarEvent next) {

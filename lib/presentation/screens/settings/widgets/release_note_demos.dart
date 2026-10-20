@@ -8,6 +8,8 @@ import 'package:pluto/core/constants/app_strings.dart';
 import 'package:pluto/core/theme/app_colors.dart';
 import 'package:pluto/core/theme/app_skin_background.dart';
 import 'package:pluto/data/datasources/theme_preference.dart';
+import 'package:pluto/core/calendar/month_grid.dart';
+import 'package:pluto/domain/entities/calendar_event.dart';
 import 'package:pluto/domain/entities/event_category.dart';
 import 'package:pluto/domain/entities/friend_profile.dart';
 import 'package:pluto/domain/entities/ledger_entry.dart';
@@ -22,8 +24,10 @@ import 'package:pluto/presentation/screens/calendar/widgets/calendar_event_label
 import 'package:pluto/presentation/screens/calendar/widgets/day_event_label.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/event_action_icon.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/event_category_chip.dart';
+import 'package:pluto/presentation/screens/calendar/widgets/event_complete_button.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/event_date_chip.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/event_time_chip.dart';
+import 'package:pluto/presentation/screens/home/widgets/leftover_todo_card.dart';
 import 'package:pluto/presentation/widgets/overflow_menu.dart';
 import 'package:pluto/presentation/widgets/themed_asset.dart';
 
@@ -201,6 +205,11 @@ enum ReleaseDemo {
   notifyDots,
   themePhotoStay,
   customThemeNav,
+  eventChecklist,
+  jobComplete,
+  goneFonts,
+  todayCircleTheme,
+  calendarMonthReset,
   feature,
   fix,
 }
@@ -352,7 +361,22 @@ ReleaseDemo releaseDemoFor(String text, {required bool isFix}) {
     if (text.contains('테마 속도 바') || text.contains('속도 바가 끊기')) {
       return ReleaseDemo.themeMotion;
     }
+    if (text.contains('이번 달이 아니던')) {
+      return ReleaseDemo.calendarMonthReset;
+    }
     return ReleaseDemo.fix;
+  }
+  if (text.contains('체크리스트를 넣을')) {
+    return ReleaseDemo.eventChecklist;
+  }
+  if (text.contains('지원서에도 완료')) {
+    return ReleaseDemo.jobComplete;
+  }
+  if (text.contains('폰트가 사라졌어요')) {
+    return ReleaseDemo.goneFonts;
+  }
+  if (text.contains('오늘 날짜의 동그라미')) {
+    return ReleaseDemo.todayCircleTheme;
   }
   if (text.contains('앞에 점') || text.contains('여러 할 일')) {
     return ReleaseDemo.notifyDots;
@@ -920,6 +944,11 @@ class ReleaseDemoView extends StatelessWidget {
       ReleaseDemo.notifyDots => const _NotifyDotsDemo(),
       ReleaseDemo.themePhotoStay => const _ThemePhotoStayDemo(),
       ReleaseDemo.customThemeNav => const _CustomThemeNavDemo(),
+      ReleaseDemo.eventChecklist => const _EventChecklistDemo(),
+      ReleaseDemo.jobComplete => const _JobCompleteDemo(),
+      ReleaseDemo.goneFonts => const _GoneFontsDemo(),
+      ReleaseDemo.todayCircleTheme => const _TodayCircleThemeDemo(),
+      ReleaseDemo.calendarMonthReset => const _CalendarMonthResetDemo(),
       ReleaseDemo.feature => const _FeatureDemo(),
       ReleaseDemo.fix => const _FixDemo(),
     };
@@ -15599,6 +15628,475 @@ class _FixDemo extends StatelessWidget {
               key: ValueKey(fixed),
               size: 48,
               color: fixed ? const Color(0xFF22C55E) : const Color(0xFFEF4444),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _EventChecklistDemo extends StatelessWidget {
+  const _EventChecklistDemo();
+
+  static const _accent = Color(0xFF3B82F6);
+  static final _date = DateTime(2026, 10, 21);
+  static const _items = ['우유', '계란'];
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 6400,
+      boxHeight: 236,
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final font = AppFonts.of(context);
+        final press = _pulse(t, 0.16, 0.26, 0.38);
+        final open = Curves.easeOutCubic.transform(_gate(t, 0.28, 0.46));
+        void noop() {}
+        return Align(
+          alignment: Alignment.bottomCenter,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: colors.tint(_accent, 0.14),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(24),
+              ),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x33000000),
+                  blurRadius: 16,
+                  offset: Offset(0, -2),
+                ),
+              ],
+            ),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    '장보기',
+                    style: TextStyle(
+                      fontFamily: font,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                      color: colors.text,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          physics: const NeverScrollableScrollPhysics(),
+                          child: Row(
+                            children: [
+                              EventCategoryChip(
+                                name: '장보기',
+                                color: _accent,
+                                onPressed: noop,
+                              ),
+                              const SizedBox(width: 4),
+                              EventDateChip(
+                                date: _date,
+                                color: _accent,
+                                onPressed: noop,
+                              ),
+                              const SizedBox(width: 4),
+                              EventActionIcon(
+                                label: AppStrings.memoAction,
+                                color: _accent,
+                                onPressed: noop,
+                                child: const AppAssetImage(
+                                  asset: AppIcons.memoOutlined,
+                                  width: 20,
+                                  height: 20,
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              Transform.scale(
+                                scale: 1 - press * 0.08,
+                                child: EventActionIcon(
+                                  label: AppStrings.checklistAction,
+                                  color: _accent,
+                                  selected: open > 0.4,
+                                  onPressed: noop,
+                                  child: AppAssetImage(
+                                    asset: open > 0.4
+                                        ? AppIcons.checklist
+                                        : AppIcons.checklistOutlined,
+                                    width: 20,
+                                    height: 20,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      SaveCompanyButton(onPressed: noop, color: _accent),
+                    ],
+                  ),
+                  ClipRect(
+                    child: Align(
+                      alignment: Alignment.topCenter,
+                      heightFactor: open,
+                      child: Opacity(
+                        opacity: open,
+                        child: Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: Column(
+                            children: [
+                              for (var i = 0; i < _items.length; i++)
+                                _ChecklistDemoRow(
+                                  text: _items[i],
+                                  color: _accent,
+                                  reveal: Curves.easeOutCubic.transform(
+                                    _gate(t, 0.34 + i * 0.08, 0.50 + i * 0.08),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _ChecklistDemoRow extends StatelessWidget {
+  const _ChecklistDemoRow({
+    required this.text,
+    required this.color,
+    required this.reveal,
+  });
+
+  final String text;
+  final Color color;
+  final double reveal;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    return ClipRect(
+      child: Align(
+        alignment: Alignment.topCenter,
+        heightFactor: reveal,
+        child: Opacity(
+          opacity: reveal,
+          child: SizedBox(
+            height: 36,
+            child: Row(
+              children: [
+                EventCompleteButton(
+                  completed: false,
+                  color: color,
+                  onPressed: () {},
+                ),
+                Expanded(
+                  child: Text(
+                    text,
+                    style: TextStyle(
+                      fontFamily: AppFonts.of(context),
+                      fontWeight: FontWeight.w700,
+                      fontSize: 15,
+                      color: colors.secondary,
+                      decoration: TextDecoration.none,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _JobCompleteDemo extends StatelessWidget {
+  const _JobCompleteDemo();
+
+  static final _today = DateTime(2026, 10, 21);
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 4800,
+      boxHeight: 220,
+      builder: (context, t) {
+        final done = t >= 0.38;
+        final press = _pulse(t, 0.22, 0.32, 0.44);
+        return Stack(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+              child: LeftoverTodoCard(
+                event: CalendarEvent(
+                  id: 'demo-job',
+                  title: '서류',
+                  date: DateTime(2026, 10, 10),
+                  categoryName: '플루토',
+                  isJob: true,
+                  completed: done,
+                ),
+                today: _today,
+                onEdit: () {},
+                onPostpone: () {},
+                onComplete: () {},
+                onDelete: () async => false,
+              ),
+            ),
+            if (press > 0)
+              Positioned(
+                right: 36,
+                bottom: 28,
+                child: _Finger(pressed: press),
+              ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _GoneFontsDemo extends StatelessWidget {
+  const _GoneFontsDemo();
+
+  static const _gone = [
+    '페이퍼로지',
+    '더잠실체',
+    '모나체',
+    '오뮤체',
+    '아기상어체',
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 5600,
+      boxHeight: 236,
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final font = AppFonts.of(context);
+        final hide = Curves.easeInOutCubic.transform(_gate(t, 0.28, 0.72));
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(18, 16, 18, 12),
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: colors.card,
+              borderRadius: BorderRadius.circular(24),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _FontDemoTile(
+                    label: '프리텐다드',
+                    font: font,
+                    colors: colors,
+                    checked: true,
+                  ),
+                  for (var i = 0; i < _gone.length; i++)
+                    ClipRect(
+                      child: Align(
+                        alignment: Alignment.topCenter,
+                        heightFactor: 1 - hide,
+                        child: Opacity(
+                          opacity: 1 - hide,
+                          child: _FontDemoTile(
+                            label: _gone[i],
+                            font: font,
+                            colors: colors,
+                          ),
+                        ),
+                      ),
+                    ),
+                  _FontDemoTile(
+                    label: '수트',
+                    font: font,
+                    colors: colors,
+                    divider: false,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _FontDemoTile extends StatelessWidget {
+  const _FontDemoTile({
+    required this.label,
+    required this.font,
+    required this.colors,
+    this.checked = false,
+    this.divider = true,
+  });
+
+  final String label;
+  final String? font;
+  final AppColors colors;
+  final bool checked;
+  final bool divider;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 8, 16, 8),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontFamily: font,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w400,
+                    color: colors.text,
+                  ),
+                ),
+              ),
+              if (checked)
+                Icon(Icons.check_rounded, size: 22, color: colors.text),
+            ],
+          ),
+        ),
+        if (divider)
+          Padding(
+            padding: const EdgeInsets.only(left: 20),
+            child: Divider(
+              height: 1,
+              thickness: 0.5,
+              color: colors.border,
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class _TodayCircleThemeDemo extends StatelessWidget {
+  const _TodayCircleThemeDemo();
+
+  static const _accents = [
+    Color(0xFF40A6FF),
+    Color(0xFFFF7AD9),
+    Color(0xFF34D399),
+    Color(0xFFFF8A65),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 5600,
+      boxHeight: 132,
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final from = _accents[(t * _accents.length).floor() % _accents.length];
+        final to = _accents[((t * _accents.length).floor() + 1) % _accents.length];
+        final p = (t * _accents.length) % 1;
+        final accent = Color.lerp(from, to, Curves.easeInOutCubic.transform(p))!;
+        final now = DateTime.now();
+        final sunday = DateTime(now.year, now.month, now.day - now.weekday % 7);
+        final week = [
+          for (var i = 0; i < 7; i++)
+            CalendarDay(
+              date: DateTime(sunday.year, sunday.month, sunday.day + i),
+              inMonth: true,
+            ),
+        ];
+        return Theme(
+          data: Theme.of(context).copyWith(
+            extensions: [
+              colors.copyWith(accent: accent, accentBright: accent),
+            ],
+          ),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                for (final day in week)
+                  Expanded(child: CalendarDayCell(day: day)),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _CalendarMonthResetDemo extends StatelessWidget {
+  const _CalendarMonthResetDemo();
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 6400,
+      boxHeight: 196,
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final font = AppFonts.of(context);
+        final away = Curves.easeInCubic.transform(_gate(t, 0.28, 0.44));
+        final back = Curves.easeOutCubic.transform(_gate(t, 0.56, 0.74));
+        final thisMonth = t >= 0.56;
+        final shown = thisMonth ? back : 1 - away;
+        final now = DateTime.now();
+        final month = thisMonth
+            ? DateTime(now.year, now.month)
+            : DateTime(now.year, now.month + 2);
+        final days = MonthGrid.daysFor(month).take(14).toList();
+        return Opacity(
+          opacity: shown,
+          child: Transform.translate(
+            offset: Offset(0, thisMonth ? 10 * (1 - back) : 8 * away),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
+              child: Column(
+                children: [
+                  Text(
+                    '${month.month}월',
+                    style: TextStyle(
+                      fontFamily: font,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                      color: colors.text,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Expanded(
+                    child: GridView.count(
+                      crossAxisCount: 7,
+                      physics: const NeverScrollableScrollPhysics(),
+                      children: [
+                        for (final day in days) CalendarDayCell(day: day),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         );

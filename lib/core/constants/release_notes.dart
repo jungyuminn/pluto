@@ -17,6 +17,18 @@ class ReleaseNote {
 abstract final class ReleaseNotes {
   static const all = [
     ReleaseNote(
+      version: '1.5.7',
+      items: [
+        '할 일에 체크리스트를 넣을 수 있어요',
+        '지원서에도 완료 표시를 할 수 있어요',
+        '페이퍼로지, 더잠실체, 모나체, 오뮤체, 아기상어체 폰트가 사라졌어요',
+        '오늘 날짜의 동그라미가 테마 색을 따라가요',
+      ],
+      fixes: [
+        '다른 화면을 갔다가 오면 캘린더가 이번 달이 아니던 점을 고쳤어요',
+      ],
+    ),
+    ReleaseNote(
       version: '1.5.6',
       items: [
         '말랑솜사탕 테마가 생겼어요',

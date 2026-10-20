@@ -58,6 +58,7 @@ class CalendarEventMemoryRepository implements CalendarEventRepository {
       _items[i] = item.copyWith(
         title: patch.title,
         memo: patch.memo,
+        checklist: patch.checklist,
         categoryId: patch.categoryId,
         categoryName: patch.categoryName,
         categoryColor: patch.categoryColor,

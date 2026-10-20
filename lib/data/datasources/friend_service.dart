@@ -27,6 +27,7 @@ import 'package:pluto/data/datasources/day_emoji_store.dart';
 import 'package:pluto/data/models/calendar_event_model.dart';
 import 'package:pluto/domain/entities/calendar_event.dart';
 import 'package:pluto/domain/entities/event_category.dart';
+import 'package:pluto/domain/entities/event_checklist_item.dart';
 import 'package:pluto/domain/entities/friend_profile.dart';
 import 'package:pluto/domain/entities/todo_request.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -1054,6 +1055,7 @@ class FriendService {
     return a.id == b.id &&
         a.title == b.title &&
         a.memo.trim() == b.memo.trim() &&
+        _sameChecklist(a.checklist, b.checklist) &&
         a.day.year == b.day.year &&
         a.day.month == b.day.month &&
         a.day.day == b.day.day &&
@@ -1067,6 +1069,21 @@ class FriendService {
         a.categoryId == b.categoryId &&
         a.categoryName == b.categoryName &&
         a.categoryColor == b.categoryColor;
+  }
+
+  bool _sameChecklist(
+    List<EventChecklistItem> a,
+    List<EventChecklistItem> b,
+  ) {
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i].id != b[i].id ||
+          a[i].text != b[i].text ||
+          a[i].completed != b[i].completed) {
+        return false;
+      }
+    }
+    return true;
   }
 
   Future<void> _applySharedFallback(
@@ -1448,6 +1465,7 @@ class FriendService {
     required String title,
     required DateTime date,
     String memo = '',
+    List<EventChecklistItem> checklist = const [],
     String categoryName = CalendarEvent.defaultCategoryName,
     int categoryColor = CalendarEvent.defaultCategoryColor,
     int? startMinutes,
@@ -1466,6 +1484,7 @@ class FriendService {
       title: clean,
       date: allDays.first,
       memo: memo,
+      checklist: checklist,
       categoryName: categoryName,
       categoryColor: categoryColor,
       startMinutes: startMinutes,
@@ -1599,6 +1618,7 @@ class FriendService {
           title: event.title,
           date: day,
           memo: event.memo,
+          checklist: event.checklist,
           categoryId: event.categoryId,
           categoryName: event.categoryName,
           categoryColor: event.categoryColor,
@@ -1643,6 +1663,7 @@ class FriendService {
     required String title,
     required DateTime date,
     required String memo,
+    List<EventChecklistItem> checklist = const [],
     required String categoryName,
     required int categoryColor,
     int? startMinutes,
@@ -1677,6 +1698,8 @@ class FriendService {
       'dates': [for (final day in days ?? [date]) _date(day)],
       'dateMode': dateMode,
       'memo': memo.trim(),
+      if (checklist.isNotEmpty)
+        'checklist': EventChecklistItem.listToJson(checklist),
       'categoryName': categoryName.trim(),
       'categoryColor': categoryColor,
       'startMinutes': startMinutes,
@@ -1741,6 +1764,9 @@ class FriendService {
       'dates': [for (final day in allDays) _date(day)],
       'dateMode': mode,
       'memo': event.memo.trim(),
+      'checklist': event.hasChecklist
+          ? EventChecklistItem.listToJson(event.checklist)
+          : FieldValue.delete(),
       'startMinutes': event.startMinutes ?? FieldValue.delete(),
       'endMinutes': event.endMinutes ?? FieldValue.delete(),
       'updatedAt': DateTime.now().millisecondsSinceEpoch,

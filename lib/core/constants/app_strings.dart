@@ -91,6 +91,7 @@ class AppStrings {
   static const autoBackupMonthly = '한 달마다';
   static String autoBackupHint(String label) => '앱을 켜면 $label 자동으로 저장해요';
   static const appTutorial = '앱 둘러보기';
+  static const appReview = '앱 리뷰 남기기';
   static const appContact = '앱 문의하기';
   static const appContactEmail = 'pluto.app.help@gmail.com';
   static const appContactSubject = '플루토 문의';
@@ -121,6 +122,8 @@ class AppStrings {
   static const tutorialWelcomeTitle = '플루토에 처음 오셨네요!';
   static const tutorialWelcomeBody = '튜토리얼을 시작할까요?';
   static const tutorialWelcomeBodyDaily = '튜토리얼을 시작할까요?';
+  static const tutorialSkipHint =
+      '설정 > 앱 둘러보기에서 다시 볼 수 있어요';
   static const tutorialFollow = '따라 해보세요';
   static const tutorialAddTapTitle = '날짜를 눌러 추가';
   static const tutorialAddTapBody = '날짜 칸을 누르면 할 일을 추가할 수 있어요';
@@ -447,7 +450,7 @@ class AppStrings {
   static const settingsCalendarSyncHelp =
       '기본 캘린더에 있는 일정을 플루토의 캘린더로 가져와요. 가져올 기간을 고르고, 카테고리는 하나에 몰아넣거나 할 일마다 고를 수 있어요.';
   static const settingsAppHelp =
-      '릴리즈 노트에서 업데이트 내역을 읽고, 앱 사용법을 보거나, 문의 메일을 보내거나, 로그인·탈퇴할 수 있어요';
+      '릴리즈 노트에서 업데이트 내역을 읽고, 앱 사용법을 보거나, 문의 메일을 보내거나, 리뷰를 남기거나, 로그인·탈퇴할 수 있어요';
   static const settingsCalendarHelp = '캘린더의 첫 요일과 음력 날짜를 표시할 수 있어요';
   static const settingsCalendarHelpWithFontSize =
       '캘린더의 첫 요일과 음력 날짜, 할 일·지원서·날짜·라벨의 글자 크기를 바꿀 수 있어요';
@@ -826,6 +829,7 @@ class AppStrings {
   static const addEvent = '+ 할 일을 추가하세요';
   static const eventTitleHint = '할 일을 입력하세요';
   static const eventMemoHint = '메모를 입력하세요';
+  static const eventChecklistHint = '항목을 입력하세요';
   static const missingEventBody = '할 일, 날짜, 카테고리는 필수사항이에요!';
   static const categoryAction = '카테고리';
   static const addCategory = '추가';

@@ -64,8 +64,8 @@ class _EventCompleteButtonState extends State<EventCompleteButton>
           ? null
           : () => widget.onPressed!(),
       child: SizedBox(
-        width: 28,
-        height: widget.shared ? 52 : 28,
+        width: 36,
+        height: widget.shared ? 52 : 36,
         child: Center(
           child: AnimatedBuilder(
             animation: _burst,

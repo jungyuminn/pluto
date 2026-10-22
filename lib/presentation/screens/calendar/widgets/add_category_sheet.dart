@@ -170,9 +170,15 @@ class _AddCategorySheetState extends State<AddCategorySheet> {
                     ),
                   ),
                   const SizedBox(width: 12),
-                  SaveCompanyButton(
-                    onPressed: _saving ? () {} : _save,
-                    color: accent,
+                  ListenableBuilder(
+                    listenable: _name,
+                    builder: (context, _) {
+                      return SaveCompanyButton(
+                        ready: _name.text.trim().isNotEmpty,
+                        onPressed: _saving ? () {} : _save,
+                        color: accent,
+                      );
+                    },
                   ),
                 ],
               ),

@@ -192,7 +192,7 @@ class _PillBottomNavState extends State<PillBottomNav> {
                       width: barWidth,
                       height: PillBottomNav.barHeight,
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        padding: const EdgeInsets.symmetric(vertical: 5),
                         child: GestureDetector(
                           behavior: HitTestBehavior.translucent,
                           onHorizontalDragStart: (details) {

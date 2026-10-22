@@ -436,9 +436,15 @@ class _AddLicenseFormState extends State<AddLicenseForm>
                   ),
                 ),
                 const SizedBox(width: 8),
-                SaveCompanyButton(
-                  onPressed: _saving ? () {} : _save,
-                  color: accent,
+                ListenableBuilder(
+                  listenable: _name,
+                  builder: (context, _) {
+                    return SaveCompanyButton(
+                      ready: _name.text.trim().isNotEmpty && _hasCategory,
+                      onPressed: _saving ? () {} : _save,
+                      color: accent,
+                    );
+                  },
                 ),
               ],
             ),

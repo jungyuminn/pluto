@@ -203,7 +203,16 @@ class _RoundEditorSheetState extends State<RoundEditorSheet>
                         ),
                       ),
                       const SizedBox(width: 8),
-                      SaveCompanyButton(onPressed: _save, color: accent),
+                      ListenableBuilder(
+                        listenable: _name,
+                        builder: (context, _) {
+                          return SaveCompanyButton(
+                            ready: _name.text.trim().isNotEmpty,
+                            onPressed: _save,
+                            color: accent,
+                          );
+                        },
+                      ),
                     ],
                   ),
                 ],

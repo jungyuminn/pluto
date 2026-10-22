@@ -543,9 +543,19 @@ class _LongGoalEditSheetState extends State<LongGoalEditSheet>
                     curve: Curves.easeOutCubic,
                     tween: ColorTween(end: accent),
                     builder: (context, color, child) {
-                      return SaveCompanyButton(
-                        onPressed: _saving ? () {} : _save,
-                        color: color ?? accent,
+                      return ListenableBuilder(
+                        listenable: Listenable.merge([_title, _target]),
+                        builder: (context, _) {
+                          final target = _parse(_target.text);
+                          return SaveCompanyButton(
+                            ready: _title.text.trim().isNotEmpty &&
+                                target != null &&
+                                target > 0 &&
+                                _hasCategory,
+                            onPressed: _saving ? () {} : _save,
+                            color: color ?? accent,
+                          );
+                        },
                       );
                     },
                   ),

@@ -35,7 +35,7 @@ class _ReleaseNotesPageState extends State<ReleaseNotesPage> {
       ),
       body: PcLayout.constrainWidth(
         ListView(
-          padding: EdgeInsets.fromLTRB(16, top + 48, 16, 32),
+          padding: EdgeInsets.fromLTRB(20, top + 48, 20, 32),
           children: [
             DecoratedBox(
               decoration: BoxDecoration(
@@ -48,13 +48,10 @@ class _ReleaseNotesPageState extends State<ReleaseNotesPage> {
                   children: [
                     for (var i = 0; i < notes.length; i++) ...[
                       if (i > 0)
-                        Padding(
-                          padding: const EdgeInsets.only(left: 20),
-                          child: Divider(
-                            height: 1,
-                            thickness: 0.5,
-                            color: colors.border,
-                          ),
+                        Divider(
+                          height: 1,
+                          thickness: 0.5,
+                          color: colors.border,
                         ),
                       _VersionRow(
                         note: notes[i],

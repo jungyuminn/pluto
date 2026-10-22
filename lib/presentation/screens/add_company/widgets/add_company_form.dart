@@ -483,9 +483,16 @@ class _AddCompanyFormViewState extends State<AddCompanyForm>
                   ),
                 ),
                 const SizedBox(width: 8),
-                SaveCompanyButton(
-                  onPressed: _saving ? () {} : _save,
-                  color: _accent,
+                ListenableBuilder(
+                  listenable: _companyName,
+                  builder: (context, _) {
+                    return SaveCompanyButton(
+                      ready: _companyName.text.trim().isNotEmpty &&
+                          _hasCategory,
+                      onPressed: _saving ? () {} : _save,
+                      color: _accent,
+                    );
+                  },
                 ),
               ],
             ),

@@ -148,7 +148,9 @@ class _BannerBody extends StatelessWidget {
     final colors = AppColors.of(context);
     final defaultTheme = _classicDefault(context);
     final fill = defaultTheme
-        ? Color.lerp(colors.selected, Colors.white, 0.4)!
+        ? (colors.isDark
+            ? Color.lerp(colors.card, Colors.white, 0.06)!
+            : Color.lerp(colors.selected, Colors.white, 0.4)!)
         : colors.tint(colors.accent, 0.11);
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
@@ -164,7 +166,9 @@ class _BannerBody extends StatelessWidget {
                 onPressed: () => showCalendarFeatureIntro(context),
                 color: Colors.transparent,
                 pressedColor: defaultTheme
-                    ? Color.lerp(colors.selected, Colors.black, 0.08)!
+                    ? (colors.isDark
+                        ? Color.lerp(colors.card, Colors.white, 0.12)!
+                        : Color.lerp(colors.selected, Colors.black, 0.08)!)
                     : colors.tint(colors.accent, 0.26),
                 borderRadius: const BorderRadius.horizontal(
                   left: Radius.circular(18),

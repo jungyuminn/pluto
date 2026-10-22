@@ -17,8 +17,8 @@ class SlidingNavIndicator extends StatelessWidget {
   final double? left;
   final bool dragging;
 
-  static const width = 60.0;
-  static const height = 40.0;
+  static const width = 70.0;
+  static const height = 46.0;
   static const duration = Duration(milliseconds: 280);
 
   @override

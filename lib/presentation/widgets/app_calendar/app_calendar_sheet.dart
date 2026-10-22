@@ -733,12 +733,10 @@ class _HeaderBar extends StatelessWidget {
           ),
         ),
         const Spacer(),
-        Opacity(
-          opacity: canConfirm ? 1 : 0.35,
-          child: SaveCompanyButton(
-            onPressed: canConfirm ? onConfirm : () {},
-            color: accent,
-          ),
+        SaveCompanyButton(
+          ready: canConfirm,
+          onPressed: onConfirm,
+          color: accent,
         ),
       ],
     );

@@ -70,6 +70,8 @@ import 'package:pluto/presentation/screens/shell/widgets/pill_bottom_nav.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+const _settingsPageInset = 20.0;
+
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
 
@@ -592,6 +594,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
     tutorial.start(fromSettings: true);
   }
 
+  Future<void> _openAppReview() async {
+    final apple = defaultTargetPlatform == TargetPlatform.iOS ||
+        defaultTargetPlatform == TargetPlatform.macOS;
+    final uri = Uri.parse(
+      apple
+          ? 'https://apps.apple.com/app/id6816418137?action=write-review'
+          : 'https://play.google.com/store/apps/details?id=com.pluto.app',
+    );
+    try {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } catch (_) {}
+  }
+
   Future<void> _openAppContact() async {
     final uri = Uri(
       scheme: 'mailto',
@@ -852,7 +867,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
         Stack(
         children: [
           ListView(
-        padding: EdgeInsets.fromLTRB(16, top + 56, 16, 32),
+        padding: EdgeInsets.fromLTRB(
+          _settingsPageInset,
+          top + 56,
+          _settingsPageInset,
+          32,
+        ),
         children: [
           _SectionLabel(
             AppStrings.settingsThemeSection,
@@ -1054,13 +1074,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        Padding(
-                          padding: const EdgeInsets.only(left: 20),
-                          child: Divider(
-                            height: 1,
-                            thickness: 0.5,
-                            color: AppColors.of(context).border,
-                          ),
+                        Divider(
+                          height: 1,
+                          thickness: 0.5,
+                          color: AppColors.of(context).border,
                         ),
                         _SettingsSwitchTile(
                           label: AppStrings.timeHour24,
@@ -1329,6 +1346,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 chevron: true,
                 onPressed: _openAppContact,
               ),
+              _SettingsTile(
+                label: AppStrings.appReview,
+                chevron: true,
+                onPressed: _openAppReview,
+              ),
               StreamBuilder(
                 stream: AppAuthService.instance.authState,
                 initialData: AppAuthService.instance.user,
@@ -1366,13 +1388,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           );
                         },
                       ),
-                      Padding(
-                        padding: const EdgeInsets.only(left: 20),
-                        child: Divider(
-                          height: 1,
-                          thickness: 0.5,
-                          color: AppColors.of(context).border,
-                        ),
+                      Divider(
+                        height: 1,
+                        thickness: 0.5,
+                        color: AppColors.of(context).border,
                       ),
                       _SettingsTile(
                         label: AppStrings.accountDelete,
@@ -2713,7 +2732,12 @@ class _ThemeSettingsPageState extends State<_ThemeSettingsPage> {
             children: [
               SizedBox(height: top + 56),
               const Padding(
-                padding: EdgeInsets.fromLTRB(16, 0, 16, 8),
+                padding: EdgeInsets.fromLTRB(
+                  _settingsPageInset,
+                  0,
+                  _settingsPageInset,
+                  8,
+                ),
                 child: _ThemeLivePreview(),
               ),
               _ThemeMotionSlider(
@@ -2729,7 +2753,12 @@ class _ThemeSettingsPageState extends State<_ThemeSettingsPage> {
                 },
               ),
               Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                padding: const EdgeInsets.fromLTRB(
+                  _settingsPageInset,
+                  8,
+                  _settingsPageInset,
+                  0,
+                ),
                 child: SlidingKindBar(
                   values: AppSkinGroup.values,
                   selected: group,
@@ -2752,7 +2781,12 @@ class _ThemeSettingsPageState extends State<_ThemeSettingsPage> {
               Expanded(
                 child: ListView(
                   controller: _scroll,
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+                  padding: const EdgeInsets.fromLTRB(
+                    _settingsPageInset,
+                    16,
+                    _settingsPageInset,
+                    32,
+                  ),
                   children: [
                     AnimatedSize(
                       duration: const Duration(milliseconds: 280),
@@ -2976,13 +3010,10 @@ class _MineThemesPanelState extends State<_MineThemesPanel>
                   onPressed: widget.onCreate,
                 ),
                 if (items.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(left: 20),
-                    child: Divider(
-                      height: 1,
-                      thickness: 0.5,
-                      color: colors.border,
-                    ),
+                  Divider(
+                    height: 1,
+                    thickness: 0.5,
+                    color: colors.border,
                   ),
                 if (items.isNotEmpty)
                   ReorderableListView.builder(
@@ -3044,13 +3075,10 @@ class _MineThemesPanelState extends State<_MineThemesPanel>
                               child: Column(
                           children: [
                             if (index > 0)
-                              Padding(
-                                padding: const EdgeInsets.only(left: 20),
-                                child: Divider(
-                                  height: 1,
-                                  thickness: 0.5,
-                                  color: colors.border,
-                                ),
+                              Divider(
+                                height: 1,
+                                thickness: 0.5,
+                                color: colors.border,
                               ),
                             Stack(
                               children: [
@@ -3486,11 +3514,21 @@ class _CustomThemeEditorPageState extends State<_CustomThemeEditorPage> {
             children: [
               SizedBox(height: top + 56),
               Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                padding: const EdgeInsets.fromLTRB(
+                  _settingsPageInset,
+                  0,
+                  _settingsPageInset,
+                  8,
+                ),
                 child: _ThemeLivePreview(customTheme: _draft),
               ),
               Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                padding: const EdgeInsets.fromLTRB(
+                  _settingsPageInset,
+                  8,
+                  _settingsPageInset,
+                  0,
+                ),
                 child: SlidingKindBar(
                   values: const [
                     UserThemeKind.pattern,
@@ -3523,9 +3561,9 @@ class _CustomThemeEditorPageState extends State<_CustomThemeEditorPage> {
               Expanded(
                 child: ListView(
                   padding: EdgeInsets.fromLTRB(
+                    _settingsPageInset,
                     16,
-                    16,
-                    16,
+                    _settingsPageInset,
                     24 + bottom + MediaQuery.viewInsetsOf(context).bottom,
                   ),
                   children: [
@@ -3640,9 +3678,15 @@ class _CustomThemeEditorPageState extends State<_CustomThemeEditorPage> {
                       selected: _accent,
                       onSelected: (value) =>
                           setState(() => _accent = value),
-                      trailing: SaveCompanyButton(
-                        onPressed: _saving ? () {} : _save,
-                        color: color ?? accent,
+                      trailing: ListenableBuilder(
+                        listenable: _name,
+                        builder: (context, _) {
+                          return SaveCompanyButton(
+                            ready: _name.text.trim().isNotEmpty,
+                            onPressed: _saving ? () {} : _save,
+                            color: color ?? accent,
+                          );
+                        },
                       ),
                     ),
             ],
@@ -3749,7 +3793,12 @@ class _ThemeMotionSlider extends StatelessWidget {
       child: visible
           ? Padding(
               key: const ValueKey('motion'),
-              padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
+              padding: const EdgeInsets.fromLTRB(
+                _settingsPageInset,
+                4,
+                _settingsPageInset,
+                4,
+              ),
               child: DecoratedBox(
                 decoration: BoxDecoration(
                   color: cardColor,
@@ -4197,7 +4246,12 @@ class _FontSettingsPageState extends State<_FontSettingsPage> {
             children: [
               SizedBox(height: top + 56),
               Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                padding: const EdgeInsets.fromLTRB(
+                  _settingsPageInset,
+                  0,
+                  _settingsPageInset,
+                  8,
+                ),
                 child: FontScope(
                   typeface: font.typeface,
                   todoScale: AppFonts.todoScaleOf(context),
@@ -4213,7 +4267,12 @@ class _FontSettingsPageState extends State<_FontSettingsPage> {
               Expanded(
                 child: SingleChildScrollView(
                   controller: _scroll,
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+                  padding: const EdgeInsets.fromLTRB(
+                    _settingsPageInset,
+                    16,
+                    _settingsPageInset,
+                    32,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
@@ -4326,7 +4385,12 @@ class _FontSizeSettingsPage extends StatelessWidget {
           ),
           body: PcLayout.constrainWidth(
             ListView(
-            padding: EdgeInsets.fromLTRB(16, top + 56, 16, 32),
+            padding: EdgeInsets.fromLTRB(
+          _settingsPageInset,
+          top + 56,
+          _settingsPageInset,
+          32,
+        ),
             children: [
               DecoratedBox(
                 decoration: BoxDecoration(
@@ -4500,7 +4564,12 @@ class _TodoNotificationSettingsPageState
         Stack(
         children: [
           ListView(
-            padding: EdgeInsets.fromLTRB(16, top + 56, 16, 32),
+            padding: EdgeInsets.fromLTRB(
+          _settingsPageInset,
+          top + 56,
+          _settingsPageInset,
+          32,
+        ),
             children: [
               _SettingsCard(
                 children: [
@@ -4623,7 +4692,12 @@ class _SummaryNotificationSettingsPageState
         Stack(
         children: [
           ListView(
-            padding: EdgeInsets.fromLTRB(16, top + 56, 16, 32),
+            padding: EdgeInsets.fromLTRB(
+          _settingsPageInset,
+          top + 56,
+          _settingsPageInset,
+          32,
+        ),
             children: [
               _SettingsCard(
                 children: [
@@ -4752,7 +4826,12 @@ class _LeftoverNotificationSettingsPageState
         Stack(
         children: [
           ListView(
-            padding: EdgeInsets.fromLTRB(16, top + 56, 16, 32),
+            padding: EdgeInsets.fromLTRB(
+          _settingsPageInset,
+          top + 56,
+          _settingsPageInset,
+          32,
+        ),
             children: [
               _SettingsCard(
                 children: [
@@ -4871,7 +4950,12 @@ class _AutoBackupSettingsPageState extends State<_AutoBackupSettingsPage> {
         Stack(
         children: [
           ListView(
-            padding: EdgeInsets.fromLTRB(16, top + 56, 16, 32),
+            padding: EdgeInsets.fromLTRB(
+          _settingsPageInset,
+          top + 56,
+          _settingsPageInset,
+          32,
+        ),
             children: [
               _SettingsCard(
                 children: [
@@ -5140,13 +5224,10 @@ class _SettingsCard extends StatelessWidget {
             for (var i = 0; i < children.length; i++) ...[
               children[i],
               if (i != children.length - 1)
-                Padding(
-                  padding: const EdgeInsets.only(left: 20),
-                  child: Divider(
-                    height: 1,
-                    thickness: 0.5,
-                    color: AppColors.of(context).border,
-                  ),
+                Divider(
+                  height: 1,
+                  thickness: 0.5,
+                  color: AppColors.of(context).border,
                 ),
             ],
           ],

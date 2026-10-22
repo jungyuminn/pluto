@@ -758,11 +758,12 @@ class _AppPreview extends StatelessWidget {
         AppStrings.releaseNotesTitle,
         AppStrings.appTutorial,
         AppStrings.appContact,
+        AppStrings.appReview,
         AppStrings.accountLogin,
       ],
-      values: [ReleaseNotes.latestVersion, '', '', ''],
+      values: [ReleaseNotes.latestVersion, '', '', '', ''],
       chevron: true,
-      chevrons: const [true, true, true, true],
+      chevrons: const [true, true, true, true, true],
       sceneHeight: 276,
       scene: (context, selected) {
         return _HelpSceneFill(
@@ -774,10 +775,59 @@ class _AppPreview extends StatelessWidget {
                     ? const _FakeTutorialPeek()
                     : selected == 2
                         ? const _ContactHelpDemo()
-                        : const _AccountHelpDemo(),
+                        : selected == 3
+                            ? const _ReviewHelpDemo()
+                            : const _AccountHelpDemo(),
           ),
         );
       },
+    );
+  }
+}
+
+class _ReviewHelpDemo extends StatelessWidget {
+  const _ReviewHelpDemo();
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    final font = AppFonts.of(context);
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: colors.card,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: colors.shadow,
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+        border: Border.all(color: colors.border.withValues(alpha: 0.7)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 18, 16, 18),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.star_outline_rounded,
+              size: 28,
+              color: colors.accentBright,
+            ),
+            const SizedBox(height: 10),
+            Text(
+              AppStrings.appReview,
+              style: TextStyle(
+                fontFamily: font,
+                fontSize: 15,
+                fontWeight: FontWeight.w800,
+                color: colors.text,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

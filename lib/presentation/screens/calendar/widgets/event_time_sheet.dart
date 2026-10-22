@@ -106,18 +106,23 @@ class _EventTimeSheetState extends State<EventTimeSheet> {
     });
   }
 
-  void _save() {
+  bool get _canSave {
     final end = _endMinutes;
-    if (widget.requireEnd && end == null) {
-      _showInvalidHint();
-      return;
-    }
-    if (end != null && end <= _startMinutes) {
+    if (widget.requireEnd && end == null) return false;
+    if (end != null && end <= _startMinutes) return false;
+    return true;
+  }
+
+  void _save() {
+    if (!_canSave) {
       _showInvalidHint();
       return;
     }
     Navigator.of(context).pop(
-      EventTimePickResult(startMinutes: _startMinutes, endMinutes: end),
+      EventTimePickResult(
+        startMinutes: _startMinutes,
+        endMinutes: _endMinutes,
+      ),
     );
   }
 
@@ -209,7 +214,11 @@ class _EventTimeSheetState extends State<EventTimeSheet> {
                         ),
                       ),
                       const Spacer(),
-                      SaveCompanyButton(onPressed: _save, color: widget.color),
+                      SaveCompanyButton(
+                        ready: _canSave,
+                        onPressed: _save,
+                        color: widget.color,
+                      ),
                     ],
                   ),
                   const SizedBox(height: 14),

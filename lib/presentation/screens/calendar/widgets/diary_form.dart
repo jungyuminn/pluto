@@ -586,9 +586,17 @@ class _DiaryFormState extends State<DiaryForm> {
                     _DeleteDiaryButton(onPressed: _saving ? null : _delete),
                   ],
                   const SizedBox(width: 8),
-                  SaveCompanyButton(
-                    onPressed: _saving ? () {} : _save,
-                    color: accent,
+                  ListenableBuilder(
+                    listenable: _title,
+                    builder: (context, _) {
+                      return SaveCompanyButton(
+                        ready: _title.text.trim().isNotEmpty &&
+                            _daysToSave().isNotEmpty &&
+                            _hasCategory,
+                        onPressed: _saving ? () {} : _save,
+                        color: accent,
+                      );
+                    },
                   ),
                 ],
               ),

@@ -12,10 +12,12 @@ class SaveCompanyButton extends StatefulWidget {
     super.key,
     required this.onPressed,
     required this.color,
+    this.ready = true,
   });
 
   final VoidCallback onPressed;
   final Color color;
+  final bool ready;
 
   static const size = 40.0;
   static const _iconSize = 20.0;
@@ -54,6 +56,7 @@ class _SaveCompanyButtonState extends State<SaveCompanyButton> {
   }
 
   bool _handle(KeyEvent event) {
+    if (!widget.ready) return false;
     if (event is! KeyDownEvent) return false;
     if (event.logicalKey != LogicalKeyboardKey.enter &&
         event.logicalKey != LogicalKeyboardKey.numpadEnter) {
@@ -90,46 +93,66 @@ class _SaveCompanyButtonState extends State<SaveCompanyButton> {
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedAccent(
-      color: EventCategory.labelOf(widget.color, 0.1),
-      builder: (context, ink) {
-        return DecoratedBox(
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: ink,
-            boxShadow: [
-              BoxShadow(
-                color: ink.withValues(alpha: 0.26),
-                blurRadius: 7,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: PressBounce(
-            onPressed: widget.onPressed,
-            color: Colors.transparent,
-            pressedColor: Color.lerp(ink, Colors.black, 0.16)!,
-            borderRadius: BorderRadius.circular(999),
-            child: SizedBox(
-              width: SaveCompanyButton.size,
-              height: SaveCompanyButton.size,
-              child: Center(
-                child: ColorFiltered(
-                  colorFilter: const ColorFilter.mode(
-                    Colors.white,
-                    BlendMode.srcIn,
+    final ready = widget.ready;
+    return SizedBox(
+      width: SaveCompanyButton.size,
+      height: SaveCompanyButton.size,
+      child: AnimatedScale(
+        scale: ready ? 1 : 0.12,
+        duration: Duration(milliseconds: ready ? 340 : 280),
+        curve: ready
+            ? const Cubic(0.34, 1.72, 0.52, 1)
+            : const Cubic(0.36, 0, 0.66, -0.36),
+        child: AnimatedOpacity(
+          opacity: ready ? 1 : 0,
+          duration: Duration(milliseconds: ready ? 160 : 240),
+          curve: ready ? Curves.easeOut : const Interval(0.28, 1),
+          child: IgnorePointer(
+            ignoring: !ready,
+            child: AnimatedAccent(
+              color: EventCategory.labelOf(widget.color, 0.1),
+              builder: (context, ink) {
+                return DecoratedBox(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: ink,
+                    boxShadow: [
+                      BoxShadow(
+                        color: ink.withValues(alpha: 0.26),
+                        blurRadius: 7,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
                   ),
-                  child: AppAssetImage(
-                    asset: AppIcons.cursor,
-                    width: SaveCompanyButton._iconSize,
-                    height: SaveCompanyButton._iconSize,
+                  child: PressBounce(
+                    onPressed: widget.onPressed,
+                    color: Colors.transparent,
+                    pressedColor: Color.lerp(ink, Colors.black, 0.16)!,
+                    borderRadius: BorderRadius.circular(999),
+                    child: const SizedBox(
+                      width: SaveCompanyButton.size,
+                      height: SaveCompanyButton.size,
+                      child: Center(
+                        child: ColorFiltered(
+                          colorFilter: ColorFilter.mode(
+                            Colors.white,
+                            BlendMode.srcIn,
+                          ),
+                          child: AppAssetImage(
+                            asset: AppIcons.cursor,
+                            width: SaveCompanyButton._iconSize,
+                            height: SaveCompanyButton._iconSize,
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
-                ),
-              ),
+                );
+              },
             ),
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 }

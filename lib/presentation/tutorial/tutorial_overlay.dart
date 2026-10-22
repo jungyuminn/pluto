@@ -5,10 +5,12 @@ import 'package:flutter/rendering.dart';
 import 'package:pluto/core/constants/app_fonts.dart';
 import 'package:pluto/core/constants/app_icons.dart';
 import 'package:pluto/core/constants/app_strings.dart';
+import 'package:pluto/core/layout/pc_layout.dart';
 import 'package:pluto/core/theme/app_colors.dart';
 import 'package:pluto/core/utils/press_bounce.dart';
 import 'package:pluto/presentation/tutorial/tutorial_anchor.dart';
 import 'package:pluto/presentation/tutorial/tutorial_controller.dart';
+import 'package:pluto/presentation/screens/friends/friends_toast.dart';
 import 'package:pluto/presentation/tutorial/tutorial_demos.dart';
 import 'package:pluto/presentation/widgets/themed_asset.dart';
 
@@ -45,6 +47,7 @@ class _TutorialOverlayState extends State<TutorialOverlay>
   final _cardKey = GlobalKey();
   var _spotlightHidden = false;
   Offset? _cardSlideFrom;
+  var _skipping = false;
 
   @override
   void initState() {
@@ -279,6 +282,25 @@ class _TutorialOverlayState extends State<TutorialOverlay>
     return Rect.lerp(from, to, _holeEase.value);
   }
 
+  Future<void> _onSkip() async {
+    final tutorial = _tutorial;
+    if (tutorial == null || !tutorial.active || _skipping) return;
+    final replay = tutorial.fromSettings;
+    _skipping = true;
+    try {
+      await tutorial.skip();
+      if (!replay && mounted) {
+        showFriendsToast(
+          context,
+          AppStrings.tutorialSkipHint,
+          extraBottom: 88 + (PcLayout.isPc ? PcLayout.navLift : 0),
+        );
+      }
+    } finally {
+      _skipping = false;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final step = _displayedStep;
@@ -296,7 +318,7 @@ class _TutorialOverlayState extends State<TutorialOverlay>
       awaitAction: step.action != TutorialAction.none,
       onNext: canAct ? tutorial.next : () {},
       onPrev: canAct ? tutorial.previous : () {},
-      onSkip: canAct ? tutorial.skip : () {},
+      onSkip: canAct ? _onSkip : () {},
     );
 
     return Positioned.fill(

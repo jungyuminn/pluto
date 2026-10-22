@@ -107,6 +107,21 @@ class _LedgerFormState extends State<LedgerForm> with TickerProviderStateMixin {
   bool get _hasCategory =>
       _categoryId != null && (_categoryName?.trim().isNotEmpty ?? false);
 
+  bool get _canSave {
+    final title = _title.text.trim();
+    if (_isHourly) {
+      final salary = _salaryDetails;
+      final result = LedgerSalaryCalc.compute(salary);
+      return title.isNotEmpty &&
+          result.net > 0 &&
+          _hasCategory &&
+          salary.hourlyWage > 0 &&
+          salary.startMinutes != null &&
+          salary.endMinutes != null;
+    }
+    return title.isNotEmpty && _amountValue > 0 && _hasCategory;
+  }
+
   Color get _kindColor => switch (_kind) {
     LedgerKind.salary => LedgerEntry.salaryColor,
     LedgerKind.hourly => LedgerEntry.hourlyColor,
@@ -655,9 +670,15 @@ class _LedgerFormState extends State<LedgerForm> with TickerProviderStateMixin {
                 ),
               ),
               const SizedBox(width: 8),
-              SaveCompanyButton(
-                onPressed: _saving ? () {} : _save,
-                color: _accent,
+              ListenableBuilder(
+                listenable: Listenable.merge([_title, _amount]),
+                builder: (context, _) {
+                  return SaveCompanyButton(
+                    ready: _canSave,
+                    onPressed: _saving ? () {} : _save,
+                    color: _accent,
+                  );
+                },
               ),
             ],
           ),

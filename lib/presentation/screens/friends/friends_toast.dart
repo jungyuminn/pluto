@@ -9,6 +9,7 @@ void showFriendsToast(
   BuildContext context,
   String text, {
   bool top = false,
+  double extraBottom = 0,
 }) {
   final previous = _friendsToastEntry;
   _friendsToastEntry = null;
@@ -19,6 +20,7 @@ void showFriendsToast(
     builder: (context) => _FriendsToastOverlay(
       text: text,
       top: top,
+      extraBottom: extraBottom,
       onFinished: () {
         if (entry.mounted) entry.remove();
         if (identical(_friendsToastEntry, entry)) {
@@ -105,11 +107,13 @@ class _FriendsToastOverlay extends StatefulWidget {
     required this.text,
     required this.onFinished,
     this.top = false,
+    this.extraBottom = 0,
   });
 
   final String text;
   final VoidCallback onFinished;
   final bool top;
+  final double extraBottom;
 
   @override
   State<_FriendsToastOverlay> createState() => _FriendsToastOverlayState();
@@ -151,7 +155,7 @@ class _FriendsToastOverlayState extends State<_FriendsToastOverlay> {
             )
           else
             PcLayout.pinBottomToast(
-              bottom: 20 + padding.bottom,
+              bottom: 20 + padding.bottom + widget.extraBottom,
               child: toast,
             ),
         ],

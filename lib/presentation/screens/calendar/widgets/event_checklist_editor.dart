@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:pluto/core/constants/app_fonts.dart';
+import 'package:pluto/core/constants/app_strings.dart';
 import 'package:pluto/core/theme/app_colors.dart';
 import 'package:pluto/domain/entities/event_checklist_item.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/event_complete_button.dart';
@@ -173,6 +174,9 @@ class EventChecklistEditorState extends State<EventChecklistEditor> {
                       focusNode: row.focus,
                       completed: row.completed,
                       readOnly: widget.readOnly,
+                      hintText: _indexOf(row) == 0
+                          ? AppStrings.eventChecklistHint
+                          : null,
                       onSubmitted: () {
                         final index = _indexOf(row);
                         if (index < 0) return;
@@ -219,6 +223,7 @@ class _ChecklistTextField extends StatefulWidget {
     required this.readOnly,
     required this.onSubmitted,
     required this.onChanged,
+    this.hintText,
   });
 
   final TextEditingController controller;
@@ -227,6 +232,7 @@ class _ChecklistTextField extends StatefulWidget {
   final bool readOnly;
   final VoidCallback onSubmitted;
   final ValueChanged<String> onChanged;
+  final String? hintText;
 
   @override
   State<_ChecklistTextField> createState() => _ChecklistTextFieldState();
@@ -332,8 +338,14 @@ class _ChecklistTextFieldState extends State<_ChecklistTextField>
                     onSubmitted: (_) => widget.onSubmitted(),
                     onChanged: widget.onChanged,
                     style: style,
-                    decoration: const InputDecoration.collapsed(
-                      hintText: null,
+                    decoration: InputDecoration.collapsed(
+                      hintText: widget.hintText,
+                      hintStyle: TextStyle(
+                        fontFamily: AppFonts.of(context),
+                        color: colors.hint,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 15,
+                      ),
                     ),
                   ),
                 ),

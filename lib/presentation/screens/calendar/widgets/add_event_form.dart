@@ -960,9 +960,17 @@ class _AddEventFormState extends State<AddEventForm>
                 TutorialPulse(
                   active: tutorial?.step.action == TutorialAction.saveEvent,
                   color: _accent,
-                  child: SaveCompanyButton(
-                    onPressed: _saving ? () {} : _save,
-                    color: _accent,
+                  child: ListenableBuilder(
+                    listenable: _title,
+                    builder: (context, _) {
+                      return SaveCompanyButton(
+                        ready: _title.text.trim().isNotEmpty &&
+                            _daysToSave().isNotEmpty &&
+                            _hasCategory,
+                        onPressed: _saving ? () {} : _save,
+                        color: _accent,
+                      );
+                    },
                   ),
                 ),
               ],

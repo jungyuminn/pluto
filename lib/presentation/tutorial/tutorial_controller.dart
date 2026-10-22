@@ -202,6 +202,7 @@ class TutorialController extends ChangeNotifier {
   var _pickedCategory = false;
 
   bool get active => _active;
+  bool get fromSettings => _fromSettings;
   int get index => _index;
   bool get isFirst => _index <= 0;
   bool get canPrevious {

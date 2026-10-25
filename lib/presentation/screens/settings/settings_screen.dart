@@ -56,6 +56,8 @@ import 'package:pluto/presentation/screens/settings/widgets/cloud_sync_dialogs.d
 import 'package:pluto/presentation/screens/settings/widgets/calendar_import_dialogs.dart';
 import 'package:pluto/presentation/screens/settings/widgets/calendar_import_wizard.dart';
 import 'package:pluto/presentation/screens/settings/widgets/login_page.dart';
+import 'package:pluto/presentation/screens/settings/widgets/photo_calendar_sheet.dart';
+import 'package:pluto/presentation/screens/calendar/widgets/category_picker_sheet.dart';
 import 'package:pluto/presentation/screens/settings/widgets/release_notes_page.dart';
 import 'package:pluto/presentation/screens/settings/widgets/settings_section_help.dart';
 import 'package:pluto/presentation/tutorial/tutorial_controller.dart';
@@ -67,6 +69,8 @@ import 'package:pluto/presentation/widgets/overlay_app_bar.dart';
 import 'package:pluto/presentation/widgets/sliding_kind_bar.dart';
 import 'package:pluto/presentation/widgets/themed_asset.dart';
 import 'package:pluto/presentation/screens/shell/widgets/pill_bottom_nav.dart';
+import 'package:pluto/presentation/screens/stats/stats_screen.dart';
+import 'package:pluto/presentation/screens/stats/widgets/planet_fill.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -440,6 +444,68 @@ class _SettingsScreenState extends State<SettingsScreen> {
         body: result.truncated
             ? AppStrings.importDonePartialBody(result.events.length)
             : AppStrings.importDoneBody(result.events.length),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      await showBackupMessageDialog(
+        context,
+        title: AppStrings.importFailedTitle,
+        body: AppStrings.importFailedBody,
+      );
+    }
+  }
+
+  Future<void> _importCalendarPhoto() async {
+    try {
+      if (AppAuthService.instance.user == null) {
+        await openLoginPage(context);
+        if (!mounted) return;
+        if (AppAuthService.instance.user == null) return;
+      }
+      final existing = await AppScope.of(context).getCalendarEvents();
+      if (!mounted) return;
+      final picked = await showPhotoCalendarSheet(
+        context,
+        existing: existing,
+      );
+      if (picked == null || !mounted) return;
+      if (picked.isEmpty) {
+        await showBackupMessageDialog(
+          context,
+          title: AppStrings.importNoEventsTitle,
+          body: AppStrings.photoImportEmpty,
+        );
+        return;
+      }
+      final mode = await showCalendarImportCategoryModeDialog(context);
+      if (mode == null || !mounted) return;
+      late final List<CalendarEvent> events;
+      if (mode == CalendarImportCategoryMode.allInOne) {
+        final category = await showCategoryPickerSheet(context);
+        if (category == null || !mounted) return;
+        events = [
+          for (final event in picked)
+            event.copyWith(
+              categoryId: category.id,
+              categoryName: category.name,
+              categoryColor: category.color,
+            ),
+        ];
+      } else {
+        final assigned = await showCalendarImportEachCategoryDialog(
+          context,
+          picked,
+        );
+        if (assigned == null || !mounted) return;
+        events = assigned;
+      }
+      await AppScope.of(context).addCalendarEvent.many(events);
+      AppBackupService.revision.value++;
+      if (!mounted) return;
+      await showBackupMessageDialog(
+        context,
+        title: AppStrings.importDoneTitle,
+        body: AppStrings.importDoneBody(events.length),
       );
     } catch (_) {
       if (!mounted) return;
@@ -1264,6 +1330,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 chevron: true,
                 onPressed: _importSamsungCalendar,
               ),
+              _SettingsTile(
+                label: AppStrings.photoImportTitle,
+                chevron: true,
+                onPressed: _importCalendarPhoto,
+              ),
             ],
           ),
             const SizedBox(height: 24),
@@ -1706,56 +1777,187 @@ DateTime _themePreviewToday() {
   return DateTime(now.year, now.month, now.day);
 }
 
-const _themePreviewCategories = EventCategory.presets;
+const _themePreviewCategories = [
+  EventCategory(id: 'preview-exercise', name: '운동', color: 0xFF7CB342),
+  EventCategory(id: 'preview-promise', name: '약속', color: 0xFF00897B),
+  EventCategory(id: 'preview-uni', name: '대학교', color: 0xFF64748B),
+  EventCategory(id: 'preview-daily', name: '일상', color: 0xFFB09AFF),
+  EventCategory(id: 'preview-hobby', name: '취미', color: 0xFFF48FB1),
+  EventCategory(id: 'preview-event', name: '행사', color: 0xFFF6C000),
+  EventCategory(id: 'preview-cafe', name: '카페', color: 0xFFF48FB1),
+  EventCategory(id: 'preview-read', name: '독서', color: 0xFF7CB342),
+  EventCategory(id: 'preview-meet', name: '미팅', color: 0xFFF6C000),
+  EventCategory(id: 'preview-travel', name: '여행', color: 0xFF00ACC1),
+  EventCategory(id: 'preview-movie', name: '영화', color: 0xFFF48FB1),
+  EventCategory(id: 'preview-shop', name: '쇼핑', color: 0xFF8D6E63),
+  EventCategory(id: 'preview-vacay', name: '휴가', color: 0xFFF48FB1),
+  EventCategory(id: 'preview-meal', name: '식사', color: 0xFFF6C000),
+  EventCategory(id: 'preview-exam', name: '시험', color: 0xFFF6C000),
+  EventCategory(id: 'preview-exam-term', name: '시험기간', color: 0xFF3B82F6),
+  EventCategory(id: 'preview-trip', name: '출장', color: 0xFF64748B),
+  EventCategory(id: 'preview-hospital', name: '병원', color: 0xFFF48FB1),
+];
 
-List<CalendarEvent> _themePreviewEventsOn(DateTime date) {
-  final day = DateTime(date.year, date.month, date.day);
+EventCategory _themePreviewCategory(String name) {
+  return _themePreviewCategories.firstWhere((item) => item.name == name);
+}
+
+CalendarEvent _themePreviewEvent({
+  required String id,
+  required String title,
+  required DateTime date,
+  required String category,
+  String? groupId,
+}) {
+  final item = _themePreviewCategory(category);
+  return CalendarEvent(
+    id: id,
+    title: title,
+    date: date,
+    groupId: groupId,
+    categoryId: item.id,
+    categoryName: item.name,
+    categoryColor: item.color,
+  );
+}
+
+List<CalendarEvent> _themePreviewRange({
+  required String id,
+  required String title,
+  required DateTime month,
+  required int from,
+  required int to,
+  required String category,
+}) {
+  final last = DateTime(month.year, month.month + 1, 0).day;
+  return [
+    for (var day = from; day <= to; day++)
+      if (day <= last)
+        _themePreviewEvent(
+          id: '$id-$day',
+          title: title,
+          date: DateTime(month.year, month.month, day),
+          category: category,
+          groupId: id,
+        ),
+  ];
+}
+
+List<CalendarEvent> _themePreviewHomeEventsOn(DateTime date) {
   final today = _themePreviewToday();
-  final travel = EventCategory.presets[0];
-  final exercise = EventCategory.presets[1];
-  final offset = day.difference(today).inDays;
-  if (offset == 0) {
+  final day = DateTime(date.year, date.month, date.day);
+  if (day == today) {
     return [
-      CalendarEvent(
-        id: 'preview-exercise',
+      _themePreviewEvent(
+        id: 'preview-gym',
         title: '헬스장',
         date: today,
-        categoryId: exercise.id,
-        categoryName: exercise.name,
-        categoryColor: exercise.color,
-        startMinutes: 7 * 60,
-        endMinutes: 8 * 60,
+        category: '운동',
+      ),
+      _themePreviewEvent(
+        id: 'preview-lunch',
+        title: '점심 식사',
+        date: today,
+        category: '약속',
+      ),
+      _themePreviewEvent(
+        id: 'preview-class',
+        title: '전공 수업',
+        date: today,
+        category: '대학교',
       ),
     ];
   }
-  if (offset == 2) {
+  if (day == today.add(const Duration(days: 1))) {
     return [
-      CalendarEvent(
-        id: 'preview-yoga',
-        title: '요가',
+      _themePreviewEvent(
+        id: 'preview-shop',
+        title: '쇼핑',
         date: day,
-        categoryId: exercise.id,
-        categoryName: exercise.name,
-        categoryColor: exercise.color,
-        startMinutes: 19 * 60,
-        endMinutes: 20 * 60,
+        category: '일상',
       ),
-    ];
-  }
-  if (offset >= 4 && offset <= 6) {
-    return [
-      CalendarEvent(
-        id: 'preview-jeju-$offset',
-        title: '제주도',
+      _themePreviewEvent(
+        id: 'preview-read',
+        title: '독서',
         date: day,
-        groupId: 'preview-jeju',
-        categoryId: travel.id,
-        categoryName: travel.name,
-        categoryColor: travel.color,
+        category: '취미',
       ),
     ];
   }
   return const [];
+}
+
+List<CalendarEvent> _themePreviewEventsOn(DateTime date) {
+  final today = _themePreviewToday();
+  if (date.year != today.year || date.month != today.month) {
+    return const [];
+  }
+  final month = DateTime(today.year, today.month);
+  final last = DateTime(month.year, month.month + 1, 0).day;
+  final day = DateTime(date.year, date.month, date.day);
+  DateTime? on(int value) {
+    if (value < 1 || value > last) return null;
+    return DateTime(month.year, month.month, value);
+  }
+
+  CalendarEvent? one(String id, String title, int value, String category) {
+    final date = on(value);
+    if (date == null) return null;
+    return _themePreviewEvent(
+      id: id,
+      title: title,
+      date: date,
+      category: category,
+    );
+  }
+
+  return [
+    for (final event in [
+      one('preview-fair', '행사', 1, '행사'),
+      one('preview-cafe', '카페', 2, '카페'),
+      one('preview-book', '독서', 3, '독서'),
+      one('preview-meeting', '미팅', 4, '미팅'),
+      ..._themePreviewRange(
+        id: 'preview-travel',
+        title: '여행',
+        month: month,
+        from: 5,
+        to: 10,
+        category: '여행',
+      ),
+      one('preview-movie', '영화', 11, '영화'),
+      one('preview-shopping', '쇼핑', 13, '쇼핑'),
+      ..._themePreviewRange(
+        id: 'preview-vacay',
+        title: '휴가',
+        month: month,
+        from: 14,
+        to: 15,
+        category: '휴가',
+      ),
+      one('preview-meal', '식사', 16, '식사'),
+      one('preview-exam', '시험', 18, '시험'),
+      ..._themePreviewRange(
+        id: 'preview-exam-term',
+        title: '시험기간',
+        month: month,
+        from: 19,
+        to: 24,
+        category: '시험기간',
+      ),
+      one('preview-workout', '운동', 25, '운동'),
+      ..._themePreviewRange(
+        id: 'preview-trip',
+        title: '출장',
+        month: month,
+        from: 26,
+        to: 29,
+        category: '출장',
+      ),
+      one('preview-hospital', '병원', 30, '병원'),
+    ])
+      if (event != null && event.day == day) event,
+  ];
 }
 
 List<JobApplication> _themePreviewJobs() {
@@ -1893,10 +2095,13 @@ class _ThemeLivePreviewState extends State<_ThemeLivePreview> {
                       setState(() => _page = page);
                       _startTimer();
                     },
-                    children: const [
-                      _ThemeHomePreviewPage(),
-                      _ThemeCalendarPreviewPage(),
-                      _ThemeJobPreviewPage(),
+                    children: [
+                      const _ThemeHomePreviewPage(),
+                      const _ThemeCalendarPreviewPage(),
+                      if (AppScope.of(context).navPreference.showJobTab)
+                        const _ThemeJobPreviewPage()
+                      else
+                        const _ThemeStatsPreviewPage(),
                     ],
                   ),
                 ),
@@ -2030,8 +2235,23 @@ class _ThemeHomePreviewPage extends StatelessWidget {
   Widget _fullHomePage(BuildContext context) {
     final scope = AppScope.of(context);
     final today = _themePreviewToday();
+    final tomorrow = today.add(const Duration(days: 1));
     final sortPrefs = scope.dayEventsViewPreference;
     final bottomGap = 88 + MediaQuery.paddingOf(context).bottom;
+    HomeDayCard card(String title, DateTime date) {
+      return HomeDayCard(
+        title: title,
+        date: date,
+        events: _themePreviewHomeEventsOn(date),
+        categories: _themePreviewCategories,
+        categoryView: sortPrefs.categoryView,
+        sortByTime: sortPrefs.sortByTime,
+        showTime: sortPrefs.showTime,
+        hour24: sortPrefs.hour24,
+        onEventsChanged: () {},
+      );
+    }
+
     return Scaffold(
       resizeToAvoidBottomInset: false,
       backgroundColor: Colors.transparent,
@@ -2055,23 +2275,15 @@ class _ThemeHomePreviewPage extends StatelessWidget {
       ),
       body: ListView(
         padding: EdgeInsets.fromLTRB(
-          16,
+          24,
           OverlayAppBar.overlapOf(context) + 8,
-          16,
+          24,
           bottomGap,
         ),
         children: [
-          HomeDayCard(
-            title: AppStrings.todayTitle,
-            date: today,
-            events: _themePreviewEventsOn(today),
-            categories: _themePreviewCategories,
-            categoryView: sortPrefs.categoryView,
-            sortByTime: sortPrefs.sortByTime,
-            showTime: sortPrefs.showTime,
-            hour24: sortPrefs.hour24,
-            onEventsChanged: () {},
-          ),
+          card(AppStrings.todayTitle, today),
+          const SizedBox(height: 16),
+          card(AppStrings.tomorrowTitle, tomorrow),
         ],
       ),
     );
@@ -2218,6 +2430,33 @@ class _ThemePreviewDayCell extends StatelessWidget {
             height: 1,
             fontWeight: today ? FontWeight.w800 : FontWeight.w500,
             color: today ? colors.text : colors.muted,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ThemeStatsPreviewPage extends StatelessWidget {
+  const _ThemeStatsPreviewPage({this.full = false});
+
+  final bool full;
+
+  @override
+  Widget build(BuildContext context) {
+    if (full) return const StatsScreen();
+    final colors = AppColors.of(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(36, 24, 36, 12),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 160, maxHeight: 160),
+          child: PlanetFill(
+            level: 4,
+            wave: 0.45,
+            outline: colors.accent,
+            empty: colors.groupedBackground,
+            pokeable: false,
           ),
         ),
       ),
@@ -2463,10 +2702,11 @@ class _ThemePreviewNav extends StatelessWidget {
       listenable: theme,
       builder: (context, _) {
         final items = AppSkinAssets.navIcons(theme.paintedSkin);
+        final job = AppScope.of(context).navPreference.showJobTab;
         final previewItems = [
           items[0],
           items[1],
-          items.last,
+          job ? items[3] : items[2],
         ];
         return Center(
           child: DecoratedBox(
@@ -2592,8 +2832,26 @@ class _ThemeFullPreviewState extends State<_ThemeFullPreview> {
     super.dispose();
   }
 
-  void _goTo(int page) {
-    final next = page.clamp(0, 2);
+  int _pageOf(int logical, {required bool job, required bool stats}) {
+    if (logical <= 1) return logical;
+    if (logical == 3) return job ? 2 : 1;
+    if (!stats) return 1;
+    return job ? 3 : 2;
+  }
+
+  int _logicalOf(int page, {required bool job, required bool stats}) {
+    if (page <= 1) return page;
+    if (page == 2) return job ? 3 : 2;
+    return 2;
+  }
+
+  void _goTo(int logical) {
+    final nav = AppScope.of(context).navPreference;
+    final next = _pageOf(
+      logical,
+      job: nav.showJobTab,
+      stats: nav.showStatsTab,
+    );
     if (next == _page) return;
     _pages.animateToPage(
       next,
@@ -2606,6 +2864,9 @@ class _ThemeFullPreviewState extends State<_ThemeFullPreview> {
   Widget build(BuildContext context) {
     final custom = widget.customTheme;
     final top = MediaQuery.paddingOf(context).top;
+    final nav = AppScope.of(context).navPreference;
+    final job = nav.showJobTab;
+    final stats = nav.showStatsTab;
     Widget preview = AppSkinBackground(
       liftForNav: true,
       skin: custom == null ? null : AppSkin.classic,
@@ -2617,16 +2878,23 @@ class _ThemeFullPreviewState extends State<_ThemeFullPreview> {
             PageView(
               controller: _pages,
               onPageChanged: (page) => setState(() => _page = page),
-              children: const [
-                IgnorePointer(child: _ThemeHomePreviewPage(full: true)),
-                IgnorePointer(child: _ThemeCalendarPreviewPage(full: true)),
-                IgnorePointer(child: _ThemeJobPreviewPage(full: true)),
+              children: [
+                const IgnorePointer(child: _ThemeHomePreviewPage(full: true)),
+                const IgnorePointer(
+                  child: _ThemeCalendarPreviewPage(full: true),
+                ),
+                if (job)
+                  const IgnorePointer(child: _ThemeJobPreviewPage(full: true)),
+                if (stats)
+                  const IgnorePointer(child: _ThemeStatsPreviewPage(full: true)),
               ],
             ),
             Align(
               alignment: Alignment.bottomCenter,
               child: PillBottomNav(
-                currentIndex: _page,
+                currentIndex: _logicalOf(_page, job: job, stats: stats),
+                showJob: job,
+                showStats: stats,
                 onChanged: _goTo,
                 tutorial: false,
               ),

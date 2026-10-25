@@ -10,19 +10,19 @@ class DotsLoadingDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     return const PopScope(
       canPop: false,
-      child: Center(child: _DotsLoader()),
+      child: Center(child: DotsLoader()),
     );
   }
 }
 
-class _DotsLoader extends StatefulWidget {
-  const _DotsLoader();
+class DotsLoader extends StatefulWidget {
+  const DotsLoader({super.key});
 
   @override
-  State<_DotsLoader> createState() => _DotsLoaderState();
+  State<DotsLoader> createState() => _DotsLoaderState();
 }
 
-class _DotsLoaderState extends State<_DotsLoader>
+class _DotsLoaderState extends State<DotsLoader>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
 

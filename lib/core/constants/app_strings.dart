@@ -15,6 +15,14 @@ class AppStrings {
   static const settingsCalendarSyncSection = '캘린더 연동';
   static const importSamsungCalendar = '삼성 캘린더';
   static const importIosCalendar = '애플 캘린더';
+  static const photoImportTitle = '이미지 자동 인식';
+  static const photoImportWait = '사진을 읽고 있어요';
+  static const photoImportWaits = [
+    photoImportWait,
+    '일정을 찾고 있어요',
+    '날짜를 맞추고 있어요',
+  ];
+  static const photoImportEmpty = '사진에서 할 일을 찾지 못했어요';
   static const importComingLaterTitle = '아직 준비 중이에요';
   static const importComingLaterBody = '애플 캘린더 연동은 곧 추가될 예정이에요';
   static const importAndroidOnlyTitle = '안드로이드에서 가져올 수 있어요';
@@ -448,7 +456,7 @@ class AppStrings {
   static const settingsBackupHelp =
       '앱의 모든 데이터를 최근 3개까지 저장해요. 앱을 지운 뒤에도 복구할 수 있어요';
   static const settingsCalendarSyncHelp =
-      '기본 캘린더에 있는 일정을 플루토의 캘린더로 가져와요. 가져올 기간을 고르고, 카테고리는 하나에 몰아넣거나 할 일마다 고를 수 있어요.';
+      '기본 캘린더나 달력 사진에서 일정을 할 일로 가져와요. 카테고리는 하나에 몰아넣거나 할 일마다 고를 수 있어요.';
   static const settingsAppHelp =
       '릴리즈 노트에서 업데이트 내역을 읽고, 앱 사용법을 보거나, 문의 메일을 보내거나, 리뷰를 남기거나, 로그인·탈퇴할 수 있어요';
   static const settingsCalendarHelp = '캘린더의 첫 요일과 음력 날짜를 표시할 수 있어요';
@@ -883,9 +891,20 @@ class AppStrings {
   static const repeatStartLabel = '시작 날짜';
   static const repeatEndLabel = '종료 날짜';
   static const repeatEndNone = '없음';
+  static const repeatKindDaily = '매일';
   static const repeatKindWeekly = '매주';
   static const repeatKindMonthly = '매월';
   static const repeatKindYearly = '매년';
+  static const repeatKindEveryN = '직접 선택';
+  static const repeatEveryNUnitDays = '일';
+  static const repeatEveryNUnitWeeks = '주';
+  static const repeatEveryNUnitMonths = '달';
+  static const repeatIntervalLabel = '주기';
+  static const repeatIntervalUnitDays = '일마다';
+  static const repeatIntervalUnitWeeks = '주마다';
+  static const repeatIntervalUnitMonths = '달마다';
+  static String repeatIntervalDays(int count) => '$count일마다';
+  static String repeatIntervalWeeks(int count) => '$count주마다';
   static const repeatMonthByDate = '날짜';
   static const repeatMonthByWeekday = '요일';
   static const deleteRepeatTitle = '반복 일정을 삭제하시겠습니까?';

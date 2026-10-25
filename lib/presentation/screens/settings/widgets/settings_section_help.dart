@@ -648,17 +648,25 @@ class _CalendarSyncPreview extends StatelessWidget {
         Theme.of(context).platform == TargetPlatform.iOS
             ? AppStrings.importIosCalendar
             : AppStrings.importSamsungCalendar,
+        AppStrings.photoImportTitle,
       ],
       chevron: true,
+      chevrons: const [true, true],
       sceneHeight: 176,
       scene: (context, selected) {
         return _HelpSceneFill(
           child: _helpKeyedSwitch(
             switchKey: selected,
-          child: _FakeBackupScene(
-            icon: Icons.event_available_rounded,
-            title: AppStrings.importDoneTitle,
-              body: AppStrings.importDoneBody(3),
+            child: _FakeBackupScene(
+              icon: selected == 0
+                  ? Icons.event_available_rounded
+                  : Icons.image_outlined,
+              title: selected == 0
+                  ? AppStrings.importDoneTitle
+                  : AppStrings.photoImportTitle,
+              body: selected == 0
+                  ? AppStrings.importDoneBody(3)
+                  : AppStrings.photoImportWait,
             ),
           ),
         );

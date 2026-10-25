@@ -93,6 +93,7 @@ class _AppCalendarSheetState extends State<AppCalendarSheet> {
   DateTime? _rangeStart;
   DateTime? _rangeEnd;
   var _repeatKind = RepeatKind.weekly;
+  var _repeatInterval = RepeatDates.minInterval;
   late DateTime _repeatStart;
   DateTime? _repeatEnd;
   late Set<int> _weekdays;
@@ -176,6 +177,7 @@ class _AppCalendarSheetState extends State<AppCalendarSheet> {
       monthRule: _monthRule,
       monthWeek: _monthWeek,
       monthWeekday: _monthWeekday,
+      interval: _repeatInterval,
     );
   }
 
@@ -196,6 +198,7 @@ class _AppCalendarSheetState extends State<AppCalendarSheet> {
         _repeatStart = keep;
         _repeatEnd = null;
         _repeatKind = RepeatKind.weekly;
+        _repeatInterval = RepeatDates.minInterval;
         _monthRule = RepeatMonthRule.date;
         _weekdays = {RepeatDates.weekdayIndex(keep)};
         _monthWeek = RepeatDates.weekOf(keep);
@@ -238,31 +241,29 @@ class _AppCalendarSheetState extends State<AppCalendarSheet> {
   }
 
   Widget _repeatBody() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        AppCalendarRepeatPanel(
-          kind: _repeatKind,
-          weekdays: _weekdays,
-          start: _repeatStart,
-          end: _repeatEnd,
-          accent: _accent,
-          startMonday: AppScope.of(context).calendarPreference.startMonday,
-          monthRule: _monthRule,
-          monthWeek: _monthWeek,
-          monthWeekday: _monthWeekday,
-          onKindChanged: _setRepeatKind,
-          onWeekdayPressed: _toggleWeekday,
-          onMonthRuleChanged: _setMonthRule,
-          onMonthWeekChanged: _setMonthWeek,
-          onMonthWeekdayChanged: _setMonthWeekday,
-          onStartPressed: _pickRepeatStart,
-          onEndChanged: (value) {
-            setState(() => _repeatEnd = value);
-          },
-        ),
-        const Spacer(),
-      ],
+    return SingleChildScrollView(
+      child: AppCalendarRepeatPanel(
+        kind: _repeatKind,
+        interval: _repeatInterval,
+        weekdays: _weekdays,
+        start: _repeatStart,
+        end: _repeatEnd,
+        accent: _accent,
+        startMonday: AppScope.of(context).calendarPreference.startMonday,
+        monthRule: _monthRule,
+        monthWeek: _monthWeek,
+        monthWeekday: _monthWeekday,
+        onKindChanged: _setRepeatKind,
+        onIntervalChanged: _setRepeatInterval,
+        onWeekdayPressed: _toggleWeekday,
+        onMonthRuleChanged: _setMonthRule,
+        onMonthWeekChanged: _setMonthWeek,
+        onMonthWeekdayChanged: _setMonthWeekday,
+        onStartPressed: _pickRepeatStart,
+        onEndChanged: (value) {
+          setState(() => _repeatEnd = value);
+        },
+      ),
     );
   }
 
@@ -386,6 +387,7 @@ class _AppCalendarSheetState extends State<AppCalendarSheet> {
       monthRule: _monthRule,
       monthWeek: _monthWeek,
       monthWeekday: _monthWeekday,
+      interval: _repeatInterval,
     );
   }
 
@@ -395,10 +397,26 @@ class _AppCalendarSheetState extends State<AppCalendarSheet> {
     _repeatEnd = null;
   }
 
+  void _setRepeatInterval(int interval) {
+    setState(() {
+      _repeatInterval = interval.clamp(
+        RepeatDates.minInterval,
+        RepeatDates.maxInterval,
+      );
+      _clearEndIfInvalid();
+    });
+  }
+
   void _setRepeatKind(RepeatKind kind) {
     setState(() {
       _repeatKind = kind;
-      if (kind == RepeatKind.monthly) {
+      if (kind.usesInterval) {
+        _repeatInterval = _repeatInterval.clamp(
+          RepeatDates.minInterval,
+          RepeatDates.maxInterval,
+        );
+      }
+      if (kind.usesMonthRule) {
         _monthRule = RepeatMonthRule.date;
         _monthWeek = RepeatDates.weekOf(_repeatStart);
         _monthWeekday = RepeatDates.weekdayIndex(_repeatStart);
@@ -547,7 +565,7 @@ class _AppCalendarSheetState extends State<AppCalendarSheet> {
       child: DecoratedBox(
         decoration: BoxDecoration(
           color: _sheetOf(context),
-          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
         ),
         child: Padding(
           padding: EdgeInsets.fromLTRB(16, 10, 16, 4 + bottom),

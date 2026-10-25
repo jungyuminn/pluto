@@ -1,4 +1,23 @@
-enum RepeatKind { weekly, monthly, yearly }
+enum RepeatKind {
+  daily,
+  weekly,
+  monthly,
+  yearly,
+  everyNDays,
+  everyNWeeks,
+  everyNMonths;
+
+  bool get usesWeekdays =>
+      this == RepeatKind.weekly || this == RepeatKind.everyNWeeks;
+
+  bool get usesInterval =>
+      this == RepeatKind.everyNDays ||
+      this == RepeatKind.everyNWeeks ||
+      this == RepeatKind.everyNMonths;
+
+  bool get usesMonthRule =>
+      this == RepeatKind.monthly || this == RepeatKind.everyNMonths;
+}
 
 enum RepeatMonthRule { date, weekday }
 
@@ -8,6 +27,8 @@ class RepeatDates {
   RepeatDates._();
 
   static const horizonYear = 2030;
+  static const minInterval = 1;
+  static const maxInterval = 30;
 
   static DateTime dateOnly(DateTime date) =>
       DateTime(date.year, date.month, date.day);
@@ -75,6 +96,7 @@ class RepeatDates {
     RepeatMonthRule monthRule = RepeatMonthRule.date,
     RepeatMonthWeek monthWeek = RepeatMonthWeek.first,
     int monthWeekday = 0,
+    int interval = minInterval,
   }) {
     final origin = today(now);
     final limit = horizon(now);
@@ -82,26 +104,43 @@ class RepeatDates {
     final options = <DateTime>[];
 
     switch (kind) {
-      case RepeatKind.weekly:
+      case RepeatKind.daily:
         var current = origin.add(const Duration(days: 7));
         while (!current.isAfter(limit)) {
           if (!current.isBefore(floor)) options.add(current);
           current = current.add(const Duration(days: 7));
         }
+      case RepeatKind.everyNDays:
+        final step = _intervalOf(interval);
+        final gap = step * ((7 + step - 1) ~/ step);
+        var current = floor.add(Duration(days: gap));
+        while (!current.isAfter(limit)) {
+          options.add(current);
+          current = current.add(Duration(days: gap));
+        }
+      case RepeatKind.weekly:
+      case RepeatKind.everyNWeeks:
+        final step = kind == RepeatKind.everyNWeeks ? 7 * _intervalOf(interval) : 7;
+        var current = origin.add(Duration(days: step));
+        while (!current.isAfter(limit)) {
+          if (!current.isBefore(floor)) options.add(current);
+          current = current.add(Duration(days: step));
+        }
       case RepeatKind.monthly:
-        var month = 1;
+      case RepeatKind.everyNMonths:
+        final step = kind == RepeatKind.everyNMonths ? _intervalOf(interval) : 1;
+        var month = step;
         while (true) {
-          final current = monthRule == RepeatMonthRule.weekday
-              ? weekdayInMonth(
-                  year: floor.year,
-                  month: floor.month + month,
-                  weekdayIndex: monthWeekday,
-                  week: monthWeek,
-                )
-              : clampDay(floor.year, floor.month + month, floor.day);
+          final current = _monthDay(
+            origin: floor,
+            monthOffset: month,
+            monthRule: monthRule,
+            monthWeek: monthWeek,
+            monthWeekday: monthWeekday,
+          );
           if (current.isAfter(limit)) break;
           if (!current.isBefore(floor)) options.add(current);
-          month++;
+          month += step;
         }
       case RepeatKind.yearly:
         for (var year = floor.year + 1; year <= horizonYear; year++) {
@@ -121,6 +160,7 @@ class RepeatDates {
     RepeatMonthRule monthRule = RepeatMonthRule.date,
     RepeatMonthWeek monthWeek = RepeatMonthWeek.first,
     int monthWeekday = 0,
+    int interval = minInterval,
     DateTime? now,
   }) {
     final first = dateOnly(start);
@@ -131,30 +171,40 @@ class RepeatDates {
     if (first.isAfter(last)) return [];
 
     switch (kind) {
+      case RepeatKind.daily:
+        return _stepDays(first, last, 1);
+      case RepeatKind.everyNDays:
+        return _stepDays(first, last, _intervalOf(interval));
       case RepeatKind.weekly:
+      case RepeatKind.everyNWeeks:
         final selected = weekdays.isEmpty ? {weekdayIndex(first)} : weekdays;
+        final weekStep = kind == RepeatKind.everyNWeeks ? _intervalOf(interval) : 1;
         final days = <DateTime>[];
         var current = first;
         while (!current.isAfter(last)) {
-          if (selected.contains(weekdayIndex(current))) days.add(current);
+          if (selected.contains(weekdayIndex(current)) &&
+              _weekIndex(current, first) % weekStep == 0) {
+            days.add(current);
+          }
           current = current.add(const Duration(days: 1));
         }
         return days;
       case RepeatKind.monthly:
+      case RepeatKind.everyNMonths:
+        final step = kind == RepeatKind.everyNMonths ? _intervalOf(interval) : 1;
         final days = <DateTime>[];
         var month = 0;
         while (true) {
-          final current = monthRule == RepeatMonthRule.weekday
-              ? weekdayInMonth(
-                  year: first.year,
-                  month: first.month + month,
-                  weekdayIndex: monthWeekday,
-                  week: monthWeek,
-                )
-              : clampDay(first.year, first.month + month, first.day);
+          final current = _monthDay(
+            origin: first,
+            monthOffset: month,
+            monthRule: monthRule,
+            monthWeek: monthWeek,
+            monthWeekday: monthWeekday,
+          );
           if (current.isAfter(last)) break;
           if (!current.isBefore(first)) days.add(current);
-          month++;
+          month += step;
         }
         return days;
       case RepeatKind.yearly:
@@ -168,5 +218,45 @@ class RepeatDates {
         }
         return days;
     }
+  }
+
+  static DateTime _monthDay({
+    required DateTime origin,
+    required int monthOffset,
+    required RepeatMonthRule monthRule,
+    required RepeatMonthWeek monthWeek,
+    required int monthWeekday,
+  }) {
+    return monthRule == RepeatMonthRule.weekday
+        ? weekdayInMonth(
+            year: origin.year,
+            month: origin.month + monthOffset,
+            weekdayIndex: monthWeekday,
+            week: monthWeek,
+          )
+        : clampDay(origin.year, origin.month + monthOffset, origin.day);
+  }
+
+  static int _intervalOf(int interval) =>
+      interval.clamp(minInterval, maxInterval);
+
+  static int _weekIndex(DateTime date, DateTime origin) {
+    final originWeek = dateOnly(origin).subtract(
+      Duration(days: weekdayIndex(origin)),
+    );
+    final dateWeek = dateOnly(date).subtract(
+      Duration(days: weekdayIndex(date)),
+    );
+    return dateWeek.difference(originWeek).inDays ~/ 7;
+  }
+
+  static List<DateTime> _stepDays(DateTime first, DateTime last, int step) {
+    final days = <DateTime>[];
+    var current = first;
+    while (!current.isAfter(last)) {
+      days.add(current);
+      current = current.add(Duration(days: step));
+    }
+    return days;
   }
 }

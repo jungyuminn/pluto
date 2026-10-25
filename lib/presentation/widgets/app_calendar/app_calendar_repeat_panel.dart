@@ -5,6 +5,8 @@ import 'package:pluto/core/constants/app_icons.dart';
 import 'package:pluto/core/constants/app_strings.dart';
 import 'package:pluto/core/theme/app_colors.dart';
 import 'package:pluto/core/utils/press_bounce.dart';
+import 'package:pluto/domain/entities/event_category.dart';
+import 'package:pluto/presentation/widgets/flat_snap_picker.dart';
 import 'package:pluto/presentation/widgets/sliding_kind_bar.dart';
 import 'package:pluto/presentation/widgets/themed_asset.dart';
 
@@ -20,7 +22,9 @@ class AppCalendarRepeatPanel extends StatelessWidget {
     this.monthRule = RepeatMonthRule.date,
     this.monthWeek = RepeatMonthWeek.first,
     this.monthWeekday = 0,
+    this.interval = RepeatDates.minInterval,
     required this.onKindChanged,
+    required this.onIntervalChanged,
     required this.onWeekdayPressed,
     required this.onMonthRuleChanged,
     required this.onMonthWeekChanged,
@@ -30,6 +34,7 @@ class AppCalendarRepeatPanel extends StatelessWidget {
   });
 
   final RepeatKind kind;
+  final int interval;
   final Set<int> weekdays;
   final DateTime start;
   final DateTime? end;
@@ -39,6 +44,7 @@ class AppCalendarRepeatPanel extends StatelessWidget {
   final RepeatMonthWeek monthWeek;
   final int monthWeekday;
   final ValueChanged<RepeatKind> onKindChanged;
+  final ValueChanged<int> onIntervalChanged;
   final ValueChanged<int> onWeekdayPressed;
   final ValueChanged<RepeatMonthRule> onMonthRuleChanged;
   final ValueChanged<RepeatMonthWeek> onMonthWeekChanged;
@@ -46,11 +52,37 @@ class AppCalendarRepeatPanel extends StatelessWidget {
   final VoidCallback onStartPressed;
   final ValueChanged<DateTime?> onEndChanged;
 
-  static const _kindLabels = {
-    RepeatKind.weekly: AppStrings.repeatKindWeekly,
-    RepeatKind.monthly: AppStrings.repeatKindMonthly,
-    RepeatKind.yearly: AppStrings.repeatKindYearly,
-  };
+  static const _kindMenu = [
+    RepeatKind.daily,
+    RepeatKind.weekly,
+    RepeatKind.monthly,
+    RepeatKind.yearly,
+    RepeatKind.everyNDays,
+  ];
+
+  static String _kindLabel(RepeatKind kind) {
+    return switch (kind) {
+      RepeatKind.daily => AppStrings.repeatKindDaily,
+      RepeatKind.weekly => AppStrings.repeatKindWeekly,
+      RepeatKind.monthly => AppStrings.repeatKindMonthly,
+      RepeatKind.yearly => AppStrings.repeatKindYearly,
+      RepeatKind.everyNDays ||
+      RepeatKind.everyNWeeks ||
+      RepeatKind.everyNMonths =>
+        AppStrings.repeatKindEveryN,
+    };
+  }
+
+  Widget _intervalSection() {
+    return _RepeatIntervalField(
+      key: const ValueKey('repeat-interval'),
+      interval: interval,
+      kind: kind,
+      accent: accent,
+      onIntervalChanged: onIntervalChanged,
+      onKindChanged: onKindChanged,
+    );
+  }
 
   static String _weekLabel(RepeatMonthWeek week) {
     return switch (week) {
@@ -70,6 +102,7 @@ class AppCalendarRepeatPanel extends StatelessWidget {
       monthRule: monthRule,
       monthWeek: monthWeek,
       monthWeekday: monthWeekday,
+      interval: interval,
     );
     final highlight = AppColors.of(context).tint(accent, 0.14);
 
@@ -84,49 +117,60 @@ class AppCalendarRepeatPanel extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             _ChevronMenu<RepeatKind>(
-              label: _kindLabels[kind]!,
+              label: _kindLabel(kind),
               compact: true,
               items: [
-                for (final item in RepeatKind.values)
-                  (item, _kindLabels[item]!),
+                for (final item in _kindMenu) (item, _kindLabel(item)),
               ],
-              onSelected: onKindChanged,
+              onSelected: (item) {
+                if (item == RepeatKind.everyNDays && kind.usesInterval) return;
+                onKindChanged(item);
+              },
               child: _RepeatRow(
                 icon: Icons.repeat_rounded,
                 label: AppStrings.repeatTypeLabel,
-                child: _ChevronLabel(label: _kindLabels[kind]!),
+                child: _ChevronLabel(label: _kindLabel(kind)),
               ),
             ),
             AnimatedSize(
               duration: const Duration(milliseconds: 240),
               curve: Curves.easeOutCubic,
               alignment: Alignment.topCenter,
-              child: kind == RepeatKind.weekly
-                  ? _WeekdayRow(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (kind.usesInterval) _intervalSection(),
+                  if (kind.usesWeekdays)
+                    _WeekdayRow(
                       selected: weekdays,
                       startMonday: startMonday,
                       selectedColor: highlight,
                       onPressed: onWeekdayPressed,
-                    )
-                  : kind == RepeatKind.monthly
-                      ? _MonthlyRule(
-                          accent: highlight,
-                          startMonday: startMonday,
-                          monthRule: monthRule,
-                          monthWeek: monthWeek,
-                          monthWeekday: monthWeekday,
-                          weekLabel: _weekLabel,
-                          onRuleChanged: onMonthRuleChanged,
-                          onWeekChanged: onMonthWeekChanged,
-                          onWeekdayChanged: onMonthWeekdayChanged,
-                        )
-                      : const SizedBox(width: double.infinity),
+                    ),
+                  if (kind.usesMonthRule)
+                    _MonthlyRule(
+                      accent: highlight,
+                      startMonday: startMonday,
+                      monthRule: monthRule,
+                      monthWeek: monthWeek,
+                      monthWeekday: monthWeekday,
+                      weekLabel: _weekLabel,
+                      onRuleChanged: onMonthRuleChanged,
+                      onWeekChanged: onMonthWeekChanged,
+                      onWeekdayChanged: onMonthWeekdayChanged,
+                    ),
+                  if (!kind.usesInterval &&
+                      !kind.usesWeekdays &&
+                      !kind.usesMonthRule)
+                    const SizedBox(width: double.infinity),
+                ],
+              ),
             ),
             AnimatedSize(
               duration: const Duration(milliseconds: 240),
               curve: Curves.easeOutCubic,
               alignment: Alignment.topCenter,
-              child: kind == RepeatKind.monthly &&
+              child: kind.usesMonthRule &&
                       monthRule == RepeatMonthRule.weekday
                   ? const SizedBox(width: double.infinity)
                   : _RepeatRow(
@@ -155,6 +199,239 @@ class AppCalendarRepeatPanel extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+String _unitLabel(RepeatKind kind) {
+  return switch (kind) {
+    RepeatKind.everyNWeeks => AppStrings.repeatIntervalUnitWeeks,
+    RepeatKind.everyNMonths => AppStrings.repeatIntervalUnitMonths,
+    _ => AppStrings.repeatIntervalUnitDays,
+  };
+}
+
+class _RepeatIntervalField extends StatefulWidget {
+  const _RepeatIntervalField({
+    super.key,
+    required this.interval,
+    required this.kind,
+    required this.accent,
+    required this.onIntervalChanged,
+    required this.onKindChanged,
+  });
+
+  final int interval;
+  final RepeatKind kind;
+  final Color accent;
+  final ValueChanged<int> onIntervalChanged;
+  final ValueChanged<RepeatKind> onKindChanged;
+
+  static const _units = [
+    RepeatKind.everyNDays,
+    RepeatKind.everyNWeeks,
+    RepeatKind.everyNMonths,
+  ];
+
+  @override
+  State<_RepeatIntervalField> createState() => _RepeatIntervalFieldState();
+}
+
+class _RepeatIntervalFieldState extends State<_RepeatIntervalField> {
+  var _open = false;
+
+  void _toggle() {
+    setState(() => _open = !_open);
+    if (!_open) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      Scrollable.ensureVisible(
+        context,
+        alignment: 0.12,
+        duration: const Duration(milliseconds: 240),
+        curve: Curves.easeOutCubic,
+      );
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    final row = _RepeatRow(
+      icon: Icons.timelapse_rounded,
+      label: AppStrings.repeatIntervalLabel,
+      child: _ChevronLabel(
+        label: '${widget.interval}${_unitLabel(widget.kind)}',
+      ),
+    );
+    return Column(
+      children: [
+        PressBounce(
+          onPressed: _toggle,
+          pressedScale: 0.99,
+          color: Colors.transparent,
+          pressedColor: colors.pressed,
+          borderRadius: BorderRadius.circular(12),
+          child: row,
+        ),
+        AnimatedSize(
+          duration: const Duration(milliseconds: 240),
+          curve: Curves.easeOutCubic,
+          alignment: Alignment.topCenter,
+          child: _open
+              ? Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: NotificationListener<ScrollNotification>(
+                    onNotification: (_) => true,
+                    child: _IntervalWheels(
+                      interval: widget.interval,
+                      kind: widget.kind,
+                      accent: widget.accent,
+                      onIntervalChanged: widget.onIntervalChanged,
+                      onKindChanged: widget.onKindChanged,
+                    ),
+                  ),
+                )
+              : const SizedBox(width: double.infinity),
+        ),
+      ],
+    );
+  }
+}
+
+class _IntervalWheels extends StatelessWidget {
+  const _IntervalWheels({
+    required this.interval,
+    required this.kind,
+    required this.accent,
+    required this.onIntervalChanged,
+    required this.onKindChanged,
+  });
+
+  final int interval;
+  final RepeatKind kind;
+  final Color accent;
+  final ValueChanged<int> onIntervalChanged;
+  final ValueChanged<RepeatKind> onKindChanged;
+
+  static const _extent = 36.0;
+
+  @override
+  Widget build(BuildContext context) {
+    final unitIndex = _RepeatIntervalField._units.indexOf(kind);
+    return ShaderMask(
+      blendMode: BlendMode.dstIn,
+      shaderCallback: (rect) {
+        return const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Color(0x00000000),
+            Color(0xFF000000),
+            Color(0xFF000000),
+            Color(0x00000000),
+          ],
+          stops: [0, 0.18, 0.82, 1],
+        ).createShader(rect);
+      },
+      child: SizedBox(
+        height: _extent * 5,
+        child: Row(
+          children: [
+            Expanded(
+              flex: 4,
+              child: _IntervalWheel(
+                itemCount:
+                    RepeatDates.maxInterval - RepeatDates.minInterval + 1,
+                index: interval - RepeatDates.minInterval,
+                loop: true,
+                selectedColor: accent,
+                labelAt: (index) => '${index + RepeatDates.minInterval}',
+                onChanged: (index) {
+                  onIntervalChanged(index + RepeatDates.minInterval);
+                },
+              ),
+            ),
+            Expanded(
+              flex: 6,
+              child: _IntervalWheel(
+                itemCount: _RepeatIntervalField._units.length,
+                index: unitIndex < 0 ? 0 : unitIndex,
+                selectedColor: accent,
+                highlightWidth: 76,
+                labelAt: (index) =>
+                    _unitLabel(_RepeatIntervalField._units[index]),
+                onChanged: (index) {
+                  onKindChanged(_RepeatIntervalField._units[index]);
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _IntervalWheel extends StatelessWidget {
+  const _IntervalWheel({
+    required this.itemCount,
+    required this.index,
+    required this.labelAt,
+    required this.onChanged,
+    required this.selectedColor,
+    this.loop = false,
+    this.highlightWidth = 52,
+  });
+
+  final int itemCount;
+  final int index;
+  final String Function(int index) labelAt;
+  final ValueChanged<int> onChanged;
+  final Color selectedColor;
+  final bool loop;
+  final double highlightWidth;
+
+  @override
+  Widget build(BuildContext context) {
+    final muted = AppColors.of(context).muted;
+    return FlatSnapPicker(
+      itemCount: itemCount,
+      index: index,
+      itemExtent: _IntervalWheels._extent,
+      loop: loop,
+      onChanged: onChanged,
+      itemBuilder: (context, itemIndex, selected) {
+        return Center(
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 120),
+            curve: Curves.easeOut,
+            width: highlightWidth,
+            height: 32,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: selected
+                  ? selectedColor.withValues(alpha: 0.14)
+                  : Colors.transparent,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: AnimatedDefaultTextStyle(
+              duration: const Duration(milliseconds: 120),
+              curve: Curves.easeOut,
+              style: TextStyle(
+                fontFamily: AppFonts.of(context),
+                fontSize: selected ? 18 : 15,
+                fontWeight: FontWeight.w600,
+                height: 1,
+                color: selected
+                    ? EventCategory.labelOf(selectedColor)
+                    : muted.withValues(alpha: 0.7),
+              ),
+              child: Text(labelAt(itemIndex)),
+            ),
+          ),
+        );
+      },
     );
   }
 }
@@ -527,7 +804,7 @@ class _ChevronMenuState<T> extends State<_ChevronMenu<T>>
                           clipBehavior: Clip.antiAlias,
                           child: ConstrainedBox(
                             constraints: BoxConstraints(
-                              maxHeight: widget.compact ? 148 : 240,
+                              maxHeight: widget.compact ? 248 : 240,
                               minWidth: widget.compact ? 124 : 148,
                               maxWidth: widget.compact ? 148 : 200,
                             ),

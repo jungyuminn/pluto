@@ -57,7 +57,6 @@ import 'package:pluto/presentation/screens/settings/widgets/calendar_import_dial
 import 'package:pluto/presentation/screens/settings/widgets/calendar_import_wizard.dart';
 import 'package:pluto/presentation/screens/settings/widgets/login_page.dart';
 import 'package:pluto/presentation/screens/settings/widgets/photo_calendar_sheet.dart';
-import 'package:pluto/presentation/screens/calendar/widgets/category_picker_sheet.dart';
 import 'package:pluto/presentation/screens/settings/widgets/release_notes_page.dart';
 import 'package:pluto/presentation/screens/settings/widgets/settings_section_help.dart';
 import 'package:pluto/presentation/tutorial/tutorial_controller.dart';
@@ -477,35 +476,28 @@ class _SettingsScreenState extends State<SettingsScreen> {
         );
         return;
       }
-      final mode = await showCalendarImportCategoryModeDialog(context);
-      if (mode == null || !mounted) return;
-      late final List<CalendarEvent> events;
-      if (mode == CalendarImportCategoryMode.allInOne) {
-        final category = await showCategoryPickerSheet(context);
-        if (category == null || !mounted) return;
-        events = [
-          for (final event in picked)
-            event.copyWith(
-              categoryId: category.id,
-              categoryName: category.name,
-              categoryColor: category.color,
-            ),
-        ];
-      } else {
-        final assigned = await showCalendarImportEachCategoryDialog(
+      final result = await showCalendarImportWizard(
+        context,
+        calendars: const [],
+        existing: existing,
+        events: picked,
+      );
+      if (result == null || !mounted) return;
+      if (result.events.isEmpty) {
+        await showBackupMessageDialog(
           context,
-          picked,
+          title: AppStrings.importNoEventsTitle,
+          body: AppStrings.photoImportEmpty,
         );
-        if (assigned == null || !mounted) return;
-        events = assigned;
+        return;
       }
-      await AppScope.of(context).addCalendarEvent.many(events);
+      await AppScope.of(context).addCalendarEvent.many(result.events);
       AppBackupService.revision.value++;
       if (!mounted) return;
       await showBackupMessageDialog(
         context,
         title: AppStrings.importDoneTitle,
-        body: AppStrings.importDoneBody(events.length),
+        body: AppStrings.importDoneBody(result.events.length),
       );
     } catch (_) {
       if (!mounted) return;

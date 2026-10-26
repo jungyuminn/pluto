@@ -1,8 +1,11 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:pluto/core/calendar/calendar_years.dart';
+import 'package:pluto/core/constants/app_fonts.dart';
 import 'package:pluto/core/constants/app_icons.dart';
 import 'package:pluto/core/constants/app_strings.dart';
+import 'package:pluto/core/layout/compose_sheet.dart';
+import 'package:pluto/core/layout/pc_layout.dart';
 import 'package:pluto/core/theme/app_colors.dart';
 import 'package:pluto/core/utils/press_bounce.dart';
 import 'package:pluto/data/datasources/device_calendar_mapper.dart';
@@ -563,8 +566,8 @@ Future<List<CalendarEvent>?> showCalendarImportEachCategoryDialog(
   BuildContext context,
   List<CalendarEvent> events,
 ) {
-  return showDialog<List<CalendarEvent>>(
-    context: context,
+  return showComposeSheet<List<CalendarEvent>>(
+    context,
     builder: (context) => _EachCategoryDialog(events: events),
   );
 }
@@ -581,13 +584,35 @@ class _EachCategoryDialog extends StatefulWidget {
 class _EachCategoryDialogState extends State<_EachCategoryDialog> {
   final _picked = <String, EventCategory>{};
 
-  Future<void> _pick(CalendarEvent event) async {
+  List<List<CalendarEvent>> get _rows {
+    final seen = <String>{};
+    final rows = <List<CalendarEvent>>[];
+    for (final event in widget.events) {
+      final groupId = event.groupId;
+      if (groupId != null) {
+        if (!seen.add(groupId)) continue;
+        rows.add([
+          for (final item in widget.events)
+            if (item.groupId == groupId) item,
+        ]);
+      } else {
+        rows.add([event]);
+      }
+    }
+    return rows;
+  }
+
+  Future<void> _pick(List<CalendarEvent> row) async {
     final category = await showCategoryPickerSheet(
       context,
-      selectedId: _picked[event.id]?.id,
+      selectedId: _picked[row.first.id]?.id,
     );
     if (category == null || !mounted) return;
-    setState(() => _picked[event.id] = category);
+    setState(() {
+      for (final event in row) {
+        _picked[event.id] = category;
+      }
+    });
   }
 
   List<CalendarEvent> _assigned() {
@@ -604,93 +629,123 @@ class _EachCategoryDialogState extends State<_EachCategoryDialog> {
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
+    final font = AppFonts.of(context);
+    final bottom = composeSheetBottomOf(context);
+    final rows = _rows;
     final canImport = widget.events.every(
       (event) => _picked.containsKey(event.id),
     );
-    return AlertDialog(
-      backgroundColor: colors.card,
-      surfaceTintColor: Colors.transparent,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-      title: Text(
-        AppStrings.importCategoryEachTitle,
-        style: TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.w800,
-          color: colors.text,
-        ),
-      ),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          SizedBox(
-            height: 360,
-            child: ListView.separated(
-              itemCount: widget.events.length,
-              separatorBuilder: (context, index) => const SizedBox(height: 8),
-              itemBuilder: (context, index) {
-                final event = widget.events[index];
-                return _EachCategoryTile(
-                  event: event,
-                  category: _picked[event.id],
-                  onPressed: () => _pick(event),
-                );
-              },
-            ),
-          ),
-          const SizedBox(height: 16),
-          Row(
+    return Material(
+      color: colors.card,
+      elevation: 0,
+      borderRadius: PcLayout.sheetRadius(),
+      clipBehavior: Clip.antiAlias,
+      child: SizedBox(
+        height: MediaQuery.sizeOf(context).height * (PcLayout.isPc ? 0.78 : 0.72),
+        child: Padding(
+          padding: EdgeInsets.fromLTRB(20, 16, 20, 16 + bottom),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Expanded(
-                child: PressBounce(
-                  onPressed: () => Navigator.of(context).pop(),
-                  color: colors.border,
-                  pressedColor: Color.lerp(colors.border, Colors.black, 0.12)!,
-                  borderRadius: BorderRadius.circular(14),
-                  child: SizedBox(
-                    height: 48,
-                    child: Center(
-                      child: Text(
-                        AppStrings.cancel,
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w800,
-                          color: colors.text,
-                        ),
-                      ),
-                    ),
-                  ),
+              Text(
+                AppStrings.importCategoryEachTitle,
+                style: TextStyle(
+                  fontFamily: font,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                  color: colors.text,
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(height: 6),
+              Text(
+                AppStrings.importCategoryEachHint,
+                style: TextStyle(
+                  fontFamily: font,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: colors.secondary,
+                ),
+              ),
+              const SizedBox(height: 12),
               Expanded(
-                child: PressBounce(
-                  onPressed: canImport
-                      ? () => Navigator.of(context).pop(_assigned())
-                      : null,
-                  color: canImport ? colors.accentBright : colors.border,
-                  pressedColor: canImport
-                      ? Color.lerp(colors.accentBright, Colors.black, 0.16)!
-                      : colors.border,
-                  borderRadius: BorderRadius.circular(14),
-                  child: SizedBox(
-                    height: 48,
-                    child: Center(
-                      child: Text(
-                        AppStrings.importAction,
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w800,
-                          color: canImport ? Colors.white : colors.muted,
+                child: ListView.separated(
+                  itemCount: rows.length,
+                  separatorBuilder: (context, index) =>
+                      const SizedBox(height: 8),
+                  itemBuilder: (context, index) {
+                    final row = rows[index];
+                    return _EachCategoryTile(
+                      event: row.first,
+                      last: row.last.day,
+                      category: _picked[row.first.id],
+                      onPressed: () => _pick(row),
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: PressBounce(
+                      onPressed: () => Navigator.of(context).pop(),
+                      color: colors.border,
+                      pressedColor:
+                          Color.lerp(colors.border, Colors.black, 0.12)!,
+                      borderRadius: BorderRadius.circular(14),
+                      child: SizedBox(
+                        height: 48,
+                        child: Center(
+                          child: Text(
+                            AppStrings.cancel,
+                            style: TextStyle(
+                              fontFamily: font,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w800,
+                              color: colors.text,
+                            ),
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Opacity(
+                      opacity: canImport ? 1 : 0.45,
+                      child: PressBounce(
+                        onPressed: canImport
+                            ? () => Navigator.of(context).pop(_assigned())
+                            : null,
+                        color: colors.accentBright,
+                        pressedColor: Color.lerp(
+                          colors.accentBright,
+                          Colors.black,
+                          0.16,
+                        )!,
+                        borderRadius: BorderRadius.circular(14),
+                        child: SizedBox(
+                          height: 48,
+                          child: Center(
+                            child: Text(
+                              AppStrings.importAction,
+                              style: TextStyle(
+                                fontFamily: font,
+                                fontSize: 15,
+                                fontWeight: FontWeight.w800,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -699,18 +754,29 @@ class _EachCategoryDialogState extends State<_EachCategoryDialog> {
 class _EachCategoryTile extends StatelessWidget {
   const _EachCategoryTile({
     required this.event,
+    required this.last,
     required this.category,
     required this.onPressed,
   });
 
   final CalendarEvent event;
+  final DateTime last;
   final EventCategory? category;
   final VoidCallback onPressed;
 
-  String get _dateLabel {
-    final date = event.day;
+  String _dayText(DateTime date) {
     final weekday = AppStrings.weekdays[date.weekday % 7];
     return '${date.year}. ${date.month}. ${date.day}. ($weekday)';
+  }
+
+  String get _dateLabel {
+    final start = event.day;
+    final dateText = last.isAfter(start)
+        ? '${_dayText(start)} ~ ${_dayText(last)}'
+        : _dayText(start);
+    final time = event.timeLabel;
+    if (time == null) return dateText;
+    return '$dateText · $time';
   }
 
   @override
@@ -731,6 +797,8 @@ class _EachCategoryTile extends StatelessWidget {
                 children: [
                   Text(
                     event.title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w700,

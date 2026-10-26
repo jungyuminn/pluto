@@ -17,6 +17,16 @@ class ReleaseNote {
 abstract final class ReleaseNotes {
   static const all = [
     ReleaseNote(
+      version: '1.5.8',
+      items: [
+        '다른 캘린더 사진에서 일정을 읽어 가져올 수 있어요',
+        '반복을 며칠·몇 주·몇 달마다로 직접 고를 수 있어요',
+      ],
+      fixes: [
+        '캘린더를 넘길 때 버벅이던 점을 고쳤어요',
+      ],
+    ),
+    ReleaseNote(
       version: '1.5.7',
       items: [
         '할 일에 체크리스트를 넣을 수 있어요',

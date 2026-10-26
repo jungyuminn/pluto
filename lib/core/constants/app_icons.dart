@@ -18,6 +18,7 @@ class AppIcons {
   static const detailView = 'assets/icons/detail_view.svg';
   static const search = 'assets/icons/search.svg';
   static const stars = 'assets/icons/stars.svg';
+  static const camera = 'assets/icons/camera.svg';
   static const addFriend = 'assets/icons/add_friend.svg';
   static const addHome = 'assets/icons/add_home.svg';
   static const removeHome = 'assets/icons/remove_home.svg';

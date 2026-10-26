@@ -31,6 +31,7 @@ Future<CalendarImportWizardResult?> showCalendarImportWizard(
   BuildContext context, {
   required List<DeviceCalendarInfo> calendars,
   required List<CalendarEvent> existing,
+  List<CalendarEvent>? events,
 }) {
   return showModalBottomSheet<CalendarImportWizardResult>(
     context: context,
@@ -48,6 +49,7 @@ Future<CalendarImportWizardResult?> showCalendarImportWizard(
         child: CalendarImportWizard(
           calendars: calendars,
           existing: existing,
+          events: events,
         ),
       );
     },
@@ -63,22 +65,26 @@ class CalendarImportWizard extends StatefulWidget {
     super.key,
     required this.calendars,
     required this.existing,
+    this.events,
   });
 
   final List<DeviceCalendarInfo> calendars;
   final List<CalendarEvent> existing;
+  final List<CalendarEvent>? events;
 
   @override
   State<CalendarImportWizard> createState() => _CalendarImportWizardState();
 }
 
 class _CalendarImportWizardState extends State<CalendarImportWizard> {
-  static const _total = 5;
   static const _pageDuration = Duration(milliseconds: 420);
   static const _pageCurve = Curves.easeOutCubic;
 
+  late final List<_ImportStep> _steps = widget.events == null
+      ? _ImportStep.values
+      : const [_ImportStep.categoryMode, _ImportStep.category];
   final _pages = PageController();
-  var _step = _ImportStep.calendars;
+  late var _step = _steps.first;
   var _busy = false;
   late final Set<String> _selected = {
     for (final calendar in widget.calendars) calendar.id,
@@ -86,7 +92,9 @@ class _CalendarImportWizardState extends State<CalendarImportWizard> {
   late DateTime _from = CalendarYears.start();
   late DateTime _to = DateTime(CalendarYears.max(), 12, 31);
   var _loading = false;
-  DeviceCalendarImportResult? _preview;
+  late DeviceCalendarImportResult? _preview = widget.events == null
+      ? null
+      : DeviceCalendarImportResult(events: widget.events!);
   final _skipped = <String>{};
   var _mode = _CategoryMode.allInOne;
   EventCategory? _allCategory;
@@ -120,9 +128,13 @@ class _CalendarImportWizardState extends State<CalendarImportWizard> {
     setState(() => _categories = categories);
   }
 
+  int get _total => _steps.length;
+
+  int get _stepIndex => _steps.indexOf(_step);
+
   double get _pageNumber {
-    if (!_pages.hasClients) return _step.index.toDouble();
-    return _pages.page ?? _step.index.toDouble();
+    if (!_pages.hasClients) return _stepIndex.toDouble();
+    return _pages.page ?? _stepIndex.toDouble();
   }
 
   List<DeviceCalendarInfo> get _pickedCalendars => [
@@ -191,7 +203,7 @@ class _CalendarImportWizardState extends State<CalendarImportWizard> {
     try {
       if (_pages.hasClients) {
         await _pages.animateToPage(
-          step.index,
+          _steps.indexOf(step),
           duration: _pageDuration,
           curve: _pageCurve,
         );
@@ -210,11 +222,11 @@ class _CalendarImportWizardState extends State<CalendarImportWizard> {
 
   void _back() {
     if (_busy || _loading) return;
-    if (_step == _ImportStep.calendars) {
+    if (_stepIndex <= 0) {
       Navigator.of(context).pop();
       return;
     }
-    _goTo(_ImportStep.values[_step.index - 1]);
+    _goTo(_steps[_stepIndex - 1]);
   }
 
   Future<void> _next() async {
@@ -227,7 +239,7 @@ class _CalendarImportWizardState extends State<CalendarImportWizard> {
       _finish();
       return;
     }
-    await _goTo(_ImportStep.values[_step.index + 1]);
+    await _goTo(_steps[_stepIndex + 1]);
   }
 
   Future<void> _loadPreview() async {
@@ -499,10 +511,7 @@ class _CalendarImportWizardState extends State<CalendarImportWizard> {
                 animation: _pages,
                 builder: (context, _) {
                   final page = _pageNumber;
-                  final visual = _ImportStep.values[page.round().clamp(
-                    0,
-                    _total - 1,
-                  )];
+                  final visual = _steps[page.round().clamp(0, _total - 1)];
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
@@ -548,7 +557,7 @@ class _CalendarImportWizardState extends State<CalendarImportWizard> {
                   controller: _pages,
                   physics: const NeverScrollableScrollPhysics(),
                   children: [
-                    for (final step in _ImportStep.values) _bodyFor(step),
+                    for (final step in _steps) _bodyFor(step),
                   ],
                 ),
               ),
@@ -569,7 +578,7 @@ class _CalendarImportWizardState extends State<CalendarImportWizard> {
                         height: 52,
                         child: Center(
                           child: Text(
-                            _step == _ImportStep.calendars
+                            _stepIndex <= 0
                                 ? AppStrings.cancel
                                 : AppStrings.importBack,
                             style: TextStyle(

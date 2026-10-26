@@ -9,6 +9,8 @@ import 'package:pluto/core/theme/app_colors.dart';
 import 'package:pluto/core/theme/app_skin_background.dart';
 import 'package:pluto/data/datasources/theme_preference.dart';
 import 'package:pluto/core/calendar/month_grid.dart';
+import 'package:pluto/core/calendar/repeat_dates.dart';
+import 'package:pluto/presentation/widgets/flat_snap_picker.dart';
 import 'package:pluto/domain/entities/calendar_event.dart';
 import 'package:pluto/domain/entities/event_category.dart';
 import 'package:pluto/domain/entities/friend_profile.dart';
@@ -121,6 +123,9 @@ enum ReleaseDemo {
   pcLaunch,
   accountSync,
   categoryAi,
+  photoImport,
+  repeatPick,
+  calendarSwipe,
   homeMemo,
   categoryView,
   friendsMiniCal,
@@ -216,6 +221,9 @@ enum ReleaseDemo {
 
 ReleaseDemo releaseDemoFor(String text, {required bool isFix}) {
   if (isFix) {
+    if (text.contains('버벅이')) {
+      return ReleaseDemo.calendarSwipe;
+    }
     if (text.contains('기기 글자 크기')) {
       return ReleaseDemo.systemTextScale;
     }
@@ -249,6 +257,17 @@ ReleaseDemo releaseDemoFor(String text, {required bool isFix}) {
         text.contains('뒤 화면') ||
         text.contains('바로 보내')) {
       return ReleaseDemo.friendsMiniCal;
+    }
+    if (text.contains('이미지 자동') ||
+        text.contains('캘린더 사진') ||
+        text.contains('읽어 가져올')) {
+      return ReleaseDemo.photoImport;
+    }
+    if (text.contains('며칠') ||
+        text.contains('몇 주') ||
+        text.contains('몇 달마다') ||
+        text.contains('직접 고를')) {
+      return ReleaseDemo.repeatPick;
     }
     if (text.contains('AI 카테고리') || text.contains('제목을 치면')) {
       return ReleaseDemo.categoryAi;
@@ -864,6 +883,9 @@ class ReleaseDemoView extends StatelessWidget {
       ReleaseDemo.pcLaunch => const _PcLaunchDemo(),
       ReleaseDemo.accountSync => const _AccountSyncDemo(),
       ReleaseDemo.categoryAi => const _CategoryAiDemo(),
+      ReleaseDemo.photoImport => const _PhotoImportDemo(),
+      ReleaseDemo.repeatPick => const _RepeatPickDemo(),
+      ReleaseDemo.calendarSwipe => const _CalendarSwipeDemo(),
       ReleaseDemo.homeMemo => const _HomeMemoDemo(),
       ReleaseDemo.categoryView => const _CategoryViewDemo(),
       ReleaseDemo.friendsMiniCal => const _FriendsMiniCalDemo(),
@@ -11059,6 +11081,621 @@ class _AiDots extends StatelessWidget {
   }
 }
 
+class _PhotoImportDemo extends StatelessWidget {
+  const _PhotoImportDemo();
+
+  static const _meeting = Color(0xFFFFAAA0);
+  static const _sport = Color(0xFF3B82F6);
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 5400,
+      boxHeight: 220,
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final font = AppFonts.of(context);
+        final shotIn = Curves.easeOutCubic.transform(_gate(t, 0.04, 0.18));
+        final pick1 = Curves.easeOutCubic.transform(_gate(t, 0.20, 0.28));
+        final out1 = Curves.easeInCubic.transform(_gate(t, 0.26, 0.36));
+        final in1 = Curves.easeOutCubic.transform(_gate(t, 0.30, 0.44));
+        final pick2 = Curves.easeOutCubic.transform(_gate(t, 0.40, 0.48));
+        final out2 = Curves.easeInCubic.transform(_gate(t, 0.46, 0.56));
+        final in2 = Curves.easeOutCubic.transform(_gate(t, 0.50, 0.64));
+        final shotOut = Curves.easeInCubic.transform(_gate(t, 0.56, 0.70));
+        final shotShow = (shotIn * (1 - shotOut)).clamp(0.0, 1.0);
+        final caption = t < 0.36
+            ? AppStrings.featureIntroPhotoBody
+            : AppStrings.importConfirmBody(2);
+        return Align(
+          alignment: Alignment.bottomCenter,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: colors.card,
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(24),
+              ),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x33000000),
+                  blurRadius: 16,
+                  offset: Offset(0, -2),
+                ),
+              ],
+            ),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    AppStrings.photoImportTitle,
+                    style: TextStyle(
+                      fontFamily: font,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                      color: colors.text,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    caption,
+                    style: TextStyle(
+                      fontFamily: font,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: colors.secondary,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  SizedBox(
+                    height: 124,
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        if (shotShow > 0)
+                          Opacity(
+                            opacity: shotShow,
+                            child: Transform.translate(
+                              offset: Offset(
+                                0,
+                                18 * (1 - shotIn) - 10 * shotOut,
+                              ),
+                              child: Transform.scale(
+                                scale: 0.92 + 0.08 * shotIn - 0.10 * shotOut,
+                                child: _PhotoShotCard(
+                                  colors: colors,
+                                  font: font,
+                                  gone1: out1,
+                                  gone2: out2,
+                                  pick1: pick1 * (1 - out1),
+                                  pick2: pick2 * (1 - out2),
+                                ),
+                              ),
+                            ),
+                          ),
+                        Column(
+                          children: [
+                            Opacity(
+                              opacity: in1,
+                              child: Transform.translate(
+                                offset: Offset(0, 14 * (1 - in1)),
+                                child: Transform.scale(
+                                  scale: 0.92 + 0.08 * in1,
+                                  child: const DayEventLabel(
+                                    title: '회의',
+                                    categoryName: '회사',
+                                    color: _meeting,
+                                    height: 48,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Opacity(
+                              opacity: in2,
+                              child: Transform.translate(
+                                offset: Offset(0, 14 * (1 - in2)),
+                                child: Transform.scale(
+                                  scale: 0.92 + 0.08 * in2,
+                                  child: const DayEventLabel(
+                                    title: '헬스장가기',
+                                    categoryName: '운동',
+                                    color: _sport,
+                                    height: 48,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _PhotoShotCard extends StatelessWidget {
+  const _PhotoShotCard({
+    required this.colors,
+    required this.font,
+    required this.gone1,
+    required this.gone2,
+    required this.pick1,
+    required this.pick2,
+  });
+
+  final AppColors colors;
+  final String? font;
+  final double gone1;
+  final double gone2;
+  final double pick1;
+  final double pick2;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: colors.card,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: colors.border, width: 2),
+        boxShadow: [
+          BoxShadow(
+            color: colors.shadow,
+            blurRadius: 16,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(3),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(15),
+          child: ColoredBox(
+            color: colors.groupedBackground,
+            child: SizedBox(
+              width: 128,
+              height: 118,
+              child: Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
+                    child: Row(
+                      children: [
+                        Text(
+                          '9:41',
+                          style: TextStyle(
+                            fontFamily: font,
+                            fontSize: 7,
+                            fontWeight: FontWeight.w800,
+                            height: 1,
+                            color: colors.text,
+                          ),
+                        ),
+                        const Spacer(),
+                        for (var i = 0; i < 3; i++)
+                          Padding(
+                            padding: const EdgeInsets.only(left: 1.5),
+                            child: DecoratedBox(
+                              decoration: BoxDecoration(
+                                color: colors.text,
+                                borderRadius: BorderRadius.circular(0.5),
+                              ),
+                              child: SizedBox(width: 2, height: 3.0 + i),
+                            ),
+                          ),
+                        const SizedBox(width: 3),
+                        DecoratedBox(
+                          decoration: BoxDecoration(
+                            border: Border.all(color: colors.text, width: 0.8),
+                            borderRadius: BorderRadius.circular(1.5),
+                          ),
+                          child: const SizedBox(width: 11, height: 6),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(8, 6, 8, 0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '9${AppStrings.monthSuffix}',
+                          style: TextStyle(
+                            fontFamily: font,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w800,
+                            height: 1,
+                            color: colors.text,
+                          ),
+                        ),
+                        const SizedBox(height: 5),
+                        Row(
+                          children: [
+                            for (final day in AppStrings.weekdays)
+                              Expanded(
+                                child: Text(
+                                  day,
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontFamily: font,
+                                    fontSize: 7,
+                                    fontWeight: FontWeight.w600,
+                                    height: 1,
+                                    color: colors.muted,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                        const SizedBox(height: 3),
+                        Row(
+                          children: [
+                            for (var d = 8; d <= 14; d++)
+                              Expanded(
+                                child: Text(
+                                  '$d',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontFamily: font,
+                                    fontSize: 8,
+                                    fontWeight:
+                                        d == 11 ? FontWeight.w800 : FontWeight.w600,
+                                    height: 1,
+                                    color: d == 11
+                                        ? colors.text
+                                        : colors.secondary,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                        const SizedBox(height: 5),
+                        _ShotLabel(
+                          title: '회의',
+                          color: _PhotoImportDemo._meeting,
+                          pick: pick1,
+                          gone: gone1,
+                        ),
+                        const SizedBox(height: 3),
+                        _ShotLabel(
+                          title: '헬스장가기',
+                          color: _PhotoImportDemo._sport,
+                          pick: pick2,
+                          gone: gone2,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Spacer(),
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 5),
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: colors.muted.withValues(alpha: 0.45),
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: const SizedBox(width: 28, height: 3),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ShotLabel extends StatelessWidget {
+  const _ShotLabel({
+    required this.title,
+    required this.color,
+    required this.pick,
+    required this.gone,
+  });
+
+  final String title;
+  final Color color;
+  final double pick;
+  final double gone;
+
+  @override
+  Widget build(BuildContext context) {
+    return Opacity(
+      opacity: (1 - gone).clamp(0.0, 1.0),
+      child: Transform.translate(
+        offset: Offset(0, -6 * gone),
+        child: Transform.scale(
+          alignment: Alignment.centerLeft,
+          scale: 1 + 0.06 * pick - 0.08 * gone,
+          child: CalendarEventLabel(
+            title: title,
+            color: color,
+            height: 15,
+            fontSize: 9,
+            applyCalendarScale: false,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _RepeatPickDemo extends StatelessWidget {
+  const _RepeatPickDemo();
+
+  static const _accent = Color(0xFF3B82F6);
+  static const _units = [
+    RepeatKind.everyNDays,
+    RepeatKind.everyNWeeks,
+    RepeatKind.everyNMonths,
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 5200,
+      boxHeight: 220,
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final font = AppFonts.of(context);
+        final opened = t >= 0.22;
+        final number = 3 + (4 * Curves.easeInOut.transform(_gate(t, 0.38, 0.72))).round();
+        final unit = t < 0.58 ? 0 : (t < 0.78 ? 1 : 2);
+        final kind = _units[unit];
+        final unitText = switch (kind) {
+          RepeatKind.everyNWeeks => AppStrings.repeatIntervalUnitWeeks,
+          RepeatKind.everyNMonths => AppStrings.repeatIntervalUnitMonths,
+          _ => AppStrings.repeatIntervalUnitDays,
+        };
+        return Align(
+          alignment: Alignment.bottomCenter,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: colors.card,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x33000000),
+                  blurRadius: 16,
+                  offset: Offset(0, -2),
+                ),
+              ],
+            ),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.timelapse_rounded, size: 20, color: colors.muted),
+                      const SizedBox(width: 8),
+                      Text(
+                        AppStrings.repeatIntervalLabel,
+                        style: TextStyle(
+                          fontFamily: font,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: colors.text,
+                        ),
+                      ),
+                      const Spacer(),
+                      Text(
+                        '$number$unitText',
+                        style: TextStyle(
+                          fontFamily: font,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: colors.text,
+                        ),
+                      ),
+                      Icon(Icons.expand_more_rounded, color: colors.muted),
+                    ],
+                  ),
+                  ClipRect(
+                    child: Align(
+                      alignment: Alignment.topCenter,
+                      heightFactor: opened ? 1 : 0,
+                      child: SizedBox(
+                        height: 140,
+                        child: IgnorePointer(
+                          child: Row(
+                            children: [
+                              Expanded(
+                                flex: 4,
+                                child: _DemoIntervalWheel(
+                                  itemCount: RepeatDates.maxInterval,
+                                  index: number - 1,
+                                  loop: true,
+                                  labelAt: (index) => '${index + 1}',
+                                ),
+                              ),
+                              Expanded(
+                                flex: 6,
+                                child: _DemoIntervalWheel(
+                                  itemCount: _units.length,
+                                  index: unit,
+                                  labelAt: (index) => switch (_units[index]) {
+                                    RepeatKind.everyNWeeks =>
+                                      AppStrings.repeatIntervalUnitWeeks,
+                                    RepeatKind.everyNMonths =>
+                                      AppStrings.repeatIntervalUnitMonths,
+                                    _ => AppStrings.repeatIntervalUnitDays,
+                                  },
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _DemoIntervalWheel extends StatelessWidget {
+  const _DemoIntervalWheel({
+    required this.itemCount,
+    required this.index,
+    required this.labelAt,
+    this.loop = false,
+  });
+
+  final int itemCount;
+  final int index;
+  final String Function(int index) labelAt;
+  final bool loop;
+
+  @override
+  Widget build(BuildContext context) {
+    final muted = AppColors.of(context).muted;
+    return FlatSnapPicker(
+      itemCount: itemCount,
+      index: index,
+      itemExtent: 28,
+      loop: loop,
+      onChanged: (_) {},
+      itemBuilder: (context, itemIndex, selected) {
+        return Center(
+          child: Text(
+            labelAt(itemIndex),
+            style: TextStyle(
+              fontFamily: AppFonts.of(context),
+              fontSize: selected ? 17 : 14,
+              fontWeight: FontWeight.w600,
+              height: 1,
+              color: selected
+                  ? EventCategory.labelOf(_RepeatPickDemo._accent)
+                  : muted.withValues(alpha: 0.7),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _CalendarSwipeDemo extends StatelessWidget {
+  const _CalendarSwipeDemo();
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 4200,
+      boxHeight: 220,
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final font = AppFonts.of(context);
+        final slide = Curves.easeInOutCubic.transform(_gate(t, 0.18, 0.52));
+        final now = DateTime.now();
+        final left = DateTime(now.year, now.month);
+        final right = DateTime(now.year, now.month + 1);
+        return ClipRect(
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    '${slide < 0.5 ? left.month : right.month}${AppStrings.monthSuffix}',
+                    style: TextStyle(
+                      fontFamily: font,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                      color: colors.text,
+                    ),
+                  ),
+                ),
+              ),
+              Expanded(
+                child: Stack(
+                  children: [
+                    FractionalTranslation(
+                      translation: Offset(-slide, 0),
+                      child: _SwipeMonth(month: left),
+                    ),
+                    FractionalTranslation(
+                      translation: Offset(1 - slide, 0),
+                      child: _SwipeMonth(month: right),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _SwipeMonth extends StatelessWidget {
+  const _SwipeMonth({required this.month});
+
+  final DateTime month;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    final font = AppFonts.of(context);
+    final days = MonthGrid.daysFor(month).take(14).toList();
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(10, 0, 10, 8),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              for (final day in AppStrings.weekdays)
+                Expanded(
+                  child: Text(
+                    day,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontFamily: font,
+                      fontSize: 9,
+                      fontWeight: FontWeight.w600,
+                      color: colors.muted,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Expanded(
+            child: GridView.count(
+              crossAxisCount: 7,
+              physics: const NeverScrollableScrollPhysics(),
+              children: [
+                for (final day in days) CalendarDayCell(day: day),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _FriendsPhotoPeekDemo extends StatelessWidget {
   const _FriendsPhotoPeekDemo();
 
@@ -12074,6 +12711,7 @@ class _FeatureIntroDemo extends StatelessWidget {
     (AppIcons.link, AppStrings.featureIntroSyncTitle),
     (AppIcons.stars, AppStrings.featureIntroAiTitle),
     (AppIcons.addFriend, AppStrings.featureIntroFriendsTitle),
+    (AppIcons.camera, AppStrings.photoImportTitle),
   ];
 
   @override
@@ -12089,13 +12727,15 @@ class _FeatureIntroDemo extends StatelessWidget {
         final sheetUp = t < 0.82
             ? Curves.easeOutCubic.transform(_gate(t, 0.30, 0.46))
             : 1 - Curves.easeInCubic.transform(_gate(t, 0.82, 0.96));
-        final selected = t < 0.50
+        final selected = t < 0.48
             ? 0
-            : t < 0.58
+            : t < 0.55
             ? 1
-            : t < 0.66
+            : t < 0.62
             ? 2
-            : 3;
+            : t < 0.69
+            ? 3
+            : 4;
         return ClipRect(
           child: Stack(
           children: [
@@ -12370,8 +13010,8 @@ class _IntroFeatureRow extends StatelessWidget {
           children: [
             AppAssetImage(
               asset: asset,
-              width: 16,
-              height: 16,
+              width: asset == AppIcons.camera ? 17 : 16,
+              height: asset == AppIcons.camera ? 17 : 16,
               color: colors.muted,
             ),
             const SizedBox(width: 8),

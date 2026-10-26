@@ -43,14 +43,23 @@ class PhotoCalendarSheet extends StatefulWidget {
 
 class _PhotoCalendarSheetState extends State<PhotoCalendarSheet> {
   final _skipped = <String>{};
+  final _scroll = ScrollController();
   var _events = <CalendarEvent>[];
   var _done = 0;
   var _reading = true;
+  var _sticking = false;
 
   @override
   void initState() {
     super.initState();
     unawaited(_read());
+  }
+
+  @override
+  void dispose() {
+    _sticking = false;
+    _scroll.dispose();
+    super.dispose();
   }
 
   Future<void> _read() async {
@@ -65,12 +74,37 @@ class _PhotoCalendarSheetState extends State<PhotoCalendarSheet> {
           existing: widget.existing,
         );
       });
+      _stickToEnd();
     }
     if (!mounted) return;
     setState(() {
       _done = widget.photos.length;
       _reading = false;
     });
+    _stickToEnd(once: true);
+  }
+
+  void _stickToEnd({bool once = false}) {
+    if (_sticking && !once) return;
+    _sticking = true;
+    void tick() {
+      if (!mounted || !_scroll.hasClients) {
+        _sticking = false;
+        return;
+      }
+      final pos = _scroll.position;
+      final end = pos.maxScrollExtent;
+      if ((pos.pixels - end).abs() > 0.5) {
+        _scroll.jumpTo(end);
+      }
+      if (once || !_reading) {
+        _sticking = false;
+        return;
+      }
+      WidgetsBinding.instance.addPostFrameCallback((_) => tick());
+    }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) => tick());
   }
 
   List<List<CalendarEvent>> get _rows {
@@ -140,6 +174,11 @@ class _PhotoCalendarSheetState extends State<PhotoCalendarSheet> {
               const SizedBox(height: 6),
               _reading
                   ? _PhotoImportWaitText(
+                      floor: _events.isNotEmpty
+                          ? 2
+                          : _done > 0
+                          ? 1
+                          : 0,
                       style: TextStyle(
                         fontFamily: font,
                         fontSize: 14,
@@ -156,7 +195,7 @@ class _PhotoCalendarSheetState extends State<PhotoCalendarSheet> {
                         color: colors.secondary,
                       ),
                     ),
-              if (_events.isNotEmpty) ...[
+              if (!_reading && _events.isNotEmpty) ...[
                 const SizedBox(height: 4),
                 Text(
                   AppStrings.importConfirmSkipHint,
@@ -185,19 +224,31 @@ class _PhotoCalendarSheetState extends State<PhotoCalendarSheet> {
                                 ),
                               ),
                       )
-                    : ListView.separated(
-                        itemCount: _rows.length,
-                        separatorBuilder: (context, index) =>
-                            const SizedBox(height: 8),
+                    : ListView.builder(
+                        controller: _scroll,
+                        itemCount: _rows.length + (_reading ? 1 : 0),
                         itemBuilder: (context, index) {
+                          if (index >= _rows.length) {
+                            return const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 14),
+                              child: Center(child: DotsLoader()),
+                            );
+                          }
                           final row = _rows[index];
-                          return _PhotoEventTile(
-                            event: row.first,
-                            last: row.last.day,
-                            selected: row.any(
-                              (event) => !_skipped.contains(event.id),
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 8),
+                            child: _RevealTile(
+                              key: ValueKey(row.first.groupId ?? row.first.id),
+                              child: _PhotoEventTile(
+                                event: row.first,
+                                last: row.last.day,
+                                selected: row.any(
+                                  (event) => !_skipped.contains(event.id),
+                                ),
+                                onPressed:
+                                    _reading ? null : () => _toggle(row),
+                              ),
                             ),
-                            onPressed: () => _toggle(row),
                           );
                         },
                       ),
@@ -269,10 +320,55 @@ class _PhotoCalendarSheetState extends State<PhotoCalendarSheet> {
   }
 }
 
+class _RevealTile extends StatefulWidget {
+  const _RevealTile({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  State<_RevealTile> createState() => _RevealTileState();
+}
+
+class _RevealTileState extends State<_RevealTile>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 320),
+  )..forward();
+  late final Animation<double> _curved = CurvedAnimation(
+    parent: _controller,
+    curve: Curves.easeOutCubic,
+  );
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRect(
+      child: SizeTransition(
+        sizeFactor: _curved,
+        alignment: Alignment.topCenter,
+        child: FadeTransition(
+          opacity: _curved,
+          child: widget.child,
+        ),
+      ),
+    );
+  }
+}
+
 class _PhotoImportWaitText extends StatefulWidget {
-  const _PhotoImportWaitText({required this.style});
+  const _PhotoImportWaitText({
+    required this.style,
+    this.floor = 0,
+  });
 
   final TextStyle style;
+  final int floor;
 
   @override
   State<_PhotoImportWaitText> createState() => _PhotoImportWaitTextState();
@@ -282,15 +378,28 @@ class _PhotoImportWaitTextState extends State<_PhotoImportWaitText> {
   var _index = 0;
   Timer? _timer;
 
+  int get _shown {
+    final last = AppStrings.photoImportWaits.length - 1;
+    final next = _index < widget.floor ? widget.floor : _index;
+    return next.clamp(0, last);
+  }
+
   @override
   void initState() {
     super.initState();
+    _index = widget.floor;
     _timer = Timer.periodic(const Duration(milliseconds: 1800), (_) {
       if (!mounted) return;
-      setState(() {
-        _index = (_index + 1) % AppStrings.photoImportWaits.length;
-      });
+      final last = AppStrings.photoImportWaits.length - 1;
+      if (_shown >= last) return;
+      setState(() => _index = _shown + 1);
     });
+  }
+
+  @override
+  void didUpdateWidget(_PhotoImportWaitText oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.floor > _index) _index = widget.floor;
   }
 
   @override
@@ -301,11 +410,37 @@ class _PhotoImportWaitTextState extends State<_PhotoImportWaitText> {
 
   @override
   Widget build(BuildContext context) {
+    final index = _shown;
     return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 280),
+      duration: const Duration(milliseconds: 360),
+      switchInCurve: Curves.easeOutCubic,
+      switchOutCurve: Curves.easeInCubic,
+      layoutBuilder: (current, previous) {
+        return Stack(
+          alignment: Alignment.centerLeft,
+          children: [
+            ...previous,
+            if (current != null) current,
+          ],
+        );
+      },
+      transitionBuilder: (child, animation) {
+        final incoming = child.key == ValueKey(index);
+        final offset = Tween<Offset>(
+          begin: incoming ? const Offset(-0.08, 0) : const Offset(0.08, 0),
+          end: Offset.zero,
+        ).animate(animation);
+        return FadeTransition(
+          opacity: animation,
+          child: SlideTransition(
+            position: offset,
+            child: child,
+          ),
+        );
+      },
       child: Text(
-        AppStrings.photoImportWaits[_index],
-        key: ValueKey(_index),
+        AppStrings.photoImportWaits[index],
+        key: ValueKey(index),
         style: widget.style,
       ),
     );
@@ -317,13 +452,13 @@ class _PhotoEventTile extends StatelessWidget {
     required this.event,
     required this.last,
     required this.selected,
-    required this.onPressed,
+    this.onPressed,
   });
 
   final CalendarEvent event;
   final DateTime last;
   final bool selected;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
 
   String _dayText(DateTime date) {
     final weekday = AppStrings.weekdays[date.weekday % 7];

@@ -16,11 +16,11 @@ class AppStrings {
   static const importSamsungCalendar = '삼성 캘린더';
   static const importIosCalendar = '애플 캘린더';
   static const photoImportTitle = '이미지 자동 인식';
-  static const photoImportWait = '사진을 읽고 있어요';
+  static const photoImportWait = '사진 속 일정을 찾고 있어요..';
   static const photoImportWaits = [
     photoImportWait,
-    '일정을 찾고 있어요',
-    '날짜를 맞추고 있어요',
+    '날짜와 시간을 확인하고 있어요..',
+    '일정을 차곡차곡 정리하고 있어요..',
   ];
   static const photoImportEmpty = '사진에서 할 일을 찾지 못했어요';
   static const importComingLaterTitle = '아직 준비 중이에요';
@@ -254,6 +254,7 @@ class AppStrings {
   static const featureIntroSyncBody = '데이터를 따로 백업할 필요가 없어요';
   static const featureIntroAiTitle = 'AI 카테고리';
   static const featureIntroAiBody = 'AI가 할 일에 따라 카테고리를 자동으로 골라줘요';
+  static const featureIntroPhotoBody = '다른 캘린더의 일정을 이미지로 가져올 수 있어요';
   static const featureIntroAiThinking = '고르는 중';
   static const featureIntroAiPicked = '운동으로 집어 두었어요';
   static const featureIntroFriendsTitle = '친구 추가';

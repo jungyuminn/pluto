@@ -55,12 +55,16 @@ class CalendarScreenState extends State<CalendarScreen>
   late final AnimationController _searchAnimation;
   late final CurvedAnimation _searchFade;
   late final ValueNotifier<bool> _searchOpen;
+  late final ValueNotifier<DateTime> _monthTick;
   var _events = <CalendarEvent>[];
   var _diaries = <DiaryEntry>[];
   var _ledgers = <LedgerEntry>[];
   var _applications = <JobApplication>[];
   var _companyCategories = <EventCategory>[];
   var _eventCategories = <EventCategory>[];
+  var _eventsByDay = <DateTime, List<CalendarEvent>>{};
+  var _diariesByDay = <DateTime, List<DiaryEntry>>{};
+  Object? _dayIndexStamp;
   var _initialized = false;
   var _rangeDragging = false;
   var _showDiary = false;
@@ -82,6 +86,8 @@ class CalendarScreenState extends State<CalendarScreen>
   @override
   void initState() {
     super.initState();
+    final now = DateTime.now();
+    _monthTick = ValueNotifier(DateTime(now.year, now.month));
     _showCurrentMonth();
     _daysMonth = _visibleMonth;
     _pages = PageController(initialPage: _initialPage);
@@ -186,6 +192,7 @@ class CalendarScreenState extends State<CalendarScreen>
     _searchFade.dispose();
     _searchAnimation.dispose();
     _searchOpen.dispose();
+    _monthTick.dispose();
     _searchFocus.dispose();
     _search.dispose();
     _pages.dispose();
@@ -238,7 +245,7 @@ class CalendarScreenState extends State<CalendarScreen>
 
   void _pickYear(int year) {
     setState(() {
-      _visibleMonth = DateTime(year, _visibleMonth.month);
+      _rememberMonth(DateTime(year, _visibleMonth.month));
       _zoom = CalendarZoomLevel.months;
     });
   }
@@ -268,8 +275,7 @@ class CalendarScreenState extends State<CalendarScreen>
     final now = DateTime.now();
     final current = DateTime(now.year, now.month);
     _baseMonth = current;
-    _visibleMonth = current;
-    _daysMonth = current;
+    _rememberMonth(current);
     _zoom = CalendarZoomLevel.days;
     if (!jump) return;
     if (_pages.hasClients) _pages.jumpToPage(_initialPage);
@@ -279,16 +285,14 @@ class CalendarScreenState extends State<CalendarScreen>
   Future<void> _goToMonth(DateTime month) async {
     final target = DateTime(month.year, month.month);
     if (!_pages.hasClients) {
-      if (mounted) setState(() => _visibleMonth = target);
+      _rememberMonth(target);
+      if (mounted) setState(() {});
       return;
     }
     final page = _pageOf(target);
     final current = _pages.page?.round() ?? _initialPage;
     if (current == page) {
-      if (_visibleMonth.year != target.year ||
-          _visibleMonth.month != target.month) {
-        setState(() => _visibleMonth = target);
-      }
+      _rememberMonth(target);
       return;
     }
     final distance = (page - current).abs();
@@ -303,10 +307,7 @@ class CalendarScreenState extends State<CalendarScreen>
       curve: Curves.easeOutCubic,
     );
     if (!mounted) return;
-    if (_visibleMonth.year != target.year ||
-        _visibleMonth.month != target.month) {
-      setState(() => _visibleMonth = target);
-    }
+    _rememberMonth(target);
   }
 
   int _pageOf(DateTime month) {
@@ -323,13 +324,7 @@ class CalendarScreenState extends State<CalendarScreen>
         _pages.jumpToPage(page);
       }
     }
-    if (_visibleMonth.year == target.year &&
-        _visibleMonth.month == target.month) {
-      _daysMonth = target;
-      return;
-    }
-    _daysMonth = target;
-    if (mounted) setState(() => _visibleMonth = target);
+    _rememberMonth(target);
   }
 
   DateTime _monthAt(int page) {
@@ -505,33 +500,119 @@ class CalendarScreenState extends State<CalendarScreen>
     _revealHit(_hits[index].day);
   }
 
-  List<CalendarEvent> _eventsOn(DateTime date) {
-    final calendarPrefs = AppScope.of(context).calendarPreference;
-    final events = calendarEventsOn(
-      date: date,
-      events: calendarPrefs.showTodos ? _events : const [],
-      applications:
-          (calendarPrefs.showCompanies &&
-              AppScope.of(context).navPreference.showJobTab)
-          ? _applications
-          : const [],
-      companyCategories: _companyCategories,
-      includeRejected: false,
-    );
-    final prefs = AppScope.of(context).dayEventsViewPreference;
-    if (prefs.categoryView) {
-      return calendarEventsByCategory(
-        events,
-        categories: _eventCategories,
-        sortByTime: prefs.sortByTime,
-      );
+  DateTime _dayOf(DateTime date) => DateTime(date.year, date.month, date.day);
+
+  void _rememberMonth(DateTime month) {
+    final next = DateTime(month.year, month.month);
+    _visibleMonth = next;
+    _daysMonth = next;
+    if (_monthTick.value.year != next.year ||
+        _monthTick.value.month != next.month) {
+      _monthTick.value = next;
     }
-    if (!prefs.sortByTime) return events;
-    return CalendarEvent.withLockedThenStartTime(events);
+  }
+
+  void _ensureDayIndex() {
+    final calendarPrefs = AppScope.of(context).calendarPreference;
+    final viewPrefs = AppScope.of(context).dayEventsViewPreference;
+    final showJobs = calendarPrefs.showCompanies &&
+        AppScope.of(context).navPreference.showJobTab;
+    final stamp = (
+      identityHashCode(_events),
+      identityHashCode(_diaries),
+      identityHashCode(_applications),
+      identityHashCode(_eventCategories),
+      identityHashCode(_companyCategories),
+      calendarPrefs.showTodos,
+      showJobs,
+      viewPrefs.categoryView,
+      viewPrefs.sortByTime,
+    );
+    if (stamp == _dayIndexStamp) return;
+    _dayIndexStamp = stamp;
+    _rebuildDayIndex(
+      showTodos: calendarPrefs.showTodos,
+      showJobs: showJobs,
+      categoryView: viewPrefs.categoryView,
+      sortByTime: viewPrefs.sortByTime,
+    );
+  }
+
+  void _rebuildDayIndex({
+    required bool showTodos,
+    required bool showJobs,
+    required bool categoryView,
+    required bool sortByTime,
+  }) {
+    final todos = showTodos
+        ? [
+            for (final event in _events)
+              if (!event.isJob && !event.someday) event,
+          ]
+        : const <CalendarEvent>[];
+    final todosByDay = <DateTime, List<CalendarEvent>>{};
+    for (final event in todos) {
+      final day = _dayOf(event.date);
+      (todosByDay[day] ??= []).add(event);
+    }
+
+    final days = {...todosByDay.keys};
+    if (showJobs) {
+      for (final application in _applications) {
+        if (application.isRejected) continue;
+        for (final round in application.rounds) {
+          final date = round.date;
+          if (date == null) continue;
+          days.add(_dayOf(date));
+        }
+      }
+    }
+
+    final eventsByDay = <DateTime, List<CalendarEvent>>{};
+    for (final day in days) {
+      final dayTodos = CalendarEvent.withRangesFirst(
+        todosByDay[day] ?? const [],
+        all: todos,
+      );
+      final jobs = showJobs
+          ? jobEventsOn(
+              day,
+              _applications,
+              companyCategories: _companyCategories,
+            )
+          : const <CalendarEvent>[];
+      var events = <CalendarEvent>[
+        ...[for (final event in dayTodos) if (event.isRange) event],
+        ...jobs,
+        ...[for (final event in dayTodos) if (!event.isRange) event],
+      ];
+      if (categoryView) {
+        events = calendarEventsByCategory(
+          events,
+          categories: _eventCategories,
+          sortByTime: sortByTime,
+        );
+      } else if (sortByTime) {
+        events = CalendarEvent.withLockedThenStartTime(events);
+      }
+      eventsByDay[day] = events;
+    }
+    _eventsByDay = eventsByDay;
+
+    final diariesByDay = <DateTime, List<DiaryEntry>>{};
+    for (final diary in _diaries) {
+      (diariesByDay[_dayOf(diary.day)] ??= []).add(diary);
+    }
+    _diariesByDay = diariesByDay;
+  }
+
+  List<CalendarEvent> _eventsOn(DateTime date) {
+    _ensureDayIndex();
+    return _eventsByDay[_dayOf(date)] ?? const [];
   }
 
   List<LedgerEntry> _ledgersOn(DateTime date) {
-    final day = DateTime(date.year, date.month, date.day);
+    final day = _dayOf(date);
     return [
       for (final entry in _ledgers)
         if (LedgerSalaryRepeat.occursOn(entry, day))
@@ -540,11 +621,8 @@ class CalendarScreenState extends State<CalendarScreen>
   }
 
   List<DiaryEntry> _diariesOn(DateTime date) {
-    final day = DateTime(date.year, date.month, date.day);
-    return [
-      for (final diary in _diaries)
-        if (diary.day == day) diary,
-    ];
+    _ensureDayIndex();
+    return _diariesByDay[_dayOf(date)] ?? const [];
   }
 
   ({DateTime start, DateTime end})? _diarySpan(DiaryEntry diary) {
@@ -685,18 +763,21 @@ class CalendarScreenState extends State<CalendarScreen>
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          ValueListenableBuilder<bool>(
+                          ValueListenableBuilder<DateTime>(
+                            valueListenable: _monthTick,
+                            builder: (context, month, _) {
+                              return ValueListenableBuilder<bool>(
                             valueListenable: _searchOpen,
                             builder: (context, searchOpen, _) {
                               return CalendarMonthHeader(
-                                month: _visibleMonth,
+                                month: month,
                                 pages: _pages,
                                 initialPage: _initialPage,
                                 monthAt: _monthAt,
                                 zoom: _zoom,
                                 title: CalendarZoom.title(
                                   _zoom,
-                                  _visibleMonth,
+                                  month,
                                   hideCurrentYear: true,
                                 ),
                                 onTitlePressed: _onTitlePressed,
@@ -740,16 +821,16 @@ class CalendarScreenState extends State<CalendarScreen>
                                         _zoom == CalendarZoomLevel.days &&
                                         viewPrefs.showLedgerMonthStats
                                     ? LedgerMonthStats.of(
-                                        month: _visibleMonth,
+                                        month: month,
                                         entries: _ledgers,
                                       )
                                     : null,
                                 onLedgerStatsPressed: () async {
                                   final day = await showLedgerMonthStatsSheet(
                                     context,
-                                    month: _visibleMonth,
+                                    month: month,
                                     stats: LedgerMonthStats.of(
-                                      month: _visibleMonth,
+                                      month: month,
                                       entries: _ledgers,
                                     ),
                                   );
@@ -757,6 +838,8 @@ class CalendarScreenState extends State<CalendarScreen>
                                   await _openDay(day, Rect.zero);
                                 },
                               );
+                            },
+                          );
                             },
                           ),
                           CalendarFeatureIntroBanner(
@@ -817,12 +900,9 @@ class CalendarScreenState extends State<CalendarScreen>
                                                         ? const NeverScrollableScrollPhysics()
                                                         : const CalendarPagePhysics(),
                                                     onPageChanged: (page) {
-                                                      setState(() {
-                                                        _visibleMonth =
-                                                            _monthAt(page);
-                                                        _daysMonth =
-                                                            _visibleMonth;
-                                                      });
+                                                      _rememberMonth(
+                                                        _monthAt(page),
+                                                      );
                                                     },
                                                     itemBuilder: (context, page) {
                                                       final emojis =
@@ -911,9 +991,8 @@ class CalendarScreenState extends State<CalendarScreen>
                                                 context,
                                               ).accentBright,
                                               onFocusedChanged: (month) {
-                                                setState(
-                                                  () => _visibleMonth = month,
-                                                );
+                                                _rememberMonth(month);
+                                                setState(() {});
                                               },
                                               onMonthPressed: _pickMonth,
                                             ),
@@ -928,9 +1007,8 @@ class CalendarScreenState extends State<CalendarScreen>
                                                 context,
                                               ).accentBright,
                                               onFocusedChanged: (month) {
-                                                setState(
-                                                  () => _visibleMonth = month,
-                                                );
+                                                _rememberMonth(month);
+                                                setState(() {});
                                               },
                                               onYearPressed: _pickYear,
                                             ),

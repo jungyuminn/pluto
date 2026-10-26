@@ -276,7 +276,7 @@ class CalendarFeatureIntroSheet extends StatefulWidget {
       _CalendarFeatureIntroSheetState();
 }
 
-enum _IntroFeature { pc, sync, ai, friends }
+enum _IntroFeature { pc, sync, ai, friends, photo }
 
 class _CalendarFeatureIntroSheetState extends State<CalendarFeatureIntroSheet> {
   late _IntroFeature _open = widget.initial;
@@ -391,6 +391,14 @@ class _CalendarFeatureIntroSheetState extends State<CalendarFeatureIntroSheet> {
                     highlight: rowHighlight,
                     onPressed: () => _select(_IntroFeature.friends),
                   ),
+                  _FeatureRow(
+                    asset: AppIcons.camera,
+                    title: AppStrings.photoImportTitle,
+                    selected: _open == _IntroFeature.photo,
+                    iconColor: defaultTheme ? colors.muted : colors.accent,
+                    highlight: rowHighlight,
+                    onPressed: () => _select(_IntroFeature.photo),
+                  ),
                   const SizedBox(height: 16),
                   PressBounce(
                     onPressed: widget.onLogin,
@@ -426,6 +434,7 @@ extension on _IntroFeature {
     _IntroFeature.pc => AppStrings.featureIntroPcBody,
     _IntroFeature.sync => AppStrings.featureIntroSyncBody,
     _IntroFeature.ai => AppStrings.featureIntroAiBody,
+    _IntroFeature.photo => AppStrings.featureIntroPhotoBody,
     _IntroFeature.friends => AppStrings.featureIntroFriendsBody,
   };
 
@@ -433,6 +442,7 @@ extension on _IntroFeature {
     _IntroFeature.pc => ReleaseDemo.pcLaunch,
     _IntroFeature.sync => ReleaseDemo.accountSync,
     _IntroFeature.ai => ReleaseDemo.categoryAi,
+    _IntroFeature.photo => ReleaseDemo.photoImport,
     _IntroFeature.friends => ReleaseDemo.friendsMiniCal,
   };
 }
@@ -476,8 +486,8 @@ class _FeatureRow extends StatelessWidget {
                 child: Center(
                   child: AppAssetImage(
                     asset: asset,
-                    width: 22,
-                    height: 22,
+                    width: asset == AppIcons.camera ? 24 : 22,
+                    height: asset == AppIcons.camera ? 24 : 22,
                     color: iconColor,
                   ),
                 ),

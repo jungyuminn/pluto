@@ -23,7 +23,7 @@ abstract final class ReleaseNotes {
         '반복을 며칠·몇 주·몇 달마다로 직접 고를 수 있어요',
       ],
       fixes: [
-        '캘린더를 넘길 때 버벅이던 점을 고쳤어요',
+        '캘린더를 넘길 때 버벅이는 현상을 고쳤어요',
       ],
     ),
     ReleaseNote(

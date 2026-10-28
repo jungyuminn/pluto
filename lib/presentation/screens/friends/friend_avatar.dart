@@ -5,6 +5,7 @@ import 'package:pluto/app_scope.dart';
 import 'package:pluto/core/constants/app_icons.dart';
 import 'package:pluto/core/constants/app_strings.dart';
 import 'package:pluto/core/theme/app_colors.dart';
+import 'package:pluto/core/theme/app_skin_background.dart';
 import 'package:pluto/data/datasources/friend_favorite_preference.dart';
 import 'package:pluto/data/datasources/friend_service.dart';
 import 'package:pluto/data/datasources/theme_preference.dart';
@@ -183,6 +184,29 @@ class _FriendAvatarState extends State<FriendAvatar> {
   }
 
   Widget _logo(BuildContext context) {
+    final theme = AppScope.maybeOf(context)?.themePreference;
+    final skin = theme?.paintedSkin ?? AppSkin.classic;
+    final avatar = AppSkinAssets.defaultAvatarOf(skin);
+    if (avatar != null) {
+      final fill = Theme.of(context).brightness == Brightness.dark
+          ? const Color(0xFF42474E)
+          : const Color(0xFFEEF0F2);
+      final faceSize = widget.size * 0.72;
+      return ClipOval(
+        child: ColoredBox(
+          color: fill,
+          child: Center(
+            child: Image.asset(
+              avatar,
+              width: faceSize,
+              height: faceSize,
+              fit: BoxFit.contain,
+              gaplessPlayback: true,
+            ),
+          ),
+        ),
+      );
+    }
     final logoSize = widget.size * 0.78;
     return Center(
       child: AppAssetImage(

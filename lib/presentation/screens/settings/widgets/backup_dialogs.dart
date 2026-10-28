@@ -13,7 +13,7 @@ Future<T> showBackupLoading<T>(
     context: context,
     barrierDismissible: false,
     useRootNavigator: true,
-    barrierColor: const Color(0x4D000000),
+    barrierColor: AppColors.barrier,
     builder: (context) => const DotsLoadingDialog(),
   );
   try {

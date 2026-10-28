@@ -2042,7 +2042,7 @@ class _ThemeLivePreviewState extends State<_ThemeLivePreview> {
       context: context,
       barrierDismissible: true,
       barrierLabel: AppStrings.themeMineFullPreview,
-      barrierColor: const Color(0x4D000000),
+      barrierColor: AppColors.barrier,
       transitionDuration: const Duration(milliseconds: 220),
       pageBuilder: (context, animation, secondaryAnimation) {
         return _ThemeFullPreview(
@@ -3400,7 +3400,7 @@ class _MineThemesPanelState extends State<_MineThemesPanel>
     await _collapse(item.id);
     if (!context.mounted) return;
     await AppScope.of(context).themePreference.deleteCustomTheme(item.id);
-    await HomeScreenWidgetService.instance.sync();
+                              await HomeScreenWidgetService.instance.sync();
   }
 }
 
@@ -5485,9 +5485,9 @@ class _SettingsCard extends StatelessWidget {
               children[i],
               if (i != children.length - 1)
                 Divider(
-                  height: 1,
-                  thickness: 0.5,
-                  color: AppColors.of(context).border,
+                    height: 1,
+                    thickness: 0.5,
+                    color: AppColors.of(context).border,
                 ),
             ],
           ],

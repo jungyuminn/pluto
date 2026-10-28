@@ -19,7 +19,7 @@ Future<void> showCategoryShareSheet(BuildContext context) {
     showDragHandle: false,
     enableDrag: true,
     backgroundColor: Colors.transparent,
-    barrierColor: const Color(0x40000000),
+    barrierColor: AppColors.barrier,
     elevation: 0,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(24)),

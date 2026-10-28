@@ -17,7 +17,7 @@ Future<String?> showDayEmojiSheet(
     isScrollControlled: true,
     useSafeArea: false,
     backgroundColor: Colors.transparent,
-    barrierColor: const Color(0x40000000),
+    barrierColor: AppColors.barrier,
     useRootNavigator: true,
     builder: (context) => SizedBox(
       width: MediaQuery.sizeOf(context).width,

@@ -130,8 +130,6 @@ class AppStrings {
   static const tutorialWelcomeTitle = '플루토에 처음 오셨네요!';
   static const tutorialWelcomeBody = '튜토리얼을 시작할까요?';
   static const tutorialWelcomeBodyDaily = '튜토리얼을 시작할까요?';
-  static const tutorialSkipHint =
-      '설정 > 앱 둘러보기에서 다시 볼 수 있어요';
   static const tutorialFollow = '따라 해보세요';
   static const tutorialAddTapTitle = '날짜를 눌러 추가';
   static const tutorialAddTapBody = '날짜 칸을 누르면 할 일을 추가할 수 있어요';

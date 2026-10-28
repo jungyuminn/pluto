@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:pluto/core/constants/app_fonts.dart';
 import 'package:pluto/core/constants/app_strings.dart';
+import 'package:pluto/core/layout/app_dialog.dart';
 import 'package:pluto/core/theme/app_colors.dart';
 import 'package:pluto/core/utils/press_bounce.dart';
 
 enum RepeatDeleteScope { thisOnly, thisAndAfter, all }
 
 Future<RepeatDeleteScope?> showDeleteRepeatEventDialog(BuildContext context) {
-  return showDialog<RepeatDeleteScope>(
+  return showAppDialog<RepeatDeleteScope>(
     context: context,
     builder: (context) => const DeleteRepeatEventDialog(),
   );

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:pluto/core/theme/app_colors.dart';
 import 'package:pluto/domain/entities/job_application.dart';
 import 'package:pluto/presentation/screens/add_company/widgets/add_company_form.dart';
 
@@ -13,7 +14,7 @@ Future<bool> showAddCompanySheet(
     showDragHandle: false,
     enableDrag: true,
     backgroundColor: Colors.transparent,
-    barrierColor: const Color(0x33000000),
+    barrierColor: AppColors.barrier,
     elevation: 0,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(24)),

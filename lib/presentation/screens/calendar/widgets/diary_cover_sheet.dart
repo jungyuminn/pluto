@@ -25,7 +25,7 @@ Future<DiaryCover?> showDiaryCoverSheet(
     showDragHandle: false,
     enableDrag: false,
     backgroundColor: Colors.transparent,
-    barrierColor: const Color(0x40000000),
+    barrierColor: AppColors.barrier,
     elevation: 0,
     builder: (context) => DiaryCoverSheet(selected: selected, color: color),
   );

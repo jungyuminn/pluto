@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 
 @immutable
 class AppColors extends ThemeExtension<AppColors> {
+  static const barrier = Color(0x2A000000);
+  static const barrierOpacity = 0.16;
+
   const AppColors({
     required this.background,
     required this.groupedBackground,

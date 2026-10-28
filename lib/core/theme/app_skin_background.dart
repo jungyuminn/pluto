@@ -46,6 +46,8 @@ class AppSkinAssets {
       'assets/themes/fluffy_bear/bear_face_bottom_light.webp';
   static const fluffyBearBottomDark =
       'assets/themes/fluffy_bear/bear_face_bottom_dark.webp';
+  static const fluffyBearAvatar =
+      'assets/themes/fluffy_bear/default_avatar.webp';
 
   static const fluffyRabbitFaceLight =
       'assets/themes/fluffy_rabbit/bunny_face_decoration_light.webp';
@@ -598,6 +600,13 @@ class AppSkinAssets {
   static const paintedIconScale = 1.2;
 
   static bool keepsPaint(String asset) => asset.startsWith('assets/themes/');
+
+  static String? defaultAvatarOf(AppSkin skin) {
+    return switch (skin) {
+      AppSkin.fluffyBear => fluffyBearAvatar,
+      _ => null,
+    };
+  }
 
   static String resolveIcon(String asset, AppSkin skin, bool dark) {
     final folder = switch (skin) {

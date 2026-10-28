@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:pluto/core/constants/app_fonts.dart';
 import 'package:pluto/core/constants/app_strings.dart';
+import 'package:pluto/core/layout/app_dialog.dart';
 import 'package:pluto/core/layout/pc_layout.dart';
 import 'package:pluto/core/theme/app_colors.dart';
 import 'package:pluto/core/utils/press_bounce.dart';
@@ -14,7 +15,7 @@ Future<CategoryDeleteScope?> showDeleteCategoryDialog(
   bool multiple = false,
   CategoryKind kind = CategoryKind.event,
 }) {
-  return showDialog<CategoryDeleteScope>(
+  return showAppDialog<CategoryDeleteScope>(
     context: context,
     builder: (context) => DeleteCategoryDialog(
       categoryName: categoryName,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:pluto/core/constants/app_strings.dart';
+import 'package:pluto/core/layout/app_dialog.dart';
 import 'package:pluto/core/theme/app_colors.dart';
 import 'package:pluto/core/utils/press_bounce.dart';
 
@@ -9,7 +10,7 @@ Future<bool> showDeleteEventDialog(
   String body = AppStrings.deleteEventBody,
   String? message,
 }) async {
-  final confirmed = await showDialog<bool>(
+  final confirmed = await showAppDialog<bool>(
     context: context,
     builder: (context) => DeleteEventDialog(
       title: title,

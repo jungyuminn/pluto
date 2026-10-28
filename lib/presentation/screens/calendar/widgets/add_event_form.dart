@@ -82,7 +82,6 @@ class _AddEventFormState extends State<AddEventForm>
   int? _categoryColor;
   int? _startMinutes;
   int? _endMinutes;
-  Animation<double>? _sheetAnimation;
   CategorySuggestSession? _suggest;
   var _suggestOn = false;
   var _suggesting = false;
@@ -153,15 +152,9 @@ class _AddEventFormState extends State<AddEventForm>
       curve: Curves.easeOutCubic,
       reverseCurve: Curves.easeInCubic,
     );
+    _focusTitle();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      _sheetAnimation = ModalRoute.of(context)?.animation;
-      final animation = _sheetAnimation;
-      if (animation == null || animation.isCompleted) {
-        _focusTitle();
-      } else {
-        animation.addStatusListener(_onSheetOpened);
-      }
       _beginSuggest();
       _loadLastCategory();
       if (!widget.someday && !(widget.initial?.someday ?? false)) {
@@ -172,12 +165,6 @@ class _AddEventFormState extends State<AddEventForm>
         }
       }
     });
-  }
-
-  void _onSheetOpened(AnimationStatus status) {
-    if (status != AnimationStatus.completed) return;
-    _sheetAnimation?.removeStatusListener(_onSheetOpened);
-    if (mounted) _focusTitle();
   }
 
   void _focusTitle() {
@@ -196,7 +183,6 @@ class _AddEventFormState extends State<AddEventForm>
 
   @override
   void dispose() {
-    _sheetAnimation?.removeStatusListener(_onSheetOpened);
     _memoFade.dispose();
     _memoAnimation.dispose();
     _checklistFade.dispose();
@@ -604,7 +590,7 @@ class _AddEventFormState extends State<AddEventForm>
         dateMode: _sharedDateMode,
       );
       if (!mounted) return;
-      Navigator.of(context).pop(true);
+      KeyboardComposerScope.close(context, true);
     } catch (error) {
       if (!mounted) return;
       setState(() => _saving = false);
@@ -670,7 +656,7 @@ class _AddEventFormState extends State<AddEventForm>
         dateMode: _sharedDateMode,
       );
       if (!mounted) return;
-      Navigator.of(context).pop(true);
+      KeyboardComposerScope.close(context, true);
       return;
     }
     final initial = widget.initial;
@@ -716,7 +702,7 @@ class _AddEventFormState extends State<AddEventForm>
         await scope.updateCalendarEvent.repeatTitles(initialRepeatId, title);
       }
       if (!mounted) return;
-      Navigator.of(context).pop(true);
+      KeyboardComposerScope.close(context, true);
       return;
     }
 
@@ -764,7 +750,7 @@ class _AddEventFormState extends State<AddEventForm>
       );
     }
     if (!mounted) return;
-    Navigator.of(context).pop(true);
+    KeyboardComposerScope.close(context, true);
   }
 
   @override
@@ -820,7 +806,7 @@ class _AddEventFormState extends State<AddEventForm>
               child: EventTitleField(
                 controller: _title,
                 focusNode: _titleFocus,
-                autofocus: false,
+                autofocus: true,
                 readOnly: !allowTitle,
                 onChanged: _feedTitle,
                 onTap: allowTitle

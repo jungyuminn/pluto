@@ -20,7 +20,7 @@ Future<void> showPlanetLevelSheet(
     isDismissible: true,
     enableDrag: true,
     backgroundColor: Colors.transparent,
-    barrierColor: const Color(0x4D000000),
+    barrierColor: AppColors.barrier,
     elevation: 0,
     builder: (context) => _PlanetLevelSheet(
       level: isMax ? PlanetStage.maxLevel : level,
@@ -36,7 +36,7 @@ Future<void> showPlanetPreviewDialog(
   HapticFeedback.selectionClick();
   return showDialog<void>(
     context: context,
-    barrierColor: const Color(0x4D000000),
+    barrierColor: AppColors.barrier,
     builder: (context) => _PlanetPreviewDialog(
       stage: stage,
       caption: caption,

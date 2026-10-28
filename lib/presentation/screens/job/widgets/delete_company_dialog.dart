@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:pluto/core/constants/app_strings.dart';
+import 'package:pluto/core/layout/app_dialog.dart';
 import 'package:pluto/core/theme/app_colors.dart';
 import 'package:pluto/core/utils/press_bounce.dart';
 
@@ -7,7 +8,7 @@ Future<bool> showDeleteCompanyDialog(
   BuildContext context, {
   required String companyName,
 }) async {
-  final confirmed = await showDialog<bool>(
+  final confirmed = await showAppDialog<bool>(
     context: context,
     builder: (context) => DeleteCompanyDialog(companyName: companyName),
   );

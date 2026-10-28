@@ -25,7 +25,7 @@ Future<bool> runAccountAction(
       context: context,
       barrierDismissible: false,
       useRootNavigator: true,
-      barrierColor: const Color(0x4D000000),
+      barrierColor: AppColors.barrier,
       builder: (context) => const DotsLoadingDialog(),
     );
     await WidgetsBinding.instance.endOfFrame;

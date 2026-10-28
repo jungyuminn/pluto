@@ -56,7 +56,7 @@ Future<void> showSettingsSectionHelp(
     showDragHandle: false,
     enableDrag: true,
     backgroundColor: Colors.transparent,
-    barrierColor: const Color(0x4D000000),
+    barrierColor: AppColors.barrier,
     elevation: 0,
     builder: (context) => SettingsSectionHelpSheet(section: section),
   );
@@ -657,7 +657,7 @@ class _CalendarSyncPreview extends StatelessWidget {
         return _HelpSceneFill(
           child: _helpKeyedSwitch(
             switchKey: selected,
-            child: _FakeBackupScene(
+          child: _FakeBackupScene(
               icon: selected == 0
                   ? Icons.event_available_rounded
                   : Icons.image_outlined,

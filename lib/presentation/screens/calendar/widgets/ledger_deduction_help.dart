@@ -25,7 +25,7 @@ Future<void> showLedgerDeductionHelp(
     showDragHandle: false,
     enableDrag: true,
     backgroundColor: Colors.transparent,
-    barrierColor: const Color(0x4D000000),
+    barrierColor: AppColors.barrier,
     elevation: 0,
     builder: (context) => LedgerDeductionHelpSheet(accent: accent),
   );

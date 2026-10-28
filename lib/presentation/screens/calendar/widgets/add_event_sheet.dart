@@ -15,7 +15,7 @@ Future<bool> showAddEventSheet(
 }) async {
   final tutorial = TutorialController.find(context);
   tutorial?.noteAddOpened();
-  final saved = await showComposeSheet<bool>(
+  final saved = await showKeyboardComposer<bool>(
     context,
     builder: (context) => AddEventSheet(
       date: date,

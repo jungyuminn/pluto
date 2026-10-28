@@ -224,7 +224,7 @@ class LedgerSalaryFields extends StatelessWidget {
       showDragHandle: false,
       enableDrag: true,
       backgroundColor: Colors.transparent,
-      barrierColor: const Color(0x40000000),
+      barrierColor: AppColors.barrier,
       elevation: 0,
       builder: (context) =>
           _BreakSheet(minutes: details.breakMinutes, accent: accent),
@@ -274,7 +274,7 @@ class LedgerSalaryFields extends StatelessWidget {
       showDragHandle: false,
       enableDrag: true,
       backgroundColor: Colors.transparent,
-      barrierColor: const Color(0x40000000),
+      barrierColor: AppColors.barrier,
       elevation: 0,
       builder: (context) {
         final colors = AppColors.of(context);

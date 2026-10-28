@@ -40,7 +40,7 @@ Future<CalendarImportWizardResult?> showCalendarImportWizard(
     enableDrag: true,
     showDragHandle: false,
     backgroundColor: Colors.transparent,
-    barrierColor: const Color(0x4D000000),
+    barrierColor: AppColors.barrier,
     builder: (context) {
       final size = MediaQuery.sizeOf(context);
       return SizedBox(

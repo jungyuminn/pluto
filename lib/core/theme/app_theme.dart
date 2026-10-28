@@ -68,11 +68,13 @@ class AppTheme {
       dialogTheme: DialogThemeData(
         backgroundColor: colors.card,
         surfaceTintColor: Colors.transparent,
+        barrierColor: AppColors.barrier,
       ),
       bottomSheetTheme: BottomSheetThemeData(
         backgroundColor: colors.card,
         surfaceTintColor: Colors.transparent,
         modalBackgroundColor: colors.card,
+        modalBarrierColor: AppColors.barrier,
       ),
       appBarTheme: AppBarTheme(
         backgroundColor: colors.background,

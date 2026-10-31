@@ -220,6 +220,9 @@ class HomeViewPreference {
         found.insert(leftoverIdx + 1, HomeCardKind.memo);
       }
     }
+    if (_isLegacyDefault(found)) {
+      return List<HomeCardKind>.of(HomeCardKind.defaults);
+    }
     if (!found.contains(HomeCardKind.someday)) {
       final longIdx = found.indexOf(HomeCardKind.longGoal);
       if (longIdx >= 0) {
@@ -230,6 +233,25 @@ class HomeViewPreference {
       if (!found.contains(kind)) found.add(kind);
     }
     return found;
+  }
+
+  static bool _isLegacyDefault(List<HomeCardKind> found) {
+    const legacy = [
+      HomeCardKind.leftover,
+      HomeCardKind.memo,
+      HomeCardKind.job,
+      HomeCardKind.today,
+      HomeCardKind.tomorrow,
+      HomeCardKind.week,
+      HomeCardKind.month,
+      HomeCardKind.someday,
+      HomeCardKind.longGoal,
+    ];
+    if (found.length != legacy.length) return false;
+    for (var i = 0; i < legacy.length; i++) {
+      if (found[i] != legacy[i]) return false;
+    }
+    return true;
   }
 
   Future<void> dismissMonthlyStats([DateTime? now]) async {
@@ -281,6 +303,7 @@ class HomeViewPreference {
 enum HomeCardKind {
   leftover,
   memo,
+  job,
   today,
   tomorrow,
   week,
@@ -297,6 +320,7 @@ enum HomeCardKind {
     month,
     someday,
     longGoal,
+    job,
   ];
 
   static HomeCardKind? fromName(String raw) {

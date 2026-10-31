@@ -18,7 +18,7 @@ class CompanyCard extends StatefulWidget {
     this.compact = false,
   });
 
-  static const compactHeight = 56.0;
+  static const compactHeight = 52.0;
 
   final JobApplication application;
   final VoidCallback? onPressed;
@@ -87,15 +87,12 @@ class _CompanyCardState extends State<CompanyCard>
     final category = application.categoryName.trim();
     final position = application.position.trim();
     final status = application.applyStatus.trim();
-    final dDay = rejected ? null : application.upcomingDDay();
     return DayEventLabel(
       title: application.companyName,
       categoryName: category,
       color: accent,
       memo: position,
       showCategory: application.hasCategory && category.isNotEmpty,
-      overline: dDay == null ? null : (dDay == 0 ? 'D-Day' : 'D-$dDay'),
-      overlineColor: AppColors.of(context).danger,
       trailing: status.isEmpty ? null : _statusBadge(status),
       disabled: rejected,
       showAccent: !rejected && !application.allSchedulesPast,

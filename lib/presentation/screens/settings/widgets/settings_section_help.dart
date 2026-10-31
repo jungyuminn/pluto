@@ -24,7 +24,6 @@ import 'package:pluto/presentation/screens/calendar/widgets/event_action_icon.da
 import 'package:pluto/presentation/screens/calendar/widgets/event_category_chip.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/event_date_chip.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/event_time_chip.dart';
-import 'package:pluto/presentation/screens/shell/widgets/pill_bottom_nav.dart';
 import 'package:pluto/presentation/widgets/themed_asset.dart';
 
 enum SettingsHelpSection {
@@ -36,7 +35,6 @@ enum SettingsHelpSection {
   font,
   appearance,
   theme,
-  nav,
   widget,
   backup,
   calendarSync,
@@ -94,12 +92,6 @@ class SettingsHelpTutorialReel extends StatelessWidget {
           caption: AppStrings.settingsNotificationSection,
           child: _TutorialFitScene(
             child: SettingsHelpPreview(section: SettingsHelpSection.notification),
-          ),
-        ),
-        _PreviewFrame(
-          caption: AppStrings.settingsNavSection,
-          child: _TutorialFitScene(
-            child: SettingsHelpPreview(section: SettingsHelpSection.nav),
           ),
         ),
         _PreviewFrame(
@@ -259,8 +251,6 @@ extension on SettingsHelpSection {
         return AppStrings.settingsAppearanceSection;
       case SettingsHelpSection.theme:
         return AppStrings.settingsThemeSection;
-      case SettingsHelpSection.nav:
-        return AppStrings.settingsNavSection;
       case SettingsHelpSection.widget:
         return AppStrings.settingsWidgetSection;
       case SettingsHelpSection.backup:
@@ -294,8 +284,6 @@ extension on SettingsHelpSection {
         return AppStrings.settingsAppearanceHelp;
       case SettingsHelpSection.theme:
         return AppStrings.settingsThemeHelp;
-      case SettingsHelpSection.nav:
-        return AppStrings.settingsNavHelp;
       case SettingsHelpSection.widget:
         return AppStrings.settingsWidgetHelp;
       case SettingsHelpSection.backup:
@@ -329,8 +317,6 @@ extension on SettingsHelpSection {
         return const _AppearancePreview();
       case SettingsHelpSection.theme:
         return const _ThemePreview();
-      case SettingsHelpSection.nav:
-        return const _NavPreview();
       case SettingsHelpSection.widget:
         return const _WidgetPreview();
       case SettingsHelpSection.backup:
@@ -2774,126 +2760,6 @@ Widget _helpKeyedSwitch({required Object switchKey, required Widget child}) {
     switchOutCurve: Curves.easeInCubic,
     child: KeyedSubtree(key: ValueKey(switchKey), child: child),
   );
-}
-
-class _NavPreview extends StatefulWidget {
-  const _NavPreview();
-
-  @override
-  State<_NavPreview> createState() => _NavPreviewState();
-}
-
-class _NavPreviewState extends State<_NavPreview>
-    with SingleTickerProviderStateMixin {
-  static const _sceneHeight = 88.0;
-  static const _rowHeight = 44.0;
-
-  late final AnimationController _loop;
-
-  @override
-  void initState() {
-    super.initState();
-    _loop = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 5600),
-    )..repeat();
-  }
-
-  @override
-  void dispose() {
-    _loop.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-              final colors = AppColors.of(context);
-    return AnimatedBuilder(
-      animation: _loop,
-      builder: (context, child) {
-        final t = _loop.value;
-        final jobOn = t >= 0.28 && t < 0.90;
-        final statsOn = t < 0.68 || t >= 0.90;
-        final finger = t < 0.10
-            ? 0.0
-            : t < 0.18
-                ? _helpGate(t, 0.10, 0.18)
-                : t < 0.86
-                    ? 1.0
-                    : t < 0.94
-                        ? 1 - _helpGate(t, 0.86, 0.94)
-                        : 0.0;
-        final pressA = _helpPulse(t, 0.20, 0.28, 0.38);
-        final pressB = _helpPulse(t, 0.60, 0.68, 0.78);
-        final press = pressA > pressB ? pressA : pressB;
-        final fingerOnStats = t >= 0.48;
-        return IgnorePointer(
-          child: DecoratedBox(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(18),
-                  border: Border.all(color: colors.border),
-                ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(17),
-              child: SizedBox(
-                height: _sceneHeight + _rowHeight * 2,
-                width: double.infinity,
-                child: Stack(
-                  children: [
-                    Column(
-                      children: [
-                        SizedBox(
-                          height: _sceneHeight,
-                          width: double.infinity,
-                          child: ColoredBox(
-                            color: colors.groupedBackground,
-                            child: Center(
-                              child: PillBottomNav(
-                                currentIndex: 1,
-                                showStats: statsOn,
-                                showJob: jobOn,
-                                tutorial: false,
-                                embedded: true,
-                                onChanged: (_) {},
-                              ),
-                            ),
-                          ),
-                        ),
-                        ColoredBox(
-                          color: colors.card,
-                          child: _HelpSwitchRow(
-                            label: AppStrings.jobMode,
-                            on: jobOn ? 1 : 0,
-                            height: _rowHeight,
-                          ),
-                        ),
-                        ColoredBox(
-                          color: colors.card,
-                          child: _HelpSwitchRow(
-                            label: AppStrings.statsTab,
-                            on: statsOn ? 1 : 0,
-                            height: _rowHeight,
-                          ),
-                        ),
-                      ],
-                    ),
-                    if (finger > 0)
-                      Positioned(
-                        right: 28,
-                        top: _sceneHeight +
-                            (fingerOnStats ? _rowHeight : 0) +
-                            (_rowHeight - 28) / 2,
-                        child: _HelpFinger(pressed: press, opacity: finger),
-                      ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
 }
 
 class _AppearancePreview extends StatelessWidget {

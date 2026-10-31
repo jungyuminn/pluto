@@ -23,6 +23,7 @@ import 'package:pluto/presentation/screens/home/leftover_todos_screen.dart';
 import 'package:pluto/presentation/screens/home/monthly_stats_screen.dart';
 import 'package:pluto/presentation/screens/home/widgets/home_day_card.dart';
 import 'package:pluto/presentation/screens/home/widgets/home_friends_row.dart';
+import 'package:pluto/presentation/screens/home/widgets/home_job_card.dart';
 import 'package:pluto/presentation/screens/home/widgets/home_leftover_card.dart';
 import 'package:pluto/presentation/screens/home/widgets/home_long_goal_card.dart';
 import 'package:pluto/presentation/screens/home/widgets/home_memo_card.dart';
@@ -466,6 +467,7 @@ class HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     return switch (kind) {
       HomeCardKind.leftover => homePrefs.showLeftover && leftover.isNotEmpty,
       HomeCardKind.memo => homePrefs.showMemo,
+      HomeCardKind.job => AppScope.of(context).navPreference.showJobTab,
       HomeCardKind.today => homePrefs.showToday,
       HomeCardKind.tomorrow => homePrefs.showTomorrow,
       HomeCardKind.week => homePrefs.showWeek,
@@ -490,6 +492,7 @@ class HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           memos: _memos,
           onChanged: _reload,
         ),
+      HomeCardKind.job => HomeJobCard(onChanged: _reload),
       HomeCardKind.today => TutorialAnchor(
           id: TutorialAnchorId.homeList,
           child: HomeDayCard(

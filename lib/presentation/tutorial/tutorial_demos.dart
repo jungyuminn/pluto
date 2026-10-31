@@ -29,7 +29,7 @@ class TutorialDemoView extends StatelessWidget {
         AppScope.maybeOf(context)?.navPreference.showStatsTab ?? true;
     return switch (demo) {
       TutorialDemo.none => const SizedBox.shrink(),
-      TutorialDemo.navTabs => _NavDemo(jobMode: jobOn, showStats: statsOn),
+      TutorialDemo.navTabs => _NavDemo(showStats: statsOn),
       TutorialDemo.calendarTitle => const _TitleDemo(),
       TutorialDemo.calendarTap => const _TapDemo(),
       TutorialDemo.calendarRange => const _RangeDemo(),
@@ -124,9 +124,8 @@ double _pulse(double t, double a, double b, double c) {
 }
 
 class _NavDemo extends StatelessWidget {
-  const _NavDemo({this.jobMode = false, this.showStats = true});
+  const _NavDemo({this.showStats = true});
 
-  final bool jobMode;
   final bool showStats;
 
   @override
@@ -135,8 +134,7 @@ class _NavDemo extends StatelessWidget {
       builder: (context, t) {
         final tap = _pulse(t, 0.28, 0.4, 0.86);
         final selected = t < 0.42 ? 1 : 0;
-        final showJob = jobMode;
-        final n = 2 + (showStats ? 1 : 0) + (showJob ? 1 : 0);
+        final n = 2 + (showStats ? 1 : 0);
         return Center(
           child: Stack(
             alignment: Alignment.center,
@@ -144,7 +142,7 @@ class _NavDemo extends StatelessWidget {
               PillBottomNav(
                 currentIndex: selected,
                 showStats: showStats,
-                showJob: showJob,
+                showJob: false,
                 tutorial: false,
                 embedded: true,
                 onChanged: (_) {},
@@ -671,7 +669,7 @@ class _SettingsDemo extends StatelessWidget {
     AppStrings.settingsHomeLayoutSection,
     AppStrings.settingsThemeSection,
     AppStrings.settingsNotificationSection,
-    AppStrings.settingsNavSection,
+    AppStrings.settingsCalendarSection,
   ];
 
   @override

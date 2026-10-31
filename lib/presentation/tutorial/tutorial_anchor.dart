@@ -17,6 +17,7 @@ enum TutorialAnchorId {
   homeSettings,
   homeList,
   homeTomorrow,
+  homeJob,
   jobTools,
   jobAdd,
 }

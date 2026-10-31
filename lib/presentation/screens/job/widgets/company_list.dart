@@ -28,6 +28,7 @@ class CompanyList extends StatefulWidget {
     this.categoryView = false,
     this.categories = const [],
     this.paddingTop = 0,
+    this.embedded = false,
   });
 
   final List<JobApplication> applications;
@@ -42,6 +43,7 @@ class CompanyList extends StatefulWidget {
   final bool categoryView;
   final List<EventCategory> categories;
   final double paddingTop;
+  final bool embedded;
 
   @override
   State<CompanyList> createState() => CompanyListState();
@@ -165,7 +167,7 @@ class CompanyListState extends State<CompanyList>
     setState(() {});
     if (!inserted) return;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted || !_scroll.hasClients) return;
+      if (!mounted || widget.embedded || !_scroll.hasClients) return;
       _scroll.animateTo(
         _scroll.position.maxScrollExtent,
         duration: const Duration(milliseconds: 280),
@@ -461,6 +463,19 @@ class CompanyListState extends State<CompanyList>
 
   @override
   Widget build(BuildContext context) {
+    final add = TutorialAnchor(
+      id: TutorialAnchorId.jobAdd,
+      child: AddCompanyButton(onPressed: widget.onAdd),
+    );
+    if (widget.embedded) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _buildList(),
+          add,
+        ],
+      );
+    }
     return CustomScrollView(
       controller: _scroll,
       physics: _draggingId == null
@@ -473,12 +488,7 @@ class CompanyListState extends State<CompanyList>
         ),
         SliverPadding(
           padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
-          sliver: SliverToBoxAdapter(
-            child: TutorialAnchor(
-              id: TutorialAnchorId.jobAdd,
-              child: AddCompanyButton(onPressed: widget.onAdd),
-            ),
-          ),
+          sliver: SliverToBoxAdapter(child: add),
         ),
       ],
     );

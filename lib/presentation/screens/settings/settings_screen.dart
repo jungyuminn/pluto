@@ -116,7 +116,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
   var _widgetFontScale = 1.0;
   var _widgetFontSliderOpen = false;
   var _jobMode = false;
-  var _showStatsTab = true;
   var _todoSize = FontSizeLevel.medium;
   var _calendarSize = FontSizeLevel.medium;
   var _calendarLabelSize = FontSizeLevel.medium;
@@ -173,7 +172,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _followWidgetFont = scope.widgetPreference.followFont;
     _widgetFontScale = scope.widgetPreference.fontScale;
     _jobMode = scope.navPreference.jobMode;
-    _showStatsTab = scope.navPreference.showStatsTab;
     _todoSize = scope.fontPreference.todoSize;
     _calendarSize = scope.fontPreference.calendarSize;
     _calendarLabelSize = scope.fontPreference.calendarLabelSize;
@@ -219,7 +217,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
       _followWidgetFont = scope.widgetPreference.followFont;
       _widgetFontScale = scope.widgetPreference.fontScale;
       _jobMode = scope.navPreference.jobMode;
-      _showStatsTab = scope.navPreference.showStatsTab;
       _todoSize = scope.fontPreference.todoSize;
       _calendarSize = scope.fontPreference.calendarSize;
       _calendarLabelSize = scope.fontPreference.calendarLabelSize;
@@ -564,11 +561,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     setState(() => _jobMode = value);
     await AppScope.of(context).navPreference.setJobMode(value);
     unawaited(FriendService.instance.syncFromLocal());
-  }
-
-  Future<void> _setShowStatsTab(bool value) async {
-    setState(() => _showStatsTab = value);
-    await AppScope.of(context).navPreference.setShowStatsTab(value);
   }
 
   Future<void> _setShowFriends(bool value) async {
@@ -1041,6 +1033,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 value: _showLongGoal,
                 onChanged: _setShowLongGoal,
               ),
+              _SettingsSwitchTile(
+                label: AppStrings.jobMode,
+                value: _jobMode,
+                onChanged: _setJobMode,
+              ),
             ],
               );
             },
@@ -1082,26 +1079,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 label: AppStrings.calendarShowLunar,
                 value: _showLunar,
                 onChanged: _setShowLunar,
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-          _SectionLabel(
-            AppStrings.settingsNavSection,
-            onHelp: () =>
-                showSettingsSectionHelp(context, SettingsHelpSection.nav),
-          ),
-          _SettingsCard(
-            children: [
-              _SettingsSwitchTile(
-                label: AppStrings.jobMode,
-                value: _jobMode,
-                onChanged: _setJobMode,
-              ),
-              _SettingsSwitchTile(
-                label: AppStrings.statsTab,
-                value: _showStatsTab,
-                onChanged: _setShowStatsTab,
               ),
             ],
           ),
@@ -2089,10 +2066,7 @@ class _ThemeLivePreviewState extends State<_ThemeLivePreview> {
                     children: [
                       const _ThemeHomePreviewPage(),
                       const _ThemeCalendarPreviewPage(),
-                      if (AppScope.of(context).navPreference.showJobTab)
-                        const _ThemeJobPreviewPage()
-                      else
-                        const _ThemeStatsPreviewPage(),
+                      const _ThemeStatsPreviewPage(),
                     ],
                   ),
                 ),
@@ -2455,6 +2429,7 @@ class _ThemeStatsPreviewPage extends StatelessWidget {
   }
 }
 
+// ignore: unused_element
 class _ThemeJobPreviewPage extends StatelessWidget {
   const _ThemeJobPreviewPage({this.full = false});
 
@@ -2693,11 +2668,10 @@ class _ThemePreviewNav extends StatelessWidget {
       listenable: theme,
       builder: (context, _) {
         final items = AppSkinAssets.navIcons(theme.paintedSkin);
-        final job = AppScope.of(context).navPreference.showJobTab;
         final previewItems = [
           items[0],
           items[1],
-          job ? items[3] : items[2],
+          items[2],
         ];
         return Center(
           child: DecoratedBox(
@@ -2823,16 +2797,14 @@ class _ThemeFullPreviewState extends State<_ThemeFullPreview> {
     super.dispose();
   }
 
-  int _pageOf(int logical, {required bool job, required bool stats}) {
+  int _pageOf(int logical, {required bool stats}) {
     if (logical <= 1) return logical;
-    if (logical == 3) return job ? 2 : 1;
     if (!stats) return 1;
-    return job ? 3 : 2;
+    return 2;
   }
 
-  int _logicalOf(int page, {required bool job, required bool stats}) {
+  int _logicalOf(int page, {required bool stats}) {
     if (page <= 1) return page;
-    if (page == 2) return job ? 3 : 2;
     return 2;
   }
 
@@ -2840,7 +2812,6 @@ class _ThemeFullPreviewState extends State<_ThemeFullPreview> {
     final nav = AppScope.of(context).navPreference;
     final next = _pageOf(
       logical,
-      job: nav.showJobTab,
       stats: nav.showStatsTab,
     );
     if (next == _page) return;
@@ -2856,7 +2827,6 @@ class _ThemeFullPreviewState extends State<_ThemeFullPreview> {
     final custom = widget.customTheme;
     final top = MediaQuery.paddingOf(context).top;
     final nav = AppScope.of(context).navPreference;
-    final job = nav.showJobTab;
     final stats = nav.showStatsTab;
     Widget preview = AppSkinBackground(
       liftForNav: true,
@@ -2874,8 +2844,6 @@ class _ThemeFullPreviewState extends State<_ThemeFullPreview> {
                 const IgnorePointer(
                   child: _ThemeCalendarPreviewPage(full: true),
                 ),
-                if (job)
-                  const IgnorePointer(child: _ThemeJobPreviewPage(full: true)),
                 if (stats)
                   const IgnorePointer(child: _ThemeStatsPreviewPage(full: true)),
               ],
@@ -2883,8 +2851,8 @@ class _ThemeFullPreviewState extends State<_ThemeFullPreview> {
             Align(
               alignment: Alignment.bottomCenter,
               child: PillBottomNav(
-                currentIndex: _logicalOf(_page, job: job, stats: stats),
-                showJob: job,
+                currentIndex: _logicalOf(_page, stats: stats),
+                showJob: false,
                 showStats: stats,
                 onChanged: _goTo,
                 tutorial: false,

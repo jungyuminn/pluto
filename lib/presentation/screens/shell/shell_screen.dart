@@ -6,7 +6,6 @@ import 'package:pluto/data/datasources/calendar_event_local_datasource.dart';
 import 'package:pluto/data/datasources/nav_preference.dart';
 import 'package:pluto/presentation/screens/calendar/calendar_screen.dart';
 import 'package:pluto/presentation/screens/home/home_screen.dart';
-import 'package:pluto/presentation/screens/job/job_screen.dart';
 import 'package:pluto/presentation/screens/stats/stats_screen.dart';
 import 'package:pluto/presentation/screens/shell/widgets/pill_bottom_nav.dart';
 import 'package:pluto/presentation/tutorial/tutorial_controller.dart';
@@ -24,12 +23,10 @@ class _ShellScreenState extends State<ShellScreen>
   static const _tabDuration = Duration(milliseconds: 340);
   static const _calendarTab = 1;
   static const _statsTab = 2;
-  static const _jobTab = 3;
 
   final _homeKey = GlobalKey<HomeScreenState>();
   final _calendarKey = GlobalKey<CalendarScreenState>();
   final _statsKey = GlobalKey<StatsScreenState>();
-  final _jobKey = GlobalKey<JobScreenState>();
 
   Widget _tabAt(int index) {
     switch (index) {
@@ -37,21 +34,9 @@ class _ShellScreenState extends State<ShellScreen>
         return HomeScreen(key: _homeKey, visible: _index == 0);
       case 1:
         return CalendarScreen(key: _calendarKey, visible: _index == 1);
-      case _statsTab:
-        return StatsScreen(key: _statsKey, visible: _index == _statsTab);
       default:
-        return JobScreen(key: _jobKey, visible: _index == _jobTab);
+        return StatsScreen(key: _statsKey, visible: _index == _statsTab);
     }
-  }
-
-  static int _visualOrder(int index) {
-    return switch (index) {
-      0 => 0,
-      1 => 1,
-      _jobTab => 2,
-      _statsTab => 3,
-      _ => index,
-    };
   }
 
   int _index = 1;
@@ -121,10 +106,6 @@ class _ShellScreenState extends State<ShellScreen>
   }
 
   void _leaveHiddenTabs() {
-    if (_nav?.showJobTab != true && _index == _jobTab) {
-      _onTabChanged(_calendarTab);
-      return;
-    }
     if (_nav?.showStatsTab != true && _index == _statsTab) {
       _onTabChanged(_calendarTab);
     }
@@ -170,9 +151,6 @@ class _ShellScreenState extends State<ShellScreen>
   }
 
   void _onTabChanged(int index) {
-    if (_nav?.showJobTab != true && index == _jobTab) {
-      index = _calendarTab;
-    }
     if (_nav?.showStatsTab != true && index == _statsTab) {
       index = _calendarTab;
     }
@@ -182,7 +160,7 @@ class _ShellScreenState extends State<ShellScreen>
       return;
     }
     _resetTab(index, animate: false);
-    final fromLeft = _visualOrder(index) < _visualOrder(_index);
+    final fromLeft = index < _index;
     final dx = fromLeft ? -0.18 : 0.18;
     final curve = CurvedAnimation(
       parent: _controller,
@@ -224,8 +202,6 @@ class _ShellScreenState extends State<ShellScreen>
         _calendarKey.currentState?.goToToday(animate: animate);
       case _statsTab:
         _statsKey.currentState?.scrollToTop(animate: animate);
-      case _jobTab:
-        _jobKey.currentState?.scrollToTop(animate: animate);
     }
   }
 
@@ -235,7 +211,7 @@ class _ShellScreenState extends State<ShellScreen>
       resizeToAvoidBottomInset: false,
       body: Stack(
         children: [
-          for (var i = 0; i < 4; i++)
+          for (var i = 0; i < 3; i++)
             _TabSlot(
               key: ValueKey(i),
               visible: i == _index ||
@@ -250,7 +226,7 @@ class _ShellScreenState extends State<ShellScreen>
             child: PillBottomNav(
               currentIndex: _index,
               showStats: _nav?.showStatsTab ?? true,
-              showJob: _nav?.showJobTab ?? false,
+              showJob: false,
               onChanged: _onTabChanged,
             ),
           ),

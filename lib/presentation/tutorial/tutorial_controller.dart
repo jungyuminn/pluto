@@ -172,14 +172,23 @@ class TutorialController extends ChangeNotifier {
       statsOnly: true,
     ),
     TutorialStep(
-      tab: 3,
+      tab: 0,
       badge: AppStrings.tutorialBadgeJob,
-      anchor: TutorialAnchorId.navJob,
+      anchor: TutorialAnchorId.homeJob,
       title: AppStrings.tutorialJobGoTitle,
       body: AppStrings.tutorialJobGoBody,
       demo: TutorialDemo.jobSwipe,
-      action: TutorialAction.openJob,
-      passHole: true,
+      forceTab: true,
+      jobOnly: true,
+    ),
+    TutorialStep(
+      tab: 0,
+      badge: AppStrings.tutorialBadgeJob,
+      anchor: TutorialAnchorId.jobAdd,
+      title: AppStrings.tutorialJobAddTitle,
+      body: AppStrings.tutorialJobAddBody,
+      demo: TutorialDemo.jobSwipe,
+      forceTab: true,
       jobOnly: true,
     ),
     TutorialStep(
@@ -263,19 +272,6 @@ class TutorialController extends ChangeNotifier {
         demo: TutorialDemo.statsPlanetFill,
         action: TutorialAction.openHome,
         passHole: true,
-      );
-    }
-    if (step.action == TutorialAction.openJob && _jobPhase == 1) {
-      return TutorialStep(
-        tab: 3,
-        badge: AppStrings.tutorialBadgeJob,
-        anchor: TutorialAnchorId.jobAdd,
-        title: AppStrings.tutorialJobAddTitle,
-        body: AppStrings.tutorialJobAddFollowBody,
-        demo: TutorialDemo.jobSwipe,
-        action: TutorialAction.openJob,
-        passHole: true,
-        jobOnly: true,
       );
     }
     return step;

@@ -154,16 +154,16 @@ class AppStrings {
   static const tutorialStatsGoTitle = '행성이 성장해요';
   static const tutorialStatsGoBody =
       '할 일을 끝낼수록 행성이 성장해요. 그동안 내가 모은 행성도 볼 수 있어요';
-  static const tutorialJobGoTitle = '지원서 화면';
-  static const tutorialJobGoBody = '아래 지원서를 누르면 회사 카드를 모을 수 있어요';
+  static const tutorialJobGoTitle = '지원서 카드';
+  static const tutorialJobGoBody = '취준 모드를 켜면 홈에 지원서 카드가 생겨요. 회사를 모아 둘 수 있어요';
   static const tutorialJobAddFollowBody = '아래 + 를 누르면 지원서를 넣을 수 있어요';
   static const tutorialNavBarTitle = '아래 탭으로 이동';
   static const tutorialNavBarBody =
-      '왼쪽부터 홈, 캘린더, 행성이에요. 취준 모드를 켜면 지원서가 행성 앞에 생겨요';
+      '왼쪽부터 홈, 캘린더, 행성이에요. 취준 모드를 켜면 홈에 지원서 카드가 생겨요';
   static const tutorialNavBarBodyDaily =
       '왼쪽부터 홈, 캘린더, 행성이에요. 하단 버튼을 눌러 화면을 이동해요';
   static const tutorialNavBarBodyNoStats =
-      '왼쪽부터 홈, 캘린더예요. 취준 모드를 켜면 지원서도 생겨요';
+      '왼쪽부터 홈, 캘린더예요. 취준 모드를 켜면 홈에 지원서 카드가 생겨요';
   static const tutorialNavBarBodyNoStatsDaily =
       '왼쪽부터 홈, 캘린더예요. 하단 버튼을 눌러 화면을 이동해요';
   static const tutorialNavCalendarTitle = '캘린더 화면';
@@ -207,9 +207,9 @@ class AppStrings {
   static const tutorialHomeListTitle = '할 일 카드';
   static const tutorialHomeListBody =
       '오늘·내일 카드예요. 눌러 열고, 길게 눌러 순서를 바꿀 수 있어요';
-  static const tutorialNavJobTitle = '지원서 화면';
+  static const tutorialNavJobTitle = '지원서 카드';
   static const tutorialNavJobBody =
-      '지원 중인 회사가 카드로 모여 있어요. 카드를 눌러 전형과 자기소개서를 관리해요';
+      '지원 중인 회사가 홈 카드로 모여 있어요. 카드를 눌러 전형과 자기소개서를 관리해요';
   static const tutorialJobToolsTitle = '위쪽 버튼';
   static const tutorialJobToolsBody =
       '돋보기와 오른쪽 메뉴예요. 메뉴에서 자격증으로 바꿀 수 있어요';
@@ -348,11 +348,7 @@ class AppStrings {
   static const settingsCategoryHelp =
       '제목을 입력하면 AI가 칸을 집어 둬요. 없으면 새 이름이 들어가고, 저장할 때 만들어져요';
   static const settingsAppearanceSection = '화면 모드';
-  static const settingsNavSection = '하단 메뉴 설정';
   static const jobMode = '취준 모드';
-  static const statsTab = '행성';
-  static const settingsNavHelp =
-      '취준 모드로 지원서·자격증 메뉴를 켜거나, 행성 탭을 끌 수 있어요';
   static const settingsThemeSection = '테마 설정';
   static const themeKind = '테마 종류';
   static const themeGroupPattern = '패턴';
@@ -437,7 +433,7 @@ class AppStrings {
   static const calendarShowLunar = '음력 날짜 표시';
   static const settingsHelpPreview = '미리보기';
   static const settingsHomeLayoutHelp =
-      '홈 화면에 보여줄 카드를 고르고, 홈에서 카드를 길게 눌러 순서를 바꿀 수 있어요';
+      '홈 화면에 보여줄 카드를 고르고, 취준 모드를 켜면 지원서 카드가 생겨요. 홈에서 카드를 길게 눌러 순서를 바꿀 수 있어요';
   static const settingsTodoHelpSort =
       '시작 시간이 있는 할 일을 빠른 시간부터 줄 세워요. 켜 두면 손으로 순서를 바꿀 수 없어요';
   static const settingsTodoHelpTime = '할 일 라벨에 시작 시간을 보여 줘요';

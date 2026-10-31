@@ -25,7 +25,7 @@ class NavPreference extends ChangeNotifier {
 
   bool get jobMode => _jobMode;
   bool get showJobTab => _jobMode;
-  bool get showStatsTab => _showStatsTab;
+  bool get showStatsTab => true;
 
   static bool _readBool(
     SharedPreferences? prefs,

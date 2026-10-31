@@ -28,6 +28,7 @@ class LicenseList extends StatefulWidget {
     this.categoryView = false,
     this.categories = const [],
     this.paddingTop = 0,
+    this.embedded = false,
   });
 
   final List<License> licenses;
@@ -42,6 +43,7 @@ class LicenseList extends StatefulWidget {
   final bool categoryView;
   final List<EventCategory> categories;
   final double paddingTop;
+  final bool embedded;
 
   @override
   State<LicenseList> createState() => LicenseListState();
@@ -139,7 +141,7 @@ class LicenseListState extends State<LicenseList>
     setState(() {});
     if (!inserted) return;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted || !_scroll.hasClients) return;
+      if (!mounted || widget.embedded || !_scroll.hasClients) return;
       _scroll.animateTo(
         _scroll.position.maxScrollExtent,
         duration: const Duration(milliseconds: 280),
@@ -381,6 +383,16 @@ class LicenseListState extends State<LicenseList>
 
   @override
   Widget build(BuildContext context) {
+    final add = AddLicenseButton(onPressed: widget.onAdd);
+    if (widget.embedded) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _buildList(),
+          add,
+        ],
+      );
+    }
     return CustomScrollView(
       controller: _scroll,
       physics: _draggingId == null
@@ -393,9 +405,7 @@ class LicenseListState extends State<LicenseList>
         ),
         SliverPadding(
           padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
-          sliver: SliverToBoxAdapter(
-            child: AddLicenseButton(onPressed: widget.onAdd),
-          ),
+          sliver: SliverToBoxAdapter(child: add),
         ),
       ],
     );

@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:pluto/core/constants/app_fonts.dart';
 import 'package:pluto/core/constants/app_icons.dart';
 import 'package:pluto/core/constants/app_strings.dart';
+import 'package:pluto/core/layout/app_dialog.dart';
 import 'package:pluto/core/layout/compose_sheet.dart';
 import 'package:pluto/core/layout/pc_layout.dart';
 import 'package:pluto/core/theme/app_colors.dart';
@@ -51,6 +52,7 @@ Future<void> showAddFriendSheet(BuildContext context) async {
     showFriendsToast(context, AppStrings.friendsProfileNeed, top: true);
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
+        settings: const RouteSettings(name: FriendsScreen.routeName),
         builder: (context) => const FriendsScreen(focusId: true),
       ),
     );
@@ -444,6 +446,8 @@ class _AddFriendSheetState extends State<AddFriendSheet> {
 class FriendsScreen extends StatefulWidget {
   const FriendsScreen({super.key, this.focusId = false});
 
+  static const routeName = '/friends';
+
   final bool focusId;
 
   @override
@@ -640,6 +644,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
                     return _profileCard(colors, profile);
                   },
                 ),
+                _incomingFriendRequests(),
                 _incomingTodos(),
                 _outgoingTodos(),
                 _friendsSection(colors),
@@ -984,13 +989,14 @@ class _FriendsScreenState extends State<FriendsScreen> {
 
   bool _hasPhoto(FriendProfile? profile) {
     if (_preview != null) return true;
+    if (profile?.hasAppPhoto == true) return true;
     return FriendService.instance.avatarBytes(profile?.uid) != null;
   }
 
   Future<void> _confirmClearPhoto() async {
     if (_savingPhoto) return;
     final colors = AppColors.of(context);
-    final ok = await showDialog<bool>(
+    final ok = await showAppDialog<bool>(
       context: context,
       builder: (context) {
         return AlertDialog(
@@ -1516,6 +1522,43 @@ class _FriendsScreenState extends State<FriendsScreen> {
     }
   }
 
+  Widget _incomingFriendRequests() {
+    return StreamBuilder(
+      stream: _service.incomingRequests(),
+      initialData: _service.lastIncoming,
+      builder: (context, snapshot) {
+        return _RequestSection(
+          key: const ValueKey('friend-incoming'),
+          title: AppStrings.friendsIncoming,
+          items: snapshot.data ?? const <FriendRequestItem>[],
+          incoming: true,
+          onAccept: _acceptFriend,
+          onDecline: _declineFriend,
+        );
+      },
+    );
+  }
+
+  Future<void> _acceptFriend(FriendRequestItem item) async {
+    try {
+      await _service.accept(item.id);
+      if (!mounted) return;
+      _toast(AppStrings.friendsAccepted);
+    } catch (error) {
+      if (!mounted) return;
+      _toast(_service.messageOf(error));
+    }
+  }
+
+  Future<void> _declineFriend(FriendRequestItem item) async {
+    try {
+      await _service.decline(item.id);
+    } catch (error) {
+      if (!mounted) return;
+      _toast(_service.messageOf(error));
+    }
+  }
+
   Widget _incomingTodos() {
     return StreamBuilder(
       stream: _service.incomingTodos(),
@@ -1998,9 +2041,7 @@ class _RequestSectionState extends State<_RequestSection> {
                   style: TextStyle(
                     fontFamily: AppFonts.of(context),
                     fontSize: 16,
-                    fontWeight: widget.incoming
-                        ? FontWeight.w700
-                        : FontWeight.w400,
+                    fontWeight: FontWeight.w400,
                     color: colors.text,
                   ),
                 ),

@@ -15,6 +15,7 @@ import flutter_local_notifications
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
     UNUserNotificationCenter.current().delegate = self
+    application.registerForRemoteNotifications()
     WidgetCenter.shared.reloadAllTimelines()
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }

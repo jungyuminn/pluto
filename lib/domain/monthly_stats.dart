@@ -192,14 +192,16 @@ class MonthlyStats {
 
     var jobRounds = 0;
     final companyIds = <String>{};
+    final statusCompanyIds = <String>{};
     final roundTypeCounts = <String, int>{};
     for (final application in applications) {
       var hadRound = false;
       for (final round in application.rounds) {
         final date = round.date;
         if (date == null || !_inRange(date, startDay, endDay)) continue;
-        jobRounds++;
         hadRound = true;
+        if (application.isRejected) continue;
+        jobRounds++;
         final roundDay = DateTime(date.year, date.month, date.day);
         busyScore[roundDay] = (busyScore[roundDay] ?? 0) + 1;
         final name = round.name.trim();
@@ -219,7 +221,9 @@ class MonthlyStats {
               (categoryCompleted[category] ?? 0) + 1;
         }
       }
-      if (hadRound) companyIds.add(application.id);
+      if (!hadRound) continue;
+      statusCompanyIds.add(application.id);
+      if (!application.isRejected) companyIds.add(application.id);
     }
 
     var coverLetters = 0;
@@ -228,7 +232,7 @@ class MonthlyStats {
     var rejected = 0;
     var inProgress = 0;
     for (final application in applications) {
-      if (!companyIds.contains(application.id)) continue;
+      if (!statusCompanyIds.contains(application.id)) continue;
       final hasLetter =
           (application.coverLetterPath?.trim().isNotEmpty ?? false) ||
           (application.coverLetterFileName?.trim().isNotEmpty ?? false);
@@ -385,6 +389,7 @@ class MonthlyStats {
   }) {
     final items = <MonthlyBusyDayItem>[];
     for (final application in applications) {
+      if (application.isRejected) continue;
       for (var i = 0; i < application.rounds.length; i++) {
         final round = application.rounds[i];
         final roundDate = round.date;

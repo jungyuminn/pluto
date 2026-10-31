@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:pluto/core/constants/app_strings.dart';
+import 'package:pluto/core/layout/app_dialog.dart';
 import 'package:pluto/core/theme/app_colors.dart';
 import 'package:pluto/core/utils/press_bounce.dart';
 import 'package:pluto/data/datasources/cloud_sync_service.dart';
@@ -19,7 +20,7 @@ Future<void> ensureCloudBound(BuildContext context) {
 }
 
 Future<bool> showAccountDeleteLocalDialog(BuildContext context) async {
-  final reset = await showDialog<bool>(
+  final reset = await showAppDialog<bool>(
     context: context,
     barrierDismissible: false,
     builder: (context) {

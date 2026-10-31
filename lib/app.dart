@@ -9,6 +9,7 @@ import 'package:pluto/app_scope.dart';
 import 'package:pluto/core/constants/app_fonts.dart';
 import 'package:pluto/core/constants/app_strings.dart';
 import 'package:pluto/core/home_widget/home_screen_widget_service.dart';
+import 'package:pluto/core/notifications/friend_push_service.dart';
 import 'package:pluto/core/notifications/todo_reminder_service.dart';
 import 'package:pluto/core/theme/app_theme.dart';
 import 'package:pluto/core/theme/web_theme_color.dart';
@@ -79,6 +80,7 @@ import 'package:pluto/domain/usecases/save_ledger.dart';
 import 'package:pluto/domain/usecases/update_calendar_event.dart';
 import 'package:pluto/domain/usecases/update_event_category.dart';
 import 'package:pluto/domain/usecases/update_job_application.dart';
+import 'package:pluto/presentation/screens/friends/friends_screen.dart';
 import 'package:pluto/presentation/screens/shell/shell_screen.dart';
 import 'package:pluto/presentation/widgets/local_file_image.dart';
 import 'package:pluto/presentation/screens/settings/widgets/cloud_sync_dialogs.dart';
@@ -844,6 +846,9 @@ class _JobPlannerMaterialAppState extends State<_JobPlannerMaterialApp>
       if (!mounted) return;
       CloudSyncService.instance.attach(AppScope.of(context));
       if (!kIsWeb) unawaited(ensureCloudBound(context));
+      FriendPushService.friendsPage = (_) => const FriendsScreen();
+      unawaited(FriendPushService.instance.attach());
+      FriendPushService.instance.consumePending();
     });
   }
 
@@ -904,6 +909,7 @@ class _JobPlannerMaterialAppState extends State<_JobPlannerMaterialApp>
             final chromeColor = (useDark ? darkTheme : lightTheme)
                 .scaffoldBackgroundColor;
             return MaterialApp(
+              navigatorKey: FriendPushService.navigatorKey,
               title: AppStrings.appName,
               debugShowCheckedModeBanner: false,
               color: chromeColor,

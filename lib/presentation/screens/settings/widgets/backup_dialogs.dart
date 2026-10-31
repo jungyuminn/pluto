@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:pluto/core/constants/app_strings.dart';
+import 'package:pluto/core/layout/app_dialog.dart';
 import 'package:pluto/core/theme/app_colors.dart';
 import 'package:pluto/core/utils/press_bounce.dart';
 import 'package:pluto/data/datasources/app_backup_service.dart';
@@ -100,7 +101,7 @@ class BackupMessageDialog extends StatelessWidget {
 }
 
 Future<bool> showRestoreConfirmDialog(BuildContext context) async {
-  final confirmed = await showDialog<bool>(
+  final confirmed = await showAppDialog<bool>(
     context: context,
     builder: (context) => const RestoreConfirmDialog(),
   );

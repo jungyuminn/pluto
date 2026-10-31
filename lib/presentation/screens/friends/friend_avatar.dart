@@ -159,10 +159,17 @@ class _FriendAvatarState extends State<FriendAvatar> {
 
   Widget _body(BuildContext context) {
     final image = _image;
+    final colors = AppColors.of(context);
+    final fill = Color.lerp(
+      colors.border,
+      Colors.white,
+      colors.isDark ? 0.18 : 0.38,
+    );
     return DecoratedBox(
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        border: Border.all(color: AppColors.of(context).border, width: 1),
+        color: image == null ? fill : null,
+        border: Border.all(color: colors.border, width: 1),
       ),
       child: SizedBox(
         width: widget.size,
@@ -188,22 +195,14 @@ class _FriendAvatarState extends State<FriendAvatar> {
     final skin = theme?.paintedSkin ?? AppSkin.classic;
     final avatar = AppSkinAssets.defaultAvatarOf(skin);
     if (avatar != null) {
-      final fill = Theme.of(context).brightness == Brightness.dark
-          ? const Color(0xFF42474E)
-          : const Color(0xFFEEF0F2);
       final faceSize = widget.size * 0.72;
-      return ClipOval(
-        child: ColoredBox(
-          color: fill,
-          child: Center(
-            child: Image.asset(
-              avatar,
-              width: faceSize,
-              height: faceSize,
-              fit: BoxFit.contain,
-              gaplessPlayback: true,
-            ),
-          ),
+      return Center(
+        child: Image.asset(
+          avatar,
+          width: faceSize,
+          height: faceSize,
+          fit: BoxFit.contain,
+          gaplessPlayback: true,
         ),
       );
     }

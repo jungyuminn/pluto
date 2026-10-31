@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:pluto/core/constants/app_fonts.dart';
 import 'package:pluto/core/constants/app_strings.dart';
+import 'package:pluto/core/layout/app_dialog.dart';
 import 'package:pluto/core/layout/pc_layout.dart';
 import 'package:pluto/core/theme/app_colors.dart';
 import 'package:pluto/core/utils/press_bounce.dart';
@@ -73,7 +74,7 @@ class _DiaryPhotoFieldState extends State<DiaryPhotoField> {
   Future<void> _confirmDelete() async {
     final path = widget.path;
     if (path == null || path.isEmpty) return;
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showAppDialog<bool>(
       context: context,
       builder: (context) => const _DeleteDiaryPhotoDialog(),
     );

@@ -385,7 +385,6 @@ class AppStrings {
   static const themeFluffyRabbit = '몽글토끼';
   static const themeFluffyCat = '몽글고양이';
   static const themeFluffyDog = '몽글강아지';
-  static const themeFluffyChick = '몽글삐약이';
   static const themeFluffyHamster = '몽글햄찌';
   static const themeMongleCloud = '몽글구름';
   static const themePinkHeart = '핑크하트';
@@ -482,6 +481,8 @@ class AppStrings {
   static const summaryReminderChannelDescription = '하루 일정을 모아서 알려줘요';
   static const leftoverReminderChannelName = '미완료 할 일';
   static const leftoverReminderChannelDescription = '그날 끝내지 않은 할 일을 알려줘요';
+  static const friendRequestChannelName = '친구';
+  static const friendRequestChannelDescription = '친구 요청을 알려줘요';
   static String todoReminderHint(String leadLabel) =>
       '시간이 설정된 할 일을 $leadLabel에 알려줘요';
   static String todoReminderBody(int leadMinutes) => leadMinutes % 60 == 0
@@ -917,7 +918,7 @@ class AppStrings {
   static const friendsPhotoFailed = '사진을 올리지 못했어요';
   static const friendsPhotoTooBig = '5MB보다 작은 사진을 골라 주세요';
   static const friendsPhotoTitle = '프로필 이미지';
-  static const friendsPhotoPick = '바꾸기';
+  static const friendsPhotoPick = '수정';
   static const friendsPhotoClear = '삭제';
   static const friendsPhotoClearTitle = '프로필 이미지를 삭제할까요?';
   static const friendsPhotoClearBody = '기본 이미지로 변경돼요';

@@ -6,6 +6,7 @@ import 'package:pluto/app_scope.dart';
 import 'package:pluto/core/constants/app_fonts.dart';
 import 'package:pluto/core/constants/app_icons.dart';
 import 'package:pluto/core/constants/app_strings.dart';
+import 'package:pluto/core/layout/app_dialog.dart';
 import 'package:pluto/core/layout/pc_layout.dart';
 import 'package:pluto/core/theme/app_colors.dart';
 import 'package:pluto/core/utils/mouse_drag_scroll.dart';
@@ -33,7 +34,7 @@ Future<bool> confirmRemoveFriend(
   BuildContext context,
   FriendProfile friend,
 ) async {
-  final ok = await showDialog<bool>(
+  final ok = await showAppDialog<bool>(
     context: context,
     builder: (context) => _RemoveFriendDialog(friend: friend),
   );

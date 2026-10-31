@@ -55,6 +55,7 @@ dependencies:
   lottie: ^3.3.2
   cloud_firestore: ^6.9.0
   cloud_functions: ^6.4.0
+  firebase_messaging: ^16.1.1
   firebase_storage: ^13.5.0
   googleapis: ^16.0.0
   http: ^1.5.0
@@ -129,9 +130,6 @@ flutter:
     - assets/themes/fluffy_dog/
     - assets/themes/fluffy_dog/icons/light/
     - assets/themes/fluffy_dog/icons/dark/
-    - assets/themes/fluffy_chick/
-    - assets/themes/fluffy_chick/icons/light/
-    - assets/themes/fluffy_chick/icons/dark/
     - assets/themes/fluffy_hamster/
     - assets/themes/fluffy_hamster/icons/light/
     - assets/themes/fluffy_hamster/icons/dark/

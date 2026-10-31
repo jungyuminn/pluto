@@ -9,6 +9,7 @@ import 'package:flutter/services.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
 import 'package:pluto/core/constants/oauth_config.dart';
+import 'package:pluto/core/notifications/friend_push_service.dart';
 import 'package:pluto/data/datasources/kakao_web_auth.dart';
 import 'package:pluto/firebase_options.dart';
 import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart' as kakao;
@@ -553,6 +554,9 @@ class AppAuthService {
 
   Future<void> signOut() async {
     if (!isReady) return;
+    try {
+      await FriendPushService.instance.stop();
+    } catch (_) {}
     final providers = {
       for (final info
           in FirebaseAuth.instance.currentUser?.providerData ?? const [])
@@ -584,6 +588,9 @@ class AppAuthService {
 
   Future<void> deleteAccount() async {
     _requireReady();
+    try {
+      await FriendPushService.instance.stop();
+    } catch (_) {}
     var user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
     try {

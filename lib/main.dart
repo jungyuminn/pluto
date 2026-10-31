@@ -4,9 +4,11 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:home_widget/home_widget.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:pluto/app.dart';
 import 'package:pluto/core/constants/oauth_config.dart';
 import 'package:pluto/core/home_widget/home_screen_widget_service.dart';
+import 'package:pluto/core/notifications/friend_push_service.dart';
 import 'package:pluto/data/datasources/app_check_service.dart';
 import 'package:pluto/data/datasources/kakao_web_auth.dart';
 import 'package:pluto/firebase_options.dart';
@@ -20,6 +22,9 @@ Future<void> main() async {
       await Firebase.initializeApp(
         options: DefaultFirebaseOptions.currentPlatform,
       );
+      if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
+        FirebaseMessaging.onBackgroundMessage(friendPushBackgroundHandler);
+      }
       await AppCheckService.activate();
     }
   } catch (error) {

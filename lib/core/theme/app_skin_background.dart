@@ -57,6 +57,8 @@ class AppSkinAssets {
       'assets/themes/fluffy_rabbit/bunny_face_bottom_light.webp';
   static const fluffyRabbitBottomDark =
       'assets/themes/fluffy_rabbit/bunny_face_bottom_dark.webp';
+  static const fluffyRabbitAvatar =
+      'assets/themes/fluffy_rabbit/default_avatar.webp';
 
   static const fluffyCatFaceLight =
       'assets/themes/fluffy_cat/cat_face_decoration_light.webp';
@@ -66,6 +68,8 @@ class AppSkinAssets {
       'assets/themes/fluffy_cat/cat_face_bottom_light.webp';
   static const fluffyCatBottomDark =
       'assets/themes/fluffy_cat/cat_face_bottom_dark.webp';
+  static const fluffyCatAvatar =
+      'assets/themes/fluffy_cat/default_avatar.webp';
 
   static const fluffyDogFaceLight =
       'assets/themes/fluffy_dog/dog_face_decoration_light.webp';
@@ -75,15 +79,8 @@ class AppSkinAssets {
       'assets/themes/fluffy_dog/dog_face_bottom_light.webp';
   static const fluffyDogBottomDark =
       'assets/themes/fluffy_dog/dog_face_bottom_dark.webp';
-
-  static const fluffyChickFaceLight =
-      'assets/themes/fluffy_chick/chick_face_decoration_light.webp';
-  static const fluffyChickFaceDark =
-      'assets/themes/fluffy_chick/chick_face_decoration_dark.webp';
-  static const fluffyChickBottomLight =
-      'assets/themes/fluffy_chick/chick_face_bottom_light.webp';
-  static const fluffyChickBottomDark =
-      'assets/themes/fluffy_chick/chick_face_bottom_dark.webp';
+  static const fluffyDogAvatar =
+      'assets/themes/fluffy_dog/default_avatar.webp';
 
   static const fluffyHamsterFaceLight =
       'assets/themes/fluffy_hamster/hamster_face_decoration_light.webp';
@@ -93,6 +90,8 @@ class AppSkinAssets {
       'assets/themes/fluffy_hamster/hamster_face_bottom_light.webp';
   static const fluffyHamsterBottomDark =
       'assets/themes/fluffy_hamster/hamster_face_bottom_dark.webp';
+  static const fluffyHamsterAvatar =
+      'assets/themes/fluffy_hamster/default_avatar.webp';
 
   static const mongleCloudFaceLight =
       'assets/themes/fluffy_cloud/cloud_decoration_light.webp';
@@ -301,10 +300,6 @@ class AppSkinAssets {
     fluffyDogFaceDark,
     fluffyDogBottomLight,
     fluffyDogBottomDark,
-    fluffyChickFaceLight,
-    fluffyChickFaceDark,
-    fluffyChickBottomLight,
-    fluffyChickBottomDark,
     fluffyHamsterFaceLight,
     fluffyHamsterFaceDark,
     fluffyHamsterBottomLight,
@@ -405,14 +400,12 @@ class AppSkinAssets {
   static const cloverDarkFill = Color(0xFF121A14);
   static const fluffyBearLightFill = Color(0xFFEBF8FF);
   static const fluffyBearDarkFill = Color(0xFF101820);
-  static const fluffyRabbitLightFill = Color(0xFFFFF2F6);
+  static const fluffyRabbitLightFill = Color(0xFFFFF5FB);
   static const fluffyRabbitDarkFill = Color(0xFF1A1014);
-  static const fluffyCatLightFill = Color(0xFFFFF4F7);
+  static const fluffyCatLightFill = Color(0xFFFFF5FB);
   static const fluffyCatDarkFill = Color(0xFF181214);
-  static const fluffyDogLightFill = Color(0xFFEEF6FA);
+  static const fluffyDogLightFill = Color(0xFFEBF8FF);
   static const fluffyDogDarkFill = Color(0xFF10161C);
-  static const fluffyChickLightFill = Color(0xFFFFF8E4);
-  static const fluffyChickDarkFill = Color(0xFF1A1610);
   static const fluffyHamsterLightFill = Color(0xFFFFF1E4);
   static const fluffyHamsterDarkFill = Color(0xFF1A1410);
   static const mongleCloudLightFill = Color(0xFFEEF6FC);
@@ -457,13 +450,11 @@ class AppSkinAssets {
       case AppSkin.fluffyBear:
         return dark ? const Color(0xFF8BB8D0) : const Color(0xFF6AA8C8);
       case AppSkin.fluffyRabbit:
-        return dark ? const Color(0xFFE09BB0) : const Color(0xFFD47A96);
+        return dark ? const Color(0xFFE8A8BA) : const Color(0xFFE08AA6);
       case AppSkin.fluffyCat:
-        return dark ? const Color(0xFFE0A0B4) : const Color(0xFFC87A94);
+        return dark ? const Color(0xFFE8A8B8) : const Color(0xFFDC8AA2);
       case AppSkin.fluffyDog:
         return dark ? const Color(0xFF8AB4C8) : const Color(0xFF5A96B0);
-      case AppSkin.fluffyChick:
-        return dark ? const Color(0xFFE0B04A) : const Color(0xFFE8A825);
       case AppSkin.fluffyHamster:
         return dark ? const Color(0xFFE0A078) : const Color(0xFFE88858);
       case AppSkin.mongleCloud:
@@ -515,8 +506,6 @@ class AppSkinAssets {
         return dark ? fluffyCatDarkFill : fluffyCatLightFill;
       case AppSkin.fluffyDog:
         return dark ? fluffyDogDarkFill : fluffyDogLightFill;
-      case AppSkin.fluffyChick:
-        return dark ? fluffyChickDarkFill : fluffyChickLightFill;
       case AppSkin.fluffyHamster:
         return dark ? fluffyHamsterDarkFill : fluffyHamsterLightFill;
       case AppSkin.mongleCloud:
@@ -561,7 +550,6 @@ class AppSkinAssets {
       case AppSkin.fluffyRabbit:
       case AppSkin.fluffyCat:
       case AppSkin.fluffyDog:
-      case AppSkin.fluffyChick:
       case AppSkin.fluffyHamster:
       case AppSkin.mongleCloud:
       case AppSkin.pinkHeart:
@@ -593,7 +581,6 @@ class AppSkinAssets {
   static const _fluffyRabbitIcons = 'assets/themes/fluffy_rabbit/icons';
   static const _fluffyCatIcons = 'assets/themes/fluffy_cat/icons';
   static const _fluffyDogIcons = 'assets/themes/fluffy_dog/icons';
-  static const _fluffyChickIcons = 'assets/themes/fluffy_chick/icons';
   static const _fluffyHamsterIcons = 'assets/themes/fluffy_hamster/icons';
   static const _pinkHeartIcons = 'assets/themes/pink_heart/icons';
   static const _mongleCloudIcons = 'assets/themes/fluffy_cloud/icons';
@@ -604,6 +591,10 @@ class AppSkinAssets {
   static String? defaultAvatarOf(AppSkin skin) {
     return switch (skin) {
       AppSkin.fluffyBear => fluffyBearAvatar,
+      AppSkin.fluffyRabbit => fluffyRabbitAvatar,
+      AppSkin.fluffyCat => fluffyCatAvatar,
+      AppSkin.fluffyDog => fluffyDogAvatar,
+      AppSkin.fluffyHamster => fluffyHamsterAvatar,
       _ => null,
     };
   }
@@ -616,7 +607,6 @@ class AppSkinAssets {
       AppSkin.fluffyRabbit => _fluffyRabbitIcons,
       AppSkin.fluffyCat => _fluffyCatIcons,
       AppSkin.fluffyDog => _fluffyDogIcons,
-      AppSkin.fluffyChick => _fluffyChickIcons,
       AppSkin.fluffyHamster => _fluffyHamsterIcons,
       AppSkin.mongleCloud => _mongleCloudIcons,
       AppSkin.pinkHeart => _pinkHeartIcons,
@@ -779,21 +769,6 @@ class AppSkinBackground extends StatelessWidget {
           faceTintDark: const Color(0xFF587088),
           hillTintLight: const Color(0xFFD0E8F0),
           hillTintDark: const Color(0xFF1A2630),
-        ),
-      AppSkin.fluffyChick => _FluffyMascotDecorations(
-          liftForNav: liftForNav,
-          scaleByWidth: scaleByWidth,
-          simple: compact,
-          playing: playing,
-          moves: true,
-          faceLight: AppSkinAssets.fluffyChickFaceLight,
-          faceDark: AppSkinAssets.fluffyChickFaceDark,
-          bottomLight: AppSkinAssets.fluffyChickBottomLight,
-          bottomDark: AppSkinAssets.fluffyChickBottomDark,
-          faceTintLight: const Color(0xFFF5D060),
-          faceTintDark: const Color(0xFF8A7030),
-          hillTintLight: const Color(0xFFFFF4C2),
-          hillTintDark: const Color(0xFF2A2410),
         ),
       AppSkin.fluffyHamster => _FluffyMascotDecorations(
           liftForNav: liftForNav,

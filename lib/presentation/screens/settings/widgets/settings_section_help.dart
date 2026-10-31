@@ -2350,8 +2350,6 @@ String _themeCaption(AppSkin skin) {
       return AppStrings.themeFluffyCat;
     case AppSkin.fluffyDog:
       return AppStrings.themeFluffyDog;
-    case AppSkin.fluffyChick:
-      return AppStrings.themeFluffyChick;
     case AppSkin.fluffyHamster:
       return AppStrings.themeFluffyHamster;
     case AppSkin.mongleCloud:

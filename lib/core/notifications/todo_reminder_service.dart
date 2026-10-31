@@ -20,6 +20,7 @@ class TodoReminderService {
   static const _channelId = 'todo_reminders';
   static const _summaryChannelId = 'daily_summary';
   static const _leftoverChannelId = 'leftover_todos';
+  static const friendChannelId = 'friend_requests';
   static const _androidIcon = 'ic_stat_notification';
   static const _maxScheduled = 64;
   static const _iosPendingLimit = 64;
@@ -35,6 +36,7 @@ class TodoReminderService {
   var _canSchedule = false;
   var _syncing = false;
   var _queued = false;
+  void Function(String? payload)? onTap;
 
   Future<void> init({
     required CalendarEventLocalDataSource events,
@@ -57,11 +59,13 @@ class TodoReminderService {
       try {
         await _plugin.initialize(
           InitializationSettings(android: android, iOS: darwin),
+          onDidReceiveNotificationResponse: _onTap,
         );
       } catch (_) {
         android = const AndroidInitializationSettings('@mipmap/ic_launcher');
         await _plugin.initialize(
           InitializationSettings(android: android, iOS: darwin),
+          onDidReceiveNotificationResponse: _onTap,
         );
       }
       final androidPlugin = _plugin.resolvePlatformSpecificImplementation<
@@ -87,6 +91,14 @@ class TodoReminderService {
           _leftoverChannelId,
           AppStrings.leftoverReminderChannelName,
           description: AppStrings.leftoverReminderChannelDescription,
+          importance: Importance.high,
+        ),
+      );
+      await androidPlugin?.createNotificationChannel(
+        const AndroidNotificationChannel(
+          friendChannelId,
+          AppStrings.friendRequestChannelName,
+          description: AppStrings.friendRequestChannelDescription,
           importance: Importance.high,
         ),
       );
@@ -118,6 +130,48 @@ class TodoReminderService {
       await android?.requestExactAlarmsPermission();
     }
     return notifications;
+  }
+
+  void _onTap(NotificationResponse response) {
+    onTap?.call(response.payload);
+  }
+
+  Future<void> showNow({
+    required String title,
+    required String body,
+    String payload = '',
+    int id = 91003001,
+  }) async {
+    if (!_ready || kIsWeb) return;
+    try {
+      await _plugin.show(
+        id,
+        title,
+        body,
+        NotificationDetails(
+          android: AndroidNotificationDetails(
+            friendChannelId,
+            AppStrings.friendRequestChannelName,
+            channelDescription: AppStrings.friendRequestChannelDescription,
+            icon: _androidIcon,
+            color: const Color(0xFF3B82F6),
+            importance: Importance.high,
+            priority: Priority.high,
+          ),
+          iOS: const DarwinNotificationDetails(
+            presentAlert: true,
+            presentBadge: false,
+            presentBanner: true,
+            presentList: true,
+            presentSound: true,
+            interruptionLevel: InterruptionLevel.active,
+          ),
+        ),
+        payload: payload,
+      );
+    } catch (error, stack) {
+      debugPrint('TodoReminderService.showNow failed: $error\n$stack');
+    }
   }
 
   Future<void> sync() async {

@@ -12,6 +12,7 @@ import 'package:pluto/core/calendar/lunar_date.dart';
 import 'package:pluto/core/constants/app_fonts.dart';
 import 'package:pluto/core/constants/app_icons.dart';
 import 'package:pluto/core/constants/app_strings.dart';
+import 'package:pluto/core/layout/app_dialog.dart';
 import 'package:pluto/core/layout/pc_layout.dart';
 import 'package:pluto/core/constants/release_notes.dart';
 import 'package:pluto/core/theme/app_colors.dart';
@@ -828,8 +829,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
         return AppStrings.themeFluffyCat;
       case AppSkin.fluffyDog:
         return AppStrings.themeFluffyDog;
-      case AppSkin.fluffyChick:
-        return AppStrings.themeFluffyChick;
       case AppSkin.fluffyHamster:
         return AppStrings.themeFluffyHamster;
       case AppSkin.mongleCloud:
@@ -3392,7 +3391,7 @@ class _MineThemesPanelState extends State<_MineThemesPanel>
 
   Future<void> _confirmDelete(BuildContext context, UserTheme item) async {
     _openId.value = null;
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showAppDialog<bool>(
       context: context,
       builder: (context) => _DeleteCustomThemeDialog(name: item.name),
     );
@@ -3732,7 +3731,7 @@ class _CustomThemeEditorPageState extends State<_CustomThemeEditorPage> {
   Future<void> _delete() async {
     final initial = widget.initial;
     if (initial == null) return;
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showAppDialog<bool>(
       context: context,
       builder: (context) => _DeleteCustomThemeDialog(name: initial.name),
     );

@@ -62,6 +62,10 @@ service cloud.firestore {
       match /vaults/{provider} {
         allow read, write: if isUser(userId);
       }
+      match /fcm_tokens/{tokenId} {
+        allow read: if false;
+        allow create, update, delete: if isUser(userId);
+      }
     }
 
     match /profiles/{userId} {

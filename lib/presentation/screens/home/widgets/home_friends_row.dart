@@ -193,6 +193,7 @@ class _HomeFriendsRowState extends State<HomeFriendsRow> {
     }
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
+        settings: const RouteSettings(name: FriendsScreen.routeName),
         builder: (context) => const FriendsScreen(),
       ),
     );

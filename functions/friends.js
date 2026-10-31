@@ -1,6 +1,8 @@
 const {getAuth} = require("firebase-admin/auth");
 const {getFirestore} = require("firebase-admin/firestore");
+const {getMessaging} = require("firebase-admin/messaging");
 const {onCall, HttpsError} = require("firebase-functions/v2/https");
+const functionsV1 = require("firebase-functions/v1");
 
 const callable = {
   cors: true,
@@ -858,6 +860,7 @@ exports.deleteFriendData = onCall(callable, async (request) => {
   if (profile?.friendCode) {
     batchDeletes.push(store.collection("friend_codes").doc(profile.friendCode));
   }
+  await addAll(store.collection("users").doc(uid).collection("fcm_tokens"));
   batchDeletes.push(store.collection("profiles").doc(uid));
 
   for (let i = 0; i < batchDeletes.length; i += 400) {
@@ -869,3 +872,115 @@ exports.deleteFriendData = onCall(callable, async (request) => {
   }
   return {status: "deleted"};
 });
+
+const DEAD_TOKEN_CODES = new Set([
+  "messaging/registration-token-not-registered",
+  "messaging/invalid-registration-token",
+]);
+
+function pushName(raw) {
+  const name = String(raw || "").replace(/\s+/g, " ").trim();
+  if (!name) return "친구";
+  return name.slice(0, 16);
+}
+
+async function tokensOf(uid) {
+  if (!uid) return [];
+  const snaps = await db()
+      .collection("users")
+      .doc(uid)
+      .collection("fcm_tokens")
+      .get();
+  return snaps.docs
+      .map((doc) => ({
+        id: doc.id,
+        token: String(doc.data()?.token || ""),
+      }))
+      .filter((item) => item.token);
+}
+
+async function notifyFriendPush(uid, payload) {
+  const tokens = await tokensOf(uid);
+  if (!tokens.length) return;
+  let response;
+  try {
+    response = await getMessaging().sendEach(tokens.map((item) => ({
+      token: item.token,
+      notification: {
+        title: payload.title,
+        body: payload.body,
+      },
+      data: {
+        type: payload.type,
+        requestId: String(payload.requestId || ""),
+      },
+      android: {
+        priority: "high",
+        notification: {
+          channelId: "friend_requests",
+          icon: "ic_stat_notification",
+        },
+      },
+      apns: {
+        payload: {
+          aps: {
+            sound: "default",
+          },
+        },
+      },
+    })));
+  } catch (error) {
+    console.error("friend push send failed", uid, error);
+    return;
+  }
+  const stale = [];
+  response.responses.forEach((result, index) => {
+    if (result.success) return;
+    const code = result.error?.code || "";
+    if (DEAD_TOKEN_CODES.has(code)) {
+      stale.push(tokens[index].id);
+    } else {
+      console.error("friend push token failed", uid, code, result.error?.message);
+    }
+  });
+  if (!stale.length) return;
+  const batch = db().batch();
+  for (const id of stale) {
+    batch.delete(db().collection("users").doc(uid).collection("fcm_tokens").doc(id));
+  }
+  await batch.commit();
+}
+
+exports.onFriendRequestWrite = functionsV1
+    .region("asia-northeast3")
+    .firestore
+    .document("friend_requests/{requestId}")
+    .onWrite(async (change, context) => {
+      const before = change.before.exists ? change.before.data() : null;
+      const after = change.after.exists ? change.after.data() : null;
+      if (!after) return;
+      const prev = String(before?.status || "");
+      const status = String(after.status || "");
+      const requestId = context.params.requestId;
+      try {
+        if (status === "pending" && prev !== "pending") {
+          await notifyFriendPush(after.toUid, {
+            type: "friend_request",
+            title: `${pushName(after.fromName)}님이 친구 요청을 보냈어요`,
+            body: "받은 친구 요청을 확인해 주세요",
+            requestId,
+          });
+          return;
+        }
+        if (status === "accepted" && prev === "pending") {
+          await notifyFriendPush(after.fromUid, {
+            type: "friend_accepted",
+            title: `${pushName(after.toName)}님이 친구 요청을 수락했어요`,
+            body: "이제 친구가 되었어요",
+            requestId,
+          });
+        }
+      } catch (error) {
+        console.error("friend push failed", requestId, error);
+      }
+    });

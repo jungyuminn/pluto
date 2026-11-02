@@ -26,7 +26,9 @@ import 'package:pluto/data/datasources/event_category_local_datasource.dart';
 import 'package:pluto/data/datasources/font_preference.dart';
 import 'package:pluto/data/datasources/home_view_preference.dart';
 import 'package:pluto/data/datasources/job_application_local_datasource.dart';
+import 'package:pluto/data/repositories/job_application_repository_impl.dart';
 import 'package:pluto/data/datasources/nav_preference.dart';
+import 'package:pluto/domain/usecases/update_job_application.dart';
 import 'package:pluto/data/datasources/theme_preference.dart';
 import 'package:pluto/data/datasources/widget_preference.dart';
 import 'package:pluto/domain/entities/calendar_event.dart';
@@ -155,23 +157,54 @@ class HomeScreenWidgetService {
         break;
       }
     }
-    if (match == null || match.isJob) return;
-    final source = pinSomedayCompleteToToday(match);
-    final toggled = await FriendService.instance.toggleComplete(source);
-    final groupId = match.isRepeat ? null : match.groupId;
-    await events.saveAll([
-      for (final event in current)
-        if (event.id == id || (groupId != null && event.groupId == groupId))
-          event.copyWith(
-            completed: toggled.completed,
-            sharedMine: toggled.sharedMine,
-            sharedPeer: toggled.sharedPeer,
-            date: toggled.date,
-            someday: toggled.someday,
-          )
-        else
-          event,
-    ]);
+    if (match != null && !match.isJob) {
+      final source = pinSomedayCompleteToToday(match);
+      final toggled = await FriendService.instance.toggleComplete(source);
+      final groupId = match.isRepeat ? null : match.groupId;
+      await events.saveAll([
+        for (final event in current)
+          if (event.id == id || (groupId != null && event.groupId == groupId))
+            event.copyWith(
+              completed: toggled.completed,
+              sharedMine: toggled.sharedMine,
+              sharedPeer: toggled.sharedPeer,
+              date: toggled.date,
+              someday: toggled.someday,
+            )
+          else
+            event,
+      ]);
+      return;
+    }
+    await _toggleJobCompleted(id, match);
+  }
+
+  Future<void> _toggleJobCompleted(String id, CalendarEvent? match) async {
+    final jobs = _jobs;
+    if (jobs == null) return;
+    final appId = match?.jobApplicationId ?? _jobApplicationIdOf(id);
+    if (appId == null || appId.isEmpty) return;
+    final event = match ??
+        CalendarEvent(
+          id: id,
+          title: '',
+          date: DateTime.now(),
+          isJob: true,
+          jobApplicationId: appId,
+        );
+    await saveJobCompleteToggle(
+      getApplications: () async => jobs.fetchAll(),
+      updater: UpdateJobApplication(JobApplicationRepositoryImpl(jobs)),
+      event: event,
+    );
+  }
+
+  static String? _jobApplicationIdOf(String id) {
+    if (!id.startsWith('job:')) return null;
+    final rest = id.substring(4);
+    final colon = rest.lastIndexOf(':');
+    if (colon <= 0) return null;
+    return rest.substring(0, colon);
   }
 
   Future<void> _ensureAppGroup() async {
@@ -407,7 +440,7 @@ class HomeScreenWidgetService {
       for (var i = 0; i < snapshot.items.length; i++) {
         final item = snapshot.items[i];
         final event = item.event;
-        final completable = event != null && !event.isJob;
+        final completable = event != null;
         await HomeWidget.saveWidgetData<String>(
           kind.rowIdKey(i),
           completable ? event.id : '',

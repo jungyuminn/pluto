@@ -163,13 +163,15 @@ class _FriendAvatarState extends State<FriendAvatar> {
     final fill = Color.lerp(
       colors.border,
       Colors.white,
-      colors.isDark ? 0.18 : 0.38,
+      colors.isDark ? 0.12 : 0.30,
     );
     return DecoratedBox(
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         color: image == null ? fill : null,
-        border: Border.all(color: colors.border, width: 1),
+        border: image == null
+            ? null
+            : Border.all(color: colors.border, width: 1),
       ),
       child: SizedBox(
         width: widget.size,
@@ -195,7 +197,7 @@ class _FriendAvatarState extends State<FriendAvatar> {
     final skin = theme?.paintedSkin ?? AppSkin.classic;
     final avatar = AppSkinAssets.defaultAvatarOf(skin);
     if (avatar != null) {
-      final faceSize = widget.size * 0.72;
+      final faceSize = widget.size * 0.70;
       return Center(
         child: Image.asset(
           avatar,

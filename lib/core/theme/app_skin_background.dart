@@ -624,9 +624,18 @@ class AppSkinAssets {
       _ => null,
     };
     if (slot == null) return asset;
-    final name =
-        dark && skin == AppSkin.fluffyBear ? '${slot}_dark.svg' : '$slot.svg';
-    return '$folder/${dark ? 'dark' : 'light'}/$name';
+    const fluffyAlwaysLight = {
+      AppSkin.fluffyBear,
+      AppSkin.fluffyRabbit,
+      AppSkin.fluffyCat,
+      AppSkin.fluffyDog,
+      AppSkin.fluffyHamster,
+      AppSkin.mongleCloud,
+    };
+    if (fluffyAlwaysLight.contains(skin)) {
+      return '$folder/light/$slot.svg';
+    }
+    return '$folder/${dark ? 'dark' : 'light'}/$slot.svg';
   }
 }
 

@@ -441,7 +441,7 @@ class _WidgetEventLabel extends StatelessWidget {
     this.officeIcon,
   });
 
-  static const _height = 60.0;
+  static const _baseHeight = 52.0;
 
   final CalendarEvent event;
   final String? timeText;
@@ -452,27 +452,30 @@ class _WidgetEventLabel extends StatelessWidget {
     final colors = AppColors.of(context);
     final background = colors.tint(event.color, 0.14);
     final ink = EventCategory.labelOf(event.color);
-    final height = _height * MediaQuery.textScalerOf(context).scale(1);
+    final scale = MediaQuery.textScalerOf(context).scale(1);
+    final typeScale = TodayWidgetCard.eventLabelHeight / _baseHeight;
+    final s = scale * typeScale;
+    final height = TodayWidgetCard.eventLabelHeight * scale;
     return DecoratedBox(
       decoration: BoxDecoration(
         color: background,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(8 * typeScale),
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(8 * typeScale),
         child: SizedBox(
           height: height,
           width: double.infinity,
           child: Row(
             children: [
               Container(
-                width: event.completed ? 0 : 4,
+                width: event.completed ? 0 : 4 * s,
                 height: height,
                 color: event.color,
               ),
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(10, 8, 4, 8),
+                  padding: EdgeInsets.fromLTRB(10 * s, 8 * s, 4 * s, 8 * s),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -484,13 +487,13 @@ class _WidgetEventLabel extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           fontFamily: AppFonts.of(context),
-                          fontSize: 12,
+                          fontSize: 12 * s,
                           fontWeight: FontWeight.w600,
                           height: 1.15,
                           color: colors.text,
                         ),
                       ),
-                      const SizedBox(height: 5),
+                      SizedBox(height: 5 * s),
                       Row(
                         children: [
                           Expanded(
@@ -501,7 +504,7 @@ class _WidgetEventLabel extends StatelessWidget {
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
                                 fontFamily: AppFonts.of(context),
-                                fontSize: 10,
+                                fontSize: 10 * s,
                                 fontWeight: FontWeight.w600,
                                 height: 1.15,
                                 color: colors.hint,
@@ -509,13 +512,13 @@ class _WidgetEventLabel extends StatelessWidget {
                             ),
                           ),
                           if (timeText != null) ...[
-                            const SizedBox(width: 6),
+                            SizedBox(width: 6 * s),
                             Text(
                               timeText!,
                               maxLines: 1,
                               style: TextStyle(
                                 fontFamily: AppFonts.of(context),
-                                fontSize: 10,
+                                fontSize: 10 * s,
                                 fontWeight: FontWeight.w700,
                                 height: 1.15,
                                 color: ink,
@@ -530,10 +533,10 @@ class _WidgetEventLabel extends StatelessWidget {
               ),
               if (event.isJob && officeIcon != null)
                 Padding(
-                  padding: const EdgeInsets.only(right: 6),
+                  padding: EdgeInsets.only(right: 6 * s),
                   child: SizedBox(
-                    width: 28,
-                    height: 28,
+                    width: 28 * s,
+                    height: 28 * s,
                     child: Center(
                       child: ColorFiltered(
                         colorFilter: ColorFilter.mode(
@@ -542,8 +545,8 @@ class _WidgetEventLabel extends StatelessWidget {
                         ),
                         child: RawImage(
                           image: officeIcon,
-                          width: 22,
-                          height: 22,
+                          width: 22 * s,
+                          height: 22 * s,
                           fit: BoxFit.contain,
                         ),
                       ),
@@ -552,50 +555,49 @@ class _WidgetEventLabel extends StatelessWidget {
                 ),
               if (event.isRange)
                 Padding(
-                  padding: EdgeInsets.only(right: event.isRepeat ? 0 : 6),
+                  padding: EdgeInsets.only(right: event.isRepeat ? 0 : 6 * s),
                   child: SizedBox(
-                    width: 28,
-                    height: 28,
+                    width: 28 * s,
+                    height: 28 * s,
                     child: Icon(
                       Icons.swap_horiz_rounded,
-                      size: 22,
+                      size: 22 * s,
                       color: ink,
                     ),
                   ),
                 ),
               if (event.isRepeat)
                 Padding(
-                  padding: EdgeInsets.only(right: event.isJob ? 6 : 0),
+                  padding: EdgeInsets.only(right: event.isJob ? 6 * s : 0),
                   child: SizedBox(
-                    width: 28,
-                    height: 28,
+                    width: 28 * s,
+                    height: 28 * s,
                     child: Icon(
                       Icons.repeat_rounded,
-                      size: 22,
+                      size: 22 * s,
                       color: ink,
                     ),
                   ),
                 ),
-              if (!event.isJob)
-                Padding(
-                  padding: const EdgeInsets.only(right: 6),
-                  child: SizedBox(
-                    width: 28,
-                    height: 28,
-                    child: Center(
-                      child: SizedBox(
-                        width: 22,
-                        height: 22,
-                        child: CustomPaint(
-                          painter: _CompleteMarkPainter(
-                            completed: event.completed,
-                            color: ink,
-                          ),
+              Padding(
+                padding: EdgeInsets.only(right: 6 * s),
+                child: SizedBox(
+                  width: 28 * s,
+                  height: 28 * s,
+                  child: Center(
+                    child: SizedBox(
+                      width: 22 * s,
+                      height: 22 * s,
+                      child: CustomPaint(
+                        painter: _CompleteMarkPainter(
+                          completed: event.completed,
+                          color: ink,
                         ),
                       ),
                     ),
                   ),
                 ),
+              ),
             ],
           ),
         ),

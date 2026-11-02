@@ -377,11 +377,11 @@ class AppStrings {
   static const themeBlossom = '블라썸';
   static const themeMotion = '재생 속도';
   static const themeClover = '네잎클로버';
-  static const themeFluffyBear = '몽글곰도리';
+  static const themeFluffyBear = '몽글곰돌이';
   static const themeFluffyRabbit = '몽글토끼';
   static const themeFluffyCat = '몽글고양이';
   static const themeFluffyDog = '몽글강아지';
-  static const themeFluffyHamster = '몽글햄찌';
+  static const themeFluffyHamster = '몽글햄스터';
   static const themeMongleCloud = '몽글구름';
   static const themePinkHeart = '핑크하트';
   static const themeSummerBeach = '한여름 바닷가';

@@ -30,6 +30,7 @@ import 'package:pluto/presentation/screens/calendar/widgets/event_complete_butto
 import 'package:pluto/presentation/screens/calendar/widgets/event_date_chip.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/event_time_chip.dart';
 import 'package:pluto/presentation/screens/home/widgets/leftover_todo_card.dart';
+import 'package:pluto/presentation/screens/settings/widgets/dots_loading_dialog.dart';
 import 'package:pluto/presentation/widgets/overflow_menu.dart';
 import 'package:pluto/presentation/widgets/themed_asset.dart';
 
@@ -215,6 +216,11 @@ enum ReleaseDemo {
   goneFonts,
   todayCircleTheme,
   calendarMonthReset,
+  friendPush,
+  importAutoCategory,
+  fluffyIconUpdate,
+  fluffyDefaultAvatar,
+  newStickers,
   feature,
   fix,
 }
@@ -257,17 +263,6 @@ ReleaseDemo releaseDemoFor(String text, {required bool isFix}) {
         text.contains('뒤 화면') ||
         text.contains('바로 보내')) {
       return ReleaseDemo.friendsMiniCal;
-    }
-    if (text.contains('이미지 자동') ||
-        text.contains('캘린더 사진') ||
-        text.contains('읽어 가져올')) {
-      return ReleaseDemo.photoImport;
-    }
-    if (text.contains('며칠') ||
-        text.contains('몇 주') ||
-        text.contains('몇 달마다') ||
-        text.contains('직접 고를')) {
-      return ReleaseDemo.repeatPick;
     }
     if (text.contains('AI 카테고리') || text.contains('제목을 치면')) {
       return ReleaseDemo.categoryAi;
@@ -384,6 +379,30 @@ ReleaseDemo releaseDemoFor(String text, {required bool isFix}) {
       return ReleaseDemo.calendarMonthReset;
     }
     return ReleaseDemo.fix;
+  }
+  if (text.contains('푸시 알림') ||
+      (text.contains('친구 요청') && text.contains('같이 할 일 요청'))) {
+    return ReleaseDemo.friendPush;
+  }
+  if (text.contains('연동') && text.contains('카테고리를 자동')) {
+    return ReleaseDemo.importAutoCategory;
+  }
+  if (text.contains('몽글 테마의 아이콘') || text.contains('아이콘이 수정')) {
+    return ReleaseDemo.fluffyIconUpdate;
+  }
+  if (text.contains('기본 프로필')) {
+    return ReleaseDemo.fluffyDefaultAvatar;
+  }
+  if (text.contains('스티커 2종') || text.contains('새로운 스티커')) {
+    return ReleaseDemo.newStickers;
+  }
+  if (text.contains('캘린더 사진') || text.contains('읽어 가져올')) {
+    return ReleaseDemo.photoImport;
+  }
+  if (text.contains('며칠') ||
+      text.contains('몇 주') ||
+      text.contains('몇 달마다')) {
+    return ReleaseDemo.repeatPick;
   }
   if (text.contains('체크리스트를 넣을')) {
     return ReleaseDemo.eventChecklist;
@@ -971,6 +990,11 @@ class ReleaseDemoView extends StatelessWidget {
       ReleaseDemo.goneFonts => const _GoneFontsDemo(),
       ReleaseDemo.todayCircleTheme => const _TodayCircleThemeDemo(),
       ReleaseDemo.calendarMonthReset => const _CalendarMonthResetDemo(),
+      ReleaseDemo.friendPush => const _FriendPushDemo(),
+      ReleaseDemo.importAutoCategory => const _ImportAutoCategoryDemo(),
+      ReleaseDemo.fluffyIconUpdate => const _FluffyIconUpdateDemo(),
+      ReleaseDemo.fluffyDefaultAvatar => const _FluffyDefaultAvatarDemo(),
+      ReleaseDemo.newStickers => const _NewStickersDemo(),
       ReleaseDemo.feature => const _FeatureDemo(),
       ReleaseDemo.fix => const _FixDemo(),
     };
@@ -1011,7 +1035,7 @@ class _LighterAppDemo extends StatelessWidget {
                       Transform.scale(
                         scale: pop,
                         child: Image.asset(
-                          'assets/stickers/daily_dog/01_thank_you.webp',
+                          'assets/stickers/pink_dog/03_thank_you.webp',
                           width: 52,
                           height: 52,
                         ),
@@ -6136,7 +6160,7 @@ class _StickerBtnDemo extends StatelessWidget {
                         child: Transform.scale(
                           scale: shown,
                           child: Image.asset(
-                            'assets/stickers/daily_dog/01_thank_you.webp',
+                            'assets/stickers/pink_dog/03_thank_you.webp',
                             width: 42,
                             height: 42,
                           ),
@@ -7613,7 +7637,7 @@ class _StickerByModeDemo extends StatelessWidget {
   static const _modes = ['할 일', '가계부', '일기'];
   static const _stickers = [
     'assets/stickers/company_cat/07_fighting.webp',
-    'assets/stickers/daily_dog/12_snack.webp',
+    'assets/stickers/brown_puppy_01/07_lunch.webp',
     'assets/stickers/daily_rabbit/05_good_morning.webp',
   ];
 
@@ -11084,29 +11108,32 @@ class _AiDots extends StatelessWidget {
 class _PhotoImportDemo extends StatelessWidget {
   const _PhotoImportDemo();
 
-  static const _meeting = Color(0xFFFFAAA0);
-  static const _sport = Color(0xFF3B82F6);
+  static final _events = [
+    (title: '회의', day: DateTime(2026, 9, 11)),
+    (title: '헬스장가기', day: DateTime(2026, 9, 12)),
+  ];
 
   @override
   Widget build(BuildContext context) {
     return _Loop(
-      ms: 5400,
-      boxHeight: 220,
+      ms: 5600,
+      boxHeight: 240,
       builder: (context, t) {
         final colors = AppColors.of(context);
         final font = AppFonts.of(context);
-        final shotIn = Curves.easeOutCubic.transform(_gate(t, 0.04, 0.18));
-        final pick1 = Curves.easeOutCubic.transform(_gate(t, 0.20, 0.28));
-        final out1 = Curves.easeInCubic.transform(_gate(t, 0.26, 0.36));
-        final in1 = Curves.easeOutCubic.transform(_gate(t, 0.30, 0.44));
-        final pick2 = Curves.easeOutCubic.transform(_gate(t, 0.40, 0.48));
-        final out2 = Curves.easeInCubic.transform(_gate(t, 0.46, 0.56));
-        final in2 = Curves.easeOutCubic.transform(_gate(t, 0.50, 0.64));
-        final shotOut = Curves.easeInCubic.transform(_gate(t, 0.56, 0.70));
-        final shotShow = (shotIn * (1 - shotOut)).clamp(0.0, 1.0);
-        final caption = t < 0.36
-            ? AppStrings.featureIntroPhotoBody
-            : AppStrings.importConfirmBody(2);
+        final shown = t < 0.18
+            ? 0
+            : t < 0.34
+            ? 1
+            : 2;
+        final reading = t < 0.62;
+        final first = Curves.easeOutCubic.transform(_gate(t, 0.16, 0.28));
+        final second = Curves.easeOutCubic.transform(_gate(t, 0.32, 0.44));
+        final appears = [first, second];
+        final waitIndex = t < 0.30 ? 0 : 1;
+        final caption = reading
+            ? AppStrings.photoImportWaits[waitIndex]
+            : AppStrings.importConfirmBody(shown);
         return Align(
           alignment: Alignment.bottomCenter,
           child: DecoratedBox(
@@ -11133,85 +11160,60 @@ class _PhotoImportDemo extends StatelessWidget {
                     AppStrings.photoImportTitle,
                     style: TextStyle(
                       fontFamily: font,
-                      fontSize: 16,
+                      fontSize: 18,
                       fontWeight: FontWeight.w800,
                       color: colors.text,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 6),
                   Text(
                     caption,
                     style: TextStyle(
                       fontFamily: font,
-                      fontSize: 13,
+                      fontSize: 14,
                       fontWeight: FontWeight.w600,
                       color: colors.secondary,
                     ),
                   ),
-                  const SizedBox(height: 10),
-                  SizedBox(
-                    height: 124,
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        if (shotShow > 0)
-                          Opacity(
-                            opacity: shotShow,
-                            child: Transform.translate(
-                              offset: Offset(
-                                0,
-                                18 * (1 - shotIn) - 10 * shotOut,
-                              ),
-                              child: Transform.scale(
-                                scale: 0.92 + 0.08 * shotIn - 0.10 * shotOut,
-                                child: _PhotoShotCard(
-                                  colors: colors,
-                                  font: font,
-                                  gone1: out1,
-                                  gone2: out2,
-                                  pick1: pick1 * (1 - out1),
-                                  pick2: pick2 * (1 - out2),
-                                ),
-                              ),
-                            ),
-                          ),
-                        Column(
-                          children: [
-                            Opacity(
-                              opacity: in1,
-                              child: Transform.translate(
-                                offset: Offset(0, 14 * (1 - in1)),
-                                child: Transform.scale(
-                                  scale: 0.92 + 0.08 * in1,
-                                  child: const DayEventLabel(
-                                    title: '회의',
-                                    categoryName: '회사',
-                                    color: _meeting,
-                                    height: 48,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 6),
-                            Opacity(
-                              opacity: in2,
-                              child: Transform.translate(
-                                offset: Offset(0, 14 * (1 - in2)),
-                                child: Transform.scale(
-                                  scale: 0.92 + 0.08 * in2,
-                                  child: const DayEventLabel(
-                                    title: '헬스장가기',
-                                    categoryName: '운동',
-                                    color: _sport,
-                                    height: 48,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
+                  if (!reading) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      AppStrings.importConfirmSkipHint,
+                      style: TextStyle(
+                        fontFamily: font,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: colors.muted,
+                      ),
                     ),
+                  ],
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    height: 128,
+                    child: shown == 0
+                        ? const Center(child: DotsLoader())
+                        : Column(
+                            children: [
+                              for (var i = 0; i < shown; i++) ...[
+                                if (i > 0) const SizedBox(height: 8),
+                                Opacity(
+                                  opacity: appears[i],
+                                  child: Transform.translate(
+                                    offset: Offset(0, 10 * (1 - appears[i])),
+                                    child: _PhotoImportEventTile(
+                                      title: _events[i].title,
+                                      day: _events[i].day,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                              if (reading && shown < 2)
+                                const Padding(
+                                  padding: EdgeInsets.only(top: 10),
+                                  child: DotsLoader(),
+                                ),
+                            ],
+                          ),
                   ),
                 ],
               ),
@@ -11223,209 +11225,69 @@ class _PhotoImportDemo extends StatelessWidget {
   }
 }
 
-class _PhotoShotCard extends StatelessWidget {
-  const _PhotoShotCard({
-    required this.colors,
-    required this.font,
-    required this.gone1,
-    required this.gone2,
-    required this.pick1,
-    required this.pick2,
+class _PhotoImportEventTile extends StatelessWidget {
+  const _PhotoImportEventTile({
+    required this.title,
+    required this.day,
   });
 
-  final AppColors colors;
-  final String? font;
-  final double gone1;
-  final double gone2;
-  final double pick1;
-  final double pick2;
+  final String title;
+  final DateTime day;
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    final weekday = AppStrings.weekdays[day.weekday % 7];
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: colors.card,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: colors.border, width: 2),
-        boxShadow: [
-          BoxShadow(
-            color: colors.shadow,
-            blurRadius: 16,
-            offset: const Offset(0, 8),
-          ),
-        ],
+        color: Color.lerp(colors.groupedBackground, colors.accentBright, 0.18)!,
+        borderRadius: BorderRadius.circular(14),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(3),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(15),
-          child: ColoredBox(
-            color: colors.groupedBackground,
-            child: SizedBox(
-              width: 128,
-              height: 118,
+        padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+        child: Row(
+          children: [
+            Expanded(
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
-                    child: Row(
-                      children: [
-                        Text(
-                          '9:41',
-                          style: TextStyle(
-                            fontFamily: font,
-                            fontSize: 7,
-                            fontWeight: FontWeight.w800,
-                            height: 1,
-                            color: colors.text,
-                          ),
-                        ),
-                        const Spacer(),
-                        for (var i = 0; i < 3; i++)
-                          Padding(
-                            padding: const EdgeInsets.only(left: 1.5),
-                            child: DecoratedBox(
-                              decoration: BoxDecoration(
-                                color: colors.text,
-                                borderRadius: BorderRadius.circular(0.5),
-                              ),
-                              child: SizedBox(width: 2, height: 3.0 + i),
-                            ),
-                          ),
-                        const SizedBox(width: 3),
-                        DecoratedBox(
-                          decoration: BoxDecoration(
-                            border: Border.all(color: colors.text, width: 0.8),
-                            borderRadius: BorderRadius.circular(1.5),
-                          ),
-                          child: const SizedBox(width: 11, height: 6),
-                        ),
-                      ],
+                  Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontFamily: AppFonts.of(context),
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: colors.text,
                     ),
                   ),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(8, 6, 8, 0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '9${AppStrings.monthSuffix}',
-                          style: TextStyle(
-                            fontFamily: font,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w800,
-                            height: 1,
-                            color: colors.text,
-                          ),
-                        ),
-                        const SizedBox(height: 5),
-                        Row(
-                          children: [
-                            for (final day in AppStrings.weekdays)
-                              Expanded(
-                                child: Text(
-                                  day,
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    fontFamily: font,
-                                    fontSize: 7,
-                                    fontWeight: FontWeight.w600,
-                                    height: 1,
-                                    color: colors.muted,
-                                  ),
-                                ),
-                              ),
-                          ],
-                        ),
-                        const SizedBox(height: 3),
-                        Row(
-                          children: [
-                            for (var d = 8; d <= 14; d++)
-                              Expanded(
-                                child: Text(
-                                  '$d',
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    fontFamily: font,
-                                    fontSize: 8,
-                                    fontWeight:
-                                        d == 11 ? FontWeight.w800 : FontWeight.w600,
-                                    height: 1,
-                                    color: d == 11
-                                        ? colors.text
-                                        : colors.secondary,
-                                  ),
-                                ),
-                              ),
-                          ],
-                        ),
-                        const SizedBox(height: 5),
-                        _ShotLabel(
-                          title: '회의',
-                          color: _PhotoImportDemo._meeting,
-                          pick: pick1,
-                          gone: gone1,
-                        ),
-                        const SizedBox(height: 3),
-                        _ShotLabel(
-                          title: '헬스장가기',
-                          color: _PhotoImportDemo._sport,
-                          pick: pick2,
-                          gone: gone2,
-                        ),
-                      ],
-                    ),
-                  ),
-                  const Spacer(),
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 5),
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        color: colors.muted.withValues(alpha: 0.45),
-                        borderRadius: BorderRadius.circular(999),
-                      ),
-                      child: const SizedBox(width: 28, height: 3),
+                  const SizedBox(height: 2),
+                  Text(
+                    '${day.year}. ${day.month}. ${day.day}. ($weekday)',
+                    style: TextStyle(
+                      fontFamily: AppFonts.of(context),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: colors.muted,
                     ),
                   ),
                 ],
               ),
             ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _ShotLabel extends StatelessWidget {
-  const _ShotLabel({
-    required this.title,
-    required this.color,
-    required this.pick,
-    required this.gone,
-  });
-
-  final String title;
-  final Color color;
-  final double pick;
-  final double gone;
-
-  @override
-  Widget build(BuildContext context) {
-    return Opacity(
-      opacity: (1 - gone).clamp(0.0, 1.0),
-      child: Transform.translate(
-        offset: Offset(0, -6 * gone),
-        child: Transform.scale(
-          alignment: Alignment.centerLeft,
-          scale: 1 + 0.06 * pick - 0.08 * gone,
-          child: CalendarEventLabel(
-            title: title,
-            color: color,
-            height: 15,
-            fontSize: 9,
-            applyCalendarScale: false,
-          ),
+            const SizedBox(width: 10),
+            DecoratedBox(
+              decoration: BoxDecoration(
+                color: colors.accentBright,
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: const SizedBox(
+                width: 22,
+                height: 22,
+                child: Icon(Icons.check_rounded, size: 16, color: Colors.white),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -11441,128 +11303,250 @@ class _RepeatPickDemo extends StatelessWidget {
     RepeatKind.everyNWeeks,
     RepeatKind.everyNMonths,
   ];
+  static const _extent = 36.0;
+  static final _date = DateTime(2026, 9, 11);
 
   @override
   Widget build(BuildContext context) {
     return _Loop(
-      ms: 5200,
-      boxHeight: 220,
+      ms: 6800,
+      boxHeight: 268,
       builder: (context, t) {
         final colors = AppColors.of(context);
-        final font = AppFonts.of(context);
-        final opened = t >= 0.22;
-        final number = 3 + (4 * Curves.easeInOut.transform(_gate(t, 0.38, 0.72))).round();
-        final unit = t < 0.58 ? 0 : (t < 0.78 ? 1 : 2);
+        final opened = Curves.easeOutCubic.transform(_gate(t, 0.14, 0.26));
+        final number = t < 0.42
+            ? 2
+            : t < 0.54
+            ? 3
+            : 4;
+        final unit = t < 0.66
+            ? 0
+            : t < 0.80
+            ? 1
+            : 2;
         final kind = _units[unit];
         final unitText = switch (kind) {
           RepeatKind.everyNWeeks => AppStrings.repeatIntervalUnitWeeks,
           RepeatKind.everyNMonths => AppStrings.repeatIntervalUnitMonths,
           _ => AppStrings.repeatIntervalUnitDays,
         };
-        return Align(
-          alignment: Alignment.bottomCenter,
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              color: colors.card,
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-              boxShadow: const [
-                BoxShadow(
-                  color: Color(0x33000000),
-                  blurRadius: 16,
-                  offset: Offset(0, -2),
-                ),
-              ],
-            ),
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Row(
-                    children: [
-                      Icon(Icons.timelapse_rounded, size: 20, color: colors.muted),
-                      const SizedBox(width: 8),
-                      Text(
-                        AppStrings.repeatIntervalLabel,
-                        style: TextStyle(
-                          fontFamily: font,
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                          color: colors.text,
-                        ),
-                      ),
-                      const Spacer(),
-                      Text(
-                        '$number$unitText',
-                        style: TextStyle(
-                          fontFamily: font,
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                          color: colors.text,
-                        ),
-                      ),
-                      Icon(Icons.expand_more_rounded, color: colors.muted),
-                    ],
+        final press = _pulse(t, 0.10, 0.18, 0.28);
+        void noop() {}
+        return Stack(
+          children: [
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: colors.tint(_accent, 0.14),
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(24),
                   ),
-                  ClipRect(
-                    child: Align(
-                      alignment: Alignment.topCenter,
-                      heightFactor: opened ? 1 : 0,
-                      child: SizedBox(
-                        height: 140,
-                        child: IgnorePointer(
-                          child: Row(
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Color(0x33000000),
+                      blurRadius: 16,
+                      offset: Offset(0, -2),
+                    ),
+                  ],
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 10),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Row(
+                        children: [
+                          EventCategoryChip(
+                            name: '운동',
+                            color: _accent,
+                            onPressed: noop,
+                          ),
+                          const SizedBox(width: 4),
+                          EventDateChip(
+                            date: _date,
+                            color: _accent,
+                            label: AppStrings.repeatEventLabel,
+                            onPressed: noop,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: colors.card,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 2, 12, 2),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
                             children: [
-                              Expanded(
-                                flex: 4,
-                                child: _DemoIntervalWheel(
-                                  itemCount: RepeatDates.maxInterval,
-                                  index: number - 1,
-                                  loop: true,
-                                  labelAt: (index) => '${index + 1}',
-                                ),
+                              _RepeatDemoRow(
+                                icon: Icons.repeat_rounded,
+                                label: AppStrings.repeatTypeLabel,
+                                value: AppStrings.repeatKindEveryN,
                               ),
-                              Expanded(
-                                flex: 6,
-                                child: _DemoIntervalWheel(
-                                  itemCount: _units.length,
-                                  index: unit,
-                                  labelAt: (index) => switch (_units[index]) {
-                                    RepeatKind.everyNWeeks =>
-                                      AppStrings.repeatIntervalUnitWeeks,
-                                    RepeatKind.everyNMonths =>
-                                      AppStrings.repeatIntervalUnitMonths,
-                                    _ => AppStrings.repeatIntervalUnitDays,
-                                  },
+                              _RepeatDemoRow(
+                                icon: Icons.timelapse_rounded,
+                                label: AppStrings.repeatIntervalLabel,
+                                value: '$number$unitText',
+                              ),
+                              ClipRect(
+                                child: Align(
+                                  alignment: Alignment.topCenter,
+                                  heightFactor: opened,
+                                  child: IgnorePointer(
+                                    child: Opacity(
+                                      opacity: opened,
+                                      child: ShaderMask(
+                                        blendMode: BlendMode.dstIn,
+                                        shaderCallback: (rect) {
+                                          return const LinearGradient(
+                                            begin: Alignment.topCenter,
+                                            end: Alignment.bottomCenter,
+                                            colors: [
+                                              Color(0x00000000),
+                                              Color(0xFF000000),
+                                              Color(0xFF000000),
+                                              Color(0x00000000),
+                                            ],
+                                            stops: [0, 0.18, 0.82, 1],
+                                          ).createShader(rect);
+                                        },
+                                        child: SizedBox(
+                                          height: _extent * 3,
+                                          child: Row(
+                                            children: [
+                                              Expanded(
+                                                flex: 4,
+                                                child: _RepeatDemoWheel(
+                                                  itemCount:
+                                                      RepeatDates.maxInterval -
+                                                      RepeatDates.minInterval +
+                                                      1,
+                                                  index: number -
+                                                      RepeatDates.minInterval,
+                                                  loop: true,
+                                                  highlightWidth: 52,
+                                                  labelAt: (index) =>
+                                                      '${index + RepeatDates.minInterval}',
+                                                ),
+                                              ),
+                                              Expanded(
+                                                flex: 6,
+                                                child: _RepeatDemoWheel(
+                                                  itemCount: _units.length,
+                                                  index: unit,
+                                                  highlightWidth: 76,
+                                                  labelAt: (index) =>
+                                                      switch (_units[index]) {
+                                                    RepeatKind.everyNWeeks =>
+                                                      AppStrings
+                                                          .repeatIntervalUnitWeeks,
+                                                    RepeatKind.everyNMonths =>
+                                                      AppStrings
+                                                          .repeatIntervalUnitMonths,
+                                                    _ => AppStrings
+                                                        .repeatIntervalUnitDays,
+                                                  },
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
                                 ),
                               ),
                             ],
                           ),
                         ),
                       ),
-                    ),
+                    ],
                   ),
-                ],
+                ),
               ),
             ),
-          ),
+            if (press > 0)
+              Positioned(
+                right: 28,
+                bottom: 36 + _extent * 3 * opened,
+                child: _Finger(pressed: press),
+              ),
+          ],
         );
       },
     );
   }
 }
 
-class _DemoIntervalWheel extends StatelessWidget {
-  const _DemoIntervalWheel({
+class _RepeatDemoRow extends StatelessWidget {
+  const _RepeatDemoRow({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
+
+  final IconData icon;
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    final font = AppFonts.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Row(
+        children: [
+          Icon(icon, size: 22, color: colors.icon),
+          const SizedBox(width: 10),
+          Text(
+            label,
+            style: TextStyle(
+              fontFamily: font,
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+              color: colors.text,
+            ),
+          ),
+          const Spacer(),
+          Text(
+            value,
+            style: TextStyle(
+              fontFamily: font,
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+              color: colors.text,
+            ),
+          ),
+          Icon(
+            Icons.keyboard_arrow_down_rounded,
+            size: 22,
+            color: colors.muted,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RepeatDemoWheel extends StatelessWidget {
+  const _RepeatDemoWheel({
     required this.itemCount,
     required this.index,
     required this.labelAt,
+    required this.highlightWidth,
     this.loop = false,
   });
 
   final int itemCount;
   final int index;
   final String Function(int index) labelAt;
+  final double highlightWidth;
   final bool loop;
 
   @override
@@ -11571,21 +11555,37 @@ class _DemoIntervalWheel extends StatelessWidget {
     return FlatSnapPicker(
       itemCount: itemCount,
       index: index,
-      itemExtent: 28,
+      itemExtent: _RepeatPickDemo._extent,
+      visibleCount: 3,
       loop: loop,
       onChanged: (_) {},
       itemBuilder: (context, itemIndex, selected) {
         return Center(
-          child: Text(
-            labelAt(itemIndex),
-            style: TextStyle(
-              fontFamily: AppFonts.of(context),
-              fontSize: selected ? 17 : 14,
-              fontWeight: FontWeight.w600,
-              height: 1,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 120),
+            curve: Curves.easeOut,
+            width: highlightWidth,
+            height: 32,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
               color: selected
-                  ? EventCategory.labelOf(_RepeatPickDemo._accent)
-                  : muted.withValues(alpha: 0.7),
+                  ? _RepeatPickDemo._accent.withValues(alpha: 0.14)
+                  : Colors.transparent,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: AnimatedDefaultTextStyle(
+              duration: const Duration(milliseconds: 120),
+              curve: Curves.easeOut,
+              style: TextStyle(
+                fontFamily: AppFonts.of(context),
+                fontSize: selected ? 18 : 15,
+                fontWeight: FontWeight.w600,
+                height: 1,
+                color: selected
+                    ? EventCategory.labelOf(_RepeatPickDemo._accent)
+                    : muted.withValues(alpha: 0.7),
+              ),
+              child: Text(labelAt(itemIndex)),
             ),
           ),
         );
@@ -11600,49 +11600,119 @@ class _CalendarSwipeDemo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _Loop(
-      ms: 4200,
-      boxHeight: 220,
+      ms: 4800,
+      boxHeight: 228,
       builder: (context, t) {
         final colors = AppColors.of(context);
         final font = AppFonts.of(context);
-        final slide = Curves.easeInOutCubic.transform(_gate(t, 0.18, 0.52));
-        final now = DateTime.now();
-        final left = DateTime(now.year, now.month);
-        final right = DateTime(now.year, now.month + 1);
-        return ClipRect(
-          child: Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    '${slide < 0.5 ? left.month : right.month}${AppStrings.monthSuffix}',
-                    style: TextStyle(
-                      fontFamily: font,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w800,
-                      color: colors.text,
+        final slide = Curves.easeInOutCubic.transform(_gate(t, 0.18, 0.68));
+        final press = _pulse(t, 0.12, 0.22, 0.72);
+        final leftOut = Curves.easeIn.transform(_gate(slide, 0.12, 0.78));
+        final rightIn = Curves.easeOut.transform(_gate(slide, 0.62, 0.88));
+        return Stack(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(10, 10, 10, 8),
+              child: Column(
+                children: [
+                  SizedBox(
+                    height: 26,
+                    width: double.infinity,
+                    child: ClipRect(
+                      child: Stack(
+                        children: [
+                          Transform.translate(
+                            offset: Offset(-48 * slide, 0),
+                            child: Opacity(
+                              opacity: 1 - leftOut,
+                              child: Text(
+                                '9${AppStrings.monthSuffix}',
+                                style: TextStyle(
+                                  fontFamily: font,
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w800,
+                                  height: 1.1,
+                                  color: colors.text,
+                                ),
+                              ),
+                            ),
+                          ),
+                          Transform.translate(
+                            offset: Offset(18 * (1 - rightIn), 0),
+                            child: Opacity(
+                              opacity: rightIn,
+                              child: Text(
+                                '10${AppStrings.monthSuffix}',
+                                style: TextStyle(
+                                  fontFamily: font,
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w800,
+                                  height: 1.1,
+                                  color: colors.text,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              ),
-              Expanded(
-                child: Stack(
-                  children: [
-                    FractionalTranslation(
-                      translation: Offset(-slide, 0),
-                      child: _SwipeMonth(month: left),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      for (final day in AppStrings.weekdays)
+                        Expanded(
+                          child: Text(
+                            day,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontFamily: font,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                              color: colors.muted,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 2),
+                  Expanded(
+                    child: ClipRect(
+                      child: Stack(
+                        children: [
+                          FractionalTranslation(
+                            translation: Offset(-slide, 0),
+                            child: _SwipeMonth(
+                              month: DateTime(2026, 9),
+                              events: const {
+                                11: (title: '회의', color: Color(0xFFFFAAA0)),
+                                12: (title: '헬스', color: Color(0xFF3B82F6)),
+                              },
+                            ),
+                          ),
+                          FractionalTranslation(
+                            translation: Offset(1 - slide, 0),
+                            child: _SwipeMonth(
+                              month: DateTime(2026, 10),
+                              events: const {
+                                3: (title: '장보기', color: Color(0xFF22C55E)),
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                    FractionalTranslation(
-                      translation: Offset(1 - slide, 0),
-                      child: _SwipeMonth(month: right),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+            if (press > 0)
+              Positioned(
+                left: 28 + 150 * slide,
+                top: 108,
+                child: _Finger(pressed: press),
+              ),
+          ],
         );
       },
     );
@@ -11650,48 +11720,82 @@ class _CalendarSwipeDemo extends StatelessWidget {
 }
 
 class _SwipeMonth extends StatelessWidget {
-  const _SwipeMonth({required this.month});
+  const _SwipeMonth({
+    required this.month,
+    this.events = const {},
+  });
 
   final DateTime month;
+  final Map<int, ({String title, Color color})> events;
+
+  List<CalendarDay> get _days {
+    final first = DateTime(month.year, month.month, 1);
+    final start = DateTime(first.year, first.month, first.day - first.weekday % 7);
+    return [
+      for (var i = 0; i < 21; i++)
+        CalendarDay(
+          date: DateTime(start.year, start.month, start.day + i),
+          inMonth: DateTime(start.year, start.month, start.day + i).month ==
+              month.month,
+        ),
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
-    final colors = AppColors.of(context);
-    final font = AppFonts.of(context);
-    final days = MonthGrid.daysFor(month).take(14).toList();
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(10, 0, 10, 8),
+    final days = _days;
+    return IgnorePointer(
       child: Column(
         children: [
-          Row(
-            children: [
-              for (final day in AppStrings.weekdays)
-                Expanded(
-                  child: Text(
-                    day,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontFamily: font,
-                      fontSize: 9,
-                      fontWeight: FontWeight.w600,
-                      color: colors.muted,
+          for (var row = 0; row < 3; row++)
+            Expanded(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  for (var col = 0; col < 7; col++)
+                    Expanded(
+                      child: _SwipeDay(
+                        day: days[row * 7 + col],
+                        event: days[row * 7 + col].inMonth
+                            ? events[days[row * 7 + col].date.day]
+                            : null,
+                      ),
                     ),
-                  ),
-                ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Expanded(
-            child: GridView.count(
-              crossAxisCount: 7,
-              physics: const NeverScrollableScrollPhysics(),
-              children: [
-                for (final day in days) CalendarDayCell(day: day),
-              ],
+                ],
+              ),
             ),
-          ),
         ],
       ),
+    );
+  }
+}
+
+class _SwipeDay extends StatelessWidget {
+  const _SwipeDay({required this.day, this.event});
+
+  final CalendarDay day;
+  final ({String title, Color color})? event;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        SizedBox(
+          height: 36,
+          child: CalendarDayCell(day: day),
+        ),
+        if (event != null)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(2, 0, 2, 0),
+            child: CalendarEventLabel(
+              title: event!.title,
+              color: event!.color,
+              height: 14,
+              fontSize: 9,
+              applyCalendarScale: false,
+            ),
+          ),
+      ],
     );
   }
 }
@@ -16691,6 +16795,7 @@ class _TodayCircleThemeDemo extends StatelessWidget {
 class _CalendarMonthResetDemo extends StatelessWidget {
   const _CalendarMonthResetDemo();
 
+
   @override
   Widget build(BuildContext context) {
     return _Loop(
@@ -16739,6 +16844,865 @@ class _CalendarMonthResetDemo extends StatelessWidget {
               ),
             ),
           ),
+        );
+      },
+    );
+  }
+}
+
+class _FriendPushDemo extends StatelessWidget {
+  const _FriendPushDemo();
+
+  static const _friend = FriendProfile(
+    uid: 'demo-push-taehee',
+    displayName: '태희',
+    friendCode: 'taehee',
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 7200,
+      boxHeight: 228,
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final font = AppFonts.of(context);
+        final todo = t >= 0.50;
+        final banner = todo
+            ? Curves.easeOutCubic.transform(_gate(t, 0.54, 0.66))
+            : Curves.easeOutCubic.transform(_gate(t, 0.10, 0.22));
+        final hold = todo ? 1 - _gate(t, 0.90, 0.98) : 1 - _gate(t, 0.42, 0.50);
+        final shown = (banner * hold).clamp(0.0, 1.0);
+        final check = Theme.of(context).brightness == Brightness.dark
+            ? const Color(0xFF60A5FA)
+            : const Color(0xFF40A6FF);
+        return Stack(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 36, 16, 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(8, 0, 2, 8),
+                    child: Text(
+                      todo
+                          ? AppStrings.friendsSharedTodoIncoming
+                          : AppStrings.friendsIncoming,
+                      style: TextStyle(
+                        fontFamily: font,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: colors.text,
+                      ),
+                    ),
+                  ),
+                  DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: colors.card,
+                      borderRadius: BorderRadius.circular(24),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 12, 8, 12),
+                      child: Row(
+                        children: [
+                          const FriendAvatar(
+                            size: 40,
+                            profile: _friend,
+                            showFavorite: false,
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  todo ? '헬스장가기' : '태희',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontFamily: font,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w400,
+                                    color: colors.text,
+                                  ),
+                                ),
+                                Text(
+                                  todo ? '태희 · 9. 12.' : 'taehee',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontFamily: font,
+                                    fontSize: 13,
+                                    color: colors.muted,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Icon(
+                            Icons.close_rounded,
+                            size: 22,
+                            color: colors.muted,
+                          ),
+                          Icon(
+                            Icons.check_rounded,
+                            size: 22,
+                            color: check,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Align(
+              alignment: Alignment.topCenter,
+              child: Opacity(
+                opacity: shown,
+                child: Transform.translate(
+                  offset: Offset(0, -18 * (1 - shown)),
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(14, 10, 14, 0),
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: colors.card,
+                        borderRadius: BorderRadius.circular(18),
+                        boxShadow: [
+                          BoxShadow(
+                            color: colors.shadow,
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(12, 10, 14, 10),
+                        child: Row(
+                          children: [
+                            const FriendAvatar(
+                              size: 36,
+                              profile: _friend,
+                              showFavorite: false,
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    todo
+                                        ? '태희님이 같이 할 일을 보냈어요'
+                                        : '태희님이 친구 요청을 보냈어요',
+                                    style: TextStyle(
+                                      fontFamily: font,
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w800,
+                                      color: colors.text,
+                                    ),
+                                  ),
+                                  Text(
+                                    todo
+                                        ? AppStrings.friendsSharedTodoIncoming
+                                        : AppStrings.friendsIncoming,
+                                    style: TextStyle(
+                                      fontFamily: font,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                      color: colors.muted,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _ImportAutoCategoryDemo extends StatelessWidget {
+  const _ImportAutoCategoryDemo();
+
+  static final _days = [DateTime(2026, 9, 11), DateTime(2026, 9, 12)];
+  static const _titles = ['회의', '헬스장가기'];
+  static const _sport = EventCategory(
+    id: 'sport',
+    name: '운동',
+    color: 0xFF3B82F6,
+  );
+  static const _meet = EventCategory(
+    id: 'meet',
+    name: '약속',
+    color: 0xFFF97316,
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 7000,
+      boxHeight: 268,
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final font = AppFonts.of(context);
+        final result = t >= 0.52;
+        final classifying = t >= 0.30 && t < 0.52;
+        final tap = _pulse(t, 0.12, 0.20, 0.28);
+        final first = Curves.easeOutCubic.transform(_gate(t, 0.56, 0.68));
+        final second = Curves.easeOutCubic.transform(_gate(t, 0.66, 0.78));
+        return Stack(
+          children: [
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: colors.card,
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(24),
+                  ),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Color(0x33000000),
+                      blurRadius: 16,
+                      offset: Offset(0, -2),
+                    ),
+                  ],
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+                  child: result
+                      ? Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Text(
+                              AppStrings.importCategoryAuto,
+                              style: TextStyle(
+                                fontFamily: font,
+                                fontSize: 18,
+                                fontWeight: FontWeight.w800,
+                                color: colors.text,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              AppStrings.importCategoryAutoHint,
+                              style: TextStyle(
+                                fontFamily: font,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: colors.muted,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            _ImportAutoEventTile(
+                              title: _titles[0],
+                              day: _days[0],
+                              category: first > 0.45 ? _meet : null,
+                            ),
+                            const SizedBox(height: 8),
+                            _ImportAutoEventTile(
+                              title: _titles[1],
+                              day: _days[1],
+                              category: second > 0.45 ? _sport : null,
+                            ),
+                          ],
+                        )
+                      : Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Text(
+                              AppStrings.importCategoryModeTitle,
+                              style: TextStyle(
+                                fontFamily: font,
+                                fontSize: 18,
+                                fontWeight: FontWeight.w800,
+                                color: colors.text,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            _ImportAutoModeTile(
+                              title: AppStrings.importCategoryAuto,
+                              body: AppStrings.importCategoryAutoBody,
+                              selected: true,
+                            ),
+                            const SizedBox(height: 8),
+                            _ImportAutoModeTile(
+                              title: AppStrings.importCategoryAll,
+                              body: AppStrings.importCategoryAllBody,
+                              selected: false,
+                            ),
+                            const SizedBox(height: 8),
+                            _ImportAutoModeTile(
+                              title: AppStrings.importCategoryEach,
+                              body: AppStrings.importCategoryEachBody,
+                              selected: false,
+                            ),
+                          ],
+                        ),
+                ),
+              ),
+            ),
+            if (classifying)
+              const Positioned.fill(
+                child: ColoredBox(
+                  color: AppColors.barrier,
+                  child: Center(child: DotsLoader()),
+                ),
+              ),
+            if (!result && !classifying)
+              Positioned(
+                left: 36,
+                top: 86,
+                child: _Finger(pressed: tap),
+              ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _ImportAutoModeTile extends StatelessWidget {
+  const _ImportAutoModeTile({
+    required this.title,
+    required this.body,
+    required this.selected,
+  });
+
+  final String title;
+  final String body;
+  final bool selected;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    final fill = selected
+        ? Color.lerp(colors.groupedBackground, colors.accentBright, 0.18)!
+        : colors.groupedBackground;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: fill,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w800,
+                      color: colors.text,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    body,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      height: 1.25,
+                      color: colors.secondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 10),
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 140),
+              width: 22,
+              height: 22,
+              decoration: BoxDecoration(
+                color: selected ? colors.accentBright : Colors.transparent,
+                shape: BoxShape.circle,
+                border: selected
+                    ? null
+                    : Border.all(color: colors.muted, width: 1.8),
+              ),
+              child: selected
+                  ? const Icon(
+                      Icons.check_rounded,
+                      size: 16,
+                      color: Colors.white,
+                    )
+                  : null,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ImportAutoEventTile extends StatelessWidget {
+  const _ImportAutoEventTile({
+    required this.title,
+    required this.day,
+    required this.category,
+  });
+
+  final String title;
+  final DateTime day;
+  final EventCategory? category;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    final weekday = AppStrings.weekdays[day.weekday % 7];
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: colors.groupedBackground,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: colors.text,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    '${day.year}. ${day.month}. ${day.day}. ($weekday)',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: colors.muted,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            SizedBox(
+              width: 112,
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 280),
+                  switchInCurve: Curves.easeOutCubic,
+                  switchOutCurve: Curves.easeInCubic,
+                  child: category == null
+                      ? Padding(
+                          key: const ValueKey('empty'),
+                          padding: const EdgeInsets.symmetric(vertical: 5),
+                          child: Text(
+                            AppStrings.importCategoryPick,
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                              color: colors.muted,
+                            ),
+                          ),
+                        )
+                      : DecoratedBox(
+                          key: ValueKey(category!.id),
+                          decoration: BoxDecoration(
+                            color: colors.card,
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(8, 5, 10, 5),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Container(
+                                  width: 12,
+                                  height: 12,
+                                  decoration: BoxDecoration(
+                                    color: category!.tint,
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  category!.name,
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w700,
+                                    color: category!.tint,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _FluffyIconUpdateDemo extends StatelessWidget {
+  const _FluffyIconUpdateDemo();
+
+  static const _skins = [
+    AppSkin.fluffyBear,
+    AppSkin.fluffyRabbit,
+    AppSkin.fluffyCat,
+    AppSkin.fluffyDog,
+    AppSkin.fluffyHamster,
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 6000,
+      boxHeight: 196,
+      builder: (context, t) {
+        final index = (t * _skins.length).floor().clamp(0, _skins.length - 1);
+        final skin = _skins[index];
+        final slice = 1 / _skins.length;
+        final local = ((t - index * slice) / slice).clamp(0.0, 1.0);
+        final pop = Curves.elasticOut.transform(_gate(local, 0.0, 0.42));
+        final dark = Theme.of(context).brightness == Brightness.dark;
+        final colors = AppColors.of(context);
+        String icon(String asset) =>
+            AppSkinAssets.resolveIcon(asset, skin, dark);
+        return AppSkinBackground(
+          skin: skin,
+          liftForNav: false,
+          simple: false,
+          playing: true,
+          child: Align(
+            alignment: Alignment.bottomCenter,
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 18),
+              child: Transform.scale(
+                scale: 0.92 + 0.08 * pop,
+                child: Material(
+                  color: colors.navBar,
+                  elevation: 0,
+                  shape: const StadiumBorder(),
+                  clipBehavior: Clip.antiAlias,
+                  child: SizedBox(
+                    height: PillBottomNav.barHeight,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        SizedBox(
+                          width: PillBottomNav.itemWidth,
+                          child: PillNavItem(
+                            selected: true,
+                            onTap: () {},
+                            filledAsset: icon(AppIcons.home),
+                            outlinedAsset: icon(AppIcons.homeOutlined),
+                          ),
+                        ),
+                        SizedBox(
+                          width: PillBottomNav.itemWidth,
+                          child: PillNavItem(
+                            selected: false,
+                            onTap: () {},
+                            filledAsset: icon(AppIcons.calendar),
+                            outlinedAsset: icon(AppIcons.calendarOutlined),
+                          ),
+                        ),
+                        SizedBox(
+                          width: PillBottomNav.itemWidth,
+                          child: PillNavItem(
+                            selected: false,
+                            onTap: () {},
+                            filledAsset: icon(AppIcons.planet),
+                            outlinedAsset: icon(AppIcons.planetOutlined),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _FluffyDefaultAvatarDemo extends StatelessWidget {
+  const _FluffyDefaultAvatarDemo();
+
+  static const _faces = [
+    (AppSkinAssets.fluffyBearAvatar, AppStrings.themeFluffyBear),
+    (AppSkinAssets.fluffyRabbitAvatar, AppStrings.themeFluffyRabbit),
+    (AppSkinAssets.fluffyCatAvatar, AppStrings.themeFluffyCat),
+    (AppSkinAssets.fluffyDogAvatar, AppStrings.themeFluffyDog),
+    (AppSkinAssets.fluffyHamsterAvatar, AppStrings.themeFluffyHamster),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 4200,
+      boxHeight: 196,
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final font = AppFonts.of(context);
+        final fill = Color.lerp(
+          colors.border,
+          Colors.white,
+          colors.isDark ? 0.12 : 0.30,
+        )!.withValues(alpha: AppColors.homeWashOpacity);
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(12, 28, 12, 16),
+          child: Row(
+            children: [
+              for (var i = 0; i < _faces.length; i++)
+                Expanded(
+                  child: Builder(
+                    builder: (context) {
+                      final shown = Curves.elasticOut.transform(
+                        _gate(t, 0.08 + i * 0.10, 0.28 + i * 0.10),
+                      );
+                      return Opacity(
+                        opacity: shown.clamp(0.0, 1.0),
+                        child: Transform.scale(
+                          scale: 0.72 + 0.28 * shown,
+                          child: Column(
+                            children: [
+                              DecoratedBox(
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: fill,
+                                ),
+                                child: SizedBox(
+                                  width: 52,
+                                  height: 52,
+                                  child: Center(
+                                    child: Image.asset(
+                                      _faces[i].$1,
+                                      width: 36,
+                                      height: 36,
+                                      fit: BoxFit.contain,
+                                      gaplessPlayback: true,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                _faces[i].$2,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontFamily: font,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
+                                  color: colors.text,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _NewStickersDemo extends StatelessWidget {
+  const _NewStickersDemo();
+
+  static const _tabSize = 56.0;
+  static const _packs = [
+    (
+      'cute_bear',
+      [
+        'assets/stickers/cute_bear/01_dont_give_up.webp',
+        'assets/stickers/cute_bear/02_please.webp',
+        'assets/stickers/cute_bear/03_sorry.webp',
+        'assets/stickers/cute_bear/04_lol.webp',
+        'assets/stickers/cute_bear/05_love.webp',
+        'assets/stickers/cute_bear/06_what.webp',
+        'assets/stickers/cute_bear/07_compliment.webp',
+        'assets/stickers/cute_bear/08_nice.webp',
+        'assets/stickers/cute_bear/09_wow.webp',
+        'assets/stickers/cute_bear/10_good_job.webp',
+      ],
+    ),
+    (
+      'pink_dog',
+      [
+        'assets/stickers/pink_dog/01_heehee.webp',
+        'assets/stickers/pink_dog/02_so_cute.webp',
+        'assets/stickers/pink_dog/03_thank_you.webp',
+        'assets/stickers/pink_dog/04_maybe.webp',
+        'assets/stickers/pink_dog/05_nope.webp',
+        'assets/stickers/pink_dog/06_sad_dance.webp',
+        'assets/stickers/pink_dog/07_gasp.webp',
+        'assets/stickers/pink_dog/08_what.webp',
+        'assets/stickers/pink_dog/09_proud.webp',
+        'assets/stickers/pink_dog/10_help.webp',
+      ],
+    ),
+    (
+      'beige_bear',
+      [
+        'assets/stickers/beige_bear/01_so_cute.webp',
+        'assets/stickers/beige_bear/02_the_best.webp',
+        'assets/stickers/beige_bear/03_lets_go.webp',
+        'assets/stickers/beige_bear/04_nope.webp',
+        'assets/stickers/beige_bear/05_hug_me.webp',
+        'assets/stickers/beige_bear/06_im_cute.webp',
+        'assets/stickers/beige_bear/07_displeased.webp',
+        'assets/stickers/beige_bear/08_whining.webp',
+        'assets/stickers/beige_bear/09_hey.webp',
+        'assets/stickers/beige_bear/10_what.webp',
+      ],
+    ),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 6800,
+      boxHeight: 248,
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final pack = t < 0.28
+            ? 0
+            : t < 0.62
+            ? 1
+            : 2;
+        final tap = pack == 0
+            ? _pulse(t, 0.18, 0.26, 0.34)
+            : pack == 1
+            ? _pulse(t, 0.52, 0.60, 0.68)
+            : 0.0;
+        final stickers = _packs[pack].$2;
+        final fingerLeft = pack <= 1 ? 16.0 + 66 * (pack + 1) : 16.0 + 66.0 * 2;
+        return Stack(
+          children: [
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: colors.card,
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(24),
+                  ),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Color(0x33000000),
+                      blurRadius: 16,
+                      offset: Offset(0, -2),
+                    ),
+                  ],
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SizedBox(
+                        height: _tabSize,
+                        child: Row(
+                          children: [
+                            for (var i = 0; i < _packs.length; i++) ...[
+                              if (i > 0) const SizedBox(width: 10),
+                              DecoratedBox(
+                                decoration: BoxDecoration(
+                                  color: i == pack
+                                      ? Color.lerp(
+                                          colors.groupedBackground,
+                                          colors.accentBright,
+                                          0.15,
+                                        )!
+                                      : colors.groupedBackground,
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: SizedBox(
+                                  width: _tabSize,
+                                  height: _tabSize,
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(4),
+                                    child: Image.asset(
+                                      _packs[i].$2.first,
+                                      fit: BoxFit.contain,
+                                      filterQuality: FilterQuality.medium,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      SizedBox(
+                        height: 132,
+                        child: GridView.builder(
+                          padding: EdgeInsets.zero,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: stickers.length,
+                          gridDelegate:
+                              const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 5,
+                            mainAxisSpacing: 6,
+                            crossAxisSpacing: 6,
+                          ),
+                          itemBuilder: (context, index) {
+                            return Image.asset(
+                              stickers[index],
+                              fit: BoxFit.contain,
+                              filterQuality: FilterQuality.medium,
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            Positioned(
+              left: fingerLeft,
+              top: 36,
+              child: _Finger(pressed: tap),
+            ),
+          ],
         );
       },
     );

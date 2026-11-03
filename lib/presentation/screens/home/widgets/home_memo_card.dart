@@ -353,8 +353,8 @@ class _MemoTile extends StatelessWidget {
         ),
         child: PressBounce(
           onPressed: onPressed,
-          color: colors.card,
-          pressedColor: Color.lerp(colors.card, Colors.black, 0.08)!,
+          color: colors.homeCard,
+          pressedColor: colors.homeCardPressed,
           borderRadius: BorderRadius.circular(18),
           child: Padding(
             padding: const EdgeInsets.fromLTRB(10, 10, 10, 8),

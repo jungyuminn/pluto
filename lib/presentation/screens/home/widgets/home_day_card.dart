@@ -658,7 +658,7 @@ class _HomeDayCardState extends State<HomeDayCard> {
     final colors = AppColors.of(context);
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: colors.card,
+        color: colors.homeCard,
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(

@@ -214,7 +214,7 @@ class _HomeJobCardState extends State<HomeJobCard> {
       id: TutorialAnchorId.homeJob,
       child: DecoratedBox(
         decoration: BoxDecoration(
-          color: colors.card,
+          color: colors.homeCard,
           borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(

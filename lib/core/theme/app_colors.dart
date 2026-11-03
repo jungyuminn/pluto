@@ -97,6 +97,13 @@ class AppColors extends ThemeExtension<AppColors> {
 
   bool get isDark => background.computeLuminance() < 0.5;
 
+  /// 홈 카드·기본 프사 원. 배경 테마가 비치게.
+  static const homeWashOpacity = 0.9;
+
+  Color get homeCard => card.withValues(alpha: homeWashOpacity);
+
+  Color get homeCardPressed => Color.lerp(homeCard, Colors.black, 0.08)!;
+
   Color tint(Color accent, [double amount = 0.28]) {
     return Color.lerp(card, accent, amount)!;
   }

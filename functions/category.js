@@ -8,6 +8,20 @@ const callable = {
   memory: "256MiB",
 };
 
+const batchCallable = {
+  ...callable,
+  timeoutSeconds: 40,
+};
+
+const itemSchema = {
+  type: "OBJECT",
+  properties: {
+    mode: {type: "STRING", enum: ["existing", "new"]},
+    name: {type: "STRING"},
+  },
+  required: ["mode", "name"],
+};
+
 function briefOf(kind) {
   switch (kind) {
     case "ledger":
@@ -27,6 +41,38 @@ function briefOf(kind) {
   }
 }
 
+function rulesOf() {
+  return (
+    "- 분명히 같은 종류일 때만 기존 칸. mode는 existing.\n" +
+    "- 일상, 기타, 일반, 할일처럼 넓은 칸은 그 일이 그 칸의 이름 그대로일 때만 쓰세요. 나머지를 거기에 넣지 마세요.\n" +
+    "- 기존 칸에 딱 안 맞으면 더 구체적인 새 칸. mode는 new.\n" +
+    "- 새 이름은 2~8글자 명사. 제목을 그대로 쓰지 마세요.\n"
+  );
+}
+
+function readNames(data) {
+  return Array.isArray(data?.names)
+    ? data.names
+        .map((name) => `${name || ""}`.trim())
+        .filter((name) => name.length > 0)
+        .slice(0, 80)
+    : [];
+}
+
+function readTitles(data) {
+  const seen = new Set();
+  const titles = [];
+  const raw = Array.isArray(data?.titles) ? data.titles : [];
+  for (const item of raw) {
+    const title = `${item || ""}`.trim().slice(0, 80);
+    if (!title || seen.has(title)) continue;
+    seen.add(title);
+    titles.push(title);
+    if (titles.length >= 60) break;
+  }
+  return titles;
+}
+
 async function accessToken() {
   const res = await fetch(
     "http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token",
@@ -42,20 +88,11 @@ async function accessToken() {
   return json.access_token;
 }
 
-async function classify(title, names, kind) {
+async function askModel(prompt, schema, maxOutputTokens) {
   const project = process.env.GCLOUD_PROJECT || process.env.GCP_PROJECT;
   if (!project) {
     throw new Error("missing-project");
   }
-  const list = names.length ? names.join(", ") : "없음";
-  const prompt =
-    `${briefOf(kind)}\n` +
-    "- 분명히 같은 종류일 때만 기존 칸. mode는 existing.\n" +
-    "- 일상, 기타, 일반, 할일처럼 넓은 칸은 그 일이 그 칸의 이름 그대로일 때만 쓰세요. 나머지를 거기에 넣지 마세요.\n" +
-    "- 기존 칸에 딱 안 맞으면 더 구체적인 새 칸. mode는 new.\n" +
-    "- 새 이름은 2~8글자 명사. 제목을 그대로 쓰지 마세요.\n" +
-    `제목: ${title}\n` +
-    `기존 칸: ${list}`;
   const token = await accessToken();
   const url =
     `https://aiplatform.googleapis.com/v1/projects/${project}` +
@@ -70,16 +107,9 @@ async function classify(title, names, kind) {
       contents: [{role: "user", parts: [{text: prompt}]}],
       generationConfig: {
         temperature: 0,
-        maxOutputTokens: 48,
+        maxOutputTokens,
         responseMimeType: "application/json",
-        responseSchema: {
-          type: "OBJECT",
-          properties: {
-            mode: {type: "STRING", enum: ["existing", "new"]},
-            name: {type: "STRING"},
-          },
-          required: ["mode", "name"],
-        },
+        responseSchema: schema,
         thinkingConfig: {thinkingBudget: 0},
       },
     }),
@@ -96,11 +126,57 @@ async function classify(title, names, kind) {
   if (!text) {
     throw new Error("empty-model");
   }
-  const parsed = JSON.parse(text);
+  return JSON.parse(text);
+}
+
+function readItem(value) {
+  if (!value || typeof value !== "object") {
+    return {mode: "", name: ""};
+  }
   return {
-    mode: `${parsed.mode || ""}`.trim(),
-    name: `${parsed.name || ""}`.trim(),
+    mode: `${value.mode || ""}`.trim(),
+    name: `${value.name || ""}`.trim(),
   };
+}
+
+async function classify(title, names, kind) {
+  const list = names.length ? names.join(", ") : "없음";
+  const prompt =
+    `${briefOf(kind)}\n` +
+    rulesOf() +
+    `제목: ${title}\n` +
+    `기존 칸: ${list}`;
+  return readItem(await askModel(prompt, itemSchema, 48));
+}
+
+async function classifyBatch(titles, names, kind) {
+  const list = names.length ? names.join(", ") : "없음";
+  const numbered = titles
+    .map((title, index) => `${index + 1}. ${title}`)
+    .join("\n");
+  const prompt =
+    `${briefOf(kind)}\n` +
+    rulesOf() +
+    "- 같은 종류의 제목은 같은 칸 이름을 쓰세요.\n" +
+    "- 답은 제목과 같은 개수, 같은 순서.\n" +
+    `기존 칸: ${list}\n` +
+    `제목:\n${numbered}`;
+  const parsed = await askModel(
+    prompt,
+    {
+      type: "OBJECT",
+      properties: {
+        items: {
+          type: "ARRAY",
+          items: itemSchema,
+        },
+      },
+      required: ["items"],
+    },
+    4096,
+  );
+  const items = Array.isArray(parsed?.items) ? parsed.items : [];
+  return titles.map((_, index) => readItem(items[index]));
 }
 
 exports.classifyCategory = onCall(callable, async (request) => {
@@ -109,12 +185,7 @@ exports.classifyCategory = onCall(callable, async (request) => {
   }
   const title = `${request.data?.title || ""}`.trim().slice(0, 80);
   const kind = `${request.data?.kind || "event"}`;
-  const names = Array.isArray(request.data?.names)
-    ? request.data.names
-        .map((name) => `${name || ""}`.trim())
-        .filter((name) => name.length > 0)
-        .slice(0, 40)
-    : [];
+  const names = readNames(request.data);
   if (!title) {
     throw new HttpsError("invalid-argument", "missing-title");
   }
@@ -122,6 +193,24 @@ exports.classifyCategory = onCall(callable, async (request) => {
     return await classify(title, names, kind);
   } catch (error) {
     console.error("classifyCategory failed", error?.message || error);
+    throw new HttpsError("internal", "classify-failed");
+  }
+});
+
+exports.classifyCategories = onCall(batchCallable, async (request) => {
+  if (!request.auth?.uid) {
+    throw new HttpsError("unauthenticated", "login-required");
+  }
+  const titles = readTitles(request.data);
+  const kind = `${request.data?.kind || "event"}`;
+  const names = readNames(request.data);
+  if (!titles.length) {
+    return {items: []};
+  }
+  try {
+    return {items: await classifyBatch(titles, names, kind)};
+  } catch (error) {
+    console.error("classifyCategories failed", error?.message || error);
     throw new HttpsError("internal", "classify-failed");
   }
 });

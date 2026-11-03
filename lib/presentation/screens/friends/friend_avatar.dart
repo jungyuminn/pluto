@@ -164,7 +164,7 @@ class _FriendAvatarState extends State<FriendAvatar> {
       colors.border,
       Colors.white,
       colors.isDark ? 0.12 : 0.30,
-    );
+    )!.withValues(alpha: AppColors.homeWashOpacity);
     return DecoratedBox(
       decoration: BoxDecoration(
         shape: BoxShape.circle,

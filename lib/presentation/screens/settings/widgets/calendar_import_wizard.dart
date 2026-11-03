@@ -7,13 +7,18 @@ import 'package:pluto/core/calendar/calendar_years.dart';
 import 'package:pluto/core/constants/app_icons.dart';
 import 'package:pluto/core/constants/app_strings.dart';
 import 'package:pluto/core/theme/app_colors.dart';
+import 'package:pluto/core/utils/category_history.dart';
 import 'package:pluto/core/utils/press_bounce.dart';
+import 'package:pluto/data/datasources/app_auth_service.dart';
+import 'package:pluto/data/datasources/category_ai_client.dart';
 import 'package:pluto/data/datasources/device_calendar_import.dart';
 import 'package:pluto/data/datasources/device_calendar_mapper.dart';
 import 'package:pluto/domain/entities/calendar_event.dart';
 import 'package:pluto/domain/entities/event_category.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/add_category_sheet.dart';
+import 'package:pluto/presentation/screens/calendar/widgets/calendar_feature_banner.dart';
 import 'package:pluto/presentation/screens/settings/widgets/backup_dialogs.dart';
+import 'package:pluto/presentation/screens/settings/widgets/dots_loading_dialog.dart';
 import 'package:pluto/presentation/widgets/app_calendar/app_calendar.dart';
 import 'package:pluto/presentation/widgets/themed_asset.dart';
 
@@ -58,7 +63,7 @@ Future<CalendarImportWizardResult?> showCalendarImportWizard(
 
 enum _ImportStep { calendars, range, confirm, categoryMode, category }
 
-enum _CategoryMode { allInOne, perEvent }
+enum _CategoryMode { auto, allInOne, perEvent }
 
 class CalendarImportWizard extends StatefulWidget {
   const CalendarImportWizard({
@@ -92,11 +97,12 @@ class _CalendarImportWizardState extends State<CalendarImportWizard> {
   late DateTime _from = CalendarYears.start();
   late DateTime _to = DateTime(CalendarYears.max(), 12, 31);
   var _loading = false;
+  var _classifying = false;
   late DeviceCalendarImportResult? _preview = widget.events == null
       ? null
       : DeviceCalendarImportResult(events: widget.events!);
   final _skipped = <String>{};
-  var _mode = _CategoryMode.allInOne;
+  var _mode = _CategoryMode.auto;
   EventCategory? _allCategory;
   final _eachCategory = <String, EventCategory>{};
   var _categories = <EventCategory>[];
@@ -125,7 +131,13 @@ class _CalendarImportWizardState extends State<CalendarImportWizard> {
       context,
     ).fetchCategories(CategoryKind.event);
     if (!mounted) return;
-    setState(() => _categories = categories);
+    final drafts = [
+      for (final category in _categories)
+        if (EventCategory.isDraftId(category.id) &&
+            categories.every((item) => item.name.trim() != category.name.trim()))
+          category,
+    ];
+    setState(() => _categories = [...categories, ...drafts]);
   }
 
   int get _total => _steps.length;
@@ -179,9 +191,11 @@ class _CalendarImportWizardState extends State<CalendarImportWizard> {
       _ImportStep.range => AppStrings.importRangeTitle,
       _ImportStep.confirm => AppStrings.importConfirmTitle,
       _ImportStep.categoryMode => AppStrings.importCategoryModeTitle,
-      _ImportStep.category => _mode == _CategoryMode.allInOne
-          ? AppStrings.importCategoryAll
-          : AppStrings.importCategoryEachTitle,
+      _ImportStep.category => switch (_mode) {
+          _CategoryMode.allInOne => AppStrings.importCategoryAll,
+          _CategoryMode.auto => AppStrings.importCategoryAuto,
+          _CategoryMode.perEvent => AppStrings.importCategoryEach,
+        },
     };
   }
 
@@ -189,7 +203,7 @@ class _CalendarImportWizardState extends State<CalendarImportWizard> {
     if (_busy || _step == step) return;
     if (step == _ImportStep.category) {
       unawaited(_loadCategories());
-      if (_mode == _CategoryMode.perEvent) {
+      if (_mode != _CategoryMode.allInOne) {
         final ids = {for (final event in _importEvents) event.id};
         if (_focusEventId == null || !ids.contains(_focusEventId)) {
           _focusEventId = _nextFocusId();
@@ -211,7 +225,7 @@ class _CalendarImportWizardState extends State<CalendarImportWizard> {
     } finally {
       if (mounted) {
         setState(() => _busy = false);
-        if (step == _ImportStep.category && _mode == _CategoryMode.perEvent) {
+        if (step == _ImportStep.category && _mode != _CategoryMode.allInOne) {
           _scrollTo(_focusEventId);
         }
       } else {
@@ -221,7 +235,7 @@ class _CalendarImportWizardState extends State<CalendarImportWizard> {
   }
 
   void _back() {
-    if (_busy || _loading) return;
+    if (_busy || _loading || _classifying) return;
     if (_stepIndex <= 0) {
       Navigator.of(context).pop();
       return;
@@ -230,13 +244,29 @@ class _CalendarImportWizardState extends State<CalendarImportWizard> {
   }
 
   Future<void> _next() async {
-    if (_busy || !_canContinue || _loading) return;
+    if (_busy || !_canContinue || _loading || _classifying) return;
     if (_step == _ImportStep.range) {
       await _loadPreview();
       return;
     }
     if (_step == _ImportStep.category) {
-      _finish();
+      await _finish();
+      return;
+    }
+    if (_step == _ImportStep.categoryMode && _mode == _CategoryMode.auto) {
+      if (!await _ensureAutoLogin()) return;
+      setState(() => _classifying = true);
+      try {
+        await _assignAutoCategories();
+      } finally {
+        if (mounted) {
+          setState(() => _classifying = false);
+        } else {
+          _classifying = false;
+        }
+      }
+      if (!mounted) return;
+      await _goTo(_ImportStep.category);
       return;
     }
     await _goTo(_steps[_stepIndex + 1]);
@@ -292,7 +322,7 @@ class _CalendarImportWizardState extends State<CalendarImportWizard> {
     }
   }
 
-  void _finish() {
+  Future<void> _finish() async {
     final preview = _preview;
     final events = _importEvents;
     if (preview == null || events.isEmpty) return;
@@ -314,19 +344,100 @@ class _CalendarImportWizardState extends State<CalendarImportWizard> {
       );
       return;
     }
-    Navigator.of(context).pop(
-      CalendarImportWizardResult(
-        events: [
-          for (final event in events)
-            event.copyWith(
-              categoryId: _eachCategory[event.id]!.id,
-              categoryName: _eachCategory[event.id]!.name,
-              categoryColor: _eachCategory[event.id]!.color,
-            ),
-        ],
-        truncated: preview.truncated,
-      ),
-    );
+    setState(() => _loading = true);
+    try {
+      final saved = <String, EventCategory>{};
+      for (final picked in _eachCategory.values) {
+        if (saved.containsKey(picked.id)) continue;
+        saved[picked.id] = await AppScope.of(context).ensureCategory(
+          CategoryKind.event,
+          id: picked.id,
+          name: picked.name,
+          color: picked.color,
+        );
+      }
+      if (!mounted) return;
+      Navigator.of(context).pop(
+        CalendarImportWizardResult(
+          events: [
+            for (final event in events)
+              event.copyWith(
+                categoryId: saved[_eachCategory[event.id]!.id]!.id,
+                categoryName: saved[_eachCategory[event.id]!.id]!.name,
+                categoryColor: saved[_eachCategory[event.id]!.id]!.color,
+              ),
+          ],
+          truncated: preview.truncated,
+        ),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _loading = false);
+    }
+  }
+
+  Future<bool> _ensureAutoLogin() async {
+    if (AppAuthService.instance.user != null) return true;
+    await showCalendarFeatureIntro(context);
+    if (!mounted) return false;
+    return AppAuthService.instance.user != null;
+  }
+
+  Future<void> _assignAutoCategories() async {
+    final events = _importEvents;
+    if (events.isEmpty) return;
+    await _loadCategories();
+    if (!mounted) return;
+    final records = [
+      for (final event in widget.existing)
+        if ((event.categoryId ?? '').isNotEmpty)
+          CategoryHistoryRecord(event.title, event.categoryId!),
+    ];
+    final next = <String, EventCategory>{};
+    final leftover = <String, String>{};
+    for (final event in events) {
+      final hit = CategoryHistory.match(
+        title: event.title,
+        categories: _categories,
+        records: records,
+      );
+      if (hit != null) {
+        next[event.id] = hit;
+        continue;
+      }
+      final key = CategoryHistory.normalize(event.title);
+      if (key.isEmpty) continue;
+      leftover.putIfAbsent(key, () => event.title.trim());
+    }
+    if (leftover.isNotEmpty) {
+      final picked = await CategoryAiClient.pickMany(
+        titles: leftover.values,
+        categories: _categories,
+      );
+      for (final event in events) {
+        if (next.containsKey(event.id)) continue;
+        final category = picked[CategoryHistory.normalize(event.title)];
+        if (category != null) next[event.id] = category;
+      }
+    }
+    if (!mounted) return;
+    final drafts = [
+      for (final category in next.values)
+        if (EventCategory.isDraftId(category.id)) category,
+    ];
+    setState(() {
+      _eachCategory
+        ..clear()
+        ..addAll(next);
+      for (final draft in drafts) {
+        if (_categories.any((item) => item.id == draft.id)) continue;
+        if (_categories.any((item) => item.name.trim() == draft.name.trim())) {
+          continue;
+        }
+        _categories = [..._categories, draft];
+      }
+      _focusEventId = _nextFocusId();
+    });
   }
 
   void _toggleEvent(String id) {
@@ -428,8 +539,8 @@ class _CalendarImportWizardState extends State<CalendarImportWizard> {
 
   Widget _categoryBody() {
     final colors = AppColors.of(context);
-    final perEvent = _mode == _CategoryMode.perEvent;
-    final chips = _CategoryChipWrap(
+    final perEvent = _mode != _CategoryMode.allInOne;
+    final chips = _CategoryChipRow(
       categories: _categories,
       selectedId: perEvent
           ? _eachCategory[_focusEventId]?.id
@@ -441,40 +552,45 @@ class _CalendarImportWizardState extends State<CalendarImportWizard> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          perEvent
-              ? AppStrings.importCategoryEachHint
-              : AppStrings.importCategoryAllHint,
+          switch (_mode) {
+            _CategoryMode.auto => AppStrings.importCategoryAutoHint,
+            _CategoryMode.perEvent => AppStrings.importCategoryEachHint,
+            _CategoryMode.allInOne => AppStrings.importCategoryAllHint,
+          },
           style: TextStyle(
-            fontSize: 15,
+            fontSize: 13,
             fontWeight: FontWeight.w600,
+            height: 1.3,
             color: colors.secondary,
           ),
         ),
         const SizedBox(height: 12),
-        if (perEvent) ...[
-          chips,
-          const SizedBox(height: 12),
-          Expanded(
-            child: ListView.separated(
-              controller: _eventList,
-              itemCount: _importEvents.length,
-              separatorBuilder: (context, index) => const SizedBox(height: 8),
-              itemBuilder: (context, index) {
-                final event = _importEvents[index];
-                return KeyedSubtree(
-                  key: _eventKey(event.id),
-                  child: _EventCategoryTile(
-                    event: event,
-                    category: _eachCategory[event.id],
-                    focused: event.id == _focusEventId,
-                    onPressed: () => _focusEvent(event.id),
-                  ),
-                );
-              },
-            ),
+        chips,
+        const SizedBox(height: 12),
+        Expanded(
+          child: ListView.separated(
+            controller: _eventList,
+            itemCount: _importEvents.length,
+            separatorBuilder: (context, index) =>
+                const SizedBox(height: 8),
+            itemBuilder: (context, index) {
+              final event = _importEvents[index];
+              return KeyedSubtree(
+                key: _eventKey(event.id),
+                child: _EventCategoryTile(
+                  event: event,
+                  category: perEvent
+                      ? _eachCategory[event.id]
+                      : _allCategory,
+                  focused: perEvent && event.id == _focusEventId,
+                  onPressed: perEvent
+                      ? () => _focusEvent(event.id)
+                      : null,
+                ),
+              );
+            },
           ),
-        ] else
-          Expanded(child: SingleChildScrollView(child: chips)),
+        ),
       ],
     );
   }
@@ -490,7 +606,11 @@ class _CalendarImportWizardState extends State<CalendarImportWizard> {
           color: colors.card,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
         ),
-        child: Padding(
+        child: ClipRRect(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+          child: Stack(
+            children: [
+              Padding(
           padding: EdgeInsets.fromLTRB(16, 10, 16, 12 + bottom),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -540,8 +660,9 @@ class _CalendarImportWizardState extends State<CalendarImportWizard> {
                           child: Text(
                             _titleOf(visual),
                             style: TextStyle(
-                              fontSize: 20,
+                              fontSize: 18,
                               fontWeight: FontWeight.w800,
+                              height: 1.2,
                               color: colors.text,
                             ),
                           ),
@@ -551,7 +672,7 @@ class _CalendarImportWizardState extends State<CalendarImportWizard> {
                   );
                 },
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 10),
               Expanded(
                 child: PageView(
                   controller: _pages,
@@ -635,6 +756,18 @@ class _CalendarImportWizardState extends State<CalendarImportWizard> {
             ],
           ),
         ),
+              if (_classifying)
+                Positioned.fill(
+                  child: AbsorbPointer(
+                    child: ColoredBox(
+                      color: AppColors.barrier,
+                      child: const Center(child: DotsLoader()),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -648,8 +781,9 @@ class _CalendarImportWizardState extends State<CalendarImportWizard> {
           Text(
             AppStrings.importCalendarsBody,
             style: TextStyle(
-              fontSize: 15,
+              fontSize: 13,
               fontWeight: FontWeight.w600,
+              height: 1.3,
               color: colors.secondary,
             ),
           ),
@@ -695,8 +829,9 @@ class _CalendarImportWizardState extends State<CalendarImportWizard> {
           Text(
             AppStrings.importRangeBody,
             style: TextStyle(
-              fontSize: 15,
+              fontSize: 13,
               fontWeight: FontWeight.w600,
+              height: 1.3,
               color: colors.secondary,
             ),
           ),
@@ -715,8 +850,9 @@ class _CalendarImportWizardState extends State<CalendarImportWizard> {
           Text(
             AppStrings.importConfirmBody(_importEvents.length),
             style: TextStyle(
-              fontSize: 15,
+              fontSize: 13,
               fontWeight: FontWeight.w600,
+              height: 1.3,
               color: colors.secondary,
             ),
           ),
@@ -750,6 +886,16 @@ class _CalendarImportWizardState extends State<CalendarImportWizard> {
       _ImportStep.categoryMode => Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          _ModeTile(
+            title: AppStrings.importCategoryAuto,
+            body: AppStrings.importCategoryAutoBody,
+            selected: _mode == _CategoryMode.auto,
+            onPressed: () {
+              setState(() => _mode = _CategoryMode.auto);
+              unawaited(_ensureAutoLogin());
+            },
+          ),
+          const SizedBox(height: 8),
           _ModeTile(
             title: AppStrings.importCategoryAll,
             body: AppStrings.importCategoryAllBody,
@@ -967,14 +1113,6 @@ class _ModeTile extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
         child: Row(
           children: [
-            Icon(
-              selected
-                  ? Icons.radio_button_checked_rounded
-                  : Icons.radio_button_off_rounded,
-              size: 22,
-              color: selected ? colors.accentBright : colors.muted,
-            ),
-            const SizedBox(width: 10),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -982,7 +1120,7 @@ class _ModeTile extends StatelessWidget {
                   Text(
                     title,
                     style: TextStyle(
-                      fontSize: 16,
+                      fontSize: 15,
                       fontWeight: FontWeight.w800,
                       color: colors.text,
                     ),
@@ -991,14 +1129,17 @@ class _ModeTile extends StatelessWidget {
                   Text(
                     body,
                     style: TextStyle(
-                      fontSize: 13,
+                      fontSize: 12,
                       fontWeight: FontWeight.w600,
+                      height: 1.25,
                       color: colors.secondary,
                     ),
                   ),
                 ],
               ),
             ),
+            const SizedBox(width: 10),
+            _RoundCheck(selected: selected, circle: true),
           ],
         ),
       ),
@@ -1006,8 +1147,8 @@ class _ModeTile extends StatelessWidget {
   }
 }
 
-class _CategoryChipWrap extends StatelessWidget {
-  const _CategoryChipWrap({
+class _CategoryChipRow extends StatelessWidget {
+  const _CategoryChipRow({
     required this.categories,
     required this.selectedId,
     required this.onPick,
@@ -1021,18 +1162,21 @@ class _CategoryChipWrap extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: [
-        for (final category in categories)
-          _PickChip(
-            category: category,
-            selected: category.id == selectedId,
-            onPressed: () => onPick(category),
-          ),
-        _AddChip(onPressed: onAdd),
-      ],
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: [
+          for (final category in categories) ...[
+            _PickChip(
+              category: category,
+              selected: category.id == selectedId,
+              onPressed: () => onPick(category),
+            ),
+            const SizedBox(width: 8),
+          ],
+          _AddChip(onPressed: onAdd),
+        ],
+      ),
     );
   }
 }
@@ -1190,9 +1334,10 @@ class _EventPreviewTile extends StatelessWidget {
 }
 
 class _RoundCheck extends StatelessWidget {
-  const _RoundCheck({required this.selected});
+  const _RoundCheck({required this.selected, this.circle = false});
 
   final bool selected;
+  final bool circle;
 
   @override
   Widget build(BuildContext context) {
@@ -1203,7 +1348,8 @@ class _RoundCheck extends StatelessWidget {
       height: 22,
       decoration: BoxDecoration(
         color: selected ? colors.accentBright : Colors.transparent,
-        borderRadius: BorderRadius.circular(6),
+        shape: circle ? BoxShape.circle : BoxShape.rectangle,
+        borderRadius: circle ? null : BorderRadius.circular(6),
         border: selected
             ? null
             : Border.all(color: colors.muted, width: 1.8),
@@ -1220,13 +1366,13 @@ class _EventCategoryTile extends StatelessWidget {
     required this.event,
     required this.category,
     required this.focused,
-    required this.onPressed,
+    this.onPressed,
   });
 
   final CalendarEvent event;
   final EventCategory? category;
   final bool focused;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
 
   String get _dateLabel {
     final date = event.day;

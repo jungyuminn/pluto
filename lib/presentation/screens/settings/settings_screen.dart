@@ -2151,7 +2151,7 @@ class _ThemeHomePreviewPage extends StatelessWidget {
           IgnorePointer(
             child: DecoratedBox(
               decoration: BoxDecoration(
-                color: colors.card,
+                color: colors.homeCard,
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(

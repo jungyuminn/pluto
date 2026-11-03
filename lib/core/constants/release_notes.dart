@@ -17,6 +17,16 @@ class ReleaseNote {
 abstract final class ReleaseNotes {
   static const all = [
     ReleaseNote(
+      version: '1.5.9',
+      items: [
+        '친구 요청과 같이 할 일 요청이 푸시 알림으로 와요',
+        '캘린더를 연동 할 때 카테고리를 자동으로 고를 수 있어요',
+        '몽글 테마의 아이콘이 수정됐어요',
+        '몽글 테마의 기본 프로필 이미지가 추가됐어요',
+        '새로운 스티커 2종이 추가됐어요',
+      ],
+    ),
+    ReleaseNote(
       version: '1.5.8',
       items: [
         '다른 캘린더 사진에서 일정을 읽어 가져올 수 있어요',

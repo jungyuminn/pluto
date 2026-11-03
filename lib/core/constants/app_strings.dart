@@ -48,10 +48,13 @@ class AppStrings {
   static String importConfirmBody(int count) => '일정 $count개를 할 일로 가져와요';
   static const importConfirmSkipHint = '가져올 일정만 체크하면 돼요';
   static const importCategoryModeTitle = '카테고리를 어떻게 넣을까요?';
+  static const importCategoryAuto = '자동으로 고르기';
+  static const importCategoryAutoBody = '일정에 맞는 카테고리를 자동으로 넣어요';
+  static const importCategoryAutoHint = '일정마다 카테고리를 수정할 수 있어요';
   static const importCategoryAll = '하나에 몰아넣기';
   static const importCategoryAllBody = '모든 일정을 같은 카테고리로 넣어요';
   static const importCategoryEach = '개별로 고르기';
-  static const importCategoryEachBody = '할 일마다 카테고리를 고르면 돼요';
+  static const importCategoryEachBody = '일정마다 카테고리를 넣어요';
   static const importCategoryEachTitle = '할 일별 카테고리';
   static const importCategoryPick = '카테고리 고르기';
   static const importCategoryAllHint = '카테고리를 고르면 모든 할 일에 들어가요';

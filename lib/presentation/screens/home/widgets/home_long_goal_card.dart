@@ -247,7 +247,7 @@ class _HomeLongGoalCardState extends State<HomeLongGoalCard> {
     final colors = AppColors.of(context);
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: colors.card,
+        color: colors.homeCard,
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(

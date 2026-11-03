@@ -157,7 +157,13 @@ class FriendPushService {
 
   Future<void> _onForeground(RemoteMessage message) async {
     final type = message.data['type'] ?? '';
-    if (type != 'friend_request' && type != 'friend_accepted') {
+    const friendTypes = {
+      'friend_request',
+      'friend_accepted',
+      'todo_request',
+      'todo_accepted',
+    };
+    if (!friendTypes.contains(type)) {
       if (message.notification == null) return;
     }
     if (!kIsWeb && Platform.isIOS) return;

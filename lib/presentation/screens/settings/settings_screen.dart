@@ -69,6 +69,7 @@ import 'package:pluto/presentation/widgets/overlay_app_bar.dart';
 import 'package:pluto/presentation/widgets/sliding_kind_bar.dart';
 import 'package:pluto/presentation/widgets/themed_asset.dart';
 import 'package:pluto/presentation/screens/shell/widgets/pill_bottom_nav.dart';
+import 'package:pluto/presentation/screens/stats/planet_stages.dart';
 import 'package:pluto/presentation/screens/stats/stats_screen.dart';
 import 'package:pluto/presentation/screens/stats/widgets/planet_fill.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -1776,6 +1777,8 @@ CalendarEvent _themePreviewEvent({
   required DateTime date,
   required String category,
   String? groupId,
+  int? startMinutes,
+  int? endMinutes,
 }) {
   final item = _themePreviewCategory(category);
   return CalendarEvent(
@@ -1786,6 +1789,8 @@ CalendarEvent _themePreviewEvent({
     categoryId: item.id,
     categoryName: item.name,
     categoryColor: item.color,
+    startMinutes: startMinutes,
+    endMinutes: endMinutes,
   );
 }
 
@@ -1821,18 +1826,24 @@ List<CalendarEvent> _themePreviewHomeEventsOn(DateTime date) {
         title: '헬스장',
         date: today,
         category: '운동',
+        startMinutes: 7 * 60,
+        endMinutes: 8 * 60,
       ),
       _themePreviewEvent(
         id: 'preview-lunch',
         title: '점심 식사',
         date: today,
         category: '약속',
+        startMinutes: 12 * 60,
+        endMinutes: 13 * 60,
       ),
       _themePreviewEvent(
         id: 'preview-class',
         title: '전공 수업',
         date: today,
         category: '대학교',
+        startMinutes: 14 * 60,
+        endMinutes: 16 * 60,
       ),
     ];
   }
@@ -2004,6 +2015,7 @@ class _ThemeLivePreviewState extends State<_ThemeLivePreview> {
       if (fromUser) _startTimer();
       return;
     }
+    setState(() => _page = wrapped);
     _pages.animateToPage(
       wrapped,
       duration: const Duration(milliseconds: 420),
@@ -2070,10 +2082,6 @@ class _ThemeLivePreviewState extends State<_ThemeLivePreview> {
                     ],
                   ),
                 ),
-                _ThemePreviewDots(
-                  selected: _page,
-                  onSelected: (page) => _goTo(page, fromUser: true),
-                ),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(14, 4, 14, 12),
                   child: _ThemePreviewNav(
@@ -2130,71 +2138,71 @@ class _ThemeHomePreviewPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (full) return _fullHomePage(context);
     final colors = AppColors.of(context);
-    final card = DecoratedBox(
-            decoration: BoxDecoration(
-              color: colors.card,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: colors.shadow,
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    AppStrings.todayTitle,
-                    style: TextStyle(
-                      fontFamily: AppFonts.of(context),
-                fontSize: full ? 17 : 15,
-                      fontWeight: FontWeight.w800,
-                      color: colors.text,
-                    ),
-                  ),
-                  Text(
-                    '8. 21. (금)',
-                    style: TextStyle(
-                      fontFamily: AppFonts.of(context),
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: colors.muted,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  const DayEventLabel(
-              title: '헬스장',
-              categoryName: '운동',
-              color: Color(0xFF7CB342),
-              timeText: '07:00',
-                  ),
-                  const SizedBox(height: 6),
-                  const CalendarEventLabel(
-              title: '제주도',
-              color: Color(0xFF00ACC1),
+    final today = _themePreviewToday();
+    final weekday = AppStrings.weekdays[today.weekday % 7];
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(14, 18, 14, 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const Spacer(),
+          IgnorePointer(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: colors.card,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: colors.shadow,
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
                   ),
                 ],
               ),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      AppStrings.todayTitle,
+                      style: TextStyle(
+                        fontFamily: AppFonts.of(context),
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
+                        color: colors.text,
+                      ),
+                    ),
+                    Text(
+                      '${today.month}. ${today.day}. ($weekday)',
+                      style: TextStyle(
+                        fontFamily: AppFonts.of(context),
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: colors.muted,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    const DayEventLabel(
+                      title: '헬스장',
+                      categoryName: '운동',
+                      color: Color(0xFFFF9AD8),
+                    ),
+                    const SizedBox(height: 6),
+                    const CalendarEventLabel(
+                      title: '제주도',
+                      color: Color(0xFF7A9FFF),
+                    ),
+                  ],
+                ),
+              ),
             ),
+          ),
+        ],
+      ),
     );
-    if (!full) {
-      return Padding(
-        padding: const EdgeInsets.fromLTRB(14, 18, 14, 12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const Spacer(),
-            card,
-          ],
-        ),
-      );
-    }
-    return _fullHomePage(context);
   }
 
   Widget _fullHomePage(BuildContext context) {
@@ -2260,24 +2268,34 @@ class _ThemeCalendarPreviewPage extends StatelessWidget {
 
   final bool full;
 
-  static const _weeks = [
-    [2, 3, 4, 5, 6, 7, 8],
-    [9, 10, 11, 12, 13, 14, 15],
-    [16, 17, 18, 19, 20, 21, 22],
-    [23, 24, 25, 26, 27, 28, 29],
-  ];
+  static List<List<int?>> _monthWeeks(DateTime today) {
+    final first = DateTime(today.year, today.month, 1);
+    final last = DateTime(today.year, today.month + 1, 0).day;
+    final cells = <int?>[
+      ...List<int?>.filled(first.weekday % 7, null),
+      for (var day = 1; day <= last; day++) day,
+    ];
+    while (cells.length % 7 != 0) {
+      cells.add(null);
+    }
+    return [
+      for (var i = 0; i < cells.length; i += 7) cells.sublist(i, i + 7),
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
     if (full) return _fullCalendarPage(context);
     final colors = AppColors.of(context);
+    final today = _themePreviewToday();
+    final weeks = _monthWeeks(today);
     return Padding(
       padding: const EdgeInsets.fromLTRB(10, 10, 10, 8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            '8${AppStrings.monthSuffix}',
+            '${today.month}${AppStrings.monthSuffix}',
             style: TextStyle(
               fontFamily: AppFonts.of(context),
               fontSize: 22,
@@ -2308,7 +2326,7 @@ class _ThemeCalendarPreviewPage extends StatelessWidget {
           Expanded(
             child: Column(
               children: [
-                for (final week in _weeks)
+                for (final week in weeks)
                   Expanded(
                     child: Row(
                       children: [
@@ -2316,7 +2334,7 @@ class _ThemeCalendarPreviewPage extends StatelessWidget {
                           Expanded(
                             child: _ThemePreviewDayCell(
                               day: day,
-                              today: day == 21,
+                              today: day == today.day,
                             ),
                           ),
                       ],
@@ -2378,11 +2396,12 @@ class _ThemePreviewDayCell extends StatelessWidget {
     required this.today,
   });
 
-  final int day;
+  final int? day;
   final bool today;
 
   @override
   Widget build(BuildContext context) {
+    if (day == null) return const SizedBox.shrink();
     final colors = AppColors.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 1),
@@ -2411,19 +2430,62 @@ class _ThemeStatsPreviewPage extends StatelessWidget {
   Widget build(BuildContext context) {
     if (full) return const StatsScreen();
     final colors = AppColors.of(context);
+    final today = _themePreviewToday();
+    const level = 4;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(36, 24, 36, 12),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 160, maxHeight: 160),
-          child: PlanetFill(
-            level: 4,
-            wave: 0.45,
-            outline: colors.accent,
-            empty: colors.groupedBackground,
-            pokeable: false,
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 8),
+      child: Column(
+        children: [
+          Text(
+            '${today.month}${AppStrings.monthSuffix}',
+            style: const TextStyle(
+              fontFamily: AppFonts.jalnan,
+              fontSize: AppFonts.wordmarkSize,
+              height: 1.1,
+              color: AppFonts.wordmarkColor,
+            ),
           ),
-        ),
+          Expanded(
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 132, maxHeight: 132),
+                child: PlanetFill(
+                  level: level,
+                  wave: 0.45,
+                  outline: colors.icon,
+                  empty: colors.card,
+                  pokeable: false,
+                ),
+              ),
+            ),
+          ),
+          DecoratedBox(
+            decoration: BoxDecoration(
+              color: colors.card,
+              borderRadius: BorderRadius.circular(999),
+              boxShadow: [
+                BoxShadow(
+                  color: colors.shadow.withValues(alpha: colors.shadow.a * 0.55),
+                  blurRadius: 6,
+                  offset: const Offset(0, 1),
+                ),
+              ],
+            ),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+              child: Text(
+                PlanetStage.nameOf(level, empty: false),
+                style: TextStyle(
+                  fontFamily: AppFonts.of(context),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  height: 1,
+                  color: colors.text,
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -2616,41 +2678,6 @@ class _ThemePreviewCompanyCard extends StatelessWidget {
   }
 }
 
-class _ThemePreviewDots extends StatelessWidget {
-  const _ThemePreviewDots({required this.selected, required this.onSelected});
-
-  final int selected;
-  final ValueChanged<int> onSelected;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = AppColors.of(context);
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        for (var i = 0; i < 3; i++)
-          PressBounce(
-            onPressed: () => onSelected(i),
-            pressedScale: 0.9,
-            pressedColor: Colors.transparent,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 220),
-                width: i == selected ? 16 : 6,
-                height: 6,
-                decoration: BoxDecoration(
-                  color: i == selected ? colors.accentBright : Colors.white,
-                  borderRadius: BorderRadius.circular(999),
-                ),
-              ),
-            ),
-          ),
-      ],
-    );
-  }
-}
-
 class _ThemePreviewNav extends StatelessWidget {
   const _ThemePreviewNav({
     required this.selected,
@@ -2660,6 +2687,11 @@ class _ThemePreviewNav extends StatelessWidget {
   final int selected;
   final ValueChanged<int> onSelected;
 
+  static const _barWidth = 168.0;
+  static const _barHeight = 40.0;
+  static const _pillWidth = 50.0;
+  static const _pillHeight = 32.0;
+
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
@@ -2668,11 +2700,8 @@ class _ThemePreviewNav extends StatelessWidget {
       listenable: theme,
       builder: (context, _) {
         final items = AppSkinAssets.navIcons(theme.paintedSkin);
-        final previewItems = [
-          items[0],
-          items[1],
-          items[2],
-        ];
+        final cell = _barWidth / 3;
+        final pillLeft = cell * selected + (cell - _pillWidth) / 2;
         return Center(
           child: DecoratedBox(
             decoration: BoxDecoration(
@@ -2687,28 +2716,49 @@ class _ThemePreviewNav extends StatelessWidget {
               ],
             ),
             child: SizedBox(
-              width: 168,
-              height: 40,
-              child: Row(
-                children: [
-                  for (var i = 0; i < previewItems.length; i++)
-                    Expanded(
-                      child: PressBounce(
-                        onPressed: () => onSelected(i),
-                        pressedScale: 0.88,
-                        pressedColor: Colors.transparent,
-                        child: Center(
-                            child: ThemedAsset(
-                              asset: i == selected
-                                ? previewItems[i].filled
-                                : previewItems[i].outlined,
-                              width: 20,
-                              height: 20,
-                          ),
+              width: _barWidth,
+              height: _barHeight,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(999),
+                child: Stack(
+                  children: [
+                    AnimatedPositioned(
+                      duration: const Duration(milliseconds: 280),
+                      curve: Curves.easeOutCubic,
+                      left: pillLeft,
+                      top: (_barHeight - _pillHeight) / 2,
+                      width: _pillWidth,
+                      height: _pillHeight,
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: colors.pressed,
+                          borderRadius: BorderRadius.circular(999),
                         ),
                       ),
                     ),
-                ],
+                    Row(
+                      children: [
+                        for (var i = 0; i < 3; i++)
+                          Expanded(
+                            child: PressBounce(
+                              onPressed: () => onSelected(i),
+                              pressedScale: 0.88,
+                              pressedColor: Colors.transparent,
+                              child: Center(
+                                child: ThemedAsset(
+                                  asset: i == selected
+                                      ? items[i].filled
+                                      : items[i].outlined,
+                                  width: 20,
+                                  height: 20,
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

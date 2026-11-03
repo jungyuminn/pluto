@@ -478,7 +478,7 @@ class AppStrings {
   static const leftoverReminderChannelName = '미완료 할 일';
   static const leftoverReminderChannelDescription = '그날 끝내지 않은 할 일을 알려줘요';
   static const friendRequestChannelName = '친구';
-  static const friendRequestChannelDescription = '친구 요청을 알려줘요';
+  static const friendRequestChannelDescription = '친구 요청과 같이 할 일을 알려줘요';
   static String todoReminderHint(String leadLabel) =>
       '시간이 설정된 할 일을 $leadLabel에 알려줘요';
   static String todoReminderBody(int leadMinutes) => leadMinutes % 60 == 0

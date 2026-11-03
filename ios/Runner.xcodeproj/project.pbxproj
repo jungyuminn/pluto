@@ -76,6 +76,7 @@
 		7B22A0072EC4EE0100C636F3 /* HomeWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = HomeWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		7B22A0162EC4EE0100C636F3 /* HomeWidgets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = HomeWidgets.xcconfig; sourceTree = "<group>"; };
 		7B22A0172EC4EE0100C636F3 /* Runner.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Runner.entitlements; sourceTree = "<group>"; };
+		7B22A0202EC4EE0100C636F3 /* RunnerRelease.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = RunnerRelease.entitlements; sourceTree = "<group>"; };
 		1498D2321E8E86230040F4C2 /* GeneratedPluginRegistrant.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GeneratedPluginRegistrant.h; sourceTree = "<group>"; };
 		1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GeneratedPluginRegistrant.m; sourceTree = "<group>"; };
 		331C807B294A618700263BE5 /* RunnerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunnerTests.swift; sourceTree = "<group>"; };
@@ -220,6 +221,7 @@
 				7B11C4B12EC51A0800C636F3 /* ICloudBackupPlugin.swift */,
 				7B33D4A12EC6200100C636F3 /* ImagePickerPlugin.swift */,
 				7B22A0172EC4EE0100C636F3 /* Runner.entitlements */,
+				7B22A0202EC4EE0100C636F3 /* RunnerRelease.entitlements */,
 				74858FAD1ED2DC5600515810 /* Runner-Bridging-Header.h */,
 			);
 			path = Runner;
@@ -896,7 +898,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
-				CODE_SIGN_ENTITLEMENTS = Runner/Runner.entitlements;
+				CODE_SIGN_ENTITLEMENTS = Runner/RunnerRelease.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = Z88U85K3F9;
 				ENABLE_BITCODE = NO;

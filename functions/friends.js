@@ -884,6 +884,12 @@ function pushName(raw) {
   return name.slice(0, 16);
 }
 
+function pushTodoTitle(raw) {
+  const title = String(raw || "").replace(/\s+/g, " ").trim();
+  if (!title) return "같이 할 일";
+  return title.length > 40 ? `${title.slice(0, 39)}…` : title;
+}
+
 async function tokensOf(uid) {
   if (!uid) return [];
   const snaps = await db()
@@ -982,5 +988,40 @@ exports.onFriendRequestWrite = functionsV1
         }
       } catch (error) {
         console.error("friend push failed", requestId, error);
+      }
+    });
+
+exports.onTodoRequestWrite = functionsV1
+    .region("asia-northeast3")
+    .firestore
+    .document("todo_requests/{requestId}")
+    .onWrite(async (change, context) => {
+      const before = change.before.exists ? change.before.data() : null;
+      const after = change.after.exists ? change.after.data() : null;
+      if (!after) return;
+      const prev = String(before?.status || "");
+      const status = String(after.status || "");
+      const requestId = context.params.requestId;
+      const todo = pushTodoTitle(after.title);
+      try {
+        if (status === "pending" && prev !== "pending") {
+          await notifyFriendPush(after.toUid, {
+            type: "todo_request",
+            title: `${pushName(after.fromName)}님이 같이 할 일을 보냈어요`,
+            body: todo,
+            requestId,
+          });
+          return;
+        }
+        if (status === "accepted" && prev === "pending") {
+          await notifyFriendPush(after.fromUid, {
+            type: "todo_accepted",
+            title: `${pushName(after.toName)}님이 같이 할 일을 수락했어요`,
+            body: todo,
+            requestId,
+          });
+        }
+      } catch (error) {
+        console.error("todo push failed", requestId, error);
       }
     });

@@ -14,6 +14,7 @@ import 'package:pluto/presentation/screens/calendar/widgets/event_category_chip.
 import 'package:pluto/presentation/screens/stats/widgets/planet_fill.dart';
 import 'package:pluto/presentation/screens/shell/widgets/pill_bottom_nav.dart';
 import 'package:pluto/presentation/tutorial/tutorial_controller.dart';
+import 'package:pluto/presentation/widgets/app_arrow.dart';
 import 'package:pluto/presentation/widgets/themed_asset.dart';
 
 class TutorialDemoView extends StatelessWidget {
@@ -701,8 +702,7 @@ class _SettingsDemo extends StatelessWidget {
                         _MenuLine(
                           label: _items[i],
                           highlighted: selected == i,
-                          trailing: Icon(
-                            Icons.chevron_right_rounded,
+                          trailing: AppArrow.right(
                             size: 16,
                             color: colors.muted,
                           ),
@@ -865,8 +865,10 @@ class _MenuDemo extends StatelessWidget {
                                               children: [
                                                 _MenuLine(
                                                   label: '표시할 항목',
-                                                  leading:
-                                                      Icons.chevron_left_rounded,
+                                                  leading: AppArrow.left(
+                                                    size: 16,
+                                                    color: colors.icon,
+                                                  ),
                                                 ),
                                                 _MenuLine(
                                                   label: '할일 보기',
@@ -934,7 +936,7 @@ class _MenuLine extends StatelessWidget {
   });
 
   final String label;
-  final IconData? leading;
+  final Widget? leading;
   final Widget? trailing;
   final bool highlighted;
 
@@ -954,7 +956,7 @@ class _MenuLine extends StatelessWidget {
         child: Row(
           children: [
             if (leading != null) ...[
-              Icon(leading, size: 16, color: colors.icon),
+              leading!,
               const SizedBox(width: 2),
             ],
             Expanded(

@@ -16,10 +16,10 @@ class AddEventButton extends StatelessWidget {
       onPressed: onPressed,
       color: colors.pressed,
       pressedColor: colors.border,
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(8),
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 16),
+        padding: const EdgeInsets.symmetric(vertical: 15),
         alignment: Alignment.center,
         child: Text(
           label ?? AppStrings.addEvent,

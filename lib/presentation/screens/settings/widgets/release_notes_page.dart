@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:ui';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -9,7 +8,9 @@ import 'package:pluto/core/constants/release_notes.dart';
 import 'package:pluto/core/layout/pc_layout.dart';
 import 'package:pluto/core/theme/app_colors.dart';
 import 'package:pluto/core/utils/press_bounce.dart';
+import 'package:pluto/presentation/widgets/app_arrow.dart';
 import 'package:pluto/presentation/screens/settings/widgets/release_note_demos.dart';
+import 'package:pluto/presentation/widgets/overlay_app_bar.dart';
 
 class ReleaseNotesPage extends StatefulWidget {
   const ReleaseNotesPage({super.key});
@@ -137,11 +138,7 @@ class _VersionRow extends StatelessWidget {
                   turns: open ? 0.25 : 0,
                   duration: const Duration(milliseconds: 280),
                   curve: Curves.easeOutCubic,
-                  child: Icon(
-                    CupertinoIcons.chevron_forward,
-                    size: 16,
-                    color: colors.muted,
-                  ),
+                  child: AppArrow.right(size: 22, color: colors.muted),
                 ),
               ],
             ),
@@ -239,7 +236,16 @@ class _Bullet extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(width: 16, child: Text('·', style: style)),
+          Padding(
+            padding: const EdgeInsets.only(top: 8, right: 8),
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: colors.text,
+                shape: BoxShape.circle,
+              ),
+              child: const SizedBox.square(dimension: 3.5),
+            ),
+          ),
           Expanded(child: Text(text, style: style)),
         ],
       ),
@@ -476,7 +482,7 @@ class _ShowcaseCycleState extends State<_ShowcaseCycle> {
             children: [
               if (_canCycle)
                 _NavButton(
-                  icon: Icons.chevron_left_rounded,
+                  left: true,
                   onPressed: () => _goTo(_index - 1, fromUser: true),
                 )
               else
@@ -514,7 +520,7 @@ class _ShowcaseCycleState extends State<_ShowcaseCycle> {
               ),
               if (_canCycle)
                 _NavButton(
-                  icon: Icons.chevron_right_rounded,
+                  left: false,
                   onPressed: () => _goTo(_index + 1, fromUser: true),
                 )
               else
@@ -569,9 +575,9 @@ class _ShowcaseCycleState extends State<_ShowcaseCycle> {
 }
 
 class _NavButton extends StatelessWidget {
-  const _NavButton({required this.icon, required this.onPressed});
+  const _NavButton({required this.left, required this.onPressed});
 
-  final IconData icon;
+  final bool left;
   final VoidCallback onPressed;
 
   @override
@@ -584,7 +590,11 @@ class _NavButton extends StatelessWidget {
       child: SizedBox(
         width: 32,
         height: 32,
-        child: Icon(icon, size: 26, color: colors.muted),
+        child: Center(
+          child: left
+              ? AppArrow.left(size: 22, color: colors.muted)
+              : AppArrow.right(size: 22, color: colors.muted),
+        ),
       ),
     );
   }
@@ -604,12 +614,11 @@ class _Bar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
-    return ClipRect(
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
-        child: ColoredBox(
-          color: colors.groupedBackground.withValues(alpha: 0.08),
-          child: AppBar(
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        const FrostedAppBarFill(),
+        AppBar(
             forceMaterialTransparency: true,
             backgroundColor: Colors.transparent,
             elevation: 0,
@@ -640,9 +649,8 @@ class _Bar extends StatelessWidget implements PreferredSizeWidget {
                 color: colors.text,
               ),
             ),
-          ),
         ),
-      ),
+      ],
     );
   }
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:pluto/core/constants/app_icons.dart';
+import 'package:pluto/core/theme/app_colors.dart';
 import 'package:pluto/domain/entities/event_category.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/calendar_filter_menu.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/category_picker_sheet.dart';
@@ -30,6 +31,7 @@ class JobOverflowMenuButton extends StatefulWidget {
     required this.licenseCategoryView,
     required this.onLicenseCategoryViewChanged,
     this.onCategoriesChanged,
+    this.muted = false,
   });
 
   final bool compact;
@@ -53,6 +55,7 @@ class JobOverflowMenuButton extends StatefulWidget {
   final bool licenseCategoryView;
   final ValueChanged<bool> onLicenseCategoryViewChanged;
   final VoidCallback? onCategoriesChanged;
+  final bool muted;
 
   @override
   State<JobOverflowMenuButton> createState() => _JobOverflowMenuButtonState();
@@ -262,6 +265,7 @@ class _JobOverflowMenuButtonState extends State<JobOverflowMenuButton>
             asset: AppIcons.more,
             width: 19,
             height: 19,
+            color: widget.muted ? AppColors.of(context).muted : null,
           ),
         ),
       ),

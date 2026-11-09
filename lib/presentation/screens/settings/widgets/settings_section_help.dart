@@ -24,6 +24,7 @@ import 'package:pluto/presentation/screens/calendar/widgets/event_action_icon.da
 import 'package:pluto/presentation/screens/calendar/widgets/event_category_chip.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/event_date_chip.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/event_time_chip.dart';
+import 'package:pluto/presentation/widgets/app_arrow.dart';
 import 'package:pluto/presentation/widgets/themed_asset.dart';
 
 enum SettingsHelpSection {
@@ -1542,7 +1543,16 @@ class _FakeReleaseBullet extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SizedBox(width: 14, child: Text('·', style: style)),
+        Padding(
+          padding: const EdgeInsets.only(top: 7, right: 8),
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: colors.text,
+              shape: BoxShape.circle,
+            ),
+            child: const SizedBox.square(dimension: 3.5),
+          ),
+        ),
         Expanded(
           child: Text(
             text,
@@ -2655,7 +2665,7 @@ class _HelpSelectRow extends StatelessWidget {
               const SizedBox(width: 2),
             ],
             if (chevron)
-              Icon(Icons.chevron_right_rounded, size: 22, color: colors.muted)
+              AppArrow.right(size: 22, color: colors.muted)
             else
               AnimatedOpacity(
                 duration: const Duration(milliseconds: 220),
@@ -2901,7 +2911,7 @@ class _CyclingPreviewState extends State<_CyclingPreview> {
             children: [
               if (_canCycle)
                 _PreviewNavButton(
-                  icon: Icons.chevron_left_rounded,
+                  left: true,
                   onPressed: () => _goTo(_index - 1, fromUser: true),
                 )
               else
@@ -2938,7 +2948,7 @@ class _CyclingPreviewState extends State<_CyclingPreview> {
               ),
               if (_canCycle)
                 _PreviewNavButton(
-                  icon: Icons.chevron_right_rounded,
+                  left: false,
                   onPressed: () => _goTo(_index + 1, fromUser: true),
                 )
               else
@@ -3050,9 +3060,9 @@ class _CyclingPreviewState extends State<_CyclingPreview> {
 }
 
 class _PreviewNavButton extends StatelessWidget {
-  const _PreviewNavButton({required this.icon, required this.onPressed});
+  const _PreviewNavButton({required this.left, required this.onPressed});
 
-  final IconData icon;
+  final bool left;
   final VoidCallback onPressed;
 
   @override
@@ -3065,7 +3075,11 @@ class _PreviewNavButton extends StatelessWidget {
       child: SizedBox(
         width: 32,
         height: 32,
-        child: Icon(icon, size: 26, color: colors.muted),
+        child: Center(
+          child: left
+              ? AppArrow.left(size: 22, color: colors.muted)
+              : AppArrow.right(size: 22, color: colors.muted),
+        ),
       ),
     );
   }

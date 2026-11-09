@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:pluto/app_scope.dart';
 import 'package:pluto/core/constants/app_fonts.dart';
 import 'package:pluto/core/constants/app_strings.dart';
+import 'package:pluto/presentation/widgets/app_arrow.dart';
 import 'package:pluto/core/layout/pc_layout.dart';
 import 'package:pluto/core/theme/app_colors.dart';
 import 'package:pluto/core/utils/korean_search.dart';
@@ -64,11 +65,7 @@ class HomeAllEventsCard extends StatelessWidget {
                   ),
                 ),
               ),
-              Icon(
-                Icons.chevron_right_rounded,
-                size: 28,
-                color: colors.accentBright,
-              ),
+              AppArrow.right(size: 24, color: colors.accentBright),
             ],
           ),
         ),

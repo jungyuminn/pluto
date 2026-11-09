@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:pluto/core/theme/app_colors.dart';
 
@@ -92,6 +94,53 @@ class OverlayAppBar extends StatelessWidget implements PreferredSizeWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class FrostedAppBarFill extends StatelessWidget {
+  const FrostedAppBarFill({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final tint = AppColors.of(context).groupedBackground;
+    return IgnorePointer(
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          ShaderMask(
+            blendMode: BlendMode.dstIn,
+            shaderCallback: (bounds) {
+              return const LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [Colors.white, Colors.white, Colors.transparent],
+                stops: [0, 0.58, 1],
+              ).createShader(bounds);
+            },
+            child: ClipRect(
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
+                child: const SizedBox.expand(),
+              ),
+            ),
+          ),
+          DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  tint.withValues(alpha: 0.72),
+                  tint.withValues(alpha: 0.5),
+                  tint.withValues(alpha: 0),
+                ],
+                stops: const [0, 0.55, 1],
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

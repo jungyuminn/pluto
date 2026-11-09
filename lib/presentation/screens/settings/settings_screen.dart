@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:ui';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/cupertino.dart';
@@ -67,6 +66,7 @@ import 'package:pluto/presentation/widgets/app_bar_icon_group.dart';
 import 'package:pluto/presentation/widgets/app_bar_wordmark.dart';
 import 'package:pluto/presentation/widgets/overlay_app_bar.dart';
 import 'package:pluto/presentation/widgets/sliding_kind_bar.dart';
+import 'package:pluto/presentation/widgets/app_arrow.dart';
 import 'package:pluto/presentation/widgets/themed_asset.dart';
 import 'package:pluto/presentation/screens/shell/widgets/pill_bottom_nav.dart';
 import 'package:pluto/presentation/screens/stats/planet_stages.dart';
@@ -5323,12 +5323,11 @@ class _FrostedAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
-    return ClipRect(
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
-        child: ColoredBox(
-          color: colors.groupedBackground.withValues(alpha: 0.08),
-          child: AppBar(
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        const FrostedAppBarFill(),
+        AppBar(
             forceMaterialTransparency: true,
             backgroundColor: Colors.transparent,
             elevation: 0,
@@ -5359,9 +5358,8 @@ class _FrostedAppBar extends StatelessWidget implements PreferredSizeWidget {
                 color: colors.text,
               ),
             ),
-          ),
         ),
-      ),
+      ],
     );
   }
 }
@@ -5997,11 +5995,7 @@ class _SettingsTile extends StatelessWidget {
                   turns: expanded == true ? 0.25 : 0,
                   duration: const Duration(milliseconds: 280),
                   curve: Curves.easeOutCubic,
-                  child: Icon(
-                    CupertinoIcons.chevron_forward,
-                    size: 16,
-                  color: colors.muted,
-                  ),
+                  child: AppArrow.right(size: 22, color: colors.muted),
                 ),
             ],
           ),

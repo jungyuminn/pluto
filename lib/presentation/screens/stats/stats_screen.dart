@@ -7,6 +7,7 @@ import 'package:pluto/app_scope.dart';
 import 'package:pluto/core/calendar/month_grid.dart';
 import 'package:pluto/core/constants/app_fonts.dart';
 import 'package:pluto/core/constants/app_strings.dart';
+import 'package:pluto/presentation/widgets/app_arrow.dart';
 import 'package:pluto/core/layout/pc_layout.dart';
 import 'package:pluto/core/theme/app_colors.dart';
 import 'package:pluto/core/theme/app_skin_background.dart';
@@ -287,7 +288,7 @@ class StatsScreenState extends State<StatsScreen>
             onPressed: _zoom == CalendarZoomLevel.days
                 ? () => _shiftMonth(-1)
                 : null,
-            icon: Icons.chevron_left_rounded,
+            left: true,
           ),
           title: PressBounce(
             onPressed: _onTitlePressed,
@@ -309,7 +310,7 @@ class StatsScreenState extends State<StatsScreen>
             onPressed: _zoom == CalendarZoomLevel.days && !_isCurrentMonth
                 ? () => _shiftMonth(1)
                 : null,
-            icon: Icons.chevron_right_rounded,
+            left: false,
           ),
         ),
         body: _loading || stats == null || play == null
@@ -1050,11 +1051,7 @@ class _CollectedCard extends StatelessWidget {
                       ),
                     ),
                   ),
-                  Icon(
-                    Icons.chevron_right_rounded,
-                    size: 20,
-                    color: colors.muted,
-                  ),
+                  AppArrow.right(size: 20, color: colors.muted),
                 ],
               ),
               if (collected.isEmpty)
@@ -1664,17 +1661,20 @@ class _DayDotState extends State<_DayDot> with SingleTickerProviderStateMixin {
 
 class _MonthArrow extends StatelessWidget {
   const _MonthArrow({
-    required this.icon,
+    required this.left,
     this.onPressed,
   });
 
-  final IconData icon;
+  final bool left;
   final VoidCallback? onPressed;
 
   @override
   Widget build(BuildContext context) {
     final enabled = onPressed != null;
     final colors = AppColors.of(context);
+    final color = enabled
+        ? AppFonts.wordmarkColor
+        : AppFonts.wordmarkColor.withValues(alpha: 0.28);
     return PressBounce(
       onPressed: onPressed,
       pressedScale: 0.9,
@@ -1683,12 +1683,10 @@ class _MonthArrow extends StatelessWidget {
       child: SizedBox(
         width: 44,
         height: 40,
-        child: Icon(
-          icon,
-          size: 26,
-          color: enabled
-              ? AppFonts.wordmarkColor
-              : AppFonts.wordmarkColor.withValues(alpha: 0.28),
+        child: Center(
+          child: left
+              ? AppArrow.left(size: 26, color: color)
+              : AppArrow.right(size: 26, color: color),
         ),
       ),
     );

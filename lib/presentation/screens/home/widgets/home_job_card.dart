@@ -249,6 +249,7 @@ class _HomeJobCardState extends State<HomeJobCard> {
                     ),
                   ),
                   JobOverflowMenuButton(
+                    muted: true,
                     compact: _compact,
                     onCompactChanged: (value) async {
                       if (value == _compact) return;

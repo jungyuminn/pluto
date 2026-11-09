@@ -560,8 +560,8 @@ class AppStrings {
   static const roundChipLabel = '일정';
   static const roundNoteHint = '추가정보를 입력하세요';
   static const emptyValue = '—';
-  static const colCoverLetter = '자기소개서';
-  static const attachFile = '자기소개서';
+  static const colCoverLetter = '첨부파일';
+  static const attachFile = '첨부파일';
   static const attachLicenseFile = '자격증';
   static const coverLetterNotFound = '자기소개서 파일을 찾을 수 없어요';
   static const coverLetterOpenFailed = '파일을 열 수 없어요';

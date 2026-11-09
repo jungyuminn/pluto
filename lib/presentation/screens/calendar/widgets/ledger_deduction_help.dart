@@ -5,6 +5,7 @@ import 'package:pluto/core/constants/app_fonts.dart';
 import 'package:pluto/core/constants/app_strings.dart';
 import 'package:pluto/core/theme/app_colors.dart';
 import 'package:pluto/core/utils/press_bounce.dart';
+import 'package:pluto/presentation/widgets/app_arrow.dart';
 import 'package:pluto/domain/entities/ledger_salary.dart';
 import 'package:pluto/domain/ledger_salary_calc.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/ledger_salary_result_card.dart';
@@ -211,7 +212,7 @@ class _DeductionPreviewState extends State<_DeductionPreview> {
                   Row(
                     children: [
                       _NavButton(
-                        icon: Icons.chevron_left_rounded,
+                        left: true,
                         onPressed: () => _goTo(_index - 1, fromUser: true),
                       ),
                       Expanded(
@@ -245,7 +246,7 @@ class _DeductionPreviewState extends State<_DeductionPreview> {
                         ),
                       ),
                       _NavButton(
-                        icon: Icons.chevron_right_rounded,
+                        left: false,
                         onPressed: () => _goTo(_index + 1, fromUser: true),
                       ),
                     ],
@@ -326,9 +327,9 @@ class _DeductionPreviewState extends State<_DeductionPreview> {
 }
 
 class _NavButton extends StatelessWidget {
-  const _NavButton({required this.icon, required this.onPressed});
+  const _NavButton({required this.left, required this.onPressed});
 
-  final IconData icon;
+  final bool left;
   final VoidCallback onPressed;
 
   @override
@@ -341,7 +342,11 @@ class _NavButton extends StatelessWidget {
       child: SizedBox(
         width: 32,
         height: 32,
-        child: Icon(icon, size: 26, color: colors.muted),
+        child: Center(
+          child: left
+              ? AppArrow.left(size: 22, color: colors.muted)
+              : AppArrow.right(size: 22, color: colors.muted),
+        ),
       ),
     );
   }

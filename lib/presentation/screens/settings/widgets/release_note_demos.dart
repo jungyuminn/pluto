@@ -32,6 +32,7 @@ import 'package:pluto/presentation/screens/calendar/widgets/event_time_chip.dart
 import 'package:pluto/presentation/screens/home/widgets/leftover_todo_card.dart';
 import 'package:pluto/presentation/screens/settings/widgets/dots_loading_dialog.dart';
 import 'package:pluto/presentation/widgets/overflow_menu.dart';
+import 'package:pluto/presentation/widgets/app_arrow.dart';
 import 'package:pluto/presentation/widgets/themed_asset.dart';
 
 enum ReleaseDemo {
@@ -7012,7 +7013,7 @@ class _NotesPeekDemo extends StatelessWidget {
                       ),
                     ),
                     const Spacer(),
-                    Icon(Icons.chevron_right_rounded, color: colors.muted),
+                    AppArrow.right(size: 22, color: colors.muted),
                   ],
                 ),
               ),
@@ -10925,28 +10926,64 @@ class _CategoryViewDemo extends StatelessWidget {
 class _CategoryAiDemo extends StatelessWidget {
   const _CategoryAiDemo();
 
-  static const _title = '헬스장가기';
-  static const _study = Color(0xFFA855F7);
-  static const _sport = Color(0xFF3B82F6);
+  static const _msPerChar = 200.0;
+  static const _thinkMs = 520.0;
+  static const _holdMs = 380.0;
+  static const _idleName = '공부';
+  static const _idleColor = Color(0xFFA855F7);
+  static const _cases = [
+    (title: '헬스장가기', name: '운동', color: Color(0xFF7A9FFF)),
+    (title: '전공수업', name: '대학교', color: Color(0xFFB4C0CC)),
+    (title: '저녁식사', name: '약속', color: Color(0xFFFF9AD8)),
+  ];
   static final _date = DateTime(2026, 9, 11);
+
+  static double _beatMs(String title) =>
+      title.length * _msPerChar + _thinkMs + _holdMs;
+
+  static double get _totalMs {
+    var ms = 0.0;
+    for (final item in _cases) {
+      ms += _beatMs(item.title);
+    }
+    return ms;
+  }
 
   @override
   Widget build(BuildContext context) {
     return _Loop(
-      ms: 6000,
+      ms: _totalMs.round(),
       boxHeight: 220,
       builder: (context, t) {
         final colors = AppColors.of(context);
         final font = AppFonts.of(context);
-        final typed = (_title.length * _gate(t, 0.08, 0.36)).round();
-        final shown = _title.substring(0, typed);
-        final thinking = _gate(t, 0.36, 0.50);
-        final pick = Curves.easeOutCubic.transform(_gate(t, 0.58, 0.74));
-        final caretOn = t < 0.36 && (t * 12).floor().isEven;
-        final color = Color.lerp(_study, _sport, pick)!;
-        final loading = t >= 0.36 && pick < 0.45;
-        final name = pick > 0.45 ? '운동' : '공부';
-        final twinkle = thinking > 0.15 && pick < 0.85
+        final n = _cases.length;
+        var cursor = t * _totalMs;
+        var scene = 0;
+        for (var i = 0; i < n; i++) {
+          final beat = _beatMs(_cases[i].title);
+          if (cursor < beat || i == n - 1) {
+            scene = i;
+            break;
+          }
+          cursor -= beat;
+        }
+        final item = _cases[scene];
+        final prevName = scene == 0 ? _idleName : _cases[scene - 1].name;
+        final prevColor = scene == 0 ? _idleColor : _cases[scene - 1].color;
+        final typeMs = item.title.length * _msPerChar;
+        final pickAt = typeMs + _thinkMs;
+        final typed = cursor < typeMs
+            ? (item.title.length * (cursor / typeMs).clamp(0.0, 1.0)).round()
+            : item.title.length;
+        final shown = item.title.substring(0, typed);
+        final caretOn =
+            cursor < typeMs && shown.isNotEmpty && (t * 10).floor().isEven;
+        final picked = cursor >= pickAt;
+        final color = picked ? item.color : prevColor;
+        final loading = cursor >= typeMs && !picked;
+        final name = picked ? item.name : prevName;
+        final twinkle = loading
             ? 0.55 + 0.45 * (0.5 + 0.5 * math.sin(t * 22 * math.pi))
             : 1.0;
         void noop() {}
@@ -11013,7 +11050,12 @@ class _CategoryAiDemo extends StatelessWidget {
                                 color: color,
                                 onPressed: noop,
                                 caption: loading
-                                    ? _AiDots(t: t, color: color)
+                                    ? _AiDots(
+                                        t: t,
+                                        color: color,
+                                        loopMs:
+                                            _CategoryAiDemo._totalMs.round(),
+                                      )
                                     : null,
                                 mark: Opacity(
                                   opacity: twinkle,
@@ -11052,7 +11094,16 @@ class _CategoryAiDemo extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: 8),
-                      SaveCompanyButton(onPressed: noop, color: color),
+                      SizedBox(
+                        width: 32,
+                        height: 32,
+                        child: FittedBox(
+                          child: SaveCompanyButton(
+                            onPressed: noop,
+                            color: color,
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                 ],
@@ -11066,10 +11117,11 @@ class _CategoryAiDemo extends StatelessWidget {
 }
 
 class _AiDots extends StatelessWidget {
-  const _AiDots({required this.t, required this.color});
+  const _AiDots({required this.t, required this.color, this.loopMs = 6000});
 
   final double t;
   final Color color;
+  final int loopMs;
 
   @override
   Widget build(BuildContext context) {
@@ -11100,7 +11152,7 @@ class _AiDots extends StatelessWidget {
   }
 
   double _bounce(int index) {
-    final phase = (t * (6000 / 900) - index / 3) % 1;
+    final phase = (t * (loopMs / 900) - index / 3) % 1;
     return math.sin(phase * math.pi).clamp(0.0, 1.0);
   }
 }
@@ -11108,32 +11160,29 @@ class _AiDots extends StatelessWidget {
 class _PhotoImportDemo extends StatelessWidget {
   const _PhotoImportDemo();
 
-  static final _events = [
-    (title: '회의', day: DateTime(2026, 9, 11)),
-    (title: '헬스장가기', day: DateTime(2026, 9, 12)),
-  ];
+  static const _meeting = Color(0xFFFFAAA0);
+  static const _sport = Color(0xFF3B82F6);
 
   @override
   Widget build(BuildContext context) {
     return _Loop(
-      ms: 5600,
-      boxHeight: 240,
+      ms: 5400,
+      boxHeight: 220,
       builder: (context, t) {
         final colors = AppColors.of(context);
         final font = AppFonts.of(context);
-        final shown = t < 0.18
-            ? 0
-            : t < 0.34
-            ? 1
-            : 2;
-        final reading = t < 0.62;
-        final first = Curves.easeOutCubic.transform(_gate(t, 0.16, 0.28));
-        final second = Curves.easeOutCubic.transform(_gate(t, 0.32, 0.44));
-        final appears = [first, second];
-        final waitIndex = t < 0.30 ? 0 : 1;
-        final caption = reading
-            ? AppStrings.photoImportWaits[waitIndex]
-            : AppStrings.importConfirmBody(shown);
+        final shotIn = Curves.easeOutCubic.transform(_gate(t, 0.04, 0.18));
+        final pick1 = Curves.easeOutCubic.transform(_gate(t, 0.20, 0.28));
+        final out1 = Curves.easeInCubic.transform(_gate(t, 0.26, 0.36));
+        final in1 = Curves.easeOutCubic.transform(_gate(t, 0.30, 0.44));
+        final pick2 = Curves.easeOutCubic.transform(_gate(t, 0.40, 0.48));
+        final out2 = Curves.easeInCubic.transform(_gate(t, 0.46, 0.56));
+        final in2 = Curves.easeOutCubic.transform(_gate(t, 0.50, 0.64));
+        final shotOut = Curves.easeInCubic.transform(_gate(t, 0.56, 0.70));
+        final shotShow = (shotIn * (1 - shotOut)).clamp(0.0, 1.0);
+        final caption = t < 0.36
+            ? AppStrings.featureIntroPhotoBody
+            : AppStrings.importConfirmBody(2);
         return Align(
           alignment: Alignment.bottomCenter,
           child: DecoratedBox(
@@ -11160,60 +11209,85 @@ class _PhotoImportDemo extends StatelessWidget {
                     AppStrings.photoImportTitle,
                     style: TextStyle(
                       fontFamily: font,
-                      fontSize: 18,
+                      fontSize: 16,
                       fontWeight: FontWeight.w800,
                       color: colors.text,
                     ),
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 4),
                   Text(
                     caption,
                     style: TextStyle(
                       fontFamily: font,
-                      fontSize: 14,
+                      fontSize: 13,
                       fontWeight: FontWeight.w600,
                       color: colors.secondary,
                     ),
                   ),
-                  if (!reading) ...[
-                    const SizedBox(height: 4),
-                    Text(
-                      AppStrings.importConfirmSkipHint,
-                      style: TextStyle(
-                        fontFamily: font,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: colors.muted,
-                      ),
-                    ),
-                  ],
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 10),
                   SizedBox(
-                    height: 128,
-                    child: shown == 0
-                        ? const Center(child: DotsLoader())
-                        : Column(
-                            children: [
-                              for (var i = 0; i < shown; i++) ...[
-                                if (i > 0) const SizedBox(height: 8),
-                                Opacity(
-                                  opacity: appears[i],
-                                  child: Transform.translate(
-                                    offset: Offset(0, 10 * (1 - appears[i])),
-                                    child: _PhotoImportEventTile(
-                                      title: _events[i].title,
-                                      day: _events[i].day,
-                                    ),
+                    height: 124,
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        if (shotShow > 0)
+                          Opacity(
+                            opacity: shotShow,
+                            child: Transform.translate(
+                              offset: Offset(
+                                0,
+                                18 * (1 - shotIn) - 10 * shotOut,
+                              ),
+                              child: Transform.scale(
+                                scale: 0.92 + 0.08 * shotIn - 0.10 * shotOut,
+                                child: _PhotoShotCard(
+                                  colors: colors,
+                                  font: font,
+                                  gone1: out1,
+                                  gone2: out2,
+                                  pick1: pick1 * (1 - out1),
+                                  pick2: pick2 * (1 - out2),
+                                ),
+                              ),
+                            ),
+                          ),
+                        Column(
+                          children: [
+                            Opacity(
+                              opacity: in1,
+                              child: Transform.translate(
+                                offset: Offset(0, 14 * (1 - in1)),
+                                child: Transform.scale(
+                                  scale: 0.92 + 0.08 * in1,
+                                  child: const DayEventLabel(
+                                    title: '회의',
+                                    categoryName: '회사',
+                                    color: _meeting,
+                                    height: 48,
                                   ),
                                 ),
-                              ],
-                              if (reading && shown < 2)
-                                const Padding(
-                                  padding: EdgeInsets.only(top: 10),
-                                  child: DotsLoader(),
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Opacity(
+                              opacity: in2,
+                              child: Transform.translate(
+                                offset: Offset(0, 14 * (1 - in2)),
+                                child: Transform.scale(
+                                  scale: 0.92 + 0.08 * in2,
+                                  child: const DayEventLabel(
+                                    title: '헬스장가기',
+                                    categoryName: '운동',
+                                    color: _sport,
+                                    height: 48,
+                                  ),
                                 ),
-                            ],
-                          ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -11225,69 +11299,209 @@ class _PhotoImportDemo extends StatelessWidget {
   }
 }
 
-class _PhotoImportEventTile extends StatelessWidget {
-  const _PhotoImportEventTile({
-    required this.title,
-    required this.day,
+class _PhotoShotCard extends StatelessWidget {
+  const _PhotoShotCard({
+    required this.colors,
+    required this.font,
+    required this.gone1,
+    required this.gone2,
+    required this.pick1,
+    required this.pick2,
   });
 
-  final String title;
-  final DateTime day;
+  final AppColors colors;
+  final String? font;
+  final double gone1;
+  final double gone2;
+  final double pick1;
+  final double pick2;
 
   @override
   Widget build(BuildContext context) {
-    final colors = AppColors.of(context);
-    final weekday = AppStrings.weekdays[day.weekday % 7];
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: Color.lerp(colors.groupedBackground, colors.accentBright, 0.18)!,
-        borderRadius: BorderRadius.circular(14),
+        color: colors.card,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: colors.border, width: 2),
+        boxShadow: [
+          BoxShadow(
+            color: colors.shadow,
+            blurRadius: 16,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
-        child: Row(
-          children: [
-            Expanded(
+        padding: const EdgeInsets.all(3),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(15),
+          child: ColoredBox(
+            color: colors.groupedBackground,
+            child: SizedBox(
+              width: 128,
+              height: 118,
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontFamily: AppFonts.of(context),
-                      fontSize: 15,
-                      fontWeight: FontWeight.w700,
-                      color: colors.text,
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
+                    child: Row(
+                      children: [
+                        Text(
+                          '9:41',
+                          style: TextStyle(
+                            fontFamily: font,
+                            fontSize: 7,
+                            fontWeight: FontWeight.w800,
+                            height: 1,
+                            color: colors.text,
+                          ),
+                        ),
+                        const Spacer(),
+                        for (var i = 0; i < 3; i++)
+                          Padding(
+                            padding: const EdgeInsets.only(left: 1.5),
+                            child: DecoratedBox(
+                              decoration: BoxDecoration(
+                                color: colors.text,
+                                borderRadius: BorderRadius.circular(0.5),
+                              ),
+                              child: SizedBox(width: 2, height: 3.0 + i),
+                            ),
+                          ),
+                        const SizedBox(width: 3),
+                        DecoratedBox(
+                          decoration: BoxDecoration(
+                            border: Border.all(color: colors.text, width: 0.8),
+                            borderRadius: BorderRadius.circular(1.5),
+                          ),
+                          child: const SizedBox(width: 11, height: 6),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    '${day.year}. ${day.month}. ${day.day}. ($weekday)',
-                    style: TextStyle(
-                      fontFamily: AppFonts.of(context),
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: colors.muted,
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(8, 6, 8, 0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '9${AppStrings.monthSuffix}',
+                          style: TextStyle(
+                            fontFamily: font,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w800,
+                            height: 1,
+                            color: colors.text,
+                          ),
+                        ),
+                        const SizedBox(height: 5),
+                        Row(
+                          children: [
+                            for (final day in AppStrings.weekdays)
+                              Expanded(
+                                child: Text(
+                                  day,
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontFamily: font,
+                                    fontSize: 7,
+                                    fontWeight: FontWeight.w600,
+                                    height: 1,
+                                    color: colors.muted,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                        const SizedBox(height: 3),
+                        Row(
+                          children: [
+                            for (var d = 8; d <= 14; d++)
+                              Expanded(
+                                child: Text(
+                                  '$d',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontFamily: font,
+                                    fontSize: 8,
+                                    fontWeight:
+                                        d == 11 ? FontWeight.w800 : FontWeight.w600,
+                                    height: 1,
+                                    color: d == 11
+                                        ? colors.text
+                                        : colors.secondary,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                        const SizedBox(height: 5),
+                        _ShotLabel(
+                          title: '회의',
+                          color: _PhotoImportDemo._meeting,
+                          pick: pick1,
+                          gone: gone1,
+                        ),
+                        const SizedBox(height: 3),
+                        _ShotLabel(
+                          title: '헬스장가기',
+                          color: _PhotoImportDemo._sport,
+                          pick: pick2,
+                          gone: gone2,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Spacer(),
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 5),
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: colors.muted.withValues(alpha: 0.45),
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: const SizedBox(width: 28, height: 3),
                     ),
                   ),
                 ],
               ),
             ),
-            const SizedBox(width: 10),
-            DecoratedBox(
-              decoration: BoxDecoration(
-                color: colors.accentBright,
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: const SizedBox(
-                width: 22,
-                height: 22,
-                child: Icon(Icons.check_rounded, size: 16, color: Colors.white),
-              ),
-            ),
-          ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ShotLabel extends StatelessWidget {
+  const _ShotLabel({
+    required this.title,
+    required this.color,
+    required this.pick,
+    required this.gone,
+  });
+
+  final String title;
+  final Color color;
+  final double pick;
+  final double gone;
+
+  @override
+  Widget build(BuildContext context) {
+    return Opacity(
+      opacity: (1 - gone).clamp(0.0, 1.0),
+      child: Transform.translate(
+        offset: Offset(0, -6 * gone),
+        child: Transform.scale(
+          alignment: Alignment.centerLeft,
+          scale: 1 + 0.06 * pick - 0.08 * gone,
+          child: CalendarEventLabel(
+            title: title,
+            color: color,
+            height: 15,
+            fontSize: 9,
+            applyCalendarScale: false,
+          ),
         ),
       ),
     );
@@ -12936,7 +13150,12 @@ class _IntroBannerChip extends StatelessWidget {
                 ),
               ),
             ),
-            Icon(Icons.close_rounded, size: 12, color: colors.muted),
+            AppAssetImage(
+              asset: AppIcons.close,
+              width: 12,
+              height: 12,
+              color: colors.muted,
+            ),
           ],
         ),
       ),
@@ -13130,7 +13349,7 @@ class _IntroFeatureRow extends StatelessWidget {
                 ),
               ),
             ),
-            Icon(Icons.chevron_right_rounded, size: 18, color: colors.muted),
+            AppArrow.right(size: 18, color: colors.muted),
           ],
         ),
       ),
@@ -16140,11 +16359,7 @@ class _CalendarOsDemo extends StatelessWidget {
                         ),
                       ),
                     ),
-                    Icon(
-                      Icons.chevron_right_rounded,
-                      size: 16,
-                      color: colors.muted,
-                    ),
+                    AppArrow.right(size: 16, color: colors.muted),
                   ],
                 ),
               ),

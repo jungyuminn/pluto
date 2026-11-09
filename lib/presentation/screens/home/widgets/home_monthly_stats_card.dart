@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:pluto/core/constants/app_fonts.dart';
 import 'package:pluto/core/theme/app_colors.dart';
+import 'package:pluto/presentation/widgets/app_arrow.dart';
 import 'package:pluto/core/utils/press_bounce.dart';
 
 class HomeMonthlyStatsCard extends StatelessWidget {
@@ -48,11 +49,7 @@ class HomeMonthlyStatsCard extends StatelessWidget {
                   ),
                 ),
               ),
-              Icon(
-                Icons.chevron_right_rounded,
-                size: 28,
-                color: colors.accentBright,
-              ),
+              AppArrow.right(size: 24, color: colors.accentBright),
             ],
           ),
         ),

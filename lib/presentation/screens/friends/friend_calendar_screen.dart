@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:pluto/app_scope.dart';
@@ -28,6 +27,7 @@ import 'package:pluto/presentation/screens/friends/friend_avatar.dart';
 import 'package:pluto/presentation/screens/friends/friend_photo_peek.dart';
 import 'package:pluto/presentation/screens/friends/friend_star_button.dart';
 import 'package:pluto/presentation/screens/friends/friends_toast.dart';
+import 'package:pluto/presentation/widgets/overlay_app_bar.dart';
 import 'package:pluto/presentation/widgets/overflow_menu.dart';
 
 Future<bool> confirmRemoveFriend(
@@ -184,11 +184,11 @@ class _FriendCalendarScreenState extends State<FriendCalendarScreen> {
   late DateTime _baseMonth;
   late DateTime _month;
   late PageController _pages;
+  late final ValueNotifier<DateTime> _monthTick;
+  late final ValueNotifier<int> _dataTick;
   final _eventsByMonth = <String, List<CalendarEvent>>{};
   final _stickersByMonth = <String, Map<String, String>>{};
   final _failedMonths = <String>{};
-  var _loading = true;
-  String? _error;
   var _hint = '';
   var _hintVisible = false;
   var _zoom = CalendarZoomLevel.days;
@@ -200,6 +200,8 @@ class _FriendCalendarScreenState extends State<FriendCalendarScreen> {
     final now = DateTime.now();
     _baseMonth = DateTime(now.year, now.month);
     _month = _baseMonth;
+    _monthTick = ValueNotifier(_baseMonth);
+    _dataTick = ValueNotifier(0);
     _pages = PageController(initialPage: _initialPage);
     _load(_month);
     _load(_monthAt(_initialPage - 1));
@@ -209,6 +211,8 @@ class _FriendCalendarScreenState extends State<FriendCalendarScreen> {
   @override
   void dispose() {
     _hintTimer?.cancel();
+    _monthTick.dispose();
+    _dataTick.dispose();
     _pages.dispose();
     super.dispose();
   }
@@ -226,9 +230,6 @@ class _FriendCalendarScreenState extends State<FriendCalendarScreen> {
   }
 
   String _monthKey(DateTime month) => '${month.year}-${month.month}';
-
-  bool _sameMonth(DateTime a, DateTime b) =>
-      a.year == b.year && a.month == b.month;
 
   DateTime _monthAt(int page) {
     return DateTime(_baseMonth.year, _baseMonth.month + (page - _initialPage));
@@ -248,11 +249,30 @@ class _FriendCalendarScreenState extends State<FriendCalendarScreen> {
     setState(() => _zoom = CalendarZoom.next(_zoom));
   }
 
+  void _rememberMonth(DateTime month) {
+    final next = DateTime(month.year, month.month);
+    _month = next;
+    if (_monthTick.value.year != next.year ||
+        _monthTick.value.month != next.month) {
+      _monthTick.value = next;
+    }
+  }
+
+  bool get _loadingCurrent {
+    final key = _monthKey(_month);
+    return !_eventsByMonth.containsKey(key) && !_failedMonths.contains(key);
+  }
+
+  String? get _errorCurrent {
+    final key = _monthKey(_month);
+    return _failedMonths.contains(key)
+        ? AppStrings.friendsCalendarDenied
+        : null;
+  }
+
   void _pickYear(int year) {
-    setState(() {
-      _month = DateTime(year, _month.month);
-      _zoom = CalendarZoomLevel.months;
-    });
+    _rememberMonth(DateTime(year, _month.month));
+    setState(() => _zoom = CalendarZoomLevel.months);
   }
 
   Future<void> _pickMonth(DateTime month) async {
@@ -264,10 +284,8 @@ class _FriendCalendarScreenState extends State<FriendCalendarScreen> {
       (month ?? _month).year,
       (month ?? _month).month,
     );
-    setState(() {
-      _zoom = CalendarZoomLevel.days;
-      _month = target;
-    });
+    _rememberMonth(target);
+    setState(() => _zoom = CalendarZoomLevel.days);
     await WidgetsBinding.instance.endOfFrame;
     if (!mounted) return;
     if (_pages.hasClients) {
@@ -291,27 +309,26 @@ class _FriendCalendarScreenState extends State<FriendCalendarScreen> {
       unawaited(_goToMonth(next));
       return;
     }
-    setState(() => _month = next);
+    _rememberMonth(next);
+    setState(() {});
   }
 
   Future<void> _goToMonth(DateTime month) async {
     final target = DateTime(month.year, month.month);
     if (!_pages.hasClients) {
-      if (mounted) setState(() => _month = target);
+      _rememberMonth(target);
       return;
     }
     final page = _pageOf(target);
     final current = _pages.page?.round() ?? _initialPage;
     if (current == page) {
-      if (!_sameMonth(_month, target)) {
-        setState(() => _month = target);
-      }
+      _rememberMonth(target);
       return;
     }
     final distance = (page - current).abs();
     if (distance > 18) {
       _pages.jumpToPage(page);
-      if (mounted) setState(() => _month = target);
+      _rememberMonth(target);
       return;
     }
     final ms = (200 + distance * 45).clamp(240, 560);
@@ -321,21 +338,13 @@ class _FriendCalendarScreenState extends State<FriendCalendarScreen> {
       curve: Curves.easeOutCubic,
     );
     if (!mounted) return;
-    if (!_sameMonth(_month, target)) {
-      setState(() => _month = target);
-    }
+    _rememberMonth(target);
   }
 
   Future<void> _load(DateTime month) async {
     final key = _monthKey(month);
     if (_eventsByMonth.containsKey(key) || _failedMonths.contains(key)) {
       return;
-    }
-    if (_sameMonth(month, _month) && mounted) {
-      setState(() {
-        _loading = true;
-        _error = null;
-      });
     }
     try {
       final events = FriendService.instance.eventsInMonth(
@@ -352,37 +361,19 @@ class _FriendCalendarScreenState extends State<FriendCalendarScreen> {
         loadedStickers = await stickers;
       } catch (_) {}
       if (!mounted) return;
-      setState(() {
-        _eventsByMonth[key] = loadedEvents;
-        _stickersByMonth[key] = loadedStickers;
-        if (_sameMonth(month, _month)) {
-          _loading = false;
-          _error = null;
-        }
-      });
+      _eventsByMonth[key] = loadedEvents;
+      _stickersByMonth[key] = loadedStickers;
+      _dataTick.value++;
     } catch (_) {
       if (!mounted) return;
-      setState(() {
-        _failedMonths.add(key);
-        if (_sameMonth(month, _month)) {
-          _loading = false;
-          _error = AppStrings.friendsCalendarDenied;
-        }
-      });
+      _failedMonths.add(key);
+      _dataTick.value++;
     }
   }
 
   void _onPageChanged(int page) {
     final month = _monthAt(page);
-    final key = _monthKey(month);
-    setState(() {
-      _month = month;
-      _error = _failedMonths.contains(key)
-          ? AppStrings.friendsCalendarDenied
-          : null;
-      _loading = !_eventsByMonth.containsKey(key) &&
-          !_failedMonths.contains(key);
-    });
+    _rememberMonth(month);
     _load(month);
     _load(_monthAt(page - 1));
     _load(_monthAt(page + 1));
@@ -447,7 +438,8 @@ class _FriendCalendarScreenState extends State<FriendCalendarScreen> {
                         ),
                       ),
                       Expanded(
-                        child: CalendarZoomTransition(
+                        child: RepaintBoundary(
+                          child: CalendarZoomTransition(
                           level: _zoom,
                           child: switch (_zoom) {
                             CalendarZoomLevel.days => Column(
@@ -464,23 +456,28 @@ class _FriendCalendarScreenState extends State<FriendCalendarScreen> {
                                       onPageChanged: _onPageChanged,
                                       itemBuilder: (context, page) {
                                         final month = _monthAt(page);
-                                        return CalendarMonthGrid(
-                                          month: month,
-                                          tutorial: false,
-                                          startMonday: startMonday,
-                                          eventsOf: _eventsOn,
-                                          emojisOf: _emojiOn,
-                                          onDayPressed: (date, origin) {
-                                            showDayEventsDialog(
-                                              context,
-                                              date: date,
-                                              events: _eventsOn(date),
-                                              origin: origin,
-                                              readOnly: true,
-                                              sticker: _emojiOn(date),
-                                              eventsForDate: (day) async =>
-                                                  _eventsOn(day),
-                                              stickerForDate: _emojiOn,
+                                        return ListenableBuilder(
+                                          listenable: _dataTick,
+                                          builder: (context, _) {
+                                            return CalendarMonthGrid(
+                                              month: month,
+                                              tutorial: false,
+                                              startMonday: startMonday,
+                                              eventsOf: _eventsOn,
+                                              emojisOf: _emojiOn,
+                                              onDayPressed: (date, origin) {
+                                                showDayEventsDialog(
+                                                  context,
+                                                  date: date,
+                                                  events: _eventsOn(date),
+                                                  origin: origin,
+                                                  readOnly: true,
+                                                  sticker: _emojiOn(date),
+                                                  eventsForDate: (day) async =>
+                                                      _eventsOn(day),
+                                                  stickerForDate: _emojiOn,
+                                                );
+                                              },
                                             );
                                           },
                                         );
@@ -494,7 +491,8 @@ class _FriendCalendarScreenState extends State<FriendCalendarScreen> {
                               focused: _month,
                               accent: colors.accentBright,
                               onFocusedChanged: (month) {
-                                setState(() => _month = month);
+                                _rememberMonth(month);
+                                setState(() {});
                               },
                               onMonthPressed: _pickMonth,
                             ),
@@ -502,11 +500,13 @@ class _FriendCalendarScreenState extends State<FriendCalendarScreen> {
                               focused: _month,
                               accent: colors.accentBright,
                               onFocusedChanged: (month) {
-                                setState(() => _month = month);
+                                _rememberMonth(month);
+                                setState(() {});
                               },
                               onYearPressed: _pickYear,
                             ),
                           },
+                        ),
                         ),
                       ),
                     ],
@@ -514,28 +514,37 @@ class _FriendCalendarScreenState extends State<FriendCalendarScreen> {
                   ),
                 ),
               ),
-              if (_error != null)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
-                  child: Text(
-                    _error!,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontFamily: AppFonts.of(context),
-                      fontSize: 14,
-                      color: colors.muted,
-                    ),
-                  ),
-                )
-              else if (_loading && _zoom == CalendarZoomLevel.days)
-                const Padding(
-                  padding: EdgeInsets.only(top: 8, bottom: 8),
-                  child: SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  ),
-                ),
+              ListenableBuilder(
+                listenable: Listenable.merge([_monthTick, _dataTick]),
+                builder: (context, _) {
+                  final error = _errorCurrent;
+                  if (error != null) {
+                    return Padding(
+                      padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
+                      child: Text(
+                        error,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontFamily: AppFonts.of(context),
+                          fontSize: 14,
+                          color: colors.muted,
+                        ),
+                      ),
+                    );
+                  }
+                  if (_loadingCurrent && _zoom == CalendarZoomLevel.days) {
+                    return const Padding(
+                      padding: EdgeInsets.only(top: 8, bottom: 8),
+                      child: SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    );
+                  }
+                  return const SizedBox.shrink();
+                },
+              ),
             ],
           ),
         ),
@@ -736,12 +745,11 @@ class _FriendsAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
-    return ClipRect(
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
-        child: ColoredBox(
-          color: colors.groupedBackground.withValues(alpha: 0.08),
-          child: AppBar(
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        const FrostedAppBarFill(),
+        AppBar(
             forceMaterialTransparency: true,
             backgroundColor: Colors.transparent,
             elevation: 0,
@@ -774,9 +782,8 @@ class _FriendsAppBar extends StatelessWidget implements PreferredSizeWidget {
                 color: colors.text,
               ),
             ),
-          ),
         ),
-      ),
+      ],
     );
   }
 }

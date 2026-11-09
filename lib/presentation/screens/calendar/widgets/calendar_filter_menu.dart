@@ -112,7 +112,7 @@ class CalendarFilterMenu extends StatelessWidget {
         if (onBack != null)
           OverflowMenuItem(
             label: AppStrings.calendarVisibleItems,
-            leading: Icons.chevron_left_rounded,
+            leadingAsset: AppIcons.arrowLeft,
             onPressed: onBack!,
           ),
         AnimatedSize(
@@ -220,7 +220,7 @@ class CalendarSortMenu extends StatelessWidget {
         if (onBack != null)
           OverflowMenuItem(
             label: AppStrings.calendarSortMode,
-            leading: Icons.chevron_left_rounded,
+            leadingAsset: AppIcons.arrowLeft,
             onPressed: onBack!,
           ),
         _MenuReveal(
@@ -348,7 +348,7 @@ class JobVisibleItemsMenu extends StatelessWidget {
         if (onBack != null)
           OverflowMenuItem(
             label: AppStrings.jobVisibleItems,
-            leading: Icons.chevron_left_rounded,
+            leadingAsset: AppIcons.arrowLeft,
             onPressed: onBack!,
           ),
         _FilterItem(
@@ -389,7 +389,7 @@ class LicenseVisibleItemsMenu extends StatelessWidget {
         if (onBack != null)
           OverflowMenuItem(
             label: AppStrings.licenseVisibleItems,
-            leading: Icons.chevron_left_rounded,
+            leadingAsset: AppIcons.arrowLeft,
             onPressed: onBack!,
           ),
         _FilterItem(
@@ -469,7 +469,7 @@ class AllEventsVisibleMenu extends StatelessWidget {
         if (onBack != null)
           OverflowMenuItem(
             label: AppStrings.searchVisibleItems,
-            leading: Icons.chevron_left_rounded,
+            leadingAsset: AppIcons.arrowLeft,
             onPressed: onBack!,
           ),
         _FilterItem(
@@ -511,7 +511,7 @@ class AllEventsSortMenu extends StatelessWidget {
         if (onBack != null)
           OverflowMenuItem(
             label: AppStrings.calendarSortMode,
-            leading: Icons.chevron_left_rounded,
+            leadingAsset: AppIcons.arrowLeft,
             onPressed: onBack!,
           ),
         _FilterItem(

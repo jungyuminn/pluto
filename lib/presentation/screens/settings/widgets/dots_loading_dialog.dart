@@ -51,9 +51,9 @@ class _DotsLoaderState extends State<DotsLoader>
           mainAxisSize: MainAxisSize.min,
           children: [
             for (var i = 0; i < 3; i++) ...[
-              if (i > 0) const SizedBox(width: 8),
+              if (i > 0) const SizedBox(width: 11),
               Transform.translate(
-                offset: Offset(0, -4 * _bounce(i)),
+                offset: Offset(0, -8 * _bounce(i)),
                 child: Opacity(
                   opacity: 0.35 + 0.65 * _bounce(i),
                   child: DecoratedBox(

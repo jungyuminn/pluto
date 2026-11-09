@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:pluto/app_scope.dart';
-import 'package:pluto/core/constants/app_icons.dart';
 import 'package:pluto/core/theme/app_colors.dart';
 import 'package:pluto/core/theme/app_skin_background.dart';
 import 'package:pluto/data/datasources/theme_preference.dart';
@@ -55,6 +54,7 @@ class ThemedAsset extends StatelessWidget {
     this.height,
     this.semanticLabel,
     this.forceTint = false,
+    this.color,
   });
 
   final String asset;
@@ -62,6 +62,7 @@ class ThemedAsset extends StatelessWidget {
   final double? height;
   final String? semanticLabel;
   final bool forceTint;
+  final Color? color;
 
   @override
   Widget build(BuildContext context) {
@@ -90,12 +91,9 @@ class ThemedAsset extends StatelessWidget {
         ),
       );
     }
-    if (asset == AppIcons.more) {
+    if (color != null) {
       return ColorFiltered(
-        colorFilter: ColorFilter.mode(
-          AppColors.of(context).muted,
-          BlendMode.srcIn,
-        ),
+        colorFilter: ColorFilter.mode(color!, BlendMode.srcIn),
         child: image,
       );
     }

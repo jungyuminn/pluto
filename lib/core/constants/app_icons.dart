@@ -28,6 +28,9 @@ class AppIcons {
   static const link = 'assets/icons/link.svg';
   static const linkOutlined = 'assets/icons/link_outlined.svg';
   static const more = 'assets/icons/more.svg';
+  static const close = 'assets/icons/close.svg';
+  static const arrowLeft = 'assets/icons/arrow_left.svg';
+  static const arrowRight = 'assets/icons/arrow_right.svg';
   static const pen = 'assets/icons/pen.svg';
   static const penOutlined = 'assets/icons/pen_outlined.svg';
   static const paintBrush = 'assets/icons/paint_brush.svg';

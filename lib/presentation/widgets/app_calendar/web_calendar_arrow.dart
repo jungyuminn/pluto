@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:pluto/core/layout/pc_layout.dart';
 import 'package:pluto/core/theme/app_colors.dart';
 import 'package:pluto/core/utils/press_bounce.dart';
+import 'package:pluto/presentation/widgets/app_arrow.dart';
 
 class WebCalendarArrowHost extends StatefulWidget {
   const WebCalendarArrowHost({
@@ -223,13 +224,9 @@ class _WebCalendarArrowState extends State<WebCalendarArrow>
             width: 48,
             height: 48,
             child: Center(
-              child: CustomPaint(
-                size: const Size.square(18),
-                painter: _ThinChevronPainter(
-                  left: widget.left,
-                  color: colors.icon,
-                ),
-              ),
+              child: widget.left
+                  ? AppArrow.left(size: 18, color: colors.icon)
+                  : AppArrow.right(size: 18, color: colors.icon),
             ),
           ),
         ),
@@ -238,39 +235,3 @@ class _WebCalendarArrowState extends State<WebCalendarArrow>
   }
 }
 
-class _ThinChevronPainter extends CustomPainter {
-  const _ThinChevronPainter({required this.left, required this.color});
-
-  final bool left;
-  final Color color;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.4
-      ..strokeCap = StrokeCap.round
-      ..strokeJoin = StrokeJoin.round;
-    final w = size.width;
-    final h = size.height;
-    final path = Path();
-    if (left) {
-      path
-        ..moveTo(w * 0.64, h * 0.12)
-        ..lineTo(w * 0.28, h * 0.50)
-        ..lineTo(w * 0.64, h * 0.88);
-    } else {
-      path
-        ..moveTo(w * 0.36, h * 0.12)
-        ..lineTo(w * 0.72, h * 0.50)
-        ..lineTo(w * 0.36, h * 0.88);
-    }
-    canvas.drawPath(path, paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant _ThinChevronPainter oldDelegate) {
-    return oldDelegate.left != left || oldDelegate.color != color;
-  }
-}

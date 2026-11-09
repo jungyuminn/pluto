@@ -11,6 +11,7 @@ import 'package:pluto/data/datasources/app_auth_service.dart';
 import 'package:pluto/presentation/screens/settings/widgets/login_page.dart';
 import 'package:pluto/presentation/screens/settings/widgets/release_note_demos.dart';
 import 'package:pluto/presentation/tutorial/tutorial_controller.dart';
+import 'package:pluto/presentation/widgets/app_arrow.dart';
 import 'package:pluto/presentation/widgets/themed_asset.dart';
 
 bool _classicDefault(BuildContext context) {
@@ -154,70 +155,67 @@ class _BannerBody extends StatelessWidget {
         : colors.tint(colors.accent, 0.11);
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: fill,
-          borderRadius: BorderRadius.circular(18),
-        ),
+      child: PressBounce(
+        onPressed: () => showCalendarFeatureIntro(context),
+        color: fill,
+        pressedColor: defaultTheme
+            ? (colors.isDark
+                ? Color.lerp(colors.card, Colors.white, 0.12)!
+                : Color.lerp(colors.selected, Colors.black, 0.08)!)
+            : colors.tint(colors.accent, 0.26),
+        borderRadius: BorderRadius.circular(18),
         child: Row(
           children: [
             Expanded(
-              child: PressBounce(
-                onPressed: () => showCalendarFeatureIntro(context),
-                color: Colors.transparent,
-                pressedColor: defaultTheme
-                    ? (colors.isDark
-                        ? Color.lerp(colors.card, Colors.white, 0.12)!
-                        : Color.lerp(colors.selected, Colors.black, 0.08)!)
-                    : colors.tint(colors.accent, 0.26),
-                borderRadius: const BorderRadius.horizontal(
-                  left: Radius.circular(18),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 15, 8, 15),
-                  child: Row(
-                    children: [
-                      AppAssetImage(
-                        asset: AppIcons.plutoLogo,
-                        width: 28,
-                        height: 28,
-                        color: defaultTheme ? null : colors.accent,
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          AppStrings.featureIntroBanner,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontFamily: AppFonts.of(context),
-                            fontSize: 15,
-                            fontWeight: FontWeight.w700,
-                            height: 1.15,
-                            color: colors.accentBright,
-                          ),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 15, 8, 15),
+                child: Row(
+                  children: [
+                    AppAssetImage(
+                      asset: AppIcons.plutoLogo,
+                      width: 28,
+                      height: 28,
+                      color: defaultTheme ? null : colors.accent,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        AppStrings.featureIntroBanner,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontFamily: AppFonts.of(context),
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          height: 1.15,
+                          color: colors.accentBright,
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
             ),
-            PressBounce(
-              onPressed: () {
-                TutorialController.maybeOf(context)?.dismissFeatureIntro();
-              },
-              pressedScale: 0.88,
-              borderRadius: const BorderRadius.horizontal(
-                right: Radius.circular(18),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(4, 18, 16, 18),
-                child: Icon(
-                  Icons.close_rounded,
-                  size: 16,
-                  color: colors.muted,
-                  semanticLabel: AppStrings.featureIntroClose,
+            Padding(
+              padding: const EdgeInsets.only(right: 6),
+              child: PressBounce(
+                onPressed: () {
+                  TutorialController.maybeOf(context)?.dismissFeatureIntro();
+                },
+                pressedScale: 0.88,
+                borderRadius: BorderRadius.circular(999),
+                child: SizedBox(
+                  width: 44,
+                  height: 44,
+                  child: Center(
+                    child: AppAssetImage(
+                      asset: AppIcons.close,
+                      width: 14,
+                      height: 14,
+                      color: colors.muted,
+                      semanticLabel: AppStrings.featureIntroClose,
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -504,11 +502,7 @@ class _FeatureRow extends StatelessWidget {
                   ),
                 ),
               ),
-              Icon(
-                Icons.chevron_right_rounded,
-                size: 26,
-                color: iconColor,
-              ),
+              AppArrow.right(size: 22, color: iconColor),
             ],
           ),
         ),

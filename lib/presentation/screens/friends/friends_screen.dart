@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:typed_data';
-import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -29,7 +28,9 @@ import 'package:pluto/presentation/screens/friends/friend_calendar_screen.dart';
 import 'package:pluto/presentation/screens/friends/friend_photo_peek.dart';
 import 'package:pluto/presentation/screens/friends/friend_star_button.dart';
 import 'package:pluto/presentation/screens/friends/friends_toast.dart';
+import 'package:pluto/presentation/widgets/overlay_app_bar.dart';
 import 'package:pluto/presentation/widgets/overflow_menu.dart';
+import 'package:pluto/presentation/widgets/app_arrow.dart';
 import 'package:pluto/presentation/widgets/themed_asset.dart';
 
 final _codeFormatters = <TextInputFormatter>[
@@ -1213,11 +1214,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
                 ),
               ),
             ),
-            Icon(
-              Icons.chevron_right_rounded,
-              size: 22,
-              color: colors.muted,
-            ),
+            AppArrow.right(size: 22, color: colors.muted),
           ],
         ),
       ),
@@ -2531,12 +2528,11 @@ class _FriendsAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
-    return ClipRect(
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
-        child: ColoredBox(
-          color: colors.groupedBackground.withValues(alpha: 0.08),
-          child: AppBar(
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        const FrostedAppBarFill(),
+        AppBar(
             forceMaterialTransparency: true,
             backgroundColor: Colors.transparent,
             elevation: 0,
@@ -2567,9 +2563,8 @@ class _FriendsAppBar extends StatelessWidget implements PreferredSizeWidget {
                 color: colors.text,
               ),
             ),
-          ),
         ),
-      ),
+      ],
     );
   }
 }

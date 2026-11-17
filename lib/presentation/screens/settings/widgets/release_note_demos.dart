@@ -12,11 +12,14 @@ import 'package:pluto/core/calendar/month_grid.dart';
 import 'package:pluto/core/calendar/repeat_dates.dart';
 import 'package:pluto/presentation/widgets/flat_snap_picker.dart';
 import 'package:pluto/domain/entities/calendar_event.dart';
+import 'package:pluto/domain/entities/diary_cover.dart';
 import 'package:pluto/domain/entities/event_category.dart';
 import 'package:pluto/domain/entities/friend_profile.dart';
 import 'package:pluto/domain/entities/ledger_entry.dart';
 import 'package:pluto/presentation/screens/add_company/widgets/save_company_button.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/calendar_day_cell.dart';
+import 'package:pluto/presentation/screens/calendar/widgets/diary_cover_sheet.dart';
+import 'package:pluto/presentation/screens/calendar/widgets/diary_cover_style.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/category_color_picker.dart';
 import 'package:pluto/presentation/screens/shell/widgets/pill_bottom_nav.dart';
 import 'package:pluto/presentation/screens/shell/widgets/pill_nav_item.dart';
@@ -222,6 +225,11 @@ enum ReleaseDemo {
   fluffyIconUpdate,
   fluffyDefaultAvatar,
   newStickers,
+  designPolish,
+  jobRangeAdd,
+  diaryBlankSheet,
+  goneThemes,
+  jobRangeStack,
   feature,
   fix,
 }
@@ -379,6 +387,9 @@ ReleaseDemo releaseDemoFor(String text, {required bool isFix}) {
     if (text.contains('이번 달이 아니던')) {
       return ReleaseDemo.calendarMonthReset;
     }
+    if (text.contains('기간 일정보다 위에')) {
+      return ReleaseDemo.jobRangeStack;
+    }
     return ReleaseDemo.fix;
   }
   if (text.contains('푸시 알림') ||
@@ -396,6 +407,18 @@ ReleaseDemo releaseDemoFor(String text, {required bool isFix}) {
   }
   if (text.contains('스티커 2종') || text.contains('새로운 스티커')) {
     return ReleaseDemo.newStickers;
+  }
+  if (text.contains('디자인이 개선')) {
+    return ReleaseDemo.designPolish;
+  }
+  if (text.contains('기간 일정으로 추가')) {
+    return ReleaseDemo.jobRangeAdd;
+  }
+  if (text.contains('시트지')) {
+    return ReleaseDemo.diaryBlankSheet;
+  }
+  if (text.contains('테마가 삭제')) {
+    return ReleaseDemo.goneThemes;
   }
   if (text.contains('캘린더 사진') || text.contains('읽어 가져올')) {
     return ReleaseDemo.photoImport;
@@ -996,6 +1019,11 @@ class ReleaseDemoView extends StatelessWidget {
       ReleaseDemo.fluffyIconUpdate => const _FluffyIconUpdateDemo(),
       ReleaseDemo.fluffyDefaultAvatar => const _FluffyDefaultAvatarDemo(),
       ReleaseDemo.newStickers => const _NewStickersDemo(),
+      ReleaseDemo.designPolish => const _DesignPolishDemo(),
+      ReleaseDemo.jobRangeAdd => const _JobRangeAddDemo(),
+      ReleaseDemo.diaryBlankSheet => const _DiaryBlankSheetDemo(),
+      ReleaseDemo.goneThemes => const _GoneThemesDemo(),
+      ReleaseDemo.jobRangeStack => const _JobRangeStackDemo(),
       ReleaseDemo.feature => const _FeatureDemo(),
       ReleaseDemo.fix => const _FixDemo(),
     };
@@ -8209,7 +8237,7 @@ class _DiaryCoverDemo extends StatelessWidget {
                         child: Text(
                           lined
                               ? AppStrings.diaryCoverLined
-                              : AppStrings.diaryCoverBasic,
+                              : AppStrings.diaryCoverBlank,
                           style: TextStyle(
                             fontFamily: font,
                             fontSize: 12,
@@ -8236,7 +8264,7 @@ class _DiaryCoverDemo extends StatelessWidget {
                         children: [
                           _miniCover(
                             colors.card,
-                            AppStrings.diaryCoverBasic,
+                            AppStrings.diaryCoverBlank,
                             selected: !lined,
                           ),
                           const SizedBox(width: 8),
@@ -17919,6 +17947,412 @@ class _NewStickersDemo extends StatelessWidget {
           ],
         );
       },
+    );
+  }
+}
+
+class _DesignPolishDemo extends StatelessWidget {
+  const _DesignPolishDemo();
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 3600,
+      boxHeight: 200,
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final font = AppFonts.of(context);
+        final open = Curves.easeOutCubic.transform(_gate(t, 0.22, 0.48));
+        return ColoredBox(
+          color: colors.pageBackground,
+          child: Stack(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: colors.homeCard,
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Row(
+                          children: [
+                            Text(
+                              '오늘',
+                              style: TextStyle(
+                                fontFamily: font,
+                                fontSize: 17,
+                                fontWeight: FontWeight.w600,
+                                height: 1.1,
+                                color: colors.text,
+                              ),
+                            ),
+                            const Spacer(),
+                            AppAssetImage(
+                              asset: AppIcons.more,
+                              width: 19,
+                              height: 19,
+                              color: colors.muted,
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        const DayEventLabel(
+                          title: '회의',
+                          categoryName: '업무',
+                          color: Color(0xFF3B82F6),
+                          timeText: '14:00',
+                          height: 52,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              if (open > 0)
+                Positioned(
+                  right: 20,
+                  top: 44,
+                  child: Opacity(
+                    opacity: open.clamp(0.0, 1.0),
+                    child: Transform.scale(
+                      alignment: Alignment.topRight,
+                      scale: 0.5 + 0.5 * open,
+                      child: OverflowMenuCard(
+                        minWidth: 0,
+                        children: [
+                          OverflowMenuItem(
+                            label: AppStrings.calendarVisibleItems,
+                            onPressed: () {},
+                          ),
+                          OverflowMenuItem(
+                            label: AppStrings.searchVisibleItems,
+                            onPressed: () {},
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _JobRangeAddDemo extends StatelessWidget {
+  const _JobRangeAddDemo();
+
+  static const _job = Color(0xFF3B82F6);
+  static const _days = ['3', '4', '5', '6'];
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 3600,
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final font = AppFonts.of(context);
+        final span = Curves.easeOutCubic.transform(_gate(t, 0.18, 0.46));
+        final rangeFlex = 1 + (2 * span);
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
+          child: _Card(
+            padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+            child: Column(
+              children: [
+                EventDateChip(
+                  date: DateTime(2026, 11, 3),
+                  color: _job,
+                  label: AppStrings.rangeEventLabel,
+                  onPressed: () {},
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    for (final day in _days)
+                      Expanded(
+                        child: Text(
+                          day,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontFamily: font,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: colors.secondary,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                SizedBox(
+                  height: 19,
+                  child: Row(
+                    children: [
+                      Expanded(
+                        flex: (rangeFlex * 20).round(),
+                        child: const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 1),
+                          child: CalendarEventLabel(
+                            title: '서류전형',
+                            color: _job,
+                            isJob: true,
+                            applyCalendarScale: false,
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        flex: ((4 - rangeFlex) * 20).round().clamp(1, 80),
+                        child: const SizedBox.shrink(),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _DiaryBlankSheetDemo extends StatelessWidget {
+  const _DiaryBlankSheetDemo();
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    final font = AppFonts.of(context);
+    final look = DiaryCoverLook.of(
+      DiaryCover.blank,
+      colors,
+      Theme.of(context).brightness,
+    );
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(18),
+      child: ColoredBox(
+        color: colors.groupedBackground,
+        child: SizedBox(
+          height: 210,
+          width: double.infinity,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(18, 14, 18, 12),
+            child: DiaryCoverPaper(
+              look: look,
+              radius: 20,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      AppStrings.diaryTitleHint,
+                      style: TextStyle(
+                        fontFamily: font,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 18,
+                        height: 1.3,
+                        color: colors.hint,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Expanded(
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: colors.card,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Center(
+                          child: Text(
+                            AppStrings.diaryPhotoHint,
+                            style: TextStyle(
+                              fontFamily: font,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                              color: colors.muted,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: DiaryCoverChip(
+                        color: colors.accent,
+                        name: DiaryCoverLook.label(DiaryCover.blank),
+                        onPressed: () {},
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _GoneThemesDemo extends StatelessWidget {
+  const _GoneThemesDemo();
+
+  static const _gone = [
+    '몽글구름',
+    '핑크하트',
+    '블라썸',
+    '네잎클로버',
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return _Loop(
+      ms: 5200,
+      boxHeight: 236,
+      builder: (context, t) {
+        final colors = AppColors.of(context);
+        final font = AppFonts.of(context);
+        final hide = Curves.easeInOutCubic.transform(_gate(t, 0.28, 0.72));
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(18, 16, 18, 12),
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: colors.card,
+              borderRadius: BorderRadius.circular(24),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _FontDemoTile(
+                    label: '몽글고양이',
+                    font: font,
+                    colors: colors,
+                    checked: true,
+                  ),
+                  for (final name in _gone)
+                    ClipRect(
+                      child: Align(
+                        alignment: Alignment.topCenter,
+                        heightFactor: 1 - hide,
+                        child: Opacity(
+                          opacity: 1 - hide,
+                          child: _FontDemoTile(
+                            label: name,
+                            font: font,
+                            colors: colors,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _JobRangeStackDemo extends StatelessWidget {
+  const _JobRangeStackDemo();
+
+  static const _job = Color(0xFF3B82F6);
+  static const _todo = Color(0xFF22C55E);
+  static const _days = ['3', '4', '5', '6'];
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    final font = AppFonts.of(context);
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(18),
+      child: ColoredBox(
+        color: colors.groupedBackground,
+        child: SizedBox(
+          height: 168,
+          width: double.infinity,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+            child: _Card(
+              padding: const EdgeInsets.fromLTRB(10, 10, 10, 12),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      for (final day in _days)
+                        Expanded(
+                          child: Text(
+                            day,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontFamily: font,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: colors.secondary,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  const SizedBox(
+                    height: 19,
+                    child: Row(
+                      children: [
+                        Expanded(
+                          flex: 3,
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 1),
+                            child: CalendarEventLabel(
+                              title: '서류전형',
+                              color: _job,
+                              isJob: true,
+                              applyCalendarScale: false,
+                            ),
+                          ),
+                        ),
+                        Expanded(child: SizedBox.shrink()),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: CalendarDayCell.labelGap),
+                  const SizedBox(
+                    height: 19,
+                    child: Row(
+                      children: [
+                        Expanded(child: SizedBox.shrink()),
+                        Expanded(
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 1),
+                            child: CalendarEventLabel(
+                              title: '회의',
+                              color: _todo,
+                              applyCalendarScale: false,
+                            ),
+                          ),
+                        ),
+                        Expanded(flex: 2, child: SizedBox.shrink()),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

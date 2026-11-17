@@ -377,16 +377,12 @@ class AppStrings {
   static const themeMineMissingName = '테마 이름을 입력해 주세요';
   static const themeMineDeleteBody = '만든 테마가 사라져요';
   static const themeClassic = '기본';
-  static const themeBlossom = '블라썸';
   static const themeMotion = '재생 속도';
-  static const themeClover = '네잎클로버';
   static const themeFluffyBear = '몽글곰돌이';
   static const themeFluffyRabbit = '몽글토끼';
   static const themeFluffyCat = '몽글고양이';
   static const themeFluffyDog = '몽글강아지';
   static const themeFluffyHamster = '몽글햄스터';
-  static const themeMongleCloud = '몽글구름';
-  static const themePinkHeart = '핑크하트';
   static const themeSummerBeach = '한여름 바닷가';
   static const themeSnowyWinter = '눈 내리는 겨울';
   static const themeSquishyBear = '아기곰도리';
@@ -821,7 +817,7 @@ class AppStrings {
   static const diaryDrawZoomPanHint = '두 손가락으로 드래그하면 화면을 옮길 수 있어요';
   static const diaryDrawZoomPanHintPc = '드래그하면 화면을 옮길 수 있어요';
   static const diaryFallback = '일기';
-  static const diaryCoverBasic = '기본';
+  static const diaryCoverBasic = '찢어진노트';
   static const diaryCoverLined = '줄노트';
   static const diaryCoverGrid = '모눈';
   static const diaryCoverDotted = '점노트';
@@ -829,7 +825,7 @@ class AppStrings {
   static const diaryCoverSky = '하늘';
   static const diaryCoverRose = '복숭아';
   static const diaryCoverMint = '민트';
-  static const diaryCoverBlank = '무지';
+  static const diaryCoverBlank = '기본';
   static const missingDiaryBody = '제목, 날짜, 카테고리는 필수사항이에요!';
   static const deleteDiaryBody = '일기가 사라져요';
   static const deleteDiaryPhotoTitle = '사진을 삭제하시나요?';
@@ -938,7 +934,7 @@ class AppStrings {
   static const friendsAdd = '친구 추가';
   static const friendsHomeAdd = '추가';
   static const friendsHomeMe = '나';
-  static const friendsCodeHint = '상대 아이디를 입력하세요';
+  static const friendsCodeHint = '친구 아이디를 입력하세요';
   static const friendsCodeRegister = '아이디 만들기';
   static const friendsCodeRegisterHint =
       '친구를 찾을 때 쓰는 아이디예요. 영문 소문자·숫자·밑줄·마침표, 2~32자';

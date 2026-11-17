@@ -47,9 +47,11 @@ class DiaryCoverLook {
       DiaryCover.mint => const Color(0xFF1E2C26),
       DiaryCover.blank => const Color(0xFF2C261E),
     };
-    final paper = brightness == Brightness.dark
-        ? Color.lerp(colors.card, darkTint, 0.55)!
-        : Color.lerp(colors.card, tint, 0.78)!;
+    final paper = cover == DiaryCover.blank
+        ? colors.pageBackground
+        : brightness == Brightness.dark
+            ? Color.lerp(colors.card, darkTint, 0.55)!
+            : Color.lerp(colors.card, tint, 0.78)!;
     return DiaryCoverLook(
       paper: paper,
       rule: Color.lerp(paper, colors.text, 0.12)!,

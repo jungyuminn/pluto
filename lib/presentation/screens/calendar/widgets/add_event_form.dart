@@ -950,11 +950,13 @@ class _AddEventFormState extends State<AddEventForm>
                         ),
                       ),
                     ),
-              const SizedBox(height: 5),
+              const SizedBox(height: 8),
               Row(
                 children: [
                   Expanded(
-                    child: SingleChildScrollView(
+                    child: Transform.translate(
+                      offset: const Offset(-2, 0),
+                      child: SingleChildScrollView(
                       scrollDirection: Axis.horizontal,
                       child: Row(
                         children: [
@@ -1037,6 +1039,7 @@ class _AddEventFormState extends State<AddEventForm>
                           ),
                         ],
                       ),
+                    ),
                     ),
                   ),
                   const SizedBox(width: 8),

@@ -12,10 +12,6 @@ enum AppSkin {
   fluffyCat,
   fluffyDog,
   fluffyHamster,
-  mongleCloud,
-  pinkHeart,
-  blossom,
-  clover,
   summerBeach,
   snowyWinter,
   squishyBear,
@@ -37,10 +33,6 @@ enum AppSkin {
     fluffyCat,
     fluffyDog,
     fluffyHamster,
-    mongleCloud,
-    pinkHeart,
-    blossom,
-    clover,
   ];
 
   static const sceneSkins = [

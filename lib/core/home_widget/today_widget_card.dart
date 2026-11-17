@@ -71,8 +71,8 @@ class TodayWidgetCard extends StatelessWidget {
   static const cardRadius = 24.0;
   static const shadowPad = EdgeInsets.fromLTRB(4, 2, 4, 8);
   static const _pad = EdgeInsets.fromLTRB(16, 14, 16, 12);
-  static const eventExtent = 70.0;
-  static const eventLabelHeight = 60.0;
+  static const eventExtent = 74.0;
+  static const eventLabelHeight = 64.0;
   static const headerExtent = 24.0;
   static const headerGap = 6.0;
   static const moreExtent = 18.0;
@@ -453,6 +453,14 @@ class _WidgetEventLabel extends StatelessWidget {
   final ui.Image? officeIcon;
   final ui.Image? rangeIcon;
 
+  Widget _markSlot(double s, Widget child) {
+    return SizedBox(
+      width: 22 * s,
+      height: 22 * s,
+      child: Center(child: child),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
@@ -493,8 +501,8 @@ class _WidgetEventLabel extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           fontFamily: AppFonts.of(context),
-                          fontSize: 12 * s,
-                          fontWeight: FontWeight.w600,
+                          fontSize: 12.5 * s,
+                          fontWeight: FontWeight.w500,
                           height: 1.15,
                           color: colors.text,
                         ),
@@ -510,8 +518,8 @@ class _WidgetEventLabel extends StatelessWidget {
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
                                 fontFamily: AppFonts.of(context),
-                                fontSize: 10 * s,
-                                fontWeight: FontWeight.w600,
+                                fontSize: 11 * s,
+                                fontWeight: FontWeight.w500,
                                 height: 1.15,
                                 color: colors.hint,
                               ),
@@ -524,8 +532,8 @@ class _WidgetEventLabel extends StatelessWidget {
                               maxLines: 1,
                               style: TextStyle(
                                 fontFamily: AppFonts.of(context),
-                                fontSize: 10 * s,
-                                fontWeight: FontWeight.w700,
+                                fontSize: 11 * s,
+                                fontWeight: FontWeight.w600,
                                 height: 1.15,
                                 color: ink,
                               ),
@@ -537,84 +545,64 @@ class _WidgetEventLabel extends StatelessWidget {
                   ),
                 ),
               ),
-              if (event.isRange && rangeIcon != null)
-                Padding(
-                  padding: EdgeInsets.only(
-                    right: event.isRepeat || event.isJob ? 0 : 6 * s,
-                  ),
-                  child: SizedBox(
-                    width: 28 * s,
-                    height: 28 * s,
-                    child: Center(
-                      child: ColorFiltered(
-                        colorFilter: ColorFilter.mode(
-                          ink,
-                          BlendMode.srcIn,
-                        ),
-                        child: RawImage(
-                          image: rangeIcon,
-                          width: 24 * s,
-                          height: 24 * s,
-                          fit: BoxFit.contain,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              if (event.isJob && officeIcon != null)
-                Padding(
-                  padding: EdgeInsets.only(
-                    right: event.isRepeat ? 0 : 6 * s,
-                  ),
-                  child: SizedBox(
-                    width: 28 * s,
-                    height: 28 * s,
-                    child: Center(
-                      child: ColorFiltered(
-                        colorFilter: ColorFilter.mode(
-                          ink,
-                          BlendMode.srcIn,
-                        ),
-                        child: RawImage(
-                          image: officeIcon,
-                          width: 22 * s,
-                          height: 22 * s,
-                          fit: BoxFit.contain,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              if (event.isRepeat)
-                Padding(
-                  padding: EdgeInsets.only(right: event.isJob ? 6 * s : 0),
-                  child: SizedBox(
-                    width: 28 * s,
-                    height: 28 * s,
-                    child: Icon(
-                      Icons.repeat_rounded,
-                      size: 22 * s,
-                      color: ink,
-                    ),
-                  ),
-                ),
               Padding(
                 padding: EdgeInsets.only(right: 6 * s),
-                child: SizedBox(
-                  width: 28 * s,
-                  height: 28 * s,
-                  child: Center(
-                    child: SizedBox(
-                      width: 22 * s,
-                      height: 22 * s,
-                      child: CustomPaint(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  spacing: 2 * s,
+                  children: [
+                    if (event.isRange && rangeIcon != null)
+                      _markSlot(
+                        s,
+                        ColorFiltered(
+                          colorFilter: ColorFilter.mode(
+                            ink,
+                            BlendMode.srcIn,
+                          ),
+                          child: RawImage(
+                            image: rangeIcon,
+                            width: 18 * s,
+                            height: 18 * s,
+                            fit: BoxFit.contain,
+                          ),
+                        ),
+                      ),
+                    if (event.isJob && officeIcon != null)
+                      _markSlot(
+                        s,
+                        ColorFiltered(
+                          colorFilter: ColorFilter.mode(
+                            ink,
+                            BlendMode.srcIn,
+                          ),
+                          child: RawImage(
+                            image: officeIcon,
+                            width: 18 * s,
+                            height: 18 * s,
+                            fit: BoxFit.contain,
+                          ),
+                        ),
+                      ),
+                    if (event.isRepeat)
+                      _markSlot(
+                        s,
+                        Icon(
+                          Icons.repeat_rounded,
+                          size: 18 * s,
+                          color: ink,
+                        ),
+                      ),
+                    _markSlot(
+                      s,
+                      CustomPaint(
+                        size: Size.square(22 * s),
                         painter: _CompleteMarkPainter(
                           completed: event.completed,
                           color: ink,
                         ),
                       ),
                     ),
-                  ),
+                  ],
                 ),
               ),
             ],
@@ -654,7 +642,7 @@ class _CompleteMarkPainter extends CustomPainter {
     if (circleProgress > 0) {
       final rect = Rect.fromCircle(
         center: Offset(size.width / 2, size.height / 2),
-        radius: size.width * 0.36,
+        radius: size.width * 0.28,
       );
       final circle = Path()..addArc(rect, -math.pi / 2, 2 * math.pi);
       final metric = circle.computeMetrics().first;

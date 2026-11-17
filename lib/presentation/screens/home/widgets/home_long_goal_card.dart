@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:pluto/app_scope.dart';
 import 'package:pluto/core/constants/app_fonts.dart';
+import 'package:pluto/core/layout/pc_layout.dart';
 import 'package:pluto/core/constants/app_strings.dart';
 import 'package:pluto/core/theme/app_colors.dart';
 import 'package:pluto/core/utils/drop_in.dart';
@@ -48,7 +49,8 @@ class _HomeLongGoalCardState extends State<HomeLongGoalCard> {
 
   static const _slotAnim = Duration(milliseconds: 240);
 
-  double get _labelHeight => 52 * AppFonts.labelScaleOf(context);
+  double get _labelHeight =>
+      PcLayout.dayLabelHeightOf() * AppFonts.labelScaleOf(context);
 
   double get _extent => _labelHeight + (widget.compact ? 8 : 10);
 
@@ -251,7 +253,7 @@ class _HomeLongGoalCardState extends State<HomeLongGoalCard> {
         borderRadius: BorderRadius.circular(24),
       ),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+        padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -419,6 +421,7 @@ class _HomeLongGoalCardState extends State<HomeLongGoalCard> {
     ];
     return DayEventLabel(
       title: goal.title,
+      height: PcLayout.dayLabelHeightOf(),
       categoryName: category?.name ?? summary,
       memo: memoParts.join('  ·  '),
       color: Color(category?.color ?? goal.color),

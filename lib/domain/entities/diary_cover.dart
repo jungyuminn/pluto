@@ -1,4 +1,5 @@
 enum DiaryCover {
+  blank,
   basic,
   lined,
   grid,
@@ -6,10 +7,9 @@ enum DiaryCover {
   kraft,
   sky,
   rose,
-  mint,
-  blank;
+  mint;
 
-  static const fallback = basic;
+  static const fallback = blank;
 
   static DiaryCover fromId(String? id) {
     for (final cover in values) {
@@ -27,6 +27,8 @@ enum DiaryCover {
       result.add(remaining.removeAt(index));
     }
     result.addAll(remaining);
+    result.remove(blank);
+    result.insert(0, blank);
     return result;
   }
 

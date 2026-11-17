@@ -173,7 +173,6 @@ class _DiaryPhotoFieldState extends State<DiaryPhotoField> {
         decoration: BoxDecoration(
           color: colors.card,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: colors.border),
         ),
         child: Column(
           children: [

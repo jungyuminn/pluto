@@ -503,10 +503,11 @@ class _DiaryFormState extends State<DiaryForm> {
                   contentPadding: const EdgeInsets.only(bottom: 8),
                 ),
               ),
-              ColoredBox(
-                color: rule,
-                child: const SizedBox(height: 1, width: double.infinity),
-              ),
+              if (_cover != DiaryCover.blank)
+                ColoredBox(
+                  color: rule,
+                  child: const SizedBox(height: 1, width: double.infinity),
+                ),
               const SizedBox(height: 12),
               DiaryPhotoField(
                 path: _previewPath,

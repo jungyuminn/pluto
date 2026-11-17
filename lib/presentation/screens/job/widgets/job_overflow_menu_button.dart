@@ -86,7 +86,7 @@ class _JobOverflowMenuButtonState extends State<JobOverflowMenuButton>
       curve: Curves.easeOutCubic,
       reverseCurve: Curves.easeInCubic,
     );
-    _scale = Tween<double>(begin: 0.88, end: 1).animate(_fade);
+    _scale = Tween<double>(begin: 0.5, end: 1).animate(_fade);
   }
 
   @override
@@ -100,10 +100,14 @@ class _JobOverflowMenuButtonState extends State<JobOverflowMenuButton>
     if (_portal.isShowing) {
       await _close();
     } else {
-      _portal.show();
       _page = _MenuPage.root;
-      _animation.forward(from: 0);
+      _animation.value = 0;
+      _portal.show();
       setState(() {});
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted || !_portal.isShowing || _closing) return;
+        _animation.forward();
+      });
     }
   }
 

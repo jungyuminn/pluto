@@ -12,32 +12,6 @@ import 'package:pluto/presentation/widgets/local_file_image.dart';
 class AppSkinAssets {
   AppSkinAssets._();
 
-  static const petal90Light =
-      'assets/themes/blossom/petal_single_light_90deg.webp';
-  static const petal180Light =
-      'assets/themes/blossom/petal_single_light_180deg.webp';
-  static const petal270Light =
-      'assets/themes/blossom/petal_single_light_270deg.webp';
-  static const petal90Dark =
-      'assets/themes/blossom/petal_single_dark_90deg.webp';
-  static const petal180Dark =
-      'assets/themes/blossom/petal_single_dark_180deg.webp';
-  static const petal270Dark =
-      'assets/themes/blossom/petal_single_dark_270deg.webp';
-  static const hillsLight =
-      'assets/themes/blossom/blossom_bottom_hills_light.webp';
-  static const hillsDark =
-      'assets/themes/blossom/blossom_bottom_hills_dark.webp';
-
-  static const cloverDecorationLight =
-      'assets/themes/clover/clover_decoration_light.webp';
-  static const cloverDecorationDark =
-      'assets/themes/clover/clover_decoration_dark.webp';
-  static const cloverBottomLight =
-      'assets/themes/clover/clover_bottom_light.webp';
-  static const cloverBottomDark =
-      'assets/themes/clover/clover_bottom_dark.webp';
-
   static const fluffyBearFaceLight =
       'assets/themes/fluffy_bear/bear_face_decoration_light.webp';
   static const fluffyBearFaceDark =
@@ -92,24 +66,6 @@ class AppSkinAssets {
       'assets/themes/fluffy_hamster/hamster_face_bottom_dark.webp';
   static const fluffyHamsterAvatar =
       'assets/themes/fluffy_hamster/default_avatar.webp';
-
-  static const mongleCloudFaceLight =
-      'assets/themes/fluffy_cloud/cloud_decoration_light.webp';
-  static const mongleCloudFaceDark =
-      'assets/themes/fluffy_cloud/cloud_decoration_dark.webp';
-  static const mongleCloudBottomLight =
-      'assets/themes/fluffy_cloud/cloud_bottom_light.webp';
-  static const mongleCloudBottomDark =
-      'assets/themes/fluffy_cloud/cloud_bottom_dark.webp';
-
-  static const pinkHeartFaceLight =
-      'assets/themes/pink_heart/heart_decoration_light.webp';
-  static const pinkHeartFaceDark =
-      'assets/themes/pink_heart/heart_decoration_dark.webp';
-  static const pinkHeartBottomLight =
-      'assets/themes/pink_heart/heart_bottom_light.webp';
-  static const pinkHeartBottomDark =
-      'assets/themes/pink_heart/heart_bottom_dark.webp';
 
   static const duckLight = 'assets/themes/summer_beach/duck_ring_light.webp';
   static const duckDark = 'assets/themes/summer_beach/duck_ring_dark.webp';
@@ -272,18 +228,6 @@ class AppSkinAssets {
       'assets/themes/cotton_candy/cotton_candy_bottom_dark.webp';
 
   static const precacheDecorations = [
-    petal90Light,
-    petal180Light,
-    petal270Light,
-    petal90Dark,
-    petal180Dark,
-    petal270Dark,
-    hillsLight,
-    hillsDark,
-    cloverDecorationLight,
-    cloverDecorationDark,
-    cloverBottomLight,
-    cloverBottomDark,
     fluffyBearFaceLight,
     fluffyBearFaceDark,
     fluffyBearBottomLight,
@@ -304,14 +248,6 @@ class AppSkinAssets {
     fluffyHamsterFaceDark,
     fluffyHamsterBottomLight,
     fluffyHamsterBottomDark,
-    mongleCloudFaceLight,
-    mongleCloudFaceDark,
-    mongleCloudBottomLight,
-    mongleCloudBottomDark,
-    pinkHeartFaceLight,
-    pinkHeartFaceDark,
-    pinkHeartBottomLight,
-    pinkHeartBottomDark,
     duckLight,
     duckDark,
     shellLight,
@@ -394,10 +330,6 @@ class AppSkinAssets {
     cottonCandyGroundDark,
   ];
 
-  static const blossomLightFill = Color(0xFFF8E8ED);
-  static const blossomDarkFill = Color(0xFF1C1418);
-  static const cloverLightFill = Color(0xFFEAF6EC);
-  static const cloverDarkFill = Color(0xFF121A14);
   static const fluffyBearLightFill = Color(0xFFEBF8FF);
   static const fluffyBearDarkFill = Color(0xFF101820);
   static const fluffyRabbitLightFill = Color(0xFFFFF5FB);
@@ -408,10 +340,6 @@ class AppSkinAssets {
   static const fluffyDogDarkFill = Color(0xFF10161C);
   static const fluffyHamsterLightFill = Color(0xFFFFF1E4);
   static const fluffyHamsterDarkFill = Color(0xFF1A1410);
-  static const mongleCloudLightFill = Color(0xFFEEF6FC);
-  static const mongleCloudDarkFill = Color(0xFF10141C);
-  static const pinkHeartLightFill = Color(0xFFFFF5F8);
-  static const pinkHeartDarkFill = Color(0xFF161014);
   static const summerLightFill = Color(0xFFEAF6FB);
   static const summerDarkFill = Color(0xFF101820);
   static const winterLightFill = Color(0xFFEEF5FB);
@@ -443,10 +371,6 @@ class AppSkinAssets {
     switch (skin) {
       case AppSkin.classic:
         return fallback;
-      case AppSkin.blossom:
-        return dark ? const Color(0xFFF0A3B8) : const Color(0xFFE56B8A);
-      case AppSkin.clover:
-        return dark ? const Color(0xFF7EB989) : const Color(0xFF48A65C);
       case AppSkin.fluffyBear:
         return dark ? const Color(0xFF8BB8D0) : const Color(0xFF6AA8C8);
       case AppSkin.fluffyRabbit:
@@ -457,10 +381,6 @@ class AppSkinAssets {
         return dark ? const Color(0xFF8AB4C8) : const Color(0xFF5A96B0);
       case AppSkin.fluffyHamster:
         return dark ? const Color(0xFFE0A078) : const Color(0xFFE88858);
-      case AppSkin.mongleCloud:
-        return dark ? const Color(0xFF8CC8F0) : const Color(0xFF6EB8E8);
-      case AppSkin.pinkHeart:
-        return dark ? const Color(0xFFDC9EB5) : const Color(0xFFE86B88);
       case AppSkin.summerBeach:
         return dark ? const Color(0xFF5EC8E8) : const Color(0xFF3BAFD4);
       case AppSkin.snowyWinter:
@@ -507,10 +427,6 @@ class AppSkinAssets {
     switch (skin) {
       case AppSkin.classic:
         return fallback;
-      case AppSkin.blossom:
-        return dark ? blossomDarkFill : blossomLightFill;
-      case AppSkin.clover:
-        return dark ? cloverDarkFill : cloverLightFill;
       case AppSkin.fluffyBear:
         return dark ? fluffyBearDarkFill : fluffyBearLightFill;
       case AppSkin.fluffyRabbit:
@@ -521,10 +437,6 @@ class AppSkinAssets {
         return dark ? fluffyDogDarkFill : fluffyDogLightFill;
       case AppSkin.fluffyHamster:
         return dark ? fluffyHamsterDarkFill : fluffyHamsterLightFill;
-      case AppSkin.mongleCloud:
-        return dark ? mongleCloudDarkFill : mongleCloudLightFill;
-      case AppSkin.pinkHeart:
-        return dark ? pinkHeartDarkFill : pinkHeartLightFill;
       case AppSkin.summerBeach:
         return dark ? summerDarkFill : summerLightFill;
       case AppSkin.snowyWinter:
@@ -557,15 +469,11 @@ class AppSkinAssets {
   static List<({String filled, String outlined})> navIcons(AppSkin skin) {
     switch (skin) {
       case AppSkin.classic:
-      case AppSkin.blossom:
-      case AppSkin.clover:
       case AppSkin.fluffyBear:
       case AppSkin.fluffyRabbit:
       case AppSkin.fluffyCat:
       case AppSkin.fluffyDog:
       case AppSkin.fluffyHamster:
-      case AppSkin.mongleCloud:
-      case AppSkin.pinkHeart:
       case AppSkin.summerBeach:
       case AppSkin.snowyWinter:
       case AppSkin.squishyBear:
@@ -588,15 +496,11 @@ class AppSkinAssets {
     }
   }
 
-  static const _blossomIcons = 'assets/themes/blossom/icons';
-  static const _cloverIcons = 'assets/themes/clover/icons';
   static const _fluffyBearIcons = 'assets/themes/fluffy_bear/icons';
   static const _fluffyRabbitIcons = 'assets/themes/fluffy_rabbit/icons';
   static const _fluffyCatIcons = 'assets/themes/fluffy_cat/icons';
   static const _fluffyDogIcons = 'assets/themes/fluffy_dog/icons';
   static const _fluffyHamsterIcons = 'assets/themes/fluffy_hamster/icons';
-  static const _pinkHeartIcons = 'assets/themes/pink_heart/icons';
-  static const _mongleCloudIcons = 'assets/themes/fluffy_cloud/icons';
   static const paintedIconScale = 1.2;
 
   static bool keepsPaint(String asset) => asset.startsWith('assets/themes/');
@@ -614,15 +518,11 @@ class AppSkinAssets {
 
   static String resolveIcon(String asset, AppSkin skin, bool dark) {
     final folder = switch (skin) {
-      AppSkin.blossom => _blossomIcons,
-      AppSkin.clover => _cloverIcons,
       AppSkin.fluffyBear => _fluffyBearIcons,
       AppSkin.fluffyRabbit => _fluffyRabbitIcons,
       AppSkin.fluffyCat => _fluffyCatIcons,
       AppSkin.fluffyDog => _fluffyDogIcons,
       AppSkin.fluffyHamster => _fluffyHamsterIcons,
-      AppSkin.mongleCloud => _mongleCloudIcons,
-      AppSkin.pinkHeart => _pinkHeartIcons,
       _ => null,
     };
     if (folder == null) return asset;
@@ -643,7 +543,6 @@ class AppSkinAssets {
       AppSkin.fluffyCat,
       AppSkin.fluffyDog,
       AppSkin.fluffyHamster,
-      AppSkin.mongleCloud,
     };
     if (fluffyAlwaysLight.contains(skin)) {
       return '$folder/light/$slot.svg';
@@ -720,18 +619,6 @@ class AppSkinBackground extends StatelessWidget {
     final Widget? decorations = custom == null
         ? switch (skin) {
       AppSkin.classic => null,
-      AppSkin.blossom => _BlossomDecorations(
-          liftForNav: liftForNav,
-          scaleByWidth: scaleByWidth,
-          simple: compact,
-          playing: playing,
-        ),
-      AppSkin.clover => _CloverDecorations(
-          liftForNav: liftForNav,
-          scaleByWidth: scaleByWidth,
-          simple: compact,
-          playing: playing,
-        ),
       AppSkin.fluffyBear => _FluffyMascotDecorations(
           liftForNav: liftForNav,
           scaleByWidth: scaleByWidth,
@@ -806,37 +693,6 @@ class AppSkinBackground extends StatelessWidget {
           faceTintDark: const Color(0xFF8A6040),
           hillTintLight: const Color(0xFFFFF0DC),
           hillTintDark: const Color(0xFF2A2018),
-        ),
-      AppSkin.mongleCloud => _FluffyMascotDecorations(
-          liftForNav: liftForNav,
-          scaleByWidth: scaleByWidth,
-          simple: compact,
-          playing: playing,
-          moves: true,
-          faceLight: AppSkinAssets.mongleCloudFaceLight,
-          faceDark: AppSkinAssets.mongleCloudFaceDark,
-          bottomLight: AppSkinAssets.mongleCloudBottomLight,
-          bottomDark: AppSkinAssets.mongleCloudBottomDark,
-          faceTintLight: const Color(0xFFA8D8F4),
-          faceTintDark: const Color(0xFF5A88A8),
-          hillTintLight: const Color(0xFFE8F4FC),
-          hillTintDark: const Color(0xFF1A2430),
-        ),
-      AppSkin.pinkHeart => _FluffyMascotDecorations(
-          liftForNav: liftForNav,
-          scaleByWidth: scaleByWidth,
-          simple: compact,
-          playing: playing,
-          moves: true,
-          beats: true,
-          faceLight: AppSkinAssets.pinkHeartFaceLight,
-          faceDark: AppSkinAssets.pinkHeartFaceDark,
-          bottomLight: AppSkinAssets.pinkHeartBottomLight,
-          bottomDark: AppSkinAssets.pinkHeartBottomDark,
-          faceTintLight: const Color(0xFFF0C4D0),
-          faceTintDark: const Color(0xFFDC9EB5),
-          hillTintLight: const Color(0xFFFCE7ED),
-          hillTintDark: const Color(0xFF5D3A49),
         ),
       AppSkin.summerBeach => _SummerBeachDecorations(
           liftForNav: liftForNav,
@@ -1266,474 +1122,6 @@ class _LogoSafe {
   }
 }
 
-class _BlossomDecorations extends StatefulWidget {
-  const _BlossomDecorations({
-    required this.liftForNav,
-    this.scaleByWidth = false,
-    this.simple = false,
-    this.playing = true,
-  });
-
-  final bool liftForNav;
-  final bool scaleByWidth;
-  final bool simple;
-  final bool playing;
-
-  @override
-  State<_BlossomDecorations> createState() => _BlossomDecorationsState();
-}
-
-class _BlossomDecorationsState extends State<_BlossomDecorations>
-    with SingleTickerProviderStateMixin {
-  Ticker? _ticker;
-  final _phase = ValueNotifier<double>(0);
-  var _last = Duration.zero;
-
-  static double _cyclesPerSecond(double motion) {
-    const slow = 1 / 16;
-    const fast = 1 / 3.2;
-    return slow + (fast - slow) * motion.clamp(0.0, 1.0);
-  }
-
-  @override
-  void dispose() {
-    _ticker?.dispose();
-    _phase.dispose();
-    super.dispose();
-  }
-
-  void _syncTicker(double motion) {
-    if (motion <= ThemePreference.motionOff) {
-      _ticker?.stop();
-      _last = Duration.zero;
-      _phase.value = 0;
-      return;
-    }
-    _ticker ??= createTicker(_onTick);
-    if (!(_ticker?.isActive ?? false)) {
-      _last = Duration.zero;
-      _ticker!.start();
-    }
-  }
-
-  void _onTick(Duration elapsed) {
-    if (!mounted) return;
-    final motion =
-        AppScope.maybeOf(context)?.themePreference.motion ??
-            ThemePreference.defaultMotion;
-    if (motion <= ThemePreference.motionOff) {
-      _ticker?.stop();
-      _last = Duration.zero;
-      _phase.value = 0;
-      return;
-    }
-    final last = _last == Duration.zero ? elapsed : _last;
-    _last = elapsed;
-    final dt = (elapsed - last).inMicroseconds / 1000000;
-    if (dt <= 0 || dt > 0.08) return;
-    _phase.value = (_phase.value + dt * _cyclesPerSecond(motion)) % 1.0;
-  }
-
-  Widget _stillPetal(String asset) {
-    return Image.asset(
-      asset,
-      fit: BoxFit.contain,
-      filterQuality: FilterQuality.medium,
-    );
-  }
-
-  Widget _fallPetal({
-    required String asset,
-    required int index,
-    required double t,
-    required double motion,
-    required double width,
-    required double height,
-    required double span,
-    required double size,
-    required double x,
-  }) {
-    final phase = (t + index * 0.27) % 1.0;
-    final travel = height + size * 2.2;
-    final top = -size * 1.1 + travel * phase;
-    final sway =
-        math.sin(phase * math.pi * 3 + index * 1.4) * span * (0.03 + motion * 0.02);
-    final angle = phase * math.pi * (1.2 + motion * 0.6) + index * 0.7;
-    return Positioned(
-      left: (x + sway).clamp(-size, width),
-      top: top,
-      width: size,
-      child: Transform.rotate(
-        angle: angle,
-        child: Image.asset(
-          asset,
-          fit: BoxFit.contain,
-          filterQuality: FilterQuality.medium,
-        ),
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final dark = Theme.of(context).brightness == Brightness.dark;
-    final preference = AppScope.maybeOf(context)?.themePreference;
-    Widget body() {
-      final motion = preference?.motion ?? ThemePreference.defaultMotion;
-      _syncTicker(motion);
-      return LayoutBuilder(
-        builder: (context, constraints) {
-          final width = constraints.maxWidth;
-          final height = constraints.maxHeight;
-          final paddingBottom = MediaQuery.viewPaddingOf(context).bottom;
-          final petalBottom =
-              widget.liftForNav ? 66 + paddingBottom : height * 0.08;
-          final petal90 =
-              dark ? AppSkinAssets.petal90Dark : AppSkinAssets.petal90Light;
-          final petal180 =
-              dark ? AppSkinAssets.petal180Dark : AppSkinAssets.petal180Light;
-          final petal270 =
-              dark ? AppSkinAssets.petal270Dark : AppSkinAssets.petal270Light;
-          final hills = dark ? AppSkinAssets.hillsDark : AppSkinAssets.hillsLight;
-          final hillsHeight = _SkinGround.heightOf(
-            width,
-            height,
-            assetRatio: 600 / 2000,
-            maxFraction: 0.32,
-          );
-          Widget petals(double t) {
-            final size = math.min(width, height);
-            final preview = widget.scaleByWidth;
-            final wide = widget.simple && !preview;
-            final sizes = [
-              size * (preview ? 0.22 : 0.34),
-              size * (preview ? 0.20 : 0.32),
-              size * (preview ? 0.16 : 0.28),
-              size * (preview ? 0.18 : 0.30),
-            ];
-            if (motion <= ThemePreference.motionOff) {
-              return Stack(
-                children: [
-                  Positioned(
-                    top: height * (wide ? 0.02 : 0.04),
-                    right: width * 0.03,
-                    width: sizes[0],
-                    child: _stillPetal(petal90),
-                  ),
-                  Positioned(
-                    left: width * 0.04,
-                    bottom: wide
-                        ? petalBottom
-                        : petalBottom + height * 0.06,
-                    width: sizes[1],
-                    child: _stillPetal(petal180),
-                  ),
-                  Positioned(
-                    right: width * 0.04,
-                    bottom: height * (wide ? 0.14 : 0.32),
-                    width: sizes[2],
-                    child: _stillPetal(petal270),
-                  ),
-                  Positioned(
-                    left: width * 0.05,
-                    top: height * (wide ? 0.16 : 0.30),
-                    width: sizes[3],
-                    child: _stillPetal(petal90),
-                  ),
-                ],
-              );
-            }
-            final xs = [
-              width * 0.97 - sizes[0],
-              width * 0.04,
-              width * 0.96 - sizes[2],
-              width * 0.05,
-            ];
-            final assets = [petal90, petal180, petal270, petal90];
-            return Stack(
-              children: [
-                for (var i = 0; i < sizes.length; i++)
-                  _fallPetal(
-                    asset: assets[i],
-                    index: i,
-                    t: t,
-                    motion: motion,
-                    width: width,
-                    height: height,
-                    span: size,
-                    size: sizes[i],
-                    x: xs[i],
-                  ),
-              ],
-            );
-          }
-
-          return IgnorePointer(
-            child: Stack(
-              children: [
-                Positioned(
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  height: hillsHeight,
-                  child: _SkinGround.cover(
-                    hills,
-                    width: width,
-                    bandHeight: hillsHeight,
-                    assetRatio: 600 / 2000,
-                  ),
-                ),
-                if (motion <= ThemePreference.motionOff)
-                  petals(0)
-                else
-                  RepaintBoundary(
-                    child: ValueListenableBuilder<double>(
-                      valueListenable: _phase,
-                      builder: (context, t, _) => petals(t),
-                    ),
-                  ),
-              ],
-            ),
-          );
-        },
-      );
-    }
-
-    return TickerMode(
-      enabled: widget.playing,
-      child: preference == null
-          ? body()
-          : ListenableBuilder(
-              listenable: preference,
-              builder: (context, _) => body(),
-            ),
-    );
-  }
-}
-
-class _CloverDecorations extends StatefulWidget {
-  const _CloverDecorations({
-    required this.liftForNav,
-    this.scaleByWidth = false,
-    this.simple = false,
-    this.playing = true,
-  });
-
-  final bool liftForNav;
-  final bool scaleByWidth;
-  final bool simple;
-  final bool playing;
-
-  @override
-  State<_CloverDecorations> createState() => _CloverDecorationsState();
-}
-
-class _CloverDecorationsState extends State<_CloverDecorations>
-    with SingleTickerProviderStateMixin {
-  Ticker? _ticker;
-  final _phase = ValueNotifier<double>(0);
-  var _last = Duration.zero;
-
-  static double _cyclesPerSecond(double motion) {
-    const slow = 1 / 7;
-    const fast = 1 / 2.4;
-    return slow + (fast - slow) * motion.clamp(0.0, 1.0);
-  }
-
-  @override
-  void dispose() {
-    _ticker?.dispose();
-    _phase.dispose();
-    super.dispose();
-  }
-
-  void _syncTicker(double motion) {
-    if (motion <= ThemePreference.motionOff) {
-      _ticker?.stop();
-      _last = Duration.zero;
-      _phase.value = 0;
-      return;
-    }
-    _ticker ??= createTicker(_onTick);
-    if (!(_ticker?.isActive ?? false)) {
-      _last = Duration.zero;
-      _ticker!.start();
-    }
-  }
-
-  void _onTick(Duration elapsed) {
-    if (!mounted) return;
-    final motion =
-        AppScope.maybeOf(context)?.themePreference.motion ??
-            ThemePreference.defaultMotion;
-    if (motion <= ThemePreference.motionOff) {
-      _ticker?.stop();
-      _last = Duration.zero;
-      _phase.value = 0;
-      return;
-    }
-    final last = _last == Duration.zero ? elapsed : _last;
-    _last = elapsed;
-    final dt = (elapsed - last).inMicroseconds / 1000000;
-    if (dt <= 0 || dt > 0.08) return;
-    _phase.value = (_phase.value + dt * _cyclesPerSecond(motion)) % 1.0;
-  }
-
-  Widget _clover({
-    required String asset,
-    required int index,
-    required double angle,
-    required double t,
-    required double motion,
-  }) {
-    Widget child = Image.asset(
-      asset,
-      fit: BoxFit.contain,
-      filterQuality: FilterQuality.medium,
-    );
-    if (motion <= ThemePreference.motionOff) {
-      if (angle != 0) child = Transform.rotate(angle: angle, child: child);
-      return child;
-    }
-    final wave = math.sin((t + index * 0.22) * math.pi * 2);
-    final wave2 = math.cos((t + index * 0.31) * math.pi * 2);
-    final amp = 3.0 + motion * 7.0;
-    final tilt = (0.05 + motion * 0.09) * wave;
-    return Transform.translate(
-      offset: Offset(wave * amp * 0.45, wave2 * amp * 0.35),
-      child: Transform.rotate(angle: angle + tilt, child: child),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final dark = Theme.of(context).brightness == Brightness.dark;
-    final preference = AppScope.maybeOf(context)?.themePreference;
-    Widget body() {
-      final motion = preference?.motion ?? ThemePreference.defaultMotion;
-      _syncTicker(motion);
-      return LayoutBuilder(
-        builder: (context, constraints) {
-          final width = constraints.maxWidth;
-          final height = constraints.maxHeight;
-          final paddingBottom = MediaQuery.viewPaddingOf(context).bottom;
-          final cloverBottomLift =
-              widget.liftForNav ? 66 + paddingBottom : height * 0.08;
-          final decoration = dark
-              ? AppSkinAssets.cloverDecorationDark
-              : AppSkinAssets.cloverDecorationLight;
-          final hills = dark
-              ? AppSkinAssets.cloverBottomDark
-              : AppSkinAssets.cloverBottomLight;
-          final hillsHeight = _SkinGround.heightOf(
-            width,
-            height,
-            assetRatio: 600 / 2000,
-            maxFraction: 0.32,
-          );
-          Widget clovers(double t) {
-            final size = math.min(width, height);
-            final preview = widget.scaleByWidth;
-            final wide = widget.simple && !preview;
-            return Stack(
-              children: [
-                Positioned(
-                  top: height * (wide ? 0.02 : 0.04),
-                  right: width * 0.03,
-                  width: size * (preview ? 0.22 : 0.34),
-                  child: _clover(
-                    asset: decoration,
-                    index: 0,
-                    angle: 0.12,
-                    t: t,
-                    motion: motion,
-                  ),
-                ),
-                Positioned(
-                  left: width * 0.04,
-                  bottom: wide
-                      ? cloverBottomLift
-                      : cloverBottomLift + height * 0.06,
-                  width: size * (preview ? 0.20 : 0.32),
-                  child: _clover(
-                    asset: decoration,
-                    index: 1,
-                    angle: -0.1,
-                    t: t,
-                    motion: motion,
-                  ),
-                ),
-                Positioned(
-                  right: width * 0.04,
-                  bottom: height * (wide ? 0.14 : 0.32),
-                  width: size * (preview ? 0.16 : 0.28),
-                  child: _clover(
-                    asset: decoration,
-                    index: 2,
-                    angle: 0.06,
-                    t: t,
-                    motion: motion,
-                  ),
-                ),
-                Positioned(
-                  left: width * 0.05,
-                  top: height * (wide ? 0.16 : 0.30),
-                  width: size * (preview ? 0.18 : 0.30),
-                  child: _clover(
-                    asset: decoration,
-                    index: 3,
-                    angle: -0.12,
-                    t: t,
-                    motion: motion,
-                  ),
-                ),
-              ],
-            );
-          }
-
-          return IgnorePointer(
-            child: Stack(
-              children: [
-                Positioned(
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  height: hillsHeight,
-                  child: _SkinGround.cover(
-                    hills,
-                    width: width,
-                    bandHeight: hillsHeight,
-                    assetRatio: 600 / 2000,
-                  ),
-                ),
-                if (motion <= ThemePreference.motionOff)
-                  clovers(0)
-                else
-                  RepaintBoundary(
-                    child: ValueListenableBuilder<double>(
-                      valueListenable: _phase,
-                      builder: (context, t, _) => clovers(t),
-                    ),
-                  ),
-              ],
-            ),
-          );
-        },
-      );
-    }
-
-    return TickerMode(
-      enabled: widget.playing,
-      child: preference == null
-          ? body()
-          : ListenableBuilder(
-              listenable: preference,
-              builder: (context, _) => body(),
-            ),
-    );
-  }
-}
-
 class _FluffyMascotDecorations extends StatefulWidget {
   const _FluffyMascotDecorations({
     required this.liftForNav,
@@ -1750,7 +1138,6 @@ class _FluffyMascotDecorations extends StatefulWidget {
     this.playing = true,
     this.moves = false,
     this.hops = false,
-    this.beats = false,
   });
 
   final bool liftForNav;
@@ -1759,7 +1146,6 @@ class _FluffyMascotDecorations extends StatefulWidget {
   final bool playing;
   final bool moves;
   final bool hops;
-  final bool beats;
   final String faceLight;
   final String faceDark;
   final String bottomLight;
@@ -1783,18 +1169,9 @@ class _FluffyMascotDecorationsState extends State<_FluffyMascotDecorations>
   static double _cyclesPerSecond(
     double motion, {
     required bool hops,
-    required bool beats,
   }) {
-    final slow = beats
-        ? 1 / 2.4
-        : hops
-            ? 1 / 3.6
-            : 1 / 6;
-    final fast = beats
-        ? 1 / 1.15
-        : hops
-            ? 1 / 1.8
-            : 1 / 2.8;
+    final slow = hops ? 1 / 3.6 : 1 / 6;
+    final fast = hops ? 1 / 1.8 : 1 / 2.8;
     return slow + (fast - slow) * motion.clamp(0.0, 1.0);
   }
 
@@ -1839,7 +1216,6 @@ class _FluffyMascotDecorationsState extends State<_FluffyMascotDecorations>
                 _cyclesPerSecond(
                   motion,
                   hops: widget.hops,
-                  beats: widget.beats,
                 )) %
         1.0;
   }
@@ -1896,16 +1272,6 @@ class _FluffyMascotDecorationsState extends State<_FluffyMascotDecorations>
               child = Transform.rotate(angle: angle, child: child);
             }
             if (motion <= ThemePreference.motionOff) return child;
-            if (widget.beats) {
-              final p = (t + index * 0.07) % 1.0;
-              double beat(double start, double dur) {
-                if (p < start || p > start + dur) return 0;
-                return math.sin((p - start) / dur * math.pi);
-              }
-              final pulse = math.max(beat(0.0, 0.16), beat(0.20, 0.14));
-              final scale = 1 + pulse * (0.045 + motion * 0.09);
-              return Transform.scale(scale: scale, child: child);
-            }
             if (widget.hops) {
               final cycle = (t + index * 0.22) % 1.0;
               final lift = cycle < 0.42

@@ -41,6 +41,7 @@ class _DiaryDrawRoute<T> extends PageRouteBuilder<T> {
   }) : super(
           opaque: false,
           fullscreenDialog: false,
+          barrierColor: AppColors.barrier,
           transitionDuration: const Duration(milliseconds: 320),
           reverseTransitionDuration: const Duration(milliseconds: 260),
           pageBuilder: (context, animation, secondaryAnimation) {
@@ -53,12 +54,9 @@ class _DiaryDrawRoute<T> extends PageRouteBuilder<T> {
             final reverse = animation.status == AnimationStatus.reverse;
             final t = (reverse ? Curves.easeInCubic : Curves.easeOutCubic)
                 .transform(animation.value);
-            return Opacity(
-              opacity: t,
-              child: Transform.translate(
-                offset: Offset(0, 18 * (1 - t)),
-                child: child,
-              ),
+            return FractionalTranslation(
+              translation: Offset(0, 1 - t),
+              child: child,
             );
           },
         );

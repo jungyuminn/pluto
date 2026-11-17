@@ -811,10 +811,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     switch (skin) {
       case AppSkin.classic:
         return AppStrings.themeClassic;
-      case AppSkin.blossom:
-        return AppStrings.themeBlossom;
-      case AppSkin.clover:
-        return AppStrings.themeClover;
       case AppSkin.fluffyBear:
         return AppStrings.themeFluffyBear;
       case AppSkin.fluffyRabbit:
@@ -825,10 +821,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
         return AppStrings.themeFluffyDog;
       case AppSkin.fluffyHamster:
         return AppStrings.themeFluffyHamster;
-      case AppSkin.mongleCloud:
-        return AppStrings.themeMongleCloud;
-      case AppSkin.pinkHeart:
-        return AppStrings.themePinkHeart;
       case AppSkin.summerBeach:
         return AppStrings.themeSummerBeach;
       case AppSkin.snowyWinter:

@@ -12,7 +12,7 @@ class OverflowMenuCard extends StatelessWidget {
     super.key,
     required this.children,
     this.radius = 32,
-    this.opacity = 0.94,
+    this.opacity = 0.88,
     this.elevation = 8,
     this.minWidth,
   });
@@ -240,7 +240,7 @@ class _OverflowMenuButtonState extends State<OverflowMenuButton>
       curve: Curves.easeOutCubic,
       reverseCurve: Curves.easeInCubic,
     );
-    _scale = Tween<double>(begin: 0.88, end: 1).animate(_fade);
+    _scale = Tween<double>(begin: 0.5, end: 1).animate(_fade);
   }
 
   @override
@@ -274,9 +274,13 @@ class _OverflowMenuButtonState extends State<OverflowMenuButton>
     } else {
       FocusManager.instance.primaryFocus?.unfocus();
       _openUp = _shouldOpenUp();
+      _animation.value = 0;
       _portal.show();
-      _animation.forward(from: 0);
       setState(() {});
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted || !_portal.isShowing || _closing) return;
+        _animation.forward();
+      });
     }
   }
 

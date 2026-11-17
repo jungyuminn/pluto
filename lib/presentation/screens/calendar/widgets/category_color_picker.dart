@@ -4,6 +4,7 @@ import 'package:pluto/core/theme/app_colors.dart';
 import 'package:pluto/core/utils/mouse_drag_scroll.dart';
 import 'package:pluto/core/utils/press_bounce.dart';
 import 'package:pluto/domain/entities/event_category.dart';
+import 'package:pluto/presentation/screens/calendar/widgets/event_complete_button.dart';
 
 class CategoryColorPicker extends StatefulWidget {
   const CategoryColorPicker({
@@ -255,8 +256,7 @@ class _ColorDot extends StatelessWidget {
             ),
           ),
           child: used
-              ? const Icon(
-                  Icons.check_rounded,
+              ? const CompleteCheck(
                   size: 16,
                   color: Colors.white,
                 )

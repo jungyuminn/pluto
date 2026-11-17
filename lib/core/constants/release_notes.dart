@@ -17,6 +17,18 @@ class ReleaseNote {
 abstract final class ReleaseNotes {
   static const all = [
     ReleaseNote(
+      version: '1.5.10',
+      items: [
+        '앱 디자인이 개선됐어요',
+        '지원서 일정을 기간 일정으로 추가할 수 있어요',
+        '일기장 기본 시트지가 변경됐어요',
+        '몇 가지 테마가 삭제됐어요',
+      ],
+      fixes: [
+        '하루 일정이 기간 일정보다 위에 있던 오류를 고쳤어요',
+      ],
+    ),
+    ReleaseNote(
       version: '1.5.9',
       items: [
         '친구 요청과 같이 할 일 요청이 푸시 알림으로 와요',

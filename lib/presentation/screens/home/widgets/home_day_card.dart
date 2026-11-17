@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:pluto/app_scope.dart';
 import 'package:pluto/core/constants/app_fonts.dart';
+import 'package:pluto/core/layout/pc_layout.dart';
 import 'package:pluto/core/constants/app_icons.dart';
 import 'package:pluto/core/constants/app_strings.dart';
 import 'package:pluto/core/theme/app_colors.dart';
@@ -78,7 +79,7 @@ class _HomeDayCardState extends State<HomeDayCard> {
   var _emojiPop = false;
   var _animateEmojiSlot = false;
 
-  static const _labelHeight = 52.0;
+  double get _labelHeight => PcLayout.dayLabelHeightOf();
   static const _eventGap = 10.0;
   static const _headerExtent = 24.0;
   static const _headerGap = 6.0;
@@ -663,7 +664,7 @@ class _HomeDayCardState extends State<HomeDayCard> {
         borderRadius: BorderRadius.circular(24),
       ),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+        padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -899,6 +900,7 @@ class _HomeDayCardState extends State<HomeDayCard> {
             isRange: event.isRange,
             memo: event.memo,
             timeText: timeText,
+            height: _labelHeight,
             onPressed: () => _edit(event),
             onCompletePressed: () => _toggleComplete(event),
           )
@@ -914,6 +916,7 @@ class _HomeDayCardState extends State<HomeDayCard> {
             isRange: event.isRange,
             memo: event.memo,
             timeText: timeText,
+            height: _labelHeight,
             onPressed: () => _edit(event),
             onLongPressed:
                 _orderByTime ? _explainTimeSortLock : null,
@@ -972,6 +975,7 @@ class _HomeDayCardState extends State<HomeDayCard> {
                     isRange: event.isRange,
                     memo: event.memo,
                     timeText: timeText,
+                    height: _labelHeight,
                   ),
                 ),
               ),

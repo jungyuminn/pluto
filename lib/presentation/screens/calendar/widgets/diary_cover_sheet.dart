@@ -289,7 +289,7 @@ class DiaryCoverChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
-    final ink = EventCategory.labelOf(color);
+    final ink = EventCategory.labelOf(color, 0.1);
     return PressBounce(
       onPressed: onPressed,
       pressedScale: 0.92,

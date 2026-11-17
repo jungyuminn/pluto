@@ -156,7 +156,7 @@ class _AddFriendSheetState extends State<AddFriendSheet> {
                       AppStrings.friendsAdd,
                       style: TextStyle(
                         fontFamily: AppFonts.of(context),
-                        fontSize: 18,
+                        fontSize: 16,
                         fontWeight: FontWeight.w800,
                         color: colors.text,
                       ),
@@ -206,16 +206,16 @@ class _AddFriendSheetState extends State<AddFriendSheet> {
     return ValueListenableBuilder<FriendProfile?>(
       valueListenable: _service.profile,
       builder: (context, profile, _) {
-        final name = profile?.displayName.trim() ?? '';
+        final name = profile?.label ?? '';
         final code = profile?.friendCode.trim() ?? '';
-        final showName = name.isNotEmpty && name != code;
+        final showId = code.isNotEmpty && code != name;
         return _Card(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 14, 8, 14),
+            padding: const EdgeInsets.fromLTRB(20, 16, 12, 16),
             child: Row(
               children: [
-                FriendAvatar(
-                  size: 52,
+                FriendPhotoPeekTarget(
+                  size: 48,
                   profile: profile,
                   showFavorite: false,
                 ),
@@ -224,37 +224,33 @@ class _AddFriendSheetState extends State<AddFriendSheet> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      if (showName)
-                        Text(
-                          name,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontFamily: AppFonts.of(context),
-                            fontSize: 16,
-                            fontWeight: FontWeight.w800,
-                            color: colors.text,
-                          ),
-                        ),
                       Text(
-                        code.isEmpty ? AppStrings.friendsCodeNeed : code,
+                        name.isEmpty ? AppStrings.friendsCodeNeed : name,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           fontFamily: AppFonts.of(context),
-                          fontSize: showName ? 13 : 16,
-                          fontWeight:
-                              showName ? FontWeight.w400 : FontWeight.w800,
-                          color: code.isEmpty ? colors.muted : colors.text,
+                          fontSize: 16,
+                          color: name.isEmpty ? colors.muted : colors.text,
                         ),
                       ),
+                      if (showId)
+                        Text(
+                          code,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontFamily: AppFonts.of(context),
+                            fontSize: 13,
+                            color: colors.muted,
+                          ),
+                        ),
                     ],
                   ),
                 ),
                 if (code.isNotEmpty)
                   PressBounce(
                     onPressed: () => _copyMyCode(code),
-                    pressedScale: 0.94,
                     pressedColor: colors.pressed,
                     borderRadius: BorderRadius.circular(18),
                     child: Tooltip(
@@ -723,7 +719,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
       visible: _hintVisible,
     );
     final page = Scaffold(
-      backgroundColor: colors.groupedBackground,
+      backgroundColor: colors.pageBackground,
       resizeToAvoidBottomInset: false,
       extendBodyBehindAppBar: true,
       appBar: _FriendsAppBar(
@@ -990,7 +986,6 @@ class _FriendsScreenState extends State<FriendsScreen> {
               }
               setState(() => _photoMenuOpen = !_photoMenuOpen);
             },
-            pressedScale: 0.96,
             pressedColor: Colors.transparent,
             child: FriendAvatar(
               size: 84,
@@ -1054,7 +1049,6 @@ class _FriendsScreenState extends State<FriendsScreen> {
   }) {
     return PressBounce(
       onPressed: onPressed,
-      pressedScale: 0.94,
       pressedColor: Colors.white.withValues(alpha: 0.12),
       borderRadius: BorderRadius.zero,
       child: ColoredBox(
@@ -1296,7 +1290,6 @@ class _FriendsScreenState extends State<FriendsScreen> {
   Widget _categoryShareRow(AppColors colors) {
     return PressBounce(
       onPressed: () => showCategoryShareSheet(context),
-      pressedScale: 0.99,
       color: colors.card,
       pressedColor: colors.pressed,
       child: Padding(
@@ -1503,7 +1496,6 @@ class _FriendsScreenState extends State<FriendsScreen> {
             ignoring: !visible,
             child: PressBounce(
               onPressed: _copyMyCode,
-              pressedScale: 0.94,
               pressedColor: colors.pressed,
               borderRadius: BorderRadius.circular(18),
               child: Tooltip(
@@ -2373,7 +2365,6 @@ class _FriendTile extends StatelessWidget {
     final colors = AppColors.of(context);
     return PressBounce(
       onPressed: onPressed,
-      pressedScale: 0.98,
       color: colors.card,
       pressedColor: colors.pressed,
       borderRadius: BorderRadius.circular(16),

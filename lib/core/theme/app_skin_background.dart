@@ -490,6 +490,19 @@ class AppSkinAssets {
     }
   }
 
+  static Color currentFillOf(BuildContext context, {Color? classic}) {
+    final colors = AppColors.of(context);
+    final theme = AppScope.maybeOf(context)?.themePreference;
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    final custom = theme?.customTheme;
+    if (custom != null) return custom.fillColorFor(dark);
+    return fillColor(
+      theme?.skin ?? AppSkin.classic,
+      dark,
+      classic ?? colors.background,
+    );
+  }
+
   static Color fillColor(AppSkin skin, bool dark, Color fallback) {
     switch (skin) {
       case AppSkin.classic:

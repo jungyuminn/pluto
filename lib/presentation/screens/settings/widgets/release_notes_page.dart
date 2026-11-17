@@ -28,7 +28,7 @@ class _ReleaseNotesPageState extends State<ReleaseNotesPage> {
     final top = MediaQuery.paddingOf(context).top;
     final notes = ReleaseNotes.all;
     return Scaffold(
-      backgroundColor: colors.groupedBackground,
+      backgroundColor: colors.pageBackground,
       extendBodyBehindAppBar: true,
       appBar: _Bar(
         title: AppStrings.releaseNotesTitle,
@@ -116,7 +116,6 @@ class _VersionRow extends StatelessWidget {
       children: [
         PressBounce(
           onPressed: onToggle,
-          pressedScale: 0.98,
           color: colors.card,
           pressedColor: colors.pressed,
           child: Padding(
@@ -164,7 +163,6 @@ class _NoteBody extends StatelessWidget {
     final colors = AppColors.of(context);
     return PressBounce(
       onPressed: onPressed,
-      pressedScale: 0.98,
       color: colors.card,
       pressedColor: colors.pressed,
       child: SizedBox(
@@ -545,7 +543,6 @@ class _ShowcaseCycleState extends State<_ShowcaseCycle> {
                 for (var i = 0; i < widget.frames.length; i++)
                   PressBounce(
                     onPressed: () => _goTo(i, fromUser: true),
-                    pressedScale: 0.9,
                     pressedColor: Colors.transparent,
                     child: Padding(
                       padding: const EdgeInsets.symmetric(
@@ -585,7 +582,6 @@ class _NavButton extends StatelessWidget {
     final colors = AppColors.of(context);
     return PressBounce(
       onPressed: onPressed,
-      pressedScale: 0.88,
       pressedColor: Colors.transparent,
       child: SizedBox(
         width: 32,

@@ -386,7 +386,7 @@ class _FriendCalendarScreenState extends State<FriendCalendarScreen> {
         AppScope.of(context).calendarPreference.startMonday;
     final top = MediaQuery.paddingOf(context).top;
     return Scaffold(
-      backgroundColor: colors.groupedBackground,
+      backgroundColor: colors.pageBackground,
       resizeToAvoidBottomInset: false,
       extendBodyBehindAppBar: true,
       appBar: _FriendsAppBar(

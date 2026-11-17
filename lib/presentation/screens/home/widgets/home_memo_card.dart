@@ -340,26 +340,14 @@ class _MemoTile extends StatelessWidget {
     return SizedBox(
       width: size,
       height: size,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(18),
-          boxShadow: [
-            BoxShadow(
-              color: colors.shadow.withValues(alpha: colors.shadow.a * 0.55),
-              blurRadius: 6,
-              offset: const Offset(0, 1),
-            ),
-          ],
-        ),
-        child: PressBounce(
-          onPressed: onPressed,
-          color: colors.homeCard,
-          pressedColor: colors.homeCardPressed,
-          borderRadius: BorderRadius.circular(18),
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(10, 10, 10, 8),
-            child: child,
-          ),
+      child: PressBounce(
+        onPressed: onPressed,
+        color: colors.homeCard,
+        pressedColor: colors.homeCardPressed,
+        borderRadius: BorderRadius.circular(18),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(10, 10, 10, 8),
+          child: child,
         ),
       ),
     );

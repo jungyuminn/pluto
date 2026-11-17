@@ -66,8 +66,6 @@ class DayEventLabel extends StatefulWidget {
   final double height;
   final Widget? footer;
 
-  static const pressedScale = 0.98;
-
   @override
   State<DayEventLabel> createState() => _DayEventLabelState();
 }
@@ -128,7 +126,6 @@ class _DayEventLabelState extends State<DayEventLabel> {
       curve: Curves.easeOutCubic,
       opacity: widget.disabled ? 0.42 : 1,
       child: PressBounce(
-      pressedScale: DayEventLabel.pressedScale,
       onPressed: () {
         if (_skipLabelTap) {
           _skipLabelTap = false;
@@ -303,12 +300,38 @@ class _DayEventLabelState extends State<DayEventLabel> {
                       ),
                     ),
                   ),
+                if (widget.isRange)
+                  Padding(
+                    padding: EdgeInsets.only(
+                      right: !hasComplete &&
+                              !widget.isRepeat &&
+                              !widget.isJob &&
+                              !widget.shared
+                          ? 6
+                          : 0,
+                    ),
+                    child: SizedBox(
+                      width: 28,
+                      height: 28,
+                      child: Center(
+                        child: ColorFiltered(
+                          colorFilter: ColorFilter.mode(
+                            ink,
+                            BlendMode.srcIn,
+                          ),
+                          child: const AppAssetImage(
+                            asset: AppIcons.arrowTransfer,
+                            width: 20,
+                            height: 20,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
                 if (widget.isJob || widget.shared)
                   Padding(
                     padding: EdgeInsets.only(
-                      right: !hasComplete && !widget.isRepeat && !widget.isRange
-                          ? 6
-                          : 0,
+                      right: !hasComplete && !widget.isRepeat ? 6 : 0,
                     ),
                     child: SizedBox(
                       width: 28,
@@ -327,21 +350,6 @@ class _DayEventLabelState extends State<DayEventLabel> {
                             height: 18,
                           ),
                         ),
-                      ),
-                    ),
-                  ),
-                if (widget.isRange)
-                  Padding(
-                    padding: EdgeInsets.only(
-                      right: !hasComplete && !widget.isRepeat ? 6 : 0,
-                    ),
-                    child: SizedBox(
-                      width: 28,
-                      height: 28,
-                      child: Icon(
-                        Icons.swap_horiz_rounded,
-                        size: 22,
-                        color: ink,
                       ),
                     ),
                   ),

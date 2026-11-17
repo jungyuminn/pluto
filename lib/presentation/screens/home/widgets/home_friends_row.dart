@@ -23,9 +23,9 @@ import 'package:pluto/presentation/screens/friends/friends_screen.dart';
 import 'package:pluto/presentation/screens/friends/group_calendar_screen.dart';
 import 'package:pluto/presentation/screens/settings/widgets/login_page.dart';
 
-const _avatarSize = 60.0;
-const _cellWidth = 76.0;
-const _rowHeight = 92.0;
+const _avatarSize = 56.0;
+const _cellWidth = 72.0;
+const _rowHeight = 86.0;
 
 class HomeFriendsRow extends StatefulWidget {
   const HomeFriendsRow({super.key});
@@ -477,7 +477,7 @@ class _AddBadge extends StatelessWidget {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: FriendAvatar.accentOf(context),
-                    border: Border.all(color: colors.background, width: 2.5),
+                    border: Border.all(color: colors.pageBackground, width: 2.5),
                   ),
                   child: const SizedBox(
                     width: 22,
@@ -514,7 +514,7 @@ class _InboxDot extends StatelessWidget {
       decoration: BoxDecoration(
         color: colors.danger,
         shape: BoxShape.circle,
-        border: Border.all(color: colors.background, width: 2),
+        border: Border.all(color: colors.pageBackground, width: 2),
       ),
       child: const SizedBox(width: 12, height: 12),
     );
@@ -607,7 +607,7 @@ class _GroupAvatar extends StatelessWidget {
             child: DecoratedBox(
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                border: Border.all(color: colors.background, width: 2),
+                border: Border.all(color: colors.pageBackground, width: 2),
               ),
               child: FriendAvatar(
                 size: face,

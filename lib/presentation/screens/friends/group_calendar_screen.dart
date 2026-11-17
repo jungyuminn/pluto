@@ -366,7 +366,7 @@ class _GroupCalendarScreenState extends State<GroupCalendarScreen> {
     final top = MediaQuery.paddingOf(context).top;
     final me = FriendService.instance.profile.value?.uid ?? '';
     return Scaffold(
-      backgroundColor: colors.groupedBackground,
+      backgroundColor: colors.pageBackground,
       resizeToAvoidBottomInset: false,
       extendBodyBehindAppBar: true,
       appBar: _Bar(onBack: () => Navigator.pop(context)),

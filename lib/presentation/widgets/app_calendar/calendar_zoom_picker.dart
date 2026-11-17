@@ -85,7 +85,6 @@ class CalendarZoomTitle extends StatelessWidget {
     final colors = AppColors.of(context);
     return PressBounce(
       onPressed: onPressed,
-      pressedScale: 0.97,
       pressedColor: colors.isDark
           ? colors.pressed
           : const Color(0xFFD5DCE6),
@@ -267,7 +266,6 @@ class _CalendarPagerTitleState extends State<CalendarPagerTitle> {
     final height = widget.fontSize * 1.1;
     return PressBounce(
       onPressed: widget.onPressed,
-      pressedScale: 0.97,
       pressedColor: colors.isDark
           ? colors.pressed
           : const Color(0xFFD5DCE6),
@@ -727,7 +725,6 @@ class _ZoomCell extends StatelessWidget {
       onPressed: cell.onPressed,
       color: Colors.transparent,
       pressedColor: Colors.transparent,
-      pressedScale: 0.94,
       child: SizedBox.expand(
         child: Center(
           child: AnimatedContainer(

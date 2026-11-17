@@ -14,6 +14,9 @@ import 'package:pluto/domain/entities/event_category.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/add_category_sheet.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/delete_category_dialog.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/delete_event_dialog.dart';
+import 'package:pluto/presentation/screens/calendar/widgets/event_complete_button.dart';
+import 'package:pluto/presentation/widgets/ai_category_chip.dart';
+import 'package:pluto/presentation/widgets/category_suggest_session.dart';
 
 Future<EventCategory?> showCategoryPickerSheet(
   BuildContext context, {
@@ -27,7 +30,7 @@ Future<EventCategory?> showCategoryPickerSheet(
     isScrollControlled: true,
     useSafeArea: false,
     showDragHandle: false,
-    enableDrag: false,
+    enableDrag: true,
     backgroundColor: Colors.transparent,
     barrierColor: AppColors.barrier,
     elevation: 0,
@@ -64,8 +67,7 @@ class CategoryPickerSheet extends StatefulWidget {
   State<CategoryPickerSheet> createState() => _CategoryPickerSheetState();
 }
 
-class _CategoryPickerSheetState extends State<CategoryPickerSheet>
-    with SingleTickerProviderStateMixin {
+class _CategoryPickerSheetState extends State<CategoryPickerSheet> {
   var _categories = <EventCategory>[];
   var _loading = true;
   var _editing = false;
@@ -80,7 +82,6 @@ class _CategoryPickerSheetState extends State<CategoryPickerSheet>
   final _appearIds = <String>{};
   final _seenIds = <String>{};
   late String? _selectedId;
-  late final AnimationController _jiggle;
 
   static const _gridAnim = Duration(milliseconds: 220);
   static const _slotAnim = Duration(milliseconds: 240);
@@ -91,10 +92,6 @@ class _CategoryPickerSheetState extends State<CategoryPickerSheet>
   void initState() {
     super.initState();
     _selectedId = widget.selectedId;
-    _jiggle = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 180),
-    );
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       unawaited(_reload());
@@ -105,7 +102,6 @@ class _CategoryPickerSheetState extends State<CategoryPickerSheet>
   @override
   void dispose() {
     _discarding.dispose();
-    _jiggle.dispose();
     super.dispose();
   }
 
@@ -177,7 +173,6 @@ class _CategoryPickerSheetState extends State<CategoryPickerSheet>
 
   void _enterEdit(EventCategory? category) {
     if (_editing) return;
-    _jiggle.repeat();
     setState(() {
       _editing = true;
       _marked.clear();
@@ -188,9 +183,6 @@ class _CategoryPickerSheetState extends State<CategoryPickerSheet>
   }
 
   void _exitEdit() {
-    _jiggle
-      ..stop()
-      ..value = 0;
     setState(() {
       _editing = false;
       _marked.clear();
@@ -520,10 +512,13 @@ class _CategoryPickerSheetState extends State<CategoryPickerSheet>
     final id = _draggingId;
     final discard = _discarding.value;
     _discarding.value = false;
-    final origin = discard || id == null ? null : _slotOrigin(id);
+    final origin = id == null ? null : _slotOrigin(id);
     final delta = origin == null ? Offset.zero : details.offset - origin;
+    final settle = Duration(
+      milliseconds: (180 + delta.distance * 0.25).clamp(200, 400).round(),
+    );
     setState(() {
-      _drop.arm(discard ? null : id, delta);
+      _drop.arm(id, delta, duration: settle);
       _draggingId = null;
     });
     if (id == null) return;
@@ -595,7 +590,7 @@ class _CategoryPickerSheetState extends State<CategoryPickerSheet>
     final colors = AppColors.of(context);
 
     return PopScope(
-      canPop: false,
+      canPop: !(_editing && !widget.startModifying),
       onPopInvokedWithResult: (didPop, result) {
         if (didPop) return;
         if (_editing && !widget.startModifying) {
@@ -612,7 +607,7 @@ class _CategoryPickerSheetState extends State<CategoryPickerSheet>
           key: _sheetKey,
           duration: const Duration(milliseconds: 180),
           curve: Curves.easeOutCubic,
-          clipBehavior: Clip.antiAlias,
+          clipBehavior: _drop.id != null ? Clip.none : Clip.antiAlias,
           decoration: BoxDecoration(
             color: _discarding.value
                 ? colors.tint(colors.danger, 0.2)
@@ -620,12 +615,22 @@ class _CategoryPickerSheetState extends State<CategoryPickerSheet>
             borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
           ),
           child: Padding(
-            padding: EdgeInsets.fromLTRB(20, 16, 20, 16 + bottom),
+            padding: EdgeInsets.fromLTRB(20, 10, 20, 16 + bottom),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
+                Center(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: colors.muted.withValues(alpha: 0.45),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: const SizedBox(width: 44, height: 4),
+                  ),
+                ),
+                const SizedBox(height: 6),
                 SizedBox(
-                  height: 40,
+                  height: 44,
                   child: Row(
                     children: [
                       _headerAction(
@@ -634,8 +639,8 @@ class _CategoryPickerSheetState extends State<CategoryPickerSheet>
                         editLabel: AppStrings.modify,
                         idleColor: colors.accent,
                         editColor: colors.accent,
-                        idlePressed: colors.rangeFill,
-                        editPressed: colors.rangeFill,
+                        idlePressed: colors.pressed,
+                        editPressed: colors.pressed,
                         visible: !_editing || _marked.length <= 1,
                         onPressed: _editing ? _editMarked : _toggleEdit,
                       ),
@@ -645,8 +650,8 @@ class _CategoryPickerSheetState extends State<CategoryPickerSheet>
                             AppStrings.categoryAction,
                             style: TextStyle(
                               fontFamily: AppFonts.of(context),
-                              fontSize: 18,
-                              fontWeight: FontWeight.w800,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
                               color: colors.text,
                             ),
                           ),
@@ -658,14 +663,14 @@ class _CategoryPickerSheetState extends State<CategoryPickerSheet>
                         editLabel: AppStrings.delete,
                         idleColor: colors.accent,
                         editColor: colors.danger,
-                        idlePressed: colors.rangeFill,
+                        idlePressed: colors.pressed,
                         editPressed: colors.tint(colors.danger, 0.22),
                         onPressed: _editing ? _deleteMarked : _add,
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 4),
                 if (_loading)
                   const Padding(
                     padding: EdgeInsets.symmetric(vertical: 32),
@@ -680,10 +685,14 @@ class _CategoryPickerSheetState extends State<CategoryPickerSheet>
                       duration: _gridAnim,
                       curve: Curves.easeOutCubic,
                       alignment: Alignment.topCenter,
+                      clipBehavior:
+                          _drop.id != null ? Clip.none : Clip.hardEdge,
                       child: SingleChildScrollView(
                         physics: _draggingId == null
                             ? const ClampingScrollPhysics()
                             : const NeverScrollableScrollPhysics(),
+                        clipBehavior:
+                            _drop.id != null ? Clip.none : Clip.hardEdge,
                         child: _buildGrid(),
                       ),
                     ),
@@ -721,19 +730,18 @@ class _CategoryPickerSheetState extends State<CategoryPickerSheet>
           ignoring: !visible,
           child: PressBounce(
             onPressed: onPressed,
-            pressedScale: 0.96,
             color: Colors.transparent,
             pressedColor: editing ? editPressed : idlePressed,
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(999),
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: AnimatedDefaultTextStyle(
                 duration: const Duration(milliseconds: 200),
                 curve: Curves.easeOutCubic,
                 style: TextStyle(
                   fontFamily: AppFonts.of(context),
                   fontSize: 16,
-                  fontWeight: FontWeight.w800,
+                  fontWeight: FontWeight.w600,
                   color: color,
                 ),
                 child: AnimatedSwitcher(
@@ -818,13 +826,7 @@ class _CategoryPickerSheetState extends State<CategoryPickerSheet>
   }
 
   Widget _slot(EventCategory category, double cell) {
-    return _Jiggle(
-      animation: _jiggle,
-      phase: category.id.hashCode * 0.17,
-      enabled: _editing &&
-          _draggingId != category.id &&
-          !_exiting.contains(category.id),
-      child: LongPressDraggable<String>(
+    return LongPressDraggable<String>(
         data: category.id,
         delay: const Duration(milliseconds: 400),
         hapticFeedbackOnStart: true,
@@ -876,7 +878,6 @@ class _CategoryPickerSheetState extends State<CategoryPickerSheet>
           ),
         ),
         child: _card(category),
-      ),
     );
   }
 
@@ -888,9 +889,9 @@ class _CategoryPickerSheetState extends State<CategoryPickerSheet>
     final marked = forceMarked || _marked.contains(category.id);
     return _CategoryCard(
       category: category,
-      selected: _editing ? marked : category.id == _selectedId,
       editing: _editing || forceMarked,
       marked: _editing && marked,
+      ai: CategorySuggestSession.isOn(context, editing: false),
       onPressed: interactive ? () => _onTap(category) : null,
     );
   }
@@ -957,47 +958,19 @@ class _GridTileState extends State<_GridTile> {
   }
 }
 
-class _Jiggle extends StatelessWidget {
-  const _Jiggle({
-    required this.animation,
-    required this.phase,
-    required this.enabled,
-    required this.child,
-  });
-
-  final Animation<double> animation;
-  final double phase;
-  final bool enabled;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    if (!enabled) return child;
-    return AnimatedBuilder(
-      animation: animation,
-      builder: (context, child) {
-        final angle =
-            math.sin((animation.value * 2 * math.pi) + phase) * 0.045;
-        return Transform.rotate(angle: angle, child: child);
-      },
-      child: child,
-    );
-  }
-}
-
 class _CategoryCard extends StatelessWidget {
   const _CategoryCard({
     required this.category,
-    required this.selected,
     required this.editing,
     required this.marked,
+    this.ai = false,
     this.onPressed,
   });
 
   final EventCategory category;
-  final bool selected;
   final bool editing;
   final bool marked;
+  final bool ai;
   final VoidCallback? onPressed;
 
   static const radius = BorderRadius.all(Radius.circular(8));
@@ -1005,11 +978,13 @@ class _CategoryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
+    final fill = Color.lerp(colors.card, colors.groupedBackground, 0.68)!;
     return PressBounce(
       onPressed: onPressed,
       expand: true,
-      color: selected ? colors.pressed : colors.background,
-      pressedColor: colors.pressed,
+      pressedScale: 0.92,
+      color: fill,
+      pressedColor: Color.lerp(colors.pressed, colors.border, 0.55)!,
       borderRadius: radius,
       child: SizedBox.expand(
         child: Stack(
@@ -1020,38 +995,46 @@ class _CategoryCard extends StatelessWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Container(
-                    width: 14,
-                    height: 14,
-                    decoration: BoxDecoration(
-                      color: category.tint,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
+                  ai
+                      ? AiCategoryStar(color: category.tint, slot: 14)
+                      : Container(
+                          width: 14,
+                          height: 14,
+                          decoration: BoxDecoration(
+                            color: category.tint,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
                   const SizedBox(height: 8),
-                  Text(
-                    category.name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontFamily: AppFonts.of(context),
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      height: 1,
-                      leadingDistribution: TextLeadingDistribution.even,
-                      color: EventCategory.labelOf(category.tint),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 14,
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        category.name,
+                        maxLines: 1,
+                        softWrap: false,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontFamily: AppFonts.of(context),
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          height: 1,
+                          leadingDistribution: TextLeadingDistribution.even,
+                          color: EventCategory.labelOf(category.tint),
+                        ),
+                      ),
                     ),
                   ),
                 ],
               ),
             ),
-            if (editing)
-              Positioned(
-                top: 4,
-                right: 4,
-                child: _SelectMark(marked: marked),
-              ),
+            Positioned(
+              top: 4,
+              right: 4,
+              child: _SelectMark(visible: editing, marked: marked),
+            ),
           ],
         ),
       ),
@@ -1060,46 +1043,61 @@ class _CategoryCard extends StatelessWidget {
 }
 
 class _SelectMark extends StatelessWidget {
-  const _SelectMark({required this.marked});
+  const _SelectMark({required this.visible, required this.marked});
 
+  final bool visible;
   final bool marked;
 
   static const _size = 14.0;
-  static const _duration = Duration(milliseconds: 220);
+  static const _duration = Duration(milliseconds: 200);
+  static const _fade = Duration(milliseconds: 160);
 
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
-    return AnimatedContainer(
-      duration: _duration,
-      curve: Curves.easeOutCubic,
-      width: _size,
-      height: _size,
-      clipBehavior: Clip.antiAlias,
-      decoration: BoxDecoration(
-        color: marked ? colors.danger : colors.card,
-        shape: BoxShape.circle,
-        border: Border.all(
-          color: marked ? colors.danger : colors.border,
-          width: 1.4,
-        ),
-      ),
-      alignment: Alignment.center,
+    return IgnorePointer(
       child: AnimatedScale(
-        scale: marked ? 1 : 0.2,
+        scale: visible ? 1 : 0.55,
         duration: _duration,
-        curve: marked ? Curves.easeOutBack : Curves.easeInCubic,
+        curve: visible ? Curves.easeOutCubic : Curves.easeInCubic,
         child: AnimatedOpacity(
-          opacity: marked ? 1 : 0,
-          duration: const Duration(milliseconds: 140),
-          curve: marked ? Curves.easeOut : Curves.easeIn,
-          child: const Icon(
-            Icons.check,
-            size: 10,
-            color: Colors.white,
+          opacity: visible ? 1 : 0,
+          duration: _fade,
+          curve: visible ? Curves.easeOut : Curves.easeIn,
+          child: AnimatedContainer(
+            duration: _duration,
+            curve: Curves.easeOutCubic,
+            width: _size,
+            height: _size,
+            clipBehavior: Clip.antiAlias,
+            decoration: BoxDecoration(
+              color: marked ? colors.danger : colors.card,
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: marked ? colors.danger : colors.border,
+                width: 1.4,
+              ),
+            ),
+            alignment: Alignment.center,
+            child: AnimatedScale(
+              scale: marked ? 1 : 0.2,
+              duration: _duration,
+              curve: marked ? Curves.easeOutBack : Curves.easeInCubic,
+              child: AnimatedOpacity(
+                opacity: marked ? 1 : 0,
+                duration: const Duration(milliseconds: 140),
+                curve: marked ? Curves.easeOut : Curves.easeIn,
+                child: const CompleteCheck(
+                  size: 10,
+                  color: Colors.white,
+                  strokeWidth: 1.35,
+                ),
+              ),
+            ),
           ),
         ),
       ),
     );
   }
 }
+

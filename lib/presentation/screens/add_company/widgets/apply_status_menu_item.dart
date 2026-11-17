@@ -18,7 +18,6 @@ class ApplyStatusMenuItem extends StatelessWidget {
 
     return PressBounce(
       onPressed: onPressed,
-      pressedScale: 0.96,
       borderRadius: BorderRadius.circular(12),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),

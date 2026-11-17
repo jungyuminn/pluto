@@ -892,63 +892,64 @@ class _AddEventFormState extends State<AddEventForm>
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              TutorialSheetHint(color: _accent),
-              TutorialPulse(
-                active: tutorial?.step.action == TutorialAction.composeEvent,
-                radius: 16,
-                color: _accent,
-                child: EventTitleField(
-                  controller: _title,
-                  focusNode: _titleFocus,
-                  autofocus: true,
-                  readOnly: !allowTitle,
-                  onChanged: _feedTitle,
-                  onTap: allowTitle
-                      ? null
-                      : () => _allowsAdd(TutorialAction.composeEvent),
-                ),
-              ),
-              ClipRect(
-                child: SizeTransition(
-                  sizeFactor: _memoFade,
-                  alignment: Alignment.topCenter,
-                  child: FadeTransition(
-                    opacity: _memoFade,
-                    child: Padding(
-                      padding: const EdgeInsets.only(top: 6),
-                      child: IgnorePointer(
-                        ignoring: !_memoOpen,
-                        child: EventMemoField(
-                          controller: _memo,
-                          focusNode: _memoFocus,
-                          readOnly: !allowExtra,
+                    TutorialSheetHint(color: _accent),
+                    TutorialPulse(
+                      active:
+                          tutorial?.step.action == TutorialAction.composeEvent,
+                      radius: 16,
+                      color: _accent,
+                      child: EventTitleField(
+                        controller: _title,
+                        focusNode: _titleFocus,
+                        autofocus: true,
+                        readOnly: !allowTitle,
+                        onChanged: _feedTitle,
+                        onTap: allowTitle
+                            ? null
+                            : () => _allowsAdd(TutorialAction.composeEvent),
+                      ),
+                    ),
+                    ClipRect(
+                      child: SizeTransition(
+                        sizeFactor: _memoFade,
+                        alignment: Alignment.topCenter,
+                        child: FadeTransition(
+                          opacity: _memoFade,
+                          child: Padding(
+                            padding: const EdgeInsets.only(top: 6),
+                            child: IgnorePointer(
+                              ignoring: !_memoOpen,
+                              child: EventMemoField(
+                                controller: _memo,
+                                focusNode: _memoFocus,
+                                readOnly: !allowExtra,
+                              ),
+                            ),
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ),
-              ),
-              ClipRect(
-                child: SizeTransition(
-                  sizeFactor: _checklistFade,
-                  alignment: Alignment.topCenter,
-                  child: FadeTransition(
-                    opacity: _checklistFade,
-                    child: Padding(
-                      padding: const EdgeInsets.only(top: 6),
-                      child: IgnorePointer(
-                        ignoring: !_checklistOpen,
-                        child: EventChecklistEditor(
-                          key: _checklistKey,
-                          initial: widget.initial?.checklist ?? const [],
-                          color: _accent,
-                          readOnly: !allowExtra,
+                    ClipRect(
+                      child: SizeTransition(
+                        sizeFactor: _checklistFade,
+                        alignment: Alignment.topCenter,
+                        child: FadeTransition(
+                          opacity: _checklistFade,
+                          child: Padding(
+                            padding: const EdgeInsets.only(top: 6),
+                            child: IgnorePointer(
+                              ignoring: !_checklistOpen,
+                              child: EventChecklistEditor(
+                                key: _checklistKey,
+                                initial: widget.initial?.checklist ?? const [],
+                                color: _accent,
+                                readOnly: !allowExtra,
+                              ),
+                            ),
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ),
-              ),
               const SizedBox(height: 5),
               Row(
                 children: [

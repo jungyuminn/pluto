@@ -271,7 +271,6 @@ class _CollectedPlanetTile extends StatelessWidget {
         HapticFeedback.selectionClick();
         Navigator.of(context).pop(planet.month);
       },
-      pressedScale: 0.96,
       pressedColor: colors.pressed,
       borderRadius: BorderRadius.circular(18),
       child: SizedBox(

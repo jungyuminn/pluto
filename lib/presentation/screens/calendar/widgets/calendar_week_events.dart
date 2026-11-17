@@ -533,29 +533,30 @@ List<_WeekBlock> _blocksFor(
     }
   }
 
-  var rangeLane = 0;
-  for (final item in raw) {
-    if (!item.event.isJob || !item.event.isRange) continue;
-    place(item, lane: rangeLane);
-    rangeLane++;
-  }
-  for (final item in raw) {
-    if (item.event.isJob || !item.event.isRange) continue;
-    place(item, lane: rangeLane);
-    rangeLane++;
-  }
-  for (final item in raw) {
-    if (!item.event.isJob || item.event.isRange) continue;
-    place(item);
-  }
-  for (final item in raw) {
-    if (item.event.isJob || item.event.isRange) continue;
+  int minLaneOf(int start, int end) {
     var minLane = 0;
-    for (var day = item.start; day <= item.end; day++) {
+    for (var day = start; day <= end; day++) {
       final next = lastLane[day] + 1;
       if (next > minLane) minLane = next;
     }
-    place(item, lane: minLane);
+    return minLane;
+  }
+
+  for (final item in raw) {
+    if (!item.event.isJob || !item.event.isRange) continue;
+    place(item);
+  }
+  for (final item in raw) {
+    if (item.event.isJob || !item.event.isRange) continue;
+    place(item);
+  }
+  for (final item in raw) {
+    if (!item.event.isJob || item.event.isRange) continue;
+    place(item, lane: minLaneOf(item.start, item.end));
+  }
+  for (final item in raw) {
+    if (item.event.isJob || item.event.isRange) continue;
+    place(item, lane: minLaneOf(item.start, item.end));
   }
   return blocks;
 }

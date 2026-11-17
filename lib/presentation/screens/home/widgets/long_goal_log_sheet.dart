@@ -930,7 +930,6 @@ class _CheckInWeekState extends State<_CheckInWeek>
           : isToday && widget.onToggle != null
               ? () => widget.onToggle!(day)
               : null,
-      pressedScale: 0.94,
       color: selected
           ? widget.color.withValues(alpha: 0.16)
           : Colors.transparent,

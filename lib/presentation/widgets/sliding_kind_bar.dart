@@ -72,7 +72,6 @@ class _SlidingKindBarState<T> extends State<SlidingKindBar<T>> {
                   Expanded(
                     child: PressBounce(
                       passthrough: true,
-                      pressedScale: 0.94,
                       color: Colors.transparent,
                       borderRadius: BorderRadius.circular(999),
                       child: Center(

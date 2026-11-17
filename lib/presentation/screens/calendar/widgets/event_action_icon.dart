@@ -36,8 +36,9 @@ class EventActionIcon extends StatelessWidget {
       label: label ?? caption,
       child: PressBounce(
         onPressed: onPressed,
+        pressedScale: 0.92,
         color: selected || hasText ? colors.card : Colors.transparent,
-        pressedColor: colors.pressed,
+        pressedColor: colors.composeChipPressed,
         borderRadius: BorderRadius.circular(999),
         child: Padding(
           padding: EdgeInsets.fromLTRB(hasIcon ? 6 : 8, 5, 8, 5),

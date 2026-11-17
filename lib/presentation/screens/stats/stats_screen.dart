@@ -292,7 +292,6 @@ class StatsScreenState extends State<StatsScreen>
           ),
           title: PressBounce(
             onPressed: _onTitlePressed,
-            pressedScale: 0.97,
             pressedColor: Colors.transparent,
             child: Text(
               _monthLabel(),
@@ -599,7 +598,6 @@ class _RankBadge extends StatelessWidget {
     final font = AppFonts.of(context);
     return PressBounce(
       onPressed: onPressed,
-      pressedScale: 0.96,
       pressedColor: colors.pressed,
       borderRadius: BorderRadius.circular(999),
       child: DecoratedBox(
@@ -664,7 +662,6 @@ class _LevelBlock extends StatelessWidget {
           isMax: play.isMax,
         );
       },
-      pressedScale: 0.98,
       pressedColor: colors.pressed,
       borderRadius: BorderRadius.circular(18),
       child: DecoratedBox(
@@ -1019,7 +1016,6 @@ class _CollectedCard extends StatelessWidget {
         if (month == null || !context.mounted) return;
         onSelectMonth(month);
       },
-      pressedScale: 0.98,
       pressedColor: colors.pressed,
       borderRadius: BorderRadius.circular(18),
       child: DecoratedBox(
@@ -1604,7 +1600,6 @@ class _DayDotState extends State<_DayDot> with SingleTickerProviderStateMixin {
     };
     return PressBounce(
       onPressed: () => widget.onPressed(widget.date, _originOf(context)),
-      pressedScale: 0.9,
       pressedColor: colors.pressed,
       borderRadius: BorderRadius.circular(999),
       child: LayoutBuilder(
@@ -1678,7 +1673,6 @@ class _MonthArrow extends StatelessWidget {
         : AppFonts.wordmarkColor.withValues(alpha: 0.28);
     return PressBounce(
       onPressed: onPressed,
-      pressedScale: 0.9,
       pressedColor: enabled ? colors.pressed : Colors.transparent,
       borderRadius: BorderRadius.circular(12),
       child: SizedBox(

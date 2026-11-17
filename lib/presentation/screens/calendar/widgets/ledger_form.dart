@@ -601,32 +601,32 @@ class _LedgerFormState extends State<LedgerForm> with TickerProviderStateMixin {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          EventTitleField(
-            controller: _title,
-            focusNode: _titleFocus,
-            autofocus: false,
-            hintText: _isWage
-                ? AppStrings.ledgerWorkplaceHint
-                : AppStrings.ledgerTitleHint,
-            onChanged: _feedTitle,
-          ),
-          const SizedBox(height: 6),
-          _AmountField(
-            controller: _amount,
-            focusNode: _amountFocus,
-            hintText: _isHourly
-                ? AppStrings.ledgerHourlyHint
-                : _isSalary
-                ? AppStrings.ledgerMonthlyHint
-                : AppStrings.ledgerAmountHint,
-            suffixText: _isHourly
-                ? '${AppStrings.ledgerAmountSuffix} (${AppStrings.ledgerHourly})'
-                : _isSalary
-                ? '${AppStrings.ledgerAmountSuffix} (${AppStrings.ledgerSalary})'
-                : AppStrings.ledgerAmountSuffix,
-            onChanged: _formatAmount,
-          ),
-          const SizedBox(height: 6),
+                EventTitleField(
+                  controller: _title,
+                  focusNode: _titleFocus,
+                  autofocus: false,
+                  hintText: _isWage
+                      ? AppStrings.ledgerWorkplaceHint
+                      : AppStrings.ledgerTitleHint,
+                  onChanged: _feedTitle,
+                ),
+                const SizedBox(height: 6),
+                _AmountField(
+                  controller: _amount,
+                  focusNode: _amountFocus,
+                  hintText: _isHourly
+                      ? AppStrings.ledgerHourlyHint
+                      : _isSalary
+                      ? AppStrings.ledgerMonthlyHint
+                      : AppStrings.ledgerAmountHint,
+                  suffixText: _isHourly
+                      ? '${AppStrings.ledgerAmountSuffix} (${AppStrings.ledgerHourly})'
+                      : _isSalary
+                      ? '${AppStrings.ledgerAmountSuffix} (${AppStrings.ledgerSalary})'
+                      : AppStrings.ledgerAmountSuffix,
+                  onChanged: _formatAmount,
+                ),
+                const SizedBox(height: 6),
           Row(
             children: [
               Expanded(

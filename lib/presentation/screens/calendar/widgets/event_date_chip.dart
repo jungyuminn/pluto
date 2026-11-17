@@ -34,8 +34,9 @@ class EventDateChip extends StatelessWidget {
     final ink = EventCategory.labelOf(color, 0.1);
     return PressBounce(
       onPressed: onPressed,
+      pressedScale: 0.92,
       color: colors.card,
-      pressedColor: colors.pressed,
+      pressedColor: colors.composeChipPressed,
       borderRadius: BorderRadius.circular(999),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(6, 5, 8, 5),

@@ -202,7 +202,6 @@ class _BannerBody extends StatelessWidget {
                 onPressed: () {
                   TutorialController.maybeOf(context)?.dismissFeatureIntro();
                 },
-                pressedScale: 0.88,
                 borderRadius: BorderRadius.circular(999),
                 child: SizedBox(
                   width: 44,
@@ -469,7 +468,6 @@ class _FeatureRow extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 6),
       child: PressBounce(
         onPressed: onPressed,
-        pressedScale: 0.98,
         alignment: Alignment.centerLeft,
         color: selected ? highlight : Colors.transparent,
         pressedColor: colors.pressed,

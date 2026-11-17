@@ -216,7 +216,6 @@ class _WebCalendarArrowState extends State<WebCalendarArrow>
         shape: const CircleBorder(),
         child: PressBounce(
           onPressed: widget.onPressed,
-          pressedScale: 0.94,
           color: colors.card,
           pressedColor: colors.pressed,
           borderRadius: BorderRadius.circular(999),

@@ -292,8 +292,9 @@ class DiaryCoverChip extends StatelessWidget {
     final ink = EventCategory.labelOf(color);
     return PressBounce(
       onPressed: onPressed,
+      pressedScale: 0.92,
       color: colors.card,
-      pressedColor: colors.pressed,
+      pressedColor: colors.composeChipPressed,
       borderRadius: BorderRadius.circular(999),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(8, 5, 10, 5),

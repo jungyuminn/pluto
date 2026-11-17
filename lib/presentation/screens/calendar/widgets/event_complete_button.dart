@@ -111,11 +111,13 @@ class CompleteCheck extends StatelessWidget {
     required this.color,
     this.size = 22,
     this.progress = 1,
+    this.strokeWidth = 1.7,
   });
 
   final Color color;
   final double size;
   final double progress;
+  final double strokeWidth;
 
   @override
   Widget build(BuildContext context) {
@@ -123,7 +125,11 @@ class CompleteCheck extends StatelessWidget {
       width: size,
       height: size,
       child: CustomPaint(
-        painter: CompleteCheckPainter(progress: progress, color: color),
+        painter: CompleteCheckPainter(
+          progress: progress,
+          color: color,
+          checkStrokeWidth: strokeWidth,
+        ),
       ),
     );
   }
@@ -134,11 +140,13 @@ class CompleteCheckPainter extends CustomPainter {
     required this.progress,
     required this.color,
     this.strokeWidth = 1.35,
+    this.checkStrokeWidth = 1.7,
   });
 
   final double progress;
   final Color color;
   final double strokeWidth;
+  final double checkStrokeWidth;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -151,7 +159,7 @@ class CompleteCheckPainter extends CustomPainter {
     final checkPaint = Paint()
       ..color = color
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.7
+      ..strokeWidth = checkStrokeWidth
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round;
     final checkProgress = progress;
@@ -187,6 +195,7 @@ class CompleteCheckPainter extends CustomPainter {
   bool shouldRepaint(covariant CompleteCheckPainter oldDelegate) {
     return oldDelegate.progress != progress ||
         oldDelegate.color != color ||
-        oldDelegate.strokeWidth != strokeWidth;
+        oldDelegate.strokeWidth != strokeWidth ||
+        oldDelegate.checkStrokeWidth != checkStrokeWidth;
   }
 }

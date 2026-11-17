@@ -249,13 +249,6 @@ class _HomeLongGoalCardState extends State<HomeLongGoalCard> {
       decoration: BoxDecoration(
         color: colors.homeCard,
         borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: colors.shadow.withValues(alpha: colors.shadow.a * 0.55),
-            blurRadius: 6,
-            offset: const Offset(0, 1),
-          ),
-        ],
       ),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),

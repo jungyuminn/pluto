@@ -623,7 +623,6 @@ class _Section extends StatelessWidget {
                   const SizedBox(width: 2),
                   PressBounce(
                     onPressed: onHelp,
-                    pressedScale: 0.88,
                     pressedColor: Colors.transparent,
                     child: Semantics(
                       button: true,

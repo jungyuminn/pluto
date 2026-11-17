@@ -1193,7 +1193,6 @@ class _DayCellState extends State<_DayCell> {
                 onPressed: () => widget.onPressed(widget.day.date),
                 color: Colors.transparent,
                 pressedColor: Colors.transparent,
-                pressedScale: 0.94,
                 expand: true,
                 alignment: Alignment.center,
                 child: Container(

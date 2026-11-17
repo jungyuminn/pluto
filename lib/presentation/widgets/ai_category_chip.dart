@@ -106,6 +106,39 @@ class _AiCategoryDotsState extends State<AiCategoryDots>
   }
 }
 
+class AiCategoryStar extends StatelessWidget {
+  const AiCategoryStar({
+    super.key,
+    required this.color,
+    this.slot = 13,
+    this.size = 18,
+  });
+
+  final Color color;
+  final double slot;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: slot,
+      height: slot,
+      child: OverflowBox(
+        minWidth: size,
+        minHeight: size,
+        maxWidth: size,
+        maxHeight: size,
+        child: AppAssetImage(
+          asset: AppIcons.stars,
+          width: size,
+          height: size,
+          color: color,
+        ),
+      ),
+    );
+  }
+}
+
 class _AiStar extends StatefulWidget {
   const _AiStar({required this.color, required this.twinkle});
 
@@ -157,12 +190,7 @@ class _AiStarState extends State<_AiStar> with SingleTickerProviderStateMixin {
             : 1.0;
         return Opacity(opacity: twinkle, child: child);
       },
-      child: AppAssetImage(
-        asset: AppIcons.stars,
-        width: 16,
-        height: 16,
-        color: widget.color,
-      ),
+      child: AiCategoryStar(color: widget.color),
     );
   }
 }

@@ -661,13 +661,6 @@ class _HomeDayCardState extends State<HomeDayCard> {
       decoration: BoxDecoration(
         color: colors.homeCard,
         borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: colors.shadow.withValues(alpha: colors.shadow.a * 0.55),
-            blurRadius: 6,
-            offset: const Offset(0, 1),
-          ),
-        ],
       ),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
@@ -718,7 +711,6 @@ class _HomeDayCardState extends State<HomeDayCard> {
                           padding: const EdgeInsets.only(right: 10),
                           child: PressBounce(
                             onPressed: () => _pickEmoji(date),
-                            pressedScale: 0.94,
                             pressedColor: colors.pressed,
                             borderRadius: BorderRadius.circular(14),
                             child: DayStickerImage(

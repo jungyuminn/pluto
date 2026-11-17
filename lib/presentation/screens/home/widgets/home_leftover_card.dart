@@ -18,41 +18,29 @@ class HomeLeftoverCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: colors.shadow.withValues(alpha: colors.shadow.a * 0.55),
-            blurRadius: 6,
-            offset: const Offset(0, 1),
-          ),
-        ],
-      ),
-      child: PressBounce(
-        onPressed: onPressed,
-        color: colors.homeCard,
-        pressedColor: colors.homeCardPressed,
-        borderRadius: BorderRadius.circular(24),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 14, 16, 14),
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  AppStrings.leftoverTodos(count),
-                  style: TextStyle(
-                    fontFamily: AppFonts.of(context),
-                    fontSize: 17,
-                    fontWeight: FontWeight.w600,
-                    height: 1.1,
-                    color: colors.accentBright,
-                  ),
+    return PressBounce(
+      onPressed: onPressed,
+      color: colors.homeCard,
+      pressedColor: colors.homeCardPressed,
+      borderRadius: BorderRadius.circular(24),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 14, 16, 14),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                AppStrings.leftoverTodos(count),
+                style: TextStyle(
+                  fontFamily: AppFonts.of(context),
+                  fontSize: 17,
+                  fontWeight: FontWeight.w600,
+                  height: 1.1,
+                  color: colors.accentBright,
                 ),
               ),
-              AppArrow.right(size: 24, color: colors.accentBright),
-            ],
-          ),
+            ),
+            AppArrow.right(size: 24, color: colors.accentBright),
+          ],
         ),
       ),
     );

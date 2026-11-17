@@ -234,7 +234,6 @@ class _ColorDot extends StatelessWidget {
     final colors = AppColors.of(context);
     return PressBounce(
       onPressed: onPressed,
-      pressedScale: 0.82,
       color: Colors.transparent,
       pressedColor: Colors.transparent,
       borderRadius: BorderRadius.circular(999),

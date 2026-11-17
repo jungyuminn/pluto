@@ -102,7 +102,14 @@ class AppColors extends ThemeExtension<AppColors> {
 
   Color get homeCard => card.withValues(alpha: homeWashOpacity);
 
+  /// 홈·설정·친구 화면. 시트는 groupedBackground를 쓴다.
+  Color get pageBackground =>
+      isDark ? groupedBackground : const Color(0xFFF3F7FC);
+
   Color get homeCardPressed => Color.lerp(homeCard, Colors.black, 0.08)!;
+
+  /// 추가 시트 알약·아이콘 눌림.
+  Color get composeChipPressed => Color.lerp(pressed, border, 0.65)!;
 
   /// 달력 칸처럼 테마가 비치는 곳을 누를 때. 색은 그대로, 뒤만 비치게.
   static const washOpacity = 0.62;

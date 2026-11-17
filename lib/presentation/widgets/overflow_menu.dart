@@ -8,9 +8,20 @@ import 'package:pluto/presentation/widgets/app_bar_icon_group.dart';
 import 'package:pluto/presentation/widgets/themed_asset.dart';
 
 class OverflowMenuCard extends StatelessWidget {
-  const OverflowMenuCard({super.key, required this.children});
+  const OverflowMenuCard({
+    super.key,
+    required this.children,
+    this.radius = 32,
+    this.opacity = 0.94,
+    this.elevation = 8,
+    this.minWidth,
+  });
 
   final List<Widget> children;
+  final double radius;
+  final double opacity;
+  final double elevation;
+  final double? minWidth;
 
   static double _minWidthOf(BuildContext context) {
     final style = TextStyle(
@@ -39,14 +50,16 @@ class OverflowMenuCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: AppColors.of(context).card.withValues(alpha: 0.94),
-      elevation: 8,
+      color: AppColors.of(context).card.withValues(alpha: opacity),
+      elevation: elevation,
       shadowColor: const Color(0x33000000),
       surfaceTintColor: Colors.transparent,
-      borderRadius: BorderRadius.circular(32),
+      borderRadius: BorderRadius.circular(radius),
       clipBehavior: Clip.antiAlias,
       child: ConstrainedBox(
-        constraints: BoxConstraints(minWidth: _minWidthOf(context)),
+        constraints: BoxConstraints(
+          minWidth: minWidth ?? _minWidthOf(context),
+        ),
         child: IntrinsicWidth(
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
@@ -75,6 +88,8 @@ class OverflowMenuItem extends StatelessWidget {
     this.value,
     this.onChanged,
     this.color,
+    this.fontWeight = FontWeight.w500,
+    this.fontSize = 16,
   });
 
   final String label;
@@ -87,6 +102,8 @@ class OverflowMenuItem extends StatelessWidget {
   final bool? value;
   final ValueChanged<bool>? onChanged;
   final Color? color;
+  final FontWeight fontWeight;
+  final double fontSize;
 
   @override
   Widget build(BuildContext context) {
@@ -124,8 +141,8 @@ class OverflowMenuItem extends StatelessWidget {
                 label,
                 style: TextStyle(
                   fontFamily: AppFonts.of(context),
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
+                  fontSize: fontSize,
+                  fontWeight: fontWeight,
                   color: tint,
                 ),
               ),
@@ -148,16 +165,11 @@ class OverflowMenuItem extends StatelessWidget {
               const SizedBox(width: 10),
               RotatedBox(
                 quarterTurns: trailingQuarterTurns,
-                child: ColorFiltered(
-                  colorFilter: ColorFilter.mode(
-                    AppColors.light.icon,
-                    BlendMode.srcIn,
-                  ),
-                  child: AppAssetImage(
-                    asset: trailingAsset!,
-                    width: 22,
-                    height: 22,
-                  ),
+                child: AppAssetImage(
+                  asset: trailingAsset!,
+                  width: 22,
+                  height: 22,
+                  color: iconTint,
                 ),
               ),
             ],
@@ -167,7 +179,6 @@ class OverflowMenuItem extends StatelessWidget {
     );
     return PressBounce(
       onPressed: onPressed,
-      pressedScale: 0.96,
       borderRadius: BorderRadius.circular(14),
       child: row,
     );

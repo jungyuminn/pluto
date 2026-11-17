@@ -170,7 +170,6 @@ class _LedgerHighlightRow extends StatelessWidget {
     final font = AppFonts.of(context);
     return PressBounce(
       onPressed: onPressed,
-      pressedScale: 0.98,
       alignment: Alignment.centerLeft,
       borderRadius: BorderRadius.circular(12),
       child: Padding(

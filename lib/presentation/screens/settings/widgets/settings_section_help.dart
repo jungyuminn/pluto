@@ -2983,7 +2983,6 @@ class _CyclingPreviewState extends State<_CyclingPreview> {
                 for (var i = 0; i < widget.frames.length; i++)
                   PressBounce(
                     onPressed: () => _goTo(i, fromUser: true),
-                    pressedScale: 0.9,
                     pressedColor: Colors.transparent,
                     child: Padding(
                       padding: const EdgeInsets.symmetric(
@@ -3075,7 +3074,6 @@ class _PreviewNavButton extends StatelessWidget {
     final colors = AppColors.of(context);
     return PressBounce(
       onPressed: onPressed,
-      pressedScale: 0.88,
       pressedColor: Colors.transparent,
       child: SizedBox(
         width: 32,

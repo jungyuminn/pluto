@@ -321,7 +321,6 @@ class _InviteTileState extends State<_InviteTile> {
     final friend = widget.friend;
     return PressBounce(
       onPressed: _busy ? null : _invite,
-      pressedScale: 0.99,
       color: colors.card,
       pressedColor: colors.pressed,
       borderRadius: BorderRadius.circular(16),

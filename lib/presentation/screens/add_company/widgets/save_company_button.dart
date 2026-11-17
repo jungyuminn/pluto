@@ -114,7 +114,6 @@ class _SaveCompanyButtonState extends State<SaveCompanyButton> {
               builder: (context, ink) {
                 return PressBounce(
                   onPressed: widget.onPressed,
-                  pressedScale: 0.88,
                   color: ink,
                   pressedColor: Color.lerp(ink, Colors.black, 0.16)!,
                   borderRadius: BorderRadius.circular(999),
@@ -123,8 +122,8 @@ class _SaveCompanyButtonState extends State<SaveCompanyButton> {
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: ink.withValues(alpha: 0.26),
-                          blurRadius: 7,
+                          color: ink.withValues(alpha: 0.34),
+                          blurRadius: 9,
                           offset: const Offset(0, 2),
                         ),
                       ],

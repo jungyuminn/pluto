@@ -908,7 +908,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final contactHint = _contactHintVisible;
 
     return Scaffold(
-      backgroundColor: AppColors.of(context).groupedBackground,
+      backgroundColor: AppColors.of(context).pageBackground,
       extendBodyBehindAppBar: true,
       appBar: _FrostedAppBar(
         title: AppStrings.settingsTitle,
@@ -2743,7 +2743,6 @@ class _ThemePreviewNav extends StatelessWidget {
                           Expanded(
                             child: PressBounce(
                               onPressed: () => onSelected(i),
-                              pressedScale: 0.88,
                               pressedColor: Colors.transparent,
                               child: Center(
                                 child: ThemedAsset(
@@ -2950,6 +2949,10 @@ class _ThemeSettingsPageState extends State<_ThemeSettingsPage> {
   final _scroll = ScrollController();
   final _selectedKey = GlobalKey();
   var _scrolledToSelected = false;
+  ThemePreference? _theme;
+  var _motionBarVisible = false;
+  var _motionBarReady = false;
+  Timer? _motionBarTimer;
 
   @override
   void initState() {
@@ -2962,9 +2965,48 @@ class _ThemeSettingsPageState extends State<_ThemeSettingsPage> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final theme = AppScope.of(context).themePreference;
+    if (_theme != theme) {
+      _theme?.removeListener(_onTheme);
+      _theme = theme;
+      theme.addListener(_onTheme);
+    }
+    if (_motionBarReady) return;
+    _motionBarReady = true;
+    _motionBarVisible = _wantsMotionBar;
+  }
+
+  @override
   void dispose() {
+    _motionBarTimer?.cancel();
+    _theme?.removeListener(_onTheme);
     _scroll.dispose();
     super.dispose();
+  }
+
+  bool get _wantsMotionBar {
+    final theme = _theme;
+    return theme != null && !theme.usesCustom && theme.skin.hasMotion;
+  }
+
+  void _onTheme() {
+    if (!mounted) return;
+    final want = _wantsMotionBar;
+    if (want) {
+      if (_motionBarVisible || _motionBarTimer != null) return;
+      _motionBarTimer = Timer(const Duration(milliseconds: 100), () {
+        _motionBarTimer = null;
+        if (!mounted || !_wantsMotionBar) return;
+        setState(() => _motionBarVisible = true);
+      });
+      return;
+    }
+    _motionBarTimer?.cancel();
+    _motionBarTimer = null;
+    if (!_motionBarVisible) return;
+    setState(() => _motionBarVisible = false);
   }
 
   Future<void> _scrollToSelected({int attempt = 0}) async {
@@ -2998,7 +3040,7 @@ class _ThemeSettingsPageState extends State<_ThemeSettingsPage> {
             AppSkin.groupOf(theme.skin, custom: theme.usesCustom);
 
         return Scaffold(
-          backgroundColor: colors.groupedBackground,
+          backgroundColor: colors.pageBackground,
           extendBodyBehindAppBar: true,
           appBar: _FrostedAppBar(
             title: AppStrings.settingsThemeSection,
@@ -3019,7 +3061,7 @@ class _ThemeSettingsPageState extends State<_ThemeSettingsPage> {
                 child: _ThemeLivePreview(),
               ),
               _ThemeMotionSlider(
-                visible: !theme.usesCustom && theme.skin.hasMotion,
+                visible: _motionBarVisible,
                 value: theme.motion,
                 color: colors.accent,
                 cardColor: colors.card,
@@ -3103,23 +3145,35 @@ class _ThemeSettingsPageState extends State<_ThemeSettingsPage> {
                       children: [
                                     for (final skin in group.skins)
                                       KeyedSubtree(
-                                        key: theme.skin == skin &&
-                                                !theme.usesCustom
-                                            ? _selectedKey
-                                            : ValueKey(skin),
-                                        child: _SettingsTile(
-                                          label:
-                                              _SettingsScreenState._skinLabel(
-                                            skin,
-                                          ),
-                                          checked: !theme.usesCustom &&
-                                              theme.skin == skin,
-                            onPressed: () async {
-                              await theme.setSkin(skin);
-                                            await HomeScreenWidgetService
-                                                .instance
-                                                .sync();
-                                          },
+                                        key: ValueKey(skin),
+                                        child: Stack(
+                                          children: [
+                                            _SettingsTile(
+                                              label: _SettingsScreenState
+                                                  ._skinLabel(skin),
+                                              checked: !theme.usesCustom &&
+                                                  theme.skin == skin,
+                                              onPressed: () async {
+                                                await theme.setSkin(skin);
+                                                unawaited(
+                                                  HomeScreenWidgetService
+                                                      .instance
+                                                      .sync(),
+                                                );
+                                              },
+                                            ),
+                                            if (!theme.usesCustom &&
+                                                theme.skin == skin)
+                                              Positioned.fill(
+                                                child: IgnorePointer(
+                                                  child: KeyedSubtree(
+                                                    key: _selectedKey,
+                                                    child:
+                                                        const SizedBox.expand(),
+                                                  ),
+                                                ),
+                                              ),
+                                          ],
                                         ),
                                       ),
                                   ],
@@ -3376,8 +3430,10 @@ class _MineThemesPanelState extends State<_MineThemesPanel>
                                         return;
                                       }
                                       await theme.setCustomTheme(item.id);
-                                      await HomeScreenWidgetService.instance
-                                          .sync();
+                                      unawaited(
+                                        HomeScreenWidgetService.instance
+                                            .sync(),
+                                      );
                                     },
                                   ),
                                 ),
@@ -3609,7 +3665,6 @@ class _ThemeSwipeAction extends StatelessWidget {
   Widget build(BuildContext context) {
     return PressBounce(
       onPressed: onPressed,
-      pressedScale: 0.9,
       color: Colors.transparent,
       pressedColor: Colors.transparent,
       child: Center(
@@ -3776,7 +3831,7 @@ class _CustomThemeEditorPageState extends State<_CustomThemeEditorPage> {
     final top = MediaQuery.paddingOf(context).top;
     final bottom = MediaQuery.paddingOf(context).bottom;
     return Scaffold(
-      backgroundColor: colors.groupedBackground,
+      backgroundColor: colors.pageBackground,
       extendBodyBehindAppBar: true,
       appBar: _FrostedAppBar(
         title: widget.initial == null
@@ -3977,7 +4032,6 @@ class _CustomThemeEditorPageState extends State<_CustomThemeEditorPage> {
             const SizedBox(height: 8),
             PressBounce(
               onPressed: _delete,
-              pressedScale: 0.96,
               color: Colors.transparent,
               pressedColor: Colors.transparent,
               child: SizedBox(
@@ -4271,7 +4325,6 @@ class _ThemeImageWell extends StatelessWidget {
     final hasImage = imagePath != null && imagePath.isNotEmpty;
     return PressBounce(
       onPressed: onPressed,
-      pressedScale: 0.99,
       color: Colors.transparent,
       pressedColor: Colors.transparent,
       borderRadius: BorderRadius.circular(16),
@@ -4512,7 +4565,7 @@ class _FontSettingsPageState extends State<_FontSettingsPage> {
       builder: (context, _) {
         final colors = AppColors.of(context);
         return Scaffold(
-          backgroundColor: colors.groupedBackground,
+          backgroundColor: colors.pageBackground,
           extendBodyBehindAppBar: true,
           appBar: _FrostedAppBar(
             title: AppStrings.settingsFontSection,
@@ -4655,7 +4708,7 @@ class _FontSizeSettingsPage extends StatelessWidget {
       builder: (context, _) {
         final colors = AppColors.of(context);
         return Scaffold(
-          backgroundColor: colors.groupedBackground,
+          backgroundColor: colors.pageBackground,
           extendBodyBehindAppBar: true,
           appBar: _FrostedAppBar(
             title: AppStrings.settingsCalendarSection,
@@ -4832,7 +4885,7 @@ class _TodoNotificationSettingsPageState
     final visible = _hintVisible;
 
     return Scaffold(
-      backgroundColor: AppColors.of(context).groupedBackground,
+      backgroundColor: AppColors.of(context).pageBackground,
       extendBodyBehindAppBar: true,
       appBar: _FrostedAppBar(
         title: AppStrings.todoNotificationSetting,
@@ -4960,7 +5013,7 @@ class _SummaryNotificationSettingsPageState
     final visible = _hintVisible;
 
     return Scaffold(
-      backgroundColor: AppColors.of(context).groupedBackground,
+      backgroundColor: AppColors.of(context).pageBackground,
       extendBodyBehindAppBar: true,
       appBar: _FrostedAppBar(
         title: AppStrings.summaryNotificationSetting,
@@ -5094,7 +5147,7 @@ class _LeftoverNotificationSettingsPageState
     final visible = _hintVisible;
 
     return Scaffold(
-      backgroundColor: AppColors.of(context).groupedBackground,
+      backgroundColor: AppColors.of(context).pageBackground,
       extendBodyBehindAppBar: true,
       appBar: _FrostedAppBar(
         title: AppStrings.leftoverNotificationSetting,
@@ -5218,7 +5271,7 @@ class _AutoBackupSettingsPageState extends State<_AutoBackupSettingsPage> {
     final visible = _hintVisible;
 
     return Scaffold(
-      backgroundColor: AppColors.of(context).groupedBackground,
+      backgroundColor: AppColors.of(context).pageBackground,
       extendBodyBehindAppBar: true,
       appBar: _FrostedAppBar(
         title: AppStrings.autoBackupSetting,
@@ -5391,7 +5444,6 @@ class _SectionLabel extends StatelessWidget {
             const SizedBox(width: 2),
             PressBounce(
               onPressed: onHelp,
-              pressedScale: 0.88,
               pressedColor: Colors.transparent,
               child: Semantics(
                 button: true,
@@ -5933,7 +5985,6 @@ class _SettingsTile extends StatelessWidget {
     return PressBounce(
       onPressed: onPressed,
       onLongPressed: onLongPressed,
-      pressedScale: 0.96,
       color: colors.card,
       pressedColor: colors.pressed,
       borderRadius: BorderRadius.circular(20),

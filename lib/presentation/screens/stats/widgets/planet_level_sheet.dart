@@ -206,7 +206,6 @@ class _StageRow extends StatelessWidget {
     final font = AppFonts.of(context);
     return PressBounce(
       onPressed: onPressed,
-      pressedScale: 0.98,
       pressedColor: colors.pressed,
       borderRadius: BorderRadius.circular(18),
       child: DecoratedBox(

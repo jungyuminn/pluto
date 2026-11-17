@@ -107,7 +107,6 @@ class _StepButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return PressBounce(
       onPressed: onPressed,
-      pressedScale: 0.94,
       color: Colors.transparent,
       pressedColor: AppColors.of(context).pressed,
       borderRadius: BorderRadius.circular(999),

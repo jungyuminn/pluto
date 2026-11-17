@@ -54,7 +54,6 @@ class _DiaryFormState extends State<DiaryForm> {
   int? _categoryColor;
   late DiaryCover _cover;
   var _saving = false;
-  Animation<double>? _sheetAnimation;
   CategorySuggestSession? _suggest;
   var _suggestOn = false;
   var _suggesting = false;
@@ -99,29 +98,13 @@ class _DiaryFormState extends State<DiaryForm> {
     }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      _sheetAnimation = ModalRoute.of(context)?.animation;
-      final animation = _sheetAnimation;
-      if (widget.initial == null) {
-        if (animation == null || animation.isCompleted) {
-          _titleFocus.requestFocus();
-        } else {
-          animation.addStatusListener(_onSheetOpened);
-        }
-      }
       _loadGroup();
       _loadLastDefaults();
     });
   }
 
-  void _onSheetOpened(AnimationStatus status) {
-    if (status != AnimationStatus.completed) return;
-    _sheetAnimation?.removeStatusListener(_onSheetOpened);
-    if (mounted && widget.initial == null) _titleFocus.requestFocus();
-  }
-
   @override
   void dispose() {
-    _sheetAnimation?.removeStatusListener(_onSheetOpened);
     _suggest?.dispose();
     _title.removeListener(_onTitleChanged);
     _titleFocus.dispose();

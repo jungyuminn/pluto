@@ -29,8 +29,9 @@ class EventCategoryChip extends StatelessWidget {
       constraints: const BoxConstraints(maxWidth: 140),
       child: PressBounce(
         onPressed: onPressed,
+        pressedScale: 0.92,
         color: AppColors.of(context).card,
-        pressedColor: AppColors.of(context).pressed,
+        pressedColor: AppColors.of(context).composeChipPressed,
         borderRadius: BorderRadius.circular(999),
         child: Padding(
           padding: const EdgeInsets.fromLTRB(6, 5, 8, 5),

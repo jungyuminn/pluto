@@ -5,9 +5,11 @@ import 'package:pluto/core/constants/app_icons.dart';
 import 'package:pluto/core/constants/app_strings.dart';
 import 'package:pluto/core/layout/pc_layout.dart';
 import 'package:pluto/core/notifications/todo_reminder_service.dart';
+import 'package:pluto/core/theme/app_colors.dart';
 import 'package:pluto/core/theme/app_skin_background.dart';
 import 'package:pluto/core/utils/fade_in.dart';
 import 'package:pluto/data/datasources/app_backup_service.dart';
+import 'package:pluto/data/datasources/theme_preference.dart';
 import 'package:pluto/data/datasources/calendar_preference.dart';
 import 'package:pluto/data/datasources/day_events_view_preference.dart';
 import 'package:pluto/data/datasources/home_view_preference.dart';
@@ -295,13 +297,22 @@ class HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         tutorial.active &&
         tutorial.step.anchor == TutorialAnchorId.homeList;
 
+    final colors = AppColors.of(context);
+    final theme = AppScope.of(context).themePreference;
+    final homeFill = !colors.isDark &&
+            !theme.usesCustom &&
+            theme.skin == AppSkin.classic
+        ? colors.pageBackground
+        : null;
     return AppSkinBackground(
       playing: widget.visible,
+      color: homeFill,
       child: Scaffold(
       resizeToAvoidBottomInset: false,
       backgroundColor: Colors.transparent,
       extendBodyBehindAppBar: true,
       appBar: OverlayAppBar(
+        fadeColor: homeFill,
         title: const AppBarWordmark(slot: WordmarkSlot.home),
         actions: TutorialAnchor(
           id: TutorialAnchorId.homeTools,

@@ -65,6 +65,7 @@ class TodayWidgetCard extends StatelessWidget {
     required this.showTime,
     this.hour24 = true,
     this.officeIcon,
+    this.rangeIcon,
   });
 
   static const cardRadius = 24.0;
@@ -87,6 +88,7 @@ class TodayWidgetCard extends StatelessWidget {
   final bool showTime;
   final bool hour24;
   final ui.Image? officeIcon;
+  final ui.Image? rangeIcon;
 
   static Size layoutSize({
     required List<TodayWidgetItem> items,
@@ -280,6 +282,7 @@ class TodayWidgetCard extends StatelessWidget {
     required bool showTime,
     bool hour24 = true,
     ui.Image? officeIcon,
+    ui.Image? rangeIcon,
   }) {
     if (item.event == null) {
       return _CategoryHeader(
@@ -295,6 +298,7 @@ class TodayWidgetCard extends StatelessWidget {
         event: item.event!,
         timeText: timeTextFor(item.event!, showTime, hour24: hour24),
         officeIcon: officeIcon,
+        rangeIcon: rangeIcon,
       ),
     );
   }
@@ -359,6 +363,7 @@ class TodayWidgetCard extends StatelessWidget {
                       event: item.event!,
                       timeText: _timeText(item.event!),
                       officeIcon: officeIcon,
+                      rangeIcon: rangeIcon,
                     ),
                   ),
               if (snapshot.moreCount > 0)
@@ -438,6 +443,7 @@ class _WidgetEventLabel extends StatelessWidget {
     required this.event,
     required this.timeText,
     this.officeIcon,
+    this.rangeIcon,
   });
 
   static const _baseHeight = 52.0;
@@ -445,6 +451,7 @@ class _WidgetEventLabel extends StatelessWidget {
   final CalendarEvent event;
   final String? timeText;
   final ui.Image? officeIcon;
+  final ui.Image? rangeIcon;
 
   @override
   Widget build(BuildContext context) {
@@ -530,9 +537,35 @@ class _WidgetEventLabel extends StatelessWidget {
                   ),
                 ),
               ),
+              if (event.isRange && rangeIcon != null)
+                Padding(
+                  padding: EdgeInsets.only(
+                    right: event.isRepeat || event.isJob ? 0 : 6 * s,
+                  ),
+                  child: SizedBox(
+                    width: 28 * s,
+                    height: 28 * s,
+                    child: Center(
+                      child: ColorFiltered(
+                        colorFilter: ColorFilter.mode(
+                          ink,
+                          BlendMode.srcIn,
+                        ),
+                        child: RawImage(
+                          image: rangeIcon,
+                          width: 24 * s,
+                          height: 24 * s,
+                          fit: BoxFit.contain,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
               if (event.isJob && officeIcon != null)
                 Padding(
-                  padding: EdgeInsets.only(right: 6 * s),
+                  padding: EdgeInsets.only(
+                    right: event.isRepeat ? 0 : 6 * s,
+                  ),
                   child: SizedBox(
                     width: 28 * s,
                     height: 28 * s,
@@ -549,19 +582,6 @@ class _WidgetEventLabel extends StatelessWidget {
                           fit: BoxFit.contain,
                         ),
                       ),
-                    ),
-                  ),
-                ),
-              if (event.isRange)
-                Padding(
-                  padding: EdgeInsets.only(right: event.isRepeat ? 0 : 6 * s),
-                  child: SizedBox(
-                    width: 28 * s,
-                    height: 28 * s,
-                    child: Icon(
-                      Icons.swap_horiz_rounded,
-                      size: 22 * s,
-                      color: ink,
                     ),
                   ),
                 ),

@@ -268,7 +268,6 @@ class _RepeatIntervalFieldState extends State<_RepeatIntervalField> {
       children: [
         PressBounce(
           onPressed: _toggle,
-          pressedScale: 0.99,
           color: Colors.transparent,
           pressedColor: colors.pressed,
           borderRadius: BorderRadius.circular(12),
@@ -601,7 +600,6 @@ class _WeekdayRow extends StatelessWidget {
             Expanded(
               child: PressBounce(
                 onPressed: () => onPressed(i),
-                pressedScale: 0.94,
                 color: Colors.transparent,
                 pressedColor: Colors.transparent,
                 child: Center(
@@ -681,7 +679,6 @@ class _ChevronButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return PressBounce(
       onPressed: onPressed,
-      pressedScale: 0.97,
       color: Colors.transparent,
       pressedColor: Colors.transparent,
       child: _ChevronLabel(label: label),
@@ -820,7 +817,6 @@ class _ChevronMenuState<T> extends State<_ChevronMenu<T>>
                                 final colors = AppColors.of(context);
                                 return PressBounce(
                                   onPressed: () => _select(item.$1),
-                                  pressedScale: 0.98,
                                   pressedColor: colors.pressed,
                                   borderRadius: BorderRadius.circular(10),
                                   child: Padding(
@@ -856,7 +852,6 @@ class _ChevronMenuState<T> extends State<_ChevronMenu<T>>
         link: _link,
         child: PressBounce(
           onPressed: _toggle,
-          pressedScale: 0.99,
           color: Colors.transparent,
           pressedColor: AppColors.of(context).pressed,
           borderRadius: BorderRadius.circular(12),

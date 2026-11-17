@@ -54,7 +54,6 @@ class AppBarWordmark extends StatelessWidget {
             slot == WordmarkSlot.home && label == AppStrings.appName;
         return PressBounce(
           onPressed: () => _edit(context),
-          pressedScale: 0.96,
           pressedColor: AppColors.of(context).pressed,
           borderRadius: BorderRadius.circular(999),
           child: Padding(

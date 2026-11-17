@@ -220,7 +220,6 @@ class _CalendarTile extends StatelessWidget {
     final colors = AppColors.of(context);
     return PressBounce(
       onPressed: onPressed,
-      pressedScale: 0.99,
       color: colors.card,
       pressedColor: colors.pressed,
       child: Padding(

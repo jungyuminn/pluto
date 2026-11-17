@@ -298,7 +298,6 @@ class _DeductionPreviewState extends State<_DeductionPreview> {
               for (var i = 0; i < _frames.length; i++)
                 PressBounce(
                   onPressed: () => _goTo(i, fromUser: true),
-                  pressedScale: 0.9,
                   pressedColor: Colors.transparent,
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
@@ -337,7 +336,6 @@ class _NavButton extends StatelessWidget {
     final colors = AppColors.of(context);
     return PressBounce(
       onPressed: onPressed,
-      pressedScale: 0.88,
       pressedColor: Colors.transparent,
       child: SizedBox(
         width: 32,

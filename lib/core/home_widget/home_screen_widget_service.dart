@@ -253,6 +253,7 @@ class HomeScreenWidgetService {
     }
 
     ui.Image? officeIcon;
+    ui.Image? rangeIcon;
     try {
       final now = DateTime.now();
       final today = DateTime(now.year, now.month, now.day);
@@ -266,7 +267,8 @@ class HomeScreenWidgetService {
       final liveRatio =
           PlatformDispatcher.instance.implicitView?.devicePixelRatio ?? 0;
       final pixelRatio = (liveRatio < 2 ? 3.0 : liveRatio).clamp(3.0, 4.0);
-      officeIcon = await _loadOfficeIcon();
+      officeIcon = await _loadSvgIcon(AppIcons.officeOutlined);
+      rangeIcon = await _loadSvgIcon(AppIcons.arrowTransfer);
       final isDark = _widgetIsDark;
       final skin = _widgetSkin;
       await _precacheCustomTheme(pixelRatio);
@@ -303,6 +305,7 @@ class HomeScreenWidgetService {
           skin: skin,
           pixelRatio: pixelRatio,
           officeIcon: officeIcon,
+          rangeIcon: rangeIcon,
         );
       }
       await _syncWeekTimetable(
@@ -365,6 +368,7 @@ class HomeScreenWidgetService {
       debugPrint('HomeScreenWidgetService.sync failed: $error\n$stack');
     } finally {
       officeIcon?.dispose();
+      rangeIcon?.dispose();
     }
   }
 
@@ -383,6 +387,7 @@ class HomeScreenWidgetService {
     required AppSkin skin,
     required double pixelRatio,
     required ui.Image? officeIcon,
+    required ui.Image? rangeIcon,
   }) async {
     final snapshot = switch (kind) {
       _WidgetKind.today => TodayWidgetCard.snapshotFor(
@@ -432,6 +437,7 @@ class HomeScreenWidgetService {
         skin: skin,
         pixelRatio: pixelRatio,
         officeIcon: officeIcon,
+        rangeIcon: rangeIcon,
       );
     } else {
       final previousCount =
@@ -459,6 +465,7 @@ class HomeScreenWidgetService {
                 showTime: showTime,
                 hour24: hour24,
                 officeIcon: officeIcon,
+                rangeIcon: rangeIcon,
               ),
             ),
           ),
@@ -520,6 +527,7 @@ class HomeScreenWidgetService {
     required AppSkin skin,
     required double pixelRatio,
     required ui.Image? officeIcon,
+    required ui.Image? rangeIcon,
   }) async {
     const sizes = <String, Size>{
       'small': _iosSmallSize,
@@ -545,6 +553,7 @@ class HomeScreenWidgetService {
               showTime: showTime,
               hour24: hour24,
               officeIcon: officeIcon,
+              rangeIcon: rangeIcon,
             ),
           ),
         ),
@@ -1011,6 +1020,7 @@ class HomeScreenWidgetService {
     required bool showTime,
     required bool hour24,
     required ui.Image? officeIcon,
+    required ui.Image? rangeIcon,
   }) {
     return _skinCard(
       skin: skin,
@@ -1077,6 +1087,7 @@ class HomeScreenWidgetService {
                                 showTime: showTime,
                                 hour24: hour24,
                                 officeIcon: officeIcon,
+                                rangeIcon: rangeIcon,
                               ),
                         ],
                       ),
@@ -1180,10 +1191,10 @@ class HomeScreenWidgetService {
     return int.tryParse(asText ?? '');
   }
 
-  Future<ui.Image?> _loadOfficeIcon() async {
+  Future<ui.Image?> _loadSvgIcon(String asset) async {
     try {
       final pictureInfo = await vg.loadPicture(
-        SvgAssetLoader(AppIcons.officeOutlined),
+        SvgAssetLoader(asset),
         null,
       );
       try {
@@ -1199,7 +1210,7 @@ class HomeScreenWidgetService {
         pictureInfo.picture.dispose();
       }
     } catch (error) {
-      debugPrint('HomeScreenWidgetService office icon failed: $error');
+      debugPrint('HomeScreenWidgetService svg icon failed: $error');
       return null;
     }
   }

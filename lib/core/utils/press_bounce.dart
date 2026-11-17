@@ -15,7 +15,7 @@ class PressBounce extends StatefulWidget {
     required this.child,
     this.onPressed,
     this.onLongPressed,
-    this.pressedScale = 0.94,
+    this.pressedScale = 0.95,
     this.color = Colors.transparent,
     this.pressedColor,
     this.borderRadius = const BorderRadius.all(Radius.circular(12)),

@@ -234,7 +234,6 @@ class _LedgerMonthNetState extends State<_LedgerMonthNet>
         ignoring: widget.stats == null,
         child: PressBounce(
           onPressed: widget.onPressed,
-          pressedScale: 0.97,
           alignment: Alignment.centerLeft,
           child: Padding(
             padding: const EdgeInsets.only(left: 8),

@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:pluto/core/theme/app_colors.dart';
+import 'package:pluto/core/theme/app_skin_background.dart';
 
 class OverlayAppBar extends StatelessWidget implements PreferredSizeWidget {
   const OverlayAppBar({
@@ -10,12 +11,14 @@ class OverlayAppBar extends StatelessWidget implements PreferredSizeWidget {
     required this.actions,
     this.leading,
     this.centerTitle = false,
+    this.fadeColor,
   });
 
   final Widget title;
   final Widget actions;
   final Widget? leading;
   final bool centerTitle;
+  final Color? fadeColor;
 
   static const extraTop = 6.0;
 
@@ -29,7 +32,7 @@ class OverlayAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = AppColors.of(context);
+    final fade = fadeColor ?? AppSkinAssets.currentFillOf(context);
     return Stack(
       fit: StackFit.expand,
       children: [
@@ -40,9 +43,9 @@ class OverlayAppBar extends StatelessWidget implements PreferredSizeWidget {
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  colors.background,
-                  colors.background.withValues(alpha: 0.72),
-                  colors.background.withValues(alpha: 0),
+                  fade,
+                  fade.withValues(alpha: 0.72),
+                  fade.withValues(alpha: 0),
                 ],
                 stops: const [0, 0.55, 1],
               ),
@@ -103,7 +106,7 @@ class FrostedAppBarFill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tint = AppColors.of(context).groupedBackground;
+    final tint = AppColors.of(context).pageBackground;
     return IgnorePointer(
       child: Stack(
         fit: StackFit.expand,

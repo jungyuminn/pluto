@@ -160,18 +160,14 @@ class _FriendAvatarState extends State<FriendAvatar> {
   Widget _body(BuildContext context) {
     final image = _image;
     final colors = AppColors.of(context);
-    final fill = Color.lerp(
-      colors.border,
-      Colors.white,
-      colors.isDark ? 0.12 : 0.30,
-    )!.withValues(alpha: AppColors.homeWashOpacity);
+    final fill = (colors.isDark
+            ? Color.lerp(colors.border, Colors.white, 0.14)!
+            : const Color(0xFFE4EAF0))
+        .withValues(alpha: 0.72);
     return DecoratedBox(
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         color: image == null ? fill : null,
-        border: image == null
-            ? null
-            : Border.all(color: colors.border, width: 1),
       ),
       child: SizedBox(
         width: widget.size,

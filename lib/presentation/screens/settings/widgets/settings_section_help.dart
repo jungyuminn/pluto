@@ -546,9 +546,13 @@ class _NotificationPreview extends StatelessWidget {
   const _NotificationPreview();
 
   static final _cards = [
-    _FakeNotificationCard(title: '코딩테스트 준비', body: '10분 후 시작해요', time: '지금'),
+    _FakeNotificationCard(
+      title: '코딩테스트 준비',
+      body: AppStrings.todoReminderBody(10),
+      time: '지금',
+    ),
         _FakeNotificationCard(
-          title: '오늘의 일정 3개',
+          title: AppStrings.summaryNotificationTitle(3),
           body: '자기소개서 제출, 코딩테스트 준비, 면접 연습',
           time: '오전 8:00',
         ),

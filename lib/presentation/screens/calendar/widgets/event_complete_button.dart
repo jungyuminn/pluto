@@ -151,7 +151,7 @@ class CompleteCheckPainter extends CustomPainter {
     final checkPaint = Paint()
       ..color = color
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.55
+      ..strokeWidth = 1.7
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round;
     final checkProgress = progress;

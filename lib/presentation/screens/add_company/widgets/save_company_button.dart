@@ -112,23 +112,23 @@ class _SaveCompanyButtonState extends State<SaveCompanyButton> {
             child: AnimatedAccent(
               color: EventCategory.labelOf(widget.color, 0.1),
               builder: (context, ink) {
-                return DecoratedBox(
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: ink,
-                    boxShadow: [
-                      BoxShadow(
-                        color: ink.withValues(alpha: 0.26),
-                        blurRadius: 7,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: PressBounce(
-                    onPressed: widget.onPressed,
-                    color: Colors.transparent,
-                    pressedColor: Color.lerp(ink, Colors.black, 0.16)!,
-                    borderRadius: BorderRadius.circular(999),
+                return PressBounce(
+                  onPressed: widget.onPressed,
+                  pressedScale: 0.88,
+                  color: ink,
+                  pressedColor: Color.lerp(ink, Colors.black, 0.16)!,
+                  borderRadius: BorderRadius.circular(999),
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: ink.withValues(alpha: 0.26),
+                          blurRadius: 7,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
                     child: const SizedBox(
                       width: SaveCompanyButton.size,
                       height: SaveCompanyButton.size,

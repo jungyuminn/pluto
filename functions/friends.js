@@ -914,7 +914,7 @@ function pushTodoTitle(raw) {
 
 function pushCalendarName(raw) {
   const name = String(raw || "").replace(/\s+/g, " ").trim();
-  if (!name) return "공유 캘린더";
+  if (!name) return "캘린더";
   return name.length > 16 ? `${name.slice(0, 15)}…` : name;
 }
 
@@ -938,12 +938,13 @@ async function notifyFriendPush(uid, payload) {
   if (!tokens.length) return;
   let response;
   try {
+    const notification = {
+      title: payload.title,
+      ...(payload.body ? {body: payload.body} : {}),
+    };
     response = await getMessaging().sendEach(tokens.map((item) => ({
       token: item.token,
-      notification: {
-        title: payload.title,
-        body: payload.body,
-      },
+      notification,
       data: {
         type: payload.type,
         requestId: String(payload.requestId || ""),
@@ -1000,8 +1001,7 @@ exports.onFriendRequestWrite = functionsV1
         if (status === "pending" && prev !== "pending") {
           await notifyFriendPush(after.toUid, {
             type: "friend_request",
-            title: `${pushName(after.fromName)}님이 친구 요청을 보냈어요`,
-            body: "받은 친구 요청을 확인해 주세요",
+            title: `${pushName(after.fromName)}님이 친구 요청을 보냈어요!`,
             requestId,
           });
           return;
@@ -1009,8 +1009,7 @@ exports.onFriendRequestWrite = functionsV1
         if (status === "accepted" && prev === "pending") {
           await notifyFriendPush(after.fromUid, {
             type: "friend_accepted",
-            title: `${pushName(after.toName)}님이 친구 요청을 수락했어요`,
-            body: "이제 친구가 되었어요",
+            title: `${pushName(after.toName)}님과 친구가 되었어요!`,
             requestId,
           });
         }
@@ -1035,7 +1034,7 @@ exports.onTodoRequestWrite = functionsV1
         if (status === "pending" && prev !== "pending") {
           await notifyFriendPush(after.toUid, {
             type: "todo_request",
-            title: `${pushName(after.fromName)}님이 같이 할 일을 보냈어요`,
+            title: `${pushName(after.fromName)}님이 같이 할 일을 보냈어요!`,
             body: todo,
             requestId,
           });
@@ -1044,7 +1043,7 @@ exports.onTodoRequestWrite = functionsV1
         if (status === "accepted" && prev === "pending") {
           await notifyFriendPush(after.fromUid, {
             type: "todo_accepted",
-            title: `${pushName(after.toName)}님이 같이 할 일을 수락했어요`,
+            title: `${pushName(after.toName)}님이 같이 할 일을 수락했어요!`,
             body: todo,
             requestId,
           });
@@ -1070,7 +1069,7 @@ exports.onGroupCalendarInviteWrite = functionsV1
         if (status === "pending" && prev !== "pending") {
           await notifyFriendPush(after.toUid, {
             type: "group_calendar_invite",
-            title: `${pushName(after.fromName)}님이 공유 캘린더에 초대했어요`,
+            title: `${pushName(after.fromName)}님이 캘린더에 초대했어요!`,
             body: calendar,
             requestId: inviteId,
           });
@@ -1079,7 +1078,7 @@ exports.onGroupCalendarInviteWrite = functionsV1
         if (status === "accepted" && prev === "pending") {
           await notifyFriendPush(after.fromUid, {
             type: "group_calendar_accepted",
-            title: `${pushName(after.toName)}님이 공유 캘린더 초대를 수락했어요`,
+            title: `${pushName(after.toName)}님이 초대를 수락했어요!`,
             body: calendar,
             requestId: inviteId,
           });

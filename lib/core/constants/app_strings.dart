@@ -485,8 +485,8 @@ class AppStrings {
   static String todoReminderHint(String leadLabel) =>
       '시간이 설정된 할 일을 $leadLabel에 알려줘요';
   static String todoReminderBody(int leadMinutes) => leadMinutes % 60 == 0
-      ? '${leadMinutes ~/ 60}시간 후 시작해요'
-      : '$leadMinutes분 후 시작해요';
+      ? '${leadMinutes ~/ 60}시간 후 시작해요!'
+      : '$leadMinutes분 후 시작해요!';
   static String summaryTimeLabel(int minutes) {
     final hour = minutes ~/ 60;
     final minute = minutes % 60;
@@ -498,11 +498,12 @@ class AppStrings {
   static String summaryReminderHint(int minutes) =>
       '매일 ${summaryTimeLabel(minutes)}에 오늘 일정을 알려줘요';
   static String summaryNotificationTitle(int count) =>
-      count == 0 ? '오늘의 일정' : '오늘의 일정이 $count개 있어요';
+      count == 0 ? '오늘 일정' : '오늘 일정이 $count개 있어요!';
   static const summaryNotificationEmpty = '오늘 일정이 없어요';
   static String leftoverReminderHint(int minutes) =>
-      '매일 ${summaryTimeLabel(minutes)}에 완료되지 않은 할 일을 알려줘요';
-  static String leftoverNotificationTitle(int count) => '완료되지 않은 할일이 $count개 있어요';
+      '매일 ${summaryTimeLabel(minutes)}에 완료하지 않은 할 일을 알려줘요';
+  static String leftoverNotificationTitle(int count) =>
+      '완료하지 않은 할 일이 $count개 있어요!';
   static const tomorrowNotificationEmpty = '내일 일정이 없어요';
   static const todayTomorrowNotificationEmpty = '오늘과 내일 일정이 없어요';
   static const weekNotificationEmpty = '이번 주 일정이 없어요';

@@ -285,7 +285,7 @@ class LedgerSalaryFields extends StatelessWidget {
           ),
           child: DecoratedBox(
             decoration: BoxDecoration(
-              color: colors.tint(accent),
+              color: colors.tint(accent, 0.14),
               borderRadius: const BorderRadius.vertical(
                 top: Radius.circular(24),
               ),
@@ -827,7 +827,7 @@ class _BreakSheetState extends State<_BreakSheet> {
       padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
       child: DecoratedBox(
         decoration: BoxDecoration(
-          color: colors.tint(widget.accent),
+          color: colors.tint(widget.accent, 0.14),
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         ),
         child: Padding(

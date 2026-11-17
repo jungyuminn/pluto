@@ -743,7 +743,9 @@ class _LedgerDaySheetState extends State<LedgerDaySheet>
                                           ),
                                           child: PressBounce(
                                             onPressed: _pickEmoji,
-                                            pressedScale: 0.92,
+                                            pressedScale: 0.94,
+                                            pressedColor: colors.pressed,
+                                            borderRadius: BorderRadius.circular(14),
                                             child: DayStickerImage(
                                               key: ValueKey(_emoji),
                                               asset: _emoji!,

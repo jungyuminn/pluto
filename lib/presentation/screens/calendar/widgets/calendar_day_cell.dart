@@ -15,6 +15,7 @@ class CalendarDayCell extends StatelessWidget {
     this.onPressed,
     this.onLongPressed,
     this.inRange = false,
+    this.rangeGrow = true,
     this.highlighted = false,
     this.showLunar = false,
   });
@@ -23,6 +24,7 @@ class CalendarDayCell extends StatelessWidget {
   final ValueChanged<Rect>? onPressed;
   final VoidCallback? onLongPressed;
   final bool inRange;
+  final bool rangeGrow;
   final bool highlighted;
   final bool showLunar;
 
@@ -99,88 +101,127 @@ class CalendarDayCell extends StatelessWidget {
     final scale = AppFonts.calendarScaleOf(context);
     final dateScale = AppFonts.calendarDateScaleOf(context);
     final dateBox = dateSizeFor(scale);
+    final paleBlue = Color.lerp(
+      colors.card,
+      colors.accent,
+      colors.isDark ? 0.2 : 0.14,
+    )!;
 
     return PressBounce(
       onPressed: onPressed == null ? () {} : () => onPressed!(_originOf(context)),
       onLongPressed: onLongPressed,
-      pressedScale: 0.96,
-      color: inRange || highlighted ? colors.rangeFill : Colors.transparent,
-      pressedColor: inRange || highlighted ? colors.rangePressed : colors.pressed,
+      pressedScale: 0.94,
+      color: highlighted ? colors.rangeFill : Colors.transparent,
+      pressedColor: highlighted
+          ? colors.rangePressed
+          : (inRange && rangeGrow ? Colors.transparent : colors.pressed),
       borderRadius: BorderRadius.circular(12),
-      child: Padding(
-        padding: const EdgeInsets.only(top: dateTop),
-        child: Column(
-          children: [
-            Container(
-              width: dateBox,
-              height: dateBox,
-              alignment: Alignment.center,
-              decoration: today
-                  ? BoxDecoration(
-                      color: todayFill,
-                      shape: BoxShape.circle,
-                    )
-                  : null,
-              child: Text(
-                '${day.date.day}',
-                style: TextStyle(
-                  fontFamily: AppFonts.of(context),
-                  fontSize: 12 * dateScale,
-                  fontWeight: today ? FontWeight.w800 : FontWeight.w600,
-                  height: 1,
-                  color: today ? Colors.white : color,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          Positioned.fill(
+            child: TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0, end: inRange ? 1 : 0),
+              duration: Duration(
+                milliseconds: inRange ? (rangeGrow ? 180 : 0) : 280,
+              ),
+              curve: Curves.easeOutCubic,
+              builder: (context, t, child) {
+                if (t <= 0) return const SizedBox.shrink();
+                return Opacity(
+                  opacity: rangeGrow ? t : 1,
+                  child: Transform.scale(
+                    scale: rangeGrow ? 0.72 + 0.28 * t : 1,
+                    child: child,
+                  ),
+                );
+              },
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: paleBlue,
+                  borderRadius: BorderRadius.circular(12),
                 ),
               ),
             ),
-            ClipRect(
-              child: AnimatedSize(
-                duration: lunarAnim,
-                curve: Curves.easeOutCubic,
-                alignment: Alignment.topCenter,
-                child: showLunar
-                    ? Padding(
-                        padding: const EdgeInsets.only(top: lunarGap),
-                        child: SizedBox(
-                          height: lunarHeightFor(dateScale),
-                          child: Text(
-                            LunarDate.labelOf(day.date) ?? '',
-                            textAlign: TextAlign.center,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontFamily: AppFonts.of(context),
-                              fontSize: 9 * dateScale,
-                              fontWeight: FontWeight.w500,
-                              height: 1.1,
-                              color: day.inMonth ? colors.muted : colors.outside,
-                            ),
-                          ),
-                        ),
-                      )
-                    : const SizedBox(width: double.infinity),
-              ),
-            ),
-            if (holiday != null) ...[
-              const SizedBox(height: holidayGap),
-              SizedBox(
-                height: holidayHeightFor(scale),
-                child: Text(
-                  holiday,
-                  textAlign: TextAlign.center,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontFamily: AppFonts.of(context),
-                    fontSize: 10 * scale,
-                    fontWeight: FontWeight.w600,
-                    height: 1.15,
-                    color: color,
+          ),
+          Padding(
+            padding: const EdgeInsets.only(top: dateTop),
+            child: Column(
+              children: [
+                Container(
+                  width: dateBox,
+                  height: dateBox,
+                  alignment: Alignment.center,
+                  decoration: today
+                      ? BoxDecoration(
+                          color: todayFill,
+                          shape: BoxShape.circle,
+                        )
+                      : null,
+                  child: Text(
+                    '${day.date.day}',
+                    style: TextStyle(
+                      fontFamily: AppFonts.of(context),
+                      fontSize: 12 * dateScale,
+                      fontWeight: today ? FontWeight.w800 : FontWeight.w600,
+                      height: 1,
+                      color: today ? Colors.white : color,
+                    ),
                   ),
                 ),
-              ),
-            ],
-          ],
-        ),
+                ClipRect(
+                  child: AnimatedSize(
+                    duration: lunarAnim,
+                    curve: Curves.easeOutCubic,
+                    alignment: Alignment.topCenter,
+                    child: showLunar
+                        ? Padding(
+                            padding: const EdgeInsets.only(top: lunarGap),
+                            child: SizedBox(
+                              height: lunarHeightFor(dateScale),
+                              child: Text(
+                                LunarDate.labelOf(day.date) ?? '',
+                                textAlign: TextAlign.center,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontFamily: AppFonts.of(context),
+                                  fontSize: 9 * dateScale,
+                                  fontWeight: FontWeight.w500,
+                                  height: 1.1,
+                                  color: day.inMonth
+                                      ? colors.muted
+                                      : colors.outside,
+                                ),
+                              ),
+                            ),
+                          )
+                        : const SizedBox(width: double.infinity),
+                  ),
+                ),
+                if (holiday != null) ...[
+                  const SizedBox(height: holidayGap),
+                  SizedBox(
+                    height: holidayHeightFor(scale),
+                    child: Text(
+                      holiday,
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontFamily: AppFonts.of(context),
+                        fontSize: 10 * scale,
+                        fontWeight: FontWeight.w600,
+                        height: 1.15,
+                        color: color,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

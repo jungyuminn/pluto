@@ -850,7 +850,7 @@ class _CategoryPickerSheetState extends State<CategoryPickerSheet>
                     height: cell,
                     child: DecoratedBox(
                       decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: _CategoryCard.radius,
                         boxShadow: [
                           BoxShadow(
                             color: discarding
@@ -872,7 +872,7 @@ class _CategoryPickerSheetState extends State<CategoryPickerSheet>
         childWhenDragging: DecoratedBox(
           decoration: BoxDecoration(
             color: AppColors.of(context).pressed,
-            borderRadius: const BorderRadius.all(Radius.circular(8)),
+            borderRadius: _CategoryCard.radius,
           ),
         ),
         child: _card(category),
@@ -1000,23 +1000,23 @@ class _CategoryCard extends StatelessWidget {
   final bool marked;
   final VoidCallback? onPressed;
 
+  static const radius = BorderRadius.all(Radius.circular(8));
+
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
     return PressBounce(
       onPressed: onPressed,
       expand: true,
-      color: selected
-          ? Color.lerp(colors.card, category.tint, 0.18)!
-          : colors.background,
-      pressedColor: Color.lerp(colors.card, category.tint, 0.28)!,
-      borderRadius: BorderRadius.circular(8),
+      color: selected ? colors.pressed : colors.background,
+      pressedColor: colors.pressed,
+      borderRadius: radius,
       child: SizedBox.expand(
         child: Stack(
           alignment: Alignment.center,
           children: [
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 10),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -1028,7 +1028,7 @@ class _CategoryCard extends StatelessWidget {
                       shape: BoxShape.circle,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 8),
                   Text(
                     category.name,
                     maxLines: 1,
@@ -1040,9 +1040,7 @@ class _CategoryCard extends StatelessWidget {
                       fontWeight: FontWeight.w700,
                       height: 1,
                       leadingDistribution: TextLeadingDistribution.even,
-                      color: selected
-                          ? EventCategory.labelOf(category.tint)
-                          : colors.text,
+                      color: EventCategory.labelOf(category.tint),
                     ),
                   ),
                 ],

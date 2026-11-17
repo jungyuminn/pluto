@@ -21,8 +21,7 @@ class AppBarPill extends StatelessWidget {
     return Center(
       child: PressBounce(
         onPressed: onPressed,
-        color: Colors.transparent,
-        pressedColor: Colors.transparent,
+        pressedColor: colors.pressed,
         borderRadius: BorderRadius.circular(999),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),

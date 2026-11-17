@@ -119,10 +119,7 @@ class _EventTimeSheetState extends State<EventTimeSheet> {
       return;
     }
     Navigator.of(context).pop(
-      EventTimePickResult(
-        startMinutes: _startMinutes,
-        endMinutes: _endMinutes,
-      ),
+      EventTimePickResult(startMinutes: _startMinutes, endMinutes: _endMinutes),
     );
   }
 
@@ -257,7 +254,7 @@ class _EventTimeSheetState extends State<EventTimeSheet> {
                         horizontal: 8,
                       ),
                       child: SizedBox(
-                        height: _FlatWheel.extent * 5,
+                        height: _TimeWheels.height,
                         child: _TimeWheels(
                           minutes: _editStart
                               ? _startMinutes
@@ -342,9 +339,7 @@ class _TimeCard extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             Text(
-              minutes == null
-                  ? AppStrings.timeEndEmpty
-                  : _formatTime(minutes!),
+              minutes == null ? AppStrings.timeEndEmpty : _formatTime(minutes!),
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontFamily: AppFonts.of(context),
@@ -376,6 +371,8 @@ class _TimeWheels extends StatefulWidget {
     required this.selectedColor,
     required this.onChanged,
   });
+
+  static const height = _FlatWheel.extent * 5;
 
   final int minutes;
   final Color selectedColor;

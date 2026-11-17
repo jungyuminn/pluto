@@ -104,8 +104,7 @@ class _HomeDayCardState extends State<HomeDayCard> {
 
   String? _timeText(CalendarEvent event) {
     if (!widget.showTime || event.someday) return null;
-    return event.labelTime(hour24: widget.hour24) ??
-        (event.isJob ? null : AppStrings.allDayLabel);
+    return event.labelTime(hour24: widget.hour24);
   }
 
   String _dayHeaderName(DateTime date) {
@@ -717,7 +716,9 @@ class _HomeDayCardState extends State<HomeDayCard> {
                           padding: const EdgeInsets.only(right: 10),
                           child: PressBounce(
                             onPressed: () => _pickEmoji(date),
-                            pressedScale: 0.92,
+                            pressedScale: 0.94,
+                            pressedColor: colors.pressed,
+                            borderRadius: BorderRadius.circular(14),
                             child: DayStickerImage(
                               key: ValueKey(_emoji),
                               asset: _emoji!,

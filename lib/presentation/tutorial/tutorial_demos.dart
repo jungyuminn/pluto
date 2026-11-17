@@ -2116,10 +2116,16 @@ class _CheckPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()
+    final circlePaint = Paint()
       ..color = color
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+    final checkPaint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.25
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round;
     final circleProgress = (1 - progress * 1.15).clamp(0.0, 1.0);
@@ -2132,18 +2138,18 @@ class _CheckPainter extends CustomPainter {
       final metric = circle.computeMetrics().first;
       canvas.drawPath(
         metric.extractPath(0, metric.length * circleProgress),
-        paint,
+        circlePaint,
       );
     }
     if (progress > 0) {
       final check = Path()
-        ..moveTo(size.width * 0.18, size.height * 0.52)
-        ..lineTo(size.width * 0.40, size.height * 0.74)
-        ..lineTo(size.width * 0.84, size.height * 0.26);
+        ..moveTo(size.width * 0.18, size.height * 0.53)
+        ..lineTo(size.width * 0.41, size.height * 0.82)
+        ..lineTo(size.width * 0.82, size.height * 0.18);
       final metric = check.computeMetrics().first;
       canvas.drawPath(
         metric.extractPath(0, metric.length * progress),
-        paint,
+        checkPaint,
       );
     }
   }

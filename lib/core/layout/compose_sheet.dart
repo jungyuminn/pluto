@@ -6,8 +6,10 @@ import 'package:pluto/core/theme/app_colors.dart';
 
 double composeSheetBottomOf(BuildContext context, {double covered = 16}) {
   final insets = MediaQuery.viewInsetsOf(context).bottom;
-  final extra = (MediaQuery.viewPaddingOf(context).bottom - covered)
-      .clamp(0.0, double.infinity);
+  final extra = (MediaQuery.viewPaddingOf(context).bottom - covered).clamp(
+    0.0,
+    double.infinity,
+  );
   return insets > extra ? insets : extra;
 }
 
@@ -48,10 +50,7 @@ Future<T?> showComposeSheet<T>(
               maxWidth: maxWidth,
               maxHeight: MediaQuery.sizeOf(context).height - 48,
             ),
-            child: Material(
-              color: Colors.transparent,
-              child: builder(context),
-            ),
+            child: Material(color: Colors.transparent, child: builder(context)),
           ),
         ),
       );
@@ -60,10 +59,7 @@ Future<T?> showComposeSheet<T>(
       final t = Curves.easeOutCubic.transform(animation.value);
       return Opacity(
         opacity: t,
-        child: Transform.scale(
-          scale: lerpDouble(0.94, 1, t)!,
-          child: child,
-        ),
+        child: Transform.scale(scale: lerpDouble(0.94, 1, t)!, child: child),
       );
     },
   );
@@ -75,11 +71,7 @@ Future<T?> showKeyboardComposer<T>(
   double maxWidth = PcLayout.pcAddEventWidth,
 }) {
   if (PcLayout.isPc) {
-    return showComposeSheet<T>(
-      context,
-      builder: builder,
-      maxWidth: maxWidth,
-    );
+    return showComposeSheet<T>(context, builder: builder, maxWidth: maxWidth);
   }
   return showGeneralDialog<T>(
     context: context,
@@ -89,10 +81,7 @@ Future<T?> showKeyboardComposer<T>(
     barrierColor: Colors.transparent,
     transitionDuration: const Duration(milliseconds: 280),
     pageBuilder: (context, animation, secondaryAnimation) {
-      return _KeyboardComposer(
-        animation: animation,
-        builder: builder,
-      );
+      return _KeyboardComposer(animation: animation, builder: builder);
     },
     transitionBuilder: (context, animation, secondaryAnimation, child) {
       return child;
@@ -101,16 +90,13 @@ Future<T?> showKeyboardComposer<T>(
 }
 
 class KeyboardComposerScope extends InheritedWidget {
-  const KeyboardComposerScope({
-    required this.pop,
-    required super.child,
-  });
+  const KeyboardComposerScope({required this.pop, required super.child});
 
   final void Function([Object? result]) pop;
 
   static void close<T>(BuildContext context, [T? result]) {
-    final scope =
-        context.getInheritedWidgetOfExactType<KeyboardComposerScope>();
+    final scope = context
+        .getInheritedWidgetOfExactType<KeyboardComposerScope>();
     if (scope != null) {
       scope.pop(result);
       return;
@@ -124,10 +110,7 @@ class KeyboardComposerScope extends InheritedWidget {
 }
 
 class _KeyboardComposer extends StatefulWidget {
-  const _KeyboardComposer({
-    required this.animation,
-    required this.builder,
-  });
+  const _KeyboardComposer({required this.animation, required this.builder});
 
   final Animation<double> animation;
   final WidgetBuilder builder;
@@ -177,8 +160,10 @@ class _KeyboardComposerState extends State<_KeyboardComposer>
   }
 
   double _extraOf(BuildContext context) {
-    return (MediaQuery.viewPaddingOf(context).bottom - 16)
-        .clamp(0.0, double.infinity);
+    return (MediaQuery.viewPaddingOf(context).bottom - 16).clamp(
+      0.0,
+      double.infinity,
+    );
   }
 
   void _measure() {
@@ -214,8 +199,7 @@ class _KeyboardComposerState extends State<_KeyboardComposer>
         child: AnimatedBuilder(
           animation: Listenable.merge([widget.animation, _dimIn]),
           builder: (context, child) {
-            final closing =
-                widget.animation.status == AnimationStatus.reverse;
+            final closing = widget.animation.status == AnimationStatus.reverse;
             final t = closing
                 ? 1 - Curves.easeInCubic.transform(widget.animation.value)
                 : 0.0;

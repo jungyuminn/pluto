@@ -12,6 +12,7 @@ import 'package:pluto/core/utils/plain_text_editing_controller.dart';
 import 'package:pluto/core/utils/title_time_parse.dart';
 import 'package:pluto/data/datasources/last_event_category_preference.dart';
 import 'package:pluto/data/datasources/friend_service.dart';
+import 'package:pluto/data/datasources/group_calendar_service.dart';
 import 'package:pluto/domain/entities/calendar_event.dart';
 import 'package:pluto/domain/entities/event_category.dart';
 import 'package:pluto/domain/entities/event_checklist_item.dart';
@@ -44,6 +45,7 @@ class AddEventForm extends StatefulWidget {
     this.initial,
     this.someday = false,
     this.shareWith,
+    this.groupCalendarId,
   });
 
   final DateTime date;
@@ -51,6 +53,7 @@ class AddEventForm extends StatefulWidget {
   final CalendarEvent? initial;
   final bool someday;
   final FriendProfile? shareWith;
+  final String? groupCalendarId;
 
   @override
   State<AddEventForm> createState() => _AddEventFormState();
@@ -105,7 +108,9 @@ class _AddEventFormState extends State<AddEventForm>
     _categoryId = initial?.categoryId ?? travel.id;
     _categoryName = initial?.categoryName ?? travel.name;
     _categoryColor = initial?.categoryColor ?? travel.color;
-    _isSomeday = widget.shareWith == null &&
+    _isSomeday =
+        widget.groupCalendarId == null &&
+        widget.shareWith == null &&
         (widget.someday || (initial?.someday ?? false));
     _startMinutes = _isSomeday ? null : initial?.startMinutes;
     _endMinutes = _isSomeday ? null : initial?.endMinutes;
@@ -284,8 +289,9 @@ class _AddEventFormState extends State<AddEventForm>
   void _onTitleChanged() {
     _feedTitle(_titleForSuggest());
     _syncTitleTimeHighlight();
-    TutorialController.find(context)
-        ?.noteAddTitle(_title.text.trim().isNotEmpty);
+    TutorialController.find(
+      context,
+    )?.noteAddTitle(_title.text.trim().isNotEmpty);
   }
 
   void _syncTitleTimeHighlight({bool force = false}) {
@@ -375,11 +381,15 @@ class _AddEventFormState extends State<AddEventForm>
     final groupId = widget.initial?.groupId;
     if (groupId == null) return;
     final events = await AppScope.of(context).getCalendarEvents();
-    final days = events
-        .where((event) => event.groupId == groupId)
-        .map((event) => DateTime(event.date.year, event.date.month, event.date.day))
-        .toList()
-      ..sort((a, b) => a.compareTo(b));
+    final days =
+        events
+            .where((event) => event.groupId == groupId)
+            .map(
+              (event) =>
+                  DateTime(event.date.year, event.date.month, event.date.day),
+            )
+            .toList()
+          ..sort((a, b) => a.compareTo(b));
     if (!mounted || days.length < 2) return;
     setState(() {
       _dateMode = AppCalendarMode.range;
@@ -388,8 +398,7 @@ class _AddEventFormState extends State<AddEventForm>
     });
   }
 
-  bool get _isRange =>
-      _dateMode == AppCalendarMode.range && _dates.length >= 2;
+  bool get _isRange => _dateMode == AppCalendarMode.range && _dates.length >= 2;
 
   bool get _isMultiple =>
       _dateMode == AppCalendarMode.multiple && _dates.length >= 2;
@@ -413,9 +422,7 @@ class _AddEventFormState extends State<AddEventForm>
     if (_isRange) {
       days = _daysOn(_dates.first, _dates.last);
     } else if (_dateMode == AppCalendarMode.multiple) {
-      days = {
-        for (final date in _dates) _dateOnly(date),
-      }.toList()
+      days = {for (final date in _dates) _dateOnly(date)}.toList()
         ..sort((a, b) => a.compareTo(b));
       if (days.isEmpty) days.add(_date);
     } else if (_dateMode == AppCalendarMode.repeat && _dates.isNotEmpty) {
@@ -426,6 +433,10 @@ class _AddEventFormState extends State<AddEventForm>
     if ((_shared || widget.shareWith != null) &&
         days.length > TodoRequestItem.maxDays) {
       return days.sublist(0, TodoRequestItem.maxDays);
+    }
+    if (widget.groupCalendarId != null &&
+        days.length > GroupCalendarService.maxDays) {
+      return days.sublist(0, GroupCalendarService.maxDays);
     }
     return days;
   }
@@ -572,6 +583,85 @@ class _AddEventFormState extends State<AddEventForm>
         const [];
   }
 
+  Future<void> _saveGroup({
+    required String title,
+    required String memo,
+    required List<EventChecklistItem> checklist,
+    required String? categoryId,
+    required String categoryName,
+    required int categoryColor,
+    required List<DateTime> days,
+  }) async {
+    final calendarId = widget.groupCalendarId;
+    if (calendarId == null || calendarId.isEmpty) return;
+    final initial = widget.initial;
+    final now = DateTime.now().microsecondsSinceEpoch;
+    final editingInPlace =
+        initial != null &&
+        initial.groupId == null &&
+        initial.repeatId == null &&
+        !_isRange &&
+        !_isMultiple &&
+        _dateMode != AppCalendarMode.repeat &&
+        days.length == 1;
+    try {
+      if (editingInPlace) {
+        await GroupCalendarService.instance.updateEvent(
+          calendarId: calendarId,
+          event: initial.copyWith(
+            title: title,
+            date: days.first,
+            memo: memo,
+            checklist: checklist,
+            categoryId: categoryId,
+            categoryName: categoryName,
+            categoryColor: categoryColor,
+            startMinutes: _startMinutes,
+            endMinutes: _endMinutes,
+            clearTime: _startMinutes == null,
+            clearEnd: _startMinutes != null && _endMinutes == null,
+          ),
+        );
+      } else {
+        final groupId = _isRange ? (initial?.groupId ?? '$now') : null;
+        final repeatId = _dateMode == AppCalendarMode.repeat
+            ? (initial?.repeatId ?? '$now')
+            : null;
+        await GroupCalendarService.instance.replaceGroup(
+          calendarId: calendarId,
+          sample: CalendarEvent(
+            id: initial?.id ?? '${now}_0',
+            title: title,
+            date: days.first,
+            memo: memo,
+            checklist: checklist,
+            categoryId: categoryId,
+            categoryName: categoryName,
+            categoryColor: categoryColor,
+            completed: initial?.completed ?? false,
+            groupId: groupId,
+            repeatId: repeatId,
+            sortOrder: initial?.sortOrder ?? now,
+            startMinutes: _startMinutes,
+            endMinutes: _endMinutes,
+          ),
+          days: days,
+          previousGroupId: initial?.groupId,
+          previousRepeatId: initial?.repeatId,
+        );
+      }
+      if (!mounted) return;
+      KeyboardComposerScope.close(context, true);
+    } catch (error) {
+      if (!mounted) return;
+      setState(() => _saving = false);
+      await showMissingFieldsDialog(
+        context,
+        body: GroupCalendarService.instance.messageOf(error),
+      );
+    }
+  }
+
   Future<void> _sendShared(String title, {required String memo}) async {
     final friend = widget.shareWith;
     if (friend == null) return;
@@ -607,10 +697,7 @@ class _AddEventFormState extends State<AddEventForm>
     final title = _title.text.trim();
     final days = _daysToSave();
     if (title.isEmpty || days.isEmpty || !_hasCategory) {
-      await showMissingFieldsDialog(
-        context,
-        body: AppStrings.missingEventBody,
-      );
+      await showMissingFieldsDialog(context, body: AppStrings.missingEventBody);
       return;
     }
     if (_saving) return;
@@ -625,6 +712,18 @@ class _AddEventFormState extends State<AddEventForm>
     _categoryId = savedCategory.id;
     _categoryName = savedCategory.name;
     _categoryColor = savedCategory.color;
+    if (widget.groupCalendarId != null) {
+      await _saveGroup(
+        title: title,
+        memo: _memo.text.trim(),
+        checklist: _checklistOf(),
+        categoryId: _categoryId,
+        categoryName: _categoryName!,
+        categoryColor: _categoryColor!,
+        days: days,
+      );
+      return;
+    }
     if (widget.shareWith != null) {
       await _sendShared(title, memo: _memo.text.trim());
       return;
@@ -673,7 +772,8 @@ class _AddEventFormState extends State<AddEventForm>
     final scope = AppScope.of(context);
     final previous = await scope.getCalendarEvents();
     final initialRepeatId = initial?.repeatId;
-    final editingInPlace = initial != null &&
+    final editingInPlace =
+        initial != null &&
         initial.groupId == null &&
         !_isRange &&
         !_isMultiple &&
@@ -693,9 +793,7 @@ class _AddEventFormState extends State<AddEventForm>
           endMinutes: _isSomeday ? null : _endMinutes,
           someday: _isSomeday,
           clearTime: _isSomeday || _startMinutes == null,
-          clearEnd: !_isSomeday &&
-              _startMinutes != null &&
-              _endMinutes == null,
+          clearEnd: !_isSomeday && _startMinutes != null && _endMinutes == null,
         ),
       );
       if (initialRepeatId != null && title != initial.title) {
@@ -758,8 +856,7 @@ class _AddEventFormState extends State<AddEventForm>
     final tutorial = TutorialController.maybeOf(context);
     final allowTitle =
         tutorial?.allowsAddInteract(TutorialAction.composeEvent) ?? true;
-    final allowExtra =
-        tutorial?.allowsAddInteract(TutorialAction.none) ?? true;
+    final allowExtra = tutorial?.allowsAddInteract(TutorialAction.none) ?? true;
     if (!allowTitle && (_titleFocus.hasFocus || _memoFocus.hasFocus)) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
@@ -772,198 +869,198 @@ class _AddEventFormState extends State<AddEventForm>
       curve: Curves.easeOutCubic,
       tween: ColorTween(end: _accent),
       builder: (context, color, child) {
-        return AccentSelectionTheme(
-          color: color ?? _accent,
-          child: child!,
-        );
+        return AccentSelectionTheme(color: color ?? _accent, child: child!);
       },
       child: AnimatedContainer(
-      duration: const Duration(milliseconds: 280),
-      curve: Curves.easeOutCubic,
-      width: double.infinity,
-      clipBehavior: PcLayout.isPc ? Clip.antiAlias : Clip.none,
-      decoration: BoxDecoration(
-        color: AppColors.of(context).tint(_accent, 0.14),
-        borderRadius: PcLayout.sheetRadius(),
-        boxShadow: PcLayout.sheetLift(),
-      ),
-      child: Padding(
-        padding: EdgeInsets.fromLTRB(
-          20,
-          16,
-          20,
-          16 + composeSheetBottomOf(context, covered: 16),
+        duration: const Duration(milliseconds: 280),
+        curve: Curves.easeOutCubic,
+        width: double.infinity,
+        clipBehavior: PcLayout.isPc ? Clip.antiAlias : Clip.none,
+        decoration: BoxDecoration(
+          color: AppColors.of(context).tint(_accent, 0.14),
+          borderRadius: PcLayout.sheetRadius(),
+          boxShadow: PcLayout.sheetLift(),
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            TutorialSheetHint(color: _accent),
-            TutorialPulse(
-              active: tutorial?.step.action == TutorialAction.composeEvent,
-              radius: 16,
-              color: _accent,
-              child: EventTitleField(
-                controller: _title,
-                focusNode: _titleFocus,
-                autofocus: true,
-                readOnly: !allowTitle,
-                onChanged: _feedTitle,
-                onTap: allowTitle
-                    ? null
-                    : () => _allowsAdd(TutorialAction.composeEvent),
+        child: Padding(
+          padding: EdgeInsets.fromLTRB(
+            20,
+            16,
+            20,
+            16 + composeSheetBottomOf(context, covered: 16),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              TutorialSheetHint(color: _accent),
+              TutorialPulse(
+                active: tutorial?.step.action == TutorialAction.composeEvent,
+                radius: 16,
+                color: _accent,
+                child: EventTitleField(
+                  controller: _title,
+                  focusNode: _titleFocus,
+                  autofocus: true,
+                  readOnly: !allowTitle,
+                  onChanged: _feedTitle,
+                  onTap: allowTitle
+                      ? null
+                      : () => _allowsAdd(TutorialAction.composeEvent),
+                ),
               ),
-            ),
-            ClipRect(
-              child: SizeTransition(
-                sizeFactor: _memoFade,
-                alignment: Alignment.topCenter,
-                child: FadeTransition(
-                  opacity: _memoFade,
-                  child: Padding(
-                    padding: const EdgeInsets.only(top: 6),
-                    child: IgnorePointer(
-                      ignoring: !_memoOpen,
-                      child: EventMemoField(
-                        controller: _memo,
-                        focusNode: _memoFocus,
-                        readOnly: !allowExtra,
+              ClipRect(
+                child: SizeTransition(
+                  sizeFactor: _memoFade,
+                  alignment: Alignment.topCenter,
+                  child: FadeTransition(
+                    opacity: _memoFade,
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 6),
+                      child: IgnorePointer(
+                        ignoring: !_memoOpen,
+                        child: EventMemoField(
+                          controller: _memo,
+                          focusNode: _memoFocus,
+                          readOnly: !allowExtra,
+                        ),
                       ),
                     ),
                   ),
                 ),
               ),
-            ),
-            ClipRect(
-              child: SizeTransition(
-                sizeFactor: _checklistFade,
-                alignment: Alignment.topCenter,
-                child: FadeTransition(
-                  opacity: _checklistFade,
-                  child: Padding(
-                    padding: const EdgeInsets.only(top: 6),
-                    child: IgnorePointer(
-                      ignoring: !_checklistOpen,
-                      child: EventChecklistEditor(
-                        key: _checklistKey,
-                        initial: widget.initial?.checklist ?? const [],
-                        color: _accent,
-                        readOnly: !allowExtra,
+              ClipRect(
+                child: SizeTransition(
+                  sizeFactor: _checklistFade,
+                  alignment: Alignment.topCenter,
+                  child: FadeTransition(
+                    opacity: _checklistFade,
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 6),
+                      child: IgnorePointer(
+                        ignoring: !_checklistOpen,
+                        child: EventChecklistEditor(
+                          key: _checklistKey,
+                          initial: widget.initial?.checklist ?? const [],
+                          color: _accent,
+                          readOnly: !allowExtra,
+                        ),
                       ),
                     ),
                   ),
                 ),
               ),
-            ),
-            const SizedBox(height: 5),
-            Row(
-              children: [
-                Expanded(
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: [
-                        TutorialPulse(
-                          active: tutorial?.step.action ==
-                              TutorialAction.composeEvent,
-                          color: _hasCategory
-                              ? _accent
-                              : AppColors.of(context).muted,
-                          child: AiCategoryChip(
-                            name: _categoryName ?? AppStrings.categoryAction,
+              const SizedBox(height: 5),
+              Row(
+                children: [
+                  Expanded(
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: [
+                          TutorialPulse(
+                            active:
+                                tutorial?.step.action ==
+                                TutorialAction.composeEvent,
                             color: _hasCategory
                                 ? _accent
                                 : AppColors.of(context).muted,
-                            selected: _hasCategory,
-                            active: _suggestOn,
-                            loading: _suggesting,
-                            onPressed: _pickCategory,
+                            child: AiCategoryChip(
+                              name: _categoryName ?? AppStrings.categoryAction,
+                              color: _hasCategory
+                                  ? _accent
+                                  : AppColors.of(context).muted,
+                              selected: _hasCategory,
+                              active: _suggestOn,
+                              loading: _suggesting,
+                              onPressed: _pickCategory,
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 4),
-                        TutorialPulse(
-                          active: tutorial?.step.action ==
-                              TutorialAction.pickDateMode,
-                          color: _accent,
-                          child: EventDateChip(
-                            date: _date,
-                            color: _accent,
-                            label: _isSomeday
-                                ? AppStrings.somedayTitle
-                                : _isRange
-                                ? AppStrings.rangeEventLabel
-                                : _isMultiple
-                                ? AppStrings.multipleEventLabel
-                                : _dateMode == AppCalendarMode.repeat ||
-                                      widget.initial?.repeatId != null
-                                ? AppStrings.repeatEventLabel
-                                : null,
-                            onPressed: _pickDate,
-                          ),
-                        ),
-                        if (!_isSomeday) ...[
                           const SizedBox(width: 4),
-                          EventTimeChip(
+                          TutorialPulse(
+                            active:
+                                tutorial?.step.action ==
+                                TutorialAction.pickDateMode,
                             color: _accent,
-                            startMinutes: _startMinutes,
-                            endMinutes: _endMinutes,
-                            onPressed: _pickTime,
+                            child: EventDateChip(
+                              date: _date,
+                              color: _accent,
+                              label: _isSomeday
+                                  ? AppStrings.somedayTitle
+                                  : _isRange
+                                  ? AppStrings.rangeEventLabel
+                                  : _isMultiple
+                                  ? AppStrings.multipleEventLabel
+                                  : _dateMode == AppCalendarMode.repeat ||
+                                        widget.initial?.repeatId != null
+                                  ? AppStrings.repeatEventLabel
+                                  : null,
+                              onPressed: _pickDate,
+                            ),
+                          ),
+                          if (!_isSomeday) ...[
+                            const SizedBox(width: 4),
+                            EventTimeChip(
+                              color: _accent,
+                              startMinutes: _startMinutes,
+                              endMinutes: _endMinutes,
+                              onPressed: _pickTime,
+                            ),
+                          ],
+                          const SizedBox(width: 4),
+                          EventActionIcon(
+                            label: AppStrings.memoAction,
+                            color: _accent,
+                            selected: _memoOpen,
+                            onPressed: _toggleMemo,
+                            child: AppAssetImage(
+                              asset: _memoOpen
+                                  ? AppIcons.memo
+                                  : AppIcons.memoOutlined,
+                              width: 20,
+                              height: 20,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          EventActionIcon(
+                            label: AppStrings.checklistAction,
+                            color: _accent,
+                            selected: _checklistOpen,
+                            onPressed: _toggleChecklist,
+                            child: AppAssetImage(
+                              asset: _checklistOpen
+                                  ? AppIcons.checklist
+                                  : AppIcons.checklistOutlined,
+                              width: 20,
+                              height: 20,
+                            ),
                           ),
                         ],
-                        const SizedBox(width: 4),
-                        EventActionIcon(
-                          label: AppStrings.memoAction,
-                          color: _accent,
-                          selected: _memoOpen,
-                          onPressed: _toggleMemo,
-                          child: AppAssetImage(
-                            asset: _memoOpen
-                                ? AppIcons.memo
-                                : AppIcons.memoOutlined,
-                            width: 20,
-                            height: 20,
-                          ),
-                        ),
-                        const SizedBox(width: 4),
-                        EventActionIcon(
-                          label: AppStrings.checklistAction,
-                          color: _accent,
-                          selected: _checklistOpen,
-                          onPressed: _toggleChecklist,
-                          child: AppAssetImage(
-                            asset: _checklistOpen
-                                ? AppIcons.checklist
-                                : AppIcons.checklistOutlined,
-                            width: 20,
-                            height: 20,
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                TutorialPulse(
-                  active: tutorial?.step.action == TutorialAction.saveEvent,
-                  color: _accent,
-                  child: ListenableBuilder(
-                    listenable: _title,
-                    builder: (context, _) {
-                      return SaveCompanyButton(
-                        ready: _title.text.trim().isNotEmpty &&
-                            _daysToSave().isNotEmpty &&
-                            _hasCategory,
-                        onPressed: _saving ? () {} : _save,
-                        color: _accent,
-                      );
-                    },
+                  const SizedBox(width: 8),
+                  TutorialPulse(
+                    active: tutorial?.step.action == TutorialAction.saveEvent,
+                    color: _accent,
+                    child: ListenableBuilder(
+                      listenable: _title,
+                      builder: (context, _) {
+                        return SaveCompanyButton(
+                          ready:
+                              _title.text.trim().isNotEmpty &&
+                              _daysToSave().isNotEmpty &&
+                              _hasCategory,
+                          onPressed: _saving ? () {} : _save,
+                          color: _accent,
+                        );
+                      },
+                    ),
                   ),
-                ),
-              ],
-            ),
-          ],
+                ],
+              ),
+            ],
+          ),
         ),
-      ),
       ),
     );
   }

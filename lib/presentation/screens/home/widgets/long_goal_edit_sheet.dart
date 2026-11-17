@@ -446,7 +446,7 @@ class _LongGoalEditSheetState extends State<LongGoalEditSheet>
         curve: Curves.easeOutCubic,
         clipBehavior: PcLayout.isPc ? Clip.antiAlias : Clip.none,
         decoration: BoxDecoration(
-          color: colors.tint(accent),
+          color: colors.tint(accent, 0.14),
           borderRadius: PcLayout.sheetRadius(),
         ),
         child: SingleChildScrollView(

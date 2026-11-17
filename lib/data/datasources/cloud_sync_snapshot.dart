@@ -16,6 +16,7 @@ import 'package:pluto/data/datasources/friend_category_preference.dart';
 import 'package:pluto/data/datasources/friend_favorite_preference.dart';
 import 'package:pluto/data/datasources/friend_home_preference.dart';
 import 'package:pluto/data/datasources/friend_order_preference.dart';
+import 'package:pluto/data/datasources/home_row_order_preference.dart';
 import 'package:pluto/data/datasources/home_view_preference.dart';
 import 'package:pluto/data/datasources/home_memo_local_datasource.dart';
 import 'package:pluto/data/datasources/job_view_preference.dart';
@@ -109,6 +110,7 @@ class CloudSyncSnapshot {
     ...FriendOrderPreference.syncedKeys,
     ...FriendHomePreference.syncedKeys,
     ...FriendFavoritePreference.syncedKeys,
+    ...HomeRowOrderPreference.syncedKeys,
   ];
 
   static const syncedKeys = [
@@ -185,6 +187,7 @@ class CloudSyncSnapshot {
     if (key == FriendCategoryPreference.companyKey) return <String>[];
     if (key == FriendOrderPreference.key) return <String>[];
     if (key == FriendFavoritePreference.key) return <String>[];
+    if (key == HomeRowOrderPreference.key) return <String>[];
     if (key == FriendHomePreference.uidsKey) return <String>[];
     if (key == FriendHomePreference.seenKey) return <String>[];
     if (key == FriendHomePreference.seededKey) return false;
@@ -351,6 +354,9 @@ class CloudSyncSnapshot {
     if ((_listOf(dump, FriendFavoritePreference.key) ?? const []).isNotEmpty) {
       return false;
     }
+    if ((_listOf(dump, HomeRowOrderPreference.key) ?? const []).isNotEmpty) {
+      return false;
+    }
     if (_boolOf(dump, FriendHomePreference.seededKey) == true) return false;
     if ((_listOf(dump, FriendHomePreference.uidsKey) ?? const []).isNotEmpty) {
       return false;
@@ -438,6 +444,15 @@ class CloudSyncSnapshot {
       out.remove(FriendFavoritePreference.key);
     } else {
       out[FriendFavoritePreference.key] = {'t': 'l', 'v': friendFavorites};
+    }
+    final homeRowOrder = _mergeStringLists(
+      _listOf(local, HomeRowOrderPreference.key),
+      _listOf(remote, HomeRowOrderPreference.key),
+    );
+    if (homeRowOrder == null) {
+      out.remove(HomeRowOrderPreference.key);
+    } else {
+      out[HomeRowOrderPreference.key] = {'t': 'l', 'v': homeRowOrder};
     }
     final localHomeSeeded = _boolOf(local, FriendHomePreference.seededKey) == true;
     final remoteHomeSeeded =

@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:pluto/app_scope.dart';
 import 'package:pluto/core/constants/app_strings.dart';
 import 'package:pluto/core/layout/pc_layout.dart';
 import 'package:pluto/core/theme/app_colors.dart';
+import 'package:pluto/core/utils/drop_in.dart';
 import 'package:pluto/core/utils/fade_in.dart';
 import 'package:pluto/core/utils/mouse_drag_scroll.dart';
 import 'package:pluto/core/utils/press_bounce.dart';
@@ -150,15 +153,27 @@ class DayEmojiSheet extends StatefulWidget {
 }
 
 class _DayEmojiSheetState extends State<DayEmojiSheet> {
+  static const _columns = 5;
+  static const _tabWidth = 56.0;
+  static const _tabHeight = 50.0;
+  static const _pcTabWidth = 76.0;
+  static const _pcTabHeight = 66.0;
+  static const _tabGap = 10.0;
+  static const _gridGap = 8.0;
+  static const _slotAnim = Duration(milliseconds: 180);
+
   var _packs = <StickerPack>[];
   var _packIndex = 0;
   var _loading = true;
   final _packScroll = ScrollController();
-
-  static const _columns = 5;
-  static const _tabSize = 56.0;
-  static const _pcTabSize = 72.0;
-  static const _gridGap = 6.0;
+  final _packRowKey = GlobalKey();
+  final _packViewportKey = GlobalKey();
+  int? _draggingIndex;
+  Offset? _packDragGlobal;
+  Timer? _packAutoScroll;
+  var _packScrollDir = 0.0;
+  var _dragTabWidth = _tabWidth;
+  final _drop = DropSettle();
 
   @override
   void initState() {
@@ -168,6 +183,7 @@ class _DayEmojiSheetState extends State<DayEmojiSheet> {
 
   @override
   void dispose() {
+    _packAutoScroll?.cancel();
     _packScroll.dispose();
     super.dispose();
   }
@@ -194,18 +210,123 @@ class _DayEmojiSheetState extends State<DayEmojiSheet> {
     });
   }
 
-  Future<void> _reorderPacks(int oldIndex, int newIndex) async {
-    if (oldIndex == newIndex) return;
-    final selectedId = _packs[_packIndex.clamp(0, _packs.length - 1)].id;
+  void _onPackDragStarted(int index, double tabWidth) {
+    _dragTabWidth = tabWidth;
+    setState(() => _draggingIndex = index);
+  }
+
+  void _onPackDragUpdate(Offset global, double tabWidth) {
+    _packDragGlobal = global;
+    _movePackAt(global, tabWidth);
+    _syncPackAutoScroll(global);
+  }
+
+  void _onPackDragEnded(DraggableDetails details) {
+    _stopPackAutoScroll();
+    _packDragGlobal = null;
+    final index = _draggingIndex;
+    final id = index == null ? null : _packs[index].id;
+    final origin = id == null ? null : _packSlotOrigin(id);
+    final delta = origin == null ? Offset.zero : details.offset - origin;
     setState(() {
-      final item = _packs.removeAt(oldIndex);
-      _packs.insert(newIndex, item);
-      final next = _packs.indexWhere((pack) => pack.id == selectedId);
-      _packIndex = next < 0 ? 0 : next;
+      _drop.arm(id, delta);
+      _draggingIndex = null;
     });
+    unawaited(_savePackOrder());
+  }
+
+  Offset? _packSlotOrigin(String id) {
+    final index = _packs.indexWhere((pack) => pack.id == id);
+    final box = _packRowKey.currentContext?.findRenderObject() as RenderBox?;
+    if (index < 0 || box == null || !box.hasSize) return null;
+    return box.localToGlobal(Offset(index * (_dragTabWidth + _tabGap), 0));
+  }
+
+  Future<void> _savePackOrder() async {
     await AppScope.of(context).dayEmojiStore.setPackOrder([
       for (final pack in _packs) pack.id,
     ]);
+  }
+
+  void _movePackAt(Offset global, double tabWidth) {
+    final from = _draggingIndex;
+    if (from == null) return;
+    final box = _packRowKey.currentContext?.findRenderObject() as RenderBox?;
+    if (box == null || !box.hasSize) return;
+    final local = box.globalToLocal(global);
+    final n = _packs.length;
+    if (n <= 1) return;
+    final stride = tabWidth + _tabGap;
+    var to = (local.dx / stride).floor().clamp(0, n - 1);
+    final left = from * stride - tabWidth * 0.18;
+    if (local.dx >= left && local.dx < left + tabWidth * 1.36) {
+      to = from;
+    }
+    _movePackTo(to);
+  }
+
+  void _movePackTo(int to) {
+    final from = _draggingIndex;
+    if (from == null || from == to) return;
+    if (to < 0 || to >= _packs.length) return;
+    final selectedId = _packs[_packIndex.clamp(0, _packs.length - 1)].id;
+    setState(() {
+      final item = _packs.removeAt(from);
+      _packs.insert(to, item);
+      _draggingIndex = to;
+      final next = _packs.indexWhere((pack) => pack.id == selectedId);
+      _packIndex = next < 0 ? 0 : next;
+    });
+    HapticFeedback.selectionClick();
+  }
+
+  void _stopPackAutoScroll() {
+    _packAutoScroll?.cancel();
+    _packAutoScroll = null;
+    _packScrollDir = 0;
+  }
+
+  void _syncPackAutoScroll(Offset global) {
+    if (!_packScroll.hasClients) {
+      _stopPackAutoScroll();
+      return;
+    }
+    final box =
+        _packViewportKey.currentContext?.findRenderObject() as RenderBox?;
+    if (box == null || !box.hasSize) {
+      _stopPackAutoScroll();
+      return;
+    }
+    final x = box.globalToLocal(global).dx;
+    const edge = 36.0;
+    var dir = 0.0;
+    if (x < edge) {
+      dir = -1;
+    } else if (x > box.size.width - edge) {
+      dir = 1;
+    }
+    if (dir == 0) {
+      _stopPackAutoScroll();
+      return;
+    }
+    if (_packAutoScroll != null && _packScrollDir == dir) return;
+    _packScrollDir = dir;
+    _packAutoScroll?.cancel();
+    _packAutoScroll = Timer.periodic(const Duration(milliseconds: 16), (_) {
+      if (!mounted || !_packScroll.hasClients) {
+        _stopPackAutoScroll();
+        return;
+      }
+      final pos = _packScroll.position;
+      final next = (pos.pixels + _packScrollDir * 9).clamp(
+        pos.minScrollExtent,
+        pos.maxScrollExtent,
+      );
+      if (next == pos.pixels) return;
+      _packScroll.jumpTo(next);
+      final pointer = _packDragGlobal;
+      if (pointer != null) _movePackAt(pointer, _dragTabWidth);
+    });
   }
 
   @override
@@ -215,7 +336,8 @@ class _DayEmojiSheetState extends State<DayEmojiSheet> {
     final current = widget.selected?.trim();
     final hasCurrent = DayStickers.isAsset(current);
     final pc = PcLayout.isPc;
-    final tabSize = pc ? _pcTabSize : _tabSize;
+    final tabWidth = pc ? _pcTabWidth : _tabWidth;
+    final tabHeight = pc ? _pcTabHeight : _tabHeight;
     final height =
         (MediaQuery.sizeOf(context).height * 0.5).clamp(380.0, 540.0);
     final pack = _packs.isEmpty ? null : _packs[_packIndex.clamp(0, _packs.length - 1)];
@@ -256,12 +378,13 @@ class _DayEmojiSheetState extends State<DayEmojiSheet> {
                   )
                 else ...[
                   SizedBox(
-                    height: tabSize,
+                    key: _packViewportKey,
+                    height: tabHeight,
                     child: LayoutBuilder(
                       builder: (context, constraints) {
                         final n = _packs.length;
                         final contentWidth =
-                            n * tabSize + (n > 1 ? (n - 1) * 10 : 0);
+                            n * tabWidth + (n > 1 ? (n - 1) * _tabGap : 0);
                         final pad = ((constraints.maxWidth - contentWidth) / 2)
                             .clamp(0.0, double.infinity);
                         return SizedBox(
@@ -272,90 +395,38 @@ class _DayEmojiSheetState extends State<DayEmojiSheet> {
                               controller: _packScroll,
                               child: MouseListDragScroll(
                                 controller: _packScroll,
-                                enabled: pad <= 0.5,
-                                child: ReorderableListView.builder(
+                                enabled:
+                                    pad <= 0.5 && _draggingIndex == null,
+                                child: SingleChildScrollView(
                                   scrollDirection: Axis.horizontal,
-                                  scrollController: _packScroll,
+                                  controller: _packScroll,
                                   primary: false,
-                                  buildDefaultDragHandles: false,
-                                  clipBehavior: Clip.hardEdge,
+                                  clipBehavior:
+                                      _draggingIndex == null && _drop.id == null
+                                      ? Clip.hardEdge
+                                      : Clip.none,
                                   physics: pad > 0.5
                                       ? const NeverScrollableScrollPhysics()
                                       : const BouncingScrollPhysics(),
-                                  padding: EdgeInsets.symmetric(horizontal: pad),
-                                  itemCount: _packs.length,
-                                  proxyDecorator: (child, index, animation) {
-                                    return AnimatedBuilder(
-                                      animation: animation,
-                                      builder: (context, child) {
-                                        final t = Curves.easeOutBack.transform(
-                                          animation.value,
-                                        );
-                                        return Transform.scale(
-                                          scale: 1 + 0.06 * t,
-                                          child: child,
-                                        );
-                                      },
-                                      child: child,
-                                    );
-                                  },
-                                  onReorderStart: (_) {
-                                    HapticFeedback.mediumImpact();
-                                  },
-                                  onReorderItem: _reorderPacks,
-                                  itemBuilder: (context, index) {
-                                    final selected = index == _packIndex;
-                                    return ReorderableDelayedDragStartListener(
-                                      key: ValueKey(_packs[index].id),
-                                      index: index,
-                                      child: Padding(
-                                        padding: EdgeInsets.only(
-                                          right:
-                                              index == _packs.length - 1 ? 0 : 10,
-                                        ),
-                                        child: PressBounce(
-                                          passthrough: true,
-                                          color: selected
-                                              ? Color.lerp(
-                                                  colors.groupedBackground,
-                                                  colors.accentBright,
-                                                  0.15,
-                                                )!
-                                              : colors.groupedBackground,
-                                          pressedColor: selected
-                                              ? Color.lerp(
-                                                  colors.groupedBackground,
-                                                  colors.accentBright,
-                                                  0.58,
-                                                )!
-                                              : colors.pressed,
-                                          borderRadius: BorderRadius.circular(16),
-                                          child: GestureDetector(
-                                            behavior: HitTestBehavior.opaque,
-                                            onTap: () => setState(
-                                              () => _packIndex = index,
-                                            ),
-                                            child: SizedBox(
-                                              width: tabSize,
-                                              height: tabSize,
-                                              child: Padding(
-                                                padding: const EdgeInsets.all(4),
-                                                child: Image.asset(
-                                                  _packs[index].cover,
-                                                  fit: BoxFit.contain,
-                                                  filterQuality:
-                                                      FilterQuality.medium,
-                                                  errorBuilder:
-                                                      (context, error, stack) =>
-                                                          const SizedBox.shrink(),
-                                                ),
-                                              ),
-                                            ),
+                                  padding:
+                                      EdgeInsets.symmetric(horizontal: pad),
+                                  child: SizedBox(
+                                    width: contentWidth,
+                                    height: tabHeight,
+                                    child: Stack(
+                                      key: _packRowKey,
+                                      clipBehavior: Clip.none,
+                                      children: [
+                                        for (var i = 0; i < n; i++)
+                                          _positionedPack(
+                                            index: i,
+                                            tabWidth: tabWidth,
+                                            tabHeight: tabHeight,
+                                            colors: colors,
                                           ),
-                                        ),
-                                      ),
-                                    );
-                                  },
+                                      ],
+                                    ),
+                                  ),
                                 ),
                               ),
                             ),
@@ -370,7 +441,6 @@ class _DayEmojiSheetState extends State<DayEmojiSheet> {
                       colors: colors,
                       packId: pack?.id,
                       stickers: stickers,
-                      compact: pc,
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -406,13 +476,155 @@ class _DayEmojiSheetState extends State<DayEmojiSheet> {
     );
   }
 
+  Widget _positionedPack({
+    required int index,
+    required double tabWidth,
+    required double tabHeight,
+    required AppColors colors,
+  }) {
+    final packId = _packs[index].id;
+    return AnimatedPositioned(
+      key: ValueKey(packId),
+      duration: _draggingIndex == null && _drop.id == null
+          ? Duration.zero
+          : _slotAnim,
+      curve: Curves.easeOutCubic,
+      left: index * (tabWidth + _tabGap),
+      width: tabWidth,
+      height: tabHeight,
+      child: _drop.wrap(
+        itemId: packId,
+        onDone: () {
+          if (!mounted || _drop.id != packId) return;
+          setState(_drop.clear);
+        },
+        child: _packSlot(
+          index: index,
+          tabWidth: tabWidth,
+          tabHeight: tabHeight,
+          colors: colors,
+        ),
+      ),
+    );
+  }
+
+  Widget _packSlot({
+    required int index,
+    required double tabWidth,
+    required double tabHeight,
+    required AppColors colors,
+  }) {
+    final pack = _packs[index];
+    final selected = index == _packIndex;
+    final chip = _packTab(
+      pack: pack,
+      selected: selected,
+      width: tabWidth,
+      height: tabHeight,
+      colors: colors,
+    );
+    return LongPressDraggable<String>(
+      data: pack.id,
+      delay: const Duration(milliseconds: 400),
+      hapticFeedbackOnStart: true,
+      rootOverlay: true,
+      maxSimultaneousDrags: _drop.of(pack.id) ? 0 : 1,
+      onDragStarted: () => _onPackDragStarted(index, tabWidth),
+      onDragUpdate: (details) =>
+          _onPackDragUpdate(details.globalPosition, tabWidth),
+      onDragEnd: _onPackDragEnded,
+      feedback: Material(
+        color: Colors.transparent,
+        child: Transform.scale(
+          scale: 1.06,
+          child: chip,
+        ),
+      ),
+      childWhenDragging: DecoratedBox(
+        decoration: BoxDecoration(
+          color: colors.pressed,
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: SizedBox(width: tabWidth, height: tabHeight),
+      ),
+      child: PressBounce(
+        passthrough: true,
+        color: selected
+            ? Color.lerp(
+                colors.groupedBackground,
+                colors.accentBright,
+                0.15,
+              )!
+            : colors.groupedBackground,
+        pressedColor: selected
+            ? Color.lerp(
+                colors.groupedBackground,
+                colors.accentBright,
+                0.58,
+              )!
+            : colors.pressed,
+        borderRadius: BorderRadius.circular(14),
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: () => setState(() => _packIndex = index),
+          child: SizedBox(
+            width: tabWidth,
+            height: tabHeight,
+            child: Padding(
+              padding: const EdgeInsets.all(4),
+              child: Image.asset(
+                pack.cover,
+                fit: BoxFit.contain,
+                filterQuality: FilterQuality.medium,
+                errorBuilder: (context, error, stack) =>
+                    const SizedBox.shrink(),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _packTab({
+    required StickerPack pack,
+    required bool selected,
+    required double width,
+    required double height,
+    required AppColors colors,
+  }) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: selected
+            ? Color.lerp(
+                colors.groupedBackground,
+                colors.accentBright,
+                0.15,
+              )!
+            : colors.groupedBackground,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: SizedBox(
+        width: width,
+        height: height,
+        child: Padding(
+          padding: const EdgeInsets.all(4),
+          child: Image.asset(
+            pack.cover,
+            fit: BoxFit.contain,
+            filterQuality: FilterQuality.medium,
+            errorBuilder: (context, error, stack) => const SizedBox.shrink(),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _stickerGrid({
     required AppColors colors,
     required String? packId,
     required List<String> stickers,
-    required bool compact,
   }) {
-    final gap = compact ? 10.0 : _gridGap;
     return FadeIn(
       key: ValueKey(packId ?? 'empty'),
       duration: const Duration(milliseconds: 320),
@@ -422,8 +634,8 @@ class _DayEmojiSheetState extends State<DayEmojiSheet> {
         itemCount: stickers.length,
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: _columns,
-          mainAxisSpacing: gap,
-          crossAxisSpacing: gap,
+          mainAxisSpacing: _gridGap,
+          crossAxisSpacing: _gridGap,
           childAspectRatio: 1,
         ),
         itemBuilder: (context, index) {
@@ -434,7 +646,7 @@ class _DayEmojiSheetState extends State<DayEmojiSheet> {
             pressedColor: colors.pressed,
             borderRadius: BorderRadius.circular(14),
             child: Padding(
-              padding: EdgeInsets.all(compact ? 8 : 2),
+              padding: const EdgeInsets.all(4),
               child: Image.asset(
                 DayStickers.resolve(sticker),
                 fit: BoxFit.contain,

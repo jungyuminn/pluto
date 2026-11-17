@@ -91,7 +91,7 @@ class CalendarMonthGrid extends StatefulWidget {
   final DateTime month;
   final void Function(DateTime date, Rect origin)? onDayPressed;
   final ValueChanged<DateTime>? onDayLongPressed;
-  final void Function(DateTime start, DateTime end)? onRangeSelected;
+  final Future<void> Function(DateTime start, DateTime end)? onRangeSelected;
   final ValueChanged<bool>? onRangeDragChanged;
   final List<CalendarEvent> Function(DateTime date)? eventsOf;
   final List<DiaryEntry> Function(DateTime date)? diariesOf;
@@ -323,6 +323,7 @@ class _CalendarMonthGridState extends State<CalendarMonthGrid>
 
   void _clearRange() {
     _setDragging(false);
+    if (_rangeStart == null && _rangeEnd == null) return;
     setState(() {
       _rangeStart = null;
       _rangeEnd = null;
@@ -347,14 +348,19 @@ class _CalendarMonthGridState extends State<CalendarMonthGrid>
     setState(() => _rangeEnd = date);
   }
 
-  void _onLongPressEnd(LongPressEndDetails details) {
+  Future<void> _onLongPressEnd(LongPressEndDetails details) async {
     final start = _rangeStart;
     final end = _rangeEnd;
-    _clearRange();
-    if (start == null || end == null || start == end) return;
+    _setDragging(false);
+    if (start == null || end == null || start == end) {
+      _clearRange();
+      return;
+    }
     final first = start.isBefore(end) ? start : end;
     final last = start.isBefore(end) ? end : start;
-    widget.onRangeSelected?.call(first, last);
+    await widget.onRangeSelected?.call(first, last);
+    if (!mounted) return;
+    _clearRange();
   }
 
   bool _inRange(DateTime date) {
@@ -365,6 +371,12 @@ class _CalendarMonthGridState extends State<CalendarMonthGrid>
     final last = start.isBefore(end) ? end : start;
     final day = _dateOnly(date);
     return !day.isBefore(first) && !day.isAfter(last);
+  }
+
+  bool _isRangeOrigin(DateTime date) {
+    final start = _rangeStart;
+    if (start == null) return false;
+    return CalendarDayDropTarget.isSameDay(date, start);
   }
 
   bool _isDropTarget(DateTime date, DateTime? highlighted) {
@@ -566,6 +578,10 @@ class _CalendarMonthGridState extends State<CalendarMonthGrid>
                                         CalendarDayCell(
                                           day: weekDays[weekday],
                                           inRange: _inRange(weekDays[weekday].date),
+                                          rangeGrow: _rangeStart == null ||
+                                              !_isRangeOrigin(
+                                                weekDays[weekday].date,
+                                              ),
                                           highlighted: _isDropTarget(
                                             weekDays[weekday].date,
                                             highlighted,

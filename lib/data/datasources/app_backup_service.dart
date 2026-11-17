@@ -23,6 +23,7 @@ import 'package:pluto/data/datasources/app_auth_service.dart';
 import 'package:pluto/data/datasources/friend_favorite_preference.dart';
 import 'package:pluto/data/datasources/friend_home_preference.dart';
 import 'package:pluto/data/datasources/friend_order_preference.dart';
+import 'package:pluto/data/datasources/home_row_order_preference.dart';
 import 'package:pluto/data/datasources/theme_preference.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
@@ -53,6 +54,7 @@ class AppBackupService {
     FriendHomePreference.seededKey,
     FriendOrderPreference.key,
     FriendFavoritePreference.key,
+    HomeRowOrderPreference.key,
   };
 
   static String fileName([DateTime? now]) {
@@ -290,6 +292,7 @@ class AppBackupService {
     unawaited(FriendOrderPreference.instance.load());
     unawaited(FriendHomePreference.instance.load());
     unawaited(FriendFavoritePreference.instance.load());
+    unawaited(HomeRowOrderPreference.instance.load());
     revision.value++;
   }
 
@@ -311,6 +314,7 @@ class AppBackupService {
     unawaited(FriendOrderPreference.instance.load());
     unawaited(FriendHomePreference.instance.load());
     unawaited(FriendFavoritePreference.instance.load());
+    unawaited(HomeRowOrderPreference.instance.load());
     scope.longGoalStore.reload();
     scope.memoStore.reload();
     scope.dayEmojiStore.reload();

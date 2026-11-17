@@ -14,6 +14,7 @@ import 'package:pluto/core/theme/app_theme.dart';
 import 'package:pluto/data/datasources/app_backup_service.dart';
 import 'package:pluto/data/datasources/calendar_complete.dart';
 import 'package:pluto/data/datasources/friend_service.dart';
+import 'package:pluto/data/datasources/group_calendar_service.dart';
 import 'package:pluto/data/datasources/theme_preference.dart';
 import 'package:pluto/core/utils/drop_in.dart';
 import 'package:pluto/core/utils/mouse_drag_scroll.dart';
@@ -46,6 +47,7 @@ Future<void> showDayEventsDialog(
   Rect? origin,
   bool readOnly = false,
   String? sticker,
+  String? groupCalendarId,
   Future<List<CalendarEvent>> Function(DateTime date)? eventsForDate,
   String? Function(DateTime date)? stickerForDate,
 }) async {
@@ -66,6 +68,7 @@ Future<void> showDayEventsDialog(
         onEventsChanged: onEventsChanged,
         readOnly: readOnly,
         sticker: sticker,
+        groupCalendarId: groupCalendarId,
         eventsForDate: eventsForDate,
         stickerForDate: stickerForDate,
       );
@@ -173,6 +176,7 @@ class DayEventsDialog extends StatefulWidget {
     this.onEventsChanged,
     this.readOnly = false,
     this.sticker,
+    this.groupCalendarId,
     this.eventsForDate,
     this.stickerForDate,
   });
@@ -182,6 +186,7 @@ class DayEventsDialog extends StatefulWidget {
   final VoidCallback? onEventsChanged;
   final bool readOnly;
   final String? sticker;
+  final String? groupCalendarId;
   final Future<List<CalendarEvent>> Function(DateTime date)? eventsForDate;
   final String? Function(DateTime date)? stickerForDate;
 
@@ -218,6 +223,7 @@ class _DayEventsDialogState extends State<DayEventsDialog> {
 
   double get _eventExtent => PcLayout.dayLabelExtentOf();
   double get _labelHeight => PcLayout.dayLabelHeightOf();
+  bool get _group => (widget.groupCalendarId ?? '').isNotEmpty;
 
   @override
   void initState() {
@@ -237,7 +243,7 @@ class _DayEventsDialogState extends State<DayEventsDialog> {
     _sortByTime = scope.dayEventsViewPreference.sortByTime;
     _showTime = scope.dayEventsViewPreference.showTime;
     _hour24 = scope.dayEventsViewPreference.hour24;
-    if (widget.readOnly) {
+    if (widget.readOnly || _group) {
       _emoji = DayStickers.isAsset(widget.sticker) ? widget.sticker : null;
     } else {
       final sticker = scope.dayEmojiStore.on(
@@ -303,6 +309,7 @@ class _DayEventsDialogState extends State<DayEventsDialog> {
         _emoji = DayStickers.isAsset(sticker) ? sticker : null;
       }
       _syncItems(_itemsForView, animate: false);
+      if (_group) unawaited(_reload(animate: false));
       return;
     }
     if (widget.readOnly) return;
@@ -319,8 +326,7 @@ class _DayEventsDialogState extends State<DayEventsDialog> {
 
   String? _timeText(CalendarEvent event) {
     if (!_showTime) return null;
-    return event.labelTime(hour24: _hour24) ??
-        (event.isJob ? null : AppStrings.allDayLabel);
+    return event.labelTime(hour24: _hour24);
   }
 
   List<_ListEntry> get _itemsForView {
@@ -411,6 +417,18 @@ class _DayEventsDialogState extends State<DayEventsDialog> {
 
   Future<void> _reload({bool animate = true}) async {
     if (widget.readOnly) return;
+    if (_group) {
+      final events = await GroupCalendarService.instance.eventsOn(
+        calendarId: widget.groupCalendarId!,
+        date: widget.date,
+      );
+      if (!mounted) return;
+      _events
+        ..clear()
+        ..addAll(events);
+      _syncItems(_itemsForView, animate: animate);
+      return;
+    }
     final scope = AppScope.of(context);
     final calendarPrefs = scope.calendarPreference;
     final events = calendarPrefs.showTodos
@@ -476,7 +494,7 @@ class _DayEventsDialogState extends State<DayEventsDialog> {
   }
 
   Future<void> _pickEmoji() async {
-    if (widget.readOnly) return;
+    if (widget.readOnly || _group) return;
     final picked = await showDayEmojiSheet(context, selected: _emoji);
     if (picked == null || !mounted) return;
     await AppScope.of(context).dayEmojiStore.set(
@@ -504,7 +522,11 @@ class _DayEventsDialogState extends State<DayEventsDialog> {
 
   Future<void> _add() async {
     if (widget.readOnly) return;
-    final saved = await showAddEventSheet(context, date: widget.date);
+    final saved = await showAddEventSheet(
+      context,
+      date: widget.date,
+      groupCalendarId: widget.groupCalendarId,
+    );
     if (saved && mounted) await _reload();
     if (saved) widget.onEventsChanged?.call();
   }
@@ -519,6 +541,7 @@ class _DayEventsDialogState extends State<DayEventsDialog> {
       context,
       date: event.date,
       event: event,
+      groupCalendarId: widget.groupCalendarId,
     );
     if (saved && mounted) await _reload(animate: false);
     if (saved) widget.onEventsChanged?.call();
@@ -549,14 +572,36 @@ class _DayEventsDialogState extends State<DayEventsDialog> {
     if (event.isRepeat) {
       final scope = await showDeleteRepeatEventDialog(context);
       if (scope == null || !mounted) return false;
-      final deleter = AppScope.of(context).deleteCalendarEvent;
-      switch (scope) {
-        case RepeatDeleteScope.thisOnly:
-          await deleter.thisOnly(event);
-        case RepeatDeleteScope.thisAndAfter:
-          await deleter.thisAndAfter(event);
-        case RepeatDeleteScope.all:
-          await deleter.allRepeats(event.repeatId!);
+      if (_group) {
+        final calendarId = widget.groupCalendarId!;
+        switch (scope) {
+          case RepeatDeleteScope.thisOnly:
+            await GroupCalendarService.instance.deleteEvent(
+              calendarId: calendarId,
+              event: event,
+            );
+          case RepeatDeleteScope.thisAndAfter:
+            await GroupCalendarService.instance.deleteRepeats(
+              calendarId: calendarId,
+              repeatId: event.repeatId!,
+              from: event.day,
+            );
+          case RepeatDeleteScope.all:
+            await GroupCalendarService.instance.deleteRepeats(
+              calendarId: calendarId,
+              repeatId: event.repeatId!,
+            );
+        }
+      } else {
+        final deleter = AppScope.of(context).deleteCalendarEvent;
+        switch (scope) {
+          case RepeatDeleteScope.thisOnly:
+            await deleter.thisOnly(event);
+          case RepeatDeleteScope.thisAndAfter:
+            await deleter.thisAndAfter(event);
+          case RepeatDeleteScope.all:
+            await deleter.allRepeats(event.repeatId!);
+        }
       }
       if (mounted) await _reload();
       widget.onEventsChanged?.call();
@@ -572,13 +617,30 @@ class _DayEventsDialogState extends State<DayEventsDialog> {
   }
 
   Future<void> _remove(CalendarEvent event) async {
-    await AppScope.of(context).deleteCalendarEvent(event);
+    if (_group) {
+      await GroupCalendarService.instance.deleteEvent(
+        calendarId: widget.groupCalendarId!,
+        event: event,
+      );
+    } else {
+      await AppScope.of(context).deleteCalendarEvent(event);
+    }
     if (mounted) await _reload();
     widget.onEventsChanged?.call();
   }
 
   Future<void> _toggleComplete(CalendarEvent event) async {
     if (widget.readOnly) return;
+    if (_group) {
+      final next = event.copyWith(completed: !event.completed);
+      await GroupCalendarService.instance.setCompleted(
+        calendarId: widget.groupCalendarId!,
+        event: next,
+      );
+      if (mounted) await _reload(animate: false);
+      widget.onEventsChanged?.call();
+      return;
+    }
     final tutorial = TutorialController.find(context);
     final scope = AppScope.of(context);
     final next = event.isJob
@@ -735,6 +797,14 @@ class _DayEventsDialogState extends State<DayEventsDialog> {
 
   Future<void> _moveToDate(CalendarEvent event, DateTime date) async {
     final target = DateTime(date.year, date.month, date.day);
+    if (_group) {
+      await GroupCalendarService.instance.updateEvent(
+        calendarId: widget.groupCalendarId!,
+        event: event.copyWith(date: target),
+      );
+      widget.onEventsChanged?.call();
+      return;
+    }
     if (event.isShared) {
       await _moveSharedToDate(event, target);
       widget.onEventsChanged?.call();
@@ -884,7 +954,7 @@ class _DayEventsDialogState extends State<DayEventsDialog> {
   }
 
   Future<void> _persistTodoOrder() async {
-    if (!mounted) return;
+    if (!mounted || _group) return;
     final todos = [
       for (final event in _events)
         if (!event.isLockedOrder) event,
@@ -952,7 +1022,9 @@ class _DayEventsDialogState extends State<DayEventsDialog> {
                                           ),
                                           child: PressBounce(
                                             onPressed: _pickEmoji,
-                                            pressedScale: 0.92,
+                                            pressedScale: 0.94,
+                                            pressedColor: colors.pressed,
+                                            borderRadius: BorderRadius.circular(14),
                                             child: DayStickerImage(
                                               key: ValueKey(_emoji),
                                               asset: _emoji!,
@@ -989,7 +1061,7 @@ class _DayEventsDialogState extends State<DayEventsDialog> {
                                 ],
                               ),
                             ),
-                            if (!widget.readOnly)
+                            if (!widget.readOnly && !_group)
                               AppBarPill(
                                 asset: AppIcons.emoji,
                                 label: AppStrings.emojiAction,
@@ -1243,6 +1315,7 @@ class _DayCardPager extends StatefulWidget {
     this.onEventsChanged,
     this.readOnly = false,
     this.sticker,
+    this.groupCalendarId,
     this.eventsForDate,
     this.stickerForDate,
   });
@@ -1252,6 +1325,7 @@ class _DayCardPager extends StatefulWidget {
   final VoidCallback? onEventsChanged;
   final bool readOnly;
   final String? sticker;
+  final String? groupCalendarId;
   final Future<List<CalendarEvent>> Function(DateTime date)? eventsForDate;
   final String? Function(DateTime date)? stickerForDate;
 
@@ -1336,6 +1410,7 @@ class _DayCardPagerState extends State<_DayCardPager> {
                     sticker: first
                         ? widget.sticker
                         : widget.stickerForDate?.call(date),
+                    groupCalendarId: widget.groupCalendarId,
                     eventsForDate: widget.eventsForDate,
                     stickerForDate: widget.stickerForDate,
                   ),

@@ -601,7 +601,7 @@ class _WeekdayRow extends StatelessWidget {
             Expanded(
               child: PressBounce(
                 onPressed: () => onPressed(i),
-                pressedScale: 0.92,
+                pressedScale: 0.94,
                 color: Colors.transparent,
                 pressedColor: Colors.transparent,
                 child: Center(

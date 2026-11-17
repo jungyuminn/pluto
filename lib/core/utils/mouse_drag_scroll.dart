@@ -170,8 +170,6 @@ class HorizontalWheelScroll extends StatefulWidget {
 }
 
 class _HorizontalWheelScrollState extends State<HorizontalWheelScroll> {
-  double? _target;
-
   void _onSignal(PointerSignalEvent event) {
     if (event is! PointerScrollEvent) return;
     final controller = widget.controller;
@@ -186,25 +184,8 @@ class _HorizontalWheelScrollState extends State<HorizontalWheelScroll> {
               resolved.scrollDelta.dy.abs()
           ? resolved.scrollDelta.dx
           : resolved.scrollDelta.dy;
-      final next = ((_target ?? current.pixels) + delta).clamp(
-        current.minScrollExtent,
-        current.maxScrollExtent,
-      );
-      if (next == current.pixels && _target == null) return;
-      _target = next;
-      controller
-          .animateTo(
-            next,
-            duration: const Duration(milliseconds: 220),
-            curve: Curves.easeOutCubic,
-          )
-          .whenComplete(() {
-        if (!controller.hasClients) return;
-        if (_target != null &&
-            (controller.position.pixels - _target!).abs() < 0.5) {
-          _target = null;
-        }
-      });
+      if (delta == 0) return;
+      current.pointerScroll(delta);
     });
   }
 

@@ -14,6 +14,7 @@ class AddEventButton extends StatelessWidget {
     final colors = AppColors.of(context);
     return PressBounce(
       onPressed: onPressed,
+      pressedScale: 0.97,
       color: colors.pressed,
       pressedColor: colors.border,
       borderRadius: BorderRadius.circular(8),

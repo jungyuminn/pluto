@@ -28,6 +28,7 @@ import 'package:pluto/presentation/screens/friends/friend_calendar_screen.dart';
 import 'package:pluto/presentation/screens/friends/friend_photo_peek.dart';
 import 'package:pluto/presentation/screens/friends/friend_star_button.dart';
 import 'package:pluto/presentation/screens/friends/friends_toast.dart';
+import 'package:pluto/presentation/screens/friends/group_calendars_section.dart';
 import 'package:pluto/presentation/widgets/overlay_app_bar.dart';
 import 'package:pluto/presentation/widgets/overflow_menu.dart';
 import 'package:pluto/presentation/widgets/app_arrow.dart';
@@ -43,22 +44,28 @@ final _codeFormatters = <TextInputFormatter>[
   }),
 ];
 
-Future<void> showAddFriendSheet(BuildContext context) async {
+Future<bool> _ensureFriendIdentity(BuildContext context) async {
+  final cached = FriendService.instance.profile.value;
+  if (cached != null && cached.hasIdentity) return true;
   try {
     await FriendService.instance.ensureProfile();
   } catch (_) {}
-  if (!context.mounted) return;
+  if (!context.mounted) return false;
   final me = FriendService.instance.profile.value;
-  if (me == null || !me.hasIdentity) {
-    showFriendsToast(context, AppStrings.friendsProfileNeed, top: true);
-    await Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        settings: const RouteSettings(name: FriendsScreen.routeName),
-        builder: (context) => const FriendsScreen(focusId: true),
-      ),
-    );
-    return;
-  }
+  if (me != null && me.hasIdentity) return true;
+  showFriendsToast(context, AppStrings.friendsProfileNeed, top: true);
+  await Navigator.of(context).push(
+    MaterialPageRoute<void>(
+      settings: const RouteSettings(name: FriendsScreen.routeName),
+      builder: (context) => const FriendsScreen(focusId: true),
+    ),
+  );
+  return false;
+}
+
+Future<void> showAddFriendSheet(BuildContext context) async {
+  if (!await _ensureFriendIdentity(context)) return;
+  if (!context.mounted) return;
   return showComposeSheet<void>(
     context,
     builder: (context) => const AddFriendSheet(),
@@ -156,6 +163,8 @@ class _AddFriendSheetState extends State<AddFriendSheet> {
                     ),
                   ),
                   const SizedBox(height: 16),
+                  _myCodeCard(colors),
+                  const SizedBox(height: 12),
                   _addFriendCard(colors),
                   _incomingSection(),
                   _outgoingSection(),
@@ -191,6 +200,95 @@ class _AddFriendSheetState extends State<AddFriendSheet> {
       },
       child: sheet,
     );
+  }
+
+  Widget _myCodeCard(AppColors colors) {
+    return ValueListenableBuilder<FriendProfile?>(
+      valueListenable: _service.profile,
+      builder: (context, profile, _) {
+        final name = profile?.displayName.trim() ?? '';
+        final code = profile?.friendCode.trim() ?? '';
+        final showName = name.isNotEmpty && name != code;
+        return _Card(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 14, 8, 14),
+            child: Row(
+              children: [
+                FriendAvatar(
+                  size: 52,
+                  profile: profile,
+                  showFavorite: false,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (showName)
+                        Text(
+                          name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontFamily: AppFonts.of(context),
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
+                            color: colors.text,
+                          ),
+                        ),
+                      Text(
+                        code.isEmpty ? AppStrings.friendsCodeNeed : code,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontFamily: AppFonts.of(context),
+                          fontSize: showName ? 13 : 16,
+                          fontWeight:
+                              showName ? FontWeight.w400 : FontWeight.w800,
+                          color: code.isEmpty ? colors.muted : colors.text,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (code.isNotEmpty)
+                  PressBounce(
+                    onPressed: () => _copyMyCode(code),
+                    pressedScale: 0.94,
+                    pressedColor: colors.pressed,
+                    borderRadius: BorderRadius.circular(18),
+                    child: Tooltip(
+                      message: AppStrings.friendsCopy,
+                      child: Semantics(
+                        button: true,
+                        label: AppStrings.friendsCopy,
+                        child: SizedBox(
+                          width: 36,
+                          height: 36,
+                          child: Center(
+                            child: AppAssetImage(
+                              asset: AppIcons.copy,
+                              width: 20,
+                              height: 20,
+                              color: colors.muted,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _copyMyCode(String code) async {
+    await Clipboard.setData(ClipboardData(text: code));
+    if (!mounted) return;
+    _toast(AppStrings.friendsCopied);
   }
 
   Widget _addFriendCard(AppColors colors) {
@@ -648,6 +746,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
                 _incomingFriendRequests(),
                 _incomingTodos(),
                 _outgoingTodos(),
+                GroupCalendarsBlock(onToast: _toast),
                 _friendsSection(colors),
               ],
             ),
@@ -2272,21 +2371,21 @@ class _FriendTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(8, 4, 12, 4),
-      child: Row(
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(12, 12, 0, 12),
-            child: FriendPhotoPeekTarget(size: 40, profile: friend),
-          ),
-          Expanded(
-            child: PressBounce(
-              onPressed: onPressed,
-              pressedScale: 0.98,
-              color: colors.card,
-              pressedColor: colors.pressed,
-              borderRadius: BorderRadius.circular(16),
+    return PressBounce(
+      onPressed: onPressed,
+      pressedScale: 0.98,
+      color: colors.card,
+      pressedColor: colors.pressed,
+      borderRadius: BorderRadius.circular(16),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(8, 4, 12, 4),
+        child: Row(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 12, 0, 12),
+              child: FriendPhotoPeekTarget(size: 40, profile: friend),
+            ),
+            Expanded(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(12, 12, 8, 12),
                 child: Column(
@@ -2313,36 +2412,36 @@ class _FriendTile extends StatelessWidget {
                 ),
               ),
             ),
-          ),
-          FriendStarButton(
-            favorited: favorited,
-            onPressed: () => onFavoriteChanged(!favorited),
-          ),
-          OverflowMenuButton(
-            actions: [
-              OverflowMenuAction(
-                label: homePinned
-                    ? AppStrings.friendsHomeUnpin
-                    : AppStrings.friendsHomePin,
-                leadingAsset:
-                    homePinned ? AppIcons.removeHome : AppIcons.addHome,
-                leadingFlipX: true,
-                onPressed: () => onHomeChanged(!homePinned),
-              ),
-              OverflowMenuAction(
-                label: AppStrings.friendsSharedTodoAdd,
-                leadingAsset: AppIcons.linkOutlined,
-                onPressed: onSharedTodo,
-              ),
-              OverflowMenuAction(
-                label: AppStrings.friendsRemove,
-                leadingAsset: AppIcons.trashCan,
-                color: colors.danger,
-                onPressed: onRemove,
-              ),
-            ],
-          ),
-        ],
+            FriendStarButton(
+              favorited: favorited,
+              onPressed: () => onFavoriteChanged(!favorited),
+            ),
+            OverflowMenuButton(
+              actions: [
+                OverflowMenuAction(
+                  label: homePinned
+                      ? AppStrings.friendsHomeUnpin
+                      : AppStrings.friendsHomePin,
+                  leadingAsset:
+                      homePinned ? AppIcons.removeHome : AppIcons.addHome,
+                  leadingFlipX: true,
+                  onPressed: () => onHomeChanged(!homePinned),
+                ),
+                OverflowMenuAction(
+                  label: AppStrings.friendsSharedTodoAdd,
+                  leadingAsset: AppIcons.linkOutlined,
+                  onPressed: onSharedTodo,
+                ),
+                OverflowMenuAction(
+                  label: AppStrings.friendsRemove,
+                  leadingAsset: AppIcons.trashCan,
+                  color: colors.danger,
+                  onPressed: onRemove,
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

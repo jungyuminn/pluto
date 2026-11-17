@@ -464,9 +464,7 @@ class TodoReminderService {
   }
 
   String _notificationBody(List<String> lines, {String? extra}) {
-    final body = lines.length > 1
-        ? [for (final line in lines) '• $line'].join('\n')
-        : lines.join('\n');
+    final body = [for (final line in lines) '• $line'].join('\n');
     if (extra == null || extra.isEmpty) return body;
     if (body.isEmpty) return extra;
     return '$body\n$extra';

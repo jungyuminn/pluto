@@ -252,7 +252,7 @@ class _LongGoalLogSheetState extends State<LongGoalLogSheet> {
           curve: Curves.easeOutCubic,
           clipBehavior: PcLayout.isPc ? Clip.antiAlias : Clip.none,
           decoration: BoxDecoration(
-            color: colors.tint(accent),
+            color: colors.tint(accent, 0.14),
             borderRadius: PcLayout.sheetRadius(),
           ),
           child: SingleChildScrollView(
@@ -346,7 +346,7 @@ class _LongGoalLogSheetState extends State<LongGoalLogSheet> {
                   ticks: progress.barSegments,
                   color: accent,
                   background: colors.border,
-                  gapColor: colors.tint(accent),
+                  gapColor: colors.tint(accent, 0.14),
                 ),
                 AnimatedSwitcher(
                   duration: const Duration(milliseconds: 360),
@@ -930,7 +930,7 @@ class _CheckInWeekState extends State<_CheckInWeek>
           : isToday && widget.onToggle != null
               ? () => widget.onToggle!(day)
               : null,
-      pressedScale: 0.92,
+      pressedScale: 0.94,
       color: selected
           ? widget.color.withValues(alpha: 0.16)
           : Colors.transparent,

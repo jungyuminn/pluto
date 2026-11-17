@@ -12,6 +12,7 @@ Future<bool> showAddEventSheet(
   CalendarEvent? event,
   bool someday = false,
   FriendProfile? shareWith,
+  String? groupCalendarId,
 }) async {
   final tutorial = TutorialController.find(context);
   tutorial?.noteAddOpened();
@@ -23,6 +24,7 @@ Future<bool> showAddEventSheet(
       event: event,
       someday: someday,
       shareWith: shareWith,
+      groupCalendarId: groupCalendarId,
     ),
   );
   tutorial?.noteAddClosed(saved: saved == true);
@@ -37,6 +39,7 @@ class AddEventSheet extends StatelessWidget {
     this.event,
     this.someday = false,
     this.shareWith,
+    this.groupCalendarId,
   });
 
   final DateTime date;
@@ -44,6 +47,7 @@ class AddEventSheet extends StatelessWidget {
   final CalendarEvent? event;
   final bool someday;
   final FriendProfile? shareWith;
+  final String? groupCalendarId;
 
   @override
   Widget build(BuildContext context) {
@@ -55,6 +59,7 @@ class AddEventSheet extends StatelessWidget {
         initial: event,
         someday: someday,
         shareWith: shareWith,
+        groupCalendarId: groupCalendarId,
       ),
     );
   }

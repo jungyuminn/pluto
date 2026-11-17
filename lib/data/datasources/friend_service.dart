@@ -23,6 +23,7 @@ import 'package:pluto/data/datasources/friend_category_preference.dart';
 import 'package:pluto/data/datasources/friend_favorite_preference.dart';
 import 'package:pluto/data/datasources/friend_home_preference.dart';
 import 'package:pluto/data/datasources/friend_order_preference.dart';
+import 'package:pluto/data/datasources/home_row_order_preference.dart';
 import 'package:pluto/data/datasources/day_emoji_store.dart';
 import 'package:pluto/data/models/calendar_event_model.dart';
 import 'package:pluto/domain/entities/calendar_event.dart';
@@ -177,6 +178,7 @@ class FriendService {
       await FriendOrderPreference.instance.load();
       await FriendHomePreference.instance.load();
       await FriendFavoritePreference.instance.load();
+      await HomeRowOrderPreference.instance.load();
       return;
     }
     if (_bootstrapUid == uid && _bootstrapWork != null) {
@@ -199,6 +201,7 @@ class FriendService {
     unawaited(FriendOrderPreference.instance.load());
     unawaited(FriendHomePreference.instance.load());
     unawaited(FriendFavoritePreference.instance.load());
+    unawaited(HomeRowOrderPreference.instance.load());
     try {
       if (!kIsWeb) {
         await AppAuthService.instance

@@ -846,6 +846,28 @@ exports.deleteFriendData = onCall(callable, async (request) => {
   await addAll(store.collection("friendships").doc(uid).collection("friends"));
   await addAll(store.collection("shared_calendars").doc(uid).collection("events"));
   await addAll(store.collection("shared_calendars").doc(uid).collection("stickers"));
+  await addAll(store.collection("group_calendar_invites").where("fromUid", "==", uid));
+  await addAll(store.collection("group_calendar_invites").where("toUid", "==", uid));
+  const groupCalendars = await store
+      .collection("group_calendars")
+      .where("memberUids", "array-contains", uid)
+      .get();
+  for (const doc of groupCalendars.docs) {
+    const data = doc.data() || {};
+    if (data.ownerUid === uid) {
+      const events = await doc.ref.collection("events").get();
+      for (const event of events.docs) {
+        batchDeletes.push(event.ref);
+      }
+      batchDeletes.push(doc.ref);
+    } else {
+      const members = (data.memberUids || []).filter((id) => id !== uid);
+      await doc.ref.update({
+        memberUids: members,
+        updatedAt: Date.now(),
+      });
+    }
+  }
 
   const friends = await store
       .collection("friendships")
@@ -888,6 +910,12 @@ function pushTodoTitle(raw) {
   const title = String(raw || "").replace(/\s+/g, " ").trim();
   if (!title) return "같이 할 일";
   return title.length > 40 ? `${title.slice(0, 39)}…` : title;
+}
+
+function pushCalendarName(raw) {
+  const name = String(raw || "").replace(/\s+/g, " ").trim();
+  if (!name) return "공유 캘린더";
+  return name.length > 16 ? `${name.slice(0, 15)}…` : name;
 }
 
 async function tokensOf(uid) {
@@ -1023,5 +1051,40 @@ exports.onTodoRequestWrite = functionsV1
         }
       } catch (error) {
         console.error("todo push failed", requestId, error);
+      }
+    });
+
+exports.onGroupCalendarInviteWrite = functionsV1
+    .region("asia-northeast3")
+    .firestore
+    .document("group_calendar_invites/{inviteId}")
+    .onWrite(async (change, context) => {
+      const before = change.before.exists ? change.before.data() : null;
+      const after = change.after.exists ? change.after.data() : null;
+      if (!after) return;
+      const prev = String(before?.status || "");
+      const status = String(after.status || "");
+      const inviteId = context.params.inviteId;
+      const calendar = pushCalendarName(after.calendarName);
+      try {
+        if (status === "pending" && prev !== "pending") {
+          await notifyFriendPush(after.toUid, {
+            type: "group_calendar_invite",
+            title: `${pushName(after.fromName)}님이 공유 캘린더에 초대했어요`,
+            body: calendar,
+            requestId: inviteId,
+          });
+          return;
+        }
+        if (status === "accepted" && prev === "pending") {
+          await notifyFriendPush(after.fromUid, {
+            type: "group_calendar_accepted",
+            title: `${pushName(after.toName)}님이 공유 캘린더 초대를 수락했어요`,
+            body: calendar,
+            requestId: inviteId,
+          });
+        }
+      } catch (error) {
+        console.error("group calendar invite push failed", inviteId, error);
       }
     });

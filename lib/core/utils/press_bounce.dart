@@ -15,7 +15,7 @@ class PressBounce extends StatefulWidget {
     required this.child,
     this.onPressed,
     this.onLongPressed,
-    this.pressedScale = 0.95,
+    this.pressedScale = 0.94,
     this.color = Colors.transparent,
     this.pressedColor,
     this.borderRadius = const BorderRadius.all(Radius.circular(12)),
@@ -54,8 +54,8 @@ class _PressBounceState extends State<PressBounce>
 
   static const _releaseSpring = SpringDescription(
     mass: 0.7,
-    stiffness: 420,
-    damping: 28,
+    stiffness: 430,
+    damping: 24,
   );
 
   late final AnimationController _controller;
@@ -70,7 +70,7 @@ class _PressBounceState extends State<PressBounce>
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 40),
+      duration: const Duration(milliseconds: 80),
       lowerBound: -0.4,
       upperBound: 1,
       value: 0,
@@ -110,8 +110,8 @@ class _PressBounceState extends State<PressBounce>
       if (mounted) setState(() {});
       await _controller.animateTo(
         1,
-        duration: const Duration(milliseconds: 40),
-        curve: Curves.easeOutCubic,
+        duration: const Duration(milliseconds: 80),
+        curve: Curves.easeInOutCubic,
       );
       return;
     }
@@ -120,7 +120,7 @@ class _PressBounceState extends State<PressBounce>
       final seq = _pressSeq;
       await _controller.animateTo(
         1,
-        duration: const Duration(milliseconds: 40),
+        duration: const Duration(milliseconds: 32),
         curve: Curves.easeOutCubic,
       );
       if (!mounted || seq != _pressSeq) return;
@@ -134,7 +134,7 @@ class _PressBounceState extends State<PressBounce>
     if (immediate) {
       await _controller.animateTo(
         0,
-        duration: const Duration(milliseconds: 70),
+        duration: const Duration(milliseconds: 55),
         curve: Curves.easeOutCubic,
       );
       return;
@@ -302,7 +302,7 @@ class _PressBounceState extends State<PressBounce>
         );
       },
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 80),
+        duration: const Duration(milliseconds: 70),
         width: widget.expand ? double.infinity : null,
         height: widget.expand ? double.infinity : null,
         alignment: widget.expand

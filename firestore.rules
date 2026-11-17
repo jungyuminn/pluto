@@ -270,5 +270,200 @@ service cloud.firestore {
     match /rate_limits/{id} {
       allow read, write: if false;
     }
+
+    function groupCalendarOf(calendarId) {
+      return get(/databases/$(database)/documents/group_calendars/$(calendarId)).data;
+    }
+
+    function isGroupCalendarMember(calendarId) {
+      return signedIn() &&
+        exists(/databases/$(database)/documents/group_calendars/$(calendarId)) &&
+        request.auth.uid in groupCalendarOf(calendarId).memberUids;
+    }
+
+    function groupCalendarCreateOk() {
+      let data = request.resource.data;
+      return isUser(data.ownerUid) &&
+        data.keys().hasOnly(['name', 'ownerUid', 'memberUids', 'createdAt', 'updatedAt']) &&
+        data.name is string &&
+        data.name.size() > 0 &&
+        data.name.size() <= 16 &&
+        data.memberUids is list &&
+        data.memberUids.size() == 1 &&
+        request.auth.uid in data.memberUids &&
+        data.createdAt is int &&
+        data.updatedAt is int;
+    }
+
+    function pendingGroupInvite(calendarId, toUid) {
+      let inviteId = calendarId + '_' + toUid;
+      return exists(/databases/$(database)/documents/group_calendar_invites/$(inviteId)) &&
+        get(/databases/$(database)/documents/group_calendar_invites/$(inviteId)).data.status == 'pending' &&
+        get(/databases/$(database)/documents/group_calendar_invites/$(inviteId)).data.toUid == toUid &&
+        get(/databases/$(database)/documents/group_calendar_invites/$(inviteId)).data.calendarId == calendarId;
+    }
+
+    function groupEventValid() {
+      let data = request.resource.data;
+      return data.keys().hasOnly([
+          'title',
+          'date',
+          'memo',
+          'color',
+          'categoryName',
+          'completed',
+          'groupId',
+          'repeatId',
+          'startMinutes',
+          'endMinutes',
+          'checklist',
+          'sortOrder',
+          'createdBy',
+          'updatedBy',
+          'createdAt',
+          'updatedAt'
+        ]) &&
+        data.title is string &&
+        data.title.size() > 0 &&
+        data.title.size() <= 80 &&
+        data.date is string &&
+        data.date.size() == 10 &&
+        data.memo is string &&
+        data.memo.size() <= 2000 &&
+        data.color is int &&
+        data.categoryName is string &&
+        data.categoryName.size() > 0 &&
+        data.categoryName.size() <= 32 &&
+        data.completed is bool &&
+        data.sortOrder is int &&
+        data.createdBy is string &&
+        data.updatedBy == request.auth.uid &&
+        data.createdAt is int &&
+        data.updatedAt is int &&
+        data.checklist is list &&
+        data.checklist.size() <= 40 &&
+        (!('groupId' in data) || data.groupId == null || data.groupId is string) &&
+        (!('repeatId' in data) || data.repeatId == null || data.repeatId is string) &&
+        (!('startMinutes' in data) || data.startMinutes == null || data.startMinutes is int) &&
+        (!('endMinutes' in data) || data.endMinutes == null || data.endMinutes is int);
+    }
+
+    function groupInviteCreateOk() {
+      let data = request.resource.data;
+      return data.fromUid == request.auth.uid &&
+        data.toUid is string &&
+        data.toUid.size() > 0 &&
+        data.toUid != request.auth.uid &&
+        isFriendOf(data.toUid) &&
+        data.status == 'pending' &&
+        data.calendarId is string &&
+        data.calendarName is string &&
+        data.calendarName.size() > 0 &&
+        data.calendarName.size() <= 16 &&
+        data.fromName is string &&
+        data.fromCode is string &&
+        data.toName is string &&
+        data.toCode is string &&
+        data.createdAt is int &&
+        request.auth.uid in data.participants &&
+        data.toUid in data.participants &&
+        exists(/databases/$(database)/documents/group_calendars/$(data.calendarId)) &&
+        request.auth.uid in groupCalendarOf(data.calendarId).memberUids &&
+        !(data.toUid in groupCalendarOf(data.calendarId).memberUids);
+    }
+
+    match /group_calendars/{calendarId} {
+      allow read: if signedIn() && request.auth.uid in resource.data.memberUids;
+      allow create: if signedIn() && groupCalendarCreateOk();
+      allow delete: if signedIn() && resource.data.ownerUid == request.auth.uid;
+      allow update: if signedIn() &&
+        request.resource.data.ownerUid == resource.data.ownerUid &&
+        request.resource.data.createdAt == resource.data.createdAt &&
+        request.resource.data.ownerUid in request.resource.data.memberUids &&
+        request.resource.data.memberUids.size() > 0 &&
+        request.resource.data.memberUids.size() <= 12 &&
+        (
+          (
+            request.auth.uid in resource.data.memberUids &&
+            request.resource.data.diff(resource.data).affectedKeys()
+              .hasOnly(['name', 'updatedAt']) &&
+            resource.data.ownerUid == request.auth.uid &&
+            request.resource.data.name is string &&
+            request.resource.data.name.size() > 0 &&
+            request.resource.data.name.size() <= 16
+          ) ||
+          (
+            request.auth.uid in resource.data.memberUids &&
+            request.auth.uid != resource.data.ownerUid &&
+            !(request.auth.uid in request.resource.data.memberUids) &&
+            resource.data.memberUids.hasAll(request.resource.data.memberUids) &&
+            request.resource.data.memberUids.size() == resource.data.memberUids.size() - 1 &&
+            request.resource.data.diff(resource.data).affectedKeys()
+              .hasOnly(['memberUids', 'updatedAt'])
+          ) ||
+          (
+            resource.data.ownerUid == request.auth.uid &&
+            request.resource.data.diff(resource.data).affectedKeys()
+              .hasOnly(['memberUids', 'updatedAt']) &&
+            resource.data.memberUids.hasAll(request.resource.data.memberUids)
+          ) ||
+          (
+            pendingGroupInvite(calendarId, request.auth.uid) &&
+            request.auth.uid in request.resource.data.memberUids &&
+            !(request.auth.uid in resource.data.memberUids) &&
+            request.resource.data.memberUids.hasAll(resource.data.memberUids) &&
+            request.resource.data.memberUids.size() == resource.data.memberUids.size() + 1 &&
+            request.resource.data.diff(resource.data).affectedKeys()
+              .hasOnly(['memberUids', 'updatedAt']) &&
+            request.resource.data.name == resource.data.name
+          )
+        );
+      match /events/{eventId} {
+        allow read: if isGroupCalendarMember(calendarId);
+        allow create: if isGroupCalendarMember(calendarId) &&
+          groupEventValid() &&
+          request.resource.data.createdBy == request.auth.uid;
+        allow update: if isGroupCalendarMember(calendarId) &&
+          groupEventValid() &&
+          request.resource.data.createdBy == resource.data.createdBy;
+        allow delete: if isGroupCalendarMember(calendarId);
+      }
+    }
+
+    match /group_calendar_invites/{inviteId} {
+      allow get: if signedIn() &&
+        (resource.data.fromUid == request.auth.uid ||
+         resource.data.toUid == request.auth.uid ||
+         request.auth.uid in resource.data.participants);
+      allow list: if signedIn() &&
+        (resource.data.fromUid == request.auth.uid ||
+         resource.data.toUid == request.auth.uid ||
+         request.auth.uid in resource.data.participants);
+      allow create: if signedIn() && groupInviteCreateOk();
+      allow update: if signedIn() &&
+        request.resource.data.fromUid == resource.data.fromUid &&
+        request.resource.data.toUid == resource.data.toUid &&
+        request.resource.data.calendarId == resource.data.calendarId &&
+        (
+          (
+            resource.data.status == 'pending' &&
+            request.resource.data.diff(resource.data).affectedKeys()
+              .hasOnly(['status', 'updatedAt']) &&
+            (
+              (resource.data.toUid == request.auth.uid &&
+                (request.resource.data.status == 'accepted' ||
+                 request.resource.data.status == 'declined')) ||
+              (resource.data.fromUid == request.auth.uid &&
+                request.resource.data.status == 'cancelled')
+            )
+          ) ||
+          (
+            resource.data.fromUid == request.auth.uid &&
+            resource.data.status != 'pending' &&
+            groupInviteCreateOk()
+          )
+        );
+      allow delete: if false;
+    }
   }
 }

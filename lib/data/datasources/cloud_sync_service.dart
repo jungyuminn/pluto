@@ -13,6 +13,7 @@ import 'package:pluto/data/datasources/cloud_sync_files.dart';
 import 'package:pluto/data/datasources/cloud_sync_snapshot.dart';
 import 'package:pluto/data/datasources/cloud_sync_tick.dart';
 import 'package:pluto/data/datasources/friend_service.dart';
+import 'package:pluto/data/datasources/group_calendar_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class CloudSyncService {
@@ -202,6 +203,7 @@ class CloudSyncService {
       }
       await AppAuthService.instance.signOut();
       FriendService.instance.reset();
+      GroupCalendarService.instance.reset();
     } catch (error) {
       if (error is AppAuthException) rethrow;
       throw AppAuthException('sync_logout', _code(error));

@@ -5932,9 +5932,10 @@ class _SettingsTile extends StatelessWidget {
     return PressBounce(
       onPressed: onPressed,
       onLongPressed: onLongPressed,
-      pressedScale: 0.98,
+      pressedScale: 0.96,
       color: colors.card,
       pressedColor: colors.pressed,
+      borderRadius: BorderRadius.circular(20),
       child: SizedBox(
         width: double.infinity,
         child: Padding(

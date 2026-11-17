@@ -26,7 +26,7 @@ class CategoryColorPicker extends StatefulWidget {
 }
 
 class _CategoryColorPickerState extends State<CategoryColorPicker> {
-  static const _dot = 28.0;
+  static const _dot = 32.0;
   static const _gap = 14.0;
   static const _columns = 7;
   static const _gridWidth = _columns * _dot + (_columns - 1) * _gap;
@@ -234,7 +234,7 @@ class _ColorDot extends StatelessWidget {
     final colors = AppColors.of(context);
     return PressBounce(
       onPressed: onPressed,
-      pressedScale: 0.9,
+      pressedScale: 0.82,
       color: Colors.transparent,
       pressedColor: Colors.transparent,
       borderRadius: BorderRadius.circular(999),
@@ -244,8 +244,8 @@ class _ColorDot extends StatelessWidget {
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 220),
           curve: Curves.easeOutCubic,
-          width: 28,
-          height: 28,
+          width: 32,
+          height: 32,
           alignment: Alignment.center,
           decoration: BoxDecoration(
             color: Color(value),
@@ -254,19 +254,11 @@ class _ColorDot extends StatelessWidget {
               color: selected ? colors.card : Colors.transparent,
               width: 3,
             ),
-            boxShadow: selected
-                ? const [
-                    BoxShadow(
-                      color: Color(0x33000000),
-                      blurRadius: 6,
-                    ),
-                  ]
-                : const [],
           ),
           child: used
               ? const Icon(
                   Icons.check_rounded,
-                  size: 16,
+                  size: 18,
                   color: Colors.white,
                 )
               : null,

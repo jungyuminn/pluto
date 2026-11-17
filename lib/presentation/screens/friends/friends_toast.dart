@@ -202,3 +202,4 @@ class _FriendsToastCard extends StatelessWidget {
     );
   }
 }
+

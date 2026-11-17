@@ -101,11 +101,13 @@ class CalendarDayCell extends StatelessWidget {
     final scale = AppFonts.calendarScaleOf(context);
     final dateScale = AppFonts.calendarDateScaleOf(context);
     final dateBox = dateSizeFor(scale);
-    final paleBlue = Color.lerp(
-      colors.card,
-      colors.accent,
-      colors.isDark ? 0.2 : 0.14,
-    )!;
+    final paleBlue = colors.wash(
+      Color.lerp(
+        colors.card,
+        colors.accent,
+        colors.isDark ? 0.2 : 0.14,
+      )!,
+    );
 
     return PressBounce(
       onPressed: onPressed == null ? () {} : () => onPressed!(_originOf(context)),
@@ -114,7 +116,7 @@ class CalendarDayCell extends StatelessWidget {
       color: highlighted ? colors.rangeFill : Colors.transparent,
       pressedColor: highlighted
           ? colors.rangePressed
-          : (inRange && rangeGrow ? Colors.transparent : colors.pressed),
+          : (inRange && rangeGrow ? Colors.transparent : colors.washPressed),
       borderRadius: BorderRadius.circular(12),
       child: Stack(
         fit: StackFit.expand,

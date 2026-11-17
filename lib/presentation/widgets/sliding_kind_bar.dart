@@ -74,7 +74,7 @@ class _SlidingKindBarState<T> extends State<SlidingKindBar<T>> {
                       passthrough: true,
                       pressedScale: 0.94,
                       color: Colors.transparent,
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(999),
                       child: Center(
                         child: AnimatedDefaultTextStyle(
                           duration: const Duration(milliseconds: 220),

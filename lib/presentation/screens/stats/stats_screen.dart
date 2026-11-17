@@ -497,10 +497,11 @@ class _MonthPlay {
     for (final application in applications) {
       if (application.isRejected) continue;
       for (final round in application.rounds) {
-        final date = round.date;
-        if (date == null || !round.completed) continue;
-        if (date.year != month.year || date.month != month.month) continue;
-        days[date.day] = (days[date.day] ?? 0) + 1;
+        if (round.date == null || !round.completed) continue;
+        for (final date in round.days) {
+          if (date.year != month.year || date.month != month.month) continue;
+          days[date.day] = (days[date.day] ?? 0) + 1;
+        }
       }
     }
     return days;

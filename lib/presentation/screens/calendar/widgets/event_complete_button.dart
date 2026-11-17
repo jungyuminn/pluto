@@ -79,39 +79,23 @@ class _EventCompleteButtonState extends State<EventCompleteButton>
                 return Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CustomPaint(
-                        painter: _CompletePainter(
-                          progress: t,
-                          color: ink,
-                        ),
-                      ),
+                    CompleteCheck(
+                      size: 18,
+                      progress: t,
+                      color: ink,
                     ),
                     const SizedBox(height: 1),
-                    SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CustomPaint(
-                        painter: _CompletePainter(
-                          progress: widget.peer ? 1 : 0,
-                          color: ink.withValues(alpha: 0.5),
-                        ),
-                      ),
+                    CompleteCheck(
+                      size: 18,
+                      progress: widget.peer ? 1 : 0,
+                      color: ink.withValues(alpha: 0.5),
                     ),
                   ],
                 );
               }
-              return SizedBox(
-                width: 22,
-                height: 22,
-                child: CustomPaint(
-                  painter: _CompletePainter(
-                    progress: t,
-                    color: ink,
-                  ),
-                ),
+              return CompleteCheck(
+                progress: t,
+                color: ink,
               );
             },
           ),
@@ -121,8 +105,32 @@ class _EventCompleteButtonState extends State<EventCompleteButton>
   }
 }
 
-class _CompletePainter extends CustomPainter {
-  const _CompletePainter({
+class CompleteCheck extends StatelessWidget {
+  const CompleteCheck({
+    super.key,
+    required this.color,
+    this.size = 22,
+    this.progress = 1,
+  });
+
+  final Color color;
+  final double size;
+  final double progress;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: size,
+      height: size,
+      child: CustomPaint(
+        painter: CompleteCheckPainter(progress: progress, color: color),
+      ),
+    );
+  }
+}
+
+class CompleteCheckPainter extends CustomPainter {
+  const CompleteCheckPainter({
     required this.progress,
     required this.color,
     this.strokeWidth = 1.35,
@@ -176,7 +184,7 @@ class _CompletePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _CompletePainter oldDelegate) {
+  bool shouldRepaint(covariant CompleteCheckPainter oldDelegate) {
     return oldDelegate.progress != progress ||
         oldDelegate.color != color ||
         oldDelegate.strokeWidth != strokeWidth;

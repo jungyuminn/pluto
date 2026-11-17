@@ -87,7 +87,7 @@ class CollectedPlanet {
     for (final application in applications) {
       if (application.isRejected) continue;
       for (final round in application.rounds) {
-        final date = round.date;
+        final date = round.startDay;
         if (date == null) continue;
         final month = DateTime(date.year, date.month);
         if (month.isAfter(nowMonth)) continue;

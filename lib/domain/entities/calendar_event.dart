@@ -99,6 +99,28 @@ class CalendarEvent {
     return '$period $hour12:${minute.toString().padLeft(2, '0')}';
   }
 
+  /// 달력·하루 목록 공통 순서: 지원서 기간 → 할 일 기간 → 지원서 → 하루 할 일.
+  static List<CalendarEvent> withCalendarOrder(
+    Iterable<CalendarEvent> events,
+  ) {
+    final jobRanges = <CalendarEvent>[];
+    final ranges = <CalendarEvent>[];
+    final jobs = <CalendarEvent>[];
+    final todos = <CalendarEvent>[];
+    for (final event in events) {
+      if (event.isJob && event.isRange) {
+        jobRanges.add(event);
+      } else if (event.isRange) {
+        ranges.add(event);
+      } else if (event.isJob) {
+        jobs.add(event);
+      } else {
+        todos.add(event);
+      }
+    }
+    return [...jobRanges, ...ranges, ...jobs, ...todos];
+  }
+
   static List<CalendarEvent> withRangesFirst(
     Iterable<CalendarEvent> events, {
     Iterable<CalendarEvent>? all,
@@ -144,20 +166,16 @@ class CalendarEvent {
   static List<CalendarEvent> withLockedThenStartTime(
     Iterable<CalendarEvent> events,
   ) {
-    final jobs = <CalendarEvent>[];
-    final ranges = <CalendarEvent>[];
-    final todos = <CalendarEvent>[];
-    for (final event in events) {
-      if (event.isJob) {
-        jobs.add(event);
-      } else if (event.isRange) {
-        ranges.add(event);
-      } else {
-        todos.add(event);
-      }
-    }
-    todos.sort(_compareStartTime);
-    return [...ranges, ...jobs, ...todos];
+    final ordered = withCalendarOrder(events);
+    final locked = [
+      for (final event in ordered)
+        if (event.isLockedOrder) event,
+    ];
+    final todos = [
+      for (final event in ordered)
+        if (!event.isLockedOrder) event,
+    ]..sort(_compareStartTime);
+    return [...locked, ...todos];
   }
 
   static int _compareStartTime(CalendarEvent a, CalendarEvent b) {

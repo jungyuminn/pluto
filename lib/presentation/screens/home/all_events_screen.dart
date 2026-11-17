@@ -165,10 +165,9 @@ class _AllEventsScreenState extends State<AllEventsScreen> {
   ) {
     DateTime? date;
     for (final round in application.rounds) {
-      final roundDate = round.date;
+      final roundDate = round.startDay;
       if (roundDate == null) continue;
-      final day = DateTime(roundDate.year, roundDate.month, roundDate.day);
-      if (date == null || day.isBefore(date)) date = day;
+      if (date == null || roundDate.isBefore(date)) date = roundDate;
     }
     final applied = application.appliedDate;
     date ??= applied == null
@@ -225,10 +224,9 @@ class _AllEventsScreenState extends State<AllEventsScreen> {
       }
       var hasDate = false;
       for (final round in application.rounds) {
-        final date = round.date;
-        if (date == null) continue;
+        if (round.date == null) continue;
         hasDate = true;
-        if (_dayInRange(date, start, end)) return true;
+        if (round.overlaps(start, end)) return true;
       }
       final applied = application.appliedDate;
       if (!hasDate && applied != null) {

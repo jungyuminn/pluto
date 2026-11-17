@@ -130,6 +130,7 @@ class LeftoverTodoCard extends StatelessWidget {
                     color: event.color,
                     completed: event.completed,
                     isJob: true,
+                    isRange: event.isRange,
                     memo: event.memo,
                     showCategory: false,
                     onPressed: onEdit,

@@ -104,6 +104,13 @@ class AppColors extends ThemeExtension<AppColors> {
 
   Color get homeCardPressed => Color.lerp(homeCard, Colors.black, 0.08)!;
 
+  /// 달력 칸처럼 테마가 비치는 곳을 누를 때. 색은 그대로, 뒤만 비치게.
+  static const washOpacity = 0.62;
+
+  Color get washPressed => pressed.withValues(alpha: washOpacity);
+
+  Color wash(Color color) => color.withValues(alpha: washOpacity);
+
   Color tint(Color accent, [double amount = 0.28]) {
     return Color.lerp(card, accent, amount)!;
   }

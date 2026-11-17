@@ -16,6 +16,32 @@ int jobCategoryColor(
   return application.categoryColor ?? CalendarEvent.defaultCategoryColor;
 }
 
+CalendarEvent jobRoundEvent(
+  JobApplication application,
+  int index,
+  DateTime day, {
+  List<EventCategory> companyCategories = const [],
+}) {
+  final round = application.rounds[index];
+  return CalendarEvent(
+    id: 'job:${application.id}:$index',
+    title: _label(application.companyName, round.name),
+    date: day,
+    memo: application.position.trim(),
+    categoryId: application.categoryId,
+    categoryName: application.hasCategory
+        ? application.categoryName
+        : (application.applyStatus.isNotEmpty
+            ? application.applyStatus
+            : application.position),
+    categoryColor: jobCategoryColor(application, companyCategories),
+    isJob: true,
+    jobApplicationId: application.id,
+    groupId: round.isRange ? 'job-range:${application.id}:$index' : null,
+    completed: round.completed,
+  );
+}
+
 List<CalendarEvent> jobEventsOn(
   DateTime date,
   Iterable<JobApplication> applications, {
@@ -28,29 +54,13 @@ List<CalendarEvent> jobEventsOn(
     if (!includeRejected && application.isRejected) continue;
     for (var i = 0; i < application.rounds.length; i++) {
       final round = application.rounds[i];
-      final roundDate = round.date;
-      if (roundDate == null) continue;
-      if (roundDate.year != day.year ||
-          roundDate.month != day.month ||
-          roundDate.day != day.day) {
-        continue;
-      }
+      if (!round.containsDay(day)) continue;
       items.add(
-        CalendarEvent(
-          id: 'job:${application.id}:$i',
-          title: _label(application.companyName, round.name),
-          date: day,
-          memo: application.position.trim(),
-          categoryId: application.categoryId,
-          categoryName: application.hasCategory
-              ? application.categoryName
-              : (application.applyStatus.isNotEmpty
-                  ? application.applyStatus
-                  : application.position),
-          categoryColor: jobCategoryColor(application, companyCategories),
-          isJob: true,
-          jobApplicationId: application.id,
-          completed: round.completed,
+        jobRoundEvent(
+          application,
+          i,
+          day,
+          companyCategories: companyCategories,
         ),
       );
     }
@@ -61,20 +71,59 @@ List<CalendarEvent> jobEventsOn(
 List<CalendarEvent> jobEventsAll(
   Iterable<JobApplication> applications, {
   List<EventCategory> companyCategories = const [],
+  bool expandRanges = false,
 }) {
   final items = <CalendarEvent>[];
   for (final application in applications) {
     if (application.isRejected) continue;
-    final seen = <String>{};
-    for (final round in application.rounds) {
-      final date = round.date;
-      if (date == null) continue;
-      final key = '${date.year}-${date.month}-${date.day}';
-      if (!seen.add(key)) continue;
-      items.addAll(
-        jobEventsOn(
-          date,
-          [application],
+    for (var i = 0; i < application.rounds.length; i++) {
+      final round = application.rounds[i];
+      final start = round.startDay;
+      if (start == null) continue;
+      if (expandRanges) {
+        for (final day in round.days) {
+          items.add(
+            jobRoundEvent(
+              application,
+              i,
+              day,
+              companyCategories: companyCategories,
+            ),
+          );
+        }
+      } else {
+        items.add(
+          jobRoundEvent(
+            application,
+            i,
+            start,
+            companyCategories: companyCategories,
+          ),
+        );
+      }
+    }
+  }
+  return items;
+}
+
+List<CalendarEvent> jobLeftoverEvents(
+  Iterable<JobApplication> applications, {
+  List<EventCategory> companyCategories = const [],
+  DateTime? now,
+}) {
+  final items = <CalendarEvent>[];
+  for (final application in applications) {
+    if (application.isRejected) continue;
+    for (var i = 0; i < application.rounds.length; i++) {
+      final round = application.rounds[i];
+      if (round.completed || round.date == null || !round.isPast(now)) {
+        continue;
+      }
+      items.add(
+        jobRoundEvent(
+          application,
+          i,
+          round.startDay!,
           companyCategories: companyCategories,
         ),
       );
@@ -105,11 +154,7 @@ List<CalendarEvent> calendarEventsOn({
     }),
     all: events.where((event) => !event.isJob && !event.someday),
   );
-  return [
-    ...[for (final event in todos) if (event.isRange) event],
-    ...jobs,
-    ...[for (final event in todos) if (!event.isRange) event],
-  ];
+  return CalendarEvent.withCalendarOrder([...jobs, ...todos]);
 }
 
 List<CalendarEvent> calendarEventsByCategory(
@@ -120,7 +165,7 @@ List<CalendarEvent> calendarEventsByCategory(
   final jobs = [for (final event in events) if (event.isJob) event];
   final todos = [for (final event in events) if (!event.isJob) event];
   List<CalendarEvent> ordered(List<CalendarEvent> items) {
-    if (!sortByTime) return items;
+    if (!sortByTime) return CalendarEvent.withCalendarOrder(items);
     return CalendarEvent.withLockedThenStartTime(items);
   }
 
@@ -248,13 +293,13 @@ List<CalendarEvent> leftoverTodosBefore(
     leftover.add(event);
   }
   leftover.addAll(rangeByGroup.values);
-  leftover.addAll([
-    for (final event in jobEventsAll(
+  leftover.addAll(
+    jobLeftoverEvents(
       applications,
       companyCategories: companyCategories,
-    ))
-      if (!event.completed && event.day.isBefore(today)) event,
-  ]);
+      now: today,
+    ),
+  );
   leftover.sort((a, b) => a.day.compareTo(b.day));
   return CalendarEvent.withRangesFirst(leftover, all: events);
 }

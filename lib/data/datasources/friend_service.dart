@@ -2382,7 +2382,11 @@ class FriendService {
     ).fetchAll();
     return [
       ...todos,
-      ...jobEventsAll(jobs, companyCategories: categories),
+      ...jobEventsAll(
+        jobs,
+        companyCategories: categories,
+        expandRanges: true,
+      ),
     ];
   }
 

@@ -11,6 +11,8 @@ class RoundDateField extends StatelessWidget {
     super.key,
     required this.date,
     required this.onPicked,
+    this.endDate,
+    this.allowRange = false,
     this.color = const Color(0xFF3B82F6),
     this.emptyLabel,
     this.label,
@@ -18,20 +20,45 @@ class RoundDateField extends StatelessWidget {
   });
 
   final DateTime? date;
-  final ValueChanged<DateTime> onPicked;
+  final DateTime? endDate;
+  final void Function(DateTime start, DateTime? end) onPicked;
+  final bool allowRange;
   final Color color;
   final String? emptyLabel;
   final String? label;
   final bool filledIcon;
 
+  bool get _range {
+    if (!allowRange || date == null || endDate == null) return false;
+    final start = DateTime(date!.year, date!.month, date!.day);
+    final last = DateTime(endDate!.year, endDate!.month, endDate!.day);
+    return last.isAfter(start);
+  }
+
   Future<void> _pick(BuildContext context) async {
     final picked = await showAppCalendarSheet(
       context,
       date: date,
+      dates: date == null
+          ? null
+          : [
+              date!,
+              if (_range) endDate!,
+            ],
+      mode: _range ? AppCalendarMode.range : AppCalendarMode.single,
       color: color,
-      showModes: false,
+      showModes: allowRange,
+      modes: allowRange
+          ? const [AppCalendarMode.single, AppCalendarMode.range]
+          : null,
     );
-    if (picked != null) onPicked(picked.date);
+    if (picked == null) return;
+    if (picked.mode == AppCalendarMode.range && picked.dates.length >= 2) {
+      final days = [...picked.dates]..sort();
+      onPicked(days.first, days.last);
+      return;
+    }
+    onPicked(picked.date, null);
   }
 
   @override
@@ -53,7 +80,8 @@ class RoundDateField extends StatelessWidget {
     return EventDateChip(
       date: date!,
       color: color,
-      label: label,
+      label: label ??
+          (_range ? AppStrings.rangeEventLabel : null),
       onPressed: () => _pick(context),
     );
   }

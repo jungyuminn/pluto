@@ -388,7 +388,7 @@ class _AddLicenseFormState extends State<AddLicenseForm>
                         const SizedBox(width: 4),
                         RoundDateField(
                           date: _acquiredAt,
-                          onPicked: (date) =>
+                          onPicked: (date, _) =>
                               setState(() => _acquiredAt = date),
                           color: accent,
                           filledIcon: true,
@@ -397,7 +397,7 @@ class _AddLicenseFormState extends State<AddLicenseForm>
                         const SizedBox(width: 4),
                         RoundDateField(
                           date: _expiresAt,
-                          onPicked: (date) =>
+                          onPicked: (date, _) =>
                               setState(() => _expiresAt = date),
                           color: accent,
                           filledIcon: true,

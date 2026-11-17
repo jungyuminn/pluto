@@ -197,13 +197,14 @@ class MonthlyStats {
     for (final application in applications) {
       var hadRound = false;
       for (final round in application.rounds) {
-        final date = round.date;
-        if (date == null || !_inRange(date, startDay, endDay)) continue;
+        if (round.date == null || !round.overlaps(startDay, endDay)) continue;
         hadRound = true;
         if (application.isRejected) continue;
         jobRounds++;
-        final roundDay = DateTime(date.year, date.month, date.day);
-        busyScore[roundDay] = (busyScore[roundDay] ?? 0) + 1;
+        for (final roundDay in round.days) {
+          if (!_inRange(roundDay, startDay, endDay)) continue;
+          busyScore[roundDay] = (busyScore[roundDay] ?? 0) + 1;
+        }
         final name = round.name.trim();
         if (name.isNotEmpty) {
           roundTypeCounts[name] = (roundTypeCounts[name] ?? 0) + 1;
@@ -392,8 +393,7 @@ class MonthlyStats {
       if (application.isRejected) continue;
       for (var i = 0; i < application.rounds.length; i++) {
         final round = application.rounds[i];
-        final roundDate = round.date;
-        if (roundDate == null || !_inRange(roundDate, date, date)) continue;
+        if (round.date == null || !round.containsDay(date)) continue;
         items.add(
           MonthlyBusyDayItem(
             title: _jobRoundLabel(application.companyName, round.name),

@@ -55,6 +55,7 @@ class _RoundEditorSheetState extends State<RoundEditorSheet>
   late final AnimationController _noteAnimation;
   late final CurvedAnimation _noteFade;
   DateTime? _date;
+  DateTime? _endDate;
   late var _noteOpen = widget.initial.note.isNotEmpty;
   var _noteToggling = false;
 
@@ -65,6 +66,7 @@ class _RoundEditorSheetState extends State<RoundEditorSheet>
     _note = PlainTextEditingController(text: widget.initial.note);
     final now = DateTime.now();
     _date = widget.initial.date ?? DateTime(now.year, now.month, now.day);
+    _endDate = widget.initial.isRange ? widget.initial.endDate : null;
     _noteAnimation = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 260),
@@ -111,6 +113,7 @@ class _RoundEditorSheetState extends State<RoundEditorSheet>
       ApplicationRound(
         name: _name.text.trim(),
         date: _date,
+        endDate: _endDate,
         note: _note.text.trim(),
         completed: widget.initial.completed,
       ),
@@ -180,9 +183,13 @@ class _RoundEditorSheetState extends State<RoundEditorSheet>
                             children: [
                               RoundDateField(
                                 date: _date,
+                                endDate: _endDate,
+                                allowRange: true,
                                 color: accent,
-                                onPicked: (value) =>
-                                    setState(() => _date = value),
+                                onPicked: (start, end) => setState(() {
+                                  _date = start;
+                                  _endDate = end;
+                                }),
                               ),
                               const SizedBox(width: 4),
                               EventActionIcon(

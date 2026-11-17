@@ -68,14 +68,10 @@ class JobApplication {
   /// 오늘부터 3일 안에 있는 가장 가까운 전형까지 남은 일수. 없으면 null.
   int? upcomingDDay([DateTime? now]) {
     final current = now ?? DateTime.now();
-    final today = DateTime(current.year, current.month, current.day);
     int? nearest;
     for (final round in rounds) {
-      final date = round.date;
-      if (date == null) continue;
-      final target = DateTime(date.year, date.month, date.day);
-      final days = target.difference(today).inDays;
-      if (days < 0 || days > 3) continue;
+      final days = round.daysUntil(current);
+      if (days == null || days > 3) continue;
       if (nearest == null || days < nearest) nearest = days;
     }
     return nearest;
@@ -84,10 +80,12 @@ class JobApplication {
   /// 오늘 포함, 아직 지나지 않은 전형 중 가장 가까운 날짜.
   DateTime? nearestUpcomingRoundDate([DateTime? now]) {
     DateTime? nearest;
+    final current = now ?? DateTime.now();
+    final today = DateTime(current.year, current.month, current.day);
     for (final round in rounds) {
-      final date = round.date;
-      if (date == null || round.isPast(now)) continue;
-      final target = DateTime(date.year, date.month, date.day);
+      final days = round.daysUntil(current);
+      if (days == null) continue;
+      final target = today.add(Duration(days: days));
       if (nearest == null || target.isBefore(nearest)) nearest = target;
     }
     return nearest;

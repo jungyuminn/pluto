@@ -133,10 +133,9 @@ class _CompanyCardState extends State<CompanyCard>
   }
 
   TableRow _round(ApplicationRound round) {
-    final date = round.date;
-    final title = date == null
+    final title = round.date == null
         ? AppStrings.emptyValue
-        : '${date.month}. ${date.day}.';
+        : round.chipDateLabel;
     final name = round.name.trim();
     final note = round.note.trim();
     final value = name.isEmpty

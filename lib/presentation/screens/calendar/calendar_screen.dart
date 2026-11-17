@@ -458,7 +458,7 @@ class CalendarScreenState extends State<CalendarScreen>
           if (application.isRejected) continue;
           for (var i = 0; i < application.rounds.length; i++) {
             final round = application.rounds[i];
-            final date = round.date;
+            final date = round.startDay;
             if (date == null) continue;
             consider('job:${application.id}:$i', date, [
               application.companyName,
@@ -561,9 +561,9 @@ class CalendarScreenState extends State<CalendarScreen>
       for (final application in _applications) {
         if (application.isRejected) continue;
         for (final round in application.rounds) {
-          final date = round.date;
-          if (date == null) continue;
-          days.add(_dayOf(date));
+          for (final date in round.days) {
+            days.add(_dayOf(date));
+          }
         }
       }
     }
@@ -581,11 +581,7 @@ class CalendarScreenState extends State<CalendarScreen>
               companyCategories: _companyCategories,
             )
           : const <CalendarEvent>[];
-      var events = <CalendarEvent>[
-        ...[for (final event in dayTodos) if (event.isRange) event],
-        ...jobs,
-        ...[for (final event in dayTodos) if (!event.isRange) event],
-      ];
+      var events = CalendarEvent.withCalendarOrder([...jobs, ...dayTodos]);
       if (categoryView) {
         events = calendarEventsByCategory(
           events,

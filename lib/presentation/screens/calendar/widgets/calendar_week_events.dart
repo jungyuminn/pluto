@@ -535,12 +535,17 @@ List<_WeekBlock> _blocksFor(
 
   var rangeLane = 0;
   for (final item in raw) {
+    if (!item.event.isJob || !item.event.isRange) continue;
+    place(item, lane: rangeLane);
+    rangeLane++;
+  }
+  for (final item in raw) {
     if (item.event.isJob || !item.event.isRange) continue;
     place(item, lane: rangeLane);
     rangeLane++;
   }
   for (final item in raw) {
-    if (!item.event.isJob) continue;
+    if (!item.event.isJob || item.event.isRange) continue;
     place(item);
   }
   for (final item in raw) {

@@ -157,7 +157,10 @@ class _LeftoverTodosScreenState extends State<LeftoverTodosScreen> {
       return;
     }
     final rounds = [...application.rounds];
-    rounds[index] = rounds[index].copyWith(date: _today);
+    rounds[index] = rounds[index].copyWith(
+      date: _today,
+      clearEndDate: true,
+    );
     await scope.updateJobApplication(application.copyWith(rounds: rounds));
   }
 

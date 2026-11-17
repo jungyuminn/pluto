@@ -567,8 +567,10 @@ class _HomeDayCardState extends State<HomeDayCard> {
     final moved = group.removeAt(from);
     group.insert(nextTo, moved);
 
-    final jobs = [for (final event in _events) if (event.isJob) event];
-    final ranges = [for (final event in _events) if (event.isRange) event];
+    final locked = [
+      for (final event in _events)
+        if (event.isLockedOrder) event,
+    ];
     final todos = [for (final event in _events) if (!event.isLockedOrder) event];
     if (widget.categoryView || widget.groupDates != null) {
       var gi = 0;
@@ -586,7 +588,7 @@ class _HomeDayCardState extends State<HomeDayCard> {
     setState(() {
       _events
         ..clear()
-        ..addAll([...ranges, ...jobs, ...todos]);
+        ..addAll(CalendarEvent.withCalendarOrder([...locked, ...todos]));
       _items = _itemsForView;
     });
     HapticFeedback.selectionClick();
@@ -902,6 +904,7 @@ class _HomeDayCardState extends State<HomeDayCard> {
             color: event.color,
             completed: event.completed,
             isJob: true,
+            isRange: event.isRange,
             memo: event.memo,
             timeText: timeText,
             onPressed: () => _edit(event),

@@ -20,6 +20,7 @@ import 'package:pluto/domain/entities/event_category.dart';
 import 'package:pluto/presentation/screens/add_company/widgets/save_company_button.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/calendar_event_label.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/day_event_label.dart';
+import 'package:pluto/presentation/screens/calendar/widgets/event_complete_button.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/event_action_icon.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/event_category_chip.dart';
 import 'package:pluto/presentation/screens/calendar/widgets/event_date_chip.dart';
@@ -2670,7 +2671,7 @@ class _HelpSelectRow extends StatelessWidget {
               AnimatedOpacity(
                 duration: const Duration(milliseconds: 220),
                 opacity: selected ? 1 : 0,
-                child: Icon(Icons.check_rounded, size: 20, color: colors.text),
+                child: CompleteCheck(size: 20, color: colors.text),
               ),
           ],
         ),

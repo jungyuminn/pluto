@@ -16936,8 +16936,7 @@ class _FontDemoTile extends StatelessWidget {
                   ),
                 ),
               ),
-              if (checked)
-                Icon(Icons.check_rounded, size: 22, color: colors.text),
+              if (checked) CompleteCheck(color: colors.text),
             ],
           ),
         ),

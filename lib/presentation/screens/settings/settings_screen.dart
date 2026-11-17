@@ -67,6 +67,7 @@ import 'package:pluto/presentation/widgets/app_bar_wordmark.dart';
 import 'package:pluto/presentation/widgets/overlay_app_bar.dart';
 import 'package:pluto/presentation/widgets/sliding_kind_bar.dart';
 import 'package:pluto/presentation/widgets/app_arrow.dart';
+import 'package:pluto/presentation/screens/calendar/widgets/event_complete_button.dart';
 import 'package:pluto/presentation/widgets/themed_asset.dart';
 import 'package:pluto/presentation/screens/shell/widgets/pill_bottom_nav.dart';
 import 'package:pluto/presentation/screens/stats/planet_stages.dart';
@@ -5990,7 +5991,7 @@ class _SettingsTile extends StatelessWidget {
                 const SizedBox(width: 2),
               ],
               if (checked)
-                Icon(Icons.check_rounded, size: 22, color: colors.text),
+                CompleteCheck(color: colors.text),
               if (chevron)
                 AnimatedRotation(
                   turns: expanded == true ? 0.25 : 0,

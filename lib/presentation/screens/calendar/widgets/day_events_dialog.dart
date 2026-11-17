@@ -928,8 +928,10 @@ class _DayEventsDialogState extends State<DayEventsDialog> {
     final moved = group.removeAt(from);
     group.insert(nextTo, moved);
 
-    final jobs = [for (final event in _events) if (event.isJob) event];
-    final ranges = [for (final event in _events) if (event.isRange) event];
+    final locked = [
+      for (final event in _events)
+        if (event.isLockedOrder) event,
+    ];
     final todos = [for (final event in _events) if (!event.isLockedOrder) event];
     if (_compact) {
       var gi = 0;
@@ -947,7 +949,7 @@ class _DayEventsDialogState extends State<DayEventsDialog> {
     setState(() {
       _events
         ..clear()
-        ..addAll([...ranges, ...jobs, ...todos]);
+        ..addAll(CalendarEvent.withCalendarOrder([...locked, ...todos]));
       _items = _itemsForView;
     });
     HapticFeedback.selectionClick();
@@ -1203,6 +1205,7 @@ class _DayEventsDialogState extends State<DayEventsDialog> {
             color: event.color,
             completed: event.completed,
             isJob: true,
+            isRange: event.isRange,
             memo: event.memo,
             timeText: timeText,
             height: _labelHeight,
